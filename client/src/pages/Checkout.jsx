@@ -594,32 +594,33 @@ const Checkout = () => {
           Home <span className="mx-2">›</span> <span className="font-semibold text-black">Checkout</span>
         </nav>
 
-        <div className="flex items-center gap-8 mb-8">
-          <div className="flex items-center gap-2">
+        {/* Always horizontal stepper, even on mobile */}
+        <div className="flex flex-row items-center gap-2 sm:gap-4 md:gap-8 w-full overflow-x-auto mb-8">
+          <div className="flex items-center gap-1 sm:gap-2">
             <span
               className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 1 ? "bg-lime-500" : "bg-gray-300"}`}
             >
               01
             </span>
-            <span className="font-semibold">Shipping Details</span>
+            <span className="font-semibold text-xs sm:text-sm md:text-base">Shipping Details</span>
           </div>
-          <div className="h-0.5 w-8 bg-gray-300" />
-          <div className="flex items-center gap-2">
+          <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
+          <div className="flex items-center gap-1 sm:gap-2">
             <span
               className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 2 ? "bg-lime-500" : "bg-gray-300"}`}
             >
               02
             </span>
-            <span className={step >= 2 ? "font-semibold" : "text-gray-400"}>Summary</span>
+            <span className={step >= 2 ? "font-semibold text-xs sm:text-sm md:text-base" : "text-gray-400 text-xs sm:text-sm md:text-base"}>Summary</span>
           </div>
-          <div className="h-0.5 w-8 bg-gray-300" />
-          <div className="flex items-center gap-2">
+          <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
+          <div className="flex items-center gap-1 sm:gap-2">
             <span
               className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 3 ? "bg-lime-500" : "bg-gray-300"}`}
             >
               03
             </span>
-            <span className={step >= 3 ? "font-semibold" : "text-gray-400"}>Payment Method</span>
+            <span className={step >= 3 ? "font-semibold text-xs sm:text-sm md:text-base" : "text-gray-400 text-xs sm:text-sm md:text-base"}>Payment Method</span>
           </div>
         </div>
 
@@ -684,6 +685,9 @@ const Checkout = () => {
                             onChange={handleChange}
                             className="w-full border rounded-r-lg px-4 py-3"
                             required
+                            maxLength={9}
+                            minLength={9}
+                            pattern="[0-9]{9}"
                           />
                         </div>
                       </div>
@@ -749,6 +753,9 @@ const Checkout = () => {
                           className="w-full border rounded-r-lg px-4 py-3"
                           placeholder="1234567890"
                           required
+                          maxLength={9}
+                          minLength={9}
+                          pattern="[0-9]{9}"
                         />
                       </div>
                     </div>

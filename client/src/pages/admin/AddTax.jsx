@@ -31,7 +31,7 @@ const AddTax = () => {
 
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await fetch("/api/tax", {
+      const response = await fetch("/api/taxes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
