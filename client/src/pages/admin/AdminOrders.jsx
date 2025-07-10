@@ -5,6 +5,7 @@ import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, Mail, ChevronDown, RefreshCw } from "lucide-react"
 
+import config from "../../config/config"
 const AdminOrders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -40,7 +41,7 @@ const AdminOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const { data } = await axios.get("http://localhost:5000/api/admin/orders")
+      const { data } = await axios.get(`${config.API_URL}/api/admin/orders`)
       setOrders(data)
       setLoading(false)
     } catch (error) {
@@ -60,7 +61,7 @@ const AdminOrders = () => {
   const handleUpdateStatus = async (orderId, status) => {
     try {
       setProcessingAction(true)
-      await axios.put(`http://localhost:5000/api/admin/orders/${orderId}/status`, { status })
+      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/status`, { status })
 
       setOrders(orders.map((order) => (order._id === orderId ? { ...order, status } : order)))
 
@@ -79,7 +80,7 @@ const AdminOrders = () => {
   const handleUpdatePaymentStatus = async (orderId, isPaid) => {
     try {
       setProcessingAction(true)
-      await axios.put(`http://localhost:5000/api/admin/orders/${orderId}/payment`, { isPaid })
+      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/payment`, { isPaid })
 
       setOrders(orders.map((order) => (order._id === orderId ? { ...order, isPaid } : order)))
 
@@ -98,7 +99,7 @@ const AdminOrders = () => {
   const handleUpdateTracking = async (orderId, trackingId) => {
     try {
       setProcessingAction(true)
-      await axios.put(`http://localhost:5000/api/admin/orders/${orderId}/tracking`, { trackingId })
+      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/tracking`, { trackingId })
 
       setOrders(orders.map((order) => (order._id === orderId ? { ...order, trackingId } : order)))
 
@@ -116,7 +117,7 @@ const AdminOrders = () => {
   const handleSendNotification = async (orderId) => {
     try {
       setProcessingAction(true)
-      await axios.post(`http://localhost:5000/api/admin/orders/${orderId}/notify`)
+      await axios.post(`${config.API_URL}/api/admin/orders/${orderId}/notify`)
       setProcessingAction(false)
       alert("Notification email sent successfully!")
     } catch (error) {

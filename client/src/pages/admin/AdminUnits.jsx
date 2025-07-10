@@ -6,6 +6,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Edit, Trash2, Ruler, Eye, EyeOff } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 
+import config from "../../config/config"
 const AdminUnits = () => {
   const [units, setUnits] = useState([])
   const [loading, setLoading] = useState(true)
@@ -37,7 +38,7 @@ const AdminUnits = () => {
         return
       }
 
-      const { data } = await axios.get("http://localhost:5000/api/units", {
+      const { data } = await axios.get(`${config.API_URL}/api/units`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -59,14 +60,14 @@ const AdminUnits = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       if (editingUnit) {
-        await axios.put(`http://localhost:5000/api/units/${editingUnit._id}`, formData, {
+        await axios.put(`${config.API_URL}/api/units/${editingUnit._id}`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
         showToast("Unit updated successfully", "success")
       } else {
-        await axios.post("http://localhost:5000/api/units", formData, {
+        await axios.post(`${config.API_URL}/api/units`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -105,7 +106,7 @@ const AdminUnits = () => {
       try {
         const token =
           localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
-        await axios.delete(`http://localhost:5000/api/units/${unitId}`, {
+        await axios.delete(`${config.API_URL}/api/units/${unitId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

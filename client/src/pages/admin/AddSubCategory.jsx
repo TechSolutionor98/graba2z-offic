@@ -8,6 +8,7 @@ import ImageUpload from "../../components/ImageUpload"
 import { ArrowLeft } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const AddSubCategory = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -29,7 +30,7 @@ const AddSubCategory = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get("http://localhost:5000/api/categories", {
+      const response = await axios.get(`${config.API_URL}/api/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setCategories(response.data)
@@ -60,7 +61,7 @@ const AddSubCategory = () => {
 
     try {
       const token = localStorage.getItem("adminToken")
-      await axios.post("http://localhost:5000/api/subcategories", formData, {
+      await axios.post(`${config.API_URL}/api/subcategories`, formData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

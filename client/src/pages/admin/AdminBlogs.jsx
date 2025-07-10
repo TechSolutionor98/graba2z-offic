@@ -7,6 +7,8 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Search, Filter, Edit, Trash2, Eye, Calendar, User, Tag } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
+
 const AdminBlogs = () => {
   const { showToast } = useToast()
   const [blogs, setBlogs] = useState([])
@@ -37,11 +39,11 @@ const AdminBlogs = () => {
 
       // Fetch all data in parallel
       const [blogsRes, categoriesRes, subCategoriesRes, topicsRes, brandsRes] = await Promise.allSettled([
-        axios.get("http://localhost:5000/api/blogs", { headers }),
-        axios.get("http://localhost:5000/api/categories", { headers }),
-        axios.get("http://localhost:5000/api/subcategories", { headers }),
-        axios.get("http://localhost:5000/api/blog-topics", { headers }),
-        axios.get("http://localhost:5000/api/brands", { headers }),
+        axios.get(`${config.API_URL}/api/blogs`, { headers }),
+        axios.get(`${config.API_URL}/api/categories`, { headers }),
+        axios.get(`${config.API_URL}/api/subcategories`, { headers }),
+        axios.get(`${config.API_URL}/api/blog-topics`, { headers }),
+        axios.get(`${config.API_URL}/api/brands`, { headers }),
       ])
 
       // Process blogs - blogs should now come directly as an array with populated fields
@@ -234,7 +236,7 @@ const AdminBlogs = () => {
     if (window.confirm("Are you sure you want to delete this blog?")) {
       try {
         const token = localStorage.getItem("adminToken")
-        await axios.delete(`http://localhost:5000/api/blogs/${id}`, {
+        await axios.delete(`${config.API_URL}/api/blogs/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         showToast("Blog deleted successfully!", "success")
@@ -250,7 +252,7 @@ const AdminBlogs = () => {
     try {
       const token = localStorage.getItem("adminToken")
       await axios.patch(
-        `http://localhost:5000/api/blogs/${id}/status`,
+        `${config.API_URL}/api/blogs/${id}/status`,
         { status: newStatus },
         {
           headers: { Authorization: `Bearer ${token}` },

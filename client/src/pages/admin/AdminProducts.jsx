@@ -7,6 +7,7 @@ import ProductForm from "../../components/admin/ProductForm"
 import { useToast } from "../../context/ToastContext"
 import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff } from "lucide-react"
 
+import config from "../../config/config"
 const AdminProducts = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
@@ -58,7 +59,7 @@ const AdminProducts = () => {
         return
       }
 
-      const { data } = await axios.get("http://localhost:5000/api/products", {
+      const { data } = await axios.get(`${config.API_URL}/api/products`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -87,7 +88,7 @@ const AdminProducts = () => {
         return
       }
 
-      const { data } = await axios.get("http://localhost:5000/api/categories", {
+      const { data } = await axios.get(`${config.API_URL}/api/categories`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -118,7 +119,7 @@ const AdminProducts = () => {
           return
         }
 
-        await axios.delete(`http://localhost:5000/api/products/${productId}`, {
+        await axios.delete(`${config.API_URL}/api/products/${productId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -163,10 +164,10 @@ const AdminProducts = () => {
       let response
       if (editingProduct) {
         console.log("✏️ Updating existing product...")
-        response = await axios.put(`http://localhost:5000/api/products/${editingProduct._id}`, productData, config)
+        response = await axios.put(`${config.API_URL}/api/products/${editingProduct._id}`, productData, config)
       } else {
         console.log("➕ Creating new product...")
-        response = await axios.post("http://localhost:5000/api/products", productData, config)
+        response = await axios.post(`${config.API_URL}/api/products`, productData, config)
       }
 
       console.log("✅ Product saved successfully:", response.data)

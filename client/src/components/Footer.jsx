@@ -5,7 +5,9 @@ import { Facebook, Twitter, Instagram, Plus, Minus, Linkedin } from "lucide-reac
 import { useState, useEffect } from "react"
 import axios from "axios"
 
-const API_BASE_URL = "http://localhost:5000"
+import config from "../../config/config"
+
+const API_BASE_URL = `${config.API_URL}`
 
 const Footer = ({ className = "" }) => {
   // State for mobile accordion sections

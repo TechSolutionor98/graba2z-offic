@@ -8,6 +8,7 @@ import ImageUpload from "../../components/ImageUpload"
 import { ArrowLeft } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const AddBrand = () => {
   const navigate = useNavigate()
   const { id } = useParams() // id for edit mode
@@ -42,7 +43,7 @@ const AddBrand = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem("adminToken")
-      const { data } = await axios.get(`http://localhost:5000/api/brands/${brandId}`, {
+      const { data } = await axios.get(`${config.API_URL}/api/brands/${brandId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setFormData({
@@ -81,7 +82,7 @@ const AddBrand = () => {
     try {
       const token = localStorage.getItem("adminToken")
       if (isEdit && id) {
-        await axios.put(`http://localhost:5000/api/brands/${id}`, formData, {
+        await axios.put(`${config.API_URL}/api/brands/${id}`, formData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -89,7 +90,7 @@ const AddBrand = () => {
         })
         showToast("Brand updated successfully!", "success")
       } else {
-        await axios.post("http://localhost:5000/api/brands", formData, {
+        await axios.post(`${config.API_URL}/api/brands`, formData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,

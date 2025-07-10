@@ -6,6 +6,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import ImageUpload from "../../components/ImageUpload"
 import { Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react"
 
+import config from "../../config/config"
 const AdminBanners = () => {
   const [banners, setBanners] = useState([])
   const [categories, setCategories] = useState([])
@@ -46,7 +47,7 @@ const AdminBanners = () => {
     try {
       setLoading(true)
       const token = localStorage.getItem("adminToken")
-      const { data } = await axios.get("http://localhost:5000/api/banners/admin", {
+      const { data } = await axios.get(`${config.API_URL}/api/banners/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -63,7 +64,7 @@ const AdminBanners = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const { data } = await axios.get("http://localhost:5000/api/categories", {
+      const { data } = await axios.get(`${config.API_URL}/api/categories`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -92,13 +93,13 @@ const AdminBanners = () => {
       }
 
       if (editingBanner) {
-        await axios.put(`http://localhost:5000/api/banners/${editingBanner._id}`, bannerData, {
+        await axios.put(`${config.API_URL}/api/banners/${editingBanner._id}`, bannerData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
       } else {
-        await axios.post("http://localhost:5000/api/banners", bannerData, {
+        await axios.post(`${config.API_URL}/api/banners`, bannerData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -157,7 +158,7 @@ const AdminBanners = () => {
     if (window.confirm("Are you sure you want to delete this banner?")) {
       try {
         const token = localStorage.getItem("adminToken")
-        await axios.delete(`http://localhost:5000/api/banners/${bannerId}`, {
+        await axios.delete(`${config.API_URL}/api/banners/${bannerId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

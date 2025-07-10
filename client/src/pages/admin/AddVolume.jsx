@@ -7,6 +7,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { ArrowLeft } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const AddVolume = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -32,7 +33,7 @@ const AddVolume = () => {
 
     try {
       const token = localStorage.getItem("adminToken")
-      await axios.post("http://localhost:5000/api/volumes", formData, {
+      await axios.post(`${config.API_URL}/api/volumes`, formData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

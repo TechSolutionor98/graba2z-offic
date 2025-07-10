@@ -9,6 +9,7 @@ import TipTapEditor from "../../components/TipTapEditor"
 import { ArrowLeft, Plus, X } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const AddProduct = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -119,7 +120,7 @@ const AddProduct = () => {
 
       // Categories
       fetchPromises.push(
-        axios.get("http://localhost:5000/api/categories", { headers }).catch((err) => {
+        axios.get(`${config.API_URL}/api/categories`, { headers }).catch((err) => {
           console.log("Categories API error:", err)
           return { data: [] }
         }),
@@ -127,7 +128,7 @@ const AddProduct = () => {
 
       // Brands
       fetchPromises.push(
-        axios.get("http://localhost:5000/api/brands", { headers }).catch((err) => {
+        axios.get(`${config.API_URL}/api/brands`, { headers }).catch((err) => {
           console.log("Brands API error:", err)
           return { data: [] }
         }),
@@ -135,7 +136,7 @@ const AddProduct = () => {
 
       // Taxes
       fetchPromises.push(
-        axios.get("http://localhost:5000/api/tax", { headers }).catch((err) => {
+        axios.get(`${config.API_URL}/api/tax`, { headers }).catch((err) => {
           console.log("Tax API error:", err)
           return { data: [] }
         }),
@@ -143,7 +144,7 @@ const AddProduct = () => {
 
       // Units
       fetchPromises.push(
-        axios.get("http://localhost:5000/api/units", { headers }).catch((err) => {
+        axios.get(`${config.API_URL}/api/units`, { headers }).catch((err) => {
           console.log("Units API error:", err)
           return { data: [] }
         }),
@@ -151,7 +152,7 @@ const AddProduct = () => {
 
       // Warranties
       fetchPromises.push(
-        axios.get("http://localhost:5000/api/warranty", { headers }).catch((err) => {
+        axios.get(`${config.API_URL}/api/warranty`, { headers }).catch((err) => {
           console.log("Warranty API error:", err)
           return { data: [] }
         }),
@@ -159,7 +160,7 @@ const AddProduct = () => {
 
       // Volumes
       fetchPromises.push(
-        axios.get("http://localhost:5000/api/volumes", { headers }).catch((err) => {
+        axios.get(`${config.API_URL}/api/volumes`, { headers }).catch((err) => {
           console.log("Volumes API error:", err)
           return { data: [] }
         }),
@@ -167,7 +168,7 @@ const AddProduct = () => {
 
       // Colors
       fetchPromises.push(
-        axios.get("http://localhost:5000/api/colors", { headers }).catch((err) => {
+        axios.get(`${config.API_URL}/api/colors`, { headers }).catch((err) => {
           console.log("Colors API error:", err)
           return { data: [] }
         }),
@@ -175,7 +176,7 @@ const AddProduct = () => {
 
       // Sizes
       fetchPromises.push(
-        axios.get("http://localhost:5000/api/sizes", { headers }).catch((err) => {
+        axios.get(`${config.API_URL}/api/sizes`, { headers }).catch((err) => {
           console.log("Sizes API error:", err)
           return { data: [] }
         }),
@@ -215,7 +216,7 @@ const AddProduct = () => {
       const token =
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
-      const { data } = await axios.get(`http://localhost:5000/api/subcategories/category/${categoryId}`, {
+      const { data } = await axios.get(`${config.API_URL}/api/subcategories/category/${categoryId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -384,7 +385,7 @@ const AddProduct = () => {
         specifications: formData.specifications.filter((spec) => spec.key && spec.value),
       }
 
-      await axios.post("http://localhost:5000/api/products", productData, {
+      await axios.post(`${config.API_URL}/api/products`, productData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

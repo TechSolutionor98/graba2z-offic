@@ -6,6 +6,8 @@ import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react"
 import { useEffect, useState } from "react"
 import axios from "axios"
 
+import config from "../../config/config"
+
 const Cart = () => {
   const {
     cartItems,
@@ -31,7 +33,7 @@ const Cart = () => {
     // Fetch delivery options
     const fetchDeliveryOptions = async () => {
       try {
-        const { data } = await axios.get("http://localhost:5000/api/delivery-charges")
+        const { data } = await axios.get(`${config.API_URL}/api/delivery-charges`)
         setDeliveryOptions(data)
         if (!selectedDelivery && data.length > 0) {
           setSelectedDelivery(data[0])
@@ -43,7 +45,7 @@ const Cart = () => {
     // Fetch tax
     const fetchTax = async () => {
       try {
-        const { data } = await axios.get("http://localhost:5000/api/tax")
+        const { data } = await axios.get(`${config.API_URL}/api/tax`)
         // Use first active tax
         if (data && data.length > 0) setTax(data[0])
       } catch (err) {
@@ -77,7 +79,7 @@ const Cart = () => {
     setCouponError("")
     try {
       const cartApiItems = cartItems.map(item => ({ product: item._id, qty: item.quantity }))
-      const { data } = await axios.post("http://localhost:5000/api/coupons/validate", {
+      const { data } = await axios.post(`${config.API_URL}/api/coupons/validate`, {
         code: couponInput,
         cartItems: cartApiItems,
       })

@@ -7,7 +7,9 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
 
-const API_BASE_URL = "http://localhost:5000"
+import config from "../../config/config"
+
+const API_BASE_URL = `${config.API_URL}`
 
 // Define the exact parent categories to show in filters
 const PARENT_CATEGORIES = [

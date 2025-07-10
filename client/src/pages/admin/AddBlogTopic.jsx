@@ -7,6 +7,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { ArrowLeft, Hash, Tag } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const AddBlogTopic = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -50,7 +51,7 @@ const AddBlogTopic = () => {
     try {
       const token = localStorage.getItem("adminToken")
 
-      await axios.post("http://localhost:5000/api/blog-topics", formData, {
+      await axios.post(`${config.API_URL}/api/blog-topics`, formData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

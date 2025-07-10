@@ -7,6 +7,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Search, Edit, Trash2, Tag, Folder, FolderOpen } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const BlogCategories = () => {
   const { showToast } = useToast()
   const [categories, setCategories] = useState([])
@@ -20,7 +21,7 @@ const BlogCategories = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get("http://localhost:5000/api/blog-categories", {
+      const response = await axios.get(`${config.API_URL}/api/blog-categories`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setCategories(response.data)
@@ -36,7 +37,7 @@ const BlogCategories = () => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
         const token = localStorage.getItem("adminToken")
-        await axios.delete(`http://localhost:5000/api/blog-categories/${id}`, {
+        await axios.delete(`${config.API_URL}/api/blog-categories/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         showToast("Category deleted successfully!", "success")

@@ -7,6 +7,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Edit, Trash2, Plus, Search, Filter } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const AdminSubCategories = () => {
   const [subCategories, setSubCategories] = useState([])
   const [categories, setCategories] = useState([])
@@ -23,7 +24,7 @@ const AdminSubCategories = () => {
   const fetchSubCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get("http://localhost:5000/api/subcategories/admin", {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setSubCategories(response.data)
@@ -38,7 +39,7 @@ const AdminSubCategories = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get("http://localhost:5000/api/categories", {
+      const response = await axios.get(`${config.API_URL}/api/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setCategories(response.data)
@@ -51,7 +52,7 @@ const AdminSubCategories = () => {
     if (window.confirm("Are you sure you want to delete this subcategory?")) {
       try {
         const token = localStorage.getItem("adminToken")
-        await axios.delete(`http://localhost:5000/api/subcategories/${id}`, {
+        await axios.delete(`${config.API_URL}/api/subcategories/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         showToast("SubCategory moved to trash successfully", "success")

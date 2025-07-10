@@ -1,166 +1,6 @@
-// import React, { useState, useEffect } from "react"
-// import * as XLSX from "xlsx"
-
-// const columns = [
-//   "name", "slug", "sku", "category", "parent_category", "barcode", "buyingPrice", "price", "offerPrice", "tax", "brand", "stockStatus", "showStockOut", "canPurchase", "refundable", "maxPurchaseQty", "lowStockWarning", "unit", "weight", "tags", "description", "discount", "specification", "details", "shortDescription"
-// ]
-
-// const AddBulkProducts = () => {
-//   const [previewProducts, setPreviewProducts] = useState([])
-//   const [invalidRows, setInvalidRows] = useState([])
-//   const [fileName, setFileName] = useState("")
-//   const [error, setError] = useState("")
-//   const [loading, setLoading] = useState(false)
-//   const [saveResult, setSaveResult] = useState(null)
-
-//   // Helper to get admin token
-//   const getAdminToken = () => localStorage.getItem("adminToken")
-
-//   const handleFileUpload = async (e) => {
-//     const file = e.target.files[0]
-//     setFileName(file?.name || "")
-//     setError("")
-//     setPreviewProducts([])
-//     setInvalidRows([])
-//     setSaveResult(null)
-//     if (!file) return
-//     setLoading(true)
-//     try {
-//       const formData = new FormData()
-//       formData.append("file", file)
-//       const token = getAdminToken()
-//       const res = await fetch("/api/products/bulk-preview", {
-//         method: "POST",
-//         body: formData,
-//         headers: token ? { "Authorization": `Bearer ${token}` } : {},
-//       })
-//       const data = await res.json()
-//       if (!res.ok) throw new Error(data.message || "Preview failed")
-//       setPreviewProducts(data.previewProducts || [])
-//       setInvalidRows(data.invalidRows || [])
-//     } catch (err) {
-//       setError(err.message)
-//     } finally {
-//       setLoading(false)
-//     }
-//   }
-
-//   const handleExport = () => {
-//     const ws = XLSX.utils.json_to_sheet(previewProducts.length ? previewProducts : [Object.fromEntries(columns.map(c => [c, ""]))])
-//     const wb = XLSX.utils.book_new()
-//     XLSX.utils.book_append_sheet(wb, ws, "Products")
-//     XLSX.writeFile(wb, "products_export.xlsx")
-//   }
-
-//   const handleBulkSave = async () => {
-//     setLoading(true)
-//     setSaveResult(null)
-//     try {
-//       const token = getAdminToken()
-//       const res = await fetch("/api/products/bulk-save", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-//         },
-//         body: JSON.stringify({ products: previewProducts })
-//       })
-//       const data = await res.json()
-//       if (!res.ok) throw new Error(data.message || "Bulk save failed")
-//       setSaveResult(data)
-//     } catch (err) {
-//       setError(err.message)
-//     } finally {
-//       setLoading(false)
-//     }
-//   }
-
-//   return (
-//     <div className="p-8">
-//       <h1 className="text-2xl font-bold mb-6">Add Bulk Products</h1>
-//       <div className="flex gap-4 mb-6">
-//         <label className="bg-lime-500 hover:bg-lime-600 text-white px-6 py-2 rounded cursor-pointer">
-//           Import
-//           <input type="file" accept=".xls,.xlsx,.xlsm,.csv" onChange={handleFileUpload} className="hidden" />
-//         </label>
-//         <button onClick={handleExport} className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded">Export</button>
-//         {fileName && <span className="text-gray-600 ml-2">{fileName}</span>}
-//       </div>
-//       {error && <div className="text-red-500 mb-4">{error}</div>}
-//       {loading && <div className="text-blue-500 mb-4">Processing...</div>}
-//       {(previewProducts.length > 0 || invalidRows.length > 0) && (
-//         <div className="mb-4">
-//           <div className="mb-2 font-semibold">Preview Summary:</div>
-//           <div className="flex gap-6 mb-2">
-//             <span>Total: {previewProducts.length + invalidRows.length}</span>
-//             <span className="text-green-600">Valid: {previewProducts.length}</span>
-//             <span className="text-red-600">Invalid: {invalidRows.length}</span>
-//           </div>
-//           {invalidRows.length > 0 && (
-//             <div className="mb-2 text-sm text-red-600">{invalidRows.length} invalid rows (not imported):
-//               <ul className="list-disc ml-6">
-//                 {invalidRows.slice(0, 5).map((row, i) => (
-//                   <li key={i}>Row {row.row}: {row.reason}</li>
-//                 ))}
-//                 {invalidRows.length > 5 && <li>...and {invalidRows.length - 5} more</li>}
-//               </ul>
-//             </div>
-//           )}
-//           {previewProducts.length > 0 && (
-//             <button onClick={handleBulkSave} className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded mt-2" disabled={loading}>
-//               Add All to Database
-//             </button>
-//           )}
-//         </div>
-//       )}
-//       {saveResult && (
-//         <div className="mb-4">
-//           <div className="font-semibold">Bulk Save Result:</div>
-//           <div>Total: {saveResult.total}, <span className="text-green-600">Success: {saveResult.success}</span>, <span className="text-red-600">Failed: {saveResult.failed}</span></div>
-//           {saveResult.failed > 0 && (
-//             <div className="text-sm text-red-600 mt-2">Failed products:
-//               <ul className="list-disc ml-6">
-//                 {saveResult.results.filter(r => r.status === "failed").slice(0, 5).map((r, i) => (
-//                   <li key={i}>Index {r.index + 1}: {r.reason}</li>
-//                 ))}
-//                 {saveResult.failed > 5 && <li>...and {saveResult.failed - 5} more</li>}
-//               </ul>
-//             </div>
-//           )}
-//         </div>
-//       )}
-//       {previewProducts.length > 0 && (
-//         <div className="overflow-x-auto bg-white rounded shadow p-4">
-//           <table className="min-w-full text-sm">
-//             <thead>
-//               <tr>
-//                 {columns.map(col => <th key={col} className="px-2 py-1 border-b text-left">{col}</th>)}
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {previewProducts.slice(0, 20).map((row, i) => (
-//                 <tr key={i} className="border-b">
-//                   {columns.map(col => <td key={col} className="px-2 py-1">{row[col] || ""}</td>)}
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//           {previewProducts.length > 20 && <div className="text-xs text-gray-500 mt-2">Showing first 20 of {previewProducts.length} products...</div>}
-//         </div>
-//       )}
-//     </div>
-//   )
-// }
-
-// export default AddBulkProducts 
-
-
-//============================================
-
-
-
 "use client"
 
+import config from "../../config/config"
 import { useState } from "react"
 import Papa from "papaparse"
 
@@ -211,7 +51,7 @@ const AddBulkProducts = () => {
           // Send parsed data to backend for preview
           try {
             const token = getAdminToken()
-            const res = await fetch("http://localhost:5000/api/products/bulk-preview-csv", {
+            const res = await fetch(`${config.API_URL}/api/products/bulk-preview-csv`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -295,7 +135,7 @@ const AddBulkProducts = () => {
     setSaveResult(null)
     try {
       const token = getAdminToken()
-      const res = await fetch("http://localhost:5000/api/products/bulk-save", {
+      const res = await fetch(`${config.API_URL}/api/products/bulk-save`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

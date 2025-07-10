@@ -7,6 +7,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { ArrowLeft, Folder, Hash } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const AddBlogCategory = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -51,7 +52,7 @@ const AddBlogCategory = () => {
     try {
       const token = localStorage.getItem("adminToken")
 
-      await axios.post("http://localhost:5000/api/blog-categories", formData, {
+      await axios.post(`${config.API_URL}/api/blog-categories`, formData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

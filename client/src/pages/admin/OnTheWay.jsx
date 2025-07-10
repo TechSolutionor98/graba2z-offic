@@ -6,6 +6,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, RefreshCw, MapPin, CheckCircle } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 
+import config from "../../config/config"
 const OnTheWay = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -36,7 +37,7 @@ const OnTheWay = () => {
         return
       }
 
-      const { data } = await axios.get("http://localhost:5000/api/admin/orders", {
+      const { data } = await axios.get(`${config.API_URL}/api/admin/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -62,7 +63,7 @@ const OnTheWay = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       await axios.put(
-        `http://localhost:5000/api/admin/orders/${orderId}/status`,
+        `${config.API_URL}/api/admin/orders/${orderId}/status`,
         { status: "Delivered" },
         {
           headers: {

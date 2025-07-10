@@ -8,6 +8,7 @@ import ImageUpload from "../../components/ImageUpload"
 import { ArrowLeft } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const AddCategory = () => {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -28,7 +29,7 @@ const AddCategory = () => {
       setLoading(true)
       // Fetch category data
       const token = localStorage.getItem("adminToken")
-      fetch(`http://localhost:5000/api/categories/${id}`, {
+      fetch(`${config.API_URL}/api/categories/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -72,7 +73,7 @@ const AddCategory = () => {
     try {
       const token = localStorage.getItem("adminToken")
       if (isEdit) {
-        await axios.put(`http://localhost:5000/api/categories/${id}`, formData, {
+        await axios.put(`${config.API_URL}/api/categories/${id}`, formData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -80,7 +81,7 @@ const AddCategory = () => {
         })
         showToast("Category updated successfully!", "success")
       } else {
-        await axios.post("http://localhost:5000/api/categories", formData, {
+        await axios.post(`${config.API_URL}/api/categories`, formData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,

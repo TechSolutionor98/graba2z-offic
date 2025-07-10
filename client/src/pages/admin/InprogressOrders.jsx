@@ -6,6 +6,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, Mail, RefreshCw, Truck } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 
+import config from "../../config/config"
 const InprogressOrders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -26,7 +27,7 @@ const InprogressOrders = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       await axios.post(
-        `http://localhost:5000/api/admin/orders/${orderId}/notify`,
+        `${config.API_URL}/api/admin/orders/${orderId}/notify`,
         {},
         {
           headers: {
@@ -62,7 +63,7 @@ const InprogressOrders = () => {
         return
       }
 
-      const { data } = await axios.get("http://localhost:5000/api/admin/orders", {
+      const { data } = await axios.get(`${config.API_URL}/api/admin/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -90,7 +91,7 @@ const InprogressOrders = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       await axios.put(
-        `http://localhost:5000/api/admin/orders/${orderId}/status`,
+        `${config.API_URL}/api/admin/orders/${orderId}/status`,
         { status: "Ready for Shipment" },
         {
           headers: {

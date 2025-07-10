@@ -7,6 +7,8 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { ArrowLeft, Plus, X } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
+
 const AddDeliveryCharge = () => {
   const navigate = useNavigate()
   const { id } = useParams();
@@ -32,7 +34,7 @@ const AddDeliveryCharge = () => {
         try {
           const token =
             localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
-          const { data } = await axios.get(`http://localhost:5000/api/delivery-charges/${id}`, {
+          const { data } = await axios.get(`${config.API_URL}/api/delivery-charges/${id}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -111,7 +113,7 @@ const AddDeliveryCharge = () => {
         isActive: formData.isActive,
       }
       if (isEdit) {
-        await axios.put(`http://localhost:5000/api/delivery-charges/${id}`, deliveryChargeData, {
+        await axios.put(`${config.API_URL}/api/delivery-charges/${id}`, deliveryChargeData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -119,7 +121,7 @@ const AddDeliveryCharge = () => {
         })
         showToast("Delivery charge updated successfully!", "success")
       } else {
-        await axios.post("http://localhost:5000/api/delivery-charges", deliveryChargeData, {
+        await axios.post(`${config.API_URL}/api/delivery-charges`, deliveryChargeData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,

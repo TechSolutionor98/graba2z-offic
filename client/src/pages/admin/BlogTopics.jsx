@@ -7,6 +7,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Search, Edit, Trash2, Hash, Tag } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const BlogTopics = () => {
   const { showToast } = useToast()
   const [topics, setTopics] = useState([])
@@ -20,7 +21,7 @@ const BlogTopics = () => {
   const fetchTopics = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get("http://localhost:5000/api/blog-topics", {
+      const response = await axios.get(`${config.API_URL}/api/blog-topics`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setTopics(response.data)
@@ -36,7 +37,7 @@ const BlogTopics = () => {
     if (window.confirm("Are you sure you want to delete this topic?")) {
       try {
         const token = localStorage.getItem("adminToken")
-        await axios.delete(`http://localhost:5000/api/blog-topics/${id}`, {
+        await axios.delete(`${config.API_URL}/api/blog-topics/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         showToast("Topic deleted successfully!", "success")

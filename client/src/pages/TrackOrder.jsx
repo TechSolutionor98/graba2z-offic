@@ -5,6 +5,8 @@ import { useToast } from "../context/ToastContext"
 import { Package, Truck, CheckCircle, Clock, AlertCircle, Search } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
+
 const TrackOrder = () => {
   const { showToast } = useToast()
   const [formData, setFormData] = useState({
@@ -30,7 +32,7 @@ const TrackOrder = () => {
     setOrderData(null)
 
     try {
-      const { data } = await axios.post("http://localhost:5000/api/orders/track", {
+      const { data } = await axios.post(`${config.API_URL}/api/orders/track`, {
         email: formData.email,
         orderId: formData.orderId,
       })

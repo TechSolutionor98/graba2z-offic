@@ -7,7 +7,9 @@ import { useToast } from "../context/ToastContext"
 import axios from "axios"
 import { Calendar, User, Eye, Star, ArrowLeft, Share2 } from "lucide-react"
 
-const API_BASE_URL = "http://localhost:5000"
+import config from "../../config/config"
+
+const API_BASE_URL = `${config.API_URL}`
 
 const BlogPost = () => {
   const { slug } = useParams()

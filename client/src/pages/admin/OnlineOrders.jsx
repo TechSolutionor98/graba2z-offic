@@ -19,6 +19,7 @@ import {
   Save,
 } from "lucide-react"
 
+import config from "../../config/config"
 // Invoice Component for Printing - Using forwardRef
 const InvoiceComponent = forwardRef(({ order }, ref) => {
   const formatPrice = (price) => {
@@ -305,7 +306,7 @@ const OnlineOrders = () => {
         return
       }
 
-      const { data } = await axios.get("http://localhost:5000/api/admin/orders", {
+      const { data } = await axios.get(`${config.API_URL}/api/admin/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -347,7 +348,7 @@ const OnlineOrders = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       await axios.put(
-        `http://localhost:5000/api/admin/orders/${orderId}/status`,
+        `${config.API_URL}/api/admin/orders/${orderId}/status`,
         { status },
         {
           headers: {
@@ -380,7 +381,7 @@ const OnlineOrders = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       await axios.put(
-        `http://localhost:5000/api/admin/orders/${orderId}`,
+        `${config.API_URL}/api/admin/orders/${orderId}`,
         { isPaid, paidAt: isPaid ? new Date() : null },
         {
           headers: {
@@ -417,7 +418,7 @@ const OnlineOrders = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       await axios.put(
-        `http://localhost:5000/api/admin/orders/${selectedOrder._id}`,
+        `${config.API_URL}/api/admin/orders/${selectedOrder._id}`,
         {
           notes: orderNotes,
           trackingId: trackingId,
@@ -459,7 +460,7 @@ const OnlineOrders = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       await axios.post(
-        `http://localhost:5000/api/admin/orders/${orderId}/notify`,
+        `${config.API_URL}/api/admin/orders/${orderId}/notify`,
         {},
         {
           headers: {
@@ -516,7 +517,7 @@ const OnlineOrders = () => {
       await Promise.all(
         selectedOrders.map((orderId) =>
           axios.put(
-            `http://localhost:5000/api/admin/orders/${orderId}/status`,
+            `${config.API_URL}/api/admin/orders/${orderId}/status`,
             { status: bulkStatus },
             {
               headers: {

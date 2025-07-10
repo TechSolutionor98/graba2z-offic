@@ -9,6 +9,7 @@ import TipTapEditor from "../../components/TipTapEditor"
 import { ArrowLeft, X, User, Clock, Tag, Save } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const EditBlog = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -56,7 +57,7 @@ const EditBlog = () => {
   const fetchBlogData = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`http://localhost:5000/api/blogs/${id}`, {
+      const response = await axios.get(`${config.API_URL}/api/blogs/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -94,9 +95,9 @@ const EditBlog = () => {
       const headers = { Authorization: `Bearer ${token}` }
 
       const [categoriesRes, topicsRes, brandsRes] = await Promise.allSettled([
-        axios.get("http://localhost:5000/api/categories", { headers }),
-        axios.get("http://localhost:5000/api/blog-topics", { headers }),
-        axios.get("http://localhost:5000/api/brands", { headers }),
+        axios.get(`${config.API_URL}/api/categories`, { headers }),
+        axios.get(`${config.API_URL}/api/blog-topics`, { headers }),
+        axios.get(`${config.API_URL}/api/brands`, { headers }),
       ])
 
       if (categoriesRes.status === "fulfilled") {
@@ -123,7 +124,7 @@ const EditBlog = () => {
   const fetchSubCategories = async (categoryId) => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`http://localhost:5000/api/subcategories/category/${categoryId}`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/category/${categoryId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       const subCategoryData = response.data
@@ -228,7 +229,7 @@ const EditBlog = () => {
 
       console.log("Updating blog data:", blogData) // Debug log
 
-      await axios.put(`http://localhost:5000/api/blogs/${id}`, blogData, {
+      await axios.put(`${config.API_URL}/api/blogs/${id}`, blogData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

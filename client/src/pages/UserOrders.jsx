@@ -6,6 +6,7 @@ import axios from "axios"
 import { useAuth } from "../context/AuthContext"
 import { CheckCircle, Clock, Package, Truck, AlertTriangle } from "lucide-react"
 
+import config from "../../config/config"
 const UserOrders = () => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -48,7 +49,7 @@ const UserOrders = () => {
           return
         }
 
-        const { data } = await axios.get("http://localhost:5000/api/orders/myorders", {
+        const { data } = await axios.get(`${config.API_URL}/api/orders/myorders`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

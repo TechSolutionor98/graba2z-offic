@@ -6,6 +6,7 @@ import ImageUpload from "../ImageUpload"
 import TipTapEditor from "../TipTapEditor"
 import { Plus, X } from "lucide-react"
 
+import config from "../../config/config"
 const ProductForm = ({ product, onSubmit, onCancel }) => {
   const [categories, setCategories] = useState([])
   const [brands, setBrands] = useState([])
@@ -105,7 +106,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   const fetchParentCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const { data } = await axios.get("http://localhost:5000/api/categories", {
+      const { data } = await axios.get(`${config.API_URL}/api/categories`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -129,7 +130,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   const fetchSubCategories = async (parentCategoryId) => {
     try {
       const token = localStorage.getItem("adminToken")
-      const { data } = await axios.get(`http://localhost:5000/api/subcategories/category/${parentCategoryId}`, {
+      const { data } = await axios.get(`${config.API_URL}/api/subcategories/category/${parentCategoryId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -144,7 +145,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const { data } = await axios.get("http://localhost:5000/api/brands", {
+      const { data } = await axios.get(`${config.API_URL}/api/brands`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

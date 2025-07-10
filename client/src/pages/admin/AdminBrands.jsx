@@ -6,6 +6,7 @@ import { FaEdit, FaTrash, FaPlus, FaSearch, FaExclamationTriangle, FaTools } fro
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 
+import config from "../../config/config"
 const AdminBrands = () => {
   const [brands, setBrands] = useState([])
   const [loading, setLoading] = useState(true)
@@ -21,7 +22,7 @@ const AdminBrands = () => {
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await fetch("http://localhost:5000/api/brands", {
+      const response = await fetch(`${config.API_URL}/api/brands`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -40,7 +41,7 @@ const AdminBrands = () => {
     if (window.confirm("Are you sure you want to delete this brand?")) {
       try {
         const token = localStorage.getItem("adminToken")
-        const response = await fetch(`http://localhost:5000/api/brands/${id}`, {
+        const response = await fetch(`${config.API_URL}/api/brands/${id}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -64,7 +65,7 @@ const AdminBrands = () => {
     if (newName && newName.trim() && newName !== currentName) {
       try {
         const token = localStorage.getItem("adminToken")
-        const response = await fetch(`http://localhost:5000/api/brands/${brandId}`, {
+        const response = await fetch(`${config.API_URL}/api/brands/${brandId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

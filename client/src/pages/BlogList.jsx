@@ -5,7 +5,9 @@ import { Link } from "react-router-dom"
 import axios from "axios"
 import { Calendar, User, Eye, Tag, Search, Filter } from "lucide-react"
 
-const API_BASE_URL = "http://localhost:5000"
+import config from "../../config/config"
+
+const API_BASE_URL = `${config.API_URL}`
 
 // Add this to the top-level of the file or in a global CSS file if you want it app-wide
 const bounceKeyframes = `

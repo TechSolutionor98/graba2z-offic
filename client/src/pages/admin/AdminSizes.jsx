@@ -5,6 +5,7 @@ import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Edit, Trash2, Ruler, Eye, EyeOff } from "lucide-react"
 
+import config from "../../config/config"
 const AdminSizes = () => {
   const [sizes, setSizes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -39,7 +40,7 @@ const AdminSizes = () => {
       }
 
       // Use correct API endpoint - /api/sizes (not /api/sizes/admin)
-      const response = await fetch("http://localhost:5000/api/sizes", {
+      const response = await fetch(`${config.API_URL}/api/sizes`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -69,7 +70,7 @@ const AdminSizes = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       if (editingSize) {
-        const response = await fetch(`http://localhost:5000/api/sizes/${editingSize._id}`, {
+        const response = await fetch(`${config.API_URL}/api/sizes/${editingSize._id}`, {
           method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -84,7 +85,7 @@ const AdminSizes = () => {
           showToast("Error updating size", "error")
         }
       } else {
-        const response = await fetch("http://localhost:5000/api/sizes", {
+        const response = await fetch(`${config.API_URL}/api/sizes`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -134,7 +135,7 @@ const AdminSizes = () => {
         const token =
           localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
-        const response = await fetch(`http://localhost:5000/api/sizes/${sizeId}`, {
+        const response = await fetch(`${config.API_URL}/api/sizes/${sizeId}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,

@@ -5,6 +5,7 @@ import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react"
 
+import config from "../../config/config"
 const AdminColors = () => {
   const [colors, setColors] = useState([])
   const [loading, setLoading] = useState(true)
@@ -35,7 +36,7 @@ const AdminColors = () => {
         return
       }
 
-      const response = await fetch("http://localhost:5000/api/colors", {
+      const response = await fetch(`${config.API_URL}/api/colors`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -66,7 +67,7 @@ const AdminColors = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       if (editingColor) {
-        const response = await fetch(`http://localhost:5000/api/colors/${editingColor._id}`, {
+        const response = await fetch(`${config.API_URL}/api/colors/${editingColor._id}`, {
           method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -81,7 +82,7 @@ const AdminColors = () => {
           showToast("Error updating color", "error")
         }
       } else {
-        const response = await fetch("http://localhost:5000/api/colors", {
+        const response = await fetch(`${config.API_URL}/api/colors`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -127,7 +128,7 @@ const AdminColors = () => {
         const token =
           localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
-        const response = await fetch(`http://localhost:5000/api/colors/${colorId}`, {
+        const response = await fetch(`${config.API_URL}/api/colors/${colorId}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,

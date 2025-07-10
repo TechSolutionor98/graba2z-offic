@@ -28,6 +28,8 @@ import {
 } from "lucide-react"
 import { productsAPI } from "../services/api.js"
 
+import config from "../../config/config"
+
 const WHATSAPP_NUMBER = '971501234567'; // Replace with your WhatsApp number
 
 const ProductDetails = () => {
@@ -95,7 +97,7 @@ const ProductDetails = () => {
 
   const fetchRelatedProducts = async () => {
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/products?category=${product.category._id}&limit=6`)
+      const { data } = await axios.get(`${config.API_URL}/api/products?category=${product.category._id}&limit=6`)
       const filtered = data.filter((p) => p._id !== product._id).slice(0, 6)
       setRelatedProducts(filtered)
     } catch (error) {
@@ -157,7 +159,7 @@ const ProductDetails = () => {
       }
 
       await axios.post(
-        `http://localhost:5000/api/products/${product._id}/reviews`,
+        `${config.API_URL}/api/products/${product._id}/reviews`,
         {
           rating: reviewData.rating,
           comment: reviewData.comment,
@@ -202,7 +204,7 @@ const ProductDetails = () => {
     e.preventDefault();
     setCallbackLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/request-callback', callbackForm);
+      await axios.post('${config.API_URL}/api/request-callback', callbackForm);
       setCallbackSuccess(true);
       setTimeout(() => {
         setShowCallbackModal(false);

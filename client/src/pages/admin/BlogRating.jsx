@@ -6,6 +6,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Star, Search, Filter, Eye, ThumbsUp, MessageSquare } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const BlogRating = () => {
   const { showToast } = useToast()
   const [blogs, setBlogs] = useState([])
@@ -22,7 +23,7 @@ const BlogRating = () => {
   const fetchBlogs = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get("http://localhost:5000/api/blogs", {
+      const response = await axios.get(`${config.API_URL}/api/blogs`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -45,7 +46,7 @@ const BlogRating = () => {
   const fetchRatings = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get("http://localhost:5000/api/blog-ratings", {
+      const response = await axios.get(`${config.API_URL}/api/blog-ratings`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 

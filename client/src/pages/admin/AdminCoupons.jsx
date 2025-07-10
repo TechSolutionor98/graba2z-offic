@@ -5,6 +5,7 @@ import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Edit, Trash2, Percent, Calendar, Eye, EyeOff } from "lucide-react"
 
+import config from "../../config/config"
 const AdminCoupons = () => {
   const [coupons, setCoupons] = useState([])
   const [categories, setCategories] = useState([])
@@ -35,7 +36,7 @@ const AdminCoupons = () => {
   const fetchCoupons = async () => {
     try {
       setLoading(true)
-      const { data } = await axios.get("http://localhost:5000/api/coupons")
+      const { data } = await axios.get(`${config.API_URL}/api/coupons`)
       setCoupons(data)
       setLoading(false)
     } catch (error) {
@@ -46,7 +47,7 @@ const AdminCoupons = () => {
 
   const fetchCategories = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/categories")
+      const { data } = await axios.get(`${config.API_URL}/api/categories`)
       setCategories(data)
     } catch (error) {
       console.error("Failed to load categories:", error)
@@ -65,9 +66,9 @@ const AdminCoupons = () => {
       }
 
       if (editingCoupon) {
-        await axios.put(`http://localhost:5000/api/coupons/${editingCoupon._id}`, couponData)
+        await axios.put(`${config.API_URL}/api/coupons/${editingCoupon._id}`, couponData)
       } else {
-        await axios.post("http://localhost:5000/api/coupons", couponData)
+        await axios.post(`${config.API_URL}/api/coupons`, couponData)
       }
 
       fetchCoupons()
@@ -116,7 +117,7 @@ const AdminCoupons = () => {
   const handleDelete = async (couponId) => {
     if (window.confirm("Are you sure you want to delete this coupon?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/coupons/${couponId}`)
+        await axios.delete(`${config.API_URL}/api/coupons/${couponId}`)
         fetchCoupons()
       } catch (error) {
         setError("Failed to delete coupon. Please try again.")

@@ -19,7 +19,9 @@ import { Link, useNavigate } from "react-router-dom"
 import BannerSlider from "../components/BannerSlider"
 import { useWishlist } from "../context/WishlistContext"
 
-const API_BASE_URL = "http://localhost:5000"
+import config from "../../config/config"
+
+const API_BASE_URL = `${config.API_URL}`
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([])

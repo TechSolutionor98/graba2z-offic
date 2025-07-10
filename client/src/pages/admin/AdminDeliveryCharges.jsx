@@ -7,6 +7,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, Search } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const AdminDeliveryCharges = () => {
   const { showToast } = useToast()
   const [deliveryCharges, setDeliveryCharges] = useState([])
@@ -23,7 +24,7 @@ const AdminDeliveryCharges = () => {
       const token =
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
-      const { data } = await axios.get("http://localhost:5000/api/delivery-charges/admin", {
+      const { data } = await axios.get(`${config.API_URL}/api/delivery-charges/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -42,7 +43,7 @@ const AdminDeliveryCharges = () => {
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       await axios.patch(
-        `http://localhost:5000/api/delivery-charges/${id}/toggle`,
+        `${config.API_URL}/api/delivery-charges/${id}/toggle`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -62,7 +63,7 @@ const AdminDeliveryCharges = () => {
       const token =
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
-      await axios.delete(`http://localhost:5000/api/delivery-charges/${deleteModal.id}`, {
+      await axios.delete(`${config.API_URL}/api/delivery-charges/${deleteModal.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 

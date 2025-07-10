@@ -9,6 +9,7 @@ import TipTapEditor from "../../components/TipTapEditor"
 import { ArrowLeft, X, User, Clock, Tag } from "lucide-react"
 import axios from "axios"
 
+import config from "../../config/config"
 const AddBlog = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -73,7 +74,7 @@ const AddBlog = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get("http://localhost:5000/api/categories", {
+      const response = await axios.get(`${config.API_URL}/api/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setCategories(Array.isArray(response.data) ? response.data : [])
@@ -86,7 +87,7 @@ const AddBlog = () => {
   const fetchSubCategories = async (categoryId) => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`http://localhost:5000/api/subcategories/category/${categoryId}`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/category/${categoryId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setSubCategories(Array.isArray(response.data) ? response.data : [])
@@ -99,7 +100,7 @@ const AddBlog = () => {
   const fetchTopics = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get("http://localhost:5000/api/blog-topics", {
+      const response = await axios.get(`${config.API_URL}/api/blog-topics`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setTopics(Array.isArray(response.data) ? response.data : [])
@@ -112,7 +113,7 @@ const AddBlog = () => {
   const fetchBrands = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get("http://localhost:5000/api/brands", {
+      const response = await axios.get(`${config.API_URL}/api/brands`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setBrands(Array.isArray(response.data) ? response.data : [])
@@ -210,7 +211,7 @@ const AddBlog = () => {
 
       console.log("Submitting blog data:", blogData) // Debug log
 
-      await axios.post("http://localhost:5000/api/blogs", blogData, {
+      await axios.post(`${config.API_URL}/api/blogs`, blogData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

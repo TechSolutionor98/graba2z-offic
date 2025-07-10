@@ -5,6 +5,7 @@ import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Save, Eye, EyeOff, Palette, Lock, Globe } from "lucide-react"
 
+import config from "../../config/config"
 const AdminSettings = () => {
   const [settings, setSettings] = useState({})
   const [passwordData, setPasswordData] = useState({
@@ -35,7 +36,7 @@ const AdminSettings = () => {
   const fetchSettings = async () => {
     try {
       setLoading(true)
-      const { data } = await axios.get("http://localhost:5000/api/settings")
+      const { data } = await axios.get(`${config.API_URL}/api/settings`)
       setSettings(data)
       setLoading(false)
     } catch (error) {
@@ -48,7 +49,7 @@ const AdminSettings = () => {
     e.preventDefault()
     try {
       setSaving(true)
-      await axios.put("http://localhost:5000/api/settings", settings)
+      await axios.put(`${config.API_URL}/api/settings`, settings)
       setSuccess("Settings updated successfully!")
       setTimeout(() => setSuccess(""), 3000)
     } catch (error) {
@@ -68,7 +69,7 @@ const AdminSettings = () => {
 
     try {
       setSaving(true)
-      await axios.put("http://localhost:5000/api/settings/password", {
+      await axios.put(`${config.API_URL}/api/settings/password`, {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       })
