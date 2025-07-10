@@ -84,7 +84,7 @@ app.use("/api/admin", adminRoutes)
 // Health check route
 app.get("/", (req, res) => {
   res.json({
-    message: "WatchCraft API is running!",
+    message: "GrabA2Z API is running!",
     version: "1.0.0",
     environment: config.NODE_ENV,
   })
