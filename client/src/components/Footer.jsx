@@ -1,0 +1,426 @@
+"use client"
+
+import { Link } from "react-router-dom"
+import { Facebook, Twitter, Instagram, Plus, Minus, Linkedin } from "lucide-react"
+import { useState, useEffect } from "react"
+import axios from "axios"
+
+const API_BASE_URL = "http://localhost:5000"
+
+const Footer = ({ className = "" }) => {
+  // State for mobile accordion sections
+  const [openSections, setOpenSections] = useState({
+    categories: false,
+    legal: false,
+    support: false,
+    connect: false,
+  })
+  const [categories, setCategories] = useState([])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await axios.get(`${API_BASE_URL}/api/categories`)
+        setCategories(data)
+      } catch (err) {
+        setCategories([])
+      }
+    }
+    fetchCategories()
+  }, [])
+
+  const toggleSection = (section) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }))
+  }
+
+  return (
+    <>
+      {/* Desktop Footer - Hidden on mobile */}
+      <footer className={`hidden md:block bg-[#1F1F39] text-white pt-8 pb-9 ${className}`}>
+        <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+            {/* Column 1 - Newsletter Subscription */}
+            <div className="md:col-span-4">
+              {/* Logo and Heading */}
+              <h3 className="text-2xl font-bold mb-4">
+                <img src="/logo.png" alt="Logo" className="w-32" />
+              </h3>
+              {/* Text */}
+              <p className="text-white mb-4">Subscribe to our newsletter</p>
+
+              {/* Form */}
+              <form className="mb-4 p-1 bg-white rounded-full w-[280px]">
+                <div className="flex w-[270px]">
+                  {/* Search Input Div */}
+                  <div className="flex-grow">
+                    <input
+                      type="email"
+                      placeholder="Enter your email address"
+                      className="w-full pl-4 py-3 bg-white placeholder-gray-400 rounded-full text-black"
+                    />
+                  </div>
+
+                  {/* Button Div */}
+                  <div>
+                    <button type="submit" className="h-full bg-orange-500 text-white rounded-full px-5">
+                      Subscribe
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {/* Social Icons */}
+              <div className="flex space-x-4">
+                <a href="#" className="text-white hover:text-lime-400">
+                  <Facebook size={20} />
+                </a>
+                <a href="#" className="text-white hover:text-lime-400">
+                  <Twitter size={20} />
+                </a>
+                <a href="#" className="text-white hover:text-lime-400">
+                  <Instagram size={20} />
+                </a>
+                <a href="#" className="text-white hover:text-lime-400">
+                  <Twitter size={20} />
+                </a>
+                <a href="#" className="text-white hover:text-lime-400">
+                  <Instagram size={20} />
+                </a>
+              </div>
+            </div>
+
+            {/* Column 2 - Top Categories */}
+            <div className="md:col-span-2">
+              <h3 className="text-2xl font-semibold mb-4">Top Categories</h3>
+              <ul className="space-y-2 text-white text-sm">
+                {categories.slice(0, 6).map((category) => (
+                  <li key={category._id}>
+                    <Link to={`/shop?category=${encodeURIComponent(category.name)}`} className="hover:text-lime-400">
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Column 3 - More Categories */}
+            <div className="md:col-span-2">
+              <h3 className="text-2xl font-semibold mb-4">More Categories</h3>
+              <ul className="space-y-2 text-white text-sm">
+                {categories.slice(6, 12).map((category) => (
+                  <li key={category._id}>
+                    <Link to={`/shop?category=${encodeURIComponent(category.name)}`} className="hover:text-lime-400">
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Column 4 - Support */}
+            <div className="md:col-span-2">
+              <h3 className="text-2xl font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-white text-sm">
+                <li>
+                  <Link to="/refund-returns" className="hover:text-lime-400">
+                    Refund and Returns
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/cookies-policy" className="hover:text-lime-400">
+                    Cookies Policies
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/exchange-policy" className="hover:text-lime-400">
+                    Exchange Policies
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/sitemap" className="hover:text-lime-400">
+                    Sitemaps
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/bulk-purchase" className="hover:text-lime-400">
+                    Bulk Purchase
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/corporate-deals" className="hover:text-lime-400">
+                    Corporate Deal
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/blogs" className="hover:text-lime-400 font-semibold">
+                    Blog
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 5 - Legal */}
+            <div className="md:col-span-2">
+              <h3 className="text-2xl font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2 text-white text-sm">
+                <li>
+                  <Link to="./About" className="hover:text-lime-400">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="hover:text-lime-400">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/terms" className="hover:text-lime-400">
+                    Terms & Condition
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy" className="hover:text-lime-400">
+                    Privacy Policies
+                  </Link>
+                </li>
+                <li>
+                  <a href="tel:+97143540566" className="hover:text-lime-400">
+                    (+971) 4-354 0566
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:Support@grabatoz.com" className="hover:text-lime-400">
+                    Support@grabatoz.com
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Desktop Bottom Footer */}
+      <section className="hidden md:block">
+        <div className="flex flex-row justify-between items-center space-x-4 p-2">
+          {/* 1st Column: Text */}
+          <div className="w-1/3">
+            <b>© 2025 Grabatoz Powered By Crown Excel</b>
+          </div>
+
+          {/* 2nd Column: Image */}
+          <div className="w-1/3">
+            <img src="/1.svg" alt="Payment Methods" className="rounded-lg w-full h-auto" />
+          </div>
+
+          {/* 3rd Column: App Store Images */}
+          <div className="w-1/3 justify-end flex items-center">
+            <div className="flex space-x-2">
+              <img src="/google_play.png" alt="Google Play" className="rounded-lg h-9" />
+              <img src="/app_store.png" alt="App Store" className="rounded-lg h-9" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile Footer - Only visible on mobile */}
+      <footer className="md:hidden bg-white">
+        {/* Categories Section */}
+        <div className="border-b border-gray-200">
+          <button
+            onClick={() => toggleSection("categories")}
+            className="w-full flex justify-between items-center p-4 text-left"
+          >
+            <span className="text-lg font-semibold text-gray-900">Categories</span>
+            {openSections.categories ? <Minus size={20} /> : <Plus size={20} />}
+          </button>
+          {openSections.categories && (
+            <div className="px-4 pb-4">
+              <ul className="space-y-3">
+                {categories.map((category) => (
+                  <li key={category._id}>
+                    <Link to={`/shop?category=${encodeURIComponent(category.name)}`} className="text-gray-700 hover:text-orange-500">
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Legal Section */}
+        <div className="border-b border-gray-200">
+          <button
+            onClick={() => toggleSection("legal")}
+            className="w-full flex justify-between items-center p-4 text-left"
+          >
+            <span className="text-lg font-semibold text-gray-900">Legal</span>
+            {openSections.legal ? <Minus size={20} /> : <Plus size={20} />}
+          </button>
+          {openSections.legal && (
+            <div className="px-4 pb-4">
+              <ul className="space-y-3">
+                <li>
+                  <Link to="/about" className="text-gray-700 hover:text-orange-500">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="text-gray-700 hover:text-orange-500">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/terms" className="text-gray-700 hover:text-orange-500">
+                    Terms & Condition
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy" className="text-gray-700 hover:text-orange-500">
+                    Privacy Policies
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/cookies-policy" className="text-gray-700 hover:text-orange-500">
+                    Cookies Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/refund-returns" className="text-gray-700 hover:text-orange-500">
+                    Refund And Return
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Support Section */}
+        <div className="border-b border-gray-200">
+          <button
+            onClick={() => toggleSection("support")}
+            className="w-full flex justify-between items-center p-4 text-left"
+          >
+            <span className="text-lg font-semibold text-gray-900">Support</span>
+            {openSections.support ? <Minus size={20} /> : <Plus size={20} />}
+          </button>
+          {openSections.support && (
+            <div className="px-4 pb-4">
+              <ul className="space-y-3">
+                <li>
+                  <Link to="/refund-returns" className="text-gray-700 hover:text-orange-500">
+                    Refund and Returns
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/exchange-policy" className="text-gray-700 hover:text-orange-500">
+                    Exchange Policies
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/sitemap" className="text-gray-700 hover:text-orange-500">
+                    Sitemaps
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/bulk-purchase" className="text-gray-700 hover:text-orange-500">
+                    Bulk Purchase
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/corporate-deals" className="text-gray-700 hover:text-orange-500">
+                    Corporate Deal
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/blogs" className="text-gray-700 hover:text-orange-500 font-semibold">
+                    Blog
+                  </Link>
+                </li>
+                <li>
+                  <a href="tel:+97143540566" className="text-gray-700 hover:text-orange-500">
+                    (+971) 4-354 0566
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:Support@grabatoz.com" className="text-gray-700 hover:text-orange-500">
+                    Support@grabatoz.com
+                  </a>
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Connect Section */}
+        <div className="border-b border-gray-200">
+          <button
+            onClick={() => toggleSection("connect")}
+            className="w-full flex justify-between items-center p-4 text-left"
+          >
+            <span className="text-lg font-semibold text-gray-900">Connect</span>
+            {openSections.connect ? <Minus size={20} /> : <Plus size={20} />}
+          </button>
+          {openSections.connect && (
+            <div className="px-4 pb-4">
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3">Connect With Us</h4>
+                <div className="flex space-x-4">
+                  <a
+                    href="#"
+                    className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700"
+                  >
+                    <Facebook size={20} />
+                  </a>
+                  <a
+                    href="#"
+                    className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:bg-gray-800"
+                  >
+                    <Twitter size={20} />
+                  </a>
+                  <a
+                    href="#"
+                    className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center text-white hover:bg-pink-700"
+                  >
+                    <Instagram size={20} />
+                  </a>
+                  <a
+                    href="#"
+                    className="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center text-white hover:bg-blue-800"
+                  >
+                    <Linkedin size={20} />
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Shop On The Go Section - Always Visible */}
+        <div className="bg-[#1F1F39] text-white p-6">
+          <h3 className="text-xl font-bold text-center mb-4">Shop On The Go</h3>
+          <div className="flex justify-center space-x-4 mb-6 ">
+            <img src="/google_play.png" alt="Google Play" className="h-8" />
+            <img src="/app_store.png" alt="App Store" className="h-8" />
+          </div>
+
+          {/* Payment Methods */}
+          <div className="flex justify-center mb-4">
+            <img src="/1.svg" alt="Payment Methods" className="h-8 w-auto" />
+          </div>
+
+          {/* Copyright */}
+          <div className="text-center text-sm text-gray-300">
+            <p>© 2025 Grabatoz powered by Crown Excel.</p>
+            <p className="mt-1">Develop By Tech Solutionor</p>
+          </div>
+        </div>
+      </footer>
+    </>
+  )
+}
+
+export default Footer
