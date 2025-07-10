@@ -55,7 +55,13 @@ const ProductCard = ({ product }) => {
             className="absolute top-2 right-10 z-10 bg-white rounded-full p-2 shadow hover:bg-red-50"
             onClick={e => {
               e.preventDefault(); e.stopPropagation();
-              isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
+              if (isInWishlist(product._id)) {
+                removeFromWishlist(product._id);
+                showToast && showToast("Removed from wishlist", "info");
+              } else {
+                addToWishlist(product);
+                showToast && showToast("Added to wishlist", "success");
+              }
             }}
             aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
           >

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import { Heart, Star } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
+import { useToast } from "../context/ToastContext"
 
 const getStatusColor = (status) => {
   if (status === "Available Product" || status === "Available") return "bg-green-600"
@@ -11,6 +12,7 @@ const getStatusColor = (status) => {
 
 const HomeStyleProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
+  const { showToast } = useToast()
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
   const hasOffer = product.offerPrice && Number(product.offerPrice) > 0
@@ -35,7 +37,13 @@ const HomeStyleProductCard = ({ product }) => {
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
-            isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
+            if (isInWishlist(product._id)) {
+              removeFromWishlist(product._id);
+              showToast && showToast("Removed from wishlist", "info");
+            } else {
+              addToWishlist(product);
+              showToast && showToast("Added to wishlist", "success");
+            }
           }}
           aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
         >

@@ -18,13 +18,21 @@ export const WishlistProvider = ({ children }) => {
     if (isAuthenticated && user) {
       // Fetch from backend
       setLoading(true)
+      console.log('[Wishlist] Fetching wishlist from backend...')
       axios.get("/api/wishlist", { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } })
-        .then(res => setWishlist(res.data))
-        .catch(() => setWishlist([]))
+        .then(res => {
+          console.log('[Wishlist] Backend response:', res.data)
+          setWishlist(res.data)
+        })
+        .catch((err) => {
+          console.error('[Wishlist] Error fetching from backend:', err)
+          setWishlist([])
+        })
         .finally(() => setLoading(false))
     } else {
       // Load from localStorage
       const stored = localStorage.getItem("wishlist")
+      console.log('[Wishlist] Loaded from localStorage:', stored)
       setWishlist(stored ? JSON.parse(stored) : [])
     }
   }, [isAuthenticated, user])
@@ -32,6 +40,7 @@ export const WishlistProvider = ({ children }) => {
   // Sync guest wishlist to localStorage
   useEffect(() => {
     if (!isAuthenticated) {
+      console.log('[Wishlist] Syncing to localStorage:', wishlist)
       localStorage.setItem("wishlist", JSON.stringify(wishlist))
     }
   }, [wishlist, isAuthenticated])
@@ -40,15 +49,18 @@ export const WishlistProvider = ({ children }) => {
   useEffect(() => {
     if (!isAuthenticated) {
       const stored = localStorage.getItem("wishlist")
+      console.log('[Wishlist] On mount loaded from localStorage:', stored)
       setWishlist(stored ? JSON.parse(stored) : [])
     }
   }, [])
 
   // Add product to wishlist
   const addToWishlist = async (product) => {
+    console.log('[Wishlist] Adding to wishlist:', product)
     if (isAuthenticated && user) {
       const token = localStorage.getItem("token")
       const { data } = await axios.post("/api/wishlist", { productId: product._id }, { headers: { Authorization: `Bearer ${token}` } })
+      console.log('[Wishlist] Backend add response:', data)
       setWishlist(data)
       showToast && showToast("Added to wishlist", "success")
     } else {
@@ -62,9 +74,11 @@ export const WishlistProvider = ({ children }) => {
 
   // Remove product from wishlist
   const removeFromWishlist = async (productId) => {
+    console.log('[Wishlist] Removing from wishlist:', productId)
     if (isAuthenticated && user) {
       const token = localStorage.getItem("token")
       const { data } = await axios.delete(`/api/wishlist/${productId}`, { headers: { Authorization: `Bearer ${token}` } })
+      console.log('[Wishlist] Backend remove response:', data)
       setWishlist(data)
       showToast && showToast("Removed from wishlist", "info")
     } else {
