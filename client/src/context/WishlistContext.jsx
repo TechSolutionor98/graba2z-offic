@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import axios from "axios"
 import { useAuth } from "./AuthContext"
 import { useToast } from "./ToastContext"
+import config from '../config/config'
 
 const WishlistContext = createContext()
 
@@ -19,7 +20,7 @@ export const WishlistProvider = ({ children }) => {
       // Fetch from backend
       setLoading(true)
       console.log('[Wishlist] Fetching wishlist from backend...')
-      axios.get("/api/wishlist", { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } })
+      axios.get(`${config.API_URL}/api/wishlist`, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } })
         .then(res => {
           console.log('[Wishlist] Backend response:', res.data)
           setWishlist(res.data)
@@ -59,7 +60,7 @@ export const WishlistProvider = ({ children }) => {
     console.log('[Wishlist] Adding to wishlist:', product)
     if (isAuthenticated && user) {
       const token = localStorage.getItem("token")
-      const { data } = await axios.post("/api/wishlist", { productId: product._id }, { headers: { Authorization: `Bearer ${token}` } })
+      const { data } = await axios.post(`${config.API_URL}/api/wishlist`, { productId: product._id }, { headers: { Authorization: `Bearer ${token}` } })
       console.log('[Wishlist] Backend add response:', data)
       setWishlist(data)
       showToast && showToast("Added to wishlist", "success")
@@ -77,7 +78,7 @@ export const WishlistProvider = ({ children }) => {
     console.log('[Wishlist] Removing from wishlist:', productId)
     if (isAuthenticated && user) {
       const token = localStorage.getItem("token")
-      const { data } = await axios.delete(`/api/wishlist/${productId}`, { headers: { Authorization: `Bearer ${token}` } })
+      const { data } = await axios.delete(`${config.API_URL}/api/wishlist/${productId}`, { headers: { Authorization: `Bearer ${token}` } })
       console.log('[Wishlist] Backend remove response:', data)
       setWishlist(data)
       showToast && showToast("Removed from wishlist", "info")
