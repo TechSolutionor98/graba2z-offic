@@ -100,7 +100,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-2 text-white text-sm">
                 {categories.slice(0, 6).map((category) => (
                   <li key={category._id}>
-                    <Link to={`/shop?category=${encodeURIComponent(category.name)}`} className="hover:text-lime-400">
+                    <Link to={`/shop?parent_category=${encodeURIComponent(category.name)}`} className="hover:text-lime-400">
                       {category.name}
                     </Link>
                   </li>
@@ -127,38 +127,38 @@ const Footer = ({ className = "" }) => {
               <h3 className="text-2xl font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-white text-sm">
                 <li>
-                  <Link to="/refund-returns" className="hover:text-lime-400">
-                    Refund and Returns
+                  <Link to="/refund-return" className="hover:text-lime-400">
+                    Refund and Return
                   </Link>
                 </li>
                 <li>
                   <Link to="/cookies-policy" className="hover:text-lime-400">
-                    Cookies Policies
+                    Cookies Policy
                   </Link>
                 </li>
                 <li>
-                  <Link to="/exchange-policy" className="hover:text-lime-400">
-                    Exchange Policies
+                  <Link to="/terms-conditions" className="hover:text-lime-400">
+                    Terms & Conditions
                   </Link>
                 </li>
                 <li>
-                  <Link to="/sitemap" className="hover:text-lime-400">
-                    Sitemaps
+                  <Link to="/privacy-policy" className="hover:text-lime-400">
+                    Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link to="/bulk-purchase" className="hover:text-lime-400">
-                    Bulk Purchase
+                  <Link to="/track-order" className="hover:text-lime-400">
+                    Track Order
                   </Link>
                 </li>
                 <li>
-                  <Link to="/corporate-deals" className="hover:text-lime-400">
-                    Corporate Deal
+                  <Link to="/wishlist" className="hover:text-lime-400">
+                    Wishlist
                   </Link>
                 </li>
                 <li>
-                  <Link to="/blogs" className="hover:text-lime-400 font-semibold">
-                    Blog
+                  <Link to="/cart" className="hover:text-lime-400 font-semibold">
+                    Cart
                   </Link>
                 </li>
               </ul>
@@ -169,7 +169,7 @@ const Footer = ({ className = "" }) => {
               <h3 className="text-2xl font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-white text-sm">
                 <li>
-                  <Link to="./About" className="hover:text-lime-400">
+                  <Link to="/about" className="hover:text-lime-400">
                     About Us
                   </Link>
                 </li>
@@ -179,24 +179,24 @@ const Footer = ({ className = "" }) => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/terms" className="hover:text-lime-400">
-                    Terms & Condition
+                  <Link to="/blogs" className="hover:text-lime-400">
+                    Blog
                   </Link>
                 </li>
                 <li>
-                  <Link to="/privacy" className="hover:text-lime-400">
-                    Privacy Policies
+                  <Link to="/shop" className="hover:text-lime-400">
+                    Shop
                   </Link>
                 </li>
                 <li>
-                  <a href="tel:+97143540566" className="hover:text-lime-400">
-                    (+971) 4-354 0566
-                  </a>
+                  <Link to="/login" className="hover:text-lime-400">
+                    Login
+                  </Link>
                 </li>
                 <li>
-                  <a href="mailto:Support@grabatoz.com" className="hover:text-lime-400">
-                    Support@grabatoz.com
-                  </a>
+                  <Link to="/register" className="hover:text-lime-400">
+                    Register
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -276,23 +276,23 @@ const Footer = ({ className = "" }) => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/terms" className="text-gray-700 hover:text-orange-500">
-                    Terms & Condition
+                  <Link to="/blogs" className="text-gray-700 hover:text-orange-500">
+                    Blog
                   </Link>
                 </li>
                 <li>
-                  <Link to="/privacy" className="text-gray-700 hover:text-orange-500">
-                    Privacy Policies
+                  <Link to="/shop" className="text-gray-700 hover:text-orange-500">
+                    Shop
                   </Link>
                 </li>
                 <li>
-                  <Link to="/cookies-policy" className="text-gray-700 hover:text-orange-500">
-                    Cookies Policy
+                  <Link to="/login" className="text-gray-700 hover:text-orange-500">
+                    Login
                   </Link>
                 </li>
                 <li>
-                  <Link to="/refund-returns" className="text-gray-700 hover:text-orange-500">
-                    Refund And Return
+                  <Link to="/register" className="text-gray-700 hover:text-orange-500">
+                    Register
                   </Link>
                 </li>
               </ul>
@@ -313,44 +313,39 @@ const Footer = ({ className = "" }) => {
             <div className="px-4 pb-4">
               <ul className="space-y-3">
                 <li>
-                  <Link to="/refund-returns" className="text-gray-700 hover:text-orange-500">
-                    Refund and Returns
+                  <Link to="/refund-return" className="text-gray-700 hover:text-orange-500">
+                    Refund and Return
                   </Link>
                 </li>
                 <li>
-                  <Link to="/exchange-policy" className="text-gray-700 hover:text-orange-500">
-                    Exchange Policies
+                  <Link to="/cookies-policy" className="text-gray-700 hover:text-orange-500">
+                    Cookies Policy
                   </Link>
                 </li>
                 <li>
-                  <Link to="/sitemap" className="text-gray-700 hover:text-orange-500">
-                    Sitemaps
+                  <Link to="/terms-conditions" className="text-gray-700 hover:text-orange-500">
+                    Terms & Conditions
                   </Link>
                 </li>
                 <li>
-                  <Link to="/bulk-purchase" className="text-gray-700 hover:text-orange-500">
-                    Bulk Purchase
+                  <Link to="/privacy-policy" className="text-gray-700 hover:text-orange-500">
+                    Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link to="/corporate-deals" className="text-gray-700 hover:text-orange-500">
-                    Corporate Deal
+                  <Link to="/track-order" className="text-gray-700 hover:text-orange-500">
+                    Track Order
                   </Link>
                 </li>
                 <li>
-                  <Link to="/blogs" className="text-gray-700 hover:text-orange-500 font-semibold">
-                    Blog
+                  <Link to="/wishlist" className="text-gray-700 hover:text-orange-500">
+                    Wishlist
                   </Link>
                 </li>
                 <li>
-                  <a href="tel:+97143540566" className="text-gray-700 hover:text-orange-500">
-                    (+971) 4-354 0566
-                  </a>
-                </li>
-                <li>
-                  <a href="mailto:Support@grabatoz.com" className="text-gray-700 hover:text-orange-500">
-                    Support@grabatoz.com
-                  </a>
+                  <Link to="/cart" className="text-gray-700 hover:text-orange-500 font-semibold">
+                    Cart
+                  </Link>
                 </li>
               </ul>
             </div>
