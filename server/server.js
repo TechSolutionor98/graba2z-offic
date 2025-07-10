@@ -41,7 +41,7 @@ const app = express()
 
 // CORS configuration
 app.use(cors({
-  origin: 'https://graba2z-official.vercel.app/',
+  origin: 'https://graba2z-official.vercel.app',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
   exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
