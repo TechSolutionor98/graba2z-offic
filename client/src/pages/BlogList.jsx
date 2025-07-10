@@ -5,7 +5,7 @@ import { Link } from "react-router-dom"
 import axios from "axios"
 import { Calendar, User, Eye, Tag, Search, Filter } from "lucide-react"
 
-import config from "../../config/config"
+import config from "../config/config"
 
 const API_BASE_URL = `${config.API_URL}`
 

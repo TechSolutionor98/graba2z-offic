@@ -6,7 +6,7 @@ import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react"
 import { useEffect, useState } from "react"
 import axios from "axios"
 
-import config from "../../config/config"
+import config from "../config/config"
 
 const Cart = () => {
   const {

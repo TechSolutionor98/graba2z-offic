@@ -6,7 +6,7 @@ import axios from "axios"
 import { useAuth } from "../context/AuthContext"
 import { CheckCircle, Clock, Package, Truck, AlertTriangle } from "lucide-react"
 
-import config from "../../config/config"
+import config from "../config/config"
 const UserOrders = () => {
   const location = useLocation()
   const navigate = useNavigate()

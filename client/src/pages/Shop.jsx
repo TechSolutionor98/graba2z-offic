@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
 
-import config from "../../config/config"
+import config from "../config/config"
 
 const API_BASE_URL = `${config.API_URL}`
 

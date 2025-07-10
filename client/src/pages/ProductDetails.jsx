@@ -28,7 +28,7 @@ import {
 } from "lucide-react"
 import { productsAPI } from "../services/api.js"
 
-import config from "../../config/config"
+import config from "../config/config"
 
 const WHATSAPP_NUMBER = '971501234567'; // Replace with your WhatsApp number
 

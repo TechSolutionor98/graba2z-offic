@@ -7,7 +7,7 @@ import { useToast } from "../context/ToastContext"
 import axios from "axios"
 import { Calendar, User, Eye, Star, ArrowLeft, Share2 } from "lucide-react"
 
-import config from "../../config/config"
+import config from "../config/config"
 
 const API_BASE_URL = `${config.API_URL}`
 

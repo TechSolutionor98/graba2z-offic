@@ -19,7 +19,7 @@ import { Link, useNavigate } from "react-router-dom"
 import BannerSlider from "../components/BannerSlider"
 import { useWishlist } from "../context/WishlistContext"
 
-import config from "../../config/config"
+import config from "../config/config"
 
 const API_BASE_URL = `${config.API_URL}`
 

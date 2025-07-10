@@ -5,7 +5,7 @@ import { useToast } from "../context/ToastContext"
 import { Package, Truck, CheckCircle, Clock, AlertCircle, Search } from "lucide-react"
 import axios from "axios"
 
-import config from "../../config/config"
+import config from "../config/config"
 
 const TrackOrder = () => {
   const { showToast } = useToast()

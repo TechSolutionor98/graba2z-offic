@@ -9,7 +9,7 @@ import { Truck, Shield, MapPin, ChevronDown, ChevronUp, CreditCard, Banknote, Cl
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
 
-import config from "../../config/config"
+import config from "../config/config            "
 const UAE_STATES = ["Abu Dhabi", "Ajman", "Al Ain", "Dubai", "Fujairah", "Ras Al Khaimah", "Sharjah", "Umm al-Qaywain"]
 
 const STORES = [
