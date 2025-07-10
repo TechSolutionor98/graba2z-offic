@@ -40,12 +40,15 @@ connectDB()
 const app = express()
 
 // CORS configuration
-app.use(
-  cors({
-    origin: [config.FRONTEND_URL, "http://localhost:3000", "http://localhost:5173"],
-    credentials: true,
-  }),
-)
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://graba2z-official.vercel.app'
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 
 // Body parser middleware
 app.use(express.json({ limit: "50mb" }))
