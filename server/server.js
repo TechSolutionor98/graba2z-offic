@@ -40,14 +40,14 @@ connectDB()
 const app = express()
 
 // CORS configuration
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://graba2z-official.vercel.app'
-];
-
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: 'https://graba2z-official.vercel.app/',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
+  exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
+  maxAge: 5,
+  credentials: true,
+  keepHeadersOnError: true
 }));
 
 // Body parser middleware
