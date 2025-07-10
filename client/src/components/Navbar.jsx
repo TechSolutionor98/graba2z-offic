@@ -38,6 +38,7 @@ const Navbar = () => {
   const [subCategories, setSubCategories] = useState([])
   const [hoveredCategory, setHoveredCategory] = useState(null)
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null)
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
 
   // Fetch categories and subcategories from API
   const fetchCategories = async () => {
@@ -101,6 +102,13 @@ const Navbar = () => {
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false)
     setExpandedMobileCategory(null)
+  }
+
+  const handleMobileSearchOpen = () => {
+    setIsMobileSearchOpen(true)
+  }
+  const handleMobileSearchClose = () => {
+    setIsMobileSearchOpen(false)
   }
 
   return (
@@ -290,11 +298,35 @@ const Navbar = () => {
           </Link>
 
           {/* Search Icon */}
-          <button className="p-2">
+          <button className="p-2" onClick={handleMobileSearchOpen} aria-label="Open search">
             <Search size={24} className="text-gray-700" />
           </button>
         </div>
       </header>
+
+      {/* Mobile Search Overlay */}
+      {isMobileSearchOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-50">
+          <div className="w-full bg-white p-4 flex items-center gap-2 shadow-md relative">
+            <form onSubmit={(e) => { handleSearch(e); handleMobileSearchClose(); }} className="flex-1 flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-lime-500"
+                autoFocus
+              />
+              <button type="submit" className="px-4 py-2 bg-lime-500 text-white rounded hover:bg-green-600">
+                <Search size={18} />
+              </button>
+            </form>
+            <button onClick={handleMobileSearchClose} className="ml-2 p-2" aria-label="Close search">
+              <X size={24} className="text-gray-600" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Side Drawer Menu */}
       {isMobileMenuOpen && (

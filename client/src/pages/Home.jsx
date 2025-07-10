@@ -443,27 +443,35 @@ const Home = () => {
       <BannerSlider banners={heroBanners} />
 
       {/* Categories Section - Arrow Navigation for All Devices */}
-      <section className="bg-white mb-5">
+      <section className="bg-white mb-5 mt-3 md:mt-4">
         <div className="max-w-8xl lg:px-3">
           <div className="flex items-center justify-between">
-            <button className="text-black hover:text-gray-600" onClick={prevCategorySlide}>
+            {/* Left Arrow: Hide if categories fit in one view or less */}
+            <button
+              className="text-black hover:text-gray-600"
+              onClick={prevCategorySlide}
+              disabled={categories.length <= (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4)}
+              style={{ opacity: categories.length <= (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4) ? 0.3 : 1 }}
+            >
               <ChevronLeft size={35} />
             </button>
 
             <div className="flex-1 overflow-hidden">
               <div
-                className="flex items-center gap-5 md:gap-4 transition-transform duration-300 ease-in-out"
+                className={`flex items-center gap-5 md:gap-4 transition-transform duration-300 ease-in-out ${categories.length <= 4 ? "justify-center" : ""}`}
                 style={{
-                  transform: `translateX(-${categorySlide * (100 / (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4))}%)`,
+                  // Center if few categories, else slide
+                  transform:
+                    categories.length <= (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4)
+                      ? "none"
+                      : `translateX(-${categorySlide * (100 / (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4))}%)`,
                 }}
               >
                 {categories.map((category) => {
-                  // Ensure we have a valid category with proper structure
                   if (!category || !category._id || !category.name) {
                     console.warn("Skipping invalid category in render:", category)
                     return null
                   }
-
                   return (
                     <button
                       key={category._id}
@@ -471,6 +479,7 @@ const Home = () => {
                       className="flex flex-col items-center group transition-all min-w-0 flex-shrink-0 px-1"
                       style={{
                         width: `${100 / (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4)}%`,
+                        maxWidth: "120px",
                       }}
                     >
                       <div className="flex items-center justify-center">
@@ -495,7 +504,13 @@ const Home = () => {
               </div>
             </div>
 
-            <button className="text-black hover:text-gray-600" onClick={nextCategorySlide}>
+            {/* Right Arrow: Hide if categories fit in one view or less */}
+            <button
+              className="text-black hover:text-gray-600"
+              onClick={nextCategorySlide}
+              disabled={categories.length <= (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4)}
+              style={{ opacity: categories.length <= (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4) ? 0.3 : 1 }}
+            >
               <ChevronRight size={36} />
             </button>
           </div>
@@ -1084,12 +1099,12 @@ const GrabatezSaleCard = ({ product }) => {
       >
         <Heart size={16} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
       </button>
-      <div className="p-1 w-ful h-[180px] mb-2">
+      <div className="p-1 w-ful h-[170px] mb-2">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
             src={product.image || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
-            className="w-full h-full cover rounded mb-5"
+            className="w-full h-full cover  rounded mb-5"
           />
         </Link>
       </div>
@@ -1168,7 +1183,7 @@ const MobileProductCard = ({ product }) => {
         <img
           src={product.image || "/placeholder.svg?height=80&width=80"}
           alt={product.name}
-          className="w-full h-20 object-cover rounded mb-2"
+          className="w-full h-[200px] cover rounded mb-2"
         />
       </Link>
       <div className="mb-2 flex items-center gap-2">

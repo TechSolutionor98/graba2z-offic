@@ -134,11 +134,15 @@ router.get(
     }
 
     // Search functionality
-    if (search) {
+    if (typeof search === "string" && search.trim() !== "") {
+      const regex = new RegExp(search, "i")
+      // Find matching brands by name
+      const matchingBrands = await Brand.find({ name: regex }).select("_id")
+      const brandIds = matchingBrands.map(b => b._id)
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { brand: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
+        { name: regex },
+        { description: regex },
+        { brand: { $in: brandIds } },
       ]
     }
 

@@ -152,22 +152,22 @@ const AdminProducts = () => {
         return
       }
 
-      const config = {
+      const axiosConfig = {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       }
 
-      console.log("🔧 Request config:", config)
+      console.log("🔧 Request config:", axiosConfig)
 
       let response
       if (editingProduct) {
         console.log("✏️ Updating existing product...")
-        response = await axios.put(`${config.API_URL}/api/products/${editingProduct._id}`, productData, config)
+        response = await axios.put(`${config.API_URL}/api/products/${editingProduct._id}`, productData, axiosConfig)
       } else {
         console.log("➕ Creating new product...")
-        response = await axios.post(`${config.API_URL}/api/products`, productData, config)
+        response = await axios.post(`${config.API_URL}/api/products`, productData, axiosConfig)
       }
 
       console.log("✅ Product saved successfully:", response.data)
