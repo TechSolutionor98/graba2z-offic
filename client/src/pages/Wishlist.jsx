@@ -10,11 +10,11 @@ const Wishlist = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
       <h1 className="text-2xl font-bold text-gray-900 mb-8">My Wishlist</h1>
-      {wishlist.length === 0 ? (
+      {Array.isArray(wishlist) && wishlist.length === 0 ? (
         <div className="text-center py-12 text-gray-500">Your wishlist is empty.</div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {wishlist.map(product => (
+          {(Array.isArray(wishlist) ? wishlist : []).map(product => (
             <div key={product._id} className="bg-white rounded-lg shadow p-4 flex flex-col">
               <Link to={`/product/${product.slug || product._id}`} className="flex-1 flex flex-col items-center">
                 <img src={product.image || "/placeholder.svg"} alt={product.name} className="h-[150px] cover rounded mb-4" />
