@@ -77,7 +77,7 @@ export const WishlistProvider = ({ children }) => {
 
   // Check if product is in wishlist
   const isInWishlist = (productId) => {
-    return wishlist.some(item => (item._id || item) === productId)
+    return Array.isArray(wishlist) && wishlist.some(item => (item._id || item) === productId)
   }
 
   return (

@@ -257,7 +257,7 @@ const AllCoupons = () => {
                     onChange={selected => {
                       if (!selected || selected.length === 0) {
                         setFormData({ ...formData, categories: [] })
-                      } else if (selected.some(option => option.value === "ALL")) {
+                      } else if (Array.isArray(selected) && selected.some(option => option.value === "ALL")) {
                         setFormData({ ...formData, categories: ["ALL"] })
                       } else {
                         setFormData({ ...formData, categories: selected.map(option => option.value) })
