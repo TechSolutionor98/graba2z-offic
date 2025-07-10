@@ -17,8 +17,8 @@ import Volume from "../models/volumeModel.js"
 
 const router = express.Router()
 
-// Multer setup for local file storage (not cloudinary, just for Excel parsing)
-const excelUpload = multer({ dest: "uploads/" })
+// Multer setup for Excel parsing (use memory storage for Vercel compatibility)
+const excelUpload = multer({ storage: multer.memoryStorage() })
 
 // Helper: map Excel columns to backend keys
 const excelToBackendKey = {
