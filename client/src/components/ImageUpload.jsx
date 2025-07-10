@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Upload, X, ImageIcon } from "lucide-react"
 import axios from "axios"
 
-import config from "../../config/config"
+import config from "../config/config"
 
 const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", multiple = false }) => {
   const [uploading, setUploading] = useState(false)

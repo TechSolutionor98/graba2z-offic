@@ -5,7 +5,7 @@ import { Facebook, Twitter, Instagram, Plus, Minus, Linkedin } from "lucide-reac
 import { useState, useEffect } from "react"
 import axios from "axios"
 
-import config from "../../config/config"
+import config from "../config/config"
 
 const API_BASE_URL = `${config.API_URL}`
 
