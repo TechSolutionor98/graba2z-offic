@@ -8,6 +8,8 @@ import { useCart } from "../context/CartContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
 
 import config from "../config/config"
+import 'rc-slider/assets/index.css';
+import Slider from 'rc-slider';
 
 const API_BASE_URL = `${config.API_URL}`
 
@@ -377,22 +379,20 @@ const Shop = () => {
                     <div className="text-center text-sm text-gray-600">
                       Price: {priceRange[0]}AED — {priceRange[1]}AED
                     </div>
-                    <div className="relative">
-                      <input
-                        type="range"
-                        min="0"
+                    <div className="px-2">
+                      <Slider
+                        range
+                        min={0}
                         max={maxPrice}
-                        value={priceRange[0]}
-                        onChange={(e) => setPriceRange([Number.parseInt(e.target.value), priceRange[1]])}
-                        className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                      />
-                      <input
-                        type="range"
-                        min="0"
-                        max={maxPrice}
-                        value={priceRange[1]}
-                        onChange={(e) => setPriceRange([priceRange[0], Number.parseInt(e.target.value)])}
-                        className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        value={priceRange}
+                        onChange={(vals) => setPriceRange(vals)}
+                        allowCross={false}
+                        trackStyle={[{ backgroundColor: '#84cc16' }]}
+                        handleStyle={[
+                          { borderColor: '#84cc16', backgroundColor: '#fff' },
+                          { borderColor: '#84cc16', backgroundColor: '#fff' }
+                        ]}
+                        railStyle={{ backgroundColor: '#e5e7eb' }}
                       />
                     </div>
                   </div>
@@ -628,7 +628,7 @@ const Shop = () => {
             {/* Products Grid */}
             {products.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {products.slice(0, productsToShow).map((product) => (
                     <HomeStyleProductCard key={product._id} product={product} />
                   ))}
