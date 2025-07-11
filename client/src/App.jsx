@@ -9,6 +9,7 @@ import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 import ProtectedRoute from "./components/ProtectedRoute"
 import AdminRoute from "./components/AdminRoute"
+import ScrollToTop from "./components/ScrollToTop";
 
 // Import pages
 import Home from "./pages/Home"
@@ -94,6 +95,7 @@ function App() {
         <CartProvider>
           <WishlistProvider>
             <Router>
+              <ScrollToTop />
               <div className="App">
                 <Routes>
                   {/* Admin Routes */}

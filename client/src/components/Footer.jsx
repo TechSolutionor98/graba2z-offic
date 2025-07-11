@@ -67,7 +67,7 @@ const Footer = ({ className = "" }) => {
 
                   {/* Button Div */}
                   <div>
-                    <button type="submit" className="h-full bg-orange-500 text-white rounded-full px-5">
+                    <button type="submit" className="h-full bg-lime-500 text-white rounded-full px-5">
                       Subscribe
                     </button>
                   </div>
