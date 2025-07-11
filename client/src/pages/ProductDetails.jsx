@@ -63,6 +63,8 @@ const ProductDetails = () => {
   const [callbackLoading, setCallbackLoading] = useState(false);
   const [callbackSuccess, setCallbackSuccess] = useState(false);
 
+  const [relatedLoading, setRelatedLoading] = useState(true);
+
   const formatPrice = (price) => {
     return `${Number(price).toLocaleString()}.00 AED`
   }
@@ -96,12 +98,21 @@ const ProductDetails = () => {
   }
 
   const fetchRelatedProducts = async () => {
+    setRelatedLoading(true);
     try {
-      const { data } = await axios.get(`${config.API_URL}/api/products?category=${product.category._id}&limit=6`)
-      const filtered = data.filter((p) => p._id !== product._id).slice(0, 6)
-      setRelatedProducts(filtered)
+      // Try to get related products from the same category
+      let { data } = await axios.get(`${config.API_URL}/api/products?category=${product.category._id}&limit=12`);
+      let filtered = data.filter((p) => p._id !== product._id);
+      if (filtered.length === 0) {
+        // If no related products, fetch all products and pick random ones (excluding current)
+        const allRes = await axios.get(`${config.API_URL}/api/products`);
+        filtered = allRes.data.filter((p) => p._id !== product._id);
+      }
+      setRelatedProducts(filtered);
     } catch (error) {
-      console.error("Error fetching related products:", error)
+      console.error("Error fetching related products:", error);
+    } finally {
+      setRelatedLoading(false);
     }
   }
 
@@ -222,6 +233,16 @@ const ProductDetails = () => {
       setCallbackLoading(false);
     }
   };
+
+  // Fisher-Yates shuffle for randomizing related products
+  function shuffleArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
 
   console.log('Render: loading =', loading, ', product =', product, ', error =', error)
 
@@ -882,11 +903,15 @@ const ProductDetails = () => {
         </div>
 
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
+          {relatedLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-green-500"></div>
+            </div>
+          ) : relatedProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              {relatedProducts.map((relatedProduct) => (
+              {shuffleArray(relatedProducts).slice(0, 6).map((relatedProduct) => (
                 <div
                   key={relatedProduct._id}
                   className="bg-white rounded-lg shadow-sm p-4 border hover:shadow-md transition-shadow"
@@ -910,8 +935,12 @@ const ProductDetails = () => {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-gray-500 text-center py-8">
+              No related products found. Check back later for more recommendations!
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Image Modal */}
