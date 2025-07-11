@@ -964,15 +964,15 @@ const ProductDetails = () => {
 
       {showCallbackModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-8 w-[900px]  shadow-lg relative">
+          <div className="bg-white rounded-lg p-4 w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl shadow-lg relative">
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-600" onClick={() => setShowCallbackModal(false)}>
               <X size={24} />
             </button>
-            <div className="flex flex-row items-center gap-10">
-              <div className="flex-shrink-0 flex flex-col items-center justify-center">
-                <img src="/public/callback.png" alt="Support" style={{ width: '300px', height: '400px' }} />
+            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+              <div className="flex-shrink-0 flex flex-col items-center justify-center mb-4 md:mb-0">
+                <img src="/public/req_call_back.png" alt="Support" className="w-40 h-52 md:w-72 md:h-96 object-contain" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 w-full">
                 <h2 className="text-xl font-bold mb-4">Request a Callback</h2>
                 {callbackSuccess ? (
                   <div className="text-green-600 font-medium text-center">Request submitted successfully!</div>
