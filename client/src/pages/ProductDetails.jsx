@@ -120,6 +120,11 @@ const ProductDetails = () => {
     addToCart(product, quantity)
   }
 
+  const handleBuyNow = () => {
+    handleAddToCart();
+    navigate('/checkout');
+  };
+
   const handleImageClick = (index) => {
     setModalImageIndex(index)
     setShowImageModal(true)
@@ -473,6 +478,7 @@ const ProductDetails = () => {
                 <button
                   disabled={product.stockStatus === "Out of Stock"}
                   className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg font-medium transition-colors"
+                  onClick={handleBuyNow}
                 >
                   Buy Now
                 </button>

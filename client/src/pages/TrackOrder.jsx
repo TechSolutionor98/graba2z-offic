@@ -167,7 +167,7 @@ const TrackOrder = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-green-600 text-white px-8 py-3 rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center space-x-2"
+                className="bg-lime-500 text-white px-8 py-3 rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center space-x-2"
               >
                 <Search size={20} />
                 <span>{loading ? "Tracking..." : "Track Order"}</span>
