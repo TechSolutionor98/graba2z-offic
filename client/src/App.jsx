@@ -124,6 +124,7 @@ function App() {
                           <Route path="subcategories/add" element={<AddSubCategory />} />
                           <Route path="brands" element={<AdminBrands />} />
                           <Route path="brands/add" element={<AddBrand />} />
+                          <Route path="edit-brand/:id" element={<AddBrand />} />
                           <Route path="colors" element={<AdminColors />} />
                           <Route path="colors/add" element={<AddColor />} />
                           <Route path="sizes" element={<AdminSizes />} />
