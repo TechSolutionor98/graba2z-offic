@@ -211,16 +211,21 @@ const AdminProducts = () => {
   }
 
   const filteredProducts = products.filter((product) => {
+    const productName = product.name || "";
+    const brandName = typeof product.brand === "object" && product.brand !== null
+      ? product.brand.name || ""
+      : product.brand || "";
+
     const matchesSearch =
-      product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
+      productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      brandName.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCategory =
       filterCategory === "all" ||
       (product.category &&
-        (typeof product.category === "object" ? product.category._id : product.category) === filterCategory)
+        (typeof product.category === "object" ? product.category._id : product.category) === filterCategory);
 
-    return matchesSearch && matchesCategory
+    return matchesSearch && matchesCategory;
   })
 
   return (
