@@ -567,10 +567,14 @@ const ProductDetails = () => {
                 </div>
 
                 {/* Bulk Purchase */}
-                <div>
-                  <Shield className="mx-auto mb-2 text-green-600" size={24} />
-                  <div className="text-xs  font-medium">Request Bulk Purchase</div>
-                </div>
+                <button
+                  type="button"
+                  className="flex flex-col items-center w-full focus:outline-none group"
+                  onClick={() => navigate('/bulk-purchase')}
+                >
+                  <Shield className="mx-auto mb-2 text-green-600 group-hover:text-lime-600 transition-colors" size={24} />
+                  <span className="text-xs font-medium group-hover:text-lime-600 transition-colors">Request Bulk Purchase</span>
+                </button>
               </div>
 
             </div>

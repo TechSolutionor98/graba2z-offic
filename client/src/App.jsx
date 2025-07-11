@@ -30,6 +30,7 @@ import PrivacyAndPolicy from "./pages/PrivacyAndPolicy"
 import TermAndCondition from "./pages/TermAndCondition"
 import RefundAndReturn from "./pages/RefundAndReturn"
 import CookiesAndPolicy from "./pages/CookiesAndPolicy"
+import ReqBulkPurchase from "./pages/ReqBulkPurchase";
 
 // Import admin pages
 import AdminLogin from "./pages/admin/AdminLogin"
@@ -177,6 +178,7 @@ function App() {
                           <Route path="/terms-conditions" element={<TermAndCondition />} />
                           <Route path="/refund-return" element={<RefundAndReturn />} />
                           <Route path="/cookies-policy" element={<CookiesAndPolicy />} />
+                          <Route path="/bulk-purchase" element={<ReqBulkPurchase />} />
 
                           {/* Protected Routes */}
                           <Route
