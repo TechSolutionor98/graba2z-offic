@@ -718,7 +718,7 @@ const Home = () => {
       {/* ASUS Banner - Desktop/Mobile Responsive */}
       <div className="w-full p-4 bg-white">
         <img
-          src={window.innerWidth < 768 ? "asus-2.png" : "./asus-2-1536x288.png"}
+          src={window.innerWidth < 768 ? "/asus.png" : "./asus-2-1536x288.png"}
           alt="ASUS Banner"
           className="w-full h-auto"
         />
@@ -819,7 +819,7 @@ const Home = () => {
       {/* MSI & Lenovo Banner - Desktop/Mobile Responsive */}
       <div className="w-full p-4 bg-white">
         <img
-          src={window.innerWidth < 768 ? "Untitled-123.png" : "./MSI-LENOVO-1.jpg"}
+          src={window.innerWidth < 768 ? "msi.png" : "./MSI-LENOVO-1.jpg"}
           alt="MSI Lenovo Banner"
           className="w-full h-auto"
         />
