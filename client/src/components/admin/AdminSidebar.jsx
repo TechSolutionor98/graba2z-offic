@@ -344,11 +344,11 @@ const AdminSidebar = () => {
         { title: "All Coupons", path: "/admin/coupons/all" },
       ],
     },
-    {
-      title: "Settings",
-      icon: Settings,
-      path: "/admin/settings",
-    },
+    // {
+    //   title: "Settings",
+    //   icon: Settings,
+    //   path: "/admin/settings",
+    // },
   ]
 
   const renderMenuItem = (item, level = 0) => {
