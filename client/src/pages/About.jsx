@@ -18,7 +18,7 @@ function AboutUs() {
           </p>
         </div>
         <div>
-          <img src="./../public/about-us.png" alt="Catalogue" className="rounded-xl w-full shadow" />
+          <img src="/about-us.png" alt="Catalogue" className="rounded-xl w-full shadow" />
         </div>
       </div>
 
@@ -30,7 +30,7 @@ function AboutUs() {
           setting new benchmarks for excellence in the industry. We aim to continuously adapt and innovate,
           staying ahead of market trends to meet the evolving needs of our clientele.
         </p>
-        <img src="./../public/our-vision.jpg" alt="Vision" className="rounded-xl mx-auto w-full max-w-3xl shadow" />
+        <img src="/our-vision.jpg" alt="Vision" className="rounded-xl mx-auto w-full max-w-3xl shadow" />
       </div>
 
       {/* Mission Section */}
