@@ -1,7 +1,7 @@
 const config = {
     // API Configuration
-    // API_URL: import.meta.env.VITE_API_URL || "http://localhost:5000",
-      API_URL:"http://localhost:5000",
+     API_URL: import.meta.env.VITE_API_URL || "http://localhost:5000",
+     
 
     // Payment Gateway Configuration
     TAMARA_API_KEY: import.meta.env.VITE_TAMARA_API_KEY,
