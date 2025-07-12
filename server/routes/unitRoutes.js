@@ -5,13 +5,26 @@ import { protect, admin } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// @desc    Get all units
+// @desc    Fetch all units (Admin only - includes inactive)
+// @route   GET /api/units/admin
+// @access  Private/Admin
+router.get(
+  "/admin",
+  protect,
+  admin,
+  asyncHandler(async (req, res) => {
+    const units = await Unit.find({ isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
+    res.json(units)
+  }),
+)
+
+// @desc    Fetch all units
 // @route   GET /api/units
 // @access  Public
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const units = await Unit.find({ isActive: true }).sort({ createdAt: -1 })
+    const units = await Unit.find({ isActive: true, isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
     res.json(units)
   }),
 )

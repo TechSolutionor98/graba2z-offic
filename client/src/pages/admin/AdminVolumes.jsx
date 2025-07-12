@@ -29,27 +29,72 @@ const AdminVolumes = () => {
   const fetchVolumes = async () => {
     try {
       setLoading(true)
-      const token =
-        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       if (!token) {
-        setError("Authentication token not found. Please login again.")
+        setError("No authentication token found. Please login again.")
         setLoading(false)
         return
       }
 
-      const { data } = await axios.get(`${config.API_URL}/api/volumes`, {
+      const response = await fetch(`${config.API_URL}/api/volumes/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       })
-      setVolumes(data)
+
+      if (response.ok) {
+        const data = await response.json()
+        setVolumes(data.filter((volume) => !volume.isDeleted))
+      } else if (response.status === 401) {
+        setError("Authentication failed. Please login again.")
+      } else {
+        setError("Failed to load volumes. Please try again later.")
+      }
       setLoading(false)
     } catch (error) {
-      console.error("Volumes fetch error:", error)
+      console.error("Error fetching volumes:", error)
       setError("Failed to load volumes. Please try again later.")
-      showToast("Failed to load volumes", "error")
       setLoading(false)
+    }
+  }
+
+  const handleToggleStatus = async (volumeId) => {
+    try {
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
+      }
+
+      const volume = volumes.find(v => v._id === volumeId)
+      if (!volume) return
+
+      const newStatus = !volume.isActive
+
+      const response = await fetch(`${config.API_URL}/api/volumes/${volumeId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      })
+
+      if (response.ok) {
+        // Update the volume in the local state
+        setVolumes(volumes.map(v => 
+          v._id === volumeId ? { ...v, isActive: newStatus } : v
+        ))
+        showToast(`Volume ${newStatus ? 'activated' : 'deactivated'} successfully`, "success")
+      } else {
+        showToast("Failed to update volume status", "error")
+      }
+    } catch (error) {
+      console.error("Failed to toggle volume status:", error)
+      showToast("Failed to update volume status", "error")
     }
   }
 
@@ -297,18 +342,31 @@ const AdminVolumes = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button
-                              onClick={() => handleEdit(volume)}
-                              className="text-blue-600 hover:text-blue-900 mr-4"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(volume._id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            <div className="flex items-center justify-end space-x-2">
+                              <button
+                                onClick={() => handleToggleStatus(volume._id)}
+                                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                                  volume.isActive 
+                                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                    : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                }`}
+                                title={volume.isActive ? 'Click to deactivate' : 'Click to activate'}
+                              >
+                                {volume.isActive ? 'Active' : 'Inactive'}
+                              </button>
+                              <button
+                                onClick={() => handleEdit(volume)}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                <Edit size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(volume._id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))

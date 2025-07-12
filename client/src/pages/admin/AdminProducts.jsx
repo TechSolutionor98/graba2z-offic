@@ -59,7 +59,7 @@ const AdminProducts = () => {
         return
       }
 
-      const { data } = await axios.get(`${config.API_URL}/api/products`, {
+      const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -139,6 +139,41 @@ const AdminProducts = () => {
     }
   }
 
+  const handleToggleStatus = async (productId) => {
+    try {
+      const token = getAdminToken()
+
+      if (!token) {
+        setError("Authentication required. Please login again.")
+        return
+      }
+
+      const product = products.find(p => p._id === productId)
+      if (!product) return
+
+      const newStatus = !product.isActive
+
+      await axios.put(`${config.API_URL}/api/products/${productId}`, 
+        { isActive: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      // Update the product in the local state
+      setProducts(products.map(p => 
+        p._id === productId ? { ...p, isActive: newStatus } : p
+      ))
+
+      showToast(`Product ${newStatus ? 'activated' : 'deactivated'} successfully`, "success")
+    } catch (error) {
+      console.error("Failed to toggle product status:", error)
+      showToast("Failed to update product status", "error")
+    }
+  }
+
   const handleFormSubmit = async (productData) => {
     try {
       console.log("🚀 Starting product submission...")
@@ -212,10 +247,25 @@ const AdminProducts = () => {
 
   // Helper to get parent category name from product
   const getParentCategoryName = (product) => {
-    const parentCategoryId = product.parentCategory;
-    if (!parentCategoryId) return 'N/A';
-    const parent = categories.find(cat => cat._id === parentCategoryId);
-    return parent ? parent.name : 'N/A';
+    // Check if parentCategory is directly on the product
+    if (product.parentCategory) {
+      if (typeof product.parentCategory === 'object' && product.parentCategory.name) {
+        return product.parentCategory.name;
+      }
+      const parent = categories.find(cat => cat._id === product.parentCategory);
+      if (parent) return parent.name;
+    }
+    
+    // Check if parent category is nested in the category object
+    if (product.category && product.category.category) {
+      if (typeof product.category.category === 'object' && product.category.category.name) {
+        return product.category.category.name;
+      }
+      const parent = categories.find(cat => cat._id === product.category.category);
+      if (parent) return parent.name;
+    }
+    
+    return 'N/A';
   };
 
   const filteredProducts = products.filter((product) => {
@@ -360,8 +410,9 @@ const AdminProducts = () => {
                         {filteredProducts.length > 0 ? (
                           filteredProducts.map((product) => {
                             console.log('Product:', product);
-                            console.log('Subcategory:', product.category);
-                            console.log('Parent category ID:', product.category?.category);
+                            console.log('Product.parentCategory:', product.parentCategory);
+                            console.log('Product.category:', product.category);
+                            console.log('Product.category.category:', product.category?.category);
                             console.log('Categories list:', categories);
                             return (
                               <tr key={product._id} className="hover:bg-gray-50">
@@ -432,18 +483,21 @@ const AdminProducts = () => {
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                  <button
-                                    onClick={() => handleEdit(product)}
-                                    className="text-blue-600 hover:text-blue-900 mr-4"
-                                  >
-                                    <Edit size={18} />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDelete(product._id)}
-                                    className="text-red-600 hover:text-red-900"
-                                  >
-                                    <Trash2 size={18} />
-                                  </button>
+                                  <div className="flex items-center justify-end space-x-2">
+                                 
+                                    <button
+                                      onClick={() => handleEdit(product)}
+                                      className="text-blue-600 hover:text-blue-900"
+                                    >
+                                      <Edit size={18} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDelete(product._id)}
+                                      className="text-red-600 hover:text-red-900"
+                                    >
+                                      <Trash2 size={18} />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             );

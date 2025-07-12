@@ -5,46 +5,7 @@ import { protect, admin } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// @desc    Fetch all categories
-// @route   GET /api/categories
-// @access  Public
-router.get(
-  "/",
-  asyncHandler(async (req, res) => {
-    try {
-      console.log("Fetching categories...")
-
-      // Fetch all active categories
-      const categories = await Category.find({
-        isActive: { $ne: false },
-        isDeleted: { $ne: true },
-      }).sort({ createdAt: -1 })
-
-      console.log("Raw categories from DB:", categories)
-
-      // Filter and validate categories
-      const validCategories = categories.filter((category) => {
-        const isValid =
-          category && category._id && category.name && typeof category.name === "string" && category.name.trim() !== ""
-
-        if (!isValid) {
-          console.warn("Invalid category found:", category)
-        }
-        return isValid
-      })
-
-      console.log("Valid categories:", validCategories)
-      console.log("Sending categories count:", validCategories.length)
-
-      res.json(validCategories)
-    } catch (error) {
-      console.error("Error fetching categories:", error)
-      res.status(500).json({ message: "Error fetching categories", error: error.message })
-    }
-  }),
-)
-
-// @desc    Get all categories (admin)
+// @desc    Fetch all categories (Admin only - includes inactive)
 // @route   GET /api/categories/admin
 // @access  Private/Admin
 router.get(
@@ -52,27 +13,19 @@ router.get(
   protect,
   admin,
   asyncHandler(async (req, res) => {
-    try {
-      const categories = await Category.find({ isDeleted: false }).sort({ createdAt: -1 })
-      // Filter out invalid categories and log them
-      const validCategories = []
-      const invalidCategories = []
-      for (const cat of categories) {
-        if (cat && cat._id && typeof cat.name === "string" && cat.name.trim() !== "") {
-          validCategories.push(cat)
-        } else {
-          invalidCategories.push(cat)
-          console.warn("[ADMIN] Skipping invalid category:", cat)
-        }
-      }
-      if (invalidCategories.length > 0) {
-        console.warn(`[ADMIN] Skipped ${invalidCategories.length} invalid categories in /api/categories/admin`)
-      }
-      res.json(validCategories)
-    } catch (error) {
-      console.error("[ADMIN] Error fetching categories:", error)
-      res.status(500).json({ message: "Error fetching categories (admin)", error: error.message })
-    }
+    const categories = await Category.find({ isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
+    res.json(categories)
+  }),
+)
+
+// @desc    Fetch all categories
+// @route   GET /api/categories
+// @access  Public
+router.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    const categories = await Category.find({ isActive: true, isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
+    res.json(categories)
   }),
 )
 

@@ -5,6 +5,7 @@ import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Edit, Trash2, Calculator, Eye, EyeOff } from "lucide-react"
 import { apiRequest } from "../../services/api"
+import config from "../../config/config"
 
 const AdminTax = () => {
   const [taxes, setTaxes] = useState([])
@@ -29,14 +30,32 @@ const AdminTax = () => {
   const fetchTaxes = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("adminToken")
-      const data = await apiRequest("/api/taxes", {
-        headers: { Authorization: `Bearer ${token}` },
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      if (!token) {
+        setError("No authentication token found. Please login again.")
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch(`${config.API_URL}/api/tax/admin`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       })
-      setTaxes(data)
+
+      if (response.ok) {
+        const data = await response.json()
+        setTaxes(data.filter((tax) => !tax.isDeleted))
+      } else if (response.status === 401) {
+        setError("Authentication failed. Please login again.")
+      } else {
+        setError("Failed to load taxes. Please try again later.")
+      }
       setLoading(false)
     } catch (error) {
-      console.error("Taxes fetch error:", error)
+      console.error("Error fetching taxes:", error)
       setError("Failed to load taxes. Please try again later.")
       setLoading(false)
     }
@@ -103,6 +122,44 @@ const AdminTax = () => {
         console.error("Tax delete error:", error)
         showToast("Failed to delete tax.", "error")
       }
+    }
+  }
+
+  const handleToggleStatus = async (taxId) => {
+    try {
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
+      }
+
+      const tax = taxes.find(t => t._id === taxId)
+      if (!tax) return
+
+      const newStatus = !tax.isActive
+
+      const response = await fetch(`${config.API_URL}/api/tax/${taxId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      })
+
+      if (response.ok) {
+        // Update the tax in the local state
+        setTaxes(taxes.map(t => 
+          t._id === taxId ? { ...t, isActive: newStatus } : t
+        ))
+        showToast(`Tax ${newStatus ? 'activated' : 'deactivated'} successfully`, "success")
+      } else {
+        showToast("Failed to update tax status", "error")
+      }
+    } catch (error) {
+      console.error("Failed to toggle tax status:", error)
+      showToast("Failed to update tax status", "error")
     }
   }
 
@@ -297,12 +354,25 @@ const AdminTax = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button onClick={() => handleEdit(tax)} className="text-blue-600 hover:text-blue-900 mr-4">
-                              <Edit size={18} />
-                            </button>
-                            <button onClick={() => handleDelete(tax._id)} className="text-red-600 hover:text-red-900">
-                              <Trash2 size={18} />
-                            </button>
+                            <div className="flex items-center justify-end space-x-2">
+                              <button
+                                onClick={() => handleToggleStatus(tax._id)}
+                                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                                  tax.isActive 
+                                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                    : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                }`}
+                                title={tax.isActive ? 'Click to deactivate' : 'Click to activate'}
+                              >
+                                {tax.isActive ? 'Active' : 'Inactive'}
+                              </button>
+                              <button onClick={() => handleEdit(tax)} className="text-blue-600 hover:text-blue-900">
+                                <Edit size={18} />
+                              </button>
+                              <button onClick={() => handleDelete(tax._id)} className="text-red-600 hover:text-red-900">
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))

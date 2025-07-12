@@ -5,13 +5,26 @@ import { protect, admin } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// @desc    Get all taxes
+// @desc    Fetch all taxes (Admin only - includes inactive)
+// @route   GET /api/tax/admin
+// @access  Private/Admin
+router.get(
+  "/admin",
+  protect,
+  admin,
+  asyncHandler(async (req, res) => {
+    const taxes = await Tax.find({ isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
+    res.json(taxes)
+  }),
+)
+
+// @desc    Fetch all taxes
 // @route   GET /api/tax
 // @access  Public
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const taxes = await Tax.find({ isActive: true }).sort({ createdAt: -1 })
+    const taxes = await Tax.find({ isActive: true, isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
     res.json(taxes)
   }),
 )

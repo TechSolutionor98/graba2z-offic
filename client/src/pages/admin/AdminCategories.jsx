@@ -5,6 +5,7 @@ import { Link } from "react-router-dom"
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Edit, Trash2, Plus } from "lucide-react"
+import config from "../../config/config"
 
 const AdminCategories = () => {
   const [categories, setCategories] = useState([])
@@ -27,7 +28,7 @@ const AdminCategories = () => {
         return
       }
 
-      const response = await fetch("/api/categories/admin", {
+      const response = await fetch(`${config.API_URL}/api/categories/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -82,6 +83,44 @@ const AdminCategories = () => {
         console.error("Error deleting category:", error)
         showToast("Error deleting category", "error")
       }
+    }
+  }
+
+  const handleToggleStatus = async (categoryId) => {
+    try {
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
+      }
+
+      const category = categories.find(c => c._id === categoryId)
+      if (!category) return
+
+      const newStatus = !category.isActive
+
+      const response = await fetch(`${config.API_URL}/api/categories/${categoryId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      })
+
+      if (response.ok) {
+        // Update the category in the local state
+        setCategories(categories.map(c => 
+          c._id === categoryId ? { ...c, isActive: newStatus } : c
+        ))
+        showToast(`Category ${newStatus ? 'activated' : 'deactivated'} successfully`, "success")
+      } else {
+        showToast("Failed to update category status", "error")
+      }
+    } catch (error) {
+      console.error("Failed to toggle category status:", error)
+      showToast("Failed to update category status", "error")
     }
   }
 
@@ -173,6 +212,17 @@ const AdminCategories = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{category.sortOrder || 0}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleToggleStatus(category._id)}
+                              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                                category.isActive 
+                                  ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                  : 'bg-red-100 text-red-800 hover:bg-red-200'
+                              }`}
+                              title={category.isActive ? 'Click to deactivate' : 'Click to activate'}
+                            >
+                              {category.isActive ? 'Active' : 'Inactive'}
+                            </button>
                             <Link
                               to={`/admin/edit-category/${category._id}`}
                               className="text-blue-600 hover:text-blue-900 p-2 rounded-md hover:bg-blue-50"
