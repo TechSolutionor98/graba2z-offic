@@ -482,56 +482,7 @@ import { protect, admin } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// @desc    Get all active subcategories
-// @route   GET /api/subcategories
-// @access  Public
-router.get(
-  "/",
-  asyncHandler(async (req, res) => {
-    try {
-      const { category } = req.query
-
-      const query = { isActive: { $ne: false }, isDeleted: { $ne: true } }
-
-      // If category filter is provided
-      if (category) {
-        query.category = category
-      }
-
-      console.log("Fetching subcategories with query:", query)
-
-      const subcategories = await SubCategory.find(query).populate("category", "name slug").sort({ createdAt: -1 })
-
-      console.log("Raw subcategories from DB:", subcategories)
-
-      // Filter and validate subcategories
-      const validSubCategories = subcategories.filter((sub) => {
-        const isValid =
-          sub &&
-          sub._id &&
-          sub.name &&
-          typeof sub.name === "string" &&
-          sub.name.trim() !== "" &&
-          !sub.name.match(/^[0-9a-fA-F]{24}$/) // Not an ID
-
-        if (!isValid) {
-          console.warn("Invalid subcategory found:", sub)
-        }
-        return isValid
-      })
-
-      console.log("Valid subcategories:", validSubCategories)
-      console.log("Sending subcategories count:", validSubCategories.length)
-
-      res.json(validSubCategories)
-    } catch (error) {
-      console.error("Error fetching subcategories:", error)
-      res.status(500).json({ message: "Error fetching subcategories", error: error.message })
-    }
-  }),
-)
-
-// @desc    Get all subcategories (admin)
+// @desc    Fetch all subcategories (Admin only - includes inactive)
 // @route   GET /api/subcategories/admin
 // @access  Private/Admin
 router.get(
@@ -539,10 +490,23 @@ router.get(
   protect,
   admin,
   asyncHandler(async (req, res) => {
-    const subcategories = await SubCategory.find({ isDeleted: { $ne: true } })
-      .populate("category", "name")
-      .sort({ createdAt: -1 })
-    res.json(subcategories)
+    const subCategories = await SubCategory.find({ isDeleted: { $ne: true } })
+      .populate("category", "name slug")
+      .sort({ sortOrder: 1, name: 1 })
+    res.json(subCategories)
+  }),
+)
+
+// @desc    Fetch all subcategories
+// @route   GET /api/subcategories
+// @access  Public
+router.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    const subCategories = await SubCategory.find({ isActive: true, isDeleted: { $ne: true } })
+      .populate("category", "name slug")
+      .sort({ sortOrder: 1, name: 1 })
+    res.json(subCategories)
   }),
 )
 

@@ -21,18 +21,34 @@ const AdminBrands = () => {
 
   const fetchBrands = async () => {
     try {
-      const token = localStorage.getItem("adminToken")
-      const response = await fetch(`${config.API_URL}/api/brands`, {
+      setLoading(true)
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      if (!token) {
+        setError("No authentication token found. Please login again.")
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch(`${config.API_URL}/api/brands/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       })
-      const data = await response.json()
-      setBrands(data)
+
+      if (response.ok) {
+        const data = await response.json()
+        setBrands(data.filter((brand) => !brand.isDeleted))
+      } else if (response.status === 401) {
+        setError("Authentication failed. Please login again.")
+      } else {
+        setError("Failed to load brands. Please try again later.")
+      }
+      setLoading(false)
     } catch (error) {
       console.error("Error fetching brands:", error)
-      showToast("Error fetching brands", "error")
-    } finally {
+      setError("Failed to load brands. Please try again later.")
       setLoading(false)
     }
   }
@@ -90,6 +106,44 @@ const AdminBrands = () => {
         console.error("Error updating brand:", error)
         alert("Error updating brand")
       }
+    }
+  }
+
+  const handleToggleStatus = async (brandId) => {
+    try {
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
+      }
+
+      const brand = brands.find(b => b._id === brandId)
+      if (!brand) return
+
+      const newStatus = !brand.isActive
+
+      const response = await fetch(`${config.API_URL}/api/brands/${brandId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      })
+
+      if (response.ok) {
+        // Update the brand in the local state
+        setBrands(brands.map(b => 
+          b._id === brandId ? { ...b, isActive: newStatus } : b
+        ))
+        showToast(`Brand ${newStatus ? 'activated' : 'deactivated'} successfully`, "success")
+      } else {
+        showToast("Failed to update brand status", "error")
+      }
+    } catch (error) {
+      console.error("Failed to toggle brand status:", error)
+      showToast("Failed to update brand status", "error")
     }
   }
 
@@ -276,22 +330,32 @@ const AdminBrands = () => {
                           {brand.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        {hasIssues && (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
                           <button
-                            onClick={() => fixBrandName(brand._id, brand.name)}
-                            className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 hover:bg-yellow-200 px-2 py-1 rounded text-xs"
-                            title="Fix brand name"
+                            onClick={() => handleToggleStatus(brand._id)}
+                            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                              brand.isActive 
+                                ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                : 'bg-red-100 text-red-800 hover:bg-red-200'
+                            }`}
+                            title={brand.isActive ? 'Click to deactivate' : 'Click to activate'}
                           >
-                            Fix
+                            {brand.isActive ? 'Active' : 'Inactive'}
                           </button>
-                        )}
-                        <Link to={`/admin/edit-brand/${brand._id}`} className="text-indigo-600 hover:text-indigo-900">
-                          <span className="text-lg">✏️</span>
-                        </Link>
-                        <button onClick={() => deleteBrand(brand._id)} className="text-red-600 hover:text-red-900 ml-2">
-                          <span className="text-lg">🗑️</span>
-                        </button>
+                          <Link
+                            to={`/admin/edit-brand/${brand._id}`}
+                            className="text-blue-600 hover:text-blue-900 p-2 rounded-md hover:bg-blue-50"
+                          >
+                            <FaEdit size={16} />
+                          </Link>
+                          <button
+                            onClick={() => deleteBrand(brand._id)}
+                            className="text-red-600 hover:text-red-900 p-2 rounded-md hover:bg-red-50"
+                          >
+                            <FaTrash size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )

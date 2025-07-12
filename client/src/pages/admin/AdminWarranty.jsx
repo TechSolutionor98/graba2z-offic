@@ -6,6 +6,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Edit, Trash2, Shield, Eye, EyeOff } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 import { apiRequest } from "../../services/api"
+import config from "../../config/config"
 
 const AdminWarranty = () => {
   const [warranties, setWarranties] = useState([])
@@ -30,16 +31,33 @@ const AdminWarranty = () => {
   const fetchWarranties = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("adminToken")
-      const data = await apiRequest("/api/warranties", {
-        headers: { Authorization: `Bearer ${token}` },
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      if (!token) {
+        setError("No authentication token found. Please login again.")
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch(`${config.API_URL}/api/warranty/admin`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       })
-      setWarranties(data)
+
+      if (response.ok) {
+        const data = await response.json()
+        setWarranties(data.filter((warranty) => !warranty.isDeleted))
+      } else if (response.status === 401) {
+        setError("Authentication failed. Please login again.")
+      } else {
+        setError("Failed to load warranties. Please try again later.")
+      }
       setLoading(false)
     } catch (error) {
-      console.error("Warranties fetch error:", error)
+      console.error("Error fetching warranties:", error)
       setError("Failed to load warranties. Please try again later.")
-      showToast("Failed to load warranties", "error")
       setLoading(false)
     }
   }
@@ -105,6 +123,44 @@ const AdminWarranty = () => {
         console.error("Warranty delete error:", error)
         showToast("Failed to delete warranty", "error")
       }
+    }
+  }
+
+  const handleToggleStatus = async (warrantyId) => {
+    try {
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
+      }
+
+      const warranty = warranties.find(w => w._id === warrantyId)
+      if (!warranty) return
+
+      const newStatus = !warranty.isActive
+
+      const response = await fetch(`${config.API_URL}/api/warranty/${warrantyId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      })
+
+      if (response.ok) {
+        // Update the warranty in the local state
+        setWarranties(warranties.map(w => 
+          w._id === warrantyId ? { ...w, isActive: newStatus } : w
+        ))
+        showToast(`Warranty ${newStatus ? 'activated' : 'deactivated'} successfully`, "success")
+      } else {
+        showToast("Failed to update warranty status", "error")
+      }
+    } catch (error) {
+      console.error("Failed to toggle warranty status:", error)
+      showToast("Failed to update warranty status", "error")
     }
   }
 
@@ -295,20 +351,39 @@ const AdminWarranty = () => {
                                 </>
                               )}
                             </span>
+                            <button
+                              onClick={() => handleToggleStatus(warranty._id)}
+                              className="ml-2 text-blue-600 hover:text-blue-900 text-xs"
+                            >
+                              {warranty.isActive ? "Deactivate" : "Activate"}
+                            </button>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button
-                              onClick={() => handleEdit(warranty)}
-                              className="text-blue-600 hover:text-blue-900 mr-4"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(warranty._id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            <div className="flex items-center justify-end space-x-2">
+                              <button
+                                onClick={() => handleToggleStatus(warranty._id)}
+                                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                                  warranty.isActive 
+                                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                    : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                }`}
+                                title={warranty.isActive ? 'Click to deactivate' : 'Click to activate'}
+                              >
+                                {warranty.isActive ? 'Active' : 'Inactive'}
+                              </button>
+                              <button
+                                onClick={() => handleEdit(warranty)}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                <Edit size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(warranty._id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))

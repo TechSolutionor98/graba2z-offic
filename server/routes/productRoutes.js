@@ -78,6 +78,92 @@ function generateSlug(name) {
   return name.trim().toLowerCase().replace(/\s+/g, "-")
 }
 
+// @desc    Fetch all products (Admin only - includes inactive)
+// @route   GET /api/products/admin
+// @access  Private/Admin
+router.get(
+  "/admin",
+  protect,
+  admin,
+  asyncHandler(async (req, res) => {
+    const { category, featured, search, limit, brand } = req.query
+
+    const query = {} // No isActive filter for admin
+
+    // Filter by category
+    if (category && category !== "all") {
+      // First try to find category by name, then by ID
+      let categoryDoc = await Category.findOne({ name: { $regex: new RegExp(`^${category}$`, "i") } })
+
+      if (!categoryDoc) {
+        // If not found by name, try by ID (if it's a valid ObjectId)
+        if (category.match(/^[0-9a-fA-F]{24}$/)) {
+          categoryDoc = await Category.findById(category)
+        }
+      }
+
+      if (categoryDoc) {
+        query.category = categoryDoc._id
+      } else {
+        // If category not found, return empty array
+        return res.json([])
+      }
+    }
+
+    // Filter by brand
+    if (brand) {
+      if (Array.isArray(brand)) {
+        // If brand is an array of IDs
+        query.brand = { $in: brand }
+      } else if (typeof brand === "string" && brand.match(/^[0-9a-fA-F]{24}$/)) {
+        // If it's an ObjectId string
+        query.brand = brand
+      } else if (typeof brand === "string") {
+        // If it's a name, look up the brand by name
+        const brandDoc = await Brand.findOne({ name: { $regex: new RegExp(`^${brand}$`, "i") } })
+        if (brandDoc) {
+          query.brand = brandDoc._id
+        } else {
+          // No matching brand, return empty
+          return res.json([])
+        }
+      }
+    }
+
+    // Filter by featured
+    if (featured === "true") {
+      query.featured = true
+    }
+
+    // Search functionality
+    if (typeof search === "string" && search.trim() !== "") {
+      const regex = new RegExp(search, "i")
+      // Find matching brands by name
+      const matchingBrands = await Brand.find({ name: regex }).select("_id")
+      const brandIds = matchingBrands.map(b => b._id)
+      query.$or = [
+        { name: regex },
+        { description: regex },
+        { brand: { $in: brandIds } },
+      ]
+    }
+
+    let productsQuery = Product.find(query)
+      .populate("category", "name slug")
+      .populate("subCategory", "name slug")
+      .populate("brand", "name slug")
+      .populate("parentCategory", "name slug")
+
+    // Apply limit if specified
+    if (limit) {
+      productsQuery = productsQuery.limit(Number.parseInt(limit))
+    }
+
+    const products = await productsQuery.sort({ createdAt: -1 })
+    res.json(products)
+  }),
+)
+
 // @desc    Fetch all products
 // @route   GET /api/products
 // @access  Public
@@ -86,7 +172,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const { category, featured, search, limit, brand } = req.query
 
-    const query = { isActive: true }
+    const query = { isActive: true } // Only active products for public
 
     // Filter by category
     if (category && category !== "all") {

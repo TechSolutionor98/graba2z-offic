@@ -29,27 +29,72 @@ const AdminUnits = () => {
   const fetchUnits = async () => {
     try {
       setLoading(true)
-      const token =
-        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       if (!token) {
-        setError("Authentication token not found. Please login again.")
+        setError("No authentication token found. Please login again.")
         setLoading(false)
         return
       }
 
-      const { data } = await axios.get(`${config.API_URL}/api/units`, {
+      const response = await fetch(`${config.API_URL}/api/units/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       })
-      setUnits(data)
+
+      if (response.ok) {
+        const data = await response.json()
+        setUnits(data.filter((unit) => !unit.isDeleted))
+      } else if (response.status === 401) {
+        setError("Authentication failed. Please login again.")
+      } else {
+        setError("Failed to load units. Please try again later.")
+      }
       setLoading(false)
     } catch (error) {
-      console.error("Units fetch error:", error)
+      console.error("Error fetching units:", error)
       setError("Failed to load units. Please try again later.")
-      showToast("Failed to load units", "error")
       setLoading(false)
+    }
+  }
+
+  const handleToggleStatus = async (unitId) => {
+    try {
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
+      }
+
+      const unit = units.find(u => u._id === unitId)
+      if (!unit) return
+
+      const newStatus = !unit.isActive
+
+      const response = await fetch(`${config.API_URL}/api/units/${unitId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      })
+
+      if (response.ok) {
+        // Update the unit in the local state
+        setUnits(units.map(u => 
+          u._id === unitId ? { ...u, isActive: newStatus } : u
+        ))
+        showToast(`Unit ${newStatus ? 'activated' : 'deactivated'} successfully`, "success")
+      } else {
+        showToast("Failed to update unit status", "error")
+      }
+    } catch (error) {
+      console.error("Failed to toggle unit status:", error)
+      showToast("Failed to update unit status", "error")
     }
   }
 
@@ -297,12 +342,25 @@ const AdminUnits = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button onClick={() => handleEdit(unit)} className="text-blue-600 hover:text-blue-900 mr-4">
-                              <Edit size={18} />
-                            </button>
-                            <button onClick={() => handleDelete(unit._id)} className="text-red-600 hover:text-red-900">
-                              <Trash2 size={18} />
-                            </button>
+                            <div className="flex items-center justify-end space-x-2">
+                              <button
+                                onClick={() => handleToggleStatus(unit._id)}
+                                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                                  unit.isActive 
+                                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                    : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                }`}
+                                title={unit.isActive ? 'Click to deactivate' : 'Click to activate'}
+                              >
+                                {unit.isActive ? 'Active' : 'Inactive'}
+                              </button>
+                              <button onClick={() => handleEdit(unit)} className="text-blue-600 hover:text-blue-900">
+                                <Edit size={18} />
+                              </button>
+                              <button onClick={() => handleDelete(unit._id)} className="text-red-600 hover:text-red-900">
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))

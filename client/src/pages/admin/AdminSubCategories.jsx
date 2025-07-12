@@ -36,6 +36,42 @@ const AdminSubCategories = () => {
     }
   }
 
+  const handleToggleStatus = async (subCategoryId) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
+      }
+
+      const subCategory = subCategories.find(sc => sc._id === subCategoryId)
+      if (!subCategory) return
+
+      const newStatus = !subCategory.isActive
+
+      const response = await axios.put(`${config.API_URL}/api/subcategories/${subCategoryId}`, 
+        { isActive: newStatus },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+
+      if (response.status === 200) {
+        // Update the subcategory in the local state
+        setSubCategories(subCategories.map(sc => 
+          sc._id === subCategoryId ? { ...sc, isActive: newStatus } : sc
+        ))
+        showToast(`Subcategory ${newStatus ? 'activated' : 'deactivated'} successfully`, "success")
+      } else {
+        showToast("Failed to update subcategory status", "error")
+      }
+    } catch (error) {
+      console.error("Failed to toggle subcategory status:", error)
+      showToast("Failed to update subcategory status", "error")
+    }
+  }
+
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
@@ -210,6 +246,17 @@ const AdminSubCategories = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleToggleStatus(subCategory._id)}
+                              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                                subCategory.isActive 
+                                  ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                  : 'bg-red-100 text-red-800 hover:bg-red-200'
+                              }`}
+                              title={subCategory.isActive ? 'Click to deactivate' : 'Click to activate'}
+                            >
+                              {subCategory.isActive ? 'Active' : 'Inactive'}
+                            </button>
                             <Link
                               to={`/admin/subcategories/edit/${subCategory._id}`}
                               className="text-blue-600 hover:text-blue-900 p-2 rounded-md hover:bg-blue-50"

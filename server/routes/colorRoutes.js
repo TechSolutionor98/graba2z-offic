@@ -5,13 +5,26 @@ import { protect, admin } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// @desc    Get all colors
+// @desc    Fetch all colors (Admin only - includes inactive)
+// @route   GET /api/colors/admin
+// @access  Private/Admin
+router.get(
+  "/admin",
+  protect,
+  admin,
+  asyncHandler(async (req, res) => {
+    const colors = await Color.find({ isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
+    res.json(colors)
+  }),
+)
+
+// @desc    Fetch all colors
 // @route   GET /api/colors
 // @access  Public
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const colors = await Color.find({ isActive: true }).sort({ createdAt: -1 })
+    const colors = await Color.find({ isActive: true, isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
     res.json(colors)
   }),
 )

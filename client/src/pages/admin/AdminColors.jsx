@@ -27,8 +27,7 @@ const AdminColors = () => {
   const fetchColors = async () => {
     try {
       setLoading(true)
-      const token =
-        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       if (!token) {
         setError("No authentication token found. Please login again.")
@@ -36,7 +35,7 @@ const AdminColors = () => {
         return
       }
 
-      const response = await fetch(`${config.API_URL}/api/colors`, {
+      const response = await fetch(`${config.API_URL}/api/colors/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -57,6 +56,44 @@ const AdminColors = () => {
       console.error("Colors fetch error:", error)
       setError("Failed to load colors. Please try again later.")
       setLoading(false)
+    }
+  }
+
+  const handleToggleStatus = async (colorId) => {
+    try {
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
+      }
+
+      const color = colors.find(c => c._id === colorId)
+      if (!color) return
+
+      const newStatus = !color.isActive
+
+      const response = await fetch(`${config.API_URL}/api/colors/${colorId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      })
+
+      if (response.ok) {
+        // Update the color in the local state
+        setColors(colors.map(c => 
+          c._id === colorId ? { ...c, isActive: newStatus } : c
+        ))
+        showToast(`Color ${newStatus ? 'activated' : 'deactivated'} successfully`, "success")
+      } else {
+        showToast("Failed to update color status", "error")
+      }
+    } catch (error) {
+      console.error("Failed to toggle color status:", error)
+      showToast("Failed to update color status", "error")
     }
   }
 
@@ -311,15 +348,28 @@ const AdminColors = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button
-                              onClick={() => handleEdit(color)}
-                              className="text-blue-600 hover:text-blue-900 mr-4"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button onClick={() => handleDelete(color._id)} className="text-red-600 hover:text-red-900">
-                              <Trash2 size={18} />
-                            </button>
+                            <div className="flex items-center justify-end space-x-2">
+                              <button
+                                onClick={() => handleToggleStatus(color._id)}
+                                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                                  color.isActive 
+                                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                    : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                }`}
+                                title={color.isActive ? 'Click to deactivate' : 'Click to activate'}
+                              >
+                                {color.isActive ? 'Active' : 'Inactive'}
+                              </button>
+                              <button
+                                onClick={() => handleEdit(color)}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                <Edit size={18} />
+                              </button>
+                              <button onClick={() => handleDelete(color._id)} className="text-red-600 hover:text-red-900">
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))

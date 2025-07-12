@@ -5,13 +5,26 @@ import { protect, admin } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
 
-// @desc    Get all warranties
+// @desc    Fetch all warranties (Admin only - includes inactive)
+// @route   GET /api/warranty/admin
+// @access  Private/Admin
+router.get(
+  "/admin",
+  protect,
+  admin,
+  asyncHandler(async (req, res) => {
+    const warranties = await Warranty.find({ isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
+    res.json(warranties)
+  }),
+)
+
+// @desc    Fetch all warranties
 // @route   GET /api/warranty
 // @access  Public
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const warranties = await Warranty.find({ isActive: true }).sort({ createdAt: -1 })
+    const warranties = await Warranty.find({ isActive: true, isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
     res.json(warranties)
   }),
 )
