@@ -298,7 +298,7 @@ const ProductDetails = () => {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-white min-h-screen">
       <div className="max-w-8xl mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
@@ -314,16 +314,19 @@ const ProductDetails = () => {
             {product.category?.name || product.category || 'N/A'}
           </Link>
           <span>/</span>
-          <span className="text-gray-900">{product.name}</span>
+          {/* <span className="text-black">{product.name}</span> */}
+          <span className="text-black block truncate max-w-[120px] sm:max-w-none">
+            {product.name}
+          </span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
           {/* Product Images - Left Side */}
-          <div className="lg:col-span-5">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              
+          <div className="lg:col-span-4">
+            <div className="rounded-lg ">
+
               {/* Main Image */}
-              <div className="relative bg-gray-50 rounded-lg p-4 group mb-4">
+              <div className="relative rounded-lg p-4 group mb-4">
                 <img
                   src={productImages[selectedImage] || "/placeholder.svg?height=400&width=400"}
                   alt={product.name}
@@ -378,14 +381,14 @@ const ProductDetails = () => {
           </div>
 
           {/* Product Info - Middle */}
-          <div className="lg:col-span-4">
-            <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="lg:col-span-5">
+            <div className="bg-white rounded-lg p-2">
               {/* Status Badges */}
               <div className="flex items-center gap-2 mb-4">
                 {getStockBadge()}
                 {getDiscountBadge()}
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">{product.name}</h1>
+              <h1 className="text-xl font-bold text-gray-900 mb-4">{product.name}</h1>
 
               {/* Brand and Category */}
               <div className="flex items-center gap-4 mb-4 text-sm">
@@ -452,16 +455,16 @@ const ProductDetails = () => {
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3">Key Features:</h3>
                   <div
-                    className="text-sm text-gray-700 prose prose-sm max-w-none"
+                    className="text-sm text-gray-700 prose prose-sm max-w-none line-clamp-5 sm:line-clamp-none"
                     dangerouslySetInnerHTML={{ __html: product.shortDescription }}
                   />
                 </div>
               )}
 
               {/* Quantity and Add to Cart */}
-              <div className="space-y-4 mb-6 ">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center border-2 border-gray-300 rounded-lg">
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center space-x-2 ">
+                  <div className="flex items-center border-2 border-gray-300  rounded-lg">
                     <button
                       onClick={() => handleQuantityChange(-1)}
                       className="px-3 py-2 text-gray-600 hover:text-red-600 hover:bg-gray-50 transition-colors"
@@ -481,71 +484,48 @@ const ProductDetails = () => {
                     </button>
                   </div>
 
-                  <div className="flex items-center  ">
+                  <div className="flex items-center  w-full ">
                     <button
                       onClick={handleAddToCart}
                       disabled={product.stockStatus === "Out of Stock"}
-                      className="w-full bg-lime-500 hover:bg-lime-600 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg font-medium transition-colors"
+                      className=" bg-lime-500 hover:bg-lime-600 disabled:bg-gray-400 text-white py-3 px-9 rounded-lg font-medium transition-colors"
                     >
-                      <ShoppingCart size={18} className="mr-2" />
+
+                      <ShoppingCart size={22} className="mr-2" />
 
                     </button>
                     <button
                       onClick={() => isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)}
-                      className="ml-6 flex items-center px-6 py-3 rounded-lg border border-gray-300 bg-white hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors"
+                      className="ml-1 flex items-center px-9 py-3 rounded-lg border border-gray-300 bg-white hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors"
                       aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
                     >
                       <Heart size={20} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
                       <span className="">{isInWishlist(product._id) ? "" : ""}</span>
+                    </button>
+                    <button
+                      disabled={product.stockStatus === "Out of Stock"}
+                      className="hidden sm:block w-full ml-1 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-3 py-3 rounded-lg font-medium transition-colors"
+                      onClick={handleBuyNow}
+                    >
+                      Buy Now
                     </button>
                   </div>
                 </div>
 
                 <button
                   disabled={product.stockStatus === "Out of Stock"}
-                  className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg font-medium transition-colors"
+                  className=" md:hidden lg:hidden w-full ml-1 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-3 py-3 rounded-lg font-medium transition-colors"
                   onClick={handleBuyNow}
                 >
                   Buy Now
                 </button>
 
-                <div className="flex items-center space-x-4">
-                  <button className="flex items-center text-gray-600 hover:text-blue-600">
-                    <Share2 size={18} className="mr-1" />
-                    Share
-                  </button>
-                </div>
               </div>
 
-              {/* Contact Options */}
-              {/* <div className="grid grid-cols-3 gap-4 py-4 border-t border-b">
-                <div className="text-center">
-                  <button
-                    className="flex items-center text-gray-600 hover:text-green-600"
-                    onClick={() => window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=Hi%2C%20I%20need%20help%20with%20this%20product%3A%20${encodeURIComponent(product.name)}`,'_blank')}
-                  >
-                    <MessageCircle size={18} className="mr-1" />
-                    Chat With Specialist
-                  </button>
-                </div>
-                <div className="text-center">
-                  <button
-                    className="flex items-center text-gray-600 hover:text-blue-600"
-                    onClick={() => setShowCallbackModal(true)}
-                  >
-                    <Phone size={18} className="mr-1" />
-                    Request a Callback
-                  </button>
-                </div>
-                <div className="text-center">
-                  <Shield className="mx-auto mb-2 text-green-600" size={24} />
-                  <div className="text-xs font-medium">Request Bulk Purchase</div>
-                </div>
-              </div> */}
-              {/* Contact Options */}
-              <div className="grid grid-cols-3 gap-4 py-4 border-t border-b text-center">
-                {/* WhatsApp Chat */}
-                <div>
+
+              {/* <div className="grid grid-cols-3 gap-4 py-4 text-center">
+                
+                <div className="border-2 border-gray-300 rounded-lg p-2 transition-transform duration-200 hover:scale-105 hover:shadow-md">
                   <button
                     className="flex flex-col items-center text-gray-600 hover:text-green-600 w-full"
                     onClick={() =>
@@ -560,8 +540,8 @@ const ProductDetails = () => {
                   </button>
                 </div>
 
-                {/* Callback Request */}
-                <div>
+              
+                <div className="border-2 border-gray-300 rounded-lg p-2 transition-transform duration-200 hover:scale-105 hover:shadow-md">
                   <button
                     className="flex flex-col items-center text-gray-600 hover:text-blue-600 w-full"
                     onClick={() => setShowCallbackModal(true)}
@@ -571,27 +551,87 @@ const ProductDetails = () => {
                   </button>
                 </div>
 
+                
+                <div className="border-2 border-gray-300 rounded-lg p-2 transition-transform duration-200 hover:scale-105 hover:shadow-md">
+                  <button
+                    type="button"
+                    className="flex flex-col items-center w-full focus:outline-none group"
+                    onClick={() => navigate('/bulk-purchase')}
+                  >
+                    <Shield className="mx-auto mb-2 text-green-600 group-hover:text-lime-600 transition-colors" size={24} />
+                    <span className="text-xs font-medium group-hover:text-lime-600 transition-colors">Request Bulk Purchase</span>
+                  </button>
+                </div>
+              </div> */}
+
+
+              <div className="grid grid-cols-3 gap-4 py-4 text-center">
+                {/* WhatsApp Chat */}
+                <div className="border-2 border-gray-300 rounded-lg p-2 transition-transform duration-200 hover:scale-105 hover:shadow-md group overflow-hidden">
+                  <button
+                    className="flex flex-col items-center text-gray-600 hover:text-green-600 w-full"
+                    onClick={() =>
+                      window.open(
+                        `https://wa.me/${WHATSAPP_NUMBER}?text=Hi%2C%20I%20need%20help%20with%20this%20product%3A%20${encodeURIComponent(product.name)}`,
+                        '_blank'
+                      )
+                    }
+                  >
+                    <MessageCircle
+                      size={24}
+                      className="mb-2 text-lime-500 transform transition-transform duration-300 group-hover:-translate-y-1"
+                    />
+                    <span className="text-xs text-black font-medium group-hover:text-lime-500">
+                      Chat With Specialist
+                    </span>
+                  </button>
+                </div>
+
+                {/* Callback Request */}
+                <div className="border-2 border-gray-300 rounded-lg p-2 transition-transform duration-200 hover:scale-105 hover:shadow-md group overflow-hidden">
+                  <button
+                    className="flex flex-col items-center text-gray-600 hover:text-blue-600 w-full"
+                    onClick={() => setShowCallbackModal(true)}
+                  >
+                    <Phone
+                      size={24}
+                      className="mb-2 text-lime-500 transform transition-transform duration-300 group-hover:-translate-y-1"
+                    />
+                    <span className="text-xs text-black font-medium group-hover:text-lime-500">Request a Callback</span>
+                  </button>
+                </div>
+
                 {/* Bulk Purchase */}
-                <button
-                  type="button"
-                  className="flex flex-col items-center w-full focus:outline-none group"
-                  onClick={() => navigate('/bulk-purchase')}
-                >
-                  <Shield className="mx-auto mb-2 text-green-600 group-hover:text-lime-600 transition-colors" size={24} />
-                  <span className="text-xs font-medium group-hover:text-lime-600 transition-colors">Request Bulk Purchase</span>
-                </button>
+                <div className="border-2 border-gray-300 rounded-lg p-2 transition-transform duration-200 hover:scale-105 hover:shadow-md group overflow-hidden">
+                  <button
+                    type="button"
+                    className="flex flex-col items-center w-full focus:outline-none group"
+                    onClick={() => navigate('/bulk-purchase')}
+                  >
+                    <Shield
+                      className="mx-auto mb-2 text-lime-500 transform transition-transform duration-300 group-hover:-translate-y-1"
+                      size={24}
+                    />
+                    <span className="text-xs font-medium group-hover:text-lime-500 transition-colors">
+                      Request Bulk Purchase
+                    </span>
+                  </button>
+                </div>
               </div>
+
+
+
 
             </div>
           </div>
 
           {/* Service Features - Right Side */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg p-3 shadow-sm space-y-6">
+            <div className="bg-white rounded-lg p-3 space-y-6">
               {/* Get My Coupon */}
               <div className="bg-yellow-50 rounded-lg p-4">
-                <h4 className="font-bold text-gray-900 text-sm mb-2 flex items-center">🎯 Get My Coupon</h4>
-                <p className="text-xs text-gray-700 mb-3">
+                <h4 className="font-bold text-gray-900 text-md mb-2 flex items-center">🎯 Get My Coupon</h4>
+                <p className="text-sm text-gray-700 mb-3">
                   Free shipping when you spend AED500 & above. Unlimited destinations in Dubai and Abu Dhabi
                 </p>
                 <button className="w-full bg-yellow-400 text-black py-2 px-4 rounded font-bold text-sm hover:bg-yellow-500 transition-colors">
@@ -636,11 +676,34 @@ const ProductDetails = () => {
               {/* Payment Methods */}
               <div className="border-t pt-4">
                 <h4 className="font-bold text-gray-900 text-sm mb-3">Payment Methods:</h4>
-                <div className="flex items-center space-x-2 flex-wrap gap-2">
+                {/* <div className="flex items-center space-x-2 flex-wrap gap-2">
                   <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">VISA</div>
                   <div className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">MASTER</div>
                   <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">COD</div>
+                </div> */}
+                <div className="flex ml-8 items-center space-x-2 flex-wrap gap-2">
+                  <div className="px-2 py-1 rounded flex items-center gap-1">
+                    <img src="/master.png" alt="master" className="w-10" />
+
+                  </div>
+                  <div className="px-2 py-1 rounded flex items-center gap-1">
+                    <img src="/visa.png" alt="visa" className="w-12" />
+
+                  </div>
+                  <div className="px-2 py-1 rounded flex items-center gap-1">
+                    <img src="/tamara.png" alt="tamara" className="w-20" />
+
+                  </div>
+                  <div className="px-2 py-1 rounded flex items-center gap-1">
+                    <img src="/tabby.png" alt="tabby" className="w-16" />
+
+                  </div>
+                  <div className="px-2 py-1 rounded flex items-center gap-1">
+                    <img src="/cod.png" alt="cod" className=" w-10" />
+
+                  </div>
                 </div>
+
               </div>
             </div>
           </div>
