@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import BannerSlider from "../components/BannerSlider"
+import CategorySlider from "../components/CategorySlider"
 import { useWishlist } from "../context/WishlistContext"
 
 import config from "../config/config"
@@ -49,6 +50,8 @@ const Home = () => {
   const [samsungProducts, setSamsungProducts] = useState([])
   const [upgradeFeatures, setUpgradeFeatures] = useState([])
   const [selectedBrand, setSelectedBrand] = useState(null)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [brandCurrentIndex, setBrandCurrentIndex] = useState(0)
 
   const bounceStyle = {
     animation: "bounce 1s infinite",
@@ -58,6 +61,11 @@ const Home = () => {
   @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-30px); }
+  }
+  
+  @keyframes infiniteScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
   }
   `
   if (typeof document !== "undefined" && !document.getElementById("bounce-keyframes")) {
@@ -352,13 +360,30 @@ const Home = () => {
   }, [])
 
   useEffect(() => {
-    if (brands.length > 8) {
+    if (brands.length > 0) {
       const interval = setInterval(() => {
         nextBrandSlide()
-      }, 4000)
+      }, 3000)
       return () => clearInterval(interval)
     }
-  }, [brands.length, brandSlide])
+  }, [brands.length, brandCurrentIndex])
+
+  // Handle infinite loop transitions
+  useEffect(() => {
+    if (brandCurrentIndex === brands.length) {
+      setTimeout(() => {
+        setIsTransitioning(false)
+        setBrandCurrentIndex(0)
+      }, 300)
+    } else if (brandCurrentIndex === -1) {
+      setTimeout(() => {
+        setIsTransitioning(false)
+        setBrandCurrentIndex(brands.length - 1)
+      }, 300)
+    } else {
+      setIsTransitioning(true)
+    }
+  }, [brandCurrentIndex, brands.length])
 
   const handleCategoryClick = (categoryName) => {
     navigate(`/shop?category=${encodeURIComponent(categoryName)}`)
@@ -407,19 +432,11 @@ const Home = () => {
   }
 
   const nextBrandSlide = () => {
-    if (brandSlide < Math.ceil(brands.length / 8) - 1) {
-      setBrandSlide(brandSlide + 1)
-    } else {
-      setBrandSlide(0)
-    }
+    setBrandCurrentIndex((prev) => (prev + 1) % brands.length)
   }
 
   const prevBrandSlide = () => {
-    if (brandSlide > 0) {
-      setBrandSlide(brandSlide - 1)
-    } else {
-      setBrandSlide(Math.ceil(brands.length / 8) - 1)
-    }
+    setBrandCurrentIndex((prev) => (prev - 1 + brands.length) % brands.length)
   }
 
   if (loading) {
@@ -441,81 +458,8 @@ const Home = () => {
   return (
     <div className="bg-white mt-8">
       <BannerSlider banners={heroBanners} />
-
-      {/* Categories Section - Arrow Navigation for All Devices */}
-      <section className="bg-white mb-5 mt-3 md:mt-4">
-        <div className="max-w-8xl lg:px-3">
-          <div className="flex items-center justify-between">
-            {/* Left Arrow: Hide if categories fit in one view or less */}
-            <button
-              className="text-black hover:text-gray-600"
-              onClick={prevCategorySlide}
-              disabled={categories.length <= (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4)}
-              style={{ opacity: categories.length <= (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4) ? 0.3 : 1 }}
-            >
-              <ChevronLeft size={35} />
-            </button>
-
-            <div className="flex-1 overflow-hidden">
-              <div
-                className={`flex items-center gap-5 md:gap-4 transition-transform duration-300 ease-in-out ${categories.length <= 4 ? "justify-center" : ""}`}
-                style={{
-                  // Center if few categories, else slide
-                  transform:
-                    categories.length <= (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4)
-                      ? "none"
-                      : `translateX(-${categorySlide * (100 / (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4))}%)`,
-                }}
-              >
-                {categories.map((category) => {
-                  if (!category || !category._id || !category.name) {
-                    console.warn("Skipping invalid category in render:", category)
-                    return null
-                  }
-                  return (
-                    <button
-                      key={category._id}
-                      onClick={() => handleCategoryClick(category.name)}
-                      className="flex flex-col items-center group transition-all min-w-0 flex-shrink-0 px-1"
-                      style={{
-                        width: `${100 / (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4)}%`,
-                        maxWidth: "120px",
-                      }}
-                    >
-                      <div className="flex items-center justify-center">
-                        {category.image ? (
-                          <img
-                            src={category.image || "/placeholder.svg"}
-                            alt={category.name}
-                            className="w-14 h-14 md:w-20 md:h-20 lg:w-40 lg:h-40 cover"
-                          />
-                        ) : (
-                          <div className="w-14 h-14 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full border-2 border-gray-200 flex items-center justify-center bg-gray-100">
-                            <span className="text-lg md:text-2xl">📦</span>
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-xs md:text-sm font-bold text-gray-700 text-center mt-1 max-w-16 md:max-w-none truncate">
-                        {category.name}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Right Arrow: Hide if categories fit in one view or less */}
-            <button
-              className="text-black hover:text-gray-600"
-              onClick={nextCategorySlide}
-              disabled={categories.length <= (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4)}
-              style={{ opacity: categories.length <= (window.innerWidth >= 1024 ? 9 : window.innerWidth >= 768 ? 6 : 4) ? 0.3 : 1 }}
-            >
-              <ChevronRight size={36} />
-            </button>
-          </div>
-        </div>
-      </section>
+      {/* Categories Section - Infinite Loop Scroll */}
+      <CategorySlider categories={categories} onCategoryClick={handleCategoryClick} />
 
       {/* Three Cards Section - Simple Mobile Grid */}
       <div className="m-3">
@@ -962,7 +906,7 @@ const Home = () => {
         </section>
       )}
 
-      {/* Featured Brands Section - Auto-scroll every 5 seconds, one brand at a time */}
+      {/* Featured Brands Section - Infinite Loop Scroll */}
       {brands.length > 0 && (
         <section className="bg-white py-8">
           <div className="max-w-8xl mx-auto">
@@ -973,17 +917,22 @@ const Home = () => {
             <div className="relative mx-3 md:mx-5">
               <div className="overflow-hidden">
                 <div
-                  className="flex transition-transform duration-1000 ease-in-out"
+                  className="flex transition-transform duration-300 ease-in-out"
                   style={{
-                    transform: `translateX(-${brandSlide * (100 / (window.innerWidth < 768 ? 4 : 8))}%)`,
+                    width: `${((brands.length * 2) / (window.innerWidth < 768 ? 10 : window.innerWidth < 1024 ? 4 : 12)) * 100}%`,
+                    transform: `translateX(-${(brandCurrentIndex + brands.length) * (100 / (brands.length * 2))}%)`,
+                    transition: isTransitioning ? "transform 0.3s" : "none",
+                  }}
+                  onTransitionEnd={() => {
+                    if (!isTransitioning) setIsTransitioning(true)
                   }}
                 >
-                  {brands.map((brand, index) => (
+                  {[...brands, ...brands].map((brand, index) => (
                     <div
                       key={`${brand._id}-${index}`}
                       className="flex-shrink-0"
                       style={{
-                        width: `${100 / (window.innerWidth < 768 ? 4 : 8)}%`,
+                        width: `${100 / (window.innerWidth < 768 ? 4 : window.innerWidth < 1024 ? 6 : 8)}%`,
                       }}
                     >
                       <div className="px-2 md:px-3">
