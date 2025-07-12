@@ -210,6 +210,14 @@ const AdminProducts = () => {
     return category ? category.name : "Unknown"
   }
 
+  // Helper to get parent category name from product
+  const getParentCategoryName = (product) => {
+    const parentCategoryId = product.parentCategory;
+    if (!parentCategoryId) return 'N/A';
+    const parent = categories.find(cat => cat._id === parentCategoryId);
+    return parent ? parent.name : 'N/A';
+  };
+
   const filteredProducts = products.filter((product) => {
     const productName = product.name || "";
     const brandName = typeof product.brand === "object" && product.brand !== null
@@ -320,6 +328,12 @@ const AdminProducts = () => {
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
+                            Parent Category
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
                             Price
                           </th>
                           <th
@@ -344,85 +358,96 @@ const AdminProducts = () => {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {filteredProducts.length > 0 ? (
-                          filteredProducts.map((product) => (
-                            <tr key={product._id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div className="h-10 w-10 flex-shrink-0">
-                                    <img
-                                      src={product.image || "/placeholder.svg"}
-                                      alt={product.name}
-                                      className="h-10 w-10 rounded-md object-cover"
-                                    />
-                                  </div>
-                                 <div className="ml-4 max-w-[110px] overflow-hidden">
-                                    <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                                    {product.slug && <div className="text-sm text-gray-500">/{product.slug}</div>}
-                                  </div>
-                                 
+                          filteredProducts.map((product) => {
+                            console.log('Product:', product);
+                            console.log('Subcategory:', product.category);
+                            console.log('Parent category ID:', product.category?.category);
+                            console.log('Categories list:', categories);
+                            return (
+                              <tr key={product._id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center">
+                                    <div className="h-10 w-10 flex-shrink-0">
+                                      <img
+                                        src={product.image || "/placeholder.svg"}
+                                        alt={product.name}
+                                        className="h-10 w-10 rounded-md object-cover"
+                                      />
+                                    </div>
+                                   <div className="ml-4 max-w-[110px] overflow-hidden">
+                                      <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                                      {product.slug && <div className="text-sm text-gray-500">/{product.slug}</div>}
+                                    </div>
 
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{product.brand?.name || 'N/A'}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                  {product.category?.name || product.category || 'N/A'}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{formatPrice(product.price)}</div>
-                                {product.oldPrice && (
-                                  <div className="text-xs text-gray-500 line-through">
-                                    {formatPrice(product.oldPrice)}
+
                                   </div>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{product.countInStock}</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex flex-col space-y-1">
-                                  <span
-                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                                      }`}
-                                  >
-                                    {product.isActive ? (
-                                      <>
-                                        <Eye className="h-3 w-3 mr-1" />
-                                        Active
-                                      </>
-                                    ) : (
-                                      <>
-                                        <EyeOff className="h-3 w-3 mr-1" />
-                                        Inactive
-                                      </>
-                                    )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-900">{product.brand?.name || 'N/A'}</div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    {product.category?.name || 'N/A'}
                                   </span>
-                                  {product.featured && (
-                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                      Featured
-                                    </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-50 text-blue-800">
+                                    {getParentCategoryName(product)}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-900">{formatPrice(product.price)}</div>
+                                  {product.oldPrice && (
+                                    <div className="text-xs text-gray-500 line-through">
+                                      {formatPrice(product.oldPrice)}
+                                    </div>
                                   )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button
-                                  onClick={() => handleEdit(product)}
-                                  className="text-blue-600 hover:text-blue-900 mr-4"
-                                >
-                                  <Edit size={18} />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(product._id)}
-                                  className="text-red-600 hover:text-red-900"
-                                >
-                                  <Trash2 size={18} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-900">{product.countInStock}</div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex flex-col space-y-1">
+                                    <span
+                                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                                        }`}
+                                    >
+                                      {product.isActive ? (
+                                        <>
+                                          <Eye className="h-3 w-3 mr-1" />
+                                          Active
+                                        </>
+                                      ) : (
+                                        <>
+                                          <EyeOff className="h-3 w-3 mr-1" />
+                                          Inactive
+                                        </>
+                                      )}
+                                    </span>
+                                    {product.featured && (
+                                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        Featured
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                  <button
+                                    onClick={() => handleEdit(product)}
+                                    className="text-blue-600 hover:text-blue-900 mr-4"
+                                  >
+                                    <Edit size={18} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(product._id)}
+                                    className="text-red-600 hover:text-red-900"
+                                  >
+                                    <Trash2 size={18} />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
                         ) : (
                           <tr>
                             <td colSpan="7" className="px-6 py-4 text-center text-gray-500">

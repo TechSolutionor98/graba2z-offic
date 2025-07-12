@@ -355,8 +355,9 @@ const AddProduct = () => {
         name: formData.name,
         sku: formData.sku,
         slug: formData.slug,
-        category: formData.category,
-        subCategory: formData.subCategory || null,
+        parentCategory: formData.category, // main category
+        category: formData.subCategory,    // subcategory
+        subCategory: formData.subCategory || null, // for backward compatibility
         barcode: formData.barcode,
         buyingPrice: Number.parseFloat(formData.buyingPrice) || 0,
         price: Number.parseFloat(formData.price) || 0,
