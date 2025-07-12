@@ -42,6 +42,81 @@ if (typeof document !== "undefined" && !document.getElementById("bounce-keyframe
   document.head.appendChild(style)
 }
 
+const PriceFilter = ({ min, max, onApply, initialRange }) => {
+  const [range, setRange] = useState(initialRange || [min, max]);
+  const [inputMin, setInputMin] = useState(range[0]);
+  const [inputMax, setInputMax] = useState(range[1]);
+
+  const handleSliderChange = (values) => {
+    setRange(values);
+    setInputMin(values[0]);
+    setInputMax(values[1]);
+  };
+
+  const handleInputMin = (e) => {
+    const value = Number(e.target.value);
+    setInputMin(value);
+    setRange([value, range[1]]);
+  };
+
+  const handleInputMax = (e) => {
+    const value = Number(e.target.value);
+    setInputMax(value);
+    setRange([range[0], value]);
+  };
+
+  const handleApply = () => {
+    onApply([inputMin, inputMax]);
+  };
+
+  return (
+    <div className="">
+    
+      <Slider
+        range
+        min={min}
+        max={max}
+        value={range}
+        onChange={handleSliderChange}
+        trackStyle={[{ backgroundColor: '#84cc16' }]} // lime-500
+        handleStyle={[
+          { backgroundColor: '#84cc16', borderColor: '#84cc16' },
+          { backgroundColor: '#84cc16', borderColor: '#84cc16' },
+        ]}
+        railStyle={{ backgroundColor: '#e5e7eb' }}
+      />
+      <div className="flex justify-between mt-4 mb-2 text-xs font-semibold">
+        <span>MIN</span>
+        <span>MAX</span>
+      </div>
+      <div className="flex gap-2 mb-4">
+        <input
+          type="number"
+          className="w-1/2 border rounded px-2 py-1 text-center focus:border-lime-500 focus:ring-lime-500"
+          value={inputMin}
+          min={min}
+          max={inputMax}
+          onChange={handleInputMin}
+        />
+        <input
+          type="number"
+          className="w-1/2 border rounded px-2 py-1 text-center focus:border-lime-500 focus:ring-lime-500"
+          value={inputMax}
+          min={inputMin}
+          max={max}
+          onChange={handleInputMax}
+        />
+      </div>
+      <button
+        className="w-full bg-white border border-lime-500 text-lime-600 rounded py-2 font-semibold hover:bg-lime-50 hover:text-lime-700 hover:border-lime-600 transition"
+        onClick={handleApply}
+      >
+        Apply
+      </button>
+    </div>
+  );
+};
+
 const Shop = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -371,30 +446,17 @@ const Shop = () => {
                   onClick={() => setShowPriceFilter(!showPriceFilter)}
                   className="flex items-center justify-between w-full text-left font-medium text-gray-900"
                 >
-                  Price
+                  Price Range
                   {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                 </button>
                 {showPriceFilter && (
                   <div className="mt-4 space-y-4">
-                    <div className="text-center text-sm text-gray-600">
-                      Price: {priceRange[0]}AED — {priceRange[1]}AED
-                    </div>
-                    <div className="px-2">
-                      <Slider
-                        range
-                        min={0}
-                        max={maxPrice}
-                        value={priceRange}
-                        onChange={(vals) => setPriceRange(vals)}
-                        allowCross={false}
-                        trackStyle={[{ backgroundColor: '#84cc16' }]}
-                        handleStyle={[
-                          { borderColor: '#84cc16', backgroundColor: '#fff' },
-                          { borderColor: '#84cc16', backgroundColor: '#fff' }
-                        ]}
-                        railStyle={{ backgroundColor: '#e5e7eb' }}
-                      />
-                    </div>
+                    <PriceFilter
+                      min={0}
+                      max={maxPrice}
+                      initialRange={priceRange}
+                      onApply={(range) => setPriceRange(range)}
+                    />
                   </div>
                 )}
               </div>
