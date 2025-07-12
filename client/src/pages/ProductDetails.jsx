@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { useCart } from "../context/CartContext"
@@ -48,6 +48,34 @@ const ProductDetails = () => {
   const [activeTab, setActiveTab] = useState("description")
   const [showImageModal, setShowImageModal] = useState(false)
   const [modalImageIndex, setModalImageIndex] = useState(0)
+  const [isImageZoomed, setIsImageZoomed] = useState(false)
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 })
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const thumbnailRowRef = useRef(null)
+  const [thumbScroll, setThumbScroll] = useState(0)
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!showImageModal || !product) return
+      
+      const productImages = product.galleryImages && product.galleryImages.length > 0
+        ? [product.image, ...product.galleryImages.filter((img) => img)]
+        : [product.image]
+      
+      if (e.key === 'ArrowLeft') {
+        setModalImageIndex(prev => prev > 0 ? prev - 1 : productImages.length - 1)
+      } else if (e.key === 'ArrowRight') {
+        setModalImageIndex(prev => prev < productImages.length - 1 ? prev + 1 : 0)
+      } else if (e.key === 'Escape') {
+        setShowImageModal(false)
+        setIsImageZoomed(false)
+      }
+    }
+    
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [showImageModal, product])
 
   // Review states
   const [showReviewForm, setShowReviewForm] = useState(false)
@@ -358,23 +386,61 @@ const ProductDetails = () => {
 
               {/* Thumbnail Images */}
               {productImages.length > 1 && (
-                <div className="flex space-x-2 overflow-x-auto">
-                  {productImages.map((image, index) => (
+                <div className="relative w-full">
+                  {/* Left Arrow */}
+                  {thumbScroll > 0 && (
                     <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden transition-all ${selectedImage === index
-                        ? "border-green-500 ring-2 ring-green-200"
-                        : "border-gray-200 hover:border-gray-300"
-                        }`}
+                      className="absolute  left-0 top-1/2 -translate-y-1/2 z-10 bg-lime-500  shadow rounded-full p-1"
+                      onClick={() => {
+                        if (thumbnailRowRef.current) {
+                          thumbnailRowRef.current.scrollBy({ left: -100, behavior: 'smooth' })
+                        }
+                      }}
                     >
-                      <img
-                        src={image || "/placeholder.svg?height=64&width=64"}
-                        alt={`${product.name} - view ${index + 1}`}
-                        className="w-full h-full object-contain"
-                      />
+                      <ChevronLeft size={20} className="text-white"/>
                     </button>
-                  ))}
+                  )}
+                  {/* Thumbnails Row */}
+                  <div
+                    ref={thumbnailRowRef}
+                    className="flex space-x-2 overflow-x-auto hide-scrollbar w-full"
+                    onScroll={e => setThumbScroll(e.target.scrollLeft)}
+                    style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}
+                  >
+                    {productImages.map((image, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={`flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden transition-all  ${selectedImage === index
+                          ? "border-green-500 ring-2 ring-green-200"
+                          : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <img
+                          src={image || "/placeholder.svg?height=64&width=64"}
+                          alt={`${product.name} - view ${index + 1}`}
+                          className="w-full h-full object-contain"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  {/* Right Arrow */}
+                  {thumbnailRowRef.current && (thumbnailRowRef.current.scrollLeft + thumbnailRowRef.current.offsetWidth < thumbnailRowRef.current.scrollWidth) && (
+                    <button
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-lime-500 shadow rounded-full p-1"
+                      onClick={() => {
+                        if (thumbnailRowRef.current) {
+                          thumbnailRowRef.current.scrollBy({ left: 100, behavior: 'smooth' })
+                        }
+                      }}
+                    >
+                      <ChevronRight size={20} className="text-white"/>
+                    </button>
+                  )}
+                  <style>{`
+                    .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+                    .hide-scrollbar::-webkit-scrollbar { display: none; }
+                  `}</style>
                 </div>
               )}
             </div>
@@ -1017,41 +1083,119 @@ const ProductDetails = () => {
 
       {/* Image Modal */}
       {showImageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
-          <div className="relative max-w-4xl max-h-full p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
+          onClick={e => {
+            if (e.target === e.currentTarget) {
+              setShowImageModal(false)
+              setIsImageZoomed(false)
+            }
+          }}
+        >
+          <div className="relative flex h-[90vh] w-[90vw] max-w-7xl bg-white rounded-lg overflow-hidden">
+            {/* Sidebar with all images (vertical on desktop, horizontal on mobile) */}
+            <div className="hidden md:block w-64 bg-gray-100 p-4 overflow-y-auto">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">All Images</h3>
+              <div className="space-y-2">
+                {productImages.map((image, index) => (
+                  <div
+                    key={index}
+                    className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
+                      index === modalImageIndex ? 'border-lime-500' : 'border-gray-300'
+                    }`}
+                    onClick={() => {
+                      setModalImageIndex(index)
+                      setIsImageZoomed(false)
+                    }}
+                  >
+                    <img
+                      src={image || "/placeholder.svg?height=150&width=150"}
+                      alt={`${product.name} ${index + 1}`}
+                      className="w-full h-24 object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Horizontal thumbnails for mobile */}
+            <div className="md:hidden absolute bottom-0 left-0 w-full bg-gray-100 p-2 flex space-x-2 overflow-x-auto z-10">
+              {productImages.map((image, index) => (
+                <div
+                  key={index}
+                  className={`flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden ${
+                    index === modalImageIndex ? 'border-lime-500' : 'border-gray-300'
+                  }`}
+                  onClick={() => {
+                    setModalImageIndex(index)
+                    setIsImageZoomed(false)
+                  }}
+                >
+                  <img
+                    src={image || "/placeholder.svg?height=64&width=64"}
+                    alt={`${product.name} ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+            
+            {/* Main image area */}
+            <div className="flex-1 flex items-center justify-center relative">
+              <img
+                src={productImages[modalImageIndex] || "/placeholder.svg?height=600&width=600"}
+                alt={product.name}
+                className={`object-contain bg-white cursor-pointer transition-transform duration-300 ${
+                  isImageZoomed 
+                    ? "max-h-none max-w-none scale-150" 
+                    : "max-h-full max-w-full"
+                }`}
+                style={{
+                  transformOrigin: isImageZoomed ? `${mousePosition.x}% ${mousePosition.y}%` : 'center'
+                }}
+                onClick={(e) => {
+                  if (!isImageZoomed) {
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    const x = ((e.clientX - rect.left) / rect.width) * 100
+                    const y = ((e.clientY - rect.top) / rect.height) * 100
+                    setMousePosition({ x, y })
+                  }
+                  setIsImageZoomed(!isImageZoomed)
+                }}
+                onMouseMove={(e) => {
+                  if (isImageZoomed) {
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    const x = ((e.clientX - rect.left) / rect.width) * 100
+                    const y = ((e.clientY - rect.top) / rect.height) * 100
+                    setMousePosition({ x, y })
+                  }
+                }}
+              />
+              
+              {/* Navigation arrows */}
+              <button
+                onClick={() => setModalImageIndex(prev => prev > 0 ? prev - 1 : productImages.length - 1)}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <button
+                onClick={() => setModalImageIndex(prev => prev < productImages.length - 1 ? prev + 1 : 0)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+              >
+                <ChevronRight size={24} />
+              </button>
+            </div>
+            
+            {/* Close button */}
             <button
-              onClick={() => setShowImageModal(false)}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+              onClick={() => {
+                setShowImageModal(false)
+                setIsImageZoomed(false)
+              }}
+              className="absolute top-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
             >
               <X size={24} />
             </button>
-
-            <img
-              src={productImages[modalImageIndex] || "/placeholder.svg?height=600&width=600"}
-              alt={`${product.name} - view ${modalImageIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
-            />
-
-            {productImages.length > 1 && (
-              <>
-                <button
-                  onClick={() => handleModalNavigation("prev")}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                <button
-                  onClick={() => handleModalNavigation("next")}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-2"
-                >
-                  <ChevronRight size={24} />
-                </button>
-              </>
-            )}
-
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm">
-              {modalImageIndex + 1} / {productImages.length}
-            </div>
           </div>
         </div>
       )}
