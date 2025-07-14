@@ -1048,7 +1048,7 @@ const GrabatezSaleCard = ({ product }) => {
       >
         <Heart size={16} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
       </button>
-      <div className="p-1 w-ful h-[170px] mb-2">
+      <div className="p-1 w-ful h-[180px] mb-2">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
             src={product.image || "/placeholder.svg?height=120&width=120"}
@@ -1074,7 +1074,7 @@ const GrabatezSaleCard = ({ product }) => {
       </Link>
       {product.category && <div className="text-xs text-gray-500 mb-1">Category: {categoryName}</div>}
       <div className="text-xs text-gray-400 mb-2">Inclusive VAT</div>
-      <div className="mb-2 flex items-center gap-2">
+      <div className=" flex items-center gap-2">
         <div className="text-red-600 font-bold">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
@@ -1272,13 +1272,13 @@ const AccessoriesProductCard = ({ product }) => {
   const categoryName = product.category?.name || "Unknown"
 
   return (
-    <div className="bg-white border rounded-lg p-3 mx-1 hover:shadow-md transition-shadow lg:min-h-[340px] lg:max-h-[360px] lg:min-w-[210px] lg:max-w-[220px] flex flex-col justify-between">
-      <div className="relative mb-3 flex justify-center items-center lg:min-h-[90px] lg:max-h-[110px]">
+    <div className="border rounded-lg p-3 mx-1 hover:shadow-md transition-shadow lg:min-h-[340px] lg:max-h-[360px] lg:min-w-[210px] lg:max-w-[220px] flex flex-col justify-between">
+      <div className="relative mb-3 flex justify-center items-center lg:min-h-[90px] lg:max-h-[170px] ">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
             src={product.image || "/placeholder.svg?height=150&width=150"}
             alt={product.name}
-            className="w-full h-[130px] contain rounded mx-auto"
+            className="w-full h-full contain rounded mx-auto"
           />
         </Link>
         <button
@@ -1318,7 +1318,7 @@ const AccessoriesProductCard = ({ product }) => {
           </div>
         )}
       </div>
-      <div className="flex items-center mt-auto">
+      <div className="flex items-center mt-auto bg-white">
         {[...Array(5)].map((_, i) => (
           <Star
             key={i}
@@ -1351,7 +1351,7 @@ const UpgradeFeatureCard = ({ feature }) => {
   }
 
   return (
-    <div className="bg-white rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 group">
+    <div className="rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 group">
       <div className="flex items-start space-x-4">
         <div
           className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center ${
