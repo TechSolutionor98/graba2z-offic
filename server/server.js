@@ -40,55 +40,16 @@ connectDB()
 const app = express()
 
 // // CORS configuration
-// app.use(cors({
-//   // origin: 'https://graba2z-official.vercel.app',
-//     origin: 'http://localhost:3000',
-//   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-//   allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
-//   exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
-//   maxAge: 5,
-//   credentials: true,
-//   keepHeadersOnError: true
-// }));
-
-
-
-
-
-
-
-
-// Allowed origins
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://graba2z-official.vercel.app'
-];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
-  exposedHeaders: ['WWW-Authenticate', 'Server-Authorization'],
+   origin: 'https://graba2z-frontend.vercel.app/',
+    origin: 'http://localhost:3000',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
+  exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
   maxAge: 5,
   credentials: true,
   keepHeadersOnError: true
 }));
-
-
-
-
-
-
-
-
 
 
 
