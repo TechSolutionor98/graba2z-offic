@@ -204,6 +204,20 @@ const Home = () => {
           })
         }
 
+        // Enhanced main category filtering function
+        const filterProductsByMainCategory = (products, mainCategoryName) => {
+          return products.filter((product) => {
+            if (!product.parentCategory) return false;
+            let mainCatName = "";
+            if (typeof product.parentCategory === "string") {
+              mainCatName = categoryIdToName[product.parentCategory] || product.parentCategory;
+            } else if (typeof product.parentCategory === "object" && product.parentCategory?.name) {
+              mainCatName = product.parentCategory.name;
+            }
+            return mainCatName.toLowerCase().includes(mainCategoryName.toLowerCase());
+          });
+        };
+
         // Get brand products
         const hpData = filterProductsByBrand(products, "HP").slice(0, 3)
         const dellData = filterProductsByBrand(products, "Dell").slice(0, 3)
@@ -211,7 +225,7 @@ const Home = () => {
         const asusData = filterProductsByBrand(products, "ASUS").slice(0, 3)
 
         // Get category products
-        const accessoriesData = filterProductsByCategory(products, "Accessories").slice(0, 5)
+        const accessoriesData = filterProductsByMainCategory(products, "Accessories").slice(0, 5)
 
         // Get Networking products
         let networkingData = filterProductsByCategory(products, "Networking").slice(0, 5)
