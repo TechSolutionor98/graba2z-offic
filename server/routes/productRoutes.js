@@ -103,7 +103,19 @@ router.get(
       }
 
       if (categoryDoc) {
-        query.category = categoryDoc._id
+        // Filter by category, subCategory, or parentCategory fields
+        query.$or = [
+          { category: categoryDoc._id },
+          { subCategory: categoryDoc._id },
+          { parentCategory: categoryDoc._id }
+        ];
+      } else if (category.match(/^[0-9a-fA-F]{24}$/)) {
+        // If not found as a main category, still try filtering by subCategory or parentCategory field
+        query.$or = [
+          { category: category },
+          { subCategory: category },
+          { parentCategory: category }
+        ];
       } else {
         // If category not found, return empty array
         return res.json([])
