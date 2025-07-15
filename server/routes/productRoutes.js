@@ -579,21 +579,29 @@ router.post(
       const volumeMap = new Map()
       allVolumes.forEach((v) => volumeMap.set(v.name.trim().toLowerCase(), v._id))
       for (const name of uniqueCategoryNames) {
-        if (!categoryMap.has(name.trim().toLowerCase())) {
-          const slug = generateSlug(name)
+        const slug = generateSlug(name)
+        const existingCategoryBySlug = await Category.findOne({ slug })
+        if (!categoryMap.has(name.trim().toLowerCase()) && !existingCategoryBySlug) {
           const newCat = await Category.create({ name: name.trim(), slug, createdBy: req.user?._id })
           categoryMap.set(name.trim().toLowerCase(), newCat._id)
+        } else if (existingCategoryBySlug) {
+          categoryMap.set(name.trim().toLowerCase(), existingCategoryBySlug._id)
         }
       }
       for (const name of uniqueBrandNames) {
-        if (!brandMap.has(name.trim().toLowerCase())) {
-          const brandSlug = generateSlug(name)
+        const brandSlug = generateSlug(name)
+        const existingBrandBySlug = await Brand.findOne({ slug: brandSlug })
+        if (!brandMap.has(name.trim().toLowerCase()) && !existingBrandBySlug) {
           const newBrand = await Brand.create({ name: name.trim(), slug: brandSlug, createdBy: req.user?._id })
           brandMap.set(name.trim().toLowerCase(), newBrand._id)
+        } else if (existingBrandBySlug) {
+          brandMap.set(name.trim().toLowerCase(), existingBrandBySlug._id)
         }
       }
       for (const name of uniqueSubCategoryNames) {
-        if (!subCategoryMap.has(name.trim().toLowerCase())) {
+        const subSlug = generateSlug(name)
+        const existingSubCategoryBySlug = await SubCategory.findOne({ slug: subSlug })
+        if (!subCategoryMap.has(name.trim().toLowerCase()) && !existingSubCategoryBySlug) {
           let parentCategoryId = undefined
           const rowWithParent = mappedRows.find(
             (r) =>
@@ -602,7 +610,6 @@ router.post(
           if (rowWithParent && rowWithParent.category) {
             parentCategoryId = categoryMap.get(String(rowWithParent.category).trim().toLowerCase())
           }
-          const subSlug = generateSlug(name)
           const newSub = await SubCategory.create({
             name: name.trim(),
             slug: subSlug,
@@ -610,6 +617,8 @@ router.post(
             createdBy: req.user?._id,
           })
           subCategoryMap.set(name.trim().toLowerCase(), newSub._id)
+        } else if (existingSubCategoryBySlug) {
+          subCategoryMap.set(name.trim().toLowerCase(), existingSubCategoryBySlug._id)
         }
       }
       for (const name of uniqueTaxNames) {
@@ -819,32 +828,29 @@ router.post(
 
       // Create missing parent categories (main categories)
       for (const name of uniqueParentCategoryNames) {
-        if (!parentCategoryMap.has(name.trim().toLowerCase())) {
-          const slug = generateSlug(name)
-          const newCat = await Category.create({
-            name: name.trim(),
-            slug,
-            createdBy: req.user?._id,
-          })
+        const slug = generateSlug(name)
+        const existingCategoryBySlug = await Category.findOne({ slug })
+        if (!parentCategoryMap.has(name.trim().toLowerCase()) && !existingCategoryBySlug) {
+          const newCat = await Category.create({ name: name.trim(), slug, createdBy: req.user?._id })
           parentCategoryMap.set(name.trim().toLowerCase(), newCat._id)
+        } else if (existingCategoryBySlug) {
+          parentCategoryMap.set(name.trim().toLowerCase(), existingCategoryBySlug._id)
         }
       }
-
       // Create missing subcategories
       for (const name of uniqueCategoryNames) {
-        if (!subCategoryMap.has(name.trim().toLowerCase())) {
+        const subSlug = generateSlug(name)
+        const existingSubCategoryBySlug = await SubCategory.findOne({ slug: subSlug })
+        if (!subCategoryMap.has(name.trim().toLowerCase()) && !existingSubCategoryBySlug) {
           // Find the parent category for this subcategory from CSV data
           let parentCategoryId = undefined
           const rowWithParent = csvData.find(
             (r) =>
               r.category && String(r.category).trim().toLowerCase() === name.trim().toLowerCase() && r.parent_category,
           )
-
           if (rowWithParent && rowWithParent.parent_category) {
             parentCategoryId = parentCategoryMap.get(String(rowWithParent.parent_category).trim().toLowerCase())
           }
-
-          const subSlug = generateSlug(name)
           const newSub = await SubCategory.create({
             name: name.trim(),
             slug: subSlug,
@@ -852,9 +858,10 @@ router.post(
             createdBy: req.user?._id,
           })
           subCategoryMap.set(name.trim().toLowerCase(), newSub._id)
+        } else if (existingSubCategoryBySlug) {
+          subCategoryMap.set(name.trim().toLowerCase(), existingSubCategoryBySlug._id)
         }
       }
-
       // Create missing brands
       for (const name of uniqueBrandNames) {
         const brandSlug = generateSlug(name)
