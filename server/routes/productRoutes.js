@@ -857,14 +857,13 @@ router.post(
 
       // Create missing brands
       for (const name of uniqueBrandNames) {
-        if (!brandMap.has(name.trim().toLowerCase())) {
-          const brandSlug = generateSlug(name)
-          const newBrand = await Brand.create({
-            name: name.trim(),
-            slug: brandSlug,
-            createdBy: req.user?._id,
-          })
+        const brandSlug = generateSlug(name)
+        const existingBrandBySlug = await Brand.findOne({ slug: brandSlug })
+        if (!brandMap.has(name.trim().toLowerCase()) && !existingBrandBySlug) {
+          const newBrand = await Brand.create({ name: name.trim(), slug: brandSlug, createdBy: req.user?._id })
           brandMap.set(name.trim().toLowerCase(), newBrand._id)
+        } else if (existingBrandBySlug) {
+          brandMap.set(name.trim().toLowerCase(), existingBrandBySlug._id)
         }
       }
 
