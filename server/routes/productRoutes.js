@@ -145,6 +145,7 @@ router.get(
         { name: regex },
         { description: regex },
         { brand: { $in: brandIds } },
+        { sku: search }, // exact SKU match
       ]
     }
 

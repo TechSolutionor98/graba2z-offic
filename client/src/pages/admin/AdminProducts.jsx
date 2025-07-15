@@ -59,10 +59,16 @@ const AdminProducts = () => {
         return
       }
 
+      // Build query params for search and category
+      const params = {}
+      if (searchTerm.trim() !== "") params.search = searchTerm.trim()
+      if (filterCategory && filterCategory !== "all") params.category = filterCategory
+
       const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        params,
       })
       setProducts(data)
       setLoading(false)
@@ -268,23 +274,26 @@ const AdminProducts = () => {
     return 'N/A';
   };
 
+  // Update: Only filter on frontend for search by name, brand, or exact SKU (case-insensitive)
   const filteredProducts = products.filter((product) => {
     const productName = product.name || "";
     const brandName = typeof product.brand === "object" && product.brand !== null
       ? product.brand.name || ""
       : product.brand || "";
+    const sku = product.sku || "";
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) return true;
+    return (
+      productName.toLowerCase().includes(search) ||
+      brandName.toLowerCase().includes(search) ||
+      sku.toLowerCase() === search
+    );
+  });
 
-    const matchesSearch =
-      productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      brandName.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesCategory =
-      filterCategory === "all" ||
-      (product.category &&
-        (typeof product.category === "object" ? product.category._id : product.category) === filterCategory);
-
-    return matchesSearch && matchesCategory;
-  })
+  // Add useEffect to refetch products when searchTerm or filterCategory changes
+  useEffect(() => {
+    fetchProducts();
+  }, [searchTerm, filterCategory]);
 
   return (
     <div className="min-h-screen bg-gray-100">
