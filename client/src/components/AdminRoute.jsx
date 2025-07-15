@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext"
 const AdminRoute = ({ children }) => {
   const adminToken = localStorage.getItem("adminToken")
   if (!adminToken) {
-    return <Navigate to="/admin/login" />
+    return <Navigate to="/grabiansadmin/login" />
   }
   return children
 }

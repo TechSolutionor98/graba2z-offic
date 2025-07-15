@@ -77,7 +77,7 @@ const AdminProducts = () => {
       if (error.response?.status === 401) {
         setError("Authentication failed. Please login again.")
         // Redirect to admin login
-        window.location.href = "/admin/login"
+        window.location.href = "/grabiansadmin/login"
       } else {
         setError("Failed to load products. Please try again later.")
       }
@@ -136,7 +136,7 @@ const AdminProducts = () => {
         console.error("Failed to delete product:", error)
         if (error.response?.status === 401) {
           setError("Authentication failed. Please login again.")
-          window.location.href = "/admin/login"
+          window.location.href = "/grabiansadmin/login"
         } else {
           setError("Failed to delete product. Please try again.")
           showToast("Failed to delete product", "error")
@@ -189,7 +189,7 @@ const AdminProducts = () => {
 
       if (!token) {
         setError("Authentication required. Please login again.")
-        window.location.href = "/admin/login"
+        window.location.href = "/grabiansadmin/login"
         return
       }
 
@@ -229,7 +229,7 @@ const AdminProducts = () => {
         // Clear invalid tokens
         localStorage.removeItem("adminToken")
         localStorage.removeItem("token")
-        window.location.href = "/admin/login"
+        window.location.href = "/grabiansadmin/login"
       } else {
         setError(`Failed to save product: ${error.response?.data?.message || error.message}`)
         showToast("Failed to save product", "error")
@@ -311,7 +311,7 @@ const AdminProducts = () => {
               {error}
               {error.includes("Authentication") && (
                 <button
-                  onClick={() => (window.location.href = "/admin/login")}
+                  onClick={() => (window.location.href = "/grabiansadmin/login")}
                   className="ml-4 px-3 py-1 bg-red-600 text-white rounded text-sm"
                 >
                   Login Again

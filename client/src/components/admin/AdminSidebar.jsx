@@ -152,7 +152,7 @@ const AdminSidebar = () => {
 
   const handleLogout = () => {
     adminLogout()
-    navigate("/admin/login")
+    navigate("/grabiansadmin/login")
   }
 
   const toggleDropdown = (dropdown, e) => {

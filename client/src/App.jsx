@@ -33,6 +33,7 @@ import RefundAndReturn from "./pages/RefundAndReturn"
 import CookiesAndPolicy from "./pages/CookiesAndPolicy"
 import ReqBulkPurchase from "./pages/ReqBulkPurchase";
 import ContactUs from "./pages/ContactUs"
+import NotFound from "./pages/NotFound";
 
 // Import admin pages
 import AdminLogin from "./pages/admin/AdminLogin"
@@ -100,7 +101,7 @@ function App() {
               <div className="App">
                 <Routes>
                   {/* Admin Routes */}
-                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route path="/grabiansadmin/login" element={<AdminLogin />} />
                   <Route
                     path="/admin/*"
                     element={
@@ -155,7 +156,9 @@ function App() {
                           <Route path="blogs/topics/add" element={<AddBlogTopic />} />
                           <Route path="blogs/rating" element={<BlogRating />} />
                           <Route path="request-callbacks" element={<AdminRequestCallbacks />} />
+                          <Route path="*" element={<NotFound />} />
                         </Routes>
+                     
                       </AdminRoute>
                     }
                   />
@@ -218,6 +221,7 @@ function App() {
                               </ProtectedRoute>
                             }
                           />
+                          <Route path="*" element={<NotFound />} />
                         </Routes>
                         <Footer />
                       </>
