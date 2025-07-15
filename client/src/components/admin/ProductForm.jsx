@@ -67,6 +67,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     fetchParentCategories()
     fetchBrands()
     if (product) {
+      const resolvedCategory =
+        (typeof product.category === "object" && product.category ? product.category._id : product.category) ||
+        (typeof product.subCategory === "object" && product.subCategory ? product.subCategory._id : product.subCategory) ||
+        "";
       setFormData({
         name: product.name || "",
         sku: product.sku || "",
@@ -74,7 +78,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         barcode: product.barcode || "",
         brand: typeof product.brand === "object" && product.brand ? product.brand._id : product.brand || "",
         parentCategory: typeof product.parentCategory === "object" && product.parentCategory ? product.parentCategory._id : product.parentCategory || "",
-        category: typeof product.category === "object" && product.category ? product.category._id : product.category || "",
+        category: resolvedCategory,
         subCategory: typeof product.subCategory === "object" && product.subCategory ? product.subCategory._id : product.subCategory || "",
         description: product.description || "",
         shortDescription: product.shortDescription || "",
@@ -101,6 +105,23 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       })
     }
   }, [product])
+
+  useEffect(() => {
+    if (
+      product &&
+      subCategories.length > 0 &&
+      !formData.category // Only set if not already set
+    ) {
+      const resolvedCategory =
+        (typeof product.category === "object" && product.category ? product.category._id : product.category) ||
+        (typeof product.subCategory === "object" && product.subCategory ? product.subCategory._id : product.subCategory) ||
+        "";
+      setFormData((prev) => ({
+        ...prev,
+        category: resolvedCategory,
+      }));
+    }
+  }, [subCategories, product]);
 
   // Fetch parent categories (main categories)
   const fetchParentCategories = async () => {
@@ -280,6 +301,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       setLoading(false)
     }
   }
+
+  // Debug logs for subcategory selection
+  console.log("Selected subcategory value:", formData.category);
+  console.log("Fetched subcategories:", subCategories.map(s => ({ id: s._id, name: s.name })));
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
