@@ -503,12 +503,17 @@ router.get(
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const subCategories = await SubCategory.find({ isActive: true, isDeleted: { $ne: true } })
+    const { category } = req.query;
+    let filter = { isActive: true, isDeleted: { $ne: true } };
+    if (category) {
+      filter.category = category;
+    }
+    const subCategories = await SubCategory.find(filter)
       .populate("category", "name slug")
-      .sort({ sortOrder: 1, name: 1 })
-    res.json(subCategories)
-  }),
-)
+      .sort({ sortOrder: 1, name: 1 });
+    res.json(subCategories);
+  })
+);
 
 // @desc    Create a subcategory
 // @route   POST /api/subcategories

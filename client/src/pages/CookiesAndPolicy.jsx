@@ -128,13 +128,14 @@ function CookiesAndPolicy() {
               </li>
               <li className="flex items-start gap-2">
                 <Phone size={20} className="mt-1 text-black" />
-                <span><span className="font-bold">Phone:</span> <span className="font-normal">+1 (123) 456-7890</span></span>
+                <span><span className="font-bold">Phone:</span> <span className="font-normal">(+971) 4-354 0566</span></span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin size={20} className="mt-1 text-black" />
                 <span>
                   <span className="font-bold">Mailing Address:</span>{' '}
-                  <span className="font-normal">Grabatoz Customer Service 123 Tech Avenue Suite 100 Silicon Valley, CA 94043 USA</span>
+                  <span className="font-normal">Grabatoz, 5 Admiral Plaza Hotel Building, Khalid Bin Waleed Road, Bur Dubai, Dubai PO Box: 241975
+                  </span>
                 </span>
               </li>
             </ul>

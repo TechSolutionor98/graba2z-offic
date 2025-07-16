@@ -254,7 +254,7 @@ const Navbar = () => {
                     onMouseLeave={() => setHoveredCategory(null)}
                   >
                     <Link
-                      to={`/shop?parent_category=${parentCategory.name}`}
+                      to={`/shop?parentCategory=${parentCategory._id}`}
                       className="text-white hover:text-green-200 font-medium whitespace-nowrap text-sm"
                     >
                       {parentCategory.name}
@@ -266,7 +266,7 @@ const Navbar = () => {
                         {categorySubCategories.map((subCategory) => (
                           <Link
                             key={subCategory._id}
-                            to={`/shop?parent_category=${parentCategory.name}&category=${subCategory.name}`}
+                            to={`/shop?parentCategory=${parentCategory._id}&subcategory=${subCategory._id}`}
                             className="block px-4 py-2 text-red-600 hover:bg-gray-100 transition-colors duration-200 text-sm"
                             onClick={() => setHoveredCategory(null)}
                           >
@@ -413,7 +413,7 @@ const Navbar = () => {
                         {/* Parent Category Item */}
                         <div className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg">
                           <Link
-                            to={`/shop?parent_category=${parentCategory.name}`}
+                            to={`/shop?parentCategory=${parentCategory._id}`}
                             className="flex items-center flex-1"
                             onClick={closeMobileMenu}
                           >
@@ -440,7 +440,7 @@ const Navbar = () => {
                             {categorySubCategories.map((subCategory) => (
                               <Link
                                 key={subCategory._id}
-                                to={`/shop?parent_category=${parentCategory.name}&category=${subCategory.name}`}
+                                to={`/shop?parentCategory=${parentCategory._id}&subcategory=${subCategory._id}`}
                                 className="block py-2 px-2 text-red-600 hover:bg-gray-50 rounded-lg text-sm"
                                 onClick={closeMobileMenu}
                               >

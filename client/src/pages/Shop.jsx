@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Search, ChevronDown, Minus } from "lucide-react"
 import axios from "axios"
 import { useNavigate, useLocation } from "react-router-dom"
@@ -144,6 +144,74 @@ const Shop = () => {
   const [showBrandFilter, setShowBrandFilter] = useState(true)
 
   const [productsToShow, setProductsToShow] = useState(20)
+  const [delayedLoading, setDelayedLoading] = useState(false)
+  const fetchTimeout = useRef();
+  const loadingTimeout = useRef();
+
+  // Re-add fetchProducts function
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (selectedCategory && selectedCategory !== "all") {
+        params.append("parentCategory", selectedCategory);
+      }
+      if (selectedSubCategories.length > 0) {
+        selectedSubCategories.forEach((subcat) => params.append("subcategory", subcat));
+      }
+      if (selectedBrands.length > 0) {
+        selectedBrands.forEach((brand) => params.append("brand", brand));
+      }
+      if (searchQuery) {
+        params.append("search", searchQuery);
+      }
+      if (stockFilters.inStock) params.append("stock", "in");
+      if (stockFilters.outOfStock) params.append("stock", "out");
+      if (stockFilters.onSale) params.append("onSale", "true");
+
+      console.log("Fetching products with params:", params.toString());
+      const { data } = await axios.get(`${API_BASE_URL}/api/products?${params.toString()}`);
+
+      if (data.length > 0) {
+        const max = Math.max(...data.map((p) => p.price));
+        setMaxPrice(max);
+        if (priceRange[1] === 10000) {
+          setPriceRange([0, max]);
+        }
+      }
+
+      // Sort products
+      const sortedProducts = [...data];
+      switch (sortBy) {
+        case "price-low":
+          sortedProducts.sort((a, b) => (a.price || 0) - (b.price || 0));
+          break;
+        case "price-high":
+          sortedProducts.sort((a, b) => (b.price || 0) - (a.price || 0));
+          break;
+        case "name":
+          sortedProducts.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+          break;
+        default:
+          // newest - already sorted by default
+          break;
+      }
+
+      // Filter by price range
+      const filteredProducts = sortedProducts.filter((product) => {
+        const price = product.price || 0;
+        return price >= priceRange[0] && price <= priceRange[1];
+      });
+
+      console.log("Products fetched and filtered:", filteredProducts.length);
+      setProducts(filteredProducts);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      setError(err.response?.data?.message || "Error fetching products");
+      setLoading(false);
+    }
+  };
 
   // Fetch categories and brands on mount
   useEffect(() => {
@@ -153,10 +221,24 @@ const Shop = () => {
     fetchProducts()
   }, [])
 
-  // Fetch products when filters change
+  // Debounced fetchProducts on filter change with delayed loading
   useEffect(() => {
-    fetchProducts()
-  }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters])
+    if (fetchTimeout.current) clearTimeout(fetchTimeout.current);
+    if (loadingTimeout.current) clearTimeout(loadingTimeout.current);
+    setLoading(true);
+    setDelayedLoading(true);
+    // Start 4s timer
+    loadingTimeout.current = setTimeout(() => {
+      setDelayedLoading(false);
+    }, 4000);
+    fetchTimeout.current = setTimeout(() => {
+      fetchProducts();
+    }, 300); // 300ms debounce for fetch
+    return () => {
+      clearTimeout(fetchTimeout.current);
+      clearTimeout(loadingTimeout.current);
+    };
+  }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters]);
 
   // Fetch subcategories when selectedCategory changes
   useEffect(() => {
@@ -171,31 +253,37 @@ const Shop = () => {
   // Sync selectedCategory and filters with URL
   useEffect(() => {
     const params = new URLSearchParams(location.search)
-    const categoryParam = params.get("category")
+    const parentCategoryParam = params.get("parentCategory")
+    const subCategoryParam = params.get("subcategory")
     const brandParam = params.get("brand")
     const searchParam = params.get("search")
 
-    if (categoryParam) {
-      setSelectedCategory(categoryParam)
-      setSelectedSubCategories([])
-      setSelectedBrands([])
+    if (parentCategoryParam) {
+      setSelectedCategory(parentCategoryParam)
     } else {
       setSelectedCategory("all")
+    }
+
+    if (subCategoryParam) {
+      setSelectedSubCategories([subCategoryParam])
+    } else {
       setSelectedSubCategories([])
-      setSelectedBrands([])
     }
 
     if (brandParam) {
-      // Find brand by name and set it
       brands.forEach((brand) => {
         if (brand.name.toLowerCase() === brandParam.toLowerCase()) {
           setSelectedBrands([brand._id])
         }
       })
+    } else {
+      setSelectedBrands([])
     }
 
     if (searchParam) {
       setSearchQuery(searchParam)
+    } else {
+      setSearchQuery("")
     }
   }, [location.search, brands])
 
@@ -268,10 +356,9 @@ const Shop = () => {
   }
 
   const fetchSubCategories = async () => {
+    const catObj = categories.find((cat) => cat._id === selectedCategory)
+    if (!catObj) return setSubCategories([])
     try {
-      const catObj = categories.find((cat) => cat.name === selectedCategory)
-      if (!catObj) return setSubCategories([])
-
       const { data } = await axios.get(`${API_BASE_URL}/api/subcategories?category=${catObj._id}`)
       console.log("Subcategories fetched:", data)
 
@@ -290,85 +377,25 @@ const Shop = () => {
 
       console.log("Filtered subcategories:", validSubCategories)
       setSubCategories(validSubCategories)
+      // Debug log after setting subCategories
+      setTimeout(() => {
+        console.log('subCategories state after set:', validSubCategories)
+      }, 0);
     } catch (err) {
       console.error("Error fetching subcategories:", err)
       setSubCategories([])
     }
   }
 
-  const fetchProducts = async () => {
-    try {
-      setLoading(true)
-      const params = new URLSearchParams()
-
-      if (selectedCategory && selectedCategory !== "all") {
-        params.append("category", selectedCategory)
-      }
-      if (selectedBrands.length > 0) {
-        selectedBrands.forEach((brand) => params.append("brand", brand))
-      }
-      if (searchQuery) {
-        params.append("search", searchQuery)
-      }
-      if (selectedSubCategories.length > 0) {
-        selectedSubCategories.forEach((subcat) => params.append("subcategory", subcat))
-      }
-      if (stockFilters.inStock) params.append("stock", "in")
-      if (stockFilters.outOfStock) params.append("stock", "out")
-      if (stockFilters.onSale) params.append("onSale", "true")
-
-      console.log("Fetching products with params:", params.toString())
-      const { data } = await axios.get(`${API_BASE_URL}/api/products?${params.toString()}`)
-
-      if (data.length > 0) {
-        const max = Math.max(...data.map((p) => p.price))
-        setMaxPrice(max)
-        if (priceRange[1] === 10000) {
-          setPriceRange([0, max])
-        }
-      }
-
-      // Sort products
-      const sortedProducts = [...data]
-      switch (sortBy) {
-        case "price-low":
-          sortedProducts.sort((a, b) => (a.price || 0) - (b.price || 0))
-          break
-        case "price-high":
-          sortedProducts.sort((a, b) => (b.price || 0) - (a.price || 0))
-          break
-        case "name":
-          sortedProducts.sort((a, b) => (a.name || "").localeCompare(b.name || ""))
-          break
-        default:
-          // newest - already sorted by default
-          break
-      }
-
-      // Filter by price range
-      const filteredProducts = sortedProducts.filter((product) => {
-        const price = product.price || 0
-        return price >= priceRange[0] && price <= priceRange[1]
-      })
-
-      console.log("Products fetched and filtered:", filteredProducts.length)
-      setProducts(filteredProducts)
-      setLoading(false)
-    } catch (err) {
-      console.error("Error fetching products:", err)
-      setError(err.response?.data?.message || "Error fetching products")
-      setLoading(false)
-    }
-  }
-
   const filteredBrands = brands.filter((brand) => brand.name.toLowerCase().includes(brandSearch.toLowerCase()))
 
-  const handleCategoryChange = (categoryName) => {
-    setSelectedCategory(categoryName)
+  // When a parent category is selected, clear subcategory selection
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategory(categoryId)
     setSelectedSubCategories([])
     const params = new URLSearchParams()
-    if (categoryName !== "all") {
-      params.set("category", categoryName)
+    if (categoryId !== "all") {
+      params.set("parentCategory", categoryId)
     }
     navigate({
       pathname: location.pathname,
@@ -376,14 +403,34 @@ const Shop = () => {
     })
   }
 
-  const handleBrandChange = (brandId) => {
-    setSelectedBrands((prev) => (prev.includes(brandId) ? prev.filter((b) => b !== brandId) : [...prev, brandId]))
+  // When a subcategory is selected, set both parent and subcategory in the filter
+  const handleSubCategoryChange = (subCatId) => {
+    setSelectedSubCategories([subCatId]);
+    // Find the parent category for this subcategory
+    const subcatObj = subCategories.find((sub) => sub._id === subCatId);
+    // category could be either an object or a string
+    let parentId;
+    if (subcatObj) {
+      parentId = typeof subcatObj.category === "object" ? subcatObj.category._id : subcatObj.category;
+    } else {
+      parentId = selectedCategory;
+    }
+    setSelectedCategory(parentId);
+    const params = new URLSearchParams();
+    if (parentId && parentId !== "all") {
+      params.set("parentCategory", parentId);
+    }
+    params.set("subcategory", subCatId);
+    // Debug log for subcategory change
+    console.log('handleSubCategoryChange called with:', { subCatId, parentId, subcatObj, params: params.toString(), subCategories });
+    navigate({
+      pathname: location.pathname,
+      search: params.toString(),
+    });
   }
 
-  const handleSubCategoryChange = (subCatId) => {
-    setSelectedSubCategories((prev) =>
-      prev.includes(subCatId) ? prev.filter((id) => id !== subCatId) : [...prev, subCatId],
-    )
+  const handleBrandChange = (brandId) => {
+    setSelectedBrands((prev) => (prev.includes(brandId) ? prev.filter((b) => b !== brandId) : [...prev, brandId]))
   }
 
   const handleStockFilterChange = (key) => {
@@ -400,10 +447,11 @@ const Shop = () => {
     navigate({ pathname: location.pathname, search: "" })
   }
 
-  if (loading) {
+  // Show only the loading logo if loading or delayedLoading is true
+  if (loading || delayedLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <img src="/g.png" alt="Loading..." style={{ width: 80, height: 80, ...bounceStyle }} />
+      <div className="flex justify-center items-center h-screen">
+        <img src="/g.png" alt="Loading..." style={{ width: 180, height: 180, animation: 'bounce 1s infinite' }} />
       </div>
     )
   }
@@ -418,6 +466,9 @@ const Shop = () => {
       </div>
     )
   }
+
+  // Add debug log before rendering
+  console.log('Products being rendered:', products)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -487,8 +538,8 @@ const Shop = () => {
                         <input
                           type="radio"
                           name="category"
-                          checked={selectedCategory === category.name}
-                          onChange={() => handleCategoryChange(category.name)}
+                          checked={selectedCategory === category._id}
+                          onChange={() => handleCategoryChange(category._id)}
                           className="mr-2"
                         />
                         <span className="text-sm text-gray-700 font-medium">{category.name}</span>
@@ -502,14 +553,17 @@ const Shop = () => {
               {subCategories.length > 0 && (
                 <div className="border-b pb-4">
                   <button className="flex items-center justify-between w-full text-left font-medium text-gray-900">
-                    {selectedCategory} Subcategories
+                    {categories.find((cat) => cat._id === selectedCategory)?.name} Subcategories
                   </button>
                   <div className="mt-4 space-y-2">
+                    {/* Debug log for subcategory filter render */}
+                    {console.log('Rendering subcategory filter:', subCategories)}
                     {subCategories.map((subcat) => (
                       <label key={subcat._id} className="flex items-center">
                         <input
-                          type="checkbox"
-                          checked={selectedSubCategories.includes(subcat._id)}
+                          type="radio"
+                          name="subcategory"
+                          checked={selectedSubCategories[0] === subcat._id}
                           onChange={() => handleSubCategoryChange(subcat._id)}
                           className="mr-2"
                         />
@@ -636,12 +690,12 @@ const Shop = () => {
                     <div className="flex-1 text-white">
                       <h2 className="text-4xl font-bold mb-4">
                         {banners.find((banner) => banner.category === selectedCategory && banner.isActive)?.title ||
-                          `Shop ${selectedCategory}`}
+                          `Shop ${categories.find((cat) => cat._id === selectedCategory)?.name}`}
                       </h2>
                       <p className="text-xl mb-6 opacity-90">
                         {banners.find((banner) => banner.category === selectedCategory && banner.isActive)
                           ?.description ||
-                          `Discover our amazing collection of ${selectedCategory.toLowerCase()} products`}
+                          `Discover our amazing collection of ${categories.find((cat) => cat._id === selectedCategory)?.name.toLowerCase()} products`}
                       </p>
                       <div className="flex items-center space-x-4">
                         <span className="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold">
@@ -653,7 +707,7 @@ const Shop = () => {
                       <div className="flex-shrink-0 ml-8">
                         <img
                           src={banners.find((banner) => banner.category === selectedCategory && banner.isActive).image}
-                          alt={selectedCategory}
+                          alt={categories.find((cat) => cat._id === selectedCategory)?.name}
                           className="w-64 h-48 object-cover rounded-lg shadow-lg"
                         />
                       </div>
@@ -667,7 +721,7 @@ const Shop = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {selectedCategory === "all" ? "All Products" : selectedCategory}
+                  {categories.find((cat) => cat._id === selectedCategory)?.name || "All Products"}
                 </h1>
                 <p className="text-gray-600 mt-1">{products.length} products found</p>
               </div>
