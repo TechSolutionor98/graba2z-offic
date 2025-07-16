@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import axios from "axios"
 import {
   Star,
@@ -52,6 +52,9 @@ const Home = () => {
   const [selectedBrand, setSelectedBrand] = useState(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [brandCurrentIndex, setBrandCurrentIndex] = useState(0)
+  const sliderRef = useRef(null)
+  const [scrollX, setScrollX] = useState(0)
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true)
 
   const bounceStyle = {
     animation: "bounce 1s infinite",
@@ -373,14 +376,50 @@ const Home = () => {
     fetchData()
   }, [])
 
+  // Infinite loop pixel-based auto-scroll for brands
   useEffect(() => {
-    if (brands.length > 0) {
-      const interval = setInterval(() => {
-        nextBrandSlide()
-      }, 3000)
-      return () => clearInterval(interval)
+    if (!brands.length) return
+    let animationFrameId
+    let lastTimestamp = null
+    const speed = 0.5 // px per frame, adjust for faster/slower scroll
+
+    function step(timestamp) {
+      if (!lastTimestamp) lastTimestamp = timestamp
+      const elapsed = timestamp - lastTimestamp
+      lastTimestamp = timestamp
+      if (!sliderRef.current) return
+      const track = sliderRef.current
+      const totalWidth = track.scrollWidth / 2 // width of one set
+      let nextScrollX = scrollX + speed
+      if (nextScrollX >= totalWidth) {
+        // Instantly reset to the start (no animation)
+        track.style.transition = "none"
+        setScrollX(0)
+        // Force reflow, then restore transition
+        setTimeout(() => {
+          if (track) track.style.transition = "transform 0.3s linear"
+        }, 20)
+        animationFrameId = requestAnimationFrame(step)
+        return
+      }
+      setScrollX(nextScrollX)
+      animationFrameId = requestAnimationFrame(step)
     }
-  }, [brands.length, brandCurrentIndex])
+
+    if (isAutoScrolling) {
+      animationFrameId = requestAnimationFrame(step)
+    }
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId)
+    }
+    // eslint-disable-next-line
+  }, [brands.length, isAutoScrolling, scrollX])
+
+  useEffect(() => {
+    if (sliderRef.current) {
+      sliderRef.current.style.transform = `translateX(-${scrollX}px)`
+    }
+  }, [scrollX])
 
   // Handle infinite loop transitions
   useEffect(() => {
@@ -452,6 +491,18 @@ const Home = () => {
   const prevBrandSlide = () => {
     setBrandCurrentIndex((prev) => (prev - 1 + brands.length) % brands.length)
   }
+
+  // Calculate how many brands are visible at once
+  const getVisibleCount = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 768) return 4
+      if (window.innerWidth < 1024) return 6
+    }
+    return 8
+  }
+  const visibleCount = getVisibleCount()
+  const totalBrands = brands.length
+  const totalSlides = totalBrands * 2
 
   if (loading) {
     return (
@@ -927,18 +978,14 @@ const Home = () => {
             <div className="relative mb-6">
               <h2 className="text-xl md:text-2xl font-bold text-gray-900 text-center">Featured Brands</h2>
             </div>
-
             <div className="relative mx-3 md:mx-5">
               <div className="overflow-hidden">
                 <div
-                  className="flex transition-transform duration-300 ease-in-out"
+                  ref={sliderRef}
+                  className="flex"
                   style={{
-                    width: `${((brands.length * 2) / (window.innerWidth < 768 ? 10 : window.innerWidth < 1024 ? 4 : 12)) * 100}%`,
-                    transform: `translateX(-${(brandCurrentIndex + brands.length) * (100 / (brands.length * 2))}%)`,
-                    transition: isTransitioning ? "transform 0.3s" : "none",
-                  }}
-                  onTransitionEnd={() => {
-                    if (!isTransitioning) setIsTransitioning(true)
+                    width: `${brands.length * 2 * 140}px`, // 140px per brand card, adjust as needed
+                    transition: "transform 0.3s linear",
                   }}
                 >
                   {[...brands, ...brands].map((brand, index) => (
@@ -946,7 +993,7 @@ const Home = () => {
                       key={`${brand._id}-${index}`}
                       className="flex-shrink-0"
                       style={{
-                        width: `${100 / (window.innerWidth < 768 ? 4 : window.innerWidth < 1024 ? 6 : 8)}%`,
+                        width: "180px", // adjust to match card width
                       }}
                     >
                       <div className="px-2 md:px-3">
@@ -957,7 +1004,7 @@ const Home = () => {
                           }}
                           className="flex flex-col items-center group transition-all duration-300 p-2 md:p-4 hover:bg-gray-50 rounded-lg w-full border-4 border-green-500"
                         >
-                          <div className="w-12 h-12 md:w-20 md:h-20 lg:w-24 lg:h-24 overflow-hidden bg-white mb-2 md:mb-3 flex items-center justify-center border border-gray-100 rounded-lg">
+                          <div className="w-12 h-12 md:w-20 md:h-20 lg:w-24 lg:h-24 overflow-hidden  mb-2 md:mb-3 flex items-center justify-center border border-gray-100 rounded-lg">
                             <img
                               src={brand.logo || "/placeholder.svg"}
                               alt={brand.name}
