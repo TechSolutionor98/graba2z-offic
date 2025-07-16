@@ -30,7 +30,7 @@ import { productsAPI } from "../services/api.js"
 
 import config from "../config/config"
 
-const WHATSAPP_NUMBER = '971501234567'; // Replace with your WhatsApp number
+const WHATSAPP_NUMBER = '971508604360'; // Replace with your WhatsApp number
 
 const ProductDetails = () => {
   const { slug } = useParams()
@@ -1218,7 +1218,7 @@ const ProductDetails = () => {
             </button>
             <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
               <div className="flex-shrink-0 flex flex-col items-center justify-center mb-4 md:mb-0">
-                <img src="/public/req_call_back.png" alt="Support" className="w-40 h-52 md:w-72 md:h-96 object-contain" />
+                <img src="/pic.png" alt="Support" className="w-40 h-52 md:w-72 md:h-96 object-contain" />
               </div>
               <div className="flex-1 w-full">
                 <h2 className="text-xl font-bold mb-4">Request a Callback</h2>
