@@ -143,7 +143,7 @@ const UserOrders = () => {
                       <div className="ml-4 flex-1">
                         <div className="flex justify-between">
                           <h4 className="text-sm font-medium text-gray-900">{item.name}</h4>
-                          <p className="text-sm font-medium text-gray-900">Rs {item.price.toLocaleString()}</p>
+                          <p className="text-sm font-medium text-gray-900">AED {item.price.toLocaleString()}</p>
                         </div>
                         <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
                       </div>
@@ -155,7 +155,7 @@ const UserOrders = () => {
               <div className="px-6 py-4 bg-gray-50">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium text-gray-900">Total</span>
-                  <span className="font-medium text-gray-900">Rs {order.totalPrice.toLocaleString()}</span>
+                  <span className="font-medium text-gray-900">AED {order.totalPrice.toLocaleString()}</span>
                 </div>
                 {order.trackingId && (
                   <div className="mt-2 text-sm">
