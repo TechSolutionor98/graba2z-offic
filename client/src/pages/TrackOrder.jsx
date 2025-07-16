@@ -308,23 +308,33 @@ const TrackOrder = () => {
             <div className="bg-white rounded-lg shadow-md p-6 min-w-0 w-full">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Order Items</h2>
               <div className="space-y-4">
-                {orderData.orderItems.map((item, index) => (
-                  <div key={index} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg min-w-0 w-full">
-                    <img
-                      src={item.image || "/placeholder.svg?height=80&width=80"}
-                      alt={item.name}
-                      className="w-20 h-20 object-contain rounded"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900">{item.name}</h3>
-                      <p className="text-sm text-gray-600">Quantity: {item.qty}</p>
-                      <p className="text-sm font-medium text-gray-900">{formatPrice(item.price)} each</p>
+                {orderData.orderItems.map((item, index) => {
+                  console.log('Order item:', item);
+                  const price = Number(item.price) || 0;
+                  const qty = Number(item.quantity) || 0;
+                  const total = price * qty;
+                  return (
+                    <div key={index} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg min-w-0 w-full">
+                      <div className="relative">
+                        <img
+                          src={item.image || "/placeholder.svg?height=80&width=80"}
+                          alt={item.name}
+                          className="w-20 h-20 object-contain rounded"
+                        />
+                        <span className="absolute bottom-1 right-1 bg-lime-500 text-white text-xs px-2 py-0.5 rounded-full">
+                          Qty: {item.quantity}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900">{item.name}</h3>
+                        <p className="text-sm font-medium text-gray-900">{formatPrice(item.price)} each</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-gray-900">{total > 0 ? formatPrice(total) : "N/A"}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900">{formatPrice(item.price * item.qty)}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="mt-6 pt-4 border-t border-gray-200">
