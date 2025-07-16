@@ -708,7 +708,7 @@ const Shop = () => {
                         <img
                           src={banners.find((banner) => banner.category === selectedCategory && banner.isActive).image}
                           alt={categories.find((cat) => cat._id === selectedCategory)?.name}
-                          className="w-64 h-48 object-cover rounded-lg shadow-lg"
+                          className="w-64 h-48 cover rounded-lg shadow-lg"
                         />
                       </div>
                     )}

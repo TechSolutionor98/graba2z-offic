@@ -23,13 +23,13 @@ const HomeStyleProductCard = ({ product }) => {
   const categoryName = product.category?.name || "Unknown"
 
   return (
-    <div className="border rounded-lg p-3  hover:shadow-md transition-shadow min-h-[340px] max-h-[360px] min-w-[190px] max-w-[200px] flex flex-col justify-between">
-      <div className="relative mb-2 flex justify-center items-center min-h-[160px] max-h-[160px]">
+    <div className="border bg-white rounded-lg p-3  hover:shadow-md transition-shadow min-h-[340px] max-h-[360px] min-w-[190px] max-w-[200px] flex flex-col justify-between">
+      <div className="relative mb-2  flex justify-center items-center min-h-[160px] max-h-[160px]">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
             src={product.image || "/placeholder.svg?height=150&width=150"}
             alt={product.name}
-            className="w-full h-full contain rounded mx-auto"
+            className="w-full h-full cover rounded mx-auto"
           />
         </Link>
         <button

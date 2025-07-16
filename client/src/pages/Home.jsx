@@ -225,10 +225,10 @@ const Home = () => {
         const asusData = filterProductsByBrand(products, "ASUS").slice(0, 3)
 
         // Get category products
-        const accessoriesData = filterProductsByMainCategory(products, "Accessories").slice(0, 5)
+        const accessoriesData = filterProductsByMainCategory(products, "Accessories").slice(0, 6)
 
         // Get Networking products
-        let networkingData = filterProductsByCategory(products, "Networking").slice(0, 5)
+        let networkingData = filterProductsByCategory(products, "Networking").slice(0, 6)
         console.log("Networking Products found:", networkingData)
 
         // Get MSI products
@@ -265,7 +265,7 @@ const Home = () => {
                   productName.includes("network"))
               )
             })
-            .slice(0, 5)
+            .slice(0, 6)
         }
 
         // Alternative search for MSI if no products found
@@ -480,23 +480,23 @@ const Home = () => {
         {/* Desktop & Tablet - Grid Layout */}
         <div className="hidden md:flex justify-between gap-4">
           <div className="w-1/3 lg:w-1/3">
-            <img src="Untitled-1.png" alt="Image 1" className="w-full h-auto rounded-lg object-cover" />
+            <img src="Untitled-1.png" alt="Image 1" className="w-full h-auto rounded-lg cover" />
           </div>
           <div className="w-1/3 lg:w-1/3">
-            <img src="Untitled-123.png" alt="Image 2" className="w-full h-auto rounded-lg object-cover" />
+            <img src="Untitled-123.png" alt="Image 2" className="w-full h-auto rounded-lg cover" />
           </div>
           <div className="w-1/3 lg:w-1/3 hidden lg:block">
-            <img src="asus-2.png" alt="Image 3" className="w-full h-auto rounded-lg object-cover" />
+            <img src="asus-2.png" alt="Image 3" className="w-full h-auto rounded-lg cover" />
           </div>
         </div>
 
         {/* Mobile - Simple Grid */}
         <div className="md:hidden grid grid-cols-2 gap-3">
           <div>
-            <img src="Untitled-1.png" alt="Image 1" className="w-full h-auto rounded-lg object-cover" />
+            <img src="Untitled-1.png" alt="Image 1" className="w-full h-auto rounded-lg cover" />
           </div>
           <div>
-            <img src="Untitled-123.png" alt="Image 2" className="w-full h-auto rounded-lg object-cover" />
+            <img src="Untitled-123.png" alt="Image 2" className="w-full h-auto rounded-lg cover" />
           </div>
         </div>
       </div>
@@ -659,9 +659,9 @@ const Home = () => {
         </div>
 
         {accessoriesProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {accessoriesProducts
-              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 5)
+              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 6)
               .map((product) => (
                 <AccessoriesProductCard key={product._id} product={product} />
               ))}
@@ -760,9 +760,9 @@ const Home = () => {
         </div>
 
         {networkingProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 ">
             {networkingProducts
-              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 5)
+              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 6)
               .map((product) => (
                 <AccessoriesProductCard key={product._id} product={product} />
               ))}
@@ -1209,12 +1209,12 @@ const DynamicBrandProductCard = ({ product }) => {
 
   return (
     <div className="border p-2 h-[340px] flex flex-col justify-between">
-      <div className="relative mb-2 flex h-[170px] justify-center items-center">
+      <div className="relative mb-2 flex h-[180px] justify-center items-center">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
             src={product.image || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
-            className="w-full h-full contain rounded mx-auto"
+            className="w-full h-full cover rounded mx-auto"
           />
         </Link>
         <button
@@ -1287,12 +1287,12 @@ const AccessoriesProductCard = ({ product }) => {
 
   return (
     <div className="border rounded-lg p-3 mx-1 hover:shadow-md transition-shadow lg:min-h-[340px] lg:max-h-[360px] lg:min-w-[210px] lg:max-w-[220px] flex flex-col justify-between">
-      <div className="relative mb-3 flex justify-center items-center lg:min-h-[90px] lg:max-h-[170px] ">
+      <div className="relative mb-3 flex justify-center items-center min-h-[155px] lg:max-h-[170px] ">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
             src={product.image || "/placeholder.svg?height=150&width=150"}
             alt={product.name}
-            className="w-full h-full contain rounded mx-auto"
+            className="w-full h-full cover rounded mx-auto"
           />
         </Link>
         <button
