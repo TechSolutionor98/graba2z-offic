@@ -29,6 +29,7 @@ const AdminBanners = () => {
     sortOrder: 0,
     validFrom: "",
     validUntil: "",
+    deviceType: "desktop",
   })
 
   const positions = [
@@ -131,6 +132,7 @@ const AdminBanners = () => {
       sortOrder: 0,
       validFrom: "",
       validUntil: "",
+      deviceType: "desktop",
     })
   }
 
@@ -150,6 +152,7 @@ const AdminBanners = () => {
       sortOrder: banner.sortOrder,
       validFrom: banner.validFrom ? new Date(banner.validFrom).toISOString().split("T")[0] : "",
       validUntil: banner.validUntil ? new Date(banner.validUntil).toISOString().split("T")[0] : "",
+      deviceType: banner.deviceType || "desktop",
     })
     setShowForm(true)
   }
@@ -281,16 +284,16 @@ const AdminBanners = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Discount (%)</label>
-                  <input
-                    type="number"
-                    value={formData.discount}
-                    onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Banner Device</label>
+                  <select
+                    value={formData.deviceType}
+                    onChange={(e) => setFormData({ ...formData, deviceType: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="24"
-                    min="0"
-                    max="100"
-                  />
+                    required
+                  >
+                    <option value="desktop">Desktop</option>
+                    <option value="mobile">Mobile</option>
+                  </select>
                 </div>
               </div>
 

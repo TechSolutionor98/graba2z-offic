@@ -55,6 +55,20 @@ const Home = () => {
   const sliderRef = useRef(null)
   const [scrollX, setScrollX] = useState(0)
   const [isAutoScrolling, setIsAutoScrolling] = useState(true)
+  const [deviceType, setDeviceType] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768 ? 'Mobile' : 'Desktop';
+    }
+    return 'Desktop';
+  });
+
+  useEffect(() => {
+    function handleResize() {
+      setDeviceType(window.innerWidth < 768 ? 'Mobile' : 'Desktop');
+    }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const bounceStyle = {
     animation: "bounce 1s infinite",
@@ -159,6 +173,8 @@ const Home = () => {
 
         // Filter hero banners
         const heroData = bannersData.filter((banner) => banner.position === "hero")
+        console.log("All Banners:", bannersData)
+        console.log("Hero Banners:", heroData)
         const promotionalBanners = bannersData.filter((banner) => banner.position === "promotional")
         const mobileData = bannersData.filter((banner) => banner.position === "mobile")
 
@@ -342,6 +358,9 @@ const Home = () => {
         setBanners(promotionalBanners)
         setHeroBanners(heroData)
         setMobileBanners(mobileData)
+        // Add log after setting hero banners
+        console.log("[DEBUG] deviceType:", deviceType)
+        console.log("[DEBUG] heroBanners:", heroData)
         setBrands(validBrands)
         setHpProducts(hpData)
         setDellProducts(dellData)
@@ -522,7 +541,7 @@ const Home = () => {
 
   return (
     <div className="bg-white mt-1">
-      <BannerSlider banners={heroBanners} />
+      <BannerSlider banners={heroBanners.filter(banner => banner.deviceType && banner.deviceType.toLowerCase() === deviceType.toLowerCase())} />
       {/* Categories Section - Infinite Loop Scroll */}
       <CategorySlider categories={categories} onCategoryClick={handleCategoryClick} />
 

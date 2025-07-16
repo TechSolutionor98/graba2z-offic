@@ -51,6 +51,11 @@ const bannerSchema = mongoose.Schema(
       type: Number,
       default: 0,
     },
+    deviceType: {
+      type: String,
+      enum: ["desktop", "mobile"],
+      default: "desktop",
+    },
     validFrom: {
       type: Date,
       default: Date.now,
