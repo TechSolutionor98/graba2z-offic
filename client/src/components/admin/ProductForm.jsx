@@ -12,6 +12,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   const [brands, setBrands] = useState([])
   const [subCategories, setSubCategories] = useState([])
   const [parentCategories, setParentCategories] = useState([])
+  const [taxes, setTaxes] = useState([])
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -56,12 +57,24 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     { value: "pack", label: "Pack" },
   ]
 
-  const taxOptions = [
-    { value: "0", label: "No Tax" },
-    { value: "5", label: "5% VAT" },
-    { value: "15", label: "15% VAT" },
-    { value: "18", label: "18% GST" },
-  ]
+  // Fetch taxes from backend
+  useEffect(() => {
+    const fetchTaxes = async () => {
+      try {
+        const token = localStorage.getItem("adminToken")
+        const { data } = await axios.get(`${config.API_URL}/api/tax`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        setTaxes(data)
+      } catch (error) {
+        setTaxes([])
+        console.error("Failed to load taxes:", error)
+      }
+    }
+    fetchTaxes()
+  }, [])
 
   useEffect(() => {
     fetchParentCategories()
@@ -305,6 +318,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   // Debug logs for subcategory selection
   console.log("Selected subcategory value:", formData.category);
   console.log("Fetched subcategories:", subCategories.map(s => ({ id: s._id, name: s.name })));
+  // Debug log for taxes
+  console.log("Fetched taxes:", taxes);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
@@ -629,9 +644,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {taxOptions.map((tax) => (
-                <option key={tax.value} value={tax.value}>
-                  {tax.label}
+              <option value="">Select a Tax</option>
+              {taxes.map((tax) => (
+                <option key={tax._id} value={tax._id}>
+                  {tax.name}{tax.rate ? ` (${tax.rate}${tax.type ? (tax.type === 'percentage' ? '%' : '') : ''})` : ''}
                 </option>
               ))}
             </select>

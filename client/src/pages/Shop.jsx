@@ -470,6 +470,11 @@ const Shop = () => {
   // Add debug log before rendering
   console.log('Products being rendered:', products)
 
+  // Get selected subcategory object
+  const selectedSubCategoryObj = subCategories.find(
+    (sub) => sub._id === selectedSubCategories[0]
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -721,7 +726,9 @@ const Shop = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {categories.find((cat) => cat._id === selectedCategory)?.name || "All Products"}
+                  {selectedSubCategoryObj
+                    ? selectedSubCategoryObj.name
+                    : categories.find((cat) => cat._id === selectedCategory)?.name || "All Products"}
                 </h1>
                 <p className="text-gray-600 mt-1">{products.length} products found</p>
               </div>

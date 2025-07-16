@@ -136,7 +136,7 @@ const AddProduct = () => {
 
       // Taxes
       fetchPromises.push(
-        axios.get(`${config.API_URL}/api/taxes`, { headers }).catch((err) => {
+        axios.get(`${config.API_URL}/api/tax`, { headers }).catch((err) => {
           console.log("Tax API error:", err)
           return { data: [] }
         }),
