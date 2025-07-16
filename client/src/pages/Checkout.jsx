@@ -1005,7 +1005,7 @@ const Checkout = () => {
                   <button
                     onClick={handleSubmit}
                     disabled={loading || !selectedPaymentMethod}
-                    className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3 disabled:opacity-50 flex items-center gap-2"
+                    className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-6 py-3 disabled:opacity-50 flex items-center gap-2"
                   >
                     {loading ? (
                       <>

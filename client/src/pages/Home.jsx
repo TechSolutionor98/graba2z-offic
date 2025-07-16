@@ -470,7 +470,7 @@ const Home = () => {
   }
 
   return (
-    <div className="bg-white mt-8">
+    <div className="bg-white mt-1">
       <BannerSlider banners={heroBanners} />
       {/* Categories Section - Infinite Loop Scroll */}
       <CategorySlider categories={categories} onCategoryClick={handleCategoryClick} />
