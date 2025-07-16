@@ -238,7 +238,7 @@ const AdminBanners = () => {
 
               {/* Image Upload Section */}
               <div>
-                <ImageUpload onImageUpload={handleImageUpload} currentImage={formData.image} label="Banner Image" />
+                <ImageUpload onImageUpload={handleImageUpload} currentImage={formData.image} label="Banner Image" isBanner={true} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

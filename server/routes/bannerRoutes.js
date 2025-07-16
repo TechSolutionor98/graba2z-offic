@@ -3,6 +3,7 @@ import asyncHandler from "express-async-handler"
 import Banner from "../models/bannerModel.js"
 import Category from "../models/categoryModel.js"
 import { protect, admin } from "../middleware/authMiddleware.js"
+import { uploadBanner } from "../utils/cloudinary.js"
 
 const router = express.Router()
 
@@ -77,6 +78,7 @@ router.post(
   "/",
   protect,
   admin,
+  uploadBanner.single("image"),
   asyncHandler(async (req, res) => {
     const { category, ...bannerData } = req.body
 

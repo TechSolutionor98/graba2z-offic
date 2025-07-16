@@ -6,7 +6,7 @@ import axios from "axios"
 
 import config from "../config/config"
 
-const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", multiple = false }) => {
+const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", multiple = false, isBanner = false }) => {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
 
@@ -49,7 +49,8 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
         formData.append("image", files[0])
 
         console.log("📤 Uploading single image...")
-        const { data } = await axios.post(`${config.API_URL}/api/upload/single`, formData, {
+        const uploadUrl = isBanner ? `${config.API_URL}/api/upload/banner` : `${config.API_URL}/api/upload/single`;
+        const { data } = await axios.post(uploadUrl, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,

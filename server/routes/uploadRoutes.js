@@ -1,6 +1,7 @@
 import express from "express"
-import { upload, deleteFromCloudinary } from "../utils/cloudinary.js"
+import { upload, deleteFromCloudinary, uploadBanner } from "../utils/cloudinary.js"
 import { protect, admin } from "../middleware/authMiddleware.js"
+import asyncHandler from "express-async-handler"
 
 const router = express.Router()
 
@@ -102,6 +103,20 @@ router.post(
     }
   },
 )
+
+// @desc    Upload banner image (high-res, no transformation)
+// @route   POST /api/upload/banner
+// @access  Private/Admin
+router.post(
+  "/banner",
+  uploadBanner.single("image"),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    res.json({ url: req.file.path });
+  })
+);
 
 // @desc    Delete image
 // @route   DELETE /api/upload/:publicId

@@ -58,6 +58,16 @@ const storage = new CloudinaryStorage({
   },
 })
 
+// High-res banner storage (no transformation)
+const bannerStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "ecommerce/banners",
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+    // No transformation: upload original file as-is
+  },
+});
+
 // Create multer upload middleware
 export const upload = multer({
   storage: storage,
@@ -74,6 +84,22 @@ export const upload = multer({
     }
   },
 })
+
+// Banner upload middleware (no transformation)
+export const uploadBanner = multer({
+  storage: bannerStorage,
+  limits: {
+    fileSize: 20 * 1024 * 1024, // 20MB limit for banners
+  },
+  fileFilter: (req, file, cb) => {
+    console.log("📁 Banner file received:", file.originalname, file.mimetype)
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true)
+    } else {
+      cb(new Error("Only image files are allowed!"), false)
+    }
+  },
+});
 
 // Helper function to delete image from Cloudinary
 export const deleteFromCloudinary = async (publicId) => {
