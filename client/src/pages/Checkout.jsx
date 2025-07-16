@@ -64,28 +64,37 @@ const PAYMENT_METHODS = [
     id: "tamara",
     name: "Tamara",
     description: "Buy now, pay later in 3 installments",
-    icon: "💳",
+    iconUrls: [
+      { src: "/tamara.png", size: "big" }
+    ],
     color: "bg-green-50 border-green-200",
   },
   {
     id: "tabby",
     name: "Tabby",
     description: "Split your purchase into 4 payments",
-    icon: "🔄",
+    iconUrls: [
+      { src: "/tabby.png", size: "big" }
+    ],
     color: "bg-purple-50 border-purple-200",
   },
   {
     id: "card",
     name: "Pay By Card",
     description: "Credit/Debit card payment",
-    icon: "💳",
+    iconUrls: [
+      { src: "/master.png", size: "medium" },
+      { src: "/visa.png", size: "medium" }
+    ],
     color: "bg-blue-50 border-blue-200",
   },
   {
     id: "cod",
     name: "Cash On Delivery",
     description: "Pay when you receive your order",
-    icon: "💵",
+    iconUrls: [
+      { src: "/currencyAED.png", size: "big" }
+    ],
     color: "bg-yellow-50 border-yellow-200",
   },
 ]
@@ -933,10 +942,25 @@ const Checkout = () => {
                           className="accent-lime-500"
                         />
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">{method.icon}</span>
                           <div>
                             <div className="font-semibold text-gray-900">{method.name}</div>
                             <div className="text-sm text-gray-600">{method.description}</div>
+                          </div>
+                          <div className="flex gap-2 ml-5 flex-wrap">
+                            {method.iconUrls.map((icon, idx) => (
+                              <img
+                                key={idx}
+                                src={icon.src}
+                                alt={method.name}
+                                className={
+                                  icon.size === "big"
+                                    ? "w-20 h-12 md:w-28 md:h-16 object-contain max-w-full"
+                                    : icon.size === "medium"
+                                    ? "w-14 h-8 md:w-16 md:h-10 object-contain max-w-full"
+                                    : "w-10 h-6 md:w-12 md:h-8 object-contain max-w-full"
+                                }
+                              />
+                            ))}
                           </div>
                         </div>
                       </label>
