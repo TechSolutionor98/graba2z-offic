@@ -464,6 +464,9 @@ const ProductDetails = () => {
                 <span className="text-gray-600">
                   Category: <span className="font-medium text-green-600">{product.category?.name || product.category || 'N/A'}</span>
                 </span>
+                <span className="text-gray-600">
+                  SKU: <span className="font-medium text-green-600">{product.sku || 'N/A'}</span>
+                </span>
               </div>
 
               {/* Rating */}
