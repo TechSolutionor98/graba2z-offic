@@ -78,104 +78,61 @@ function generateSlug(name) {
   return name.trim().toLowerCase().replace(/\s+/g, "-")
 }
 
+// Helper to escape regex special characters
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // @desc    Fetch all products (Admin only - includes inactive)
 // @route   GET /api/products/admin
 // @access  Private/Admin
-router.get(
-  "/admin",
-  protect,
-  admin,
-  asyncHandler(async (req, res) => {
-    const { category, featured, search, limit, brand } = req.query
+router.get("/admin", protect, admin, async (req, res) => {
+  try {
+    const { search, category, subcategory, parentCategory, limit = 20, page = 1 } = req.query;
+    const query = {};
+    const orConditions = [];
 
-    const query = {} // No isActive filter for admin
+    if (category) query.category = category;
+    if (subcategory) query.subCategory = subcategory;
+    if (parentCategory) query.parentCategory = parentCategory;
 
-    // Filter by category
-    if (category && category !== "all") {
-      // First try to find category by name, then by ID
-      let categoryDoc = await Category.findOne({ name: { $regex: new RegExp(`^${category}$`, "i") } })
-
-      if (!categoryDoc) {
-        // If not found by name, try by ID (if it's a valid ObjectId)
-        if (category.match(/^[0-9a-fA-F]{24}$/)) {
-          categoryDoc = await Category.findById(category)
-        }
-      }
-
-      if (categoryDoc) {
-        // Filter by category, subCategory, or parentCategory fields
-        query.$or = [
-          { category: categoryDoc._id },
-          { subCategory: categoryDoc._id },
-          { parentCategory: categoryDoc._id }
-        ];
-      } else if (category.match(/^[0-9a-fA-F]{24}$/)) {
-        // If not found as a main category, still try filtering by subCategory or parentCategory field
-        query.$or = [
-          { category: category },
-          { subCategory: category },
-          { parentCategory: category }
-        ];
-      } else {
-        // If category not found, return empty array
-        return res.json([])
-      }
-    }
-
-    // Filter by brand
-    if (brand) {
-      if (Array.isArray(brand)) {
-        // If brand is an array of IDs
-        query.brand = { $in: brand }
-      } else if (typeof brand === "string" && brand.match(/^[0-9a-fA-F]{24}$/)) {
-        // If it's an ObjectId string
-        query.brand = brand
-      } else if (typeof brand === "string") {
-        // If it's a name, look up the brand by name
-        const brandDoc = await Brand.findOne({ name: { $regex: new RegExp(`^${brand}$`, "i") } })
-        if (brandDoc) {
-          query.brand = brandDoc._id
-        } else {
-          // No matching brand, return empty
-          return res.json([])
-        }
-      }
-    }
-
-    // Filter by featured
-    if (featured === "true") {
-      query.featured = true
-    }
-
-    // Search functionality
     if (typeof search === "string" && search.trim() !== "") {
-      const regex = new RegExp(search, "i")
+      const safeSearch = escapeRegex(search);
+      const regex = new RegExp(safeSearch, "i");
       // Find matching brands by name
-      const matchingBrands = await Brand.find({ name: regex }).select("_id")
-      const brandIds = matchingBrands.map(b => b._id)
-      query.$or = [
+      const matchingBrands = await Brand.find({ name: regex }).select("_id");
+      const brandIds = matchingBrands.map(b => b._id);
+      orConditions.push(
         { name: regex },
         { description: regex },
-        { brand: { $in: brandIds } },
-        { sku: search }, // exact SKU match
-      ]
+        { sku: regex },
+        { barcode: regex },
+        { tags: regex },
+        { brand: { $in: brandIds } }
+      );
     }
+    if (orConditions.length > 0) {
+      query.$or = orConditions;
+    }
+
+    // Get total count for pagination
+    const totalCount = await Product.countDocuments(query);
 
     let productsQuery = Product.find(query)
-      .populate("category", "name slug")
-      .populate("subCategory", "name slug")
-      .populate("brand", "name slug")
-      .populate("parentCategory", "name slug")
+      .populate("brand category subCategory parentCategory")
+      .sort({ createdAt: -1 });
 
-    // Apply limit if specified
-    if (limit) {
-      productsQuery = productsQuery.limit(Number.parseInt(limit))
-    }
+    // Pagination
+    const skip = (page - 1) * limit;
+    productsQuery = productsQuery.skip(skip).limit(Number.parseInt(limit));
 
-    const products = await productsQuery.sort({ createdAt: -1 })
-    res.json(products)
-  }),
-)
+    const products = await productsQuery;
+    res.json({ products, totalCount });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // @desc    Fetch all products
 // @route   GET /api/products

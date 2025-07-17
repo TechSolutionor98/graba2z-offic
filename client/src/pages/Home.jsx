@@ -458,7 +458,12 @@ const Home = () => {
   }, [brandCurrentIndex, brands.length])
 
   const handleCategoryClick = (categoryName) => {
-    navigate(`/shop?category=${encodeURIComponent(categoryName)}`)
+    const category = categories.find(cat => cat.name === categoryName)
+    if (category && category._id) {
+      navigate(`/shop?parentCategory=${category._id}`)
+    } else {
+      navigate(`/shop`)
+    }
   }
 
   const handleBrandClick = (brandName) => {

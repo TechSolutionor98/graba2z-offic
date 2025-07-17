@@ -17,6 +17,9 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const PRODUCTS_PER_PAGE = 20
   const { showToast } = useToast()
 
   const formatPrice = (price) => {
@@ -47,7 +50,7 @@ const AdminProducts = () => {
   useEffect(() => {
     fetchProducts()
     fetchCategories()
-  }, [])
+  }, [page, searchTerm, filterCategory])
 
   const fetchProducts = async () => {
     try {
@@ -59,18 +62,20 @@ const AdminProducts = () => {
         return
       }
 
-      // Build query params for search and category
-      const params = {}
+      // Build query params for search, category, pagination
+      const params = { limit: PRODUCTS_PER_PAGE, page }
       if (searchTerm.trim() !== "") params.search = searchTerm.trim()
       if (filterCategory && filterCategory !== "all") params.category = filterCategory
 
-      const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
+      const { data, headers } = await axios.get(`${config.API_URL}/api/products/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
         params,
       })
-      setProducts(data)
+      setProducts(data.products || [])
+      const totalCount = data.totalCount || 0
+      setTotalPages(Math.ceil(totalCount / PRODUCTS_PER_PAGE) || 1)
       setLoading(false)
     } catch (error) {
       console.error("Failed to load products:", error)
@@ -275,20 +280,7 @@ const AdminProducts = () => {
   };
 
   // Update: Only filter on frontend for search by name, brand, or exact SKU (case-insensitive)
-  const filteredProducts = products.filter((product) => {
-    const productName = product.name || "";
-    const brandName = typeof product.brand === "object" && product.brand !== null
-      ? product.brand.name || ""
-      : product.brand || "";
-    const sku = product.sku || "";
-    const search = searchTerm.trim().toLowerCase();
-    if (!search) return true;
-    return (
-      productName.toLowerCase().includes(search) ||
-      brandName.toLowerCase().includes(search) ||
-      sku.toLowerCase() === search
-    );
-  });
+  // Remove filteredProducts and use products directly in rendering
 
   // Add useEffect to refetch products when searchTerm or filterCategory changes
   useEffect(() => {
@@ -416,8 +408,8 @@ const AdminProducts = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredProducts.length > 0 ? (
-                          filteredProducts.map((product) => {
+                        {products.length > 0 ? (
+                          products.map((product) => {
                             console.log('Product:', product);
                             console.log('Product.parentCategory:', product.parentCategory);
                             console.log('Product.category:', product.category);
@@ -521,6 +513,98 @@ const AdminProducts = () => {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              )}
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 my-4">
+                  <button
+                    className="px-3 py-1 border rounded disabled:opacity-50"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                  >
+                    Previous
+                  </button>
+                  {/* Windowed Pagination Logic */}
+                  {(() => {
+                    const pages = [];
+                    // Always show first page
+                    pages.push(
+                      <button
+                        key={1}
+                        className={`px-3 py-1 border rounded ${page === 1 ? 'bg-blue-500 text-white' : ''}`}
+                        onClick={() => setPage(1)}
+                      >
+                        1
+                      </button>
+                    );
+
+                    // Determine window
+                    let start = Math.max(2, page);
+                    let end = Math.min(totalPages - 1, page + 2);
+
+                    // If on first or second page, show 2 and 3
+                    if (page === 1) {
+                      start = 2;
+                      end = Math.min(totalPages - 1, 3);
+                    } else if (page === 2) {
+                      start = 2;
+                      end = Math.min(totalPages - 1, 4);
+                    }
+                    // If on last or near-last page, show last-2, last-1
+                    if (page >= totalPages - 2) {
+                      start = Math.max(2, totalPages - 2);
+                      end = totalPages - 1;
+                    }
+
+                    // Add ellipsis if needed
+                    if (start > 2) {
+                      pages.push(
+                        <span key="start-ellipsis" className="px-2">...</span>
+                      );
+                    }
+
+                    for (let i = start; i <= end; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          className={`px-3 py-1 border rounded ${page === i ? 'bg-blue-500 text-white' : ''}`}
+                          onClick={() => setPage(i)}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+
+                    // Add ellipsis if needed
+                    if (end < totalPages - 1) {
+                      pages.push(
+                        <span key="end-ellipsis" className="px-2">...</span>
+                      );
+                    }
+
+                    // Always show last page if more than 1
+                    if (totalPages > 1) {
+                      pages.push(
+                        <button
+                          key={totalPages}
+                          className={`px-3 py-1 border rounded ${page === totalPages ? 'bg-blue-500 text-white' : ''}`}
+                          onClick={() => setPage(totalPages)}
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                    }
+
+                    return pages;
+                  })()}
+                  <button
+                    className="px-3 py-1 border rounded disabled:opacity-50"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === totalPages}
+                  >
+                    Next
+                  </button>
                 </div>
               )}
             </>
