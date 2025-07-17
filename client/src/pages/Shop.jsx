@@ -726,7 +726,9 @@ const Shop = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {selectedSubCategoryObj
+                  {searchQuery.trim() ? (
+                    <>Results for "{searchQuery.trim()}"</>
+                  ) : selectedSubCategoryObj
                     ? selectedSubCategoryObj.name
                     : categories.find((cat) => cat._id === selectedCategory)?.name || "All Products"}
                 </h1>

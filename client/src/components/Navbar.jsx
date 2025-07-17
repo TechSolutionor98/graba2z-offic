@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 import config from "../config/config"
 import { Link, useNavigate, useLocation } from "react-router-dom"
@@ -33,6 +33,11 @@ const Navbar = () => {
   const location = useLocation()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState([])
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const searchInputRef = useRef(null)
+  const searchDropdownRef = useRef(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
@@ -67,6 +72,47 @@ const Navbar = () => {
     setExpandedMobileCategory(expandedMobileCategory === categoryId ? null : categoryId)
   }
 
+  // Instant search effect
+  useEffect(() => {
+    if (searchQuery.trim().length === 0) {
+      setSearchResults([])
+      setShowSearchDropdown(false)
+      setSearchLoading(false)
+      return
+    }
+    setSearchLoading(true)
+    const fetchResults = async () => {
+      try {
+        const { data } = await axios.get(`${config.API_URL}/api/products?search=${encodeURIComponent(searchQuery.trim())}&limit=5`)
+        setSearchResults(data)
+        setShowSearchDropdown(true)
+      } catch (err) {
+        setSearchResults([])
+        setShowSearchDropdown(false)
+      } finally {
+        setSearchLoading(false)
+      }
+    }
+    const timeout = setTimeout(fetchResults, 250)
+    return () => clearTimeout(timeout)
+  }, [searchQuery])
+
+  // Hide dropdown on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (
+        searchDropdownRef.current &&
+        !searchDropdownRef.current.contains(e.target) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(e.target)
+      ) {
+        setShowSearchDropdown(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [])
+
   useEffect(() => {
     fetchCategories()
     fetchSubCategories()
@@ -90,7 +136,8 @@ const Navbar = () => {
     e.preventDefault()
     if (searchQuery.trim()) {
       navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
-      setSearchQuery("")
+      setShowSearchDropdown(false)
+      // setSearchQuery("") // Optionally clear
     }
   }
 
@@ -136,11 +183,48 @@ const Navbar = () => {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-4 pr-4 py-3 border border-gray-300 focus:outline-none focus:border-lime-500"
                       style={{ width: "80%" }}
+                      ref={searchInputRef}
+                      onFocus={() => { if (searchResults.length > 0) setShowSearchDropdown(true) }}
                     />
+                    {/* Loading spinner */}
+                    {searchLoading && (
+                      <span className="absolute right-36 top-1/2 transform -translate-y-1/2">
+                        <svg className="animate-spin h-5 w-5 text-lime-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                      </span>
+                    )}
                     <button type="submit" className="px-4 py-4 bg-lime-500 text-white hover:bg-green-600">
                       <Search size={18} />
                     </button>
                   </div>
+                  {/* Autocomplete Dropdown */}
+                  {showSearchDropdown && searchResults.length > 0 && (
+                    <div ref={searchDropdownRef} className="absolute left-0 right-0 bg-white border border-gray-200 shadow-lg rounded z-50 mt-2 max-h-96 overflow-y-auto">
+                      {searchResults.map((product) => (
+                        <Link
+                          key={product._id}
+                          to={`/product/${product.slug || product._id}`}
+                          className="flex items-start gap-4 px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
+                          onClick={() => setShowSearchDropdown(false)}
+                        >
+                          <img src={product.image || "/placeholder.svg"} alt={product.name} className="w-16 h-16 object-contain rounded" />
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</div>
+                            <div className="text-xs text-gray-500 line-clamp-2">{product.description}</div>
+                          </div>
+                        </Link>
+                      ))}
+                      <Link
+                        to={`/shop?search=${encodeURIComponent(searchQuery.trim())}`}
+                        className="block text-center text-lime-600 hover:underline py-2 text-sm font-medium"
+                        onClick={() => setShowSearchDropdown(false)}
+                      >
+                        View all results
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </form>
             </div>

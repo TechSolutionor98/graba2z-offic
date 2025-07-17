@@ -209,7 +209,10 @@ router.get(
       orConditions.push(
         { name: regex },
         { description: regex },
-        { brand: { $in: brandIds } }
+        { brand: { $in: brandIds } },
+        { sku: regex },         // Allow partial SKU match
+        { barcode: regex },     // Allow partial barcode match
+        { tags: regex }         // Allow partial tag match
       );
     }
     if (orConditions.length > 0) {
