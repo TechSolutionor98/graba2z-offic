@@ -1,15 +1,13 @@
 import express from "express"
-import cors from "cors"
 import dotenv from "dotenv"
+import cors from "cors"
 import connectDB from "./config/db.js"
-import config from "./config/config.js"
-import { notFound, errorHandler } from "./middleware/errorMiddleware.js"
+import { errorHandler, notFound } from "./middleware/errorMiddleware.js"
 
-// Routes
+// Import routes
 import userRoutes from "./routes/userRoutes.js"
 import productRoutes from "./routes/productRoutes.js"
 import orderRoutes from "./routes/orderRoutes.js"
-import uploadRoutes from "./routes/uploadRoutes.js"
 import categoryRoutes from "./routes/categoryRoutes.js"
 import subCategoryRoutes from "./routes/subCategoryRoutes.js"
 import brandRoutes from "./routes/brandRoutes.js"
@@ -27,10 +25,11 @@ import blogCategoryRoutes from "./routes/blogCategoryRoutes.js"
 import blogTopicRoutes from "./routes/blogTopicRoutes.js"
 import blogRatingRoutes from "./routes/blogRatingRoutes.js"
 import settingsRoutes from "./routes/settingsRoutes.js"
-import wishlistRoutes from "./routes/wishlistRoutes.js"
 import requestCallbackRoutes from "./routes/requestCallbackRoutes.js"
-import paymentRoutes from "./routes/paymentRoutes.js"
+import uploadRoutes from "./routes/uploadRoutes.js"
 import adminRoutes from "./routes/adminRoutes.js"
+import wishlistRoutes from "./routes/wishlistRoutes.js"
+import paymentRoutes from "./routes/paymentRoutes.js"
 
 dotenv.config()
 
@@ -39,6 +38,7 @@ connectDB()
 
 const app = express()
 
+// Middleware
 // // CORS configuration
 app.use(cors({
   origin: 'https://www.graba2z.ae',
@@ -51,11 +51,6 @@ app.use(cors({
   keepHeadersOnError: true
 }));
 
-
-
-
-
-// Body parser middleware
 app.use(express.json({ limit: "50mb" }))
 app.use(express.urlencoded({ extended: true, limit: "50mb" }))
 
@@ -63,7 +58,6 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }))
 app.use("/api/users", userRoutes)
 app.use("/api/products", productRoutes)
 app.use("/api/orders", orderRoutes)
-app.use("/api/upload", uploadRoutes)
 app.use("/api/categories", categoryRoutes)
 app.use("/api/subcategories", subCategoryRoutes)
 app.use("/api/brands", brandRoutes)
@@ -71,8 +65,8 @@ app.use("/api/colors", colorRoutes)
 app.use("/api/sizes", sizeRoutes)
 app.use("/api/units", unitRoutes)
 app.use("/api/volumes", volumeRoutes)
-app.use("/api/warranty", warrantyRoutes)
-app.use("/api/tax", taxRoutes)
+app.use("/api/warranties", warrantyRoutes)
+app.use("/api/taxes", taxRoutes)
 app.use("/api/delivery-charges", deliveryChargeRoutes)
 app.use("/api/coupons", couponRoutes)
 app.use("/api/banners", bannerRoutes)
@@ -81,26 +75,18 @@ app.use("/api/blog-categories", blogCategoryRoutes)
 app.use("/api/blog-topics", blogTopicRoutes)
 app.use("/api/blog-ratings", blogRatingRoutes)
 app.use("/api/settings", settingsRoutes)
-app.use("/api/wishlist", wishlistRoutes)
 app.use("/api/request-callback", requestCallbackRoutes)
-app.use("/api/payment", paymentRoutes)
+app.use("/api/upload", uploadRoutes)
 app.use("/api/admin", adminRoutes)
-
-// Health check route
-app.get("/", (req, res) => {
-  res.json({
-    message: "GrabA2Z API is running!",
-    version: "1.0.0",
-    environment: config.NODE_ENV,
-  })
-})
+app.use("/api/wishlist", wishlistRoutes)
+app.use("/api/payment", paymentRoutes)
 
 // Error handling middleware
 app.use(notFound)
 app.use(errorHandler)
 
-const PORT = config.PORT
+const PORT = process.env.PORT || 5000
 
 app.listen(PORT, () => {
-  console.log(`Server running in ${config.NODE_ENV} mode on port ${PORT}`)
+  console.log(`Server running on port ${PORT}`)
 })
