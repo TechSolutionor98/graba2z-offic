@@ -14,7 +14,9 @@ const HomeStyleProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { showToast } = useToast()
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
-  const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
+  // Treat both 'Available' and 'Available Product' as available
+  const isAvailable = (product.stockStatus === "Available" || product.stockStatus === "Available Product" || (!product.stockStatus && product.countInStock > 0))
+  const stockStatus = isAvailable ? "Available" : (product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock"))
   const hasOffer = product.offerPrice && Number(product.offerPrice) > 0
   const showOldPrice = hasOffer && Number(product.basePrice) > Number(product.offerPrice)
   const priceToShow = hasOffer ? product.offerPrice : product.basePrice || product.price
@@ -51,11 +53,24 @@ const HomeStyleProductCard = ({ product }) => {
         </button>
       </div>
       <div className="mb-2 flex items-center gap-2">
-        <div className={`${getStatusColor(stockStatus)} text-white px-2 py-1 rounded text-xs font-bold inline-block mr-1`}>
-          {stockStatus}
-        </div>
-        {discount && (
-          <div className="bg-yellow-400 text-white px-2 py-1 rounded text-xs font-bold inline-block">{discount}</div>
+        {isAvailable ? (
+          <>
+            <div className={`${getStatusColor("Available") } text-white px-2 py-1 rounded text-xs font-bold inline-block mr-1`}>
+              Available
+            </div>
+            {discount && (
+              <div className="bg-yellow-400 text-white px-2 py-1 rounded text-xs font-bold inline-block">{discount}</div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className={`${getStatusColor(stockStatus)} text-white px-2 py-1 rounded text-xs font-bold inline-block mr-1`}>
+              {stockStatus}
+            </div>
+            {discount && (
+              <div className="bg-yellow-400 text-white px-2 py-1 rounded text-xs font-bold inline-block">{discount}</div>
+            )}
+          </>
         )}
       </div>
       <Link to={`/product/${product.slug || product._id}`}>

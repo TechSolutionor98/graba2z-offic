@@ -1357,13 +1357,13 @@ const AccessoriesProductCard = ({ product }) => {
   const categoryName = product.category?.name || "Unknown"
 
   return (
-    <div className="border rounded-lg p-3 mx-1 hover:shadow-md transition-shadow lg:min-h-[340px] lg:max-h-[360px] lg:min-w-[210px] lg:max-w-[220px] flex flex-col justify-between">
-      <div className="relative mb-3 flex justify-center items-center min-h-[155px] lg:max-h-[170px] ">
+    <div className="border  rounded-lg p-3 mx-1 hover:shadow-md transition-shadow lg:min-h-[340px] lg:max-h-[360px] lg:min-w-[210px] lg:max-w-[220px] flex flex-col justify-between">
+      <div className="relative  mb-3 flex justify-center items-center min-h-[155px] lg:max-h-[170px] ">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
             src={product.image || "/placeholder.svg?height=150&width=150"}
             alt={product.name}
-            className="w-full h-full cover rounded mx-auto"
+            className="w-full h-[165px] cover rounded mx-auto"
           />
         </Link>
         <button
