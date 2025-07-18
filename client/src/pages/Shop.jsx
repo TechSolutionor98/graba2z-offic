@@ -65,7 +65,8 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
     setRange([range[0], value]);
   };
 
-  const handleApply = () => {
+  const handleApply = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     onApply([inputMin, inputMax]);
   };
 
@@ -108,6 +109,7 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
         />
       </div>
       <button
+        type="button"
         className="w-full bg-white border border-lime-500 text-lime-600 rounded py-2 font-semibold hover:bg-lime-50 hover:text-lime-700 hover:border-lime-600 transition"
         onClick={handleApply}
       >
@@ -137,6 +139,7 @@ const Shop = () => {
   const [subCategories, setSubCategories] = useState([])
   const [selectedSubCategories, setSelectedSubCategories] = useState([])
   const [stockFilters, setStockFilters] = useState({ inStock: false, outOfStock: false, onSale: false })
+  const [minPrice, setMinPrice] = useState(0);
 
   // Filter panel states
   const [showPriceFilter, setShowPriceFilter] = useState(true)
@@ -173,11 +176,16 @@ const Shop = () => {
       const { data } = await axios.get(`${API_BASE_URL}/api/products?${params.toString()}`);
 
       if (data.length > 0) {
-        const max = Math.max(...data.map((p) => p.price));
+        const prices = data.map((p) => p.price || 0);
+        const minProductPrice = Math.min(...prices);
+        const max = Math.max(...prices);
         setMaxPrice(max);
-        if (priceRange[1] === 10000) {
-          setPriceRange([0, max]);
+        // Only reset price range if it matches the default (user hasn't changed it)
+        if (priceRange[0] === 0 && priceRange[1] === 10000) {
+          setPriceRange([minProductPrice, max]);
         }
+        // Save minProductPrice in state for use in PriceFilter
+        setMinPrice(minProductPrice);
       }
 
       // Sort products
@@ -238,7 +246,7 @@ const Shop = () => {
       clearTimeout(fetchTimeout.current);
       clearTimeout(loadingTimeout.current);
     };
-  }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters]);
+  }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, sortBy]);
 
   // Fetch subcategories when selectedCategory changes
   useEffect(() => {
@@ -475,6 +483,11 @@ const Shop = () => {
     (sub) => sub._id === selectedSubCategories[0]
   );
 
+  // 1. Add a handler for sort dropdown
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -508,7 +521,7 @@ const Shop = () => {
                 {showPriceFilter && (
                   <div className="mt-4 space-y-4">
                     <PriceFilter
-                      min={0}
+                      min={minPrice} // Use true minimum product price for the slider and input
                       max={maxPrice}
                       initialRange={priceRange}
                       onApply={(range) => setPriceRange(range)}
@@ -739,13 +752,13 @@ const Shop = () => {
               <div className="mt-4 sm:mt-0">
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={handleSortChange}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="newest">Newest First</option>
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
-                  <option value="name">Name: A to Z</option>
+                  <option value="name">Name: A-Z</option>
                 </select>
               </div>
             </div>
