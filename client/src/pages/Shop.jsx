@@ -156,9 +156,17 @@ const Shop = () => {
   const loadAndFilterProducts = async () => {
     try {
       setLoading(true);
-      // Get products from cache or API
+      setError(null);
+
+      // Use the productCache service instead of direct API call
       const allProducts = await productCache.getProducts();
       
+      if (!allProducts || allProducts.length === 0) {
+        setError("No products available");
+        setLoading(false);
+        return;
+      }
+
       // Apply filters
       const stockStatusFilters = []
       if (stockFilters.inStock) stockStatusFilters.push('inStock')
@@ -376,39 +384,35 @@ const Shop = () => {
       const { data } = await axios.get(`${API_BASE_URL}/api/banners`)
       setBanners(data)
     } catch (err) {
-      console.error("Error fetching banners:", err)
+      // Handle error silently
     }
   }
 
   const fetchSubCategories = async () => {
-    const catObj = categories.find((cat) => cat._id === selectedCategory)
-    if (!catObj) return setSubCategories([])
     try {
+      const catObj = categories.find((cat) => cat._id === selectedCategory)
+      if (!catObj) return
+
       const { data } = await axios.get(`${API_BASE_URL}/api/subcategories?category=${catObj._id}`)
-      console.log("Subcategories fetched:", data)
 
       // Filter and validate subcategories
-      const validSubCategories = data.filter((sub) => {
+      const validSubCategories = data.filter((subCat) => {
         const isValid =
-          sub &&
-          typeof sub === "object" &&
-          sub.name &&
-          typeof sub.name === "string" &&
-          sub.name.trim() !== "" &&
-          !sub.name.match(/^[0-9a-fA-F]{24}$/) // Not an ID
+          subCat &&
+          typeof subCat === "object" &&
+          subCat.name &&
+          typeof subCat.name === "string" &&
+          subCat.name.trim() !== "" &&
+          subCat.isActive !== false &&
+          !subCat.isDeleted &&
+          !subCat.name.match(/^[0-9a-fA-F]{24}$/) // Not an ID
 
         return isValid
       })
 
-      console.log("Filtered subcategories:", validSubCategories)
       setSubCategories(validSubCategories)
-      // Debug log after setting subCategories
-      setTimeout(() => {
-        console.log('subCategories state after set:', validSubCategories)
-      }, 0);
     } catch (err) {
-      console.error("Error fetching subcategories:", err)
-      setSubCategories([])
+      // Handle error silently
     }
   }
 
