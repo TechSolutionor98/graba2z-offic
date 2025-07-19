@@ -533,7 +533,7 @@ const Home = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
-        <img src="/g.png" alt="Loading..." style={{ width: 80, height: 80, ...bounceStyle }} />
+        <img src="/load.gif" alt="Loading..." style={{ width: 300, height: 175, ...bounceStyle }} />
       </div>
     )
   }
