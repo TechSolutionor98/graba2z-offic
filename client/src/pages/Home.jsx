@@ -643,7 +643,7 @@ const Home = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {featuredProducts.slice(0, 6).map((product, index) => (
+          {featuredProducts.slice(0, 4).map((product, index) => (
             <MobileProductCard key={product._id} product={product} index={index} />
           ))}
         </div>

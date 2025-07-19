@@ -562,11 +562,23 @@ const Navbar = () => {
           <Link to="/cart" className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500 relative">
             <ShoppingCart size={20} />
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold hover:text-lime-500">
                 {cartCount}
               </span>
             )}
             <span className="text-xs mt-1">Cart</span>
+          </Link>
+
+
+           {/* Wishlist */}
+          <Link to="/wishlist" className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500 relative" aria-label="Wishlist">
+            <Heart size={20} className="" />
+            {wishlist.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                {wishlist.length}
+              </span>
+            )}
+             <span className="text-xs mt-1">WishList</span>
           </Link>
 
           {/* Account */}
@@ -577,6 +589,8 @@ const Navbar = () => {
             <UserCircle size={20} />
             <span className="text-xs mt-1">Account</span>
           </Link>
+
+         
         </div>
       </nav>
     </>
