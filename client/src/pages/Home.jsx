@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import axios from "axios"
+import productCache from "../services/productCache"
 import {
   Star,
   Heart,
@@ -95,22 +96,23 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsResponse, categoriesResponse, brandsResponse, bannersResponse, upgradeFeaturesResponse] =
+        // Get products from cache or API
+        const products = await productCache.getProducts()
+        
+        const [categoriesResponse, brandsResponse, bannersResponse, upgradeFeaturesResponse] =
           await Promise.all([
-            axios.get(`${API_BASE_URL}/api/products`),
             axios.get(`${API_BASE_URL}/api/categories`),
             axios.get(`${API_BASE_URL}/api/brands`),
             axios.get(`${API_BASE_URL}/api/banners?active=true`),
             axios.get(`${API_BASE_URL}/api/upgrade-features?active=true`).catch(() => ({ data: [] })),
           ])
 
-        const products = productsResponse.data
         const categoriesData = categoriesResponse.data
         const brandsData = brandsResponse.data
         const bannersData = bannersResponse.data
         const upgradeFeaturesData = upgradeFeaturesResponse.data
 
-        console.log("All Products fetched:", products)
+        console.log("All Products loaded:", products.length)
         console.log("Categories fetched:", categoriesData)
         console.log("Brands fetched:", brandsData)
 
@@ -643,7 +645,7 @@ const Home = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {featuredProducts.slice(0, 4).map((product, index) => (
+          {featuredProducts.slice(0, 6).map((product, index) => (
             <MobileProductCard key={product._id} product={product} index={index} />
           ))}
         </div>

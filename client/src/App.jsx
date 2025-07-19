@@ -9,7 +9,8 @@ import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 import ProtectedRoute from "./components/ProtectedRoute"
 import AdminRoute from "./components/AdminRoute"
-import ScrollToTop from "./components/ScrollToTop";
+import ScrollToTop from "./components/ScrollToTop"
+import CacheStatus from "./components/CacheStatus"
 
 // Import pages
 import Home from "./pages/Home"
@@ -171,6 +172,7 @@ function App() {
                     element={
                       <>
                         <Navbar />
+                        <CacheStatus />
                         <Routes>
                           <Route path="/" element={<Home />} />
                           <Route path="/shop" element={<Shop />} />

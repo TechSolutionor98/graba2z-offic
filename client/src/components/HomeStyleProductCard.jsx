@@ -2,6 +2,7 @@ import { Link } from "react-router-dom"
 import { Heart, Star } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useToast } from "../context/ToastContext"
+import { getImageUrl } from "../utils/imageUtils"
 
 const getStatusColor = (status) => {
   if (status === "Available Product" || status === "Available") return "bg-green-600"
@@ -23,15 +24,21 @@ const HomeStyleProductCard = ({ product }) => {
   const rating = product.rating || 0
   const numReviews = product.numReviews || 0
   const categoryName = product.category?.name || "Unknown"
+  
+  // Debug product images
+
 
   return (
     <div className="border bg-white rounded-lg p-3  hover:shadow-md transition-shadow min-h-[340px] max-h-[360px] min-w-[190px] max-w-[200px] flex flex-col justify-between">
       <div className="relative mb-2  flex justify-center items-center min-h-[160px] max-h-[160px]">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
-            src={product.image || "/placeholder.svg?height=150&width=150"}
+            src={getImageUrl(product)}
             alt={product.name}
             className="w-full h-full cover rounded mx-auto"
+            onError={(e) => {
+              e.target.src = "/placeholder.svg?height=150&width=150"
+            }}
           />
         </Link>
         <button

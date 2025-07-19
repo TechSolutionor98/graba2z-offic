@@ -6,6 +6,7 @@ import axios from "axios"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
+import productCache from "../services/productCache"
 
 import config from "../config/config"
 import 'rc-slider/assets/index.css';
@@ -151,32 +152,33 @@ const Shop = () => {
   const fetchTimeout = useRef();
   const loadingTimeout = useRef();
 
-  // Re-add fetchProducts function
-  const fetchProducts = async () => {
+  // Load and filter products using cache
+  const loadAndFilterProducts = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
-      if (selectedCategory && selectedCategory !== "all") {
-        params.append("parentCategory", selectedCategory);
-      }
-      if (selectedSubCategories.length > 0) {
-        selectedSubCategories.forEach((subcat) => params.append("subcategory", subcat));
-      }
-      if (selectedBrands.length > 0) {
-        selectedBrands.forEach((brand) => params.append("brand", brand));
-      }
-      if (searchQuery) {
-        params.append("search", searchQuery);
-      }
-      if (stockFilters.inStock) params.append("stock", "in");
-      if (stockFilters.outOfStock) params.append("stock", "out");
-      if (stockFilters.onSale) params.append("onSale", "true");
+      // Get products from cache or API
+      const allProducts = await productCache.getProducts();
+      
+      // Apply filters
+      const stockStatusFilters = []
+      if (stockFilters.inStock) stockStatusFilters.push('inStock')
+      if (stockFilters.outOfStock) stockStatusFilters.push('outOfStock')
+      if (stockFilters.onSale) stockStatusFilters.push('onSale')
+      
+      const filters = {
+        parent_category: selectedCategory !== "all" ? selectedCategory : null,
+        category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
+        brand: selectedBrands.length > 0 ? selectedBrands : null,
+        search: searchQuery || null,
+        priceRange: priceRange,
+        stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
+        sortBy: sortBy
+      };
 
-      console.log("Fetching products with params:", params.toString());
-      const { data } = await axios.get(`${API_BASE_URL}/api/products?${params.toString()}`);
+      const filteredProducts = productCache.filterProducts(allProducts, filters);
 
-      if (data.length > 0) {
-        const prices = data.map((p) => p.price || 0);
+      if (filteredProducts.length > 0) {
+        const prices = filteredProducts.map((p) => p.price || 0);
         const minProductPrice = Math.min(...prices);
         const max = Math.max(...prices);
         setMaxPrice(max);
@@ -188,36 +190,62 @@ const Shop = () => {
         setMinPrice(minProductPrice);
       }
 
-      // Sort products
-      const sortedProducts = [...data];
-      switch (sortBy) {
-        case "price-low":
-          sortedProducts.sort((a, b) => (a.price || 0) - (b.price || 0));
-          break;
-        case "price-high":
-          sortedProducts.sort((a, b) => (b.price || 0) - (a.price || 0));
-          break;
-        case "name":
-          sortedProducts.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-          break;
-        default:
-          // newest - already sorted by default
-          break;
-      }
-
-      // Filter by price range
-      const filteredProducts = sortedProducts.filter((product) => {
-        const price = product.price || 0;
-        return price >= priceRange[0] && price <= priceRange[1];
-      });
-
-      console.log("Products fetched and filtered:", filteredProducts.length);
       setProducts(filteredProducts);
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching products:", err);
-      setError(err.response?.data?.message || "Error fetching products");
+      setError("Error loading products");
       setLoading(false);
+    }
+  };
+
+  // Filter products from cache without API calls (for instant filtering)
+  const filterProductsFromCache = async () => {
+    try {
+      // Get cached products
+      const allProducts = await productCache.getProducts();
+      if (!allProducts || allProducts.length === 0) {
+        await loadAndFilterProducts();
+        return;
+      }
+      
+
+      
+      // Apply filters
+      const stockStatusFilters = []
+      if (stockFilters.inStock) stockStatusFilters.push('inStock')
+      if (stockFilters.outOfStock) stockStatusFilters.push('outOfStock')
+      if (stockFilters.onSale) stockStatusFilters.push('onSale')
+      
+      const filters = {
+        parent_category: selectedCategory !== "all" ? selectedCategory : null,
+        category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
+        brand: selectedBrands.length > 0 ? selectedBrands : null,
+        search: searchQuery || null,
+        priceRange: priceRange,
+        stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
+        sortBy: sortBy
+      };
+
+      const filteredProducts = productCache.filterProducts(allProducts, filters);
+
+      if (filteredProducts.length > 0) {
+        const prices = filteredProducts.map((p) => p.price || 0);
+        const minProductPrice = Math.min(...prices);
+        const max = Math.max(...prices);
+        setMaxPrice(max);
+        // Only reset price range if it matches the default (user hasn't changed it)
+        if (priceRange[0] === 0 && priceRange[1] === 10000) {
+          setPriceRange([minProductPrice, max]);
+        }
+        // Save minProductPrice in state for use in PriceFilter
+        setMinPrice(minProductPrice);
+      }
+
+      setProducts(filteredProducts);
+      
+    } catch (err) {
+      // Fallback to API if cache fails
+      await loadAndFilterProducts();
     }
   };
 
@@ -226,25 +254,18 @@ const Shop = () => {
     fetchCategories()
     fetchBrands()
     fetchBanners()
-    fetchProducts()
+    loadAndFilterProducts()
   }, [])
 
-  // Debounced fetchProducts on filter change with delayed loading
+  // Filter products from cache when filters change (no API calls)
   useEffect(() => {
     if (fetchTimeout.current) clearTimeout(fetchTimeout.current);
-    if (loadingTimeout.current) clearTimeout(loadingTimeout.current);
-    setLoading(true);
-    setDelayedLoading(true);
-    // Start 4s timer
-    loadingTimeout.current = setTimeout(() => {
-      setDelayedLoading(false);
-    }, 4000);
+    
     fetchTimeout.current = setTimeout(() => {
-      fetchProducts();
-    }, 300); // 300ms debounce for fetch
+      filterProductsFromCache();
+    }, 100); // 100ms debounce for instant filtering
     return () => {
       clearTimeout(fetchTimeout.current);
-      clearTimeout(loadingTimeout.current);
     };
   }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, sortBy]);
 
@@ -303,7 +324,6 @@ const Shop = () => {
   const fetchCategories = async () => {
     try {
       const { data } = await axios.get(`${API_BASE_URL}/api/categories`)
-      console.log("Categories fetched:", data)
 
       // Filter to only show parent categories
       const validCategories = data.filter((cat) => {
@@ -321,17 +341,15 @@ const Shop = () => {
         return isValid
       })
 
-      console.log("Filtered categories:", validCategories)
       setCategories(validCategories)
     } catch (err) {
-      console.error("Error fetching categories:", err)
+      // Handle error silently
     }
   }
 
   const fetchBrands = async () => {
     try {
       const { data } = await axios.get(`${API_BASE_URL}/api/brands`)
-      console.log("Brands fetched:", data)
 
       // Filter and validate brands
       const validBrands = data.filter((brand) => {
@@ -347,10 +365,9 @@ const Shop = () => {
         return isValid
       })
 
-      console.log("Filtered brands:", validBrands)
       setBrands(validBrands)
     } catch (err) {
-      console.error("Error fetching brands:", err)
+      // Handle error silently
     }
   }
 
@@ -442,7 +459,12 @@ const Shop = () => {
   }
 
   const handleStockFilterChange = (key) => {
-    setStockFilters((prev) => ({ ...prev, [key]: !prev[key] }))
+    setStockFilters((prev) => {
+      // For radio buttons, only one can be selected at a time
+      const newState = { inStock: false, outOfStock: false, onSale: false }
+      newState[key] = true
+      return newState
+    })
   }
 
   const clearAllFilters = () => {
@@ -455,8 +477,8 @@ const Shop = () => {
     navigate({ pathname: location.pathname, search: "" })
   }
 
-  // Show only the loading logo if loading or delayedLoading is true
-  if (loading || delayedLoading) {
+  // Show loading only on initial load, not on filter changes
+  if (loading && products.length === 0) {
     return (
       <div className="flex justify-center items-center h-screen">
         <img src="/g.png" alt="Loading..." style={{ width: 180, height: 180, animation: 'bounce 1s infinite' }} />
@@ -497,7 +519,7 @@ const Shop = () => {
             <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
               {/* Search */}
               <div>
-                <div className="relative">
+                {/* <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     type="text"
@@ -506,7 +528,7 @@ const Shop = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
-                </div>
+                </div> */}
               </div>
 
               {/* Price Filter */}
@@ -643,7 +665,8 @@ const Shop = () => {
                 <div className="mt-4 space-y-2">
                   <label className="flex items-center">
                     <input
-                      type="checkbox"
+                      type="radio"
+                      name="stockFilter"
                       checked={stockFilters.onSale}
                       onChange={() => handleStockFilterChange("onSale")}
                       className="mr-2"
@@ -652,7 +675,8 @@ const Shop = () => {
                   </label>
                   <label className="flex items-center">
                     <input
-                      type="checkbox"
+                      type="radio"
+                      name="stockFilter"
                       checked={stockFilters.inStock}
                       onChange={() => handleStockFilterChange("inStock")}
                       className="mr-2"
@@ -661,14 +685,17 @@ const Shop = () => {
                   </label>
                   <label className="flex items-center">
                     <input
-                      type="checkbox"
+                      type="radio"
+                      name="stockFilter"
                       checked={stockFilters.outOfStock}
                       onChange={() => handleStockFilterChange("outOfStock")}
                       className="mr-2"
                     />
                     <span className="text-sm text-gray-700">Out of stock</span>
                   </label>
+                
                 </div>
+             
               </div>
 
               {/* Clear Filters Button */}
