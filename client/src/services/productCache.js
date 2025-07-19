@@ -1,3 +1,5 @@
+import config from "../config/config.js"
+
 // Product Caching Service with compression and size management
 class ProductCacheService {
   constructor() {
@@ -275,7 +277,7 @@ class ProductCacheService {
     // Fetch products from API and cache them
   async fetchAndCacheProducts() {
     try {
-      const response = await fetch('/api/products')
+      const response = await fetch(`${config.API_URL}/api/products`)
       if (!response.ok) {
         throw new Error('Failed to fetch products')
       }
