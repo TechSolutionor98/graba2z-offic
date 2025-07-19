@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import { Eye, EyeOff, Mail, Lock } from "lucide-react"
+import { Fragment } from "react"
 
 const Login = () => {
   const navigate = useNavigate()
@@ -62,15 +63,12 @@ const Login = () => {
           <div className="max-w-md w-full space-y-8">
             <div className="text-center">
               <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Welcome back</h2>
-             
             </div>
-
             {error && (
               <div className="p-4 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100 animate-fade-in">
                 {error}
               </div>
             )}
-
             <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-5">
                 <div>
@@ -163,12 +161,20 @@ const Login = () => {
                     "Sign in"
                   )}
                 </button>
+                {/* Guest Mode Button */}
+                <button
+                  type="button"
+                  className="w-full flex justify-center py-3 px-4 mt-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 transition-all duration-200"
+                  onClick={() => navigate("/guest")}
+                >
+                  Continue as Guest
+                </button>
                 <p className="mt-4 text-md text-gray-600">
-                Don't have an account?{" "}
-                <Link to="/register" className="font-semibold text-gray-900 hover:text-gray-700 transition-colors">
-                  Sign up
-                </Link>
-              </p>
+                  Don't have an account?{" "}
+                  <Link to="/register" className="font-semibold text-gray-900 hover:text-gray-700 transition-colors">
+                    Sign up
+                  </Link>
+                </p>
               </div>
             </form>
           </div>
@@ -181,7 +187,6 @@ const Login = () => {
             className="w-full h-full object-cover object-center"
           />
         </div>
-       
       </div>
     </div>
   )

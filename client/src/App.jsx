@@ -35,6 +35,7 @@ import CookiesAndPolicy from "./pages/CookiesAndPolicy"
 import ReqBulkPurchase from "./pages/ReqBulkPurchase";
 import ContactUs from "./pages/ContactUs"
 import NotFound from "./pages/NotFound";
+import Guest from "./pages/Guest"
 
 // Import admin pages
 import AdminLogin from "./pages/admin/AdminLogin"
@@ -191,15 +192,12 @@ function App() {
                           <Route path="/cookies-policy" element={<CookiesAndPolicy />} />
                           <Route path="/bulk-purchase" element={<ReqBulkPurchase />} />
                           <Route path="/contact" element={<ContactUs />} />
+                          <Route path="/guest" element={<Guest />} />
 
                           {/* Protected Routes */}
                           <Route
                             path="/checkout"
-                            element={
-                              <ProtectedRoute>
-                                <Checkout />
-                              </ProtectedRoute>
-                            }
+                            element={<Checkout />}
                           />
                           <Route
                             path="/profile"

@@ -116,6 +116,15 @@ const Checkout = () => {
   const { cartItems, cartTotal, clearCart, calculateFinalTotal } = useCart()
   const { user } = useAuth()
 
+  useEffect(() => {
+    if (!user) {
+      const guestInfo = localStorage.getItem("guestInfo")
+      if (!guestInfo) {
+        navigate("/login")
+      }
+    }
+  }, [user, navigate])
+
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -575,6 +584,26 @@ const Checkout = () => {
       setFormData((prev) => ({ ...prev, ...parsed }))
     }
   }, [])
+
+  useEffect(() => {
+    if (!user) {
+      const guestInfo = localStorage.getItem("guestInfo")
+      if (guestInfo) {
+        try {
+          const parsed = JSON.parse(guestInfo)
+          setFormData((prev) => ({
+            ...prev,
+            email: parsed.email || prev.email,
+            phone: parsed.phone || prev.phone,
+          }))
+          setPickupDetails((prev) => ({
+            ...prev,
+            phone: prev.phone || parsed.phone || "",
+          }))
+        } catch {}
+      }
+    }
+  }, [user])
 
   const bounceStyle = {
     animation: 'bounce 1s infinite',
