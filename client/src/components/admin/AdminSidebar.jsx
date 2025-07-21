@@ -344,6 +344,16 @@ const AdminSidebar = () => {
         { title: "All Coupons", path: "/admin/coupons/all" },
       ],
     },
+    {
+      title: "Email Templates",
+      icon: Settings,
+      path: "/admin/email-templates",
+    },
+    {
+      title: "Newsletter Subscribers",
+      icon: Users,
+      path: "/admin/newsletter-subscribers",
+    },
     // {
     //   title: "Settings",
     //   icon: Settings,

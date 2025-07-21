@@ -58,6 +58,8 @@ import AdminSettings from "./pages/admin/AdminSettings"
 import AdminBlogs from "./pages/admin/AdminBlogs"
 import AdminRequestCallbacks from "./pages/admin/AdminRequestCallbacks"
 import AdminSubCategories from "./pages/admin/AdminSubCategories"
+import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
+import AdminNewsletter from "./pages/admin/AdminNewsletter";
 
 // Add other admin pages as needed
 import AddProduct from "./pages/admin/AddProduct"
@@ -160,6 +162,8 @@ function App() {
                           <Route path="blogs/topics/add" element={<AddBlogTopic />} />
                           <Route path="blogs/rating" element={<BlogRating />} />
                           <Route path="request-callbacks" element={<AdminRequestCallbacks />} />
+                          <Route path="email-templates" element={<AdminEmailTemplates />} />
+                          <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                      

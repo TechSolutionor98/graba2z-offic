@@ -31,6 +31,8 @@ import wishlistRoutes from "./routes/wishlistRoutes.js"
 import requestCallbackRoutes from "./routes/requestCallbackRoutes.js"
 import paymentRoutes from "./routes/paymentRoutes.js"
 import adminRoutes from "./routes/adminRoutes.js"
+import emailTemplateRoutes from "./routes/emailTemplateRoutes.js"
+import newsletterRoutes from "./routes/newsletterRoutes.js"
 
 dotenv.config()
 
@@ -42,8 +44,8 @@ const app = express()
 // // CORS configuration
 app.use(cors({
   origin: [
-    'https://www.graba2z.ae'
-    //'http://localhost:3000'
+    //'https://www.graba2z.ae'
+    'http://localhost:3000'
   ],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
@@ -87,6 +89,8 @@ app.use("/api/wishlist", wishlistRoutes)
 app.use("/api/request-callback", requestCallbackRoutes)
 app.use("/api/payment", paymentRoutes)
 app.use("/api/admin", adminRoutes)
+app.use("/api/email-templates", emailTemplateRoutes)
+app.use("/api/newsletter", newsletterRoutes)
 
 // Health check route
 app.get("/", (req, res) => {

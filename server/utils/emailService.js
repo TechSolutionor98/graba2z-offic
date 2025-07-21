@@ -1,286 +1,40 @@
-// import nodemailer from "nodemailer"
+import nodemailer from "nodemailer";
 
-// // Create transporter - FIXED: should be createTransport, not createTransporter
-// const createTransporter = () => {
-//   return nodemailer.createTransport({
-//     service: "gmail",
-//     auth: {
-//       user: process.env.EMAIL_USER,
-//       pass: process.env.EMAIL_PASS,
-//     },
-//   })
-// }
+// Create transporters for order and support emails
+const orderTransporter = nodemailer.createTransport({
+  host: process.env.ORDER_EMAIL_HOST,
+  port: Number(process.env.ORDER_EMAIL_PORT),
+  secure: process.env.ORDER_EMAIL_SECURE === "true",
+  auth: {
+    user: process.env.ORDER_EMAIL_USER,
+    pass: process.env.ORDER_EMAIL_PASS,
+  },
+});
 
-// // Email templates
-// const getEmailTemplate = (type, data) => {
-//   const baseStyle = `
-//     <style>
-//       body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-//       .container { max-width: 600px; margin: 0 auto; background-color: white; }
-//       .header { background-color: #7CB342; color: white; padding: 20px; text-align: center; }
-//       .content { padding: 30px; }
-//       .footer { background-color: #f8f8f8; padding: 20px; text-align: center; color: #666; }
-//       .button { background-color: #7CB342; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; }
-//       .code { background-color: #f0f0f0; padding: 15px; font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 3px; border-radius: 5px; margin: 20px 0; }
-//       .order-item { border-bottom: 1px solid #eee; padding: 10px 0; }
-//       .total { font-weight: bold; font-size: 18px; color: #7CB342; }
-//     </style>
-//   `
+const supportTransporter = nodemailer.createTransport({
+  host: process.env.SUPPORT_EMAIL_HOST,
+  port: Number(process.env.SUPPORT_EMAIL_PORT),
+  secure: process.env.SUPPORT_EMAIL_SECURE === "true",
+  auth: {
+    user: process.env.SUPPORT_EMAIL_USER,
+    pass: process.env.SUPPORT_EMAIL_PASS,
+  },
+});
 
-//   switch (type) {
-//     case "emailVerification":
-//       return `
-//         <!DOCTYPE html>
-//         <html>
-//         <head>
-//           <meta charset="utf-8">
-//           <title>Email Verification</title>
-//           ${baseStyle}
-//         </head>
-//         <body>
-//           <div class="container">
-//             <div class="header">
-//               <h1>Verify Your Email</h1>
-//             </div>
-//             <div class="content">
-//               <h2>Hello ${data.name || "User"}!</h2>
-//               <p>Thank you for registering with Graba2z. Please verify your email address by entering the verification code below:</p>
-//               <div class="code">${data.code || "000000"}</div>
-//               <p>This code will expire in 10 minutes.</p>
-//               <p>If you didn't create an account with us, please ignore this email.</p>
-//             </div>
-//             <div class="footer">
-//               <p>&copy; 2024 Graba2z. All rights reserved.</p>
-//             </div>
-//           </div>
-//         </body>
-//         </html>
-//       `
-
-//     case "orderConfirmation":
-//       const orderItems = Array.isArray(data.orderItems) ? data.orderItems : []
-//       const orderItemsHtml = orderItems
-//         .map(
-//           (item) => `
-//         <div class="order-item">
-//           <strong>${item.name || "Product"}</strong><br>
-//           Quantity: ${item.quantity || 1} × $${item.price || 0}<br>
-//           Subtotal: $${(item.quantity || 1) * (item.price || 0)}
-//         </div>
-//       `,
-//         )
-//         .join("")
-
-//       return `
-//         <!DOCTYPE html>
-//         <html>
-//         <head>
-//           <meta charset="utf-8">
-//           <title>Order Confirmation</title>
-//           ${baseStyle}
-//         </head>
-//         <body>
-//           <div class="container">
-//             <div class="header">
-//               <h1>Order Confirmed!</h1>
-//             </div>
-//             <div class="content">
-//               <h2>Hello ${data.customerName || "Customer"}!</h2>
-//               <p>Thank you for your order. Here are the details:</p>
-//               <p><strong>Order ID:</strong> ${data.orderNumber || "N/A"}</p>
-//               <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
-              
-//               <h3>Order Items:</h3>
-//               ${orderItemsHtml}
-              
-//               <div class="total">
-//                 <p>Total: $${data.totalPrice || 0}</p>
-//               </div>
-              
-//               <p>We'll send you another email when your order ships.</p>
-//             </div>
-//             <div class="footer">
-//               <p>&copy; 2024 Graba2z. All rights reserved.</p>
-//             </div>
-//           </div>
-//         </body>
-//         </html>
-//       `
-
-//     case "orderStatusUpdate":
-//       return `
-//         <!DOCTYPE html>
-//         <html>
-//         <head>
-//           <meta charset="utf-8">
-//           <title>Order Status Update</title>
-//           ${baseStyle}
-//         </head>
-//         <body>
-//           <div class="container">
-//             <div class="header">
-//               <h1>Order Status Update</h1>
-//             </div>
-//             <div class="content">
-//               <h2>Hello ${data.customerName || "Customer"}!</h2>
-//               <p>Your order status has been updated:</p>
-//               <p><strong>Order ID:</strong> ${data.orderNumber || "N/A"}</p>
-//               <p><strong>New Status:</strong> ${data.status || "Processing"}</p>
-//               ${data.trackingId ? `<p><strong>Tracking Number:</strong> ${data.trackingId}</p>` : ""}
-//             </div>
-//             <div class="footer">
-//               <p>&copy; 2024 Graba2z. All rights reserved.</p>
-//             </div>
-//           </div>
-//         </body>
-//         </html>
-//       `
-
-//     default:
-//       return `
-//         <!DOCTYPE html>
-//         <html>
-//         <head>
-//           <meta charset="utf-8">
-//           <title>Graba2z</title>
-//           ${baseStyle}
-//         </head>
-//         <body>
-//           <div class="container">
-//             <div class="header">
-//               <h1>Graba2z</h1>
-//             </div>
-//             <div class="content">
-//               <p>Thank you for choosing Graba2z!</p>
-//             </div>
-//             <div class="footer">
-//               <p>&copy; 2024 Graba2z. All rights reserved.</p>
-//             </div>
-//           </div>
-//         </body>
-//         </html>
-//       `
-//   }
-// }
-
-// // Generic send email function
-// const sendEmail = async (to, subject, html) => {
-//   try {
-//     const transporter = createTransporter()
-
-//     const mailOptions = {
-//       from: `"Graba2z" <${process.env.EMAIL_USER}>`,
-//       to,
-//       subject,
-//       html,
-//     }
-
-//     const result = await transporter.sendMail(mailOptions)
-//     console.log("Email sent successfully:", result.messageId)
-//     return { success: true, messageId: result.messageId }
-//   } catch (error) {
-//     console.error("Failed to send email:", error)
-//     throw new Error(`Email sending failed: ${error.message}`)
-//   }
-// }
-
-// // Send verification email
-// export const sendVerificationEmail = async (email, name, code) => {
-//   try {
-//     const html = getEmailTemplate("emailVerification", { name, code })
-//     await sendEmail(email, "Verify Your Email - Graba2z", html)
-//     return { success: true }
-//   } catch (error) {
-//     console.error("Failed to send verification email:", error)
-//     throw error
-//   }
-// }
-
-// // Send order placed email (for orderRoutes.js compatibility)
-// export const sendOrderPlacedEmail = async (order) => {
-//   try {
-//     const orderNumber = order._id.toString().slice(-6)
-//     const customerName = order.shippingAddress?.name || order.pickupDetails?.name || "Customer"
-//     const customerEmail = order.shippingAddress?.email || order.user?.email
-
-//     const html = getEmailTemplate("orderConfirmation", {
-//       orderNumber,
-//       customerName,
-//       orderItems: order.orderItems || [],
-//       totalPrice: order.totalPrice,
-//     })
-
-//     await sendEmail(customerEmail, `Order Confirmation #${orderNumber} - Graba2z`, html)
-//     return { success: true }
-//   } catch (error) {
-//     console.error("Failed to send order placed email:", error)
-//     throw error
-//   }
-// }
-
-// // Send order status update email
-// export const sendOrderStatusUpdateEmail = async (order) => {
-//   try {
-//     const orderNumber = order._id.toString().slice(-6)
-//     const customerName = order.shippingAddress?.name || order.pickupDetails?.name || "Customer"
-//     const customerEmail = order.shippingAddress?.email || order.user?.email
-
-//     const html = getEmailTemplate("orderStatusUpdate", {
-//       orderNumber,
-//       customerName,
-//       status: order.status,
-//       trackingId: order.trackingId,
-//     })
-
-//     const statusMessages = {
-//       processing: "Order is Being Processed",
-//       confirmed: "Order Confirmed",
-//       shipped: "Order Shipped",
-//       delivered: "Order Delivered",
-//       cancelled: "Order Cancelled",
-//     }
-
-//     const subject = `${statusMessages[order.status] || "Order Update"} #${orderNumber} - Graba2z`
-//     await sendEmail(customerEmail, subject, html)
-//     return { success: true }
-//   } catch (error) {
-//     console.error("Failed to send order status update email:", error)
-//     throw error
-//   }
-// }
-
-// // Backward compatibility exports
-// export const sendOrderNotification = sendOrderStatusUpdateEmail
-// export const sendTrackingUpdateEmail = sendOrderStatusUpdateEmail
-
-// export default {
-//   sendVerificationEmail,
-//   sendOrderPlacedEmail,
-//   sendOrderStatusUpdateEmail,
-//   sendOrderNotification,
-//   sendTrackingUpdateEmail,
-// }
-
-
-
-//============================Final Code ==========================
-
-
-
-
-
-import nodemailer from "nodemailer"
-
-// Create transporter
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  })
-}
+// Helper to select transporter and from address
+const getMailConfig = (type) => {
+  if (type === "order") {
+    return {
+      transporter: orderTransporter,
+      from: `Graba2z Orders <${process.env.ORDER_EMAIL_USER}>`,
+    };
+  } else {
+    return {
+      transporter: supportTransporter,
+      from: `Graba2z Support <${process.env.SUPPORT_EMAIL_USER}>`,
+    };
+  }
+};
 
 // Email templates
 const getEmailTemplate = (type, data) => {
@@ -802,32 +556,33 @@ const getEmailTemplate = (type, data) => {
   }
 }
 
-// Generic send email function
-const sendEmail = async (to, subject, html) => {
+// Generic send email function with sender type
+const sendEmail = async (to, subject, html, senderType = "support") => {
   try {
-    const transporter = createTransporter()
-
+    const { transporter, from } = getMailConfig(senderType);
+    if (senderType === "support") {
+      console.log("[DEBUG] SUPPORT_EMAIL_USER:", process.env.SUPPORT_EMAIL_USER);
+    }
     const mailOptions = {
-      from: `"Graba2z" <${process.env.EMAIL_USER}>`,
+      from,
       to,
       subject,
       html,
-    }
-
-    const result = await transporter.sendMail(mailOptions)
-    console.log("Email sent successfully:", result.messageId)
-    return { success: true, messageId: result.messageId }
+    };
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`Email sent successfully from ${from}:`, result.messageId);
+    return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error("Failed to send email:", error)
-    throw new Error(`Email sending failed: ${error.message}`)
+    console.error("Failed to send email:", error);
+    throw new Error(`Email sending failed: ${error.message}`);
   }
-}
+};
 
 // Send verification email
 export const sendVerificationEmail = async (email, name, code) => {
   try {
     const html = getEmailTemplate("emailVerification", { name, code })
-    await sendEmail(email, "Verify Your Email - Graba2z", html)
+    await sendEmail(email, "Verify Your Email - Graba2z", html, "support")
     return { success: true }
   } catch (error) {
     console.error("Failed to send verification email:", error)
@@ -854,7 +609,7 @@ export const sendOrderPlacedEmail = async (order) => {
       customerEmail,
     })
 
-    await sendEmail(customerEmail, `Order Confirmation #${orderNumber} - Graba2z`, html)
+    await sendEmail(customerEmail, `Order Confirmation #${orderNumber} - Graba2z`, html, "order")
     return { success: true }
   } catch (error) {
     console.error("Failed to send order placed email:", error)
@@ -889,7 +644,7 @@ export const sendOrderStatusUpdateEmail = async (order) => {
     }
 
     const subject = `${statusMessages[order.status] || "Order Update"} #${orderNumber} - Graba2z`
-    await sendEmail(customerEmail, subject, html)
+    await sendEmail(customerEmail, subject, html, "order")
     return { success: true }
   } catch (error) {
     console.error("Failed to send order status update email:", error)
@@ -901,10 +656,25 @@ export const sendOrderStatusUpdateEmail = async (order) => {
 export const sendOrderNotification = sendOrderStatusUpdateEmail
 export const sendTrackingUpdateEmail = sendOrderStatusUpdateEmail
 
+export const sendNewsletterConfirmation = async (email, preferences) => {
+  const html = `
+    <div>
+      <h2>Thank you for subscribing to our newsletter!</h2>
+      <p>Your preferences: <b>${(preferences || []).join(", ")}</b></p>
+      <p>You will now receive updates according to your selected preferences.</p>
+      <p style="color: #888; font-size: 13px; margin-top: 24px;">This is an automated message. Please do not reply.</p>
+    </div>
+  `;
+  await sendEmail(email, "Newsletter Subscription Confirmed - Graba2z", html, "support");
+};
+
+export { sendEmail };
+
 export default {
   sendVerificationEmail,
   sendOrderPlacedEmail,
   sendOrderStatusUpdateEmail,
   sendOrderNotification,
   sendTrackingUpdateEmail,
+  sendNewsletterConfirmation,
 }

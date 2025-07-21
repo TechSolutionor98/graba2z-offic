@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 
 import config from "../config/config"
+import NewsletterModal from "./NewsletterModal";
 
 const API_BASE_URL = `${config.API_URL}`
 
@@ -18,6 +19,8 @@ const Footer = ({ className = "" }) => {
     connect: false,
   })
   const [categories, setCategories] = useState([])
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [showNewsletterModal, setShowNewsletterModal] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -38,6 +41,12 @@ const Footer = ({ className = "" }) => {
     }))
   }
 
+  const handleNewsletterInput = (e) => setNewsletterEmail(e.target.value);
+  const handleNewsletterSubmit = (e) => {
+    e.preventDefault();
+    if (newsletterEmail) setShowNewsletterModal(true);
+  };
+
   return (
     <>
       {/* Desktop Footer - Hidden on mobile */}
@@ -54,7 +63,7 @@ const Footer = ({ className = "" }) => {
               <p className="text-white mb-4">Subscribe to our newsletter</p>
 
               {/* Form */}
-              <form className="mb-4 p-1 bg-white rounded-full w-[280px]">
+              <form className="mb-4 p-1 bg-white rounded-full w-[280px]" onSubmit={handleNewsletterSubmit}>
                 <div className="flex w-[270px]">
                   {/* Search Input Div */}
                   <div className="flex-grow">
@@ -62,6 +71,9 @@ const Footer = ({ className = "" }) => {
                       type="email"
                       placeholder="Enter your email address"
                       className="w-full pl-4 py-3 bg-white placeholder-gray-400 rounded-full text-black"
+                      value={newsletterEmail}
+                      onChange={handleNewsletterInput}
+                      required
                     />
                   </div>
 
@@ -73,6 +85,12 @@ const Footer = ({ className = "" }) => {
                   </div>
                 </div>
               </form>
+              {showNewsletterModal && (
+                <NewsletterModal
+                  email={newsletterEmail}
+                  onClose={() => setShowNewsletterModal(false)}
+                />
+              )}
 
               {/* Social Icons */}
               <div className="flex space-x-4">
