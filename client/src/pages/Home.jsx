@@ -1295,12 +1295,12 @@ const DynamicBrandProductCard = ({ product }) => {
 
   return (
     <div className="border p-2 h-[340px] flex flex-col justify-between">
-      <div className="relative mb-2 flex h-[180px] justify-center items-center">
+      <div className="relative mb-2 flex h-[180px] justify-center items-cente">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
             src={product.image || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
-            className="w-full h-full cover rounded mx-auto"
+            className="w-full h-full cover object-contain rounded mx-auto"
           />
         </Link>
         <button
