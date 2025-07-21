@@ -3,10 +3,7 @@ import axios from "axios";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 
 const typeLabels = {
-  order: "Order",
-  verification: "Verification",
   newsletter: "Newsletter",
-  custom: "Custom",
 };
 
 const emptyTemplate = {
@@ -146,10 +143,10 @@ const AdminEmailTemplates = () => {
             <div className="mb-2">
               <label className="block mb-1">Type</label>
               <select name="type" value={form.type} onChange={handleChange} className="border rounded px-2 py-1 w-full">
-                <option value="order">Order</option>
-                <option value="verification">Verification</option>
+              
+             
                 <option value="newsletter">Newsletter</option>
-                <option value="custom">Custom</option>
+                
               </select>
             </div>
             <div className="mb-2">
