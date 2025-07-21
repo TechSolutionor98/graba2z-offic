@@ -248,8 +248,21 @@ const Home = () => {
         // Get category products
         const accessoriesData = filterProductsByMainCategory(products, "Accessories").slice(0, 6)
 
-        // Get Networking products
-        let networkingData = filterProductsByCategory(products, "Networking").slice(0, 6)
+        // Get Networking products (DYNAMIC CATEGORY ID BY NAME)
+        const networkingCategory = validCategories.find(
+          cat => cat.name && cat.name.trim().toLowerCase() === "networking"
+        );
+        let networkingData = [];
+        if (networkingCategory) {
+          networkingData = products.filter(product => {
+            return (
+              (typeof product.category === "string" && product.category === networkingCategory._id) ||
+              (typeof product.category === "object" && product.category?._id === networkingCategory._id) ||
+              (typeof product.parentCategory === "string" && product.parentCategory === networkingCategory._id) ||
+              (typeof product.parentCategory === "object" && product.parentCategory?._id === networkingCategory._id)
+            );
+          }).slice(0, 6);
+        }
         console.log("Networking Products found:", networkingData)
 
         // Get MSI products
@@ -645,7 +658,7 @@ const Home = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {featuredProducts.slice(0, 6).map((product, index) => (
+          {featuredProducts.slice(0, 4).map((product, index) => (
             <MobileProductCard key={product._id} product={product} index={index} />
           ))}
         </div>
