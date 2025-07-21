@@ -130,12 +130,14 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
   // Update visible count based on screen size
   useEffect(() => {
     const updateVisible = () => {
-      if (window.innerWidth < 768) {
-        setVisibleCount(3); // mobile
-      } else if (window.innerWidth < 1024) {
+      if (window.innerWidth >= 1280) {
+        setVisibleCount(10); // extra large screens
+      } else if (window.innerWidth >= 1024) {
+        setVisibleCount(8); // large screens
+      } else if (window.innerWidth >= 768) {
         setVisibleCount(6); // tablet
       } else {
-        setVisibleCount(8); // desktop
+        setVisibleCount(3); // mobile
       }
     };
     updateVisible();
@@ -179,7 +181,7 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
             className="flex-1 overflow-hidden"
             ref={containerRef}
           >
-            <div className="flex items-center lg:gap-10  transition-transform duration-300 ease-in-out">
+            <div className="flex items-center lg:gap-10 xl:gap-[65px] transition-transform duration-300 ease-in-out">
               {visibleCategories.map((category) => (
                 <button
                   key={category._id}
