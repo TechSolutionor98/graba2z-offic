@@ -297,10 +297,9 @@ const router = express.Router()
 
 // @desc    Create new order
 // @route   POST /api/orders
-// @access  Private
+// @access  Public (for guest checkout)
 router.post(
   "/",
-  protect,
   asyncHandler(async (req, res) => {
     const {
       orderItems,
@@ -350,7 +349,7 @@ router.post(
 
     const order = new Order({
       orderItems,
-      user: req.user._id,
+      ...(req.user ? { user: req.user._id } : {}),
       deliveryType,
       shippingAddress: deliveryType === "home" ? shippingAddress : undefined,
       pickupDetails: deliveryType === "pickup" ? pickupDetails : undefined,

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import axios from "axios"
 import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
@@ -115,6 +116,7 @@ const Checkout = () => {
   const navigate = useNavigate()
   const { cartItems, cartTotal, clearCart, calculateFinalTotal } = useCart()
   const { user } = useAuth()
+  const location = useLocation();
 
   useEffect(() => {
     if (!user) {
@@ -391,6 +393,10 @@ const Checkout = () => {
     console.log("[Checkout] Using token:", token);
     console.log("[Checkout] Sending orderData:", orderData);
     try {
+      let axiosConfig = {};
+      if (token) {
+        axiosConfig.headers = { Authorization: `Bearer ${token}` };
+      }
       const response = await axios.post(
         `${config.API_URL}/api/orders`,
         {
@@ -399,9 +405,7 @@ const Checkout = () => {
           paymentStatus: "pending",
           isPaid: false,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        axiosConfig
       );
       console.log("[Checkout] Order response:", response);
       return { success: true, order: response.data };
@@ -442,11 +446,12 @@ const Checkout = () => {
       setLoading(true)
       setError(null)
 
-      const token = localStorage.getItem("token")
-      if (!token) {
-        console.log('[Checkout] Early return: no token in localStorage');
-        setError("Please log in to place an order")
-        return
+      const token = localStorage.getItem("token");
+      const guestInfo = localStorage.getItem("guestInfo");
+      if (!token && !guestInfo) {
+        // Neither logged in nor guest
+        setError("Please log in or continue as guest to place an order");
+        return;
       }
 
       const orderData = {
@@ -491,27 +496,38 @@ const Checkout = () => {
       }
 
       // Process payment
-      const paymentResult = await processPayment(orderData)
+      let paymentResult;
+      if (!token && guestInfo) {
+        // Guest order: do not send Authorization header
+        paymentResult = await processPayment(orderData);
+      } else {
+        // Logged-in user: send Authorization header
+        paymentResult = await processPayment(orderData);
+      }
 
       if (selectedPaymentMethod === "cod") {
         // For COD, order is created directly
-        clearCart()
-        navigate(`/orders?success=true&orderId=${paymentResult.order._id}`)
+        clearCart();
+        if (paymentResult && paymentResult.order && paymentResult.order._id) {
+          navigate(`/orders?success=true&orderId=${paymentResult.order._id}`);
+        } else {
+          navigate(`/orders?success=true`);
+        }
       } else {
         // For other payment methods, redirect to payment gateway
-        if (paymentResult.checkout_url || paymentResult.payment_url || paymentResult._links?.payment?.href) {
+        if (paymentResult && (paymentResult.checkout_url || paymentResult.payment_url || paymentResult._links?.payment?.href)) {
           const paymentUrl =
-            paymentResult.checkout_url || paymentResult.payment_url || paymentResult._links?.payment?.href
-          window.location.href = paymentUrl
+            paymentResult.checkout_url || paymentResult.payment_url || paymentResult._links?.payment?.href;
+          window.location.href = paymentUrl;
         } else {
-          throw new Error("Payment URL not received")
+          throw new Error("Payment URL not received");
         }
       }
     } catch (error) {
-      console.error("Error processing order:", error)
-      setError(error.response?.data?.message || error.message || "Failed to process order. Please try again.")
+      console.error("Error processing order:", error);
+      setError(error.response?.data?.message || error.message || "Failed to process order. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -604,6 +620,15 @@ const Checkout = () => {
       }
     }
   }, [user])
+
+  // On mount, check for step query param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const stepParam = parseInt(params.get('step'), 10);
+    if ([1, 2, 3].includes(stepParam)) {
+      setStep(stepParam);
+    }
+  }, [location.search]);
 
   const bounceStyle = {
     animation: 'bounce 1s infinite',
