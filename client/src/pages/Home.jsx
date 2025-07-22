@@ -1159,12 +1159,12 @@ const GrabatezSaleCard = ({ product }) => {
       </div>
       <div className="mb-2 flex items-center gap-2">
         <div
-          className={`${getStatusColor(stockStatus)} text-white px-2 py-1 rounded text-xs font-bold inline-block mb-1`}
+          className={`${getStatusColor(stockStatus)} text-white px-1 py-1 rounded text-xs font-bold inline-block mb-1`}
         >
           {stockStatus}
         </div>
         {discount && (
-          <div className="bg-yellow-400 text-white px-2 py-1 rounded text-xs font-bold inline-block ml-1">
+          <div className="bg-yellow-400 text-white px-1 py-1 rounded text-xs font-bold inline-block ml-1">
             {discount}
           </div>
         )}
