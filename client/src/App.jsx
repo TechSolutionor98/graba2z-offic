@@ -35,6 +35,7 @@ import CookiesAndPolicy from "./pages/CookiesAndPolicy"
 import ReqBulkPurchase from "./pages/ReqBulkPurchase";
 import ContactUs from "./pages/ContactUs"
 import NotFound from "./pages/NotFound";
+import GuestOrder from "./pages/GuestOrder";
 import Guest from "./pages/Guest"
 
 // Import admin pages
@@ -197,6 +198,7 @@ function App() {
                           <Route path="/bulk-purchase" element={<ReqBulkPurchase />} />
                           <Route path="/contact" element={<ContactUs />} />
                           <Route path="/guest" element={<Guest />} />
+                          <Route path="/guest-order" element={<GuestOrder />} />
 
                           {/* Protected Routes */}
                           <Route

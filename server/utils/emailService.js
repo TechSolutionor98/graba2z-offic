@@ -750,7 +750,7 @@ const getEmailTemplate = (type, data) => {
                 <a href="https://x.com/GrabAtoz" target="_blank"><img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753107545/WhatsApp_Image_2025-07-21_at_7.10.18_AM_2_cwzjg6.png" alt="X" style="width:32px;height:32px;margin:0 10px;vertical-align:middle;background:transparent;border-radius:8px;box-shadow:none;" /></a>
                 <a href="https://www.linkedin.com/company/grabatozae" target="_blank"><img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753107123/WhatsApp_Image_2025-07-21_at_7.10.18_AM_3_ll6y2i.jpg" alt="LinkedIn" style="width:32px;height:32px;margin:0 10px;vertical-align:middle;background:transparent;border-radius:8px;box-shadow:none;" /></a>
               </div>
-              <p>This email was sent by: support@grabatoz.ae</p>
+              <p>This email was sent by: order@grabatoz.ae</p>
               <br/>
               <p>Kindly Do Not Reply to this Email</p>
               <br/>
@@ -765,59 +765,156 @@ const getEmailTemplate = (type, data) => {
       `
 
     case "orderStatusUpdate":
+      // Status icon and label for current status only
+      const statusSteps = [
+        { key: "Processing", label: "Processing", icon: "⚙️" },
+        { key: "Confirmed", label: "Confirmed", icon: "✅" },
+        { key: "Shipped", label: "Shipped", icon: "📦" },
+        { key: "Out for Delivery", label: "Out for Delivery", icon: "🚚" },
+        { key: "Delivered", label: "Delivered", icon: "🎉" },
+        { key: "Cancelled", label: "Cancelled", icon: "❌" },
+      ];
+      const getCurrentStep = (status) => {
+        if (!status) return statusSteps[0];
+        const normalized = status.trim().toLowerCase();
+        if (normalized === "processing") return statusSteps[0];
+        if (normalized === "confirmed") return statusSteps[1];
+        if (normalized === "shipped") return statusSteps[2];
+        if (normalized === "out for delivery") return statusSteps[3];
+        if (normalized === "delivered") return statusSteps[4];
+        if (normalized === "cancelled") return statusSteps[5];
+        return statusSteps[0];
+      };
+      const currentStep = getCurrentStep(data.status);
+      // Order summary table (scoped variables)
+      const statusOrderItems = Array.isArray(data.orderItems) ? data.orderItems : [];
+      const statusOrderItemsHtml = statusOrderItems.map(item => {
+        // Truncate product name to two lines (max 80 chars)
+        let name = item.product?.name || item.name || 'Product';
+        if (name.length > 80) name = name.slice(0, 77) + '...';
+        return `
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:10px 0;"><img src="${item.product?.image || item.image || '/placeholder.svg?height=80&width=80'}" alt="${name}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;background:#f0f0f0;" /></td>
+            <td style="padding:10px 0 10px 12px;font-size:15px;color:#222;max-width:220px;line-height:1.3;">${name}</td>
+            <td style="padding:10px 0;font-size:15px;color:#333;">AED ${(item.price || 0).toFixed(2)}</td>
+            <td style="padding:10px 0;font-size:15px;color:#333;">${item.quantity || 1}</td>
+          </tr>
+        `;
+      }).join('');
+      const statusSubtotal = data.itemsPrice || 0;
+      const statusShipping = data.shippingPrice || 0;
+      const statusTotal = data.totalPrice || 0;
+      const statusVatAmount = (statusTotal * 0.05).toFixed(2);
       return `
         <!DOCTYPE html>
-        <html>
+        <html lang="en">
         <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
           <title>Order Status Update</title>
-          ${baseStyle}
+          <style>
+            body { background-color: #e8f7ee; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 32px auto; background-color: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); border: 1px solid #e0e0e0; }
+           
+            
+             .action-buttons {
+              text-align: center;
+              margin: 30px 0;
+            }
+            .button {
+              display: inline-block;
+              background-color: #8BC34A;
+              color: white;
+              padding: 15px 30px;
+              text-decoration: none;
+              border-radius: 25px;
+              font-weight: bold;
+              font-size: 14px;
+              margin: 5px 10px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            
+            
+            
+            
+            
+            
+            .header { background-color: #fff; padding: 32px 0 16px 0; text-align: center; border-bottom: 1px solid #e0e0e0; }
+            .header a { display: inline-block; }
+            .header img { max-height: 60px; }
+            .order-icon { width: 80px; height: 80px; background-color: #2c3e50; border-radius: 50%; margin: 20px auto 0 auto; display: flex; align-items: center; justify-content: center; color: white; font-size: 30px; }
+            .content { padding: 40px 30px 32px 30px; background: #fff; }
+            .order-number { font-size: 24px; font-weight: bold; color: #333; text-align: center; margin-bottom: 20px; }
+            .greeting { font-size: 18px; text-align: center; margin-bottom: 10px; color: #333; }
+            .processing-text { font-size: 16px; text-align: center; color: #666; margin-bottom: 30px; }
+            .status-badge { display: flex; align-items: center; justify-content: center; margin: 24px 0 24px 0; }
+            .status-icon { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; background: #8BC34A; color: #fff; margin-right: 16px; box-shadow: 0 2px 8px #8BC34A33; }
+            .status-label { font-size: 20px; font-weight: bold; color: #689f38; letter-spacing: 0.2px; }
+            .order-summary-table { width: 100%; border-collapse: collapse; margin: 30px 0 10px 0; }
+            .order-summary-table th { background: #f9f9f9; color: #333; font-size: 15px; font-weight: 600; padding: 10px 0; border-bottom: 2px solid #e0e0e0; }
+            .order-summary-table td { text-align: center; }
+            .order-summary-totals { width: 100%; margin-top: 10px; }
+            .order-summary-totals td { font-size: 15px; padding: 6px 0; color: #333; }
+            .order-summary-totals .total { font-weight: bold; font-size: 17px; color: #689f38; }
+            .order-summary-totals .vat { font-size: 13px; color: #888; text-align: right; }
+            .footer { background-color: #e8f7ee; padding: 32px 20px 20px 20px; text-align: center; font-size: 13px; color: #888; }
+            .footer .socials { margin: 18px 0 10px 0; }
+            .footer .socials a { display: inline-block; margin: 0 10px; text-decoration: none; }
+            .footer .socials img { width: 32px; height: 32px; vertical-align: middle; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: box-shadow 0.2s; }
+            .footer .socials img:hover { box-shadow: 0 4px 16px rgba(26,188,123,0.15); }
+            @media (max-width: 600px) { .container { border-radius: 0; margin: 0; } .content { padding: 24px 8px 24px 8px; } .footer { padding: 24px 4px 12px 4px; } }
+          </style>
         </head>
         <body>
-          <div class="email-container">
+          <div class="container">
             <div class="header">
-              <img src="https://graba2z.ae/logo.png" alt="Graba2z" class="logo" />
-              <div class="order-icon">📦</div>
+              <a href="https://www.graba2z.ae/" target="_blank">
+                <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753105567/admin-logo_ruxcjj.png" alt="Graba2z Logo" />
+              </a>
+              
             </div>
             <div class="content">
               <div class="order-number">Order #${data.orderNumber || data._id?.toString().slice(-6) || "N/A"}</div>
               <div class="greeting">Hello ${data.customerName || "Customer"}!</div>
               <div class="processing-text">Your order status has been updated.</div>
-              
-              <div class="info-section">
-                <div class="info-title">New Status</div>
-                <div class="info-content" style="font-weight: bold; color: #8BC34A;">${data.status || "Processing"}</div>
+              <div class="status-badge">
+                <div class="status-icon">${currentStep.icon}</div>
+                <span class="status-label">${currentStep.label}</span>
               </div>
-
-              ${
-                data.trackingId
-                  ? `
-              <div class="info-section">
-                <div class="info-title">Tracking Number</div>
-                <div class="info-content">${data.trackingId}</div>
-              </div>
-              `
-                  : ""
-              }
-
+              <table class="order-summary-table">
+                <tr>
+                  <th>Image</th>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Qty</th>
+                </tr>
+                ${statusOrderItemsHtml}
+              </table>
+              <table class="order-summary-totals">
+                <tr><td style="text-align:right;">Subtotal:</td><td style="text-align:right;">AED ${statusSubtotal.toFixed(2)}</td></tr>
+                <tr><td style="text-align:right;">Shipping:</td><td style="text-align:right;">AED ${statusShipping.toFixed(2)}</td></tr>
+                <tr class="total"><td style="text-align:right;">Total:</td><td style="text-align:right;">AED ${statusTotal.toFixed(2)}</td></tr>
+                <tr><td colspan="2" class="vat">(includes ${statusVatAmount} AED VAT)</td></tr>
+              </table>
               <div class="action-buttons">
                 <a href="${process.env.FRONTEND_URL || "https://graba2z.ae"}/track-order" class="button">Track Your Order</a>
               </div>
             </div>
             <div class="footer">
-              <h3>Get in Touch</h3>
-              <div class="social-icons">
-                <a href="https://facebook.com/graba2z" class="social-icon">f</a>
-                <a href="https://twitter.com/graba2z" class="social-icon">t</a>
-                <a href="https://instagram.com/graba2z" class="social-icon">@</a>
-                <a href="https://linkedin.com/company/graba2z" class="social-icon">in</a>
+              <div class="socials">
+                <a href="https://www.facebook.com/grabatozae/" target="_blank"><img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753107123/WhatsApp_Image_2025-07-21_at_7.10.18_AM_1_axvzvv.jpg" alt="Facebook" style="width:32px;height:32px;margin:0 10px;vertical-align:middle;background:transparent;border-radius:8px;box-shadow:none;" /></a>
+                <a href="https://www.instagram.com/grabatoz/" target="_blank"><img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753107124/WhatsApp_Image_2025-07-21_at_7.10.18_AM_xgjv5f.jpg" alt="Instagram" style="width:32px;height:32px;margin:0 10px;vertical-align:middle;background:transparent;border-radius:8px;box-shadow:none;" /></a>
+                <a href="https://x.com/GrabAtoz" target="_blank"><img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753107545/WhatsApp_Image_2025-07-21_at_7.10.18_AM_2_cwzjg6.png" alt="X" style="width:32px;height:32px;margin:0 10px;vertical-align:middle;background:transparent;border-radius:8px;box-shadow:none;" /></a>
+                <a href="https://www.linkedin.com/company/grabatozae" target="_blank"><img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753107123/WhatsApp_Image_2025-07-21_at_7.10.18_AM_3_ll6y2i.jpg" alt="LinkedIn" style="width:32px;height:32px;margin:0 10px;vertical-align:middle;background:transparent;border-radius:8px;box-shadow:none;" /></a>
               </div>
-              <div class="contact-info">
-                <p><strong>This email was sent by:</strong><br>
-                <a href="mailto:order@grabatoz.ae">order@grabatoz.ae</a></p>
-                <p><strong>For any questions please send an email to:</strong><br>
-                <a href="mailto:support@grabatoz.ae">support@grabatoz.ae</a></p>
+              <p>This email was sent by: order@grabatoz.ae</p>
+              <br/>
+              <p>Kindly Do Not Reply to this Email</p>
+              <br/>
+              <div style="margin-top: 10px; color: #888;">
+                &copy; 2025 Graba2z. All rights reserved.<br />
+                <span style="font-size:12px;">If you did not enter this email address when signing up for Graba2z, disregard this message.</span>
               </div>
             </div>
           </div>

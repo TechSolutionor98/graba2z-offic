@@ -508,10 +508,20 @@ const Checkout = () => {
       if (selectedPaymentMethod === "cod") {
         // For COD, order is created directly
         clearCart();
-        if (paymentResult && paymentResult.order && paymentResult.order._id) {
-          navigate(`/orders?success=true&orderId=${paymentResult.order._id}`);
+        if (!token && guestInfo) {
+          // Guest: redirect to GuestOrder page
+          if (paymentResult && paymentResult.order && paymentResult.order._id) {
+            navigate(`/guest-order?success=true&orderId=${paymentResult.order._id}&email=${encodeURIComponent(formData.email)}`);
+          } else {
+            navigate(`/guest-order?success=true&email=${encodeURIComponent(formData.email)}`);
+          }
         } else {
-          navigate(`/orders?success=true`);
+          // Logged-in user
+          if (paymentResult && paymentResult.order && paymentResult.order._id) {
+            navigate(`/orders?success=true&orderId=${paymentResult.order._id}`);
+          } else {
+            navigate(`/orders?success=true`);
+          }
         }
       } else {
         // For other payment methods, redirect to payment gateway
