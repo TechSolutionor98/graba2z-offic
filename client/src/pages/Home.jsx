@@ -1216,7 +1216,7 @@ const MobileProductCard = ({ product }) => {
   const categoryName = product.category?.name || "Unknown"
 
   return (
-    <div className="bg-white rounded-lg p-3 shadow-md relative">
+    <div className="bg-white rounded-lg p-2 shadow-md relative">
       <button
         className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
         onClick={(e) => {
@@ -1235,14 +1235,14 @@ const MobileProductCard = ({ product }) => {
           className="w-full h-[200px] cover rounded mb-2"
         />
       </Link>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2 flex items-center gap-3">
         <div
-          className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs font-bold inline-block mb-1`}
+          className={`${getStatusColor(stockStatus)} text-white px-0.5 py-0.5 rounded text-xs font-bold inline-block mb-1`}
         >
           {stockStatus}
         </div>
         {discount && (
-          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs font-bold inline-block ml-1">
+          <div className="bg-yellow-400 text-white px-0.5 py-0.5 rounded text-xs font-bold inline-block ml-1">
             {discount}
           </div>
         )}
