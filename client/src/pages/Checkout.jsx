@@ -661,14 +661,14 @@ const Checkout = () => {
   const remainingItemsCount = cartItems.length - 3
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <div className="mb-8">
+    <div className="max-w-7xl mx-auto py-10">
+      <div className="mb-8 px-6">
         <nav className="text-sm text-gray-500 mb-4">
           Home <span className="mx-2">›</span> <span className="font-semibold text-black">Checkout</span>
         </nav>
 
         {/* Always horizontal stepper, even on mobile */}
-        <div className="flex flex-row items-center gap-2 sm:gap-4 md:gap-8 w-full overflow-x-auto mb-8">
+        <div className="flex flex-row items-center gap-2 sm:gap-4 md:gap-8 w-full overflow-x-auto mb-8 ">
           <div className="flex items-center gap-1 sm:gap-2">
             <span
               className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 1 ? "bg-lime-500" : "bg-gray-300"}`}
@@ -725,9 +725,9 @@ const Checkout = () => {
 
       {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3">
-          <div className="bg-white rounded-2xl shadow-sm p-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4">
+        <div className="lg:col-span-3 ">
+          <div className="rounded-2xl shadow-sm p-8">
             {step === 1 && (
               <>
                 {deliveryType === "home" && (
@@ -1088,14 +1088,14 @@ const Checkout = () => {
 
         {/* Order Summary Sidebar */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-4">
+          <div className="bg-lime-200 rounded-2xl shadow-sm p-4 sticky top-4 m-2">
             <div className="flex items-center mb-6">
               <div className="bg-lime-100 p-2 rounded-full">
                 <Truck className="h-5 w-5 text-lime-600" />
               </div>
               <div className="ml-3">
-                <h2 className="text-lg font-semibold text-gray-900">Order Summary</h2>
-                <p className="text-sm text-gray-600">Review your order</p>
+                <h2 className="text-lg font-bold text-black">Order Summary</h2>
+                <p className="text-sm text-black">Review your order</p>
               </div>
             </div>
 
@@ -1111,11 +1111,11 @@ const Checkout = () => {
                       />
                     </div>
                     <div className="ml-3">
-                      <h3 className="text-sm font-medium text-gray-900 truncate max-w-32">{item.name}</h3>
-                      <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                      <h3 className="text-sm font-medium text-black truncate max-w-32">{item.name}</h3>
+                      <p className="text-xs text-black">Qty: {item.quantity}</p>
                     </div>
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{formatPrice(item.price * item.quantity)}</span>
+                  <span className="text-sm font-medium text-black">{formatPrice(item.price * item.quantity)}</span>
                 </div>
               ))}
 
@@ -1123,8 +1123,7 @@ const Checkout = () => {
               {cartItems.length > 3 && (
                 <button
                   onClick={toggleShowAllItems}
-                  className="w-full text-center text-sm text-lime-600 hover:text-lime-700 py-2 flex items-center justify-center gap-1 transition-colors"
-                >
+                  className="w-full text-center text-sm text-black  py-2 flex items-center justify-center gap-1 transition-colors">
                   {showAllItems ? (
                     <>
                       <ChevronUp className="h-4 w-4" />
@@ -1141,18 +1140,18 @@ const Checkout = () => {
 
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="text-gray-900">{formatPrice(cartTotal)}</span>
+                <span className="text-black">Subtotal</span>
+                <span className="text-black">{formatPrice(cartTotal)}</span>
               </div>
 
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Delivery Charge</span>
-                <span className="text-gray-900">Included</span>
+                <span className="text-black">Delivery Charge</span>
+                <span className="text-black">Included</span>
               </div>
 
               <div className="border-t pt-3 flex justify-between font-medium">
-                <span className="text-gray-900">Total</span>
-                <span className="text-lime-600 text-lg">{formatPrice(finalTotal)}</span>
+                <span className="text-back">Total</span>
+                <span className="text-black text-lg">{formatPrice(finalTotal)}</span>
               </div>
             </div>
 
