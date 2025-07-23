@@ -168,7 +168,7 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
   };
 
   return (
-    <section className="bg-white mb-5 mt-3 md:mt-4">
+    <section className=" mb-5  bg-white">
       <div className="max-w-8xl lg:px-3">
         <div className="flex items-center justify-between">
           <button
@@ -204,7 +204,7 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
                     maxWidth: "120px",
                   }}
                 >
-                  <div className="flex items-center justify-center  lg:w-[180px] ">
+                  <div className="flex items-center justify-center  lg:w-[160px] ">
                     {category.image ? (
                       <img
                         src={category.image}
