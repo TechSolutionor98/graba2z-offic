@@ -20,6 +20,7 @@ import { Link, useNavigate } from "react-router-dom"
 import BannerSlider from "../components/BannerSlider"
 import CategorySlider from "../components/CategorySlider"
 import { useWishlist } from "../context/WishlistContext"
+import BrandSlider from "../components/BrandSlider";
 
 import config from "../config/config"
 
@@ -53,6 +54,7 @@ const Home = () => {
   const [selectedBrand, setSelectedBrand] = useState(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [brandCurrentIndex, setBrandCurrentIndex] = useState(0)
+  const [brandIndex, setBrandIndex] = useState(0); // <-- moved here
   const sliderRef = useRef(null)
   const [scrollX, setScrollX] = useState(0)
   const [isAutoScrolling, setIsAutoScrolling] = useState(true)
@@ -540,8 +542,22 @@ const Home = () => {
     return 8
   }
   const visibleCount = getVisibleCount()
-  const totalBrands = brands.length
-  const totalSlides = totalBrands * 2
+  // Remove duplicate totalBrands declaration; use the one for featured brands section only
+  const totalBrands = brands.length;
+  const getVisibleBrands = () => {
+    if (!brands.length) return [];
+    let visible = [];
+    for (let i = 0; i < visibleCount; i++) {
+      visible.push(brands[(brandIndex + i) % totalBrands]);
+    }
+    return visible;
+  };
+  const handlePrevBrand = () => {
+    setBrandIndex((prev) => (prev - 1 + totalBrands) % totalBrands);
+  };
+  const handleNextBrand = () => {
+    setBrandIndex((prev) => (prev + 1) % totalBrands);
+  };
 
   if (loading) {
     return (
@@ -1010,58 +1026,9 @@ const Home = () => {
         </section>
       )}
 
-      {/* Featured Brands Section - Infinite Loop Scroll */}
+      {/* Featured Brands Section - Use BrandSlider component */}
       {brands.length > 0 && (
-        <section className="bg-white py-8">
-          <div className="max-w-8xl mx-auto">
-            <div className="relative mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 text-center">Featured Brands</h2>
-            </div>
-            <div className="relative mx-3 md:mx-5">
-              <div className="overflow-hidden">
-                <div
-                  ref={sliderRef}
-                  className="flex"
-                  style={{
-                    width: `${brands.length * 2 * 140}px`, // 140px per brand card, adjust as needed
-                    transition: "transform 0.3s linear",
-                  }}
-                >
-                  {[...brands, ...brands].map((brand, index) => (
-                    <div
-                      key={`${brand._id}-${index}`}
-                      className="flex-shrink-0"
-                      style={{
-                        width: "180px", // adjust to match card width
-                      }}
-                    >
-                      <div className="px-2 md:px-3">
-                        <button
-                          onClick={() => {
-                            setSelectedBrand(brand._id)
-                            handleBrandClick(brand.name)
-                          }}
-                          className="flex flex-col items-center group transition-all duration-300 p-2 md:p-4 hover:bg-gray-50 rounded-lg w-full border-4 border-green-500"
-                        >
-                          <div className="w-12 h-12 md:w-20 md:h-20 lg:w-24 lg:h-24 overflow-hidden  mb-2 md:mb-3 flex items-center justify-center border border-gray-100 rounded-lg">
-                            <img
-                              src={brand.logo || "/placeholder.svg"}
-                              alt={brand.name}
-                              className="w-full h-full object-contain p-1"
-                            />
-                          </div>
-                          <span className="text-xs md:text-sm font-medium text-gray-700 group-hover:text-green-600 text-center line-clamp-1">
-                            {brand.name}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <BrandSlider brands={brands} onBrandClick={handleBrandClick} />
       )}
 
       {/* Core Service Section - Responsive: Desktop(4 in row), Mobile(2x2 grid) */}
