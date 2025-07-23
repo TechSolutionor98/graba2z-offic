@@ -389,6 +389,213 @@ const Checkout = () => {
     }
   }
 
+  // New function to create order first, then initiate payment
+  const createOrderThenPay = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const token = localStorage.getItem("token")
+      const guestInfo = localStorage.getItem("guestInfo")
+      if (!token && !guestInfo) {
+        setError("Please log in or continue as guest to place an order")
+        setLoading(false)
+        return
+      }
+
+      // Prepare order data
+      const orderData = {
+        orderItems: cartItems.map((item) => ({
+          product: item._id,
+          name: item.name,
+          image: item.image,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+        itemsPrice: cartTotal,
+        shippingPrice: 0,
+        totalPrice: cartTotal,
+        deliveryType: deliveryType,
+        paymentMethod: selectedPaymentMethod,
+        paymentStatus: "pending",
+        isPaid: false,
+        customerNotes: customerNotes.trim() || undefined,
+      }
+      if (deliveryType === "home") {
+        orderData.shippingAddress = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+        }
+        if (selectedPaymentMethod === "cod") {
+          orderData.billingAddress = { ...orderData.shippingAddress }
+        }
+      } else if (deliveryType === "pickup") {
+        const store = STORES.find((s) => s.storeId === pickupDetails.storeId)
+        orderData.pickupDetails = {
+          phone: pickupDetails.phone,
+          location: store?.name || pickupDetails.location,
+          storeId: pickupDetails.storeId,
+          storeAddress: store?.address,
+          storePhone: store?.phone,
+        }
+      }
+
+      // Create order first
+      const axiosConfig = {}
+      if (token) {
+        axiosConfig.headers = { Authorization: `Bearer ${token}` }
+      }
+      const orderRes = await axios.post(
+        `${config.API_URL}/api/orders`,
+        orderData,
+        axiosConfig
+      )
+      const createdOrder = orderRes.data
+      const orderId = createdOrder._id
+
+      // Now initiate payment, passing orderId as reference
+      if (selectedPaymentMethod === "card") {
+        // N-Genius: pass orderId as reference
+        const response = await axios.post(`${config.API_URL}/api/payment/ngenius/card`, {
+          amount: finalTotal,
+          currencyCode: "AED",
+          orderId: orderId,
+          // Add redirect URLs for success/cancel
+          redirectUrl: `${window.location.origin}/payment/success`,
+          cancelUrl: `${window.location.origin}/payment/cancel`,
+        })
+        const paymentUrl = response.data?.paymentUrl
+        if (paymentUrl) {
+          window.location.href = paymentUrl
+        } else {
+          throw new Error("Payment URL not received from N-Genius")
+        }
+      } else if (selectedPaymentMethod === "tamara") {
+        // Tamara: pass orderId as order_reference_id
+        const tamaraPayload = {
+          total_amount: {
+            amount: finalTotal,
+            currency: "AED",
+          },
+          shipping_amount: {
+            amount: 0,
+            currency: "AED",
+          },
+          tax_amount: {
+            amount: 0,
+            currency: "AED",
+          },
+          order_reference_id: orderId,
+          order_number: `ORD_${orderId}`,
+          consumer: {
+            first_name: formData.name.split(" ")[0] || "Customer",
+            last_name: formData.name.split(" ")[1] || "",
+            phone_number: `+971${formData.phone}`,
+            email: formData.email,
+          },
+          shipping_address: {
+            first_name: formData.name.split(" ")[0] || "Customer",
+            last_name: formData.name.split(" ")[1] || "",
+            line1: formData.address,
+            city: formData.city,
+            country_code: "AE",
+          },
+          items: cartItems.map((item) => ({
+            name: item.name,
+            type: "Physical",
+            reference_id: item._id,
+            sku: item._id,
+            quantity: item.quantity,
+            unit_price: {
+              amount: item.price,
+              currency: "AED",
+            },
+            total_amount: {
+              amount: item.price * item.quantity,
+              currency: "AED",
+            },
+          })),
+          merchant_url: {
+            success: `${window.location.origin}/payment/success`,
+            failure: `${window.location.origin}/payment/cancel`,
+            cancel: `${window.location.origin}/payment/cancel`,
+            notification: `${window.location.origin}/api/webhooks/tamara`,
+          },
+        }
+        const response = await axios.post(`${config.API_URL}/api/payment/tamara/checkout`, tamaraPayload)
+        const paymentUrl = response.data?.checkout_url || response.data?.payment_url
+        if (paymentUrl) {
+          window.location.href = paymentUrl
+        } else {
+          throw new Error("Payment URL not received from Tamara")
+        }
+      } else if (selectedPaymentMethod === "tabby") {
+        // Tabby: pass orderId as reference_id
+        const tabbyPayload = {
+          payment: {
+            amount: finalTotal.toString(),
+            currency: "AED",
+            description: `Order payment for ${cartItems.length} items`,
+            buyer: {
+              phone: `+971${formData.phone}`,
+              email: formData.email,
+              name: formData.name,
+            },
+            shipping_address: {
+              city: formData.city,
+              address: formData.address,
+              zip: formData.zipCode,
+            },
+            order: {
+              tax_amount: "0.00",
+              shipping_amount: "0.00",
+              discount_amount: "0.00",
+              updated_at: new Date().toISOString(),
+              reference_id: orderId,
+              items: cartItems.map((item) => ({
+                title: item.name,
+                description: item.description || item.name,
+                quantity: item.quantity,
+                unit_price: item.price.toString(),
+                discount_amount: "0.00",
+                reference_id: item._id,
+                image_url: item.image,
+                product_url: `${window.location.origin}/product/${item.slug || item._id}`,
+                category: item.category || "Electronics",
+              })),
+            },
+            order_history: [],
+            meta: {
+              order_id: orderId,
+              customer: formData.email,
+            },
+          },
+          lang: "en",
+          merchant_code: process.env.REACT_APP_TABBY_MERCHANT_CODE,
+          merchant_urls: {
+            success: `${window.location.origin}/payment/success`,
+            cancel: `${window.location.origin}/payment/cancel`,
+            failure: `${window.location.origin}/payment/cancel`,
+          },
+        }
+        const response = await axios.post(`${config.API_URL}/api/payment/tabby/checkout`, tabbyPayload)
+        const paymentUrl = response.data?.checkout_url || response.data?.payment_url
+        if (paymentUrl) {
+          window.location.href = paymentUrl
+        } else {
+          throw new Error("Payment URL not received from Tabby")
+        }
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || error.message || "Failed to process order/payment. Please try again.")
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     console.log("[Checkout] handleSubmit called")
     e.preventDefault()
@@ -1070,14 +1277,19 @@ const Checkout = () => {
                   >
                     Back
                   </button>
+                  {/* Use createOrderThenPay for online payments, handleSubmit for COD */}
                   <button
-                    onClick={handleSubmit}
+                    onClick={
+                      selectedPaymentMethod === "card" || selectedPaymentMethod === "tamara" || selectedPaymentMethod === "tabby"
+                        ? createOrderThenPay
+                        : handleSubmit
+                    }
                     disabled={loading || !selectedPaymentMethod}
                     className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-6 py-3 disabled:opacity-50 flex items-center gap-2"
                   >
                     {loading ? (
                       <>
-                        <img src="/g.png" alt="Loading..." style={{ width: 24, height: 24, ...bounceStyle }} />
+                        <img src="/g.png" alt="Loading..." style={{ width: 24, height: 24, animation: "bounce 1s infinite" }} />
                         Processing...
                       </>
                     ) : (

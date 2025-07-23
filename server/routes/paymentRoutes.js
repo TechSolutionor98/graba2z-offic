@@ -29,10 +29,13 @@ router.post("/tamara/checkout", protect, async (req, res) => {
 
 router.post("/tamara/webhook", async (req, res) => {
   try {
-    const { order_id, order_status, payment_status } = req.body
+    const { order_id, order_status, payment_status, order_reference_id } = req.body
 
-    // Find and update order
-    const order = await Order.findOne({ "paymentResult.tamara_order_id": order_id })
+    // Find and update order (support both old and new reference)
+    let order = await Order.findOne({ "paymentResult.tamara_order_id": order_id })
+    if (!order && order_reference_id) {
+      order = await Order.findById(order_reference_id)
+    }
     if (order) {
       order.paymentResult = {
         ...order.paymentResult,
@@ -76,9 +79,14 @@ router.post("/tabby/sessions", protect, async (req, res) => {
 router.post("/tabby/webhook", async (req, res) => {
   try {
     const { id, status, order } = req.body
+    // Try to get reference_id from order or meta
+    const referenceId = order?.reference_id || order?.meta?.order_id
 
-    // Find and update order
-    const dbOrder = await Order.findOne({ "paymentResult.tabby_payment_id": id })
+    // Find and update order (support both old and new reference)
+    let dbOrder = await Order.findOne({ "paymentResult.tabby_payment_id": id })
+    if (!dbOrder && referenceId) {
+      dbOrder = await Order.findById(referenceId)
+    }
     if (dbOrder) {
       dbOrder.paymentResult = {
         ...dbOrder.paymentResult,
@@ -176,10 +184,13 @@ router.post("/ngenius/card", async (req, res) => {
 // Keep the existing N-Genius webhook
 router.post("/ngenius/webhook", async (req, res) => {
   try {
-    const { orderReference, state, amount } = req.body
+    const { orderReference, state, amount, orderId } = req.body
 
-    // Find and update order
-    const order = await Order.findOne({ "paymentResult.ngenius_order_ref": orderReference })
+    // Find and update order (support both old and new reference)
+    let order = await Order.findOne({ "paymentResult.ngenius_order_ref": orderReference })
+    if (!order && orderId) {
+      order = await Order.findById(orderId)
+    }
     if (order) {
       order.paymentResult = {
         ...order.paymentResult,

@@ -37,6 +37,8 @@ import ContactUs from "./pages/ContactUs"
 import NotFound from "./pages/NotFound";
 import GuestOrder from "./pages/GuestOrder";
 import Guest from "./pages/Guest"
+import PaymentSuccess from "./pages/PaymentSuccess"
+import PaymentCancel from "./pages/PaymentCancel"
 
 // Import admin pages
 import AdminLogin from "./pages/admin/AdminLogin"
@@ -199,7 +201,8 @@ function App() {
                           <Route path="/contact" element={<ContactUs />} />
                           <Route path="/guest" element={<Guest />} />
                           <Route path="/guest-order" element={<GuestOrder />} />
-
+                          <Route path="/payment/success" element={<PaymentSuccess />} />
+                          <Route path="/payment/cancel" element={<PaymentCancel />} />
                           {/* Protected Routes */}
                           <Route
                             path="/checkout"
