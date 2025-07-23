@@ -98,28 +98,52 @@ router.post("/tabby/webhook", async (req, res) => {
 })
 
 // N-Genius Payment Routes
-router.post("/ngenius/orders", protect, async (req, res) => {
+router.post("/ngenius/card", async (req, res) => {
+  const { amount, currencyCode = "AED" } = req.body
+
+  if (!amount) {
+    return res.status(400).json({ error: "Amount is required" })
+  }
+
   try {
-    // First, get access token
-    const authResponse = await axios.post(
+    const basicToken =
+      "Njk1NWExNDItMjA3ZC00MWZiLTk5NjQtZTM5OWY5MmVjMjRmOjhmZGM1NThhLTM0ZWYtNDFjMC05M2NjLTk5OWNhZjM5ZTA2OQ=="
+
+    // Step 1: Get access token
+    const tokenRes = await axios.post(
       `${process.env.NGENIUS_API_URL}/identity/auth/access-token`,
-      {
-        realmName: process.env.NGENIUS_REALM,
-      },
+      {}, // required: empty object, not null
       {
         headers: {
-          Authorization: `Basic ${Buffer.from(`${process.env.NGENIUS_API_KEY}:${process.env.NGENIUS_API_SECRET}`).toString("base64")}`,
+          Authorization: `Basic ${basicToken}`,
           "Content-Type": "application/vnd.ni-identity.v1+json",
         },
       },
     )
 
-    const accessToken = authResponse.data.access_token
+    const accessToken = tokenRes.data.access_token
+    if (!accessToken) {
+      return res.status(500).json({ error: "Access token not received" })
+    }
 
-    // Create payment order
-    const orderResponse = await axios.post(
-      `${process.env.NGENIUS_API_URL}/transactions/outlets/${process.env.NGENIUS_OUTLET_ID}/orders`,
-      req.body,
+    console.log("Access token:", accessToken.slice(0, 12) + "...")
+
+    // Step 2: Create order
+    const orderPayload = {
+      action: "PURCHASE",
+      amount: {
+        currencyCode,
+        value: Math.round(amount * 100), // AED 10 → 1000 fils
+      },
+      merchantAttributes: {
+        redirectUrl: "https://graba2z.ae/payment/success", // ✅ required
+        cancelUrl: "https://graba2z.ae/payment/cancel", // optional
+      },
+    }
+
+    const orderRes = await axios.post(
+      `${process.env.NGENIUS_API_URL}/transactions/outlets/${process.env.NG_OUTLET_ID}/orders`,
+      orderPayload,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -129,16 +153,27 @@ router.post("/ngenius/orders", protect, async (req, res) => {
       },
     )
 
-    res.json(orderResponse.data)
-  } catch (error) {
-    console.error("N-Genius payment error:", error.response?.data || error.message)
+    const { _links } = orderRes.data
+    const redirectUrl = _links?.payment?.href
+
+    if (!redirectUrl) {
+      return res.status(500).json({ error: "No redirect URL found in response" })
+    }
+
+    res.status(200).json({
+      paymentUrl: redirectUrl,
+      orderData: orderRes.data,
+    })
+  } catch (err) {
+    console.error("Hosted Payment Flow Error:", err.response?.data || err.message)
     res.status(500).json({
-      message: "N-Genius payment failed",
-      error: error.response?.data || error.message,
+      error: "Hosted payment flow failed",
+      details: err.response?.data || err.message,
     })
   }
 })
 
+// Keep the existing N-Genius webhook
 router.post("/ngenius/webhook", async (req, res) => {
   try {
     const { orderReference, state, amount } = req.body

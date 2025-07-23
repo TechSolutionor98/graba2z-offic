@@ -6,7 +6,7 @@ import { useLocation } from "react-router-dom"
 import axios from "axios"
 import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
-import { Truck, Shield, MapPin, ChevronDown, ChevronUp, CreditCard, Banknote, Clock, X } from "lucide-react"
+import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X } from "lucide-react"
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
 
@@ -65,18 +65,14 @@ const PAYMENT_METHODS = [
     id: "tamara",
     name: "Tamara",
     description: "Buy now, pay later in 3 installments",
-    iconUrls: [
-      { src: "/tamara.png", size: "big" }
-    ],
+    iconUrls: [{ src: "/tamara.png", size: "big" }],
     color: "bg-green-50 border-green-200",
   },
   {
     id: "tabby",
     name: "Tabby",
     description: "Split your purchase into 4 payments",
-    iconUrls: [
-      { src: "/tabby.png", size: "big" }
-    ],
+    iconUrls: [{ src: "/tabby.png", size: "big" }],
     color: "bg-purple-50 border-purple-200",
   },
   {
@@ -85,7 +81,7 @@ const PAYMENT_METHODS = [
     description: "Credit/Debit card payment",
     iconUrls: [
       { src: "/master.png", size: "medium" },
-      { src: "/visa.png", size: "medium" }
+      { src: "/visa.png", size: "medium" },
     ],
     color: "bg-blue-50 border-blue-200",
   },
@@ -93,9 +89,7 @@ const PAYMENT_METHODS = [
     id: "cod",
     name: "Cash On Delivery",
     description: "Pay when you receive your order",
-    iconUrls: [
-      { src: "/currencyAED.png", size: "big" }
-    ],
+    iconUrls: [{ src: "/currencyAED.png", size: "big" }],
     color: "bg-yellow-50 border-yellow-200",
   },
 ]
@@ -105,18 +99,18 @@ const bounceKeyframes = `
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-30px); }
 }`
-if (typeof document !== 'undefined' && !document.getElementById('bounce-keyframes')) {
-  const style = document.createElement('style')
-  style.id = 'bounce-keyframes'
+if (typeof document !== "undefined" && !document.getElementById("bounce-keyframes")) {
+  const style = document.createElement("style")
+  style.id = "bounce-keyframes"
   style.innerHTML = bounceKeyframes
   document.head.appendChild(style)
 }
 
 const Checkout = () => {
   const navigate = useNavigate()
-  const { cartItems, cartTotal, clearCart, calculateFinalTotal } = useCart()
+  const { cartItems, cartTotal, clearCart, calculateFinalTotal, selectedDelivery } = useCart();
   const { user } = useAuth()
-  const location = useLocation();
+  const location = useLocation()
 
   useEffect(() => {
     if (!user) {
@@ -167,9 +161,9 @@ const Checkout = () => {
   })
   const [customerNotes, setCustomerNotes] = useState("")
 
-  // Use cart total from context, don't recalculate
-  const deliveryCharge = 0 // Delivery charges already included in cart total
-  const finalTotal = cartTotal // Use cart total directly, no additional charges
+  // Calculate delivery charge and final total
+  const deliveryCharge = selectedDelivery ? (cartTotal > 600 ? 0 : selectedDelivery.charge) : 0;
+  const finalTotal = cartTotal + deliveryCharge;
 
   const formatPrice = (price) => {
     return `AED ${price.toLocaleString()}`
@@ -295,7 +289,7 @@ const Checkout = () => {
       },
     }
 
-    const response = await axios.post("/api/payments/tamara/checkout", tamaraPayload)
+    const response = await axios.post("/api/payment/tamara/checkout", tamaraPayload)
     return response.data
   }
 
@@ -348,39 +342,19 @@ const Checkout = () => {
       },
     }
 
-    const response = await axios.post("/api/payments/tabby/checkout", tabbyPayload)
+    const response = await axios.post("/api/payment/tabby/checkout", tabbyPayload)
     return response.data
   }
 
   const processCardPayment = async (orderData) => {
-    // Call backend to create N-Genius order
-    const response = await axios.post(
-      "/api/payments/ngenius/orders",
-      {
-        action: "PURCHASE",
-        amount: {
-          currencyCode: "AED",
-          value: Math.round(finalTotal * 100), // N-Genius expects amount in minor units
-        },
-        merchantOrderReference: `ORDER_${Date.now()}`,
-        emailAddress: formData.email,
-        billingAddress: {
-          firstName: formData.name.split(" ")[0] || "Customer",
-          lastName: formData.name.split(" ")[1] || "",
-          address1: formData.address,
-          city: formData.city,
-          countryCode: "AE",
-        },
-        // Add any other required fields for N-Genius here
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-        },
-      }
-    )
+    // Call backend to create N-Genius order using the correct endpoint
+    const response = await axios.post("/api/payment/ngenius/card", {
+      amount: finalTotal,
+      currencyCode: "AED",
+    })
+
     // Redirect user to N-Genius payment page
-    const paymentUrl = response.data?._links?.payment?.href
+    const paymentUrl = response.data?.paymentUrl
     if (paymentUrl) {
       window.location.href = paymentUrl
     } else {
@@ -389,13 +363,13 @@ const Checkout = () => {
   }
 
   const processCODPayment = async (orderData) => {
-    const token = localStorage.getItem("token");
-    console.log("[Checkout] Using token:", token);
-    console.log("[Checkout] Sending orderData:", orderData);
+    const token = localStorage.getItem("token")
+    console.log("[Checkout] Using token:", token)
+    console.log("[Checkout] Sending orderData:", orderData)
     try {
-      let axiosConfig = {};
+      const axiosConfig = {}
       if (token) {
-        axiosConfig.headers = { Authorization: `Bearer ${token}` };
+        axiosConfig.headers = { Authorization: `Bearer ${token}` }
       }
       const response = await axios.post(
         `${config.API_URL}/api/orders`,
@@ -405,40 +379,40 @@ const Checkout = () => {
           paymentStatus: "pending",
           isPaid: false,
         },
-        axiosConfig
-      );
-      console.log("[Checkout] Order response:", response);
-      return { success: true, order: response.data };
+        axiosConfig,
+      )
+      console.log("[Checkout] Order response:", response)
+      return { success: true, order: response.data }
     } catch (error) {
-      console.error("[Checkout] Order error:", error, error.response?.data);
-      throw error;
+      console.error("[Checkout] Order error:", error, error.response?.data)
+      throw error
     }
   }
 
   const handleSubmit = async (e) => {
-    console.log('[Checkout] handleSubmit called');
+    console.log("[Checkout] handleSubmit called")
     e.preventDefault()
 
     if (cartItems.length === 0) {
-      console.log('[Checkout] Early return: cart is empty');
+      console.log("[Checkout] Early return: cart is empty")
       setError("Your cart is empty")
       return
     }
 
     // Validate based on delivery type
     if (deliveryType === "home" && !validateHomeDelivery()) {
-      console.log('[Checkout] Early return: home delivery validation failed');
+      console.log("[Checkout] Early return: home delivery validation failed")
       return
     }
 
     if (deliveryType === "pickup" && !validatePickup()) {
-      console.log('[Checkout] Early return: pickup validation failed');
+      console.log("[Checkout] Early return: pickup validation failed")
       return
     }
 
     // Validate payment method
     if (!validatePayment()) {
-      console.log('[Checkout] Early return: payment validation failed');
+      console.log("[Checkout] Early return: payment validation failed")
       return
     }
 
@@ -446,12 +420,12 @@ const Checkout = () => {
       setLoading(true)
       setError(null)
 
-      const token = localStorage.getItem("token");
-      const guestInfo = localStorage.getItem("guestInfo");
+      const token = localStorage.getItem("token")
+      const guestInfo = localStorage.getItem("guestInfo")
       if (!token && !guestInfo) {
         // Neither logged in nor guest
-        setError("Please log in or continue as guest to place an order");
-        return;
+        setError("Please log in or continue as guest to place an order")
+        return
       }
 
       const orderData = {
@@ -496,48 +470,59 @@ const Checkout = () => {
       }
 
       // Process payment
-      let paymentResult;
+      let paymentResult
       if (!token && guestInfo) {
         // Guest order: do not send Authorization header
-        paymentResult = await processPayment(orderData);
+        paymentResult = await processPayment(orderData)
       } else {
         // Logged-in user: send Authorization header
-        paymentResult = await processPayment(orderData);
+        paymentResult = await processPayment(orderData)
       }
 
       if (selectedPaymentMethod === "cod") {
         // For COD, order is created directly
-        clearCart();
+        clearCart()
         if (!token && guestInfo) {
           // Guest: redirect to GuestOrder page
           if (paymentResult && paymentResult.order && paymentResult.order._id) {
-            navigate(`/guest-order?success=true&orderId=${paymentResult.order._id}&email=${encodeURIComponent(formData.email)}`);
+            navigate(
+              `/guest-order?success=true&orderId=${paymentResult.order._id}&email=${encodeURIComponent(formData.email)}`,
+            )
           } else {
-            navigate(`/guest-order?success=true&email=${encodeURIComponent(formData.email)}`);
+            navigate(`/guest-order?success=true&email=${encodeURIComponent(formData.email)}`)
           }
         } else {
           // Logged-in user
           if (paymentResult && paymentResult.order && paymentResult.order._id) {
-            navigate(`/orders?success=true&orderId=${paymentResult.order._id}`);
+            navigate(`/orders?success=true&orderId=${paymentResult.order._id}`)
           } else {
-            navigate(`/orders?success=true`);
+            navigate(`/orders?success=true`)
           }
         }
       } else {
         // For other payment methods, redirect to payment gateway
-        if (paymentResult && (paymentResult.checkout_url || paymentResult.payment_url || paymentResult._links?.payment?.href)) {
+        if (
+          paymentResult &&
+          (paymentResult.checkout_url ||
+            paymentResult.payment_url ||
+            paymentResult._links?.payment?.href ||
+            paymentResult.paymentUrl)
+        ) {
           const paymentUrl =
-            paymentResult.checkout_url || paymentResult.payment_url || paymentResult._links?.payment?.href;
-          window.location.href = paymentUrl;
+            paymentResult.checkout_url ||
+            paymentResult.payment_url ||
+            paymentResult._links?.payment?.href ||
+            paymentResult.paymentUrl
+          window.location.href = paymentUrl
         } else {
-          throw new Error("Payment URL not received");
+          throw new Error("Payment URL not received")
         }
       }
     } catch (error) {
-      console.error("Error processing order:", error);
-      setError(error.response?.data?.message || error.message || "Failed to process order. Please try again.");
+      console.error("Error processing order:", error)
+      setError(error.response?.data?.message || error.message || "Failed to process order. Please try again.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -554,10 +539,13 @@ const Checkout = () => {
       ...newAddress,
     })
     // Save to localStorage for persistence
-    localStorage.setItem("savedShippingAddress", JSON.stringify({
-      ...formData,
-      ...newAddress,
-    }))
+    localStorage.setItem(
+      "savedShippingAddress",
+      JSON.stringify({
+        ...formData,
+        ...newAddress,
+      }),
+    )
     setShowAddressModal(false)
     setStep(2)
   }
@@ -633,15 +621,15 @@ const Checkout = () => {
 
   // On mount, check for step query param
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const stepParam = parseInt(params.get('step'), 10);
+    const params = new URLSearchParams(location.search)
+    const stepParam = Number.parseInt(params.get("step"), 10)
     if ([1, 2, 3].includes(stepParam)) {
-      setStep(stepParam);
+      setStep(stepParam)
     }
-  }, [location.search]);
+  }, [location.search])
 
   const bounceStyle = {
-    animation: 'bounce 1s infinite',
+    animation: "bounce 1s infinite",
   }
 
   if (cartItems.length === 0) {
@@ -684,7 +672,15 @@ const Checkout = () => {
             >
               02
             </span>
-            <span className={step >= 2 ? "font-semibold text-xs sm:text-sm md:text-base" : "text-gray-400 text-xs sm:text-sm md:text-base"}>Summary</span>
+            <span
+              className={
+                step >= 2
+                  ? "font-semibold text-xs sm:text-sm md:text-base"
+                  : "text-gray-400 text-xs sm:text-sm md:text-base"
+              }
+            >
+              Summary
+            </span>
           </div>
           <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
           <div className="flex items-center gap-1 sm:gap-2">
@@ -693,7 +689,15 @@ const Checkout = () => {
             >
               03
             </span>
-            <span className={step >= 3 ? "font-semibold text-xs sm:text-sm md:text-base" : "text-gray-400 text-xs sm:text-sm md:text-base"}>Payment Method</span>
+            <span
+              className={
+                step >= 3
+                  ? "font-semibold text-xs sm:text-sm md:text-base"
+                  : "text-gray-400 text-xs sm:text-sm md:text-base"
+              }
+            >
+              Payment Method
+            </span>
           </div>
         </div>
 
@@ -1014,14 +1018,14 @@ const Checkout = () => {
                             {method.iconUrls.map((icon, idx) => (
                               <img
                                 key={idx}
-                                src={icon.src}
+                                src={icon.src || "/placeholder.svg"}
                                 alt={method.name}
                                 className={
                                   icon.size === "big"
                                     ? "w-20 h-12 md:w-28 md:h-16 object-contain max-w-full"
                                     : icon.size === "medium"
-                                    ? "w-14 h-8 md:w-16 md:h-10 object-contain max-w-full"
-                                    : "w-10 h-6 md:w-12 md:h-8 object-contain max-w-full"
+                                      ? "w-14 h-8 md:w-16 md:h-10 object-contain max-w-full"
+                                      : "w-10 h-6 md:w-12 md:h-8 object-contain max-w-full"
                                 }
                               />
                             ))}
@@ -1123,7 +1127,8 @@ const Checkout = () => {
               {cartItems.length > 3 && (
                 <button
                   onClick={toggleShowAllItems}
-                  className="w-full text-center text-sm text-black  py-2 flex items-center justify-center gap-1 transition-colors">
+                  className="w-full text-center text-sm text-black  py-2 flex items-center justify-center gap-1 transition-colors"
+                >
                   {showAllItems ? (
                     <>
                       <ChevronUp className="h-4 w-4" />
@@ -1146,7 +1151,7 @@ const Checkout = () => {
 
               <div className="flex justify-between text-sm">
                 <span className="text-black">Delivery Charge</span>
-                <span className="text-black">Included</span>
+                <span className="text-black">{deliveryCharge === 0 ? "Free" : formatPrice(deliveryCharge)}</span>
               </div>
 
               <div className="border-t pt-3 flex justify-between font-medium">

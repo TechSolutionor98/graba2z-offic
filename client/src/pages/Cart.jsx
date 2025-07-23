@@ -45,7 +45,7 @@ const Cart = () => {
     // Fetch tax
     const fetchTax = async () => {
       try {
-        const { data } = await axios.get(`${config.API_URL}/api/taxes`)
+        const { data } = await axios.get(`${config.API_URL}/api/tax`)
         // Use first active tax
         if (data && data.length > 0) setTax(data[0])
       } catch (err) {
