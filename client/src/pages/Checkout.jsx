@@ -108,9 +108,39 @@ if (typeof document !== "undefined" && !document.getElementById("bounce-keyframe
 
 const Checkout = () => {
   const navigate = useNavigate()
-  const { cartItems, cartTotal, clearCart, calculateFinalTotal } = useCart()
+  const { cartItems, cartTotal, clearCart, calculateFinalTotal, deliveryOptions, setDeliveryOptions, selectedDelivery, setSelectedDelivery } = useCart()
   const { user } = useAuth()
   const location = useLocation()
+
+  const [tax, setTax] = useState(null)
+
+  // Fetch delivery options on mount (if not already fetched)
+  useEffect(() => {
+    if (!deliveryOptions || deliveryOptions.length === 0) {
+      const fetchDeliveryOptions = async () => {
+        try {
+          const { data } = await axios.get(`${config.API_URL}/api/delivery-charges`)
+          setDeliveryOptions(data)
+          if (!selectedDelivery && data.length > 0) {
+            setSelectedDelivery(data[0])
+          }
+        } catch (err) {
+          // handle error
+        }
+      }
+      fetchDeliveryOptions()
+    }
+    // Fetch tax
+    const fetchTax = async () => {
+      try {
+        const { data } = await axios.get(`${config.API_URL}/api/tax`)
+        if (data && data.length > 0) setTax(data[0])
+      } catch (err) {
+        // handle error
+      }
+    }
+    fetchTax()
+  }, [])
 
   useEffect(() => {
     if (!user) {
@@ -161,12 +191,26 @@ const Checkout = () => {
   })
   const [customerNotes, setCustomerNotes] = useState("")
 
-  // Use cart total from context, don't recalculate
-  const deliveryCharge = 0 // Delivery charges already included in cart total
-  const finalTotal = cartTotal // Use cart total directly, no additional charges
+  // Delivery charge logic (dynamic)
+  let deliveryCharge = 0
+  if (selectedDelivery && cartTotal < 500) {
+    deliveryCharge = selectedDelivery.charge
+  }
+
+  // Tax calculation
+  let taxAmount = 0
+  if (tax) {
+    if (tax.type === "percentage") {
+      taxAmount = ((cartTotal + deliveryCharge) * tax.rate) / 100
+    } else {
+      taxAmount = tax.rate
+    }
+  }
+
+  const finalTotal = cartTotal + deliveryCharge + taxAmount
 
   const formatPrice = (price) => {
-    return `AED ${price.toLocaleString()}`
+    return `AED ${price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
 
   const handleChange = (e) => {
@@ -248,7 +292,7 @@ const Checkout = () => {
         currency: "AED",
       },
       tax_amount: {
-        amount: 0,
+        amount: taxAmount,
         currency: "AED",
       },
       order_reference_id: `ORDER_${Date.now()}`,
@@ -310,8 +354,8 @@ const Checkout = () => {
           zip: formData.zipCode,
         },
         order: {
-          tax_amount: "0.00",
-          shipping_amount: "0.00",
+          tax_amount: taxAmount.toString(),
+          shipping_amount: deliveryCharge.toString(),
           discount_amount: "0.00",
           updated_at: new Date().toISOString(),
           reference_id: `ORDER_${Date.now()}`,
@@ -412,8 +456,8 @@ const Checkout = () => {
           quantity: item.quantity,
         })),
         itemsPrice: cartTotal,
-        shippingPrice: 0,
-        totalPrice: cartTotal,
+        shippingPrice: deliveryCharge, // Include delivery charge
+        totalPrice: finalTotal, // Include delivery charge
         deliveryType: deliveryType,
         paymentMethod: selectedPaymentMethod,
         paymentStatus: "pending",
@@ -486,7 +530,7 @@ const Checkout = () => {
             currency: "AED",
           },
           tax_amount: {
-            amount: 0,
+            amount: taxAmount,
             currency: "AED",
           },
           order_reference_id: orderId,
@@ -551,8 +595,8 @@ const Checkout = () => {
               zip: formData.zipCode,
             },
             order: {
-              tax_amount: "0.00",
-              shipping_amount: "0.00",
+              tax_amount: taxAmount.toString(),
+              shipping_amount: deliveryCharge.toString(),
               discount_amount: "0.00",
               updated_at: new Date().toISOString(),
               reference_id: orderId,
@@ -644,8 +688,8 @@ const Checkout = () => {
           quantity: item.quantity,
         })),
         itemsPrice: cartTotal,
-        shippingPrice: 0,
-        totalPrice: cartTotal,
+        shippingPrice: deliveryCharge, // Include delivery charge
+        totalPrice: finalTotal, // Include delivery charge
         deliveryType: deliveryType,
         paymentMethod: selectedPaymentMethod,
         customerNotes: customerNotes.trim() || undefined, // Only include if not empty
@@ -1364,6 +1408,11 @@ const Checkout = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-black">Delivery Charge</span>
                 <span className="text-black">Included</span>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span className="text-black">Tax</span>
+                <span className="text-black">{formatPrice(taxAmount)}</span>
               </div>
 
               <div className="border-t pt-3 flex justify-between font-medium">
