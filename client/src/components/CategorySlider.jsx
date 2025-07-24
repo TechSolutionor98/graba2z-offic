@@ -204,7 +204,7 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
                     maxWidth: "120px",
                   }}
                 >
-                  <div className="flex items-center justify-center  lg:w-[160px] ">
+                  {/* <div className="flex items-center justify-center  lg:w-[160px] ">
                     {category.image ? (
                       <img
                         src={category.image}
@@ -217,7 +217,28 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
                         <span className="text-lg md:text-2xl">📦</span>
                       </div>
                     )}
+                  </div> */}
+
+                  <div
+                    className="flex items-center justify-center lg:w-[160px]"
+                    style={{ willChange: 'transform', transform: 'translateZ(0)' }}
+                  >
+                    {category.image ? (
+                      <img
+                        src={category.image}
+                        alt={category.name}
+                        width="176"
+                        height="176"
+                        loading="eager"
+                        className="w-18 h-18 md:w-25 md:h-25 lg:w-32 lg:h-32 xl:w-44 xl:h-44 object-contain"
+                      />
+                    ) : (
+                      <div className="w-22 h-22 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full border-2 border-gray-200 flex items-center justify-center bg-gray-100">
+                        <span className="text-lg md:text-2xl">📦</span>
+                      </div>
+                    )}
                   </div>
+
                   <span className="text-xs md:text-sm font-bold text-gray-700 text-center -mt-2 lg:-mt-4 truncate">
                     {category.name}
                   </span>
