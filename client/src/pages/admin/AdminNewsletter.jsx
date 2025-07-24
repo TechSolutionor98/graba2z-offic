@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import config from "../../config/config";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 
 const preferenceLabels = {
@@ -22,11 +23,13 @@ const AdminNewsletter = () => {
   const [sendResult, setSendResult] = useState("");
   const [singleSend, setSingleSend] = useState(null);
 
+  const API = config.API_URL;
+
   useEffect(() => {
     const fetchSubscribers = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get("/api/newsletter/subscribers");
+        const { data } = await axios.get(`${API}/api/newsletter/subscribers`);
         setSubscribers(Array.isArray(data) ? data : []);
       } catch {
         setSubscribers([]);
@@ -34,12 +37,12 @@ const AdminNewsletter = () => {
       setLoading(false);
     };
     fetchSubscribers();
-  }, []);
+  }, [API]);
 
   useEffect(() => {
     // Fetch templates for newsletter type
-    axios.get("/api/email-templates/type/newsletter").then(res => setTemplates(Array.isArray(res.data) ? res.data : []));
-  }, []);
+    axios.get(`${API}/api/email-templates/type/newsletter`).then(res => setTemplates(Array.isArray(res.data) ? res.data : []));
+  }, [API]);
 
   const filtered = filter
     ? (Array.isArray(subscribers) ? subscribers : []).filter((s) => s.preferences.includes(filter))
@@ -80,7 +83,7 @@ const AdminNewsletter = () => {
     setSending(true);
     setSendResult("");
     try {
-      await axios.post("/api/newsletter/bulk-send", {
+      await axios.post(`${API}/api/newsletter/bulk-send`, {
         userIds: selected,
         templateId: selectedTemplate,
       });

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import config from "../../config/config";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 
 const typeLabels = {
@@ -21,6 +22,8 @@ const AdminEmailTemplates = () => {
   const [form, setForm] = useState(emptyTemplate);
   const [error, setError] = useState("");
 
+  const API = config.API_URL;
+
   useEffect(() => {
     fetchTemplates();
   }, []);
@@ -28,7 +31,7 @@ const AdminEmailTemplates = () => {
   const fetchTemplates = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("/api/email-templates");
+      const { data } = await axios.get(`${API}/api/email-templates`);
       setTemplates(Array.isArray(data) ? data : []);
     } catch {
       setTemplates([]);
@@ -60,9 +63,9 @@ const AdminEmailTemplates = () => {
     setError("");
     try {
       if (editing === "new") {
-        await axios.post("/api/email-templates", form);
+        await axios.post(`${API}/api/email-templates`, form);
       } else {
-        await axios.put(`/api/email-templates/${editing}`, form);
+        await axios.put(`${API}/api/email-templates/${editing}`, form);
       }
       await fetchTemplates();
       cancelEdit();
@@ -72,11 +75,11 @@ const AdminEmailTemplates = () => {
   };
   const deleteTemplate = async (id) => {
     if (!window.confirm("Delete this template?")) return;
-    await axios.delete(`/api/email-templates/${id}`);
+    await axios.delete(`${API}/api/email-templates/${id}`);
     await fetchTemplates();
   };
   const setDefault = async (id) => {
-    await axios.patch(`/api/email-templates/${id}/default`);
+    await axios.patch(`${API}/api/email-templates/${id}/default`);
     await fetchTemplates();
   };
 
