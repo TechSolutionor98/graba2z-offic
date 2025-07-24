@@ -240,7 +240,14 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
                   </div>
 
                   <span className="text-xs md:text-sm font-bold text-gray-700 text-center -mt-2 lg:-mt-4 truncate">
-                    {category.name}
+                    {(() => {
+                      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+                      const name = category.name;
+                      if (isMobile && name.length > 14) {
+                        return name.slice(0, 14) + '...';
+                      }
+                      return name;
+                    })()}
                   </span>
                 </button>
               ))}
