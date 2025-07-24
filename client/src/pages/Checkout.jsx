@@ -1034,35 +1034,35 @@ const Checkout = () => {
           </div>
         </div>
 
-        <div className="flex gap-8 mb-6">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="deliveryType"
-              value="home"
-              checked={deliveryType === "home"}
-              onChange={() => setDeliveryType("home")}
-              className="accent-lime-500 mr-2"
-            />
-            <span className="font-semibold text-lg">Home Delivery</span>
-          </label>
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="deliveryType"
-              value="pickup"
-              checked={deliveryType === "pickup"}
-              onChange={() => setDeliveryType("pickup")}
-              className="accent-lime-500 mr-2"
-            />
-            <span className="font-semibold text-lg">Pickup From Store</span>
-          </label>
-        </div>
-      </div>
-
-      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
-
-      <div className="grid grid-cols-1 lg:grid-cols-4">
+        {/* Delivery type selection: Only show on step 1 */}
+        {step === 1 && (
+          <div className="flex gap-8 mb-6">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="deliveryType"
+                value="home"
+                checked={deliveryType === "home"}
+                onChange={() => setDeliveryType("home")}
+                className="accent-lime-500 mr-2"
+              />
+              <span className="font-semibold text-lg">Home Delivery</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="deliveryType"
+                value="pickup"
+                checked={deliveryType === "pickup"}
+                onChange={() => setDeliveryType("pickup")}
+                className="accent-lime-500 mr-2"
+              />
+              <span className="font-semibold text-lg">Pickup From Store</span>
+            </label>
+          </div>
+        )}
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+        <div className="grid grid-cols-1 lg:grid-cols-4">
         <div className="lg:col-span-3 ">
           <div className="rounded-2xl shadow-sm p-8">
             {step === 1 && (
@@ -1650,6 +1650,7 @@ const Checkout = () => {
           </div>
         </div>
       </Dialog>
+    </div>
     </div>
   )
 }
