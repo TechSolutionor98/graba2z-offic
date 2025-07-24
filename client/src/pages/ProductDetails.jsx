@@ -306,9 +306,9 @@ const ProductDetails = () => {
   const getStockBadge = () => {
     switch (product.stockStatus) {
       case "Available Product":
-        return <span className="bg-blue-500 text-white px-2 rounded text-sm font-medium">In stock</span>
+        return <span className="bg-lime-500 text-white px-3 py-1 rounded text-sm font-bold">In stock</span>
       case "Out of Stock":
-        return <span className="bg-red-500 text-white px-1 rounded text-sm font-medium">Out of stock</span>
+        return <span className="bg-red-500 text-white px-3 py-1 rounded text-sm font-bold">Out of stock</span>
       case "PreOrder":
         return <span className="bg-orange-500 text-white px-1 rounded text-sm font-medium">Pre Order</span>
       default:
