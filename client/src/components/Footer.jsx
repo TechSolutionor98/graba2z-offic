@@ -118,7 +118,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-2 text-white text-sm">
                 {categories.slice(0, 6).map((category) => (
                   <li key={category._id}>
-                    <Link to={`/shop?parent_category=${encodeURIComponent(category.name)}`} className="hover:text-lime-400">
+                    <Link to={`/shop?parentCategory=${category._id}`} className="hover:text-lime-400">
                       {category.name}
                     </Link>
                   </li>
@@ -132,7 +132,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-2 text-white text-sm">
                 {categories.slice(6, 12).map((category) => (
                   <li key={category._id}>
-                    <Link to={`/shop?category=${encodeURIComponent(category.name)}`} className="hover:text-lime-400">
+                    <Link to={`/shop?parentCategory=${category._id}`} className="hover:text-lime-400">
                       {category.name}
                     </Link>
                   </li>
@@ -261,7 +261,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-3">
                 {categories.map((category) => (
                   <li key={category._id}>
-                    <Link to={`/shop?category=${encodeURIComponent(category.name)}`} className="text-gray-700 hover:text-orange-500">
+                    <Link to={`/shop?parentCategory=${category._id}`} className="text-gray-700 hover:text-orange-500">
                       {category.name}
                     </Link>
                   </li>
