@@ -777,6 +777,7 @@ const Checkout = () => {
     }
   }
 
+  // Update handleAddressModalSubmit to only save to localStorage for guests, and always update formData
   const handleAddressModalSubmit = (e) => {
     e.preventDefault()
     const newAddress = {
@@ -789,21 +790,23 @@ const Checkout = () => {
       ...formData,
       ...newAddress,
     })
-    // Save to localStorage for persistence
-    localStorage.setItem(
-      "savedShippingAddress",
-      JSON.stringify({
-        ...formData,
-        ...newAddress,
-      }),
-    )
+    // Only save to localStorage if not logged in
+    if (!user) {
+      localStorage.setItem(
+        "savedShippingAddress",
+        JSON.stringify({
+          ...formData,
+          ...newAddress,
+        })
+      )
+    }
     setShowAddressModal(false)
-    setStep(2)
+    // Do NOT advance step here; let main form handle it
   }
 
+  // In handleContinueToSummary, always save address/phone to backend for logged-in users when deliveryType is 'home'
   const handleContinueToSummary = async (e) => {
     e.preventDefault()
-
     if (deliveryType === "home") {
       if (!formData.email || !formData.phone) {
         setError("Please fill in email and phone number")
@@ -817,18 +820,20 @@ const Checkout = () => {
       if (user) {
         try {
           const token = localStorage.getItem("token")
+          const payload = {
+            phone: formData.phone,
+            address: {
+              street: formData.address,
+              city: formData.city,
+              state: formData.state,
+              zipCode: formData.zipCode,
+              country: "UAE",
+            },
+          }
+          console.log("[Checkout] Sending address/phone to backend:", payload)
           await axios.put(
             `${config.API_URL}/api/users/profile`,
-            {
-              phone: formData.phone,
-              address: {
-                street: formData.address,
-                city: formData.city,
-                state: formData.state,
-                zipCode: formData.zipCode,
-                country: "UAE",
-              },
-            },
+            payload,
             { headers: { Authorization: `Bearer ${token}` } }
           )
         } catch (err) {
@@ -844,9 +849,11 @@ const Checkout = () => {
       if (user && pickupDetails.phone) {
         try {
           const token = localStorage.getItem("token")
+          const payload = { phone: pickupDetails.phone }
+          console.log("[Checkout] Sending pickup phone to backend:", payload)
           await axios.put(
             `${config.API_URL}/api/users/profile`,
-            { phone: pickupDetails.phone },
+            payload,
             { headers: { Authorization: `Bearer ${token}` } }
           )
         } catch (err) {
@@ -854,7 +861,6 @@ const Checkout = () => {
         }
       }
     }
-
     setError(null)
     setStep(2)
   }
