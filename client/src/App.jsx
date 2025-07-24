@@ -206,7 +206,11 @@ function App() {
                           {/* Protected Routes */}
                           <Route
                             path="/checkout"
-                            element={<Checkout />}
+                            element={
+                              <ProtectedRoute>
+                                <Checkout />
+                              </ProtectedRoute>
+                            }
                           />
                           <Route
                             path="/profile"

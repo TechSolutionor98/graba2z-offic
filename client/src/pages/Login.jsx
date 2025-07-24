@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import { Eye, EyeOff, Mail, Lock } from "lucide-react"
@@ -9,6 +9,7 @@ import { Fragment } from "react"
 
 const Login = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
   const { showToast } = useToast()
 
@@ -44,7 +45,8 @@ const Login = () => {
 
       if (result.success) {
         showToast && showToast("Logged in successfully!", "success")
-        navigate("/")
+        const redirectTo = location.state?.from?.pathname || "/"
+        navigate(redirectTo, { replace: true })
       } else {
         setError(result.message)
       }
