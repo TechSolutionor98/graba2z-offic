@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Search, ChevronDown, Minus } from "lucide-react"
+import { Search, ChevronDown, Minus, X, Filter as FilterIcon } from "lucide-react"
 import axios from "axios"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useCart } from "../context/CartContext"
@@ -146,6 +146,7 @@ const Shop = () => {
   const [showPriceFilter, setShowPriceFilter] = useState(true)
   const [showCategoryFilter, setShowCategoryFilter] = useState(true)
   const [showBrandFilter, setShowBrandFilter] = useState(true)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   const [productsToShow, setProductsToShow] = useState(20)
   const [delayedLoading, setDelayedLoading] = useState(false)
@@ -517,9 +518,206 @@ const Shop = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Mobile Filter Button */}
+        <div className="block md:hidden mb-4">
+          <button
+            className="flex items-center gap-2 px-4 py-2 bg-lime-500 text-white rounded font-semibold shadow hover:bg-lime-600 transition"
+            onClick={() => setIsMobileFilterOpen(true)}
+          >
+            <FilterIcon size={20} />
+            Filter
+          </button>
+        </div>
+        {/* Mobile Filter Drawer */}
+        {isMobileFilterOpen && (
+          <div className="fixed inset-0 z-50 flex">
+            {/* Overlay */}
+            <div className="fixed inset-0 bg-black bg-opacity-40" onClick={() => setIsMobileFilterOpen(false)}></div>
+            {/* Drawer */}
+            <div className="relative bg-white w-80 max-w-full h-full shadow-xl p-6 overflow-y-auto ml-auto animate-slideInRight">
+              <button
+                className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700"
+                onClick={() => setIsMobileFilterOpen(false)}
+                aria-label="Close filter"
+              >
+                <X size={24} />
+              </button>
+              {/* Filter Content (copied from sidebar) */}
+              <div className="space-y-6 mt-6">
+                {/* Price Filter */}
+                <div className="border-b pb-4">
+                  <button
+                    onClick={() => setShowPriceFilter(!showPriceFilter)}
+                    className="flex items-center justify-between w-full text-left font-medium text-gray-900"
+                  >
+                    Price Range
+                    {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  {showPriceFilter && (
+                    <div className="mt-4 space-y-4">
+                      <PriceFilter
+                        min={minPrice}
+                        max={maxPrice}
+                        initialRange={priceRange}
+                        onApply={(range) => setPriceRange(range)}
+                      />
+                    </div>
+                  )}
+                </div>
+                {/* Categories Filter */}
+                <div className="border-b pb-4">
+                  <button
+                    onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+                    className="flex items-center justify-between w-full text-left font-medium text-gray-900"
+                  >
+                    Categories
+                    {showCategoryFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  {showCategoryFilter && (
+                    <div className="mt-4 space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="category"
+                          checked={selectedCategory === "all"}
+                          onChange={() => handleCategoryChange("all")}
+                          className="mr-2"
+                        />
+                        <span className="text-sm text-gray-700">All Categories</span>
+                      </label>
+                      {categories.map((category) => (
+                        <label key={category._id} className="flex items-center">
+                          <input
+                            type="radio"
+                            name="category"
+                            checked={selectedCategory === category._id}
+                            onChange={() => handleCategoryChange(category._id)}
+                            className="mr-2"
+                          />
+                          <span className="text-sm text-gray-700 font-medium">{category.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Subcategories Filter */}
+                {subCategories.length > 0 && (
+                  <div className="border-b pb-4">
+                    <button className="flex items-center justify-between w-full text-left font-medium text-gray-900">
+                      {categories.find((cat) => cat._id === selectedCategory)?.name} Subcategories
+                    </button>
+                    <div className="mt-4 space-y-2">
+                      {subCategories.map((subcat) => (
+                        <label key={subcat._id} className="flex items-center">
+                          <input
+                            type="radio"
+                            name="subcategory"
+                            checked={selectedSubCategories[0] === subcat._id}
+                            onChange={() => handleSubCategoryChange(subcat._id)}
+                            className="mr-2"
+                          />
+                          <span className="text-sm text-gray-700">{subcat.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Brands Filter */}
+                {brands.length > 0 && (
+                  <div className="border-b pb-4">
+                    <button
+                      onClick={() => setShowBrandFilter(!showBrandFilter)}
+                      className="flex items-center justify-between w-full text-left font-medium text-gray-900"
+                    >
+                      Brands
+                      {showBrandFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    {showBrandFilter && (
+                      <div className="mt-4 space-y-3">
+                        <div className="relative">
+                          <Search
+                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                            size={16}
+                          />
+                          <input
+                            type="text"
+                            placeholder="Search brands"
+                            value={brandSearch}
+                            onChange={(e) => setBrandSearch(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        </div>
+                        <div className="max-h-48 overflow-y-auto space-y-2">
+                          {filteredBrands.map((brand) => (
+                            <label key={brand._id} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedBrands.includes(brand._id)}
+                                onChange={() => handleBrandChange(brand._id)}
+                                className="mr-2 text-green-600 focus:ring-green-500"
+                              />
+                              <span className="text-sm text-gray-700">{brand.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* Stock/On Sale Filter */}
+                <div className="border-b pb-4">
+                  <button className="flex items-center justify-between w-full text-left font-medium text-gray-900">
+                    Stock
+                  </button>
+                  <div className="mt-4 space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="stockFilter"
+                        checked={stockFilters.onSale}
+                        onChange={() => handleStockFilterChange("onSale")}
+                        className="mr-2"
+                      />
+                      <span className="text-sm text-gray-700">On sale</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="stockFilter"
+                        checked={stockFilters.inStock}
+                        onChange={() => handleStockFilterChange("inStock")}
+                        className="mr-2"
+                      />
+                      <span className="text-sm text-gray-700">In stock</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="stockFilter"
+                        checked={stockFilters.outOfStock}
+                        onChange={() => handleStockFilterChange("outOfStock")}
+                        className="mr-2"
+                      />
+                      <span className="text-sm text-gray-700">Out of stock</span>
+                    </label>
+                  </div>
+                </div>
+                {/* Clear Filters Button */}
+                <div className="pt-4">
+                  <button
+                    onClick={clearAllFilters}
+                    className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
-          <div className="lg:w-1/4">
+          {/* Sidebar Filters (hidden on mobile) */}
+          <div className="lg:w-1/4 hidden md:block">
             <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
               {/* Search */}
               <div>
