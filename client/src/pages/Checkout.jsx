@@ -801,7 +801,7 @@ const Checkout = () => {
     setStep(2)
   }
 
-  const handleContinueToSummary = (e) => {
+  const handleContinueToSummary = async (e) => {
     e.preventDefault()
 
     if (deliveryType === "home") {
@@ -813,10 +813,45 @@ const Checkout = () => {
         setShowAddressModal(true)
         return
       }
+      // Save to backend if logged in
+      if (user) {
+        try {
+          const token = localStorage.getItem("token")
+          await axios.put(
+            `${config.API_URL}/api/users/profile`,
+            {
+              phone: formData.phone,
+              address: {
+                street: formData.address,
+                city: formData.city,
+                state: formData.state,
+                zipCode: formData.zipCode,
+                country: "UAE",
+              },
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        } catch (err) {
+          // Optionally show error
+        }
+      }
     } else if (deliveryType === "pickup") {
       if (!pickupDetails.phone || !pickupDetails.storeId) {
         setError("Please fill in phone number and select a store")
         return
+      }
+      // Optionally, save phone to backend if logged in
+      if (user && pickupDetails.phone) {
+        try {
+          const token = localStorage.getItem("token")
+          await axios.put(
+            `${config.API_URL}/api/users/profile`,
+            { phone: pickupDetails.phone },
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        } catch (err) {
+          // Optionally show error
+        }
       }
     }
 
@@ -878,6 +913,47 @@ const Checkout = () => {
       setStep(stepParam)
     }
   }, [location.search])
+
+  // Fetch user profile and pre-fill address/phone if logged in
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        try {
+          const token = localStorage.getItem("token")
+          const { data } = await axios.get(`${config.API_URL}/api/users/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          // Fill formData and pickupDetails.phone
+          setFormData((prev) => ({
+            ...prev,
+            name: data.name || prev.name,
+            email: data.email || prev.email,
+            phone: data.phone || prev.phone || "",
+            address: data.address?.street || prev.address || "",
+            city: data.address?.city || prev.city || "",
+            state: data.address?.state || prev.state || "",
+            zipCode: data.address?.zipCode || prev.zipCode || "",
+          }))
+          setPickupDetails((prev) => ({
+            ...prev,
+            phone: data.phone || prev.phone || "",
+          }))
+        } catch (err) {
+          // ignore error
+        }
+      }
+    }
+    fetchUserProfile()
+  }, [user])
+
+  // Sync phone number between forms when switching delivery type
+  useEffect(() => {
+    if (deliveryType === "pickup" && !pickupDetails.phone && formData.phone) {
+      setPickupDetails((prev) => ({ ...prev, phone: formData.phone }))
+    } else if (deliveryType === "home" && !formData.phone && pickupDetails.phone) {
+      setFormData((prev) => ({ ...prev, phone: pickupDetails.phone }))
+    }
+  }, [deliveryType])
 
   const bounceStyle = {
     animation: "bounce 1s infinite",
