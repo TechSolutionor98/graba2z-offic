@@ -1,5 +1,5 @@
-import { createContext, useContext } from 'react';
-import { Toaster, toast } from 'react-hot-toast';
+import { createContext, useContext, useCallback } from 'react';
+import Toast, { showToast as toastifyShowToast } from '../components/Toast';
 
 const ToastContext = createContext();
 
@@ -8,56 +8,35 @@ export const useToast = () => {
 };
 
 export const ToastProvider = ({ children }) => {
-  const showToast = (message, type = 'success') => {
+  const showToast = useCallback((message, type = 'success', options = {}) => {
+    // Map the type to match our design system
+    let toastType;
     switch (type) {
       case 'success':
-        toast.success(message, {
-          style: {
-            background: '#333',
-            color: '#fff',
-          },
-          iconTheme: {
-            primary: '#fff',
-            secondary: '#333',
-          },
-        });
+        toastType = 'success';
         break;
       case 'error':
-        toast.error(message, {
-          style: {
-            background: '#333',
-            color: '#fff',
-          },
-          iconTheme: {
-            primary: '#fff',
-            secondary: '#333',
-          },
-        });
+        toastType = 'error';
+        break;
+      case 'alert':
+        toastType = 'alert';
+        break;
+      case 'delete':
+        toastType = 'delete';
         break;
       default:
-        toast(message, {
-          style: {
-            background: '#333',
-            color: '#fff',
-          },
-        });
+        toastType = type === 'success' ? 'success' : 'error';
     }
-  };
+
+    // Use the appropriate toastify method based on type
+    const title = options.title;
+    toastifyShowToast[toastType](message, title);
+  }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-        toastOptions={{
-          duration: 2000,
-          style: {
-            background: '#333',
-            color: '#fff',
-          },
-        }}
-      />
+      <Toast />
     </ToastContext.Provider>
   );
 };
