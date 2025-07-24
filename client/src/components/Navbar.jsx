@@ -326,10 +326,50 @@ const Navbar = () => {
         <div className="bg-lime-500 mt-4 flex relative">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center space-x-16 h-12">
-              {/* Dynamic Parent Categories with Subcategory Dropdowns */}
-              {categories.map((parentCategory) => {
-                const categorySubCategories = getSubCategoriesForCategory(parentCategory._id)
+              {/* Category Overflow Dropdown for md+ screens */}
+              {categories.length > 8 && (
+                <div className="relative group hidden md:block">
+                  <button
+                    className="text-white font-medium whitespace-nowrap text-sm flex items-center"
+                  >
+                    {/* More <ChevronDown size={18} className="ml-1 " /> */}
+              More      <ChevronDown size={18} className="ml-1 stroke-[3]" />
 
+                  </button>
+                  <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border  hidden group-hover:block">
+                    {categories.slice(8).map((parentCategory) => {
+                      const categorySubCategories = getSubCategoriesForCategory(parentCategory._id);
+                      return (
+                        <div key={parentCategory._id} className="relative group/category">
+                          <Link
+                            to={`/shop?parentCategory=${parentCategory._id}`}
+                            className="block px-4 py-2 text-black  font-medium whitespace-nowrap text-sm"
+                          >
+                            {parentCategory.name}
+                          </Link>
+                          {/* Dropdown for subcategories */}
+                          {categorySubCategories.length > 0 && (
+                            <div className="absolute left-full top-0 ml-2 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border border-gray-200 hidden group-hover/category:block">
+                              {categorySubCategories.map((subCategory) => (
+                                <Link
+                                  key={subCategory._id}
+                                  to={`/shop?parentCategory=${parentCategory._id}&subcategory=${subCategory._id}`}
+                                  className="block px-4 py-2 text-red-600 hover:bg-gray-100 transition-colors duration-200 text-sm"
+                                >
+                                  {subCategory.name}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {/* Show first 8 categories as usual (all on mobile) */}
+              {(categories.length > 8 ? categories.slice(0, 8) : categories).map((parentCategory) => {
+                const categorySubCategories = getSubCategoriesForCategory(parentCategory._id)
                 return (
                   <div
                     key={parentCategory._id}
@@ -339,11 +379,10 @@ const Navbar = () => {
                   >
                     <Link
                       to={`/shop?parentCategory=${parentCategory._id}`}
-                      className="text-white hover:text-green-200 font-medium whitespace-nowrap text-sm"
+                      className="text-white  font-medium whitespace-nowrap text-sm"
                     >
                       {parentCategory.name}
                     </Link>
-
                     {/* Dropdown for subcategories */}
                     {hoveredCategory === parentCategory._id && categorySubCategories.length > 0 && (
                       <div className="absolute top-full left-0 mt-0 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border border-gray-200">
@@ -590,7 +629,7 @@ const Navbar = () => {
             <span className="text-xs mt-1">Account</span>
           </Link>
 
-         
+
         </div>
       </nav>
     </>
