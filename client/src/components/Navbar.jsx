@@ -44,6 +44,8 @@ const Navbar = () => {
   const [hoveredCategory, setHoveredCategory] = useState(null)
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
+  const profileRef = useRef(null);
+  const profileButtonRef = useRef(null);
 
   // Fetch categories and subcategories from API
   const fetchCategories = async () => {
@@ -117,6 +119,25 @@ const Navbar = () => {
     fetchCategories()
     fetchSubCategories()
   }, [])
+
+  // Close profile dropdown on outside click (desktop only)
+  useEffect(() => {
+    if (!isProfileOpen) return;
+    function handleProfileClick(e) {
+      // Only run on md+ screens
+      if (window.innerWidth < 768) return;
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(e.target) &&
+        profileButtonRef.current &&
+        !profileButtonRef.current.contains(e.target)
+      ) {
+        setIsProfileOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleProfileClick);
+    return () => document.removeEventListener("mousedown", handleProfileClick);
+  }, [isProfileOpen]);
 
   // Check if current path is an admin route
   const isAdminRoute = location.pathname.startsWith("/admin")
@@ -243,12 +264,12 @@ const Navbar = () => {
 
               {/* Profile */}
               <div className="relative">
-                <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="p-3 border border-black">
+                <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="p-3 border border-black" ref={profileButtonRef}>
                   <User size={20} className="text-gray-600" />
                 </button>
 
                 {isProfileOpen && (
-                  <div className="absolute right-0 w-48 py-2 mt-2 bg-white rounded-md shadow-xl z-20 border">
+                  <div ref={profileRef} className="absolute right-0 w-48 py-2 mt-2 bg-white rounded-md shadow-xl z-20 border">
                     {isAuthenticated ? (
                       <>
                         <Link
@@ -333,7 +354,7 @@ const Navbar = () => {
                     className="text-white font-medium whitespace-nowrap text-sm flex items-center"
                   >
                     {/* More <ChevronDown size={18} className="ml-1 " /> */}
-              More      <ChevronDown size={18} className="ml-1 stroke-[3]" />
+              More      <ChevronDown size={18} className="ml-1 stroke-[]" />
 
                   </button>
                   <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border  hidden group-hover:block">
