@@ -27,7 +27,7 @@ const AdminNewsletter = () => {
       setLoading(true);
       try {
         const { data } = await axios.get("/api/newsletter/subscribers");
-        setSubscribers(data);
+        setSubscribers(Array.isArray(data) ? data : []);
       } catch {
         setSubscribers([]);
       }
@@ -38,12 +38,12 @@ const AdminNewsletter = () => {
 
   useEffect(() => {
     // Fetch templates for newsletter type
-    axios.get("/api/email-templates/type/newsletter").then(res => setTemplates(res.data));
+    axios.get("/api/email-templates/type/newsletter").then(res => setTemplates(Array.isArray(res.data) ? res.data : []));
   }, []);
 
   const filtered = filter
-    ? subscribers.filter((s) => s.preferences.includes(filter))
-    : subscribers;
+    ? (Array.isArray(subscribers) ? subscribers : []).filter((s) => s.preferences.includes(filter))
+    : (Array.isArray(subscribers) ? subscribers : []);
 
   useEffect(() => {
     if (selectAll) {
@@ -136,7 +136,7 @@ const AdminNewsletter = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {(!Array.isArray(filtered) || filtered.length === 0) ? (
                 <tr>
                   <td colSpan={5} className="text-center p-4">No subscribers found.</td>
                 </tr>
@@ -181,9 +181,9 @@ const AdminNewsletter = () => {
                   onChange={handleTemplateChange}
                 >
                   <option value="">-- Select --</option>
-                  {templates.map((tpl) => (
+                  {Array.isArray(templates) ? templates.map((tpl) => (
                     <option key={tpl._id} value={tpl._id}>{tpl.name}</option>
-                  ))}
+                  )) : null}
                 </select>
               </div>
               {previewHtml && (

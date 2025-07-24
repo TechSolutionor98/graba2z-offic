@@ -29,7 +29,7 @@ const AdminEmailTemplates = () => {
     setLoading(true);
     try {
       const { data } = await axios.get("/api/email-templates");
-      setTemplates(data);
+      setTemplates(Array.isArray(data) ? data : []);
     } catch {
       setTemplates([]);
     }
@@ -102,7 +102,7 @@ const AdminEmailTemplates = () => {
               </tr>
             </thead>
             <tbody>
-              {templates.length === 0 ? (
+              {(!Array.isArray(templates) || templates.length === 0) ? (
                 <tr>
                   <td colSpan={5} className="text-center p-4">No templates found.</td>
                 </tr>
