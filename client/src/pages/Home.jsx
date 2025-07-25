@@ -15,6 +15,9 @@ import {
   Zap,
   Shield,
   Award,
+  Bell,
+  Tag,
+  Calendar,
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import BannerSlider from "../components/BannerSlider"
@@ -23,8 +26,17 @@ import { useWishlist } from "../context/WishlistContext"
 import BrandSlider from "../components/BrandSlider";
 
 import config from "../config/config"
+import NewsletterModal from "../components/NewsletterModal"
 
 const API_BASE_URL = `${config.API_URL}`
+
+const NOTIF_POPUP_KEY = "notif_popup_shown"
+
+const NEWSLETTER_OPTIONS = [
+  { label: "All Updates", value: "all", icon: <Bell className="inline mr-2 w-4 h-4" /> },
+  { label: "Promotions Only", value: "promotions", icon: <Tag className="inline mr-2 w-4 h-4" /> },
+  { label: "Events Only", value: "events", icon: <Calendar className="inline mr-2 w-4 h-4" /> },
+]
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([])
@@ -65,6 +77,15 @@ const Home = () => {
     return 'Desktop';
   });
 
+  // Notification popup state
+  const [showNotifPopup, setShowNotifPopup] = useState(false)
+  const [notifStep, setNotifStep] = useState("ask") // 'ask' | 'email'
+  const [notifEmail, setNotifEmail] = useState("")
+  const [notifLoading, setNotifLoading] = useState(false)
+  const [notifError, setNotifError] = useState("")
+  const [notifSuccess, setNotifSuccess] = useState(false)
+  const [notifPrefs, setNotifPrefs] = useState([])
+
   useEffect(() => {
     function handleResize() {
       setDeviceType(window.innerWidth < 768 ? 'Mobile' : 'Desktop');
@@ -72,6 +93,12 @@ const Home = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (!localStorage.getItem(NOTIF_POPUP_KEY)) {
+      setTimeout(() => setShowNotifPopup(true), 1200)
+    }
+  }, [])
 
   const bounceStyle = {
     animation: "bounce 1s infinite",
@@ -559,6 +586,40 @@ const Home = () => {
     setBrandIndex((prev) => (prev + 1) % totalBrands);
   };
 
+  const handleNotifDeny = () => {
+    setShowNotifPopup(false)
+    localStorage.setItem(NOTIF_POPUP_KEY, "1")
+  }
+  const handleNotifAllow = () => {
+    setNotifStep("email")
+  }
+  const handleNotifEmailChange = (e) => setNotifEmail(e.target.value)
+  const handleNotifPrefChange = (value) => {
+    setNotifPrefs((prev) =>
+      prev.includes(value)
+        ? prev.filter((v) => v !== value)
+        : [...prev, value]
+    )
+  }
+  const handleNotifEmailSubmit = async (e) => {
+    e.preventDefault()
+    setNotifError("")
+    if (!notifPrefs.length) {
+      setNotifError("Please select at least one preference.")
+      return
+    }
+    setNotifLoading(true)
+    try {
+      await axios.post(`${API_BASE_URL}/api/newsletter/subscribe`, { email: notifEmail, preferences: notifPrefs })
+      setNotifSuccess(true)
+      localStorage.setItem(NOTIF_POPUP_KEY, "1")
+      setTimeout(() => setShowNotifPopup(false), 2000)
+    } catch (err) {
+      setNotifError("Failed to subscribe. Please try again.")
+    }
+    setNotifLoading(false)
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -577,6 +638,83 @@ const Home = () => {
 
   return (
     <div className="bg-white mt-1">
+      {/* Notification/Newsletter Popup */}
+      {showNotifPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full relative animate-fadeInUp">
+            {notifStep === "ask" && (
+              <>
+                <div className="flex items-center mb-4">
+                  <img src="/logo.png" alt="Logo" className="w-14 h-14 rounded-full mr-4 border border-gray-200" />
+                  <div>
+                    <h2 className="text-lg font-bold text-black mb-1">This website would like to send you awesome updates and offers!</h2>
+                    <p className="text-gray-600 text-sm">Notifications can be turned off anytime from browser settings.</p>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <button className="px-4 py-2 rounded bg-gray-200 text-black font-semibold" onClick={handleNotifDeny}>Don't Allow</button>
+                  <button className="px-4 py-2 rounded bg-lime-500 text-white font-semibold" onClick={handleNotifAllow}>Allow</button>
+                </div>
+              </>
+            )}
+            {notifStep === "email" && !notifSuccess && (
+              <form onSubmit={handleNotifEmailSubmit}>
+                <div className="flex items-center mb-4">
+                  <img src="/logo.png" alt="Logo" className="w-14 h-14 rounded-full mr-4 border border-gray-200" />
+                  <div>
+                    <h2 className="text-lg font-bold text-black mb-1">Subscribe to our newsletter</h2>
+                    <p className="text-gray-600 text-sm">Enter your email to get the best offers and updates!</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="email"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded"
+                    placeholder="Enter your email"
+                    value={notifEmail}
+                    onChange={handleNotifEmailChange}
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded bg-lime-500 text-white font-semibold"
+                    disabled={notifLoading}
+                  >
+                    {notifLoading ? "Subscribing..." : "Subscribe"}
+                  </button>
+                </div>
+                {/* Preferences checkboxes */}
+                <div className="flex flex-col md:flex-row gap-2 mb-2">
+                  {NEWSLETTER_OPTIONS.map(opt => (
+                    <label key={opt.value} className="flex items-center text-black font-normal cursor-pointer">
+                      <input
+                        type="checkbox"
+                        value={opt.value}
+                        checked={notifPrefs.includes(opt.value)}
+                        onChange={() => handleNotifPrefChange(opt.value)}
+                        className="mr-2"
+                      />
+                      {opt.icon}
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+                {notifError && <div className="text-red-500 text-sm mb-2">{notifError}</div>}
+                <div className="flex justify-end">
+                  <button type="button" className="px-3 py-1 text-xs text-gray-500 underline" onClick={handleNotifDeny}>Cancel</button>
+                </div>
+              </form>
+            )}
+            {notifSuccess && (
+              <div className="flex flex-col items-center justify-center py-6">
+                <img src="/logo.png" alt="Logo" className="w-14 h-14 rounded-full mb-3 border border-gray-200" />
+                <h2 className="text-lg font-bold text-black mb-2">Thank you for subscribing!</h2>
+                <p className="text-gray-600 text-sm">A confirmation email has been sent to {notifEmail}.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <BannerSlider banners={heroBanners.filter(banner => banner.deviceType && banner.deviceType.toLowerCase() === deviceType.toLowerCase())} />
       {/* Categories Section - Infinite Loop Scroll */}
       <CategorySlider categories={categories} onCategoryClick={handleCategoryClick} />
@@ -1081,6 +1219,15 @@ const Home = () => {
           </div>
         </div>
       </section>
+      <style>{`
+        @keyframes fadeInUp {
+          0% { opacity: 0; transform: translateY(32px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeInUp {
+          animation: fadeInUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
+        }
+      `}</style>
     </div>
   )
 }
