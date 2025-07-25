@@ -81,7 +81,7 @@ const BannerSlider = ({ banners }) => {
 
 
       {/* Slide Indicators */}
-      {banners.length > 1 && (
+      {/* {banners.length > 1 && (
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10 hidden sm:flex">
           {banners.map((_, index) => (
             <button
@@ -94,7 +94,7 @@ const BannerSlider = ({ banners }) => {
             />
           ))}
         </div>
-      )}
+      )} */}
 
     </section>
   )
