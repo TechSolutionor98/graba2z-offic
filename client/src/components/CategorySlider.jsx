@@ -21,6 +21,10 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
         setVisibleCount(8); // large screens
       } else if (window.innerWidth >= 768) {
         setVisibleCount(6); // tablet
+      } else if (window.innerWidth >= 640) {
+        setVisibleCount(5); // tablet landscape
+      } else if (window.innerWidth >= 480) {
+        setVisibleCount(4); // small tablets/large phones
       } else {
         setVisibleCount(3); // mobile
       }
