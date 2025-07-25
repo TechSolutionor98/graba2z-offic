@@ -28,6 +28,7 @@ const AllCoupons = () => {
     validFrom: "",
     validUntil: "",
     isActive: true,
+    visibility: "public", // <-- add this line
   })
 
   useEffect(() => {
@@ -70,6 +71,7 @@ const AllCoupons = () => {
         maxDiscountAmount: formData.maxDiscountAmount ? Number.parseFloat(formData.maxDiscountAmount) : null,
         usageLimit: formData.usageLimit ? Number.parseInt(formData.usageLimit) : null,
         categories: formData.categories.includes("ALL") ? [] : formData.categories,
+        visibility: formData.visibility || "public", // <-- ensure this is sent
       }
 
       if (editingCoupon) {
@@ -104,6 +106,7 @@ const AllCoupons = () => {
       validFrom: "",
       validUntil: "",
       isActive: true,
+      visibility: "public", // <-- add this line
     })
   }
 
@@ -121,6 +124,7 @@ const AllCoupons = () => {
       validFrom: new Date(coupon.validFrom).toISOString().split("T")[0],
       validUntil: new Date(coupon.validUntil).toISOString().split("T")[0],
       isActive: coupon.isActive,
+      visibility: coupon.visibility || "public", // <-- add this line
     })
     setShowForm(true)
   }
@@ -266,6 +270,35 @@ const AllCoupons = () => {
                     classNamePrefix="react-select"
                     placeholder="Select categories..."
                   />
+                </div>
+              </div>
+
+              {/* Visibility Radio Buttons */}
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
+                <div className="flex gap-6">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="visibility"
+                      value="public"
+                      checked={formData.visibility === "public"}
+                      onChange={() => setFormData({ ...formData, visibility: "public" })}
+                      className="form-radio h-4 w-4 text-blue-600"
+                    />
+                    <span className="ml-2">Public</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="visibility"
+                      value="private"
+                      checked={formData.visibility === "private"}
+                      onChange={() => setFormData({ ...formData, visibility: "private" })}
+                      className="form-radio h-4 w-4 text-blue-600"
+                    />
+                    <span className="ml-2">Private</span>
+                  </label>
                 </div>
               </div>
 

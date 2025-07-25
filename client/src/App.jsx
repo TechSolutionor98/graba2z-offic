@@ -54,7 +54,7 @@ import AdminUnits from "./pages/admin/AdminUnits"
 import AdminVolumes from "./pages/admin/AdminVolumes"
 import AdminWarranty from "./pages/admin/AdminWarranty"
 import AdminTax from "./pages/admin/AdminTax"
-import AdminCoupons from "./pages/admin/AdminCoupons"
+import AllCoupons from "./pages/admin/AllCoupons"
 import AdminBanners from "./pages/admin/AdminBanners"
 import AdminDeliveryCharges from "./pages/admin/AdminDeliveryCharges"
 import AdminSettings from "./pages/admin/AdminSettings"
@@ -83,7 +83,6 @@ import AddBlogTopic from "./pages/admin/AddBlogTopic"
 import BlogCategories from "./pages/admin/BlogCategories"
 import BlogTopics from "./pages/admin/BlogTopics"
 import BlogRating from "./pages/admin/BlogRating"
-import AllCoupons from "./pages/admin/AllCoupons"
 import AddBulkProducts from "./pages/admin/AddBulkProducts"
 import EditCategory from "./pages/admin/EditCategory";
 
@@ -150,7 +149,7 @@ function App() {
                           <Route path="warranty/add" element={<AddWarranty />} />
                           <Route path="tax" element={<AdminTax />} />
                           <Route path="tax/add" element={<AddTax />} />
-                          <Route path="coupons" element={<AdminCoupons />} />
+                          <Route path="coupons" element={<AllCoupons />} />
                           <Route path="coupons/all" element={<AllCoupons />} />
                           <Route path="banners" element={<AdminBanners />} />
                           <Route path="delivery-charges" element={<AdminDeliveryCharges />} />

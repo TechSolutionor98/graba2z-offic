@@ -13,7 +13,7 @@ const router = express.Router()
 router.get(
   "/",
   asyncHandler(async (req, res) => {
-    const coupons = await Coupon.find({ isActive: true, validUntil: { $gte: new Date() } })
+    const coupons = await Coupon.find({ isActive: true, validUntil: { $gte: new Date() }, visibility: "public" })
       .populate("categories", "name")
       .sort({ createdAt: -1 })
 
@@ -193,7 +193,7 @@ router.post(
     }
 
     const coupon = new Coupon({
-      ...couponData,
+      ...couponData, // includes visibility
       code: couponData.code.toUpperCase(),
       categories,
       createdBy: req.user._id,
@@ -247,7 +247,7 @@ router.put(
         if (key === "code") {
           coupon[key] = updateData[key].toUpperCase()
         } else {
-          coupon[key] = updateData[key]
+          coupon[key] = updateData[key] // includes visibility
         }
       })
 

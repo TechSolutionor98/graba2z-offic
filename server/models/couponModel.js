@@ -56,6 +56,11 @@ const couponSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    visibility: {
+      type: String,
+      enum: ["public", "private"],
+      default: "public",
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
