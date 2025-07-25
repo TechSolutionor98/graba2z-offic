@@ -201,7 +201,7 @@ const ProductDetails = () => {
     try {
       setSubmittingReview(true)
       // Check both userToken and adminToken
-      const token = localStorage.getItem("userToken") || localStorage.getItem("adminToken")
+      const token = localStorage.getItem("token") || localStorage.getItem("adminToken")
       if (!token) {
         showToast("Please login to write a review", "error")
         navigate("/login")
