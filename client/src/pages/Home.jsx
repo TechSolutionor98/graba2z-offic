@@ -33,9 +33,9 @@ const API_BASE_URL = `${config.API_URL}`
 const NOTIF_POPUP_KEY = "notif_popup_shown"
 
 const NEWSLETTER_OPTIONS = [
-  { label: "All Updates", value: "all", icon: <Bell className="inline mr-2 w-4 h-4" /> },
-  { label: "Promotions Only", value: "promotions", icon: <Tag className="inline mr-2 w-4 h-4" /> },
-  { label: "Events Only", value: "events", icon: <Calendar className="inline mr-2 w-4 h-4" /> },
+  { label: "Updates", value: "all", icon: <Bell className="inline mr-2 w-4 h-4" /> },
+  { label: "Promotions", value: "promotions", icon: <Tag className="inline mr-2 w-4 h-4" /> },
+  { label: "Events", value: "events", icon: <Calendar className="inline mr-2 w-4 h-4" /> },
 ]
 
 const Home = () => {
@@ -645,7 +645,7 @@ const Home = () => {
             {notifStep === "ask" && (
               <>
                 <div className="flex items-center mb-4">
-                  <img src="/logo.png" alt="Logo" className="w-14 h-14 rounded-full mr-4 border border-gray-200" />
+                  <img src="/g.png" alt="Logo" className="w-16 h-18 rounded-full mr-4" />
                   <div>
                     <h2 className="text-lg font-bold text-black mb-1">This website would like to send you awesome updates and offers!</h2>
                     <p className="text-gray-600 text-sm">Notifications can be turned off anytime from browser settings.</p>
@@ -659,8 +659,8 @@ const Home = () => {
             )}
             {notifStep === "email" && !notifSuccess && (
               <form onSubmit={handleNotifEmailSubmit}>
-                <div className="flex items-center mb-4">
-                  <img src="/logo.png" alt="Logo" className="w-14 h-14 rounded-full mr-4 border border-gray-200" />
+                <div className="flex items-center  mb-4">
+                  <img src="/g.png" alt="Logo" className="w-14 h-14 rounded-full mr-4" />
                   <div>
                     <h2 className="text-lg font-bold text-black mb-1">Subscribe to our newsletter</h2>
                     <p className="text-gray-600 text-sm">Enter your email to get the best offers and updates!</p>
@@ -684,7 +684,7 @@ const Home = () => {
                   </button>
                 </div>
                 {/* Preferences checkboxes */}
-                <div className="flex flex-col md:flex-row gap-2 mb-2">
+                <div className="flex flex-col md:flex-row gap-6 mb-2">
                   {NEWSLETTER_OPTIONS.map(opt => (
                     <label key={opt.value} className="flex items-center text-black font-normal cursor-pointer">
                       <input
