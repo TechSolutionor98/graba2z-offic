@@ -1326,7 +1326,7 @@ const ProductDetails = () => {
       {/* Coupons Modal */}
       {showCouponsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl shadow-lg relative">
+          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[80vh] overflow-y-auto shadow-lg relative">
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-600" onClick={handleCloseCouponsModal}>
               <X size={24} />
             </button>
@@ -1340,60 +1340,75 @@ const ProductDetails = () => {
             ) : publicCoupons.length === 0 ? (
               <div className="text-gray-500 text-center">No coupons available at the moment.</div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
                 {publicCoupons.map((coupon, idx) => {
                   const color = COUPON_COLORS[idx % COUPON_COLORS.length]
                   const categories = coupon.categories && coupon.categories.length > 0
                     ? coupon.categories.map(cat => cat.name || cat).join(", ")
                     : "All Categories"
                   return (
-                    <div key={coupon._id} className="relative flex flex-col items-center w-full">
-                      {/* Ticket Style */}
+                    <div key={coupon._id} className="relative flex items-center w-full">
+                      {/* Ticket Style - Horizontal Layout */}
                       <div
                         className={`w-full flex shadow-md relative overflow-visible transition-all duration-500 ease-out opacity-0 translate-y-8 animate-fadeInUp ${color.border}`}
-                        style={{ minHeight: 160, animationDelay: `${idx * 80}ms`, animationFillMode: 'forwards' }}
+                        style={{ minHeight: 100, animationDelay: `${idx * 80}ms`, animationFillMode: 'forwards' }}
                       >
-                        {/* Left stub */}
-                        <div className={`flex flex-col items-center justify-between py-4 px-2 ${color.stub} border-l-2 border-t-2 border-b-2 ${color.border} rounded-l-lg relative`} style={{ minWidth: 36 }}>
-                          <span className="text-[10px] font-bold tracking-widest text-gray-700 rotate-180" style={{ writingMode: 'vertical-rl' }}>SPECIAL DISCOUNT</span>
-                          {/* Barcode effect */}
-                          <div className={`w-5 h-8 mt-2 flex flex-col justify-between ${color.barcode}`} style={{ borderRadius: 2 }}>
-                            {[...Array(7)].map((_, i) => (
+                        {/* Left stub - Compact */}
+                        <div className={`flex flex-col items-center justify-center py-2 px-2 ${color.stub} border-l-2 border-t-2 border-b-2 ${color.border} rounded-l-lg relative`} style={{ minWidth: 60 }}>
+                          <span className="text-[8px] font-bold tracking-widest text-gray-700 rotate-180" style={{ writingMode: 'vertical-rl' }}>DISCOUNT</span>
+                          {/* Barcode effect - Smaller */}
+                          <div className={`w-4 h-6 mt-1 flex flex-col justify-between ${color.barcode}`} style={{ borderRadius: 2 }}>
+                            {[...Array(5)].map((_, i) => (
                               <div key={i} className={`h-0.5 ${i % 2 === 0 ? 'bg-gray-700' : 'bg-gray-400'} w-full rounded`}></div>
                             ))}
                           </div>
                         </div>
-                        {/* Main ticket */}
-                        <div className={`flex-1 ${color.main} border-r-2 border-t-2 border-b-2 ${color.border} rounded-r-lg p-4 flex flex-col items-center relative overflow-hidden`}>
+                        {/* Main ticket - Responsive Layout */}
+                        <div className={`flex-1 ${color.main} border-r-2 border-t-2 border-b-2 ${color.border} rounded-r-lg p-3 flex flex-col md:flex-row md:items-center relative overflow-hidden`}>
                           {/* Cut edges */}
                           <div className={`absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full border-2 ${color.border}`}></div>
                           <div className={`absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full border-2 ${color.border}`}></div>
-                          <div className="w-full flex justify-between items-center mb-2">
-                            <span className="text-xs font-semibold text-gray-500 tracking-widest">GIFT COUPON</span>
-                            <span className={`text-2xl font-bold flex items-center ${color.text}`}>
-                              <Percent className="w-5 h-5 mr-1" />
-                              {coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `AED ${coupon.discountValue}`}
-                            </span>
-                          </div>
-                          <div className="w-full text-center mb-2 flex flex-col items-center">
-                            <span className="block text-lg font-bold text-gray-900">PROMO CODE</span>
-                            <div className="flex items-center justify-center mt-1">
-                              <span className={`inline-block bg-white border ${color.border} rounded px-4 py-1 font-mono text-lg font-bold ${color.text} tracking-widest`}>{coupon.code}</span>
-                              <button
-                                className={`ml-2 px-2 py-1 text-xs ${color.stub} hover:brightness-110 text-black rounded transition-colors font-semibold border ${color.border} focus:outline-none focus:ring-2 focus:ring-yellow-300`}
-                                onClick={() => handleCopyCoupon(coupon.code, coupon._id)}
-                              >
-                                {couponCopied === coupon._id ? 'Copied!' : 'Copy'}
-                              </button>
+                          
+                          {/* Mobile: Vertical Layout, Desktop: Horizontal Layout */}
+                          <div className="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-4 flex-1">
+                            {/* Discount Info */}
+                            <div className="flex items-center justify-between md:flex-col md:items-center md:justify-center">
+                              <span className="text-xs font-semibold text-gray-500 tracking-widest">GIFT COUPON</span>
+                              <span className={`text-xl font-bold flex items-center ${color.text}`}>
+                                <Percent className="w-4 h-4 mr-1" />
+                                {coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `AED ${coupon.discountValue}`}
+                              </span>
+                            </div>
+                            
+                            {/* Promo Code */}
+                            <div className="flex flex-col items-center flex-1">
+                              <span className="block text-sm font-bold text-gray-900 mb-2">PROMO CODE</span>
+                              <div className="flex items-center w-full justify-center">
+                                <span className={`inline-block bg-white border ${color.border} rounded px-3 py-1 font-mono text-sm font-bold ${color.text} tracking-widest`}>{coupon.code}</span>
+                                <button
+                                  className={`ml-2 px-2 py-1 text-xs ${color.stub} hover:brightness-110 text-black rounded transition-colors font-semibold border ${color.border} focus:outline-none focus:ring-2 focus:ring-yellow-300`}
+                                  onClick={() => handleCopyCoupon(coupon.code, coupon._id)}
+                                >
+                                  {couponCopied === coupon._id ? 'Copied!' : 'Copy'}
+                                </button>
+                              </div>
                             </div>
                           </div>
-                          <div className="w-full text-center text-xs text-gray-600 mb-2">{coupon.description}</div>
-                          <div className="w-full flex flex-wrap justify-between text-xs text-gray-500 mb-1">
-                            <span>Min: AED {coupon.minOrderAmount || 0}</span>
-                            <span>Valid: {new Date(coupon.validFrom).toLocaleDateString()} - {new Date(coupon.validUntil).toLocaleDateString()}</span>
-                          </div>
-                          <div className="w-full text-center text-xs font-semibold text-gray-700 mt-1">
-                            {categories}
+                          
+                          {/* Details - Mobile: Full width, Desktop: Right aligned */}
+                          <div className="flex flex-col md:items-end text-left md:text-right space-y-1 mt-3 md:mt-0">
+                            <div className="text-xs text-gray-600 md:max-w-xs">{coupon.description}</div>
+                            <div className="flex flex-col md:items-end space-y-1">
+                              <div className="text-xs text-gray-500">
+                                Min: AED {coupon.minOrderAmount || 0}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Valid: {new Date(coupon.validFrom).toLocaleDateString()} - {new Date(coupon.validUntil).toLocaleDateString()}
+                              </div>
+                              <div className="text-xs font-semibold text-gray-700">
+                                {categories}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
