@@ -46,6 +46,7 @@ const Navbar = () => {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const profileRef = useRef(null);
   const profileButtonRef = useRef(null);
+  const [visibleCategoriesCount, setVisibleCategoriesCount] = useState(8);
 
   // Fetch categories and subcategories from API
   const fetchCategories = async () => {
@@ -119,6 +120,28 @@ const Navbar = () => {
     fetchCategories()
     fetchSubCategories()
   }, [])
+
+  // Responsive categories count based on screen size
+  useEffect(() => {
+    const updateVisibleCategories = () => {
+      const width = window.innerWidth;
+      if (width >= 1536) { // 2xl screens
+        setVisibleCategoriesCount(10);
+      } else if (width >= 1280) { // xl screens
+        setVisibleCategoriesCount(8);
+      } else if (width >= 1024) { // lg screens
+        setVisibleCategoriesCount(6);
+      } else if (width >= 768) { // md screens
+        setVisibleCategoriesCount(4);
+      } else {
+        setVisibleCategoriesCount(8); // mobile - show all in mobile menu
+      }
+    };
+
+    updateVisibleCategories();
+    window.addEventListener('resize', updateVisibleCategories);
+    return () => window.removeEventListener('resize', updateVisibleCategories);
+  }, []);
 
   // Close profile dropdown on outside click (desktop only)
   useEffect(() => {
@@ -348,17 +371,15 @@ const Navbar = () => {
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center space-x-16 h-12">
               {/* Category Overflow Dropdown for md+ screens */}
-              {categories.length > 8 && (
+              {categories.length > visibleCategoriesCount && (
                 <div className="relative group hidden md:block">
                   <button
                     className="text-white font-medium whitespace-nowrap text-sm flex items-center"
                   >
-                    {/* More <ChevronDown size={18} className="ml-1 " /> */}
-              More      <ChevronDown size={18} className="ml-1 stroke-[]" />
-
+                    More <ChevronDown size={18} className="ml-1" />
                   </button>
-                  <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border  hidden group-hover:block">
-                    {categories.slice(8).map((parentCategory) => {
+                  <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border hidden group-hover:block">
+                    {categories.slice(visibleCategoriesCount).map((parentCategory) => {
                       const categorySubCategories = getSubCategoriesForCategory(parentCategory._id);
                       return (
                         <div key={parentCategory._id} className="relative group/category">
@@ -388,8 +409,8 @@ const Navbar = () => {
                   </div>
                 </div>
               )}
-              {/* Show first 8 categories as usual (all on mobile) */}
-              {(categories.length > 8 ? categories.slice(0, 8) : categories).map((parentCategory) => {
+              {/* Show responsive number of categories (all on mobile) */}
+              {(categories.length > visibleCategoriesCount ? categories.slice(0, visibleCategoriesCount) : categories).map((parentCategory) => {
                 const categorySubCategories = getSubCategoriesForCategory(parentCategory._id)
                 return (
                   <div
