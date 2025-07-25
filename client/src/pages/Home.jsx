@@ -788,7 +788,7 @@ const Home = () => {
                 </div>
               </div>
 
-              <div className="flex justify-center space-x-2 mt-4">
+              {/* <div className="flex justify-center space-x-2 mt-4">
                 {Array.from({ length: Math.max(0, featuredProducts.length - 3) }).map((_, index) => (
                   <button
                     key={index}
@@ -798,7 +798,7 @@ const Home = () => {
                     }`}
                   />
                 ))}
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
