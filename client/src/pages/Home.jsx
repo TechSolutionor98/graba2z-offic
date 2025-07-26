@@ -3,6 +3,10 @@
 import { useState, useEffect, useRef } from "react"
 import axios from "axios"
 import productCache from "../services/productCache"
+
+
+
+import BigSaleSection from "../components/BigSaleSection"
 import {
   Star,
   Heart,
@@ -20,7 +24,6 @@ import {
   Calendar,
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
-import { generateShopURL } from "../utils/urlUtils"
 import BannerSlider from "../components/BannerSlider"
 import CategorySlider from "../components/CategorySlider"
 import { useWishlist } from "../context/WishlistContext"
@@ -505,16 +508,14 @@ const Home = () => {
   const handleCategoryClick = (categoryName) => {
     const category = categories.find(cat => cat.name === categoryName)
     if (category && category._id) {
-      const url = generateShopURL({ parentCategory: category.name });
-      navigate(url);
+      navigate(`/shop?parentCategory=${category._id}`)
     } else {
       navigate(`/shop`)
     }
   }
 
   const handleBrandClick = (brandName) => {
-    const url = generateShopURL({ brand: brandName });
-    navigate(url);
+    navigate(`/shop?brand=${encodeURIComponent(brandName)}`)
   }
 
   const nextSlide = () => {
@@ -748,64 +749,8 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Big Sale Section - Hidden on Mobile */}
-      <section className="relative my-6 hidden md:block bg-red-300 ">
-        <div className="absolute inset-0 ">
-          <div
-            className="bg-[url('http://grabatoz.ae/wp-content/uploads/2025/06/slider-2-2.png')] bg-cover w-full"
-            style={{ height: "420px" }}
-          ></div>
-        </div>
-
-        <div className="relative max-w-8xl px-5">
-          <div className="flex justify-end">
-            <div className="w-2/3 relative">
-              <button
-                onClick={prevSlide}
-                disabled={currentSlide === 0}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 translate-x-2 z-20 bg-white hover:bg-gray-100 rounded-full p-3 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all border-2 border-gray-200"
-                style={{ marginLeft: "-20px" }}
-              >
-                <ChevronLeft size={20} className="text-gray-700" />
-              </button>
-
-              <button
-                onClick={nextSlide}
-                disabled={currentSlide >= featuredProducts.length - 4}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 -translate-x-2 z-20 bg-white hover:bg-gray-100 rounded-full p-3 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all border-2 border-gray-200"
-                style={{ marginRight: "-20px" }}
-              >
-                <ChevronRight size={20} className="text-gray-700" />
-              </button>
-
-              <div className="overflow-hidden my-5">
-                <div
-                  className="flex transition-transform duration-300 ease-in-out"
-                  style={{ transform: `translateX(-${currentSlide * 25}%)` }}
-                >
-                  {featuredProducts.map((product, index) => (
-                    <div key={product._id} className="w-1/4  flex-shrink-0">
-                      <GrabatezSaleCard product={product} index={index % 4} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* <div className="flex justify-center space-x-2 mt-4">
-                {Array.from({ length: Math.max(0, featuredProducts.length - 3) }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      currentSlide === index ? "bg-white" : "bg-white/50"
-                    }`}
-                  />
-                ))}
-              </div> */}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Big Sale Section - Handles both mobile and desktop views */}
+      <BigSaleSection products={featuredProducts} />
 
       {/* Featured Products Section - Mobile Grid */}
       <section className="py-6 mx-3 md:hidden">
@@ -1235,85 +1180,7 @@ const Home = () => {
   )
 }
 
-const GrabatezSaleCard = ({ product }) => {
-  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
-  // Use dynamic discount
-  const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
-  // Use dynamic stock status
-  const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
-  // Use dynamic price
-  const hasOffer = product.offerPrice && Number(product.offerPrice) > 0
-  const showOldPrice = hasOffer && Number(product.basePrice) > Number(product.offerPrice)
-  const priceToShow = hasOffer ? product.offerPrice : product.basePrice || product.price
-  // Use dynamic reviews
-  const rating = product.rating || 0
-  const numReviews = product.numReviews || 0
 
-  // Get category and brand names safely
-  const categoryName = product.category?.name || "Unknown"
-
-  return (
-    <div className="bg-white rounded-lg p-4 shadow-lg relative" style={{ height: "370px", width: "210px" }}>
-      <button
-        className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
-        }}
-        aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
-      >
-        <Heart size={16} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
-      </button>
-      <div className="p-1 w-ful h-[180px] mb-2">
-        <Link to={`/product/${product.slug || product._id}`}>
-          <img
-            src={product.image || "/placeholder.svg?height=120&width=120"}
-            alt={product.name}
-            className="w-full h-full cover  rounded mb-5"
-          />
-        </Link>
-      </div>
-      <div className="mb-2 flex items-center gap-2">
-        <div
-          className={`${getStatusColor(stockStatus)} text-white px-1 py-1 rounded text-xs font-bold inline-block mb-1`}
-        >
-          {stockStatus}
-        </div>
-        {discount && (
-          <div className="bg-yellow-400 text-white px-1 py-1 rounded text-xs font-bold inline-block ml-1">
-            {discount}
-          </div>
-        )}
-      </div>
-      <Link to={`/product/${product.slug || product._id}`}>
-        <h3 className="text-xs font-medium text-black mb-2 line-clamp-2 hover:text-blue-400">{product.name}</h3>
-      </Link>
-      {product.category && <div className="text-xs text-gray-500 mb-1">Category: {categoryName}</div>}
-      <div className="text-xs text-gray-400 mb-2">Inclusive VAT</div>
-      <div className=" flex items-center gap-2">
-        <div className="text-red-600 font-bold">
-          {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
-        </div>
-        {showOldPrice && (
-          <div className="text-gray-400 line-through text-xs">
-            {Number(product.basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
-          </div>
-        )}
-      </div>
-      <div className="flex items-center">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            size={10}
-            className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-          />
-        ))}
-        <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
-      </div>
-    </div>
-  )
-}
 
 const MobileProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
@@ -1637,3 +1504,4 @@ const getStatusColor = (status) => {
 }
 
 export default Home
+

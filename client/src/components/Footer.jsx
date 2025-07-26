@@ -1,8 +1,9 @@
 "use client"
 
 import { Link } from "react-router-dom"
-import { generateShopURL } from "../utils/urlUtils"
 import { Facebook, Twitter, Instagram, Plus, Minus, Linkedin } from "lucide-react"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faPinterest } from "@fortawesome/free-brands-svg-icons"
 import { useState, useEffect } from "react"
 import axios from "axios"
 
@@ -64,14 +65,14 @@ const Footer = ({ className = "" }) => {
               <p className="text-white mb-4">Subscribe to our newsletter</p>
 
               {/* Form */}
-              <form className="mb-4 p-1 bg-white rounded-full w-[280px]" onSubmit={handleNewsletterSubmit}>
+              <form className="mb-4 p-1 bg-white rounded-full  w-[280px]" onSubmit={handleNewsletterSubmit}>
                 <div className="flex w-[270px]">
                   {/* Search Input Div */}
                   <div className="flex-grow">
                     <input
                       type="email"
                       placeholder="Enter your email address"
-                      className="w-full pl-4 py-3 bg-white placeholder-gray-400 rounded-full text-black"
+                      className="w-full pl-4 py-3 bg-white placeholder-gray-400 rounded-full border-white  text-black"
                       value={newsletterEmail}
                       onChange={handleNewsletterInput}
                       required
@@ -94,21 +95,21 @@ const Footer = ({ className = "" }) => {
               )}
 
               {/* Social Icons */}
-              <div className="flex space-x-4">
-                <a href="#" className="text-white hover:text-lime-400">
+              <div className="flex space-x-6 pl-4">
+                <a href="https://www.facebook.com/grabatozae/" className="text-white hover:text-lime-400">
                   <Facebook size={20} />
                 </a>
-                <a href="#" className="text-white hover:text-lime-400">
+                <a href="https://x.com/GrabAtoz" className="text-white hover:text-lime-400">
                   <Twitter size={20} />
                 </a>
-                <a href="#" className="text-white hover:text-lime-400">
+                <a href="https://www.instagram.com/grabatoz/" className="text-white hover:text-lime-400">
                   <Instagram size={20} />
                 </a>
-                <a href="#" className="text-white hover:text-lime-400">
-                  <Twitter size={20} />
+                <a href="https://www.linkedin.com/company/grabatozae" className="text-white hover:text-lime-400">
+                  <Linkedin size={20} />
                 </a>
-                <a href="#" className="text-white hover:text-lime-400">
-                  <Instagram size={20} />
+                <a href="https://www.pinterest.com/grabatoz/" className="text-white hover:text-lime-400">
+                  <FontAwesomeIcon icon={faPinterest} style={{width: '20px', height: '20px'}} />
                 </a>
               </div>
             </div>
@@ -119,7 +120,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-2 text-white text-sm">
                 {categories.slice(0, 6).map((category) => (
                   <li key={category._id}>
-                    <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
+                    <Link to={`/shop?parentCategory=${category._id}`} className="hover:text-lime-400">
                       {category.name}
                     </Link>
                   </li>
@@ -133,7 +134,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-2 text-white text-sm">
                 {categories.slice(6, 12).map((category) => (
                   <li key={category._id}>
-                    <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
+                    <Link to={`/shop?parentCategory=${category._id}`} className="hover:text-lime-400">
                       {category.name}
                     </Link>
                   </li>
@@ -262,7 +263,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-3">
                 {categories.map((category) => (
                   <li key={category._id}>
-                    <Link to={generateShopURL({ parentCategory: category.name })} className="text-gray-700 hover:text-orange-500">
+                    <Link to={`/shop?parentCategory=${category._id}`} className="text-gray-700 hover:text-orange-500">
                       {category.name}
                     </Link>
                   </li>
