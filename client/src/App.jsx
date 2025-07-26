@@ -185,6 +185,9 @@ function App() {
                           <Route path="/shop" element={<Shop />} />
                           <Route path="/shop/:parentCategory" element={<Shop />} />
                           <Route path="/shop/:parentCategory/:subcategory" element={<Shop />} />
+                          <Route path="/product-category" element={<Shop />} />
+                          <Route path="/product-category/:parentCategory" element={<Shop />} />
+                          <Route path="/product-category/:parentCategory/:subcategory" element={<Shop />} />
                           <Route path="/product/:slug" element={<ProductDetails />} />
                           <Route path="/cart" element={<Cart />} />
                           <Route path="/login" element={<Login />} />

@@ -314,6 +314,21 @@ const Shop = () => {
     }
   }, [location.pathname, location.search, subCategories]);
 
+  // 4. On URL or brands change: set selectedBrands from the URL parameter
+  useEffect(() => {
+    const urlParams = parseShopURL(location.pathname, location.search);
+    if (brands.length > 0 && urlParams.brand) {
+      const foundBrand = brands.find(
+        brand => brand.name === urlParams.brand || createSlug(brand.name) === createSlug(urlParams.brand)
+      );
+      if (foundBrand) {
+        setSelectedBrands([foundBrand._id]);
+      } else {
+        setSelectedBrands([]);
+      }
+    }
+  }, [location.pathname, location.search, brands]);
+
   // Debug: Log all loaded categories and subcategories
   useEffect(() => {
     if (categories.length > 0) {

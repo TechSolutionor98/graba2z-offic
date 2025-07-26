@@ -27,7 +27,7 @@ export const createSlug = (text) => {
 export const generateShopURL = (params = {}) => {
   const { parentCategory, subcategory, brand, search } = params;
   
-  let url = '/shop';
+  let url = '/product-category';
   
   // Build URL path based on category structure
   if (parentCategory && parentCategory !== 'all') {
@@ -74,7 +74,7 @@ export const parseShopURL = (pathname, search) => {
   // Parse pathname for category structure
   const pathParts = pathname.split('/').filter(part => part);
   
-  if (pathParts.length > 1 && pathParts[0] === 'shop') {
+  if (pathParts.length > 1 && pathParts[0] === 'product-category') {
     // Extract parent category from URL
     if (pathParts.length >= 2) {
       params.parentCategory = pathParts[1];
@@ -130,4 +130,4 @@ export const findSubcategoryByIdentifier = (subcategories, identifier) => {
     sub.slug === identifier || 
     createSlug(sub.name) === identifier
   );
-}; 
+};

@@ -5,23 +5,23 @@ import { generateShopURL, createSlug } from './urlUtils.js';
 const testCases = [
   {
     input: { parentCategory: 'All In One' },
-    expected: '/shop/all-in-one'
+    expected: '/product-category/all-in-one'
   },
   {
     input: { parentCategory: 'All In One', subcategory: 'Desktop All In One' },
-    expected: '/shop/all-in-one/desktop-all-in-one'
+    expected: '/product-category/all-in-one/desktop-all-in-one'
   },
   {
     input: { parentCategory: 'Laptops', brand: 'HP' },
-    expected: '/shop/laptops?brand=HP'
+    expected: '/product-category/laptops?brand=HP'
   },
   {
     input: { parentCategory: 'Accessories', subcategory: 'Keyboards', search: 'wireless' },
-    expected: '/shop/accessories/keyboards?search=wireless'
+    expected: '/product-category/accessories/keyboards?search=wireless'
   },
   {
     input: { parentCategory: 'all' },
-    expected: '/shop'
+    expected: '/product-category'
   }
 ];
 
@@ -56,4 +56,4 @@ slugTests.forEach((test, index) => {
   console.log(`  Expected: "${test.expected}"`);
   console.log(`  Got: "${result}"`);
   console.log('');
-}); 
+});
