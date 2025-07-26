@@ -280,7 +280,7 @@ const Home = () => {
         const asusData = filterProductsByBrand(products, "ASUS").slice(0, 3)
 
         // Get category products
-        const accessoriesData = filterProductsByMainCategory(products, "Accessories").slice(0, 6)
+        const accessoriesData = filterProductsByMainCategory(products, "Accessories").slice(0,8)
 
         // Get Networking products (DYNAMIC CATEGORY ID BY NAME)
         const networkingCategory = validCategories.find(
@@ -295,7 +295,7 @@ const Home = () => {
               (typeof product.parentCategory === "string" && product.parentCategory === networkingCategory._id) ||
               (typeof product.parentCategory === "object" && product.parentCategory?._id === networkingCategory._id)
             );
-          }).slice(0, 6);
+          }).slice(0, 8);
         }
         console.log("Networking Products found:", networkingData)
 
@@ -852,9 +852,9 @@ const Home = () => {
         </div>
 
         {accessoriesProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8">
             {accessoriesProducts
-              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 6)
+              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : window.innerWidth < 1536 ? 6 : 8)
               .map((product) => (
                 <AccessoriesProductCard key={product._id} product={product} />
               ))}
@@ -953,9 +953,9 @@ const Home = () => {
         </div>
 
         {networkingProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 ">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8">
             {networkingProducts
-              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 6)
+              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : window.innerWidth < 1536 ? 6 : 8)
               .map((product) => (
                 <AccessoriesProductCard key={product._id} product={product} />
               ))}
