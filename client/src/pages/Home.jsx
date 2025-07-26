@@ -20,6 +20,7 @@ import {
   Calendar,
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
+import { generateShopURL } from "../utils/urlUtils"
 import BannerSlider from "../components/BannerSlider"
 import CategorySlider from "../components/CategorySlider"
 import { useWishlist } from "../context/WishlistContext"
@@ -504,14 +505,16 @@ const Home = () => {
   const handleCategoryClick = (categoryName) => {
     const category = categories.find(cat => cat.name === categoryName)
     if (category && category._id) {
-      navigate(`/shop?parentCategory=${category._id}`)
+      const url = generateShopURL({ parentCategory: category.name });
+      navigate(url);
     } else {
       navigate(`/shop`)
     }
   }
 
   const handleBrandClick = (brandName) => {
-    navigate(`/shop?brand=${encodeURIComponent(brandName)}`)
+    const url = generateShopURL({ brand: brandName });
+    navigate(url);
   }
 
   const nextSlide = () => {

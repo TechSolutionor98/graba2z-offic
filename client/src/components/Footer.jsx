@@ -1,6 +1,7 @@
 "use client"
 
 import { Link } from "react-router-dom"
+import { generateShopURL } from "../utils/urlUtils"
 import { Facebook, Twitter, Instagram, Plus, Minus, Linkedin } from "lucide-react"
 import { useState, useEffect } from "react"
 import axios from "axios"
@@ -118,7 +119,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-2 text-white text-sm">
                 {categories.slice(0, 6).map((category) => (
                   <li key={category._id}>
-                    <Link to={`/shop?parentCategory=${category._id}`} className="hover:text-lime-400">
+                    <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
                       {category.name}
                     </Link>
                   </li>
@@ -132,7 +133,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-2 text-white text-sm">
                 {categories.slice(6, 12).map((category) => (
                   <li key={category._id}>
-                    <Link to={`/shop?parentCategory=${category._id}`} className="hover:text-lime-400">
+                    <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
                       {category.name}
                     </Link>
                   </li>
@@ -261,7 +262,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-3">
                 {categories.map((category) => (
                   <li key={category._id}>
-                    <Link to={`/shop?parentCategory=${category._id}`} className="text-gray-700 hover:text-orange-500">
+                    <Link to={generateShopURL({ parentCategory: category.name })} className="text-gray-700 hover:text-orange-500">
                       {category.name}
                     </Link>
                   </li>

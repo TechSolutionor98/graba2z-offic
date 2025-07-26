@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from "react"
 import { Search, ChevronDown, Minus, X, Filter as FilterIcon } from "lucide-react"
 import axios from "axios"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
 import productCache from "../services/productCache"
+import { generateShopURL, parseShopURL, findCategoryByIdentifier, findSubcategoryByIdentifier, createSlug } from "../utils/urlUtils"
 
 import config from "../config/config"
 import 'rc-slider/assets/index.css';
@@ -16,15 +17,15 @@ const API_BASE_URL = `${config.API_URL}`
 
 // Define the exact parent categories to show in filters
 const PARENT_CATEGORIES = [
-  "All In One",
+  "All in one",
   "Desktop",
   "Monitors",
   "Mobiles",
   "Laptops",
   "Printers & Copier",
-  "Routers",
+  "Routers & Switches",
   "Projector",
-  "Accessories",
+  "Accessories & Components",
   "Networking",
 ]
 
@@ -123,6 +124,7 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
 const Shop = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const params = useParams()
   const { addToCart } = useCart()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
@@ -278,52 +280,52 @@ const Shop = () => {
     };
   }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, sortBy]);
 
-  // Fetch subcategories when selectedCategory changes
+  // 1. On URL or categories change: set selectedCategory from the slug.
+  useEffect(() => {
+    const urlParams = parseShopURL(location.pathname, location.search);
+    if (categories.length > 0) {
+      const foundCategory = categories.find(
+        cat => cat._id === urlParams.parentCategory || cat.slug === urlParams.parentCategory || createSlug(cat.name) === urlParams.parentCategory
+      );
+      setSelectedCategory(foundCategory ? foundCategory._id : "all");
+    }
+  }, [location.pathname, location.search, categories]);
+
+  // 2. On selectedCategory change: fetch subcategories for that category.
   useEffect(() => {
     if (selectedCategory && selectedCategory !== "all") {
-      fetchSubCategories()
+      fetchSubCategories();
     } else {
-      setSubCategories([])
-      setSelectedSubCategories([])
+      setSubCategories([]);
+      setSelectedSubCategories([]);
     }
-  }, [selectedCategory, categories])
+  }, [selectedCategory]);
 
-  // Sync selectedCategory and filters with URL
+  // 3. On subCategories or URL change: set selectedSubCategories from the slug.
   useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const parentCategoryParam = params.get("parentCategory")
-    const subCategoryParam = params.get("subcategory")
-    const brandParam = params.get("brand")
-    const searchParam = params.get("search")
-
-    if (parentCategoryParam) {
-      setSelectedCategory(parentCategoryParam)
+    const urlParams = parseShopURL(location.pathname, location.search);
+    if (subCategories.length > 0 && urlParams.subcategory) {
+      const foundSubcategory = subCategories.find(
+        sub => sub._id === urlParams.subcategory || sub.slug === urlParams.subcategory || createSlug(sub.name) === urlParams.subcategory
+      );
+      setSelectedSubCategories(foundSubcategory ? [foundSubcategory._id] : []);
     } else {
-      setSelectedCategory("all")
+      setSelectedSubCategories([]);
     }
+  }, [location.pathname, location.search, subCategories]);
 
-    if (subCategoryParam) {
-      setSelectedSubCategories([subCategoryParam])
-    } else {
-      setSelectedSubCategories([])
+  // Debug: Log all loaded categories and subcategories
+  useEffect(() => {
+    if (categories.length > 0) {
+      console.log('All loaded categories:', categories.map(c => ({ name: c.name, slug: c.slug, _id: c._id })));
     }
+  }, [categories]);
 
-    if (brandParam) {
-      brands.forEach((brand) => {
-        if (brand.name.toLowerCase() === brandParam.toLowerCase()) {
-          setSelectedBrands([brand._id])
-        }
-      })
-    } else {
-      setSelectedBrands([])
+  useEffect(() => {
+    if (subCategories.length > 0) {
+      console.log('All loaded subcategories:', subCategories.map(s => ({ name: s.name, slug: s.slug, _id: s._id })));
     }
-
-    if (searchParam) {
-      setSearchQuery(searchParam)
-    } else {
-      setSearchQuery("")
-    }
-  }, [location.search, brands])
+  }, [subCategories]);
 
   // Reset productsToShow when filters change or products are refetched
   useEffect(() => {
@@ -423,14 +425,19 @@ const Shop = () => {
   const handleCategoryChange = (categoryId) => {
     setSelectedCategory(categoryId)
     setSelectedSubCategories([])
-    const params = new URLSearchParams()
-    if (categoryId !== "all") {
-      params.set("parentCategory", categoryId)
-    }
-    navigate({
-      pathname: location.pathname,
-      search: params.toString(),
-    })
+    
+    // Find the category object to get its name for URL generation
+    const categoryObj = categories.find(cat => cat._id === categoryId);
+    const categoryName = categoryObj ? categoryObj.name : categoryId;
+    
+    // Generate SEO-friendly URL
+    const url = generateShopURL({
+      parentCategory: categoryId !== "all" ? categoryName : null,
+      brand: selectedBrands.length > 0 ? brands.find(b => b._id === selectedBrands[0])?.name : null,
+      search: searchQuery || null
+    });
+    
+    navigate(url);
   }
 
   // When a subcategory is selected, set both parent and subcategory in the filter
@@ -446,21 +453,48 @@ const Shop = () => {
       parentId = selectedCategory;
     }
     setSelectedCategory(parentId);
-    const params = new URLSearchParams();
-    if (parentId && parentId !== "all") {
-      params.set("parentCategory", parentId);
-    }
-    params.set("subcategory", subCatId);
-    // Debug log for subcategory change
-    console.log('handleSubCategoryChange called with:', { subCatId, parentId, subcatObj, params: params.toString(), subCategories });
-    navigate({
-      pathname: location.pathname,
-      search: params.toString(),
+    
+    // Find the category and subcategory objects to get their names for URL generation
+    const categoryObj = categories.find(cat => cat._id === parentId);
+    const subcategoryObj = subCategories.find(sub => sub._id === subCatId);
+    
+    const categoryName = categoryObj ? categoryObj.name : parentId;
+    const subcategoryName = subcategoryObj ? subcategoryObj.name : subCatId;
+    
+    // Generate SEO-friendly URL
+    const url = generateShopURL({
+      parentCategory: parentId !== "all" ? categoryName : null,
+      subcategory: subcategoryName,
+      brand: selectedBrands.length > 0 ? brands.find(b => b._id === selectedBrands[0])?.name : null,
+      search: searchQuery || null
     });
+    
+    // Debug log for subcategory change
+    console.log('handleSubCategoryChange called with:', { subCatId, parentId, subcatObj, url, subCategories });
+    navigate(url);
   }
 
   const handleBrandChange = (brandId) => {
     setSelectedBrands((prev) => (prev.includes(brandId) ? prev.filter((b) => b !== brandId) : [...prev, brandId]))
+    
+    // Update URL with brand filter
+    const newSelectedBrands = selectedBrands.includes(brandId) 
+      ? selectedBrands.filter((b) => b !== brandId) 
+      : [...selectedBrands, brandId];
+    
+    const categoryObj = categories.find(cat => cat._id === selectedCategory);
+    const subcategoryObj = selectedSubCategories.length > 0 
+      ? subCategories.find(sub => sub._id === selectedSubCategories[0]) 
+      : null;
+    
+    const url = generateShopURL({
+      parentCategory: selectedCategory !== "all" ? (categoryObj?.name || selectedCategory) : null,
+      subcategory: subcategoryObj?.name || (selectedSubCategories[0] || null),
+      brand: newSelectedBrands.length > 0 ? brands.find(b => b._id === newSelectedBrands[0])?.name : null,
+      search: searchQuery || null
+    });
+    
+    navigate(url);
   }
 
   const handleStockFilterChange = (key) => {
@@ -472,6 +506,27 @@ const Shop = () => {
     })
   }
 
+  // Handle search query changes and update URL
+  const handleSearchChange = (e) => {
+    const newSearchQuery = e.target.value;
+    setSearchQuery(newSearchQuery);
+    
+    // Update URL with search query
+    const categoryObj = categories.find(cat => cat._id === selectedCategory);
+    const subcategoryObj = selectedSubCategories.length > 0 
+      ? subCategories.find(sub => sub._id === selectedSubCategories[0]) 
+      : null;
+    
+    const url = generateShopURL({
+      parentCategory: selectedCategory !== "all" ? (categoryObj?.name || selectedCategory) : null,
+      subcategory: subcategoryObj?.name || (selectedSubCategories[0] || null),
+      brand: selectedBrands.length > 0 ? brands.find(b => b._id === selectedBrands[0])?.name : null,
+      search: newSearchQuery || null
+    });
+    
+    navigate(url);
+  }
+
   const clearAllFilters = () => {
     setSelectedCategory("all")
     setSelectedBrands([])
@@ -479,7 +534,7 @@ const Shop = () => {
     setPriceRange([0, maxPrice])
     setSearchQuery("")
     setStockFilters({ inStock: false, outOfStock: false, onSale: false })
-    navigate({ pathname: location.pathname, search: "" })
+    navigate("/shop")
   }
 
   // Show loading only on initial load, not on filter changes
@@ -726,8 +781,8 @@ const Shop = () => {
                   <input
                     type="text"
                     placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    value={searchQuery}
+                onChange={handleSearchChange}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div> */}

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 
 import config from "../config/config"
 import { Link, useNavigate, useLocation } from "react-router-dom"
+import { generateShopURL } from "../utils/urlUtils"
 import { useAuth } from "../context/AuthContext"
 import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
@@ -384,7 +385,7 @@ const Navbar = () => {
                       return (
                         <div key={parentCategory._id} className="relative group/category">
                           <Link
-                            to={`/shop?parentCategory=${parentCategory._id}`}
+                            to={generateShopURL({ parentCategory: parentCategory.name })}
                             className="block px-4 py-2 text-black  font-medium whitespace-nowrap text-sm"
                           >
                             {parentCategory.name}
@@ -395,7 +396,7 @@ const Navbar = () => {
                               {categorySubCategories.map((subCategory) => (
                                 <Link
                                   key={subCategory._id}
-                                  to={`/shop?parentCategory=${parentCategory._id}&subcategory=${subCategory._id}`}
+                                  to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
                                   className="block px-4 py-2 text-red-600 hover:bg-gray-100 transition-colors duration-200 text-sm"
                                 >
                                   {subCategory.name}
@@ -420,7 +421,7 @@ const Navbar = () => {
                     onMouseLeave={() => setHoveredCategory(null)}
                   >
                     <Link
-                      to={`/shop?parentCategory=${parentCategory._id}`}
+                      to={generateShopURL({ parentCategory: parentCategory.name })}
                       className="text-white  font-medium whitespace-nowrap text-sm"
                     >
                       {parentCategory.name}
@@ -431,7 +432,7 @@ const Navbar = () => {
                         {categorySubCategories.map((subCategory) => (
                           <Link
                             key={subCategory._id}
-                            to={`/shop?parentCategory=${parentCategory._id}&subcategory=${subCategory._id}`}
+                            to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
                             className="block px-4 py-2 text-red-600 hover:bg-gray-100 transition-colors duration-200 text-sm"
                             onClick={() => setHoveredCategory(null)}
                           >
@@ -578,7 +579,7 @@ const Navbar = () => {
                         {/* Parent Category Item */}
                         <div className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg">
                           <Link
-                            to={`/shop?parentCategory=${parentCategory._id}`}
+                            to={generateShopURL({ parentCategory: parentCategory.name })}
                             className="flex items-center flex-1"
                             onClick={closeMobileMenu}
                           >
@@ -605,7 +606,7 @@ const Navbar = () => {
                             {categorySubCategories.map((subCategory) => (
                               <Link
                                 key={subCategory._id}
-                                to={`/shop?parentCategory=${parentCategory._id}&subcategory=${subCategory._id}`}
+                                to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
                                 className="block py-2 px-2 text-red-600 hover:bg-gray-50 rounded-lg text-sm"
                                 onClick={closeMobileMenu}
                               >
