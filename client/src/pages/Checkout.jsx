@@ -1429,8 +1429,8 @@ const Checkout = () => {
         </div>
 
         {/* Order Summary Sidebar */}
-        <div className="lg:col-span-2 ">
-          <div className="bg-lime-200 rounded-2xl shadow-sm p-4 sticky mt-4 lg:m-9">
+        <div className="lg:col-span-2">
+          <div className="bg-lime-200 rounded-2xl shadow-sm p-4 top-9 lg:m-9" style={{position:"sticky"}}>
             <div className="flex items-center mb-6">
               <div className="bg-lime-100 p-2 rounded-full">
                 <Truck className="h-5 w-5 text-lime-600" />
