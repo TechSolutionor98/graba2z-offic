@@ -44,8 +44,8 @@ const app = express()
 // // CORS configuration
 app.use(cors({
   origin: [
-  //'https://www.graba2z.ae'
-   'http://localhost:3000'
+  'https://www.graba2z.ae'
+   //'http://localhost:3000'
   ],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
