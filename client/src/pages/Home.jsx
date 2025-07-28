@@ -851,7 +851,7 @@ const Home = () => {
         </div>
 
         {accessoriesProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8 ">
             {accessoriesProducts
               .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : window.innerWidth < 1536 ? 6 : 8)
               .map((product) => (
@@ -1377,14 +1377,14 @@ const AccessoriesProductCard = ({ product }) => {
           <Heart size={14} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
         </button>
       </div>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2 flex items-center lg:gap-4">
         <div
-          className={`${getStatusColor(stockStatus)} text-white px-2 py-1 rounded text-xs font-bold inline-block mr-1`}
+          className={`${getStatusColor(stockStatus)} text-white px-0.5 lg:px-1 py-1 rounded text-xs font-bold inline-block mr-1`}
         >
           {stockStatus}
         </div>
         {discount && (
-          <div className="bg-yellow-400 text-white px-2 py-1 rounded text-xs font-bold inline-block">{discount}</div>
+          <div className="bg-yellow-400 text-white lg:px-1 px-0.5 py-1 rounded text-xs font-bold inline-block">{discount}</div>
         )}
       </div>
       <Link to={`/product/${product.slug || product._id}`}>
