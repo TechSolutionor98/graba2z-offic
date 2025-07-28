@@ -25,7 +25,9 @@ import {
   Truck,
   RotateCcw,
   Award,
+  Mail,
   Percent,
+
 } from "lucide-react"
 import { productsAPI } from "../services/api.js"
 
@@ -1220,8 +1222,8 @@ const ProductDetails = () => {
                 src={productImages[modalImageIndex] || "/placeholder.svg?height=600&width=600"}
                 alt={product.name}
                 className={`object-contain bg-white cursor-pointer transition-transform duration-300 ${isImageZoomed
-                    ? "max-h-none max-w-none scale-150"
-                    : "max-h-full max-w-full"
+                  ? "max-h-none max-w-none scale-150"
+                  : "max-h-full max-w-full"
                   }`}
                 style={{
                   transformOrigin: isImageZoomed ? `${mousePosition.x}% ${mousePosition.y}%` : 'center'
@@ -1283,33 +1285,81 @@ const ProductDetails = () => {
 
       {showCallbackModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-4 w-full max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl shadow-lg relative">
+          <div className="bg-white rounded-lg p-4 w-full max-w-sm sm:max-w-sm md:max-w-sm lg:max-w-md shadow-lg relative">
             <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-600" onClick={() => setShowCallbackModal(false)}>
               <X size={24} />
             </button>
             <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
-              <div className="flex-shrink-0 flex flex-col items-center justify-center mb-4 md:mb-0">
+              {/* <div className="flex-shrink-0 flex flex-col items-center justify-center mb-4 md:mb-0">
                 <img src="/pic.png" alt="Support" className="w-40 h-52 md:w-72 md:h-96 object-contain" />
-              </div>
+              </div> */}
               <div className="flex-1 w-full">
-                <h2 className="text-xl font-bold mb-4">Request a Callback</h2>
+                <h2 className="text-xl  text-center font-bold mb-4">Request a Callback</h2>
                 {callbackSuccess ? (
                   <div className="text-green-600 font-medium text-center">Request submitted successfully!</div>
                 ) : (
-                  <form onSubmit={handleCallbackSubmit} className="space-y-4">
+                  <form onSubmit={handleCallbackSubmit} className="space-y-5">
+
+                    {/* Name Field */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                      <input type="text" name="name" value={callbackForm.name} onChange={handleCallbackChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                      <label className="block text-sm font-medium text-gray-700 mb-1 ml-9">Name</label>
+                      <div className="flex items-center gap-3">
+
+                        <div className="text-lime-600">
+                          <User size={26} />
+                        </div>
+                        <input
+                          type="text"
+                          name="name"
+                          value={callbackForm.name}
+                          onChange={handleCallbackChange}
+                          className="flex-1 py-2 px-3 border border-gray-300 rounded-md"
+                          required
+                        />
+                      </div>
                     </div>
+
+                    {/* Email Field */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                      <input type="email" name="email" value={callbackForm.email} onChange={handleCallbackChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                      <label className="block text-sm font-medium text-gray-700 mb-1 ml-9">Email</label>
+                      <div className="flex items-center gap-3">
+                        <div className="text-lime-600">
+                          <Mail size={26} />
+                        </div>
+                        <input
+                          type="email"
+                          name="email"
+                          value={callbackForm.email}
+                          onChange={handleCallbackChange}
+                          className="flex-1 py-2 px-3 border border-gray-300 rounded-md"
+                          required
+                        />
+                      </div>
                     </div>
+
+                    {/* Phone Field */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                      <input type="tel" name="phone" value={callbackForm.phone} onChange={handleCallbackChange} className="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+                      <label className="block text-sm font-medium text-gray-700 mb-1 ml-9">Phone Number</label>
+                      <div className="flex items-center gap-3">
+                        <div className="text-lime-600">
+                          <Phone size={26} />
+                        </div>
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={callbackForm.phone}
+                          onChange={handleCallbackChange}
+                          className="flex-1 py-2 px-3 border border-gray-300 rounded-md"
+                          required
+                        />
+                      </div>
                     </div>
-                    <button type="submit" className="w-full bg-lime-500 text-white py-2 rounded-md font-medium" disabled={callbackLoading}>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-lime-500 text-white py-2 rounded-md font-medium"
+                      disabled={callbackLoading}
+                    >
                       {callbackLoading ? 'Submitting...' : 'Submit Request'}
                     </button>
                   </form>
