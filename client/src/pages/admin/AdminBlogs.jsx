@@ -320,7 +320,7 @@ const AdminBlogs = () => {
               <p className="text-gray-600 mt-2">Manage your blog posts and content</p>
             </div>
             <Link
-              to="/admin/add-blog"
+              to="/admin/blogs/add"
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus size={20} />

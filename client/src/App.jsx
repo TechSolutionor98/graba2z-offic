@@ -197,7 +197,7 @@ function App() {
                           <Route path="/track-order" element={<TrackOrder />} />
                           <Route path="/about" element={<About />} />
                           <Route path="/blogs" element={<BlogList />} />
-                          <Route path="/blog/:id" element={<BlogPost />} />
+                          <Route path="/blogs/:slug" element={<BlogPost />} />
                           <Route path="/privacy-policy" element={<PrivacyAndPolicy />} />
                           <Route path="/terms-conditions" element={<TermAndCondition />} />
                           <Route path="/refund-return" element={<RefundAndReturn />} />

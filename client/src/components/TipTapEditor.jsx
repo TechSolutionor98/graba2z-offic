@@ -6,7 +6,10 @@ import Image from "@tiptap/extension-image"
 import Link from "@tiptap/extension-link"
 import TextAlign from "@tiptap/extension-text-align"
 import Underline from "@tiptap/extension-underline"
-import { useState } from "react"
+import BulletList from "@tiptap/extension-bullet-list"
+import OrderedList from "@tiptap/extension-ordered-list"
+import ListItem from "@tiptap/extension-list-item"
+import { useState, useEffect, useRef } from "react"
 import {
   Bold,
   Italic,
@@ -27,11 +30,21 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
   const [showLinkDialog, setShowLinkDialog] = useState(false)
   const [linkUrl, setLinkUrl] = useState("")
   const [linkText, setLinkText] = useState("")
+  const [editorContent, setEditorContent] = useState(content)
+  const editorRef = useRef(null)
 
+  // Create editor instance
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bulletList: false,
+        orderedList: false,
+        listItem: false,
+      }),
       Underline,
+      BulletList,
+      OrderedList,
+      ListItem,
       Image.configure({
         HTMLAttributes: {
           class: "max-w-full h-auto rounded-lg my-4",
@@ -45,11 +58,15 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
       }),
       TextAlign.configure({
         types: ["heading", "paragraph"],
+        alignments: ['left', 'center', 'right'],
+        defaultAlignment: 'left',
       }),
     ],
-    content,
+    content: editorContent,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML())
+      const html = editor.getHTML()
+      setEditorContent(html)
+      onChange(html)
     },
     editorProps: {
       attributes: {
@@ -57,6 +74,18 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
       },
     },
   })
+
+  editorRef.current = editor
+
+  // Update editor content when content prop changes
+  useEffect(() => {
+    if (content !== editorContent) {
+      setEditorContent(content)
+      if (editorRef.current) {
+        editorRef.current.commands.setContent(content)
+      }
+    }
+  }, [content])
 
   if (!editor) {
     return null

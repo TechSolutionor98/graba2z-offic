@@ -34,10 +34,11 @@ const BlogPost = () => {
     if (blog) {
       fetchRelatedBlogs()
       fetchBlogRatings()
-      incrementViews()
+      // Remove incrementViews() call since views are incremented server-side
     }
   }, [blog])
 
+  // You can remove the incrementViews function entirely
   const fetchBlog = async () => {
     try {
       setLoading(true)
@@ -67,11 +68,12 @@ const BlogPost = () => {
   const fetchBlogRatings = async () => {
     try {
       const { data } = await axios.get(`${API_BASE_URL}/api/blog-ratings/blog/${blog._id}`)
-      setBlogRatings(data)
-
+      // Fix: Use data.ratings instead of data
+      setBlogRatings(data.ratings || [])
+  
       // Check if current user has rated this blog
       if (user) {
-        const userRatingData = data.find((r) => r.user._id === user._id)
+        const userRatingData = data.ratings?.find((r) => r.user._id === user._id)
         if (userRatingData) {
           setUserRating(userRatingData)
           setRating(userRatingData.rating)
@@ -80,6 +82,8 @@ const BlogPost = () => {
       }
     } catch (error) {
       console.error("Error fetching blog ratings:", error)
+      // Set to empty array on error
+      setBlogRatings([])
     }
   }
 
@@ -164,7 +168,8 @@ const BlogPost = () => {
   }
 
   const calculateAverageRating = () => {
-    if (blogRatings.length === 0) return 0
+    // Add safety check to ensure blogRatings is an array
+    if (!Array.isArray(blogRatings) || blogRatings.length === 0) return 0
     const sum = blogRatings.reduce((acc, rating) => acc + rating.rating, 0)
     return (sum / blogRatings.length).toFixed(1)
   }
@@ -291,7 +296,7 @@ const BlogPost = () => {
             </div>
 
             {/* Blog Content */}
-            <div className="prose prose-lg max-w-none mb-8" dangerouslySetInnerHTML={{ __html: blog.content }} />
+            <div className="prose prose-lg max-w-none mb-8" dangerouslySetInnerHTML={{ __html: blog.description }} />
 
             {/* Tags */}
             {blog.tags && blog.tags.length > 0 && (

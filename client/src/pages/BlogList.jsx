@@ -248,7 +248,7 @@ const BlogList = () => {
                   </div>
                   {/* Read More */}
                   <Link
-                    to={`/blogs/${blog._id}`}
+                    to={`/blogs/${blog.slug}`}
                     className="text-lime-600 hover:text-lime-500 hover:underline font-semibold mt-auto"
                   >
                     Read More →
