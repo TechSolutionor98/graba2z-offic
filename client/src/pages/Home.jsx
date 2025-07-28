@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import axios from "axios"
 import productCache from "../services/productCache"
-import { createSlug } from "../utils/urlUtils"
+import { createSlug, generateShopURL } from "../utils/urlUtils"
 
 
 
@@ -508,8 +508,8 @@ const Home = () => {
 
   const handleCategoryClick = (categoryName) => {
     const category = categories.find(cat => cat.name === categoryName)
-    if (category && category._id) {
-      navigate(`/shop?parentCategory=${category._id}`)
+    if (category && category.name) {
+      navigate(generateShopURL({ parentCategory: category.name }))
     } else {
       navigate(`/shop`)
     }
