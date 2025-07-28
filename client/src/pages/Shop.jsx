@@ -15,7 +15,19 @@ import Slider from 'rc-slider';
 
 const API_BASE_URL = `${config.API_URL}`
 
-
+// Define the exact parent categories to show in filters
+const PARENT_CATEGORIES = [
+  "All in one",
+  "Desktop",
+  "Monitors",
+  "Mobiles",
+  "Laptops",
+  "Printers & Copier",
+  "Routers & Switches",
+  "Projector",
+  "Accessories & Components",
+  "Networking",
+]
 
 const bounceStyle = {
   animation: "bounce 1s infinite",
@@ -350,7 +362,7 @@ const Shop = () => {
           cat.isActive !== false &&
           !cat.isDeleted &&
           !cat.name.match(/^[0-9a-fA-F]{24}$/) && // Not an ID
-          !cat.parentCategory // Only include categories without a parent
+          PARENT_CATEGORIES.includes(cat.name) // Only include predefined parent categories
 
         return isValid
       })
