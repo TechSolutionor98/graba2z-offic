@@ -92,11 +92,11 @@ const ProductCard = ({ product, isMobile = false }) => {
                     </div>
                 )}
             </div>
-            {showOldPrice && (
+            {/* {showOldPrice && (
                 <div className="text-xs text-green-600 font-medium mb-1">
                     Save {Number(basePrice - priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
                 </div>
-            )}
+            )} */}
             <div className="flex items-center mt-1">
                 {[...Array(5)].map((_, i) => (
                     <Star
