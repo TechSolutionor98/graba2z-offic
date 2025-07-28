@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPinterest } from "@fortawesome/free-brands-svg-icons"
 import { useState, useEffect } from "react"
 import axios from "axios"
+import { generateShopURL } from "../utils/urlUtils"
 
 import config from "../config/config"
 import NewsletterModal from "./NewsletterModal";
@@ -24,16 +25,47 @@ const Footer = ({ className = "" }) => {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data } = await axios.get(`${API_BASE_URL}/api/categories`)
-        setCategories(data)
-      } catch (err) {
-        setCategories([])
-      }
+  const [subCategories, setSubCategories] = useState([])
+
+  const fetchCategories = async () => {
+    try {
+      const { data } = await axios.get(`${API_BASE_URL}/api/categories`)
+      const validCategories = data.filter((cat) => {
+        const isValid =
+          cat &&
+          typeof cat === "object" &&
+          cat.name &&
+          typeof cat.name === "string" &&
+          cat.name.trim() !== "" &&
+          cat.isActive !== false &&
+          !cat.isDeleted &&
+          !cat.name.match(/^[0-9a-fA-F]{24}$/) && // Not an ID
+          !cat.parentCategory // Only include parent categories
+        return isValid
+      })
+      validCategories.sort((a, b) => a.name.localeCompare(b.name))
+      setCategories(validCategories)
+    } catch (error) {
+      console.error("Error fetching categories:", error)
     }
+  }
+
+  const fetchSubCategories = async () => {
+    try {
+      const { data } = await axios.get(`${API_BASE_URL}/api/subcategories`)
+      setSubCategories(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error("Error fetching subcategories:", error)
+    }
+  }
+
+  const getSubCategoriesForCategory = (categoryId) => {
+    return subCategories.filter((sub) => sub.category?._id === categoryId)
+  }
+
+  useEffect(() => {
     fetchCategories()
+    fetchSubCategories()
   }, [])
 
   const toggleSection = (section) => {
@@ -120,7 +152,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-2 text-white text-sm">
                 {categories.slice(0, 6).map((category) => (
                   <li key={category._id}>
-                    <Link to={`/shop?parentCategory=${category._id}`} className="hover:text-lime-400">
+                    <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
                       {category.name}
                     </Link>
                   </li>
@@ -134,7 +166,7 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-2 text-white text-sm">
                 {categories.slice(6, 12).map((category) => (
                   <li key={category._id}>
-                    <Link to={`/shop?parentCategory=${category._id}`} className="hover:text-lime-400">
+                    <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
                       {category.name}
                     </Link>
                   </li>
