@@ -74,22 +74,30 @@ export const parseShopURL = (pathname, search) => {
   // Parse pathname for category structure
   const pathParts = pathname.split('/').filter(part => part);
   
-  if (pathParts.length > 1 && pathParts[0] === 'product-category') {
-    // Extract parent category from URL
-    if (pathParts.length >= 2) {
-      params.parentCategory = pathParts[1];
+  if (pathParts.length > 0) {
+    // Handle product-category path
+    if (pathParts[0] === 'product-category') {
+      // Extract parent category from URL
+      if (pathParts.length >= 2) {
+        params.parentCategory = pathParts[1];
+      }
+      
+      // Extract subcategory from URL
+      if (pathParts.length >= 3) {
+        params.subcategory = pathParts[2];
+      }
     }
     
-    // Extract subcategory from URL
-    if (pathParts.length >= 3) {
-      params.subcategory = pathParts[2];
+    // Handle product-brand path
+    if (pathParts[0] === 'product-brand' && pathParts.length >= 2) {
+      params.brand = pathParts[1];
     }
   }
   
-  // Parse query parameters
+  // Parse query parameters (for backward compatibility)
   const searchParams = new URLSearchParams(search);
   
-  if (searchParams.has('brand')) {
+  if (searchParams.has('brand') && !params.brand) {
     params.brand = searchParams.get('brand');
   }
   

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import axios from "axios"
 import productCache from "../services/productCache"
+import { createSlug } from "../utils/urlUtils"
 
 
 
@@ -515,7 +516,7 @@ const Home = () => {
   }
 
   const handleBrandClick = (brandName) => {
-    navigate(`/shop?brand=${encodeURIComponent(brandName)}`)
+    navigate(`/product-brand/${createSlug(brandName)}`)
   }
 
   const nextSlide = () => {
