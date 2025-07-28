@@ -197,17 +197,10 @@ const Checkout = () => {
     deliveryCharge = selectedDelivery.charge
   }
 
-  // Tax calculation
-  let taxAmount = 0
-  if (tax) {
-    if (tax.type === "percentage") {
-      taxAmount = ((cartTotal + deliveryCharge) * tax.rate) / 100
-    } else {
-      taxAmount = tax.rate
-    }
-  }
+  // Tax is included in prices, no separate calculation needed
+  const taxAmount = 0
 
-  const finalTotal = cartTotal + deliveryCharge + taxAmount
+  const finalTotal = cartTotal + deliveryCharge
 
   const formatPrice = (price) => {
     return `AED ${price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`

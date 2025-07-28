@@ -40,6 +40,29 @@ export const CartProvider = ({ children }) => {
   }, [cartItems])
 
   const addToCart = (product, quantity = 1) => {
+    // Determine the correct price to use
+    const basePrice = Number(product.price) || 0
+    const offerPrice = Number(product.offerPrice) || 0
+    
+    // Logic: Use offer price if it exists and is valid, otherwise use base price
+    let finalPrice = basePrice  // Default to base price
+    
+    if (offerPrice > 0 && offerPrice < basePrice) {
+      // Valid offer price exists, use it
+      finalPrice = offerPrice
+    }
+    // If offer price is 0 or null, finalPrice remains as basePrice
+    
+    // Create cart item with correct pricing
+    const cartItem = {
+      ...product,
+      price: finalPrice,           // The price we're charging (offer price or base price)
+      originalPrice: basePrice,    // Store original price for display
+      basePrice: basePrice,        // Store base price for calculations
+      offerPrice: offerPrice || 0, // Store offer price for reference (0 if null)
+      quantity
+    }
+    
     setCartItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex((item) => item._id === product._id)
 
@@ -55,7 +78,7 @@ export const CartProvider = ({ children }) => {
       } else {
         // Item doesn't exist, add new item
         showToast(`Added ${product.name} to cart`, "success")
-        return [...prevItems, { ...product, quantity }]
+        return [...prevItems, cartItem]
       }
     })
   }
