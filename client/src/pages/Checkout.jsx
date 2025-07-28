@@ -1062,9 +1062,9 @@ const Checkout = () => {
           </div>
         )}
         {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
-        <div className="grid grid-cols-1 lg:grid-cols-4">
-        <div className="lg:col-span-3 ">
-          <div className="rounded-2xl shadow-sm p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 ">
+        <div className="lg:col-span-3 p-2 ">
+          <div className="rounded-2xl">
             {step === 1 && (
               <>
                 {deliveryType === "home" && (
@@ -1429,8 +1429,8 @@ const Checkout = () => {
         </div>
 
         {/* Order Summary Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="bg-lime-200 rounded-2xl shadow-sm p-4 sticky top-4 m-2">
+        <div className="lg:col-span-2 ">
+          <div className="bg-lime-200 rounded-2xl shadow-sm p-4 sticky mt-4 lg:m-9">
             <div className="flex items-center mb-6">
               <div className="bg-lime-100 p-2 rounded-full">
                 <Truck className="h-5 w-5 text-lime-600" />

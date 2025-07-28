@@ -59,11 +59,11 @@ const ProductDetails = () => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!showImageModal || !product) return
-      
+
       const productImages = product.galleryImages && product.galleryImages.length > 0
         ? [product.image, ...product.galleryImages.filter((img) => img)]
         : [product.image]
-      
+
       if (e.key === 'ArrowLeft') {
         setModalImageIndex(prev => prev > 0 ? prev - 1 : productImages.length - 1)
       } else if (e.key === 'ArrowRight') {
@@ -73,7 +73,7 @@ const ProductDetails = () => {
         setIsImageZoomed(false)
       }
     }
-    
+
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [showImageModal, product])
@@ -468,7 +468,7 @@ const ProductDetails = () => {
                         }
                       }}
                     >
-                      <ChevronLeft size={20} className="text-white"/>
+                      <ChevronLeft size={20} className="text-white" />
                     </button>
                   )}
                   {/* Thumbnails Row */}
@@ -476,7 +476,7 @@ const ProductDetails = () => {
                     ref={thumbnailRowRef}
                     className="flex space-x-2 overflow-x-auto hide-scrollbar w-full"
                     onScroll={e => setThumbScroll(e.target.scrollLeft)}
-                    style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >
                     {productImages.map((image, index) => (
                       <button
@@ -485,7 +485,7 @@ const ProductDetails = () => {
                         className={`flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden transition-all  ${selectedImage === index
                           ? "border-green-500 ring-2 ring-green-200"
                           : "border-gray-200 hover:border-gray-300"
-                        }`}
+                          }`}
                       >
                         <img
                           src={image || "/placeholder.svg?height=64&width=64"}
@@ -505,7 +505,7 @@ const ProductDetails = () => {
                         }
                       }}
                     >
-                      <ChevronRight size={20} className="text-white"/>
+                      <ChevronRight size={20} className="text-white" />
                     </button>
                   )}
                   <style>{`
@@ -1177,9 +1177,8 @@ const ProductDetails = () => {
                 {productImages.map((image, index) => (
                   <div
                     key={index}
-                    className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
-                      index === modalImageIndex ? 'border-lime-500' : 'border-gray-300'
-                    }`}
+                    className={`cursor-pointer border-2 rounded-lg overflow-hidden ${index === modalImageIndex ? 'border-lime-500' : 'border-gray-300'
+                      }`}
                     onClick={() => {
                       setModalImageIndex(index)
                       setIsImageZoomed(false)
@@ -1199,9 +1198,8 @@ const ProductDetails = () => {
               {productImages.map((image, index) => (
                 <div
                   key={index}
-                  className={`flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden ${
-                    index === modalImageIndex ? 'border-lime-500' : 'border-gray-300'
-                  }`}
+                  className={`flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden ${index === modalImageIndex ? 'border-lime-500' : 'border-gray-300'
+                    }`}
                   onClick={() => {
                     setModalImageIndex(index)
                     setIsImageZoomed(false)
@@ -1215,17 +1213,16 @@ const ProductDetails = () => {
                 </div>
               ))}
             </div>
-            
+
             {/* Main image area */}
             <div className="flex-1 flex items-center justify-center relative">
               <img
                 src={productImages[modalImageIndex] || "/placeholder.svg?height=600&width=600"}
                 alt={product.name}
-                className={`object-contain bg-white cursor-pointer transition-transform duration-300 ${
-                  isImageZoomed 
-                    ? "max-h-none max-w-none scale-150" 
+                className={`object-contain bg-white cursor-pointer transition-transform duration-300 ${isImageZoomed
+                    ? "max-h-none max-w-none scale-150"
                     : "max-h-full max-w-full"
-                }`}
+                  }`}
                 style={{
                   transformOrigin: isImageZoomed ? `${mousePosition.x}% ${mousePosition.y}%` : 'center'
                 }}
@@ -1247,7 +1244,7 @@ const ProductDetails = () => {
                   }
                 }}
               />
-              
+
               {/* Navigation arrows */}
               <button
                 onClick={() => setModalImageIndex(prev => prev > 0 ? prev - 1 : productImages.length - 1)}
@@ -1262,7 +1259,7 @@ const ProductDetails = () => {
                 <ChevronRight size={24} />
               </button>
             </div>
-            
+
             {/* Close button */}
             <button
               onClick={() => {
@@ -1368,18 +1365,26 @@ const ProductDetails = () => {
                           {/* Cut edges */}
                           <div className={`absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full border-2 ${color.border}`}></div>
                           <div className={`absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full border-2 ${color.border}`}></div>
-                          
+
                           {/* Mobile: Vertical Layout, Desktop: Horizontal Layout */}
                           <div className="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-4 flex-1">
                             {/* Discount Info */}
                             <div className="flex items-center justify-between md:flex-col md:items-center md:justify-center">
                               <span className="text-xs font-semibold text-gray-500 tracking-widest">GIFT COUPON</span>
-                              <span className={`text-xl font-bold flex items-center ${color.text}`}>
+                              {/* <span className={`text-xl font-bold flex items-center ${color.text}`}>
                                 <Percent className="w-4 h-4 mr-1" />
                                 {coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `AED ${coupon.discountValue}`}
+                              </span> */}
+                              <span className={`text-xl font-bold flex items-center ${color.text}`}>
+                                {coupon.discountType === "percentage" && (
+                                  <Percent className="w-4 h-4 mr-1" />
+                                )}
+                                {coupon.discountType === "percentage"
+                                  ? `${coupon.discountValue}`
+                                  : `AED ${coupon.discountValue}`}
                               </span>
                             </div>
-                            
+
                             {/* Promo Code */}
                             <div className="flex flex-col items-center flex-1">
                               <span className="block text-sm font-bold text-gray-900 mb-2">PROMO CODE</span>
@@ -1394,7 +1399,7 @@ const ProductDetails = () => {
                               </div>
                             </div>
                           </div>
-                          
+
                           {/* Details - Mobile: Full width, Desktop: Right aligned */}
                           <div className="flex flex-col md:items-end text-left md:text-right space-y-1 mt-3 md:mt-0">
                             <div className="text-xs text-gray-600 md:max-w-xs">{coupon.description}</div>
