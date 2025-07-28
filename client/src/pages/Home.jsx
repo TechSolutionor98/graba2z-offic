@@ -506,7 +506,8 @@ const Home = () => {
     }
   }, [brandCurrentIndex, brands.length])
 
-  const handleCategoryClick = (category) => {
+  const handleCategoryClick = (categoryName) => {
+    const category = categories.find(cat => cat.name === categoryName)
     if (category && category._id) {
       navigate(`/shop?parentCategory=${category._id}`)
     } else {

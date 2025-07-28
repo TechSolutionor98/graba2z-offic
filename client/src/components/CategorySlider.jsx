@@ -183,30 +183,66 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
           </button>
 
           <div
+            className="flex-1 overflow-hidden"
             ref={containerRef}
-            className="overflow-hidden flex-1 px-2"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
           >
             <div
-              className="flex transition-transform duration-300 ease-in-out"
+              className="flex items-center lg:gap-10 xl:gap-[65px] transition-transform duration-300 ease-in-out"
               style={sliderStyle}
             >
-              {visibleCategories.map((category, index) => (
+              {visibleCategories.map((category) => (
                 <button
                   key={category._id}
-                  onClick={() => onCategoryClick(category)}
+                  onClick={() => onCategoryClick(category.name)}
                   className="flex flex-col items-center group flex-shrink-0 px-1"
                   style={{
                     width: `${100 / visibleCount}%`,
                     maxWidth: "120px",
                   }}
                 >
+                  {/* <div className="flex items-center justify-center  lg:w-[160px] ">
+                    {category.image ? (
+                      <img
+                        src={category.image}
+                        alt={category.name}
+                        className="w-18 h-18 md:w-25 md:h-25 lg:w-32 lg:h-32 xl:w-44 xl:h-44  object-contain "
+                      
+                      />
+                    ) : (
+                      <div className="w-22 h-22 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full border-2 border-gray-200 flex items-center justify-center bg-gray-100">
+                        <span className="text-lg md:text-2xl">📦</span>
+                      </div>
+                    )}
+                  </div> */}
+
+                  <div
+                    className="flex items-center justify-center lg:w-[160px]"
+                    style={{ willChange: 'transform', transform: 'translateZ(0)' }}
+                  >
+                    {category.image ? (
+                      <img
+                        src={category.image}
+                        alt={category.name}
+                        width="176"
+                        height="176"
+                        loading="eager"
+                        className="w-18 h-18 md:w-25 md:h-25 lg:w-32 lg:h-32 xl:w-44 xl:h-44 object-contain"
+                      />
+                    ) : (
+                      <div className="w-22 h-22 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full border-2 border-gray-200 flex items-center justify-center bg-gray-100">
+                        <span className="text-lg md:text-2xl">📦</span>
+                      </div>
+                    )}
+                  </div>
+
                   <span className="text-xs md:text-sm font-bold text-gray-700 text-center -mt-2 lg:-mt-4 truncate">
                     {(() => {
                       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
