@@ -10,9 +10,22 @@ const ProductCard = ({ product, isMobile = false }) => {
     const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
     const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
     const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
-    const hasOffer = product.offerPrice && Number(product.offerPrice) > 0
-    const showOldPrice = hasOffer && Number(product.basePrice) > Number(product.offerPrice)
-    const priceToShow = hasOffer ? product.offerPrice : product.basePrice || product.price
+    const basePrice = Number(product.price) || 0
+    const offerPrice = Number(product.offerPrice) || 0
+    
+    // Show offer price if it exists and is less than base price
+    const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
+    const showOldPrice = hasValidOffer
+    
+    // Determine which price to display
+    let priceToShow = 0
+    if (hasValidOffer) {
+        priceToShow = offerPrice
+    } else if (basePrice > 0) {
+        priceToShow = basePrice
+    } else if (offerPrice > 0) {
+        priceToShow = offerPrice
+    }
     const rating = product.rating || 0
     const numReviews = product.numReviews || 0
     const categoryName = product.category?.name || ""
@@ -69,16 +82,21 @@ const ProductCard = ({ product, isMobile = false }) => {
                 <div className="text-xs text-gray-500 mb-1">Category: {categoryName}</div>
             )}
             <div className="text-xs text-gray-400 mb-2">Inclusive VAT</div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-1">
                 <div className="text-red-600 font-bold">
                     {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
                 </div>
                 {showOldPrice && (
-                    <div className="text-gray-400 line-through text-xs">
-                        {Number(product.basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+                    <div className="text-gray-400 line-through text-xs font-medium">
+                        {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
                     </div>
                 )}
             </div>
+            {showOldPrice && (
+                <div className="text-xs text-green-600 font-medium mb-1">
+                    Save {Number(basePrice - priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+                </div>
+            )}
             <div className="flex items-center mt-1">
                 {[...Array(5)].map((_, i) => (
                     <Star

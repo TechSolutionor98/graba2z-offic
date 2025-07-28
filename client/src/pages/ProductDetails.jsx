@@ -560,20 +560,41 @@ const ProductDetails = () => {
 
               {/* Price */}
               <div className="mb-6">
-                <div className="flex items-center space-x-3 mb-2">
-                  {product.offerPrice > 0 && product.offerPrice < product.price ? (
+                {(() => {
+                  const basePrice = Number(product.price) || 0
+                  const offerPrice = Number(product.offerPrice) || 0
+                  const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
+                  
+                  let priceToShow = 0
+                  if (hasValidOffer) {
+                    priceToShow = offerPrice
+                  } else if (basePrice > 0) {
+                    priceToShow = basePrice
+                  } else if (offerPrice > 0) {
+                    priceToShow = offerPrice
+                  }
+                  
+                  return (
                     <>
-                      <div className="text-3xl font-bold text-red-600">{formatPrice(product.offerPrice)}</div>
-                      <div className="text-xl text-gray-500 line-through">{formatPrice(product.price)}</div>
+                      <div className="flex items-center space-x-3 mb-2">
+                        <div className="text-3xl font-bold text-red-600">{formatPrice(priceToShow)}</div>
+                        {hasValidOffer && (
+                          <div className="text-xl text-gray-500 line-through font-medium">{formatPrice(basePrice)}</div>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-600">Including VAT</div>
+                      {hasValidOffer && (
+                        <div className="text-sm text-green-600 font-medium">
+                          You Save {formatPrice(basePrice - priceToShow)}
+                          {product.discount > 0 && ` (${product.discount}%)`}
+                        </div>
+                      )}
+                      {product.discount > 0 && !hasValidOffer && (
+                        <div className="text-sm text-green-600 font-medium">You Save {product.discount}%</div>
+                      )}
                     </>
-                  ) : (
-                    <div className="text-3xl font-bold text-red-600">{formatPrice(product.price)}</div>
-                  )}
-                </div>
-                <div className="text-sm text-gray-600">Including VAT</div>
-                {product.discount > 0 && (
-                  <div className="text-sm text-green-600 font-medium">You Save {product.discount}%</div>
-                )}
+                  )
+                })()}
               </div>
 
               {/* Stock Status */}

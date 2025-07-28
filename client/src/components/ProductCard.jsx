@@ -27,9 +27,22 @@ const ProductCard = ({ product }) => {
 
   // Determine which price to show
   const hasDiscount = product.discount && Number(product.discount) > 0
-  const hasOffer = product.offerPrice && Number(product.offerPrice) > 0
-  const showOldPrice = hasOffer && Number(product.basePrice) > Number(product.offerPrice)
-  const priceToShow = hasOffer ? product.offerPrice : product.basePrice || product.price
+  const basePrice = Number(product.price) || 0
+  const offerPrice = Number(product.offerPrice) || 0
+  
+  // Show offer price if it exists and is less than base price
+  const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
+  const showOldPrice = hasValidOffer
+  
+  // Determine which price to display
+  let priceToShow = 0
+  if (hasValidOffer) {
+    priceToShow = offerPrice
+  } else if (basePrice > 0) {
+    priceToShow = basePrice
+  } else if (offerPrice > 0) {
+    priceToShow = offerPrice
+  }
   const stockStatus = product.stockStatus || (product.countInStock > 0 ? 'Available' : 'Out of Stock')
 
   return (
@@ -83,9 +96,14 @@ const ProductCard = ({ product }) => {
           <div className="flex items-center space-x-2 mb-1">
             <span className="font-bold text-red-600 text-lg">{formatPrice(priceToShow)}</span>
             {showOldPrice && (
-              <span className="text-gray-500 line-through text-sm">{formatPrice(product.basePrice)}</span>
+              <span className="text-gray-400 line-through text-sm font-medium">{formatPrice(basePrice)}</span>
             )}
           </div>
+          {showOldPrice && (
+            <div className="text-xs text-green-600 font-medium mb-1">
+              Save {formatPrice(basePrice - priceToShow)}
+            </div>
+          )}
           <div className="text-xs text-gray-500 mb-1">Inclusive VAT</div>
         </div>
       </Link>
