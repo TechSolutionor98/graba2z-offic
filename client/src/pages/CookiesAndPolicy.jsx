@@ -4,145 +4,140 @@ import { EnvelopeSimple, Phone, MapPin } from 'phosphor-react';
 function CookiesAndPolicy() {
   return (
     <div className="font-poppins text-[#000000] px-4 py-12 md:px-16 bg-white min-h-screen">
-      <div className="max-w-5xl mx-auto bg-white p-6 md:p-10 rounded-lg shadow-2xl">
-        <h1 className="text-5xl font-bold text-center mb-8">Cookies Policy</h1>
+      <div className="max-w-5xl mx-auto bg-white p-6 md:p-10 rounded-lg ">
+        <h1 className="text-5xl font-bold text-center mb-8">Cookies & Tracking Technologies</h1>
 
         <div className="space-y-6 text-[17px] leading-[23px]">
           <div>
-            <h2 className="font-bold mb-2 text-3xl">Introduction</h2>
             <p className="font-normal">
-              Welcome to Grabatoz! Our website uses cookies to enhance your browsing experience and ensure the smooth functioning of our services. 
-              By continuing to use our site, you agree to our use of cookies as described in this policy.
+              Our site uses cookies and similar tracking technologies to improve user experience, security, and site functionality.
+              Cookies may be used to remember your preferences, enable shopping features, analyze site traffic, and display personalized content or advertisements.
+              You may disable cookies via your browser settings; however, some features of our site may not function properly without cookies enabled.
             </p>
           </div>
 
           <div>
-            <h2 className="font-bold mb-2 text-2xl">What Are Cookies?</h2>
+            <h2 className="font-bold text-2xl mb-2">Disclosure to Third Parties</h2>
             <p className="font-normal">
-              Cookies are small text files stored on your device (computer, tablet, or mobile) when you visit a website. 
-              They help us recognize your device and store information about your preferences or past actions.
+              We will only share your personal data with other parties, including companies and external individuals, if legal permission to do so exists.
             </p>
           </div>
 
           <div>
-            <h2 className="font-bold mb-2 text-2xl">Types of Cookies We Use</h2>
-            <ol className="list-decimal pl-4 space-y-2">
-              <li>
-                <span className="font-bold">Essential Cookies:</span>{' '}
-                <span className="font-normal">
-                  These cookies are necessary for the website to function correctly. 
-                  They enable core features such as security, network management, and accessibility.
-                </span>
-              </li>
-              <li>
-                <span className="font-bold">Performance Cookies:</span>{' '}
-                <span className="font-normal">
-                  These cookies collect information about how you use our website, such as pages visited and any errors encountered. 
-                  This helps us improve the site's functionality and user experience.
-                </span>
-              </li>
-              <li>
-                <span className="font-bold">Functional Cookies:</span>{' '}
-                <span className="font-normal">
-                  These cookies remember your preferences and settings to provide a more personalized experience, 
-                  such as your language preference or login details.
-                </span>
-              </li>
-              <li>
-                <span className="font-bold">Targeting Cookies:</span>{' '}
-                <span className="font-normal">
-                  These cookies track your browsing habits to deliver personalized advertising based on your interests. 
-                  They also help measure the effectiveness of advertising campaigns.
-                </span>
-              </li>
-            </ol>
+            <h2 className="font-bold text-2xl mb-2">Cookies in Our App</h2>
+            <p className="font-normal">
+              We utilize cookies and similar technologies within the application to enhance user experience and overall efficiency.
+              Cookies are small text files stored on your device to help with usability and performance.
+              We use session cookies (deleted after session) and permanent cookies.
+              Necessary cookies are essential for basic functions and security. Other cookies may require consent.
+            </p>
+          </div>
+
+          {/* 📸 First Image Section */}
+          <div className="rounded-lg overflow-hidden shadow mt-6">
+            <img
+              src="Privacy.jpg" // <-- Replace with actual URL
+              alt="Cookies Inside App"
+              className="w-full h-auto object-cover"
+            />
           </div>
 
           <div>
-            <h2 className="font-bold mb-2 text-2xl">How We Use Cookies</h2>
-            <ul className="list-disc pl-5 space-y-1">
+            <h2 className="font-bold text-2xl mb-2">Analysis Services</h2>
+            <ul className="list-disc pl-6 space-y-2">
               <li>
-                <span className="font-bold">To Provide Essential Services:</span>{' '}
-                <span className="font-normal">Ensuring secure login and protection against fraudulent activities.</span>
+                <strong>beaconsmind AG:</strong> Tracks app usage, user preferences, and store presence using beacon technology, with your consent.
               </li>
               <li>
-                <span className="font-bold">To Improve User Experience:</span>{' '}
-                <span className="font-normal">Analyzing site usage to enhance website performance and usability.</span>
+                <strong>Google Analytics:</strong> Provides insights to improve app features and user engagement.
               </li>
               <li>
-                <span className="font-bold">To Personalize Content:</span>{' '}
-                <span className="font-normal">Storing your preferences and login details for a customized experience.</span>
-              </li>
-              <li>
-                <span className="font-bold">To Deliver Targeted Ads:</span>{' '}
-                <span className="font-normal">Displaying relevant ads based on your browsing behavior and preferences.</span>
+                <strong>Sentry:</strong> Identifies and reports crashes or unexpected errors in the app using diagnostic information.
               </li>
             </ul>
           </div>
 
           <div>
-            <h2 className="font-bold mb-2 text-2xl">Managing Cookies</h2>
-            <p className="font-normal mb-2">
-              You can manage or disable cookies through your browser settings. However, please note that disabling cookies may affect your ability to use certain features of our website.
-            </p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>
-                <span className="font-bold">Browser Settings:</span>{' '}
-                <span className="font-normal">
-                  Most browsers allow you to control cookies through their settings preferences. 
-                  Refer to your browser’s help section for instructions on how to delete or block cookies.
-                </span>
-              </li>
-              <li>
-                <span className="font-bold">Opting Out of Targeted Advertising:</span>{' '}
-                <span className="font-normal">
-                  You can opt out of interest-based advertising through industry opt-out pages like the 
-                  Digital Advertising Alliance (DAA) or the Network Advertising Initiative (NAI).
-                </span>
-              </li>
+            <h2 className="font-bold text-2xl mb-2">Your Users' Rights</h2>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Right to information</li>
+              <li>Right to rectification or erasure</li>
+              <li>Right to restriction of processing</li>
+              <li>Right to object to processing</li>
+              <li>Right to data portability</li>
             </ul>
+            <p className="font-normal mt-2">
+              For data protection inquiries, contact: <strong>customercare@grabatoz.ae</strong>
+            </p>
           </div>
 
           <div>
-            <h2 className="font-bold mb-2 text-2xl">Third-Party Cookies</h2>
+            <h2 className="font-bold text-2xl mb-2">Email & Postal Communication</h2>
             <p className="font-normal">
-              We may also use third-party cookies provided by trusted partners to deliver targeted advertising and analytics services. 
-              These third parties have their own privacy policies and cookie practices.
+              With your consent during registration, we may send you newsletters via email or post. You can revoke consent at any time.
             </p>
           </div>
 
           <div>
-            <h2 className="font-bold mb-2 text-2xl">Changes to This Policy</h2>
-            <p className="font-normal mb-4">
-              We may update our Cookies Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. 
-              Please revisit this page periodically to stay informed about our use of cookies.
+            <h2 className="font-bold text-2xl mb-2">Links to External Websites</h2>
+            <p className="font-normal">
+              Our app may contain links to third-party websites. Once accessed, we are no longer responsible for their data collection or practices. Refer to their privacy policies.
             </p>
-            <p className="font-normal mb-4">
-              If you have any questions about our Cookies Policy, privacy practices, or any other inquiries related to your experience with Grabatoz, 
-              please feel free to reach out to us. Our customer service team is here to assist you.
+          </div>
+
+          <div>
+            <h2 className="font-bold text-2xl mb-2">Data Security</h2>
+            <p className="font-normal">
+              You are responsible for access to your device and password security. We use technical and organizational safeguards but cannot guarantee complete security during internet transmission.
             </p>
+          </div>
+
+          {/* 📸 Second Image Section */}
+          <div className="rounded-lg overflow-hidden shadow mt-6">
+            <img
+              src="data.jpg" // <-- Replace with actual URL
+              alt="Data Security Measures"
+              className="w-full h-auto object-cover"
+            />
+          </div>
+
+          <div>
+            <h2 className="font-bold text-2xl mb-2">Updates to Privacy Notice</h2>
+            <p className="font-normal">
+              This privacy notice may change due to legal, operational, or feature-related updates. Please check regularly for updates.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="font-bold text-2xl mb-2">Your Consent</h2>
+            <p className="font-normal">
+              By using grabatoz.ae, you consent to the data practices by Crown Excel General Trading LLC. Any policy changes will be posted here.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="font-bold text-2xl mb-2">Contact Details</h2>
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <EnvelopeSimple size={20} className="mt-1 text-black" />
-                <span><span className="font-bold">Email:</span> <span className="font-normal">support@grabatoz.com</span></span>
+                <span><strong>Email:</strong> customercare@grabatoz.ae</span>
               </li>
               <li className="flex items-start gap-2">
                 <Phone size={20} className="mt-1 text-black" />
-                <span><span className="font-bold">Phone:</span> <span className="font-normal">(+971) 4-354 0566</span></span>
+                <span><strong>Phone:</strong> (+971) 4-354 0566</span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin size={20} className="mt-1 text-black" />
-                <span>
-                  <span className="font-bold">Mailing Address:</span>{' '}
-                  <span className="font-normal">Grabatoz, 5 Admiral Plaza Hotel Building, Khalid Bin Waleed Road, Bur Dubai, Dubai PO Box: 241975
-                  </span>
-                </span>
+                <span><strong>Mailing Address:</strong> Grabatoz, 5 Admiral Plaza Hotel Building, Khalid Bin Waleed Road, Bur Dubai, Dubai, PO Box: 241975</span>
+              </li>
+              <li>
+                <strong>Customer Service Hours:</strong> 9:00 AM – 7:00 PM daily
               </li>
             </ul>
           </div>
 
           <p className="font-normal mt-6">
-            We value your feedback and are committed to providing the best possible service. Thank you for choosing Grabatoz!
+            We value your feedback and are committed to protecting your data. Thank you for choosing Grabatoz.
           </p>
         </div>
       </div>
