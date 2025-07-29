@@ -90,18 +90,15 @@ const ProductCard = ({ product }) => {
             </button>
           </div>
         </div>
-        <div className="p-4">
+        <div className="p-5">
           <h3 className="font-medium text-gray-900 mb-1 truncate">{product.name}</h3>
           <p className="text-gray-500 text-sm mb-2">{product.brand?.name || product.brand || 'N/A'}</p>
-          <div className="flex items-center space-x-2 mb-1">
+          <div className="mb-1">
             <span className="font-bold text-red-600 text-lg">{formatPrice(priceToShow)}</span>
-            {showOldPrice && (
-              <span className="text-gray-400 line-through text-sm font-medium">{formatPrice(basePrice)}</span>
-            )}
           </div>
           {showOldPrice && (
-            <div className="text-xs text-green-600 font-medium mb-1">
-              Save {formatPrice(basePrice - priceToShow)}
+            <div className="text-xs text-gray-400 line-through font-medium mb-1">
+              {formatPrice(basePrice)}
             </div>
           )}
           <div className="text-xs text-gray-500 mb-1">Inclusive VAT</div>

@@ -42,7 +42,7 @@ const HomeStyleProductCard = ({ product }) => {
 
 
   return (
-    <div className="border bg-white rounded-lg p-3  hover:shadow-md transition-shadow min-h-[340px] max-h-[360px] min-w-[190px] max-w-[200px] flex flex-col justify-between">
+    <div className="border bg-white rounded-lg p-3  hover:shadow-md transition-shadow min-h-[370px] max-h-[380px] min-w-[190px] max-w-[200px] flex flex-col justify-between">
       <div className="relative mb-2  flex justify-center items-center min-h-[160px] max-h-[160px]">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
@@ -98,7 +98,7 @@ const HomeStyleProductCard = ({ product }) => {
       </Link>
       {product.category && <div className="text-xs text-gray-500 mb-1">Category: {categoryName}</div>}
       <div className="text-xs text-gray-500 mb-2">Inclusive VAT</div>
-      <div className="mb-1 flex items-center gap-2">
+      <div className="mb-1">
         <div className="text-red-600 font-bold text-base md:text-lg">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
@@ -108,11 +108,6 @@ const HomeStyleProductCard = ({ product }) => {
           </div>
         )}
       </div>
-      {showOldPrice && (
-        <div className="text-xs text-green-600 font-medium mb-1">
-          Save {Number(basePrice - priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
-        </div>
-      )}
       <div className="flex items-center mt-auto">
         {[...Array(5)].map((_, i) => (
           <Star
