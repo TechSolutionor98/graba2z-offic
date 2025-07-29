@@ -163,7 +163,7 @@ const BigSaleSection = ({ products = [] }) => {
                 <div
                     className="w-full h-full bg-cover bg-center bg-no-repeat"
                     style={{
-                        backgroundImage: 'url(http://grabatoz.ae/wp-content/uploads/2025/06/slider-2-2.png)',
+                        backgroundImage: 'url(https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753795953/slider_2_pkaann.png)',
                         height: '100%',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
