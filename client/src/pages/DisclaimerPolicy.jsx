@@ -13,9 +13,9 @@ export default function DisclaimerPolicy() {
   // };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-white min-h-screen">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-12 text-center">
           <div className="flex justify-center mb-6">
             <div className="bg-lime-500 rounded-full p-4">
@@ -42,13 +42,15 @@ export default function DisclaimerPolicy() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-6 py-12">
         
         {/* Introduction */}
-        <div className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-start gap-4">
-            <FileText className="w-6 h-6 text-lime-500 mt-1 flex-shrink-0" />
-            <div>
+        <div className="bg-white rounded-lg p-1">
+          <div className="flex flex-col md:flex-row md:items-start gap-4">
+            <div className="flex justify-center md:justify-start">
+              <FileText className="w-8 h-8 text-lime-500 mt-1 flex-shrink-0" />
+            </div>
+            <div className="text-center md:text-left">
               <h2 className="text-xl font-semibold text-gray-900 mb-3">Important Notice</h2>
               <p className="text-gray-700 leading-relaxed">
                 This disclaimer policy outlines the terms and limitations of liability for Grabatoz.ae, 
@@ -60,10 +62,12 @@ export default function DisclaimerPolicy() {
         </div>
 
         {/* Limitation of Liability */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <AlertTriangle className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Limitation of Liability and Disclaimers</h2>
+        <section className="bg-white rounded-lg  mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <AlertTriangle className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Limitation of Liability and Disclaimers</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -98,10 +102,12 @@ export default function DisclaimerPolicy() {
         </section>
 
         {/* User Agreement */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <FileText className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">User Agreement and Limitation of Liability</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <FileText className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">User Agreement and Limitation of Liability</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -122,10 +128,12 @@ export default function DisclaimerPolicy() {
         </section>
 
         {/* Site Security */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <Lock className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Site Security and Acceptable Use</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <Lock className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Site Security and Acceptable Use</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -153,10 +161,12 @@ export default function DisclaimerPolicy() {
         </section>
 
         {/* Content Accuracy */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <Globe className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Content Accuracy and Updates</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <Globe className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Content Accuracy and Updates</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -180,10 +190,12 @@ export default function DisclaimerPolicy() {
         </section>
 
         {/* No Warranty */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <Shield className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">No Warranty for Travel, Shipping, or Advisory Content</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <Shield className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">No Warranty for Travel, Shipping, or Advisory Content</h2>
           </div>
           
           <div className="text-gray-700">
@@ -199,7 +211,7 @@ export default function DisclaimerPolicy() {
       </div>
 
       {/* Contact Information */}
-      <section className="bg-white text-black p-4">
+      <section className="bg-gray-50 text-black p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-semibold mb-2">Contact Information</h2>
@@ -212,7 +224,7 @@ export default function DisclaimerPolicy() {
                 <Phone className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Phone</h3>
-              <a href="tel:+97143540566" className="text-lime-400 hover:text-lime-300">
+              <a href="tel:+97143540566" className="text-lime-500">
                 +971 4 354 0566
               </a>
             </div>
@@ -222,7 +234,7 @@ export default function DisclaimerPolicy() {
                 <Mail className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Email</h3>
-              <a href="mailto:customercare@grabatoz.ae" className="text-lime-400 hover:text-lime-300">
+              <a href="mailto:customercare@grabatoz.ae" className="text-lime-500">
                 customercare@grabatoz.ae
               </a>
             </div>
