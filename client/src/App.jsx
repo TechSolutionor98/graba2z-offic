@@ -30,6 +30,7 @@ import BlogList from "./pages/BlogList"
 import BlogPost from "./pages/BlogPost"
 import PrivacyAndPolicy from "./pages/PrivacyAndPolicy"
 import ArabicContent from "./pages/ArabicContent"
+import DisclaimerPolicy from "./pages/DisclaimerPolicy"
 import TermAndCondition from "./pages/TermAndCondition"
 import RefundAndReturn from "./pages/RefundAndReturn"
 import CookiesAndPolicy from "./pages/CookiesAndPolicy"
@@ -201,6 +202,7 @@ function App() {
                           <Route path="/blogs/:slug" element={<BlogPost />} />
                           <Route path="/privacy-policy" element={<PrivacyAndPolicy />} />
                           <Route path="/privacy-policy-arabic" element={<ArabicContent />} />
+                          <Route path="/disclaimer-policy" element={<DisclaimerPolicy />} />
                           <Route path="/terms-conditions" element={<TermAndCondition />} />
                           <Route path="/refund-return" element={<RefundAndReturn />} />
                           <Route path="/cookies-policy" element={<CookiesAndPolicy />} />

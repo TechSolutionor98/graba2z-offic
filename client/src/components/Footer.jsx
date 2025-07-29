@@ -199,6 +199,11 @@ const Footer = ({ className = "" }) => {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/disclaimer-policy" className="hover:text-lime-400">
+                    Disclaimer Policy
+                  </Link>
+                </li>
+                <li>
                   <Link to="/track-order" className="hover:text-lime-400">
                     Track Order
                   </Link>
@@ -382,6 +387,11 @@ const Footer = ({ className = "" }) => {
                 <li>
                   <Link to="/privacy-policy" className="text-gray-700 hover:text-orange-500">
                     Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/disclaimer-policy" className="text-gray-700 hover:text-orange-500">
+                    Disclaimer Policy
                   </Link>
                 </li>
                 <li>
