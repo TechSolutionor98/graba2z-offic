@@ -107,8 +107,8 @@ router.post(
     if (coupon.categories && coupon.categories.length > 0) {
       // Category-specific coupon
       for (const item of cartItems) {
-        const product = await Product.findById(item.product).populate("category")
-        if (product && product.category && coupon.categories.some(c => c._id.toString() === product.category._id.toString())) {
+        const product = await Product.findById(item.product).populate("parentCategory")
+        if (product && product.parentCategory && coupon.categories.some(c => c._id.toString() === product.parentCategory._id.toString())) {
           eligibleItems.push(item)
           totalEligibleAmount += product.price * item.qty
         }
@@ -128,15 +128,15 @@ router.post(
       res.status(400)
       throw new Error(
         coupon.categories && coupon.categories.length > 0
-          ? `This coupon is only valid for: ${coupon.categories.map(c => c.name).join(", ")}`
+          ? `This coupon is only valid for products in: ${coupon.categories.map(c => c.name).join(", ")}. None of your cart items belong to these categories.`
           : "No eligible items in cart"
       )
     }
 
     // Check minimum order amount
-    if (coupon.minimumAmount && totalEligibleAmount < coupon.minimumAmount) {
+    if (coupon.minOrderAmount && totalEligibleAmount < coupon.minOrderAmount) {
       res.status(400)
-      throw new Error(`Minimum order amount of ${coupon.minimumAmount} required for this coupon`)
+      throw new Error(`Minimum order amount of ${coupon.minOrderAmount} required for this coupon`)
     }
 
     // Calculate discount

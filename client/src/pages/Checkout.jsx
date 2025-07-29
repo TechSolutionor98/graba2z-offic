@@ -108,7 +108,7 @@ if (typeof document !== "undefined" && !document.getElementById("bounce-keyframe
 
 const Checkout = () => {
   const navigate = useNavigate()
-  const { cartItems, cartTotal, clearCart, calculateFinalTotal, deliveryOptions, setDeliveryOptions, selectedDelivery, setSelectedDelivery } = useCart()
+  const { cartItems, cartTotal, clearCart, calculateFinalTotal, deliveryOptions, setDeliveryOptions, selectedDelivery, setSelectedDelivery, coupon, setCoupon, couponDiscount, setCouponDiscount } = useCart()
   const { user } = useAuth()
   const location = useLocation()
 
@@ -190,6 +190,9 @@ const Checkout = () => {
     cardholderName: "",
   })
   const [customerNotes, setCustomerNotes] = useState("")
+  const [couponInput, setCouponInput] = useState("")
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [couponError, setCouponError] = useState("")
 
   // Delivery charge logic (dynamic)
   let deliveryCharge = 0
@@ -198,12 +201,93 @@ const Checkout = () => {
   }
 
   // Tax is included in prices, no separate calculation needed
-  const taxAmount = 0
+  const taxAmount = "included"
 
-  const finalTotal = cartTotal + deliveryCharge
+  const finalTotal = cartTotal + deliveryCharge - couponDiscount
 
   const formatPrice = (price) => {
     return `AED ${price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+  }
+
+  // Helper function to get pricing details for an item
+  const getItemPricingDetails = (item) => {
+    const basePrice = Number(item.originalPrice || item.basePrice) || 0
+    const currentPrice = Number(item.price) || 0
+    const offerPrice = Number(item.offerPrice) || 0
+    
+    // Determine the actual prices to display
+    let actualBasePrice = basePrice
+    let actualCurrentPrice = currentPrice
+    
+    // If we have both base price and offer price, and offer price is valid
+    if (basePrice > 0 && offerPrice > 0 && offerPrice < basePrice) {
+      // We have a valid discount
+      actualBasePrice = basePrice
+      actualCurrentPrice = offerPrice
+    } else if (basePrice > 0) {
+      // No valid offer, use base price
+      actualBasePrice = basePrice
+      actualCurrentPrice = basePrice
+    } else {
+      // Fallback to current price
+      actualBasePrice = currentPrice
+      actualCurrentPrice = currentPrice
+    }
+    
+    const savings = actualBasePrice > actualCurrentPrice ? actualBasePrice - actualCurrentPrice : 0
+    const discountPercentage = savings > 0 ? Math.round((savings / actualBasePrice) * 100) : 0
+    
+    return {
+      basePrice: actualBasePrice,
+      currentPrice: actualCurrentPrice,
+      savings,
+      discountPercentage,
+      hasDiscount: savings > 0
+    }
+  }
+
+  // Calculate detailed cart totals
+  const calculateCartTotals = () => {
+    let totalBasePrice = 0
+    let totalOfferPrice = 0
+    let totalSavings = 0
+    
+    cartItems.forEach(item => {
+      const pricingDetails = getItemPricingDetails(item)
+      totalBasePrice += pricingDetails.basePrice * item.quantity
+      totalOfferPrice += pricingDetails.currentPrice * item.quantity
+      totalSavings += pricingDetails.savings * item.quantity
+    })
+    
+    return {
+      totalBasePrice,
+      totalOfferPrice,
+      totalSavings
+    }
+  }
+
+  const cartTotals = calculateCartTotals()
+
+  // Coupon logic
+  const handleApplyCoupon = async () => {
+    setCouponLoading(true)
+    setCouponError("")
+    try {
+      const cartApiItems = cartItems.map(item => ({ product: item._id, qty: item.quantity }))
+      const { data } = await axios.post(`${config.API_URL}/api/coupons/validate`, {
+        code: couponInput,
+        cartItems: cartApiItems,
+      })
+      setCoupon(data.coupon)
+      setCouponDiscount(data.discountAmount)
+      setCouponError("")
+    } catch (err) {
+      setCoupon(null)
+      setCouponDiscount(0)
+      setCouponError(err.response?.data?.message || "Invalid coupon")
+    } finally {
+      setCouponLoading(false)
+    }
   }
 
   const handleChange = (e) => {
@@ -286,7 +370,7 @@ const Checkout = () => {
       },
       tax_amount: {
         amount: taxAmount,
-        currency: "AED",
+       
       },
       order_reference_id: `ORDER_${Date.now()}`,
       order_number: `ORD_${Date.now()}`,
@@ -524,7 +608,7 @@ const Checkout = () => {
           },
           tax_amount: {
             amount: taxAmount,
-            currency: "AED",
+            
           },
           order_reference_id: orderId,
           order_number: `ORD_${orderId}`,
@@ -1475,25 +1559,112 @@ const Checkout = () => {
             </div>
 
             <div className="space-y-3">
+              {/* Detailed Price Breakdown */}
+              {cartTotals.totalBasePrice > cartTotals.totalOfferPrice && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Base Price Total</span>
+                    <span className="text-gray-500 line-through">{formatPrice(cartTotals.totalBasePrice)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Our Offer Price</span>
+                    <span className="text-red-600 font-medium">{formatPrice(cartTotals.totalOfferPrice)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span className="font-medium">You Save</span>
+                    <span className="font-medium">- {formatPrice(cartTotals.totalSavings)}</span>
+                  </div>
+                  <div className="border-t pt-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Subtotal</span>
+                      <span className="text-black font-medium">{formatPrice(cartTotal)}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              {/* Simple subtotal when no discounts */}
+              {cartTotals.totalBasePrice <= cartTotals.totalOfferPrice && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="text-black">{formatPrice(cartTotal)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between text-sm">
-                <span className="text-black">Subtotal</span>
-                <span className="text-black">{formatPrice(cartTotal)}</span>
+                <span className="text-gray-600">Shipping</span>
+                <span className="text-black">{deliveryCharge === 0 ? 'Free' : formatPrice(deliveryCharge)}</span>
               </div>
 
               <div className="flex justify-between text-sm">
-                <span className="text-black">Delivery Charge</span>
-                <span className="text-black">Included</span>
+                <span className="text-gray-600">VAT Included</span>
+                <span className="text-gray-600">✓</span>
               </div>
 
-              <div className="flex justify-between text-sm">
-                <span className="text-black">Tax</span>
-                <span className="text-black">{formatPrice(taxAmount)}</span>
+              {/* Coupon Section */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 border rounded-lg px-3 py-2 text-sm"
+                    placeholder="Enter coupon code"
+                    value={coupon ? coupon.code : couponInput}
+                    onChange={e => setCouponInput(e.target.value)}
+                    disabled={!!coupon}
+                  />
+                  {!coupon ? (
+                    <button
+                      className="bg-lime-500 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponInput}
+                    >
+                      {couponLoading ? "Applying..." : "Apply"}
+                    </button>
+                  ) : (
+                    <button
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm"
+                      onClick={() => {
+                        setCoupon(null);
+                        setCouponDiscount(0);
+                        setCouponInput("");
+                        setCouponError("");
+                      }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {couponError && <div className="text-red-500 text-xs">{couponError}</div>}
+                {coupon && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Coupon: {coupon.code}</span>
+                    <span>- {formatPrice(couponDiscount)}</span>
+                  </div>
+                )}
               </div>
 
-              <div className="border-t pt-3 flex justify-between font-medium">
-                <span className="text-back">Total</span>
-                <span className="text-black text-lg">{formatPrice(finalTotal)}</span>
+              <div className="border-t pt-3 flex justify-between font-bold text-lg">
+                <span className="text-black">Total Amount</span>
+                <span className="text-black">{formatPrice(finalTotal)}</span>
               </div>
+
+              {/* Free shipping message */}
+              {cartTotal < 500 && cartTotal > 0 && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    Purchase for {formatPrice(500 - cartTotal)} or more to enable free shipping
+                  </p>
+                </div>
+              )}
+
+              {cartTotal >= 500 && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                  <span className="text-lg">🎉</span>
+                  <p className="text-sm text-green-700 font-medium">
+                    You qualify for free shipping!
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 bg-gray-50 p-4 rounded-lg">
