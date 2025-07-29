@@ -732,7 +732,7 @@ const Home = () => {
             <img src="Untitled-1.png" alt="Image 1" className="w-full h-auto rounded-lg cover" />
           </div>
           <div className="w-1/3 lg:w-1/3">
-            <img src="Untitled-123.png" alt="Image 2" className="w-full h-auto rounded-lg cover" />
+            <img src="acer 2.png" alt="Image 2" className="w-full h-auto rounded-lg cover" />
           </div>
           <div className="w-1/3 lg:w-1/3 hidden lg:block">
             <img src="asus-2.png" alt="Image 3" className="w-full h-auto rounded-lg cover" />
