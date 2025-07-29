@@ -1,12 +1,30 @@
 "use client";
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function PrivacyPolicy() {
+  const navigate = useNavigate();
+
+  const handleArabicClick = () => {
+    navigate('/privacy-policy-arabic');
+  };
+
   return (
     <div className="bg-white min-h-screen px-4 md:px-12 py-10 font-sans text-gray-800">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-4xl font-bold mb-6 text-center">Privacy Policy</h1>
+        
+        {/* Language Switch Button */}
+        <div className="flex justify-center mb-8">
+          <button
+            onClick={handleArabicClick}
+            className="bg-lime-500  text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
+          >
+            <span>العربية</span>
+            <span>Arabic</span>
+          </button>
+        </div>
 
         <section className="space-y-6 text-base leading-relaxed">
           <p>
