@@ -12,9 +12,9 @@ export default function PrivacyPolicy() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-white min-h-screen">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-6 py-12 text-center">
           <div className="flex justify-center mb-6">
             <div className="bg-lime-500 rounded-full p-4">
@@ -41,13 +41,15 @@ export default function PrivacyPolicy() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-6xl mx-auto px-6 py-12">
         
         {/* Introduction */}
-        <div className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-start gap-4">
-            <FileText className="w-6 h-6 text-lime-500 mt-1 flex-shrink-0" />
-            <div>
+        <div className="bg-white rounded-lg p-1">
+          <div className="flex flex-col md:flex-row md:items-start gap-4">
+            <div className="flex justify-center md:justify-start">
+              <FileText className="w-8 h-8 text-lime-500 mt-1 flex-shrink-0" />
+            </div>
+            <div className="text-center md:text-left">
               <h2 className="text-xl font-semibold text-gray-900 mb-3">Important Notice</h2>
               <p className="text-gray-700 leading-relaxed">
                 Grabatoz, powered by Crown Excel General Trading LLC ("we," "us," or "our"), respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, and protect your information when you use our website grabatoz.ae and related services.
@@ -57,10 +59,12 @@ export default function PrivacyPolicy() {
         </div>
 
         {/* Privacy Images */}
-        <div className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <Eye className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Privacy Overview</h2>
+        <div className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3">
+            <div className="flex justify-center md:justify-start">
+              {/* <Eye className="w-8 h-8 text-lime-500" /> */}
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"></h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="relative">
@@ -87,10 +91,12 @@ export default function PrivacyPolicy() {
         </div>
 
         {/* Account and Registration */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <Users className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Account and Registration Obligations</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <Users className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Account and Registration Obligations</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -109,10 +115,12 @@ export default function PrivacyPolicy() {
         </section>
 
         {/* Privacy Commitment */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <Shield className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Your Privacy – Our Commitment</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <Shield className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Your Privacy – Our Commitment</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -133,10 +141,12 @@ export default function PrivacyPolicy() {
         </section>
 
         {/* Information Collection */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <Database className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Information We Collect</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <Database className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Information We Collect</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -168,10 +178,12 @@ export default function PrivacyPolicy() {
         </section>
 
         {/* Credit Card Security */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <CreditCard className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Credit/Debit Card Security</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <CreditCard className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Credit/Debit Card Security</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -189,10 +201,12 @@ export default function PrivacyPolicy() {
         </section>
 
         {/* Use of Information */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <Globe className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Use of Your Information</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <Globe className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Use of Your Information</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -229,10 +243,12 @@ export default function PrivacyPolicy() {
         </section>
 
         {/* Data Security */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <Lock className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Data Security and Your Rights</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <Lock className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Data Security and Your Rights</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -243,9 +259,9 @@ export default function PrivacyPolicy() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               <div className="relative">
                 <img 
-                  src="https://images.unsplash.com/photo-1614064641938-3bbee52942c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" 
+                  src="security.jpg" 
                   alt="Data Security" 
-                  className="rounded-lg shadow-md object-cover w-full h-32"
+                  className="rounded-lg shadow-md object-cover w-full h-48"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center">
                   <p className="text-white font-semibold">Secure Servers</p>
@@ -253,9 +269,9 @@ export default function PrivacyPolicy() {
               </div>
               <div className="relative">
                 <img 
-                  src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" 
+                  src="Rights.jpg" 
                   alt="User Rights" 
-                  className="rounded-lg shadow-md object-cover w-full h-32"
+                  className="rounded-lg shadow-md object-cover w-full h-48"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center">
                   <p className="text-white font-semibold">User Rights</p>
@@ -285,10 +301,12 @@ export default function PrivacyPolicy() {
         </section>
 
         {/* Updates and Contact */}
-        <section className="bg-white rounded-lg shadow-sm p-8 mb-8 border border-gray-200">
-          <div className="flex items-center gap-3 mb-6">
-            <FileText className="w-6 h-6 text-lime-500" />
-            <h2 className="text-2xl font-semibold text-gray-900">Updates and Your Consent</h2>
+        <section className="bg-white rounded-lg mt-5 p-1">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+            <div className="flex justify-center md:justify-start">
+              <FileText className="w-8 h-8 text-lime-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Updates and Your Consent</h2>
           </div>
           
           <div className="space-y-4 text-gray-700">
@@ -304,7 +322,7 @@ export default function PrivacyPolicy() {
       </div>
 
       {/* Contact Information */}
-      <section className="bg-white text-black p-4">
+      <section className="bg-gray-50 text-black p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-semibold mb-2">Contact Information</h2>
@@ -317,7 +335,7 @@ export default function PrivacyPolicy() {
                 <Phone className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Phone</h3>
-              <a href="tel:+97143540566" className="text-lime-400 hover:text-lime-300">
+              <a href="tel:+97143540566" className="text-black hover:text-lime-500">
                 +971 4 354 0566
               </a>
             </div>
@@ -327,7 +345,7 @@ export default function PrivacyPolicy() {
                 <Mail className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Email</h3>
-              <a href="mailto:customercare@grabatoz.ae" className="text-lime-400 hover:text-lime-300">
+              <a href="mailto:customercare@grabatoz.ae" className="text-black hover:text-lime-500">
                 customercare@grabatoz.ae
               </a>
             </div>
@@ -337,7 +355,7 @@ export default function PrivacyPolicy() {
                 <Clock className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Hours</h3>
-              <p className="text-lime-500">Daily 9:00 AM - 7:00 PM</p>
+              <p className="text-black hover:text-lime-500">Daily 9:00 AM - 7:00 PM</p>
             </div>
             
             <div className="text-center">
@@ -345,7 +363,7 @@ export default function PrivacyPolicy() {
                 <MapPin className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Address</h3>
-              <p className="text-lime-500">P.O. Box 241975, Dubai, UAE</p>
+              <p className="text-black hover:text-lime-500">P.O. Box 241975, Dubai, UAE</p>
             </div>
           </div>
           

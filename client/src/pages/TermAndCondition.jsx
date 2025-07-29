@@ -87,126 +87,255 @@
 // export default TermsAndConditions;
 
 
+"use client";
+
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Shield, FileText, Users, CreditCard, Globe, Phone, Mail, MapPin, Clock } from "lucide-react";
 
-const sections = [
-  {
-    title: "1. Membership Eligibility",
-    content: (
-      <ul className="list-disc pl-6 space-y-2">
-        <li>Only individuals legally eligible to enter contracts as per UAE law can use our services.</li>
-        <li>Users under 18 must use the site under supervision of a parent or guardian who agrees to the terms.</li>
-        <li>Access may be terminated if users violate terms or provide false information.</li>
-        <li>Users outside the UAE are responsible for complying with local laws.</li>
-      </ul>
-    ),
-    image: "https://via.placeholder.com/400x300?text=Membership",
-  },
-  {
-    title: "2. Account & Registration",
-    content: (
-      <ul className="list-disc pl-6 space-y-2">
-        <li>Keep your account credentials secure and confidential.</li>
-        <li>Provide accurate registration details and keep them updated.</li>
-        <li>Report unauthorized account access immediately.</li>
-        <li>False or misleading info may lead to account suspension.</li>
-      </ul>
-    ),
-    image: "https://via.placeholder.com/400x300?text=Account",
-  },
-  {
-    title: "3. Pricing & Orders",
-    content: (
-      <ul className="list-disc pl-6 space-y-2">
-        <li>Errors in price or product info may result in cancellation.</li>
-        <li>You will be notified before dispatch if any discrepancy arises.</li>
-        <li>Prices may change without notice.</li>
-        <li>Refunds are processed via original payment methods only.</li>
-      </ul>
-    ),
-    image: "https://via.placeholder.com/400x300?text=Pricing",
-  },
-  {
-    title: "4. Product Display & Communication",
-    content: (
-      <>
-        <p>
-          Colors may differ due to device settings. Refer to detailed product specs before buying. Use support tools like chat or callback for clarity.
-        </p>
-        <p className="mt-4">
-          By using Grabatoz.ae, you consent to receive emails and electronic communications from us.
-        </p>
-      </>
-    ),
-    image: "https://via.placeholder.com/400x300?text=Display",
-  },
-  {
-    title: "5. Contact Information",
-    content: (
-      <p>
-        Grabatoz.ae<br />
-        Powered by Crown Excel General Trading LLC<br />
-        P.O. Box No: 241975, Dubai, UAE<br />
-        📞 Tel: +971 4 354 0566<br />
-        ✉️ Email: customercare@grabatoz.ae<br />
-        🕒 Service Hours: 9:00 AM to 7:00 PM Daily
-      </p>
-    ),
-    image: "https://via.placeholder.com/400x300?text=Contact",
-  },
-];
+export default function TermsAndConditions() {
+  const navigate = useNavigate();
 
-function TermsAndConditions() {
+  // Future functionality for Arabic version
+  // const handleArabicClick = () => {
+  //   navigate('/terms-conditions-arabic');
+  // };
+
   return (
-    <div className="bg-white font-poppins min-h-screen px-4 md:px-16 py-12">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-10 text-gray-900">
-          Terms & Conditions
-        </h1>
-
-        {/* Introduction */}
-        <div className="mb-14 text-[17px] leading-[26px] text-gray-800 max-w-4xl mx-auto text-center">
-          <p>
-            Welcome to Grabatoz.ae, a service by Crown Excel General Trading LLC.
-            By using our site, you agree to the following terms and conditions.
-            Your order is treated as an "offer" and is only accepted upon dispatch of products.
-          </p>
-        </div>
-
-        {/* Sections with alternating image/text layout */}
-        {sections.map((section, index) => (
-          <div
-            key={index}
-            className={`grid md:grid-cols-2 gap-8 items-center mb-16 ${
-              index % 2 === 1 ? "md:flex-row-reverse" : ""
-            }`}
-          >
-            {/* Image */}
-            <div className="w-full">
-              <img
-                src={section.image}
-                alt={section.title}
-                className="rounded-lg w-full object-cover"
-              />
-            </div>
-
-            {/* Content */}
-            <div className="text-gray-800 text-[17px] leading-[26px]">
-              <h2 className="text-2xl font-semibold mb-4">{section.title}</h2>
-              {section.content}
+    <div className="bg-white min-h-screen">
+      {/* Header */}
+      <div className="bg-gray-50 border-b border-gray-200">
+        <div className="max-w-4xl mx-auto px-6 py-12 text-center">
+          <div className="flex justify-center mb-6">
+            <div className="bg-lime-500 rounded-full p-4">
+              <Shield className="w-12 h-12 text-white" />
             </div>
           </div>
-        ))}
-
-        {/* Final Note */}
-        <div className="text-center text-[16px] text-gray-600 mt-10">
-          <p>
-            These terms may change without notice. Continued use of Grabatoz.ae confirms your acceptance.
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Terms & Conditions
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Welcome to Grabatoz.ae, a service by Crown Excel General Trading LLC. Understanding our terms and your rights when using our services.
           </p>
+          
+          {/* Language Switch Button - Commented out until Arabic version is created */}
+          {/* <div className="flex justify-center mt-6">
+            <button
+              onClick={handleArabicClick}
+              className="bg-lime-500 hover:bg-lime-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+            >
+              العربية Arabic
+            </button>
+          </div> */}
         </div>
       </div>
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        
+        {/* Introduction */}
+        <div className="bg-white rounded-lg p-1">
+          <div className="flex flex-col md:flex-row md:items-start gap-4">
+            <div className="flex justify-center md:justify-start">
+              <FileText className="w-8 h-8 text-lime-500 mt-1 flex-shrink-0" />
+            </div>
+            <div className="text-center md:text-left">
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Important Notice</h2>
+              <p className="text-gray-700 leading-relaxed">
+                By using our site, you agree to the following terms and conditions.
+                Your order is treated as an "offer" and is only accepted upon dispatch of products.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Membership Eligibility */}
+        <section className="bg-white rounded-lg mt-5 ">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+                <div className="flex justify-center md:justify-start">
+                  <Users className="w-8 h-8 text-lime-500" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">1. Membership Eligibility</h2>
+              </div>
+              
+              <div className="space-y-4 text-gray-700">
+                <ul className="list-disc list-inside space-y-2 ml-4">
+                  <li>Only individuals legally eligible to enter contracts as per UAE law can use our services.</li>
+                  <li>Users under 18 must use the site under supervision of a parent or guardian who agrees to the terms.</li>
+                  <li>Access may be terminated if users violate terms or provide false information.</li>
+                  <li>Users outside the UAE are responsible for complying with local laws.</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="relative">
+              <img 
+                src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                alt="Membership and Legal Compliance" 
+                className="rounded-lg shadow-md object-cover w-full h-64"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
+            </div>
+          </div>
+        </section>
+
+        {/* Account & Registration */}
+        <section className="bg-white rounded-lg mt-5 ">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="relative md:order-2">
+              <img 
+                src="https://images.unsplash.com/photo-1633265486064-086b219458ec?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                alt="Account Security and Registration" 
+                className="rounded-lg shadow-md object-cover w-full h-64"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
+            </div>
+            
+            <div className="md:order-1">
+              <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+                <div className="flex justify-center md:justify-start">
+                  <FileText className="w-8 h-8 text-lime-500" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">2. Account & Registration</h2>
+              </div>
+              
+              <div className="space-y-4 text-gray-700">
+                <ul className="list-disc list-inside space-y-2 ml-4">
+                  <li>Keep your account credentials secure and confidential.</li>
+                  <li>Provide accurate registration details and keep them updated.</li>
+                  <li>Report unauthorized account access immediately.</li>
+                  <li>False or misleading info may lead to account suspension.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing & Orders */}
+        <section className="bg-white rounded-lg mt-5 ">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+                <div className="flex justify-center md:justify-start">
+                  <CreditCard className="w-8 h-8 text-lime-500" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">3. Pricing & Orders</h2>
+              </div>
+              
+              <div className="space-y-4 text-gray-700">
+                <ul className="list-disc list-inside space-y-2 ml-4">
+                  <li>Errors in price or product info may result in cancellation.</li>
+                  <li>You will be notified before dispatch if any discrepancy arises.</li>
+                  <li>Prices may change without notice.</li>
+                  <li>Refunds are processed via original payment methods only.</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="relative">
+              <img 
+                src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                alt="Pricing and Payment Processing" 
+                className="rounded-lg shadow-md object-cover w-full h-64"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
+            </div>
+          </div>
+        </section>
+
+        {/* Product Display & Communication */}
+        <section className="bg-white rounded-lg mt-5 ">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="relative md:order-2">
+              <img 
+                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
+                alt="Product Display and Communication" 
+                className="rounded-lg shadow-md object-cover w-full h-64"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
+            </div>
+            
+            <div className="md:order-1">
+              <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
+                <div className="flex justify-center md:justify-start">
+                  <Globe className="w-8 h-8 text-lime-500" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">4. Product Display & Communication</h2>
+              </div>
+              
+              <div className="space-y-4 text-gray-700">
+                <p>
+                  Colors may differ due to device settings. Refer to detailed product specs before buying. Use support tools like chat or callback for clarity.
+                </p>
+                <p>
+                  By using Grabatoz.ae, you consent to receive emails and electronic communications from us.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Final Note */}
+      
+
+      </div>
+
+      {/* Contact Information */}
+      <section className="bg-gray-50 text-black p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-semibold mb-2">Contact Information</h2>
+            <p className="text-black">Get in touch with our team for any questions or concerns</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <Phone className="w-5 h-5 text-lime-500" />
+              </div>
+              <h3 className="font-medium mb-1">Phone</h3>
+              <a href="tel:+97143540566" className="text-lime-500">
+                +971 4 354 0566
+              </a>
+            </div>
+            
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <Mail className="w-5 h-5 text-lime-500" />
+              </div>
+              <h3 className="font-medium mb-1">Email</h3>
+              <a href="mailto:customercare@grabatoz.ae" className="text-lime-500">
+                customercare@grabatoz.ae
+              </a>
+            </div>
+            
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <Clock className="w-5 h-5 text-lime-500" />
+              </div>
+              <h3 className="font-medium mb-1">Hours</h3>
+              <p className="text-lime-500">Daily 9:00 AM - 7:00 PM</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <MapPin className="w-5 h-5 text-lime-500" />
+              </div>
+              <h3 className="font-medium mb-1">Address</h3>
+              <p className="text-lime-500">P.O. Box 241975, Dubai, UAE</p>
+            </div>
+          </div>
+          
+          <div className="text-center pt-4 border-t border-gray-700">
+            <p className="text-black">
+              <strong>Grabatoz.ae</strong><br />
+              <b>Powered by Crown Excel General Trading LLC</b>
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
-
-export default TermsAndConditions;
