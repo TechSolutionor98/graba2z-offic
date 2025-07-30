@@ -1074,6 +1074,26 @@ export const sendNewsletterConfirmation = async (email, preferences) => {
   await sendEmail(email, "Newsletter Subscription Confirmed - Graba2z", html, "support");
 };
 
+export const sendResetPasswordEmail = async (email, name, resetLink) => {
+  try {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #eee; padding: 32px;">
+        <h2 style="color: #2c3e50;">Reset Your Password</h2>
+        <p>Hi ${name || "User"},</p>
+        <p>We received a request to reset your password. Click the button below to set a new password. This link is valid for 60 minutes.</p>
+        <a href="${resetLink}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: #84cc16; color: #fff; border-radius: 4px; text-decoration: none; font-weight: bold;">Reset Password</a>
+        <p>If you did not request this, you can safely ignore this email.</p>
+        <p style="color: #888; font-size: 12px; margin-top: 32px;">&copy; ${new Date().getFullYear()} Graba2z</p>
+      </div>
+    `;
+    await sendEmail(email, "Reset Your Password - Graba2z", html, "support");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to send reset password email:", error);
+    throw error;
+  }
+};
+
 export { sendEmail };
 
 export default {

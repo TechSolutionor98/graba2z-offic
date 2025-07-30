@@ -41,6 +41,8 @@ import GuestOrder from "./pages/GuestOrder";
 import Guest from "./pages/Guest"
 import PaymentSuccess from "./pages/PaymentSuccess"
 import PaymentCancel from "./pages/PaymentCancel"
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Import admin pages
 import AdminLogin from "./pages/admin/AdminLogin"
@@ -231,6 +233,8 @@ function App() {
                           <Route path="/guest-order" element={<GuestOrder />} />
                           <Route path="/payment/success" element={<PaymentSuccess />} />
                           <Route path="/payment/cancel" element={<PaymentCancel />} />
+                          <Route path="/forgot-password" element={<ForgotPassword />} />
+                          <Route path="/reset-password" element={<ResetPassword />} />
                           {/* Protected Routes */}
                           <Route
                             path="/checkout"

@@ -4,6 +4,7 @@ import User from "../models/userModel.js"
 import generateToken from "../utils/generateToken.js"
 import { protect } from "../middleware/authMiddleware.js"
 import { sendVerificationEmail } from "../utils/emailService.js"
+import { sendResetPasswordEmail } from "../utils/emailService.js"
 
 const router = express.Router()
 
@@ -165,6 +166,51 @@ router.post(
     }
   }),
 )
+
+// @desc    Forgot password - send reset link
+// @route   POST /api/users/forgot-password
+// @access  Public
+router.post(
+  "/forgot-password",
+  asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Always respond with success to prevent email enumeration
+      return res.json({ message: "If this email is registered, a reset link has been sent." });
+    }
+    const resetToken = user.generatePasswordResetToken();
+    // Set expiry to 60 minutes
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000);
+    await user.save();
+    const resetLink = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password?token=${resetToken}`;
+    await sendResetPasswordEmail(user.email, user.name, resetLink);
+    res.json({ message: "If this email is registered, a reset link has been sent." });
+  })
+);
+
+// @desc    Reset password
+// @route   POST /api/users/reset-password
+// @access  Public
+router.post(
+  "/reset-password",
+  asyncHandler(async (req, res) => {
+    const { token, password } = req.body;
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+    if (!user) {
+      res.status(400);
+      throw new Error("Invalid or expired reset token");
+    }
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+    res.json({ message: "Password has been reset successfully." });
+  })
+);
 
 // @desc    Get user profile
 // @route   GET /api/users/profile

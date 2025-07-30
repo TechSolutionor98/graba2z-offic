@@ -67,6 +67,18 @@ export const authAPI = {
       body: JSON.stringify({ email }),
     }),
 
+  forgotPassword: (email) =>
+    apiRequest("/api/users/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (token, password) =>
+    apiRequest("/api/users/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    }),
+
   getProfile: () => apiRequest("/api/users/profile"),
 
   updateProfile: (profileData) =>
