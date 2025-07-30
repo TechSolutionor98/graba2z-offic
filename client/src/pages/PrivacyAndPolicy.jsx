@@ -335,7 +335,7 @@ export default function PrivacyPolicy() {
                 <Phone className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Phone</h3>
-              <a href="tel:+97143540566" className="text-black hover:text-lime-500">
+              <a href="tel:+97143540566" className="text-lime-500">
                 +971 4 354 0566
               </a>
             </div>
@@ -345,7 +345,7 @@ export default function PrivacyPolicy() {
                 <Mail className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Email</h3>
-              <a href="mailto:customercare@grabatoz.ae" className="text-black hover:text-lime-500">
+              <a href="mailto:customercare@grabatoz.ae" className="text-lime-500">
                 customercare@grabatoz.ae
               </a>
             </div>
@@ -355,7 +355,7 @@ export default function PrivacyPolicy() {
                 <Clock className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Hours</h3>
-              <p className="text-black hover:text-lime-500">Daily 9:00 AM - 7:00 PM</p>
+              <p className="text-lime-500">Daily 9:00 AM - 7:00 PM</p>
             </div>
             
             <div className="text-center">
@@ -363,7 +363,7 @@ export default function PrivacyPolicy() {
                 <MapPin className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Address</h3>
-              <p className="text-black hover:text-lime-500">P.O. Box 241975, Dubai, UAE</p>
+              <p className="text-lime-500">P.O. Box 241975, Dubai, UAE</p>
             </div>
           </div>
           

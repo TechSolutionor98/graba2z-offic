@@ -104,7 +104,7 @@ const Footer = ({ className = "" }) => {
                     <input
                       type="email"
                       placeholder="Enter your email address"
-                      className="w-full pl-4 py-3 bg-white placeholder-gray-400 rounded-full border-white  text-black"
+                      className="w-full pl-4 py-3 bg-white placeholder-gray-400 rounded-full border-white  text-black focus:outline-none focus:ring-0 focus:border-white"
                       value={newsletterEmail}
                       onChange={handleNewsletterInput}
                       required

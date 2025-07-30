@@ -132,7 +132,7 @@ const Home = () => {
       try {
         // Get products from cache or API
         const products = await productCache.getProducts()
-        
+
         const [categoriesResponse, brandsResponse, bannersResponse, upgradeFeaturesResponse] =
           await Promise.all([
             axios.get(`${API_BASE_URL}/api/categories`),
@@ -153,42 +153,42 @@ const Home = () => {
         // Filter and validate categories - ensure they have proper structure
         const validCategories = Array.isArray(categoriesData)
           ? categoriesData.filter((cat) => {
-              const isValid =
-                cat &&
-                typeof cat === "object" &&
-                cat.name &&
-                typeof cat.name === "string" &&
-                cat.name.trim() !== "" &&
-                cat.isActive !== false &&
-                !cat.isDeleted &&
-                !cat.name.match(/^[0-9a-fA-F]{24}$/) // Not an ID
+            const isValid =
+              cat &&
+              typeof cat === "object" &&
+              cat.name &&
+              typeof cat.name === "string" &&
+              cat.name.trim() !== "" &&
+              cat.isActive !== false &&
+              !cat.isDeleted &&
+              !cat.name.match(/^[0-9a-fA-F]{24}$/) // Not an ID
 
-              if (!isValid) {
-                console.warn("Invalid category found:", cat)
-              }
-              return isValid
-            })
+            if (!isValid) {
+              console.warn("Invalid category found:", cat)
+            }
+            return isValid
+          })
           : []
 
         // Filter and validate brands - ensure they have proper structure and names
         const validBrands = Array.isArray(brandsData)
           ? brandsData.filter((brand) => {
-              const isValid =
-                brand &&
-                typeof brand === "object" &&
-                brand.name &&
-                typeof brand.name === "string" &&
-                brand.name.trim() !== "" &&
-                brand.isActive !== false &&
-                !brand.name.match(/^[0-9a-fA-F]{24}$/) && // Not an ID
-                brand.logo && // Has logo
-                brand.logo.trim() !== ""
+            const isValid =
+              brand &&
+              typeof brand === "object" &&
+              brand.name &&
+              typeof brand.name === "string" &&
+              brand.name.trim() !== "" &&
+              brand.isActive !== false &&
+              !brand.name.match(/^[0-9a-fA-F]{24}$/) && // Not an ID
+              brand.logo && // Has logo
+              brand.logo.trim() !== ""
 
-              if (!isValid) {
-                console.warn("Invalid brand found:", brand)
-              }
-              return isValid
-            })
+            if (!isValid) {
+              console.warn("Invalid brand found:", brand)
+            }
+            return isValid
+          })
           : []
 
         // Create brand lookup maps
@@ -280,7 +280,7 @@ const Home = () => {
         const asusData = filterProductsByBrand(products, "ASUS").slice(0, 3)
 
         // Get category products
-        const accessoriesData = filterProductsByMainCategory(products, "Accessories").slice(0,8)
+        const accessoriesData = filterProductsByMainCategory(products, "Accessories").slice(0, 8)
 
         // Get Networking products (DYNAMIC CATEGORY ID BY NAME)
         const networkingCategory = validCategories.find(
@@ -767,13 +767,37 @@ const Home = () => {
         </div>
       </section>
 
-      {/* HP Dell Banner - Desktop/Mobile Responsive */}
-      <div className="rounded-lg shadow-lg mx-3">
+
+
+      {/* Mobile Banner */}
+      <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
         <img
-          src={window.innerWidth < 768 ? "hp-banner.jpg" : "hp-dell-new-1536x288 (1).png"}
-          alt="HP Dell Banner"
+          src="hp-banner.jpg"
+          alt="HP Dell Banner Mobile"
           className="w-full h-full cover"
         />
+      </div>
+
+      {/* Desktop Banner - Two separate images side by side */}
+      <div className="hidden md:flex gap-2 mx-3 h-[270px]">
+        <div className="w-1/2">
+          <Link to="/hp-products">
+            <img
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/hp_half_side_1_iqvlks.png"
+              alt="HP Products Banner"
+              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+            />
+          </Link>
+        </div>
+        <div className="w-1/2">
+          <Link to="/dell-products">
+            <img
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/dell_half_side_6_igop3u.png"
+              alt="Dell Products Banner"
+              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+            />
+          </Link>
+        </div>
       </div>
 
       {/* HP and Dell Section - Mobile shows only HP */}
@@ -830,12 +854,14 @@ const Home = () => {
       </section>
 
       {/* Accessories Banner - Desktop/Mobile Responsive */}
-      <div className="mx-3 my-4">
+      <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
+        <Link to="/accessories">
         <img
-          src={window.innerWidth < 768 ? "Accessories-1480x560-100-1-600x227.jpg" : "./Accessories-new-1-1536x288.jpg"}
+          src={window.innerWidth < 768 ? "Accessories-1480x560-100-1-600x227.jpg" : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acessories_1_ceg4gu.png"}
           alt="Accessories Promotion Banner"
           className="w-full h-full cover rounded-lg"
         />
+        </Link>
       </div>
 
       {/* Accessories Section - Mobile shows 2 products */}
@@ -867,12 +893,43 @@ const Home = () => {
       </section>
 
       {/* ASUS Banner - Desktop/Mobile Responsive */}
-      <div className="w-full p-4 bg-white">
+      {/* <div className="w-full p-4 bg-white">
         <img
           src={window.innerWidth < 768 ? "/asus.png" : "./asus-2-1536x288.png"}
           alt="ASUS Banner"
           className="w-full h-auto"
         />
+      </div> */}
+
+      {/* Mobile Banner */}
+      <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
+        <img
+          src="asus.png"
+          alt="HP Dell Banner Mobile"
+          className="w-full h-full cover"
+        />
+      </div>
+
+      {/* Desktop Banner - Two separate images side by side */}
+      <div className="hidden md:flex gap-2 mx-3 h-[270px]">
+        <div className="w-1/2">
+          <Link to="/hp-products">
+            <img
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acer_half_side_jkun9a.png"
+              alt="HP Products Banner"
+              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+            />
+          </Link>
+        </div>
+        <div className="w-1/2">
+          <Link to="/dell-products">
+            <img
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/asus_half_side_aikrmo.png"
+              alt="Dell Products Banner"
+              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+            />
+          </Link>
+        </div>
       </div>
 
       {/* Acer and ASUS Section - Mobile shows only ASUS */}
@@ -931,11 +988,11 @@ const Home = () => {
       </section>
 
       {/* Networking Banner - Desktop/Mobile Responsive */}
-      <div className="w-full p-4 bg-white">
+      <div className="mx-3 my-4 h-[160px] lg:h-[300px]"> 
         <img
           src={window.innerWidth < 768 ? "dddd-768x291.png" : "./Networking-new-1-1536x288.jpg"}
           alt="Networking Banner"
-          className="w-full h-auto"
+          className="w-full h-full cover rounded-lg"
         />
       </div>
 
@@ -968,12 +1025,43 @@ const Home = () => {
       </section>
 
       {/* MSI & Lenovo Banner - Desktop/Mobile Responsive */}
-      <div className="w-full p-4 bg-white">
+      {/* <div className="w-full p-4 bg-white">
         <img
           src={window.innerWidth < 768 ? "msi.png" : "./MSI-LENOVO-1.jpg"}
           alt="MSI Lenovo Banner"
           className="w-full h-auto"
         />
+      </div> */}
+
+      {/* Mobile Banner */}
+      <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
+        <img
+          src="msi.png"
+          alt="HP Dell Banner Mobile"
+          className="w-full h-full cover"
+        />
+      </div>
+
+      {/* Desktop Banner - Two separate images side by side */}
+      <div className="hidden md:flex gap-2 mx-3 h-[270px]">
+        <div className="w-1/2">
+          <Link to="/hp-products">
+            <img
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/msi_half_side_1_k4dmhz.png"
+              alt="HP Products Banner"
+              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+            />
+          </Link>
+        </div>
+        <div className="w-1/2">
+          <Link to="/dell-products">
+            <img
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/lenovo_half_side_daug2k.png"
+              alt="Dell Products Banner"
+              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+            />
+          </Link>
+        </div>
       </div>
 
       {/* MSI and Lenovo Products Section - Mobile shows only MSI */}
@@ -1030,12 +1118,43 @@ const Home = () => {
       </section>
 
       {/* Apple & Samsung Banner - Desktop/Mobile Responsive */}
-      <div className="w-full p-4 bg-white">
+      {/* <div className="w-full p-4 bg-white">
         <img
           src={window.innerWidth < 768 ? "apple-banner-768x290.jpg" : "./Apple-Samsung.psd-new-1536x288.png"}
           alt="Apple Samsung Banner"
           className="w-full h-auto"
         />
+      </div> */}
+
+         {/* Mobile Banner */}
+      <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
+        <img
+          src="apple-banner-768x290.jpg"
+          alt="HP Dell Banner Mobile"
+          className="w-full h-full cover"
+        />
+      </div>
+
+      {/* Desktop Banner - Two separate images side by side */}
+      <div className="hidden md:flex gap-2 mx-3 h-[270px]">
+        <div className="w-1/2">
+          <Link to="/hp-products">
+            <img
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/hp_half_side_1_iqvlks.png"
+              alt="HP Products Banner"
+              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+            />
+          </Link>
+        </div>
+        <div className="w-1/2">
+          <Link to="/dell-products">
+            <img
+              src="hp-dell-new-1536x288 (1).png"
+              alt="Dell Products Banner"
+              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+            />
+          </Link>
+        </div>
       </div>
 
       {/* Apple and Samsung Products Section - Mobile shows only Apple */}
@@ -1192,11 +1311,11 @@ const MobileProductCard = ({ product }) => {
   // Use dynamic price
   const basePrice = Number(product.price) || 0
   const offerPrice = Number(product.offerPrice) || 0
-  
+
   // Show offer price if it exists and is less than base price
   const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
   const showOldPrice = hasValidOffer
-  
+
   // Determine which price to display
   let priceToShow = 0
   if (hasValidOffer) {
@@ -1288,11 +1407,11 @@ const DynamicBrandProductCard = ({ product }) => {
   // Use dynamic price
   const basePrice = Number(product.price) || 0
   const offerPrice = Number(product.offerPrice) || 0
-  
+
   // Show offer price if it exists and is less than base price
   const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
   const showOldPrice = hasValidOffer
-  
+
   // Determine which price to display
   let priceToShow = 0
   if (hasValidOffer) {
@@ -1384,11 +1503,11 @@ const AccessoriesProductCard = ({ product }) => {
   // Use dynamic price
   const basePrice = Number(product.price) || 0
   const offerPrice = Number(product.offerPrice) || 0
-  
+
   // Show offer price if it exists and is less than base price
   const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
   const showOldPrice = hasValidOffer
-  
+
   // Determine which price to display
   let priceToShow = 0
   if (hasValidOffer) {
@@ -1493,9 +1612,8 @@ const UpgradeFeatureCard = ({ feature }) => {
     <div className="rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 group">
       <div className="flex items-start space-x-4">
         <div
-          className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center ${
-            feature.iconColor || "bg-blue-100"
-          } group-hover:scale-110 transition-transform duration-300`}
+          className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center ${feature.iconColor || "bg-blue-100"
+            } group-hover:scale-110 transition-transform duration-300`}
         >
           <div className={`${feature.iconTextColor || "text-blue-600"}`}>{getIconComponent(feature.icon)}</div>
         </div>
@@ -1537,9 +1655,8 @@ const UpgradeFeatureCard = ({ feature }) => {
           {feature.badge && (
             <div className="mt-3">
               <span
-                className={`inline-block px-2 py-1 md:px-3 md:py-1 text-xs font-medium rounded-full ${
-                  feature.badgeColor || "bg-green-100 text-green-800"
-                }`}
+                className={`inline-block px-2 py-1 md:px-3 md:py-1 text-xs font-medium rounded-full ${feature.badgeColor || "bg-green-100 text-green-800"
+                  }`}
               >
                 {feature.badge}
               </span>

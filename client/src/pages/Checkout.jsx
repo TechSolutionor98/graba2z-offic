@@ -1055,8 +1055,8 @@ const Checkout = () => {
   }
 
   // Determine which items to show
-  const itemsToShow = showAllItems ? cartItems : cartItems.slice(0, 3)
-  const remainingItemsCount = cartItems.length - 3
+  const itemsToShow = showAllItems ? cartItems : cartItems.slice(0, 2)
+  const remainingItemsCount = cartItems.length - 2
 
   return (
     <div className="max-w-7xl mx-auto py-10">
@@ -1065,82 +1065,83 @@ const Checkout = () => {
           Home <span className="mx-2">›</span> <span className="font-semibold text-black">Checkout</span>
         </nav>
 
-        {/* Always horizontal stepper, even on mobile */}
-        <div className="flex flex-row items-center gap-2 sm:gap-4 md:gap-8 w-full overflow-x-auto mb-8 ">
-          <div className="flex items-center gap-1 sm:gap-2">
-            <span
-              className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 1 ? "bg-lime-500" : "bg-gray-300"}`}
-            >
-              01
-            </span>
-            <span className="font-semibold text-xs sm:text-sm md:text-base">Shipping Details</span>
-          </div>
-          <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
-          <div className="flex items-center gap-1 sm:gap-2">
-            <span
-              className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 2 ? "bg-lime-500" : "bg-gray-300"}`}
-            >
-              02
-            </span>
-            <span
-              className={
-                step >= 2
-                  ? "font-semibold text-xs sm:text-sm md:text-base"
-                  : "text-gray-400 text-xs sm:text-sm md:text-base"
-              }
-            >
-              Summary
-            </span>
-          </div>
-          <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
-          <div className="flex items-center gap-1 sm:gap-2">
-            <span
-              className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 3 ? "bg-lime-500" : "bg-gray-300"}`}
-            >
-              03
-            </span>
-            <span
-              className={
-                step >= 3
-                  ? "font-semibold text-xs sm:text-sm md:text-base"
-                  : "text-gray-400 text-xs sm:text-sm md:text-base"
-              }
-            >
-              Payment Method
-            </span>
-          </div>
-        </div>
-
-        {/* Delivery type selection: Only show on step 1 */}
-        {step === 1 && (
-          <div className="flex gap-8 mb-6">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="deliveryType"
-                value="home"
-                checked={deliveryType === "home"}
-                onChange={() => setDeliveryType("home")}
-                className="accent-lime-500 mr-2"
-              />
-              <span className="font-semibold text-lg">Home Delivery</span>
-            </label>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="deliveryType"
-                value="pickup"
-                checked={deliveryType === "pickup"}
-                onChange={() => setDeliveryType("pickup")}
-                className="accent-lime-500 mr-2"
-              />
-              <span className="font-semibold text-lg">Pickup From Store</span>
-            </label>
-          </div>
-        )}
-        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
-        <div className="grid grid-cols-1 lg:grid-cols-5 ">
+        <div className="grid grid-cols-1 lg:grid-cols-5">
         <div className="lg:col-span-3 p-2 ">
+          {/* Always horizontal stepper, even on mobile */}
+          <div className="flex flex-row items-center gap-2 sm:gap-4 md:gap-8 w-full overflow-x-auto mb-8">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 1 ? "bg-lime-500" : "bg-gray-300"}`}
+              >
+                01
+              </span>
+              <span className="font-semibold text-xs sm:text-sm md:text-base">Shipping Details</span>
+            </div>
+            <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 2 ? "bg-lime-500" : "bg-gray-300"}`}
+              >
+                02
+              </span>
+              <span
+                className={
+                  step >= 2
+                    ? "font-semibold text-xs sm:text-sm md:text-base"
+                    : "text-gray-400 text-xs sm:text-sm md:text-base"
+                }
+              >
+                Summary
+              </span>
+            </div>
+            <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
+            <div className="flex items-center gap-1 sm:gap-2">
+              <span
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 3 ? "bg-lime-500" : "bg-gray-300"}`}
+              >
+                03
+              </span>
+              <span
+                className={
+                  step >= 3
+                    ? "font-semibold text-xs sm:text-sm md:text-base"
+                    : "text-gray-400 text-xs sm:text-sm md:text-base"
+                }
+              >
+                Payment Method
+              </span>
+            </div>
+          </div>
+
+          {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+          
+          {/* Delivery type selection: Only show on step 1 */}
+          {step === 1 && (
+            <div className="flex gap-8 mb-6">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="deliveryType"
+                  value="home"
+                  checked={deliveryType === "home"}
+                  onChange={() => setDeliveryType("home")}
+                  className="accent-lime-500 mr-2"
+                />
+                <span className="font-semibold text-lg">Home Delivery</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="deliveryType"
+                  value="pickup"
+                  checked={deliveryType === "pickup"}
+                  onChange={() => setDeliveryType("pickup")}
+                  className="accent-lime-500 mr-2"
+                />
+                <span className="font-semibold text-lg">Pickup From Store</span>
+              </label>
+            </div>
+          )}
           <div className="rounded-2xl">
             {step === 1 && (
               <>
@@ -1506,11 +1507,11 @@ const Checkout = () => {
         </div>
 
         {/* Order Summary Sidebar */}
-        <div className="lg:col-span-2">
-          <div className="bg-lime-200 rounded-2xl shadow-sm p-4 top-9 lg:m-9" style={{position:"sticky"}}>
+        <div className="lg:col-span-2 ">
+          <div className="rounded-lg shadow-md shadow-lime-500 p-4 lg:mx-9 sticky top-4">
             <div className="flex items-center mb-6">
               <div className="bg-lime-100 p-2 rounded-full">
-                <Truck className="h-5 w-5 text-lime-600" />
+                <Truck className="h-8 w-8 text-lime-600" />
               </div>
               <div className="ml-3">
                 <h2 className="text-lg font-bold text-black">Order Summary</h2>
@@ -1539,7 +1540,7 @@ const Checkout = () => {
               ))}
 
               {/* Show/Hide More Items Button */}
-              {cartItems.length > 3 && (
+              {cartItems.length > 2 && (
                 <button
                   onClick={toggleShowAllItems}
                   className="w-full text-center text-sm text-black  py-2 flex items-center justify-center gap-1 transition-colors"
@@ -1670,7 +1671,7 @@ const Checkout = () => {
             <div className="mt-6 bg-gray-50 p-4 rounded-lg">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <Shield className="h-4 w-4 text-lime-500" />
+                  <Shield className="h-7 w-7 text-lime-500" />
                 </div>
                 <div className="ml-2">
                   <p className="text-xs text-gray-700">
