@@ -990,7 +990,7 @@ const Home = () => {
       {/* Networking Banner - Desktop/Mobile Responsive */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]"> 
         <img
-          src={window.innerWidth < 768 ? "dddd-768x291.png" : "./Networking-new-1-1536x288.jpg"}
+          src={window.innerWidth < 768 ? "dddd-768x291.png" : "networking.png"}
           alt="Networking Banner"
           className="w-full h-full cover rounded-lg"
         />
@@ -1140,7 +1140,7 @@ const Home = () => {
         <div className="w-1/2">
           <Link to="/hp-products">
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/hp_half_side_1_iqvlks.png"
+              src="apple half side.png"
               alt="HP Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
@@ -1149,7 +1149,7 @@ const Home = () => {
         <div className="w-1/2">
           <Link to="/dell-products">
             <img
-              src="hp-dell-new-1536x288 (1).png"
+              src="samsung half side.png"
               alt="Dell Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
