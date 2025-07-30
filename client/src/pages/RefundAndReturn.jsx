@@ -60,13 +60,13 @@ export default function RefundAndReturn() {
             </p>
             
             {/* Image Section */}
-            <div className="rounded-lg overflow-hidden shadow mt-6">
+            {/* <div className="rounded-lg overflow-hidden shadow mt-6">
               <img
                 src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
                 alt="15 Day Return Period"
                 className="w-full h-48 object-cover"
               />
-            </div>
+            </div> */}
           </div>
         </section>
 
@@ -104,13 +104,13 @@ export default function RefundAndReturn() {
             </p>
             
             {/* Image Section */}
-            <div className="rounded-lg overflow-hidden shadow mt-6">
+            {/* <div className="rounded-lg overflow-hidden shadow mt-6">
               <img
                 src="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
                 alt="Defective Laptop Repair and Warranty"
                 className="w-full h-48 object-cover"
               />
-            </div>
+            </div> */}
           </div>
         </section>
 

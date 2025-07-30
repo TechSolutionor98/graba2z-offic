@@ -176,7 +176,7 @@ const Cart = () => {
                   const pricingDetails = getItemPricingDetails(item)
                   
                   return (
-                  <li key={item._id} className="p-6">
+                  <li key={item._id} className="p-3">
                     {/* Mobile Card */}
                     <div className="block sm:hidden">
                       <div className="flex flex-row items-center mb-3">
@@ -185,7 +185,7 @@ const Cart = () => {
                         </div>
                         <div className="flex-1 ml-4">
                           <h3 className="text-base font-medium text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
-                            {item.name.length > 50 ? item.name.slice(0, 20) + "..." : item.name}
+                            {item.name.length > 30 ? item.name.slice(0, 25) + "..." : item.name}
                           </h3>
                           <p className="mt-1 text-sm text-gray-500">{item.brand?.name || 'N/A'}</p>
                         </div>
@@ -254,7 +254,7 @@ const Cart = () => {
                       </div>
                     </div>
                     {/* Desktop Card (only visible on sm and up) */}
-                    <div className="hidden sm:flex flex-col sm:flex-row">
+                    <div className="hidden sm:flex flex-col sm:flex-row ">
                       <div className="sm:w-40 sm:h-26 flex-shrink-0 overflow-hidden rounded-md mb-4 sm:mb-0">
                         <img
                           src={item.image || "/placeholder.svg"}
@@ -264,14 +264,14 @@ const Cart = () => {
                       </div>
                       <div className="sm:ml-8 flex-1">
                         <div className="flex justify-between items-start">
-                          <div className="flex-1">
+                          <div className="flex-1 ">
                             <h3 className="text-lg font-medium text-gray-900 mb-1">
                               {item.name.length > 60 ? item.name.slice(0, 60) + "..." : item.name}
                             </h3>
                             <p className="text-sm text-gray-500 mb-3">{item.brand?.name || 'N/A'}</p>
                             
                             {/* Pricing Details */}
-                            <div className="bg-gray-50 p-3 rounded mb-3 max-w-md">
+                            <div className="bg-gray-50 p-3 rounded mb-3 max-w-xl ">
                               {pricingDetails.hasDiscount ? (
                                 <>
                                   <div className="flex justify-between text-sm mb-1">
@@ -299,7 +299,7 @@ const Cart = () => {
                           </div>
                           
                           {/* Total Price */}
-                          <div className="text-right ml-4">
+                          {/* <div className="text-right ml-4 bg-red-300">
                             <p className="text-xl font-bold text-gray-900">
                               {formatPrice(pricingDetails.currentPrice * item.quantity)}
                             </p>
@@ -308,10 +308,10 @@ const Cart = () => {
                                 Total Save: {formatPrice(pricingDetails.savings * item.quantity)}
                               </p>
                             )}
-                          </div>
+                          </div> */}
                         </div>
                         
-                        <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center justify-between ">
                           <div className="flex items-center border rounded-md">
                             <button
                               onClick={() => handleQuantityChange(item._id, item.quantity - 1)}
@@ -328,13 +328,22 @@ const Cart = () => {
                               <Plus size={16} />
                             </button>
                           </div>
-                          
+                            <div className="text-right ml-4">
+                            <p className="text-xl font-bold text-gray-900">
+                              {formatPrice(pricingDetails.currentPrice * item.quantity)}
+                            </p>
+                            {pricingDetails.hasDiscount && (
+                              <p className="text-sm text-green-600 font-medium">
+                                Total Save: {formatPrice(pricingDetails.savings * item.quantity)}
+                              </p>
+                            )}
+                          </div>
                           <button
                             onClick={() => removeFromCart(item._id)}
-                            className="text-red-500 hover:text-red-700 flex items-center"
+                            className="text-red-500 hover:text-red-700 flex items-center "
                           >
                             <Trash2 size={18} className="mr-2" />
-                            Remove
+                          
                           </button>
                         </div>
                       </div>
@@ -348,7 +357,9 @@ const Cart = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            {/* <div className="bg-white rounded-lg shadow-md  p-6"> */}
+          <div className="bg-white rounded-lg shadow-md shadow-lime-500 p-6">
+
               <h2 className="text-lg font-medium text-gray-900 mb-4">Order Summary</h2>
 
               <div className="space-y-4">
