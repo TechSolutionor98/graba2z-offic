@@ -23,11 +23,13 @@ import {
   Bell,
   Tag,
   Calendar,
+  ShoppingBag,
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import BannerSlider from "../components/BannerSlider"
 import CategorySlider from "../components/CategorySlider"
 import { useWishlist } from "../context/WishlistContext"
+import { useCart } from "../context/CartContext"
 import BrandSlider from "../components/BrandSlider";
 
 import config from "../config/config"
@@ -1304,6 +1306,7 @@ const Home = () => {
 
 const MobileProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
+  const { addToCart } = useCart()
   // Use dynamic discount
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Use dynamic stock status
@@ -1333,103 +1336,7 @@ const MobileProductCard = ({ product }) => {
   const categoryName = product.category?.name || "Unknown"
 
   return (
-    <div className="bg-white rounded-lg p-2 shadow-md relative">
-      <button
-        className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
-        }}
-        aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
-      >
-        <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
-      </button>
-      <Link to={`/product/${product.slug || product._id}`}>
-        <img
-          src={product.image || "/placeholder.svg?height=80&width=80"}
-          alt={product.name}
-          className="w-full h-[200px] cover rounded mb-2"
-        />
-      </Link>
-      <div className="mb-2 flex items-center gap-3">
-        <div
-          className={`${getStatusColor(stockStatus)} text-white px-0.5 py-0.5 rounded text-xs font-bold inline-block mb-1`}
-        >
-          {stockStatus}
-        </div>
-        {discount && (
-          <div className="bg-yellow-400 text-white px-0.5 py-0.5 rounded text-xs font-bold inline-block ml-1">
-            {discount}
-          </div>
-        )}
-      </div>
-      <Link to={`/product/${product.slug || product._id}`}>
-        <h3 className="text-xs font-medium text-black mb-1 line-clamp-2 hover:text-blue-400">{product.name}</h3>
-      </Link>
-      {product.category && <div className="text-xs text-gray-500 mb-1">Category: {categoryName}</div>}
-      <div className="text-xs text-gray-400 mb-1">Inclusive VAT</div>
-      <div className="mb-1 flex items-center gap-2">
-        <div className="text-red-600 font-bold text-sm">
-          {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
-        </div>
-        {showOldPrice && (
-          <div className="text-gray-400 line-through text-xs font-medium">
-            {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
-          </div>
-        )}
-      </div>
-      {/* {showOldPrice && (
-        <div className="text-xs text-green-600 font-medium mb-1">
-          Save {Number(basePrice - priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
-        </div>
-      )} */}
-      <div className="flex items-center">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            size={8}
-            className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
-          />
-        ))}
-        <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
-      </div>
-    </div>
-  )
-}
-
-const DynamicBrandProductCard = ({ product }) => {
-  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
-  // Use dynamic discount
-  const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
-  // Use dynamic stock status
-  const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
-  // Use dynamic price
-  const basePrice = Number(product.price) || 0
-  const offerPrice = Number(product.offerPrice) || 0
-
-  // Show offer price if it exists and is less than base price
-  const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
-  const showOldPrice = hasValidOffer
-
-  // Determine which price to display
-  let priceToShow = 0
-  if (hasValidOffer) {
-    priceToShow = offerPrice
-  } else if (basePrice > 0) {
-    priceToShow = basePrice
-  } else if (offerPrice > 0) {
-    priceToShow = offerPrice
-  }
-  // Use dynamic reviews
-  const rating = product.rating || 0
-  const numReviews = product.numReviews || 0
-
-  // Get category and brand names safely
-  const categoryName = product.category?.name || "Unknown"
-
-  return (
-    <div className="border p-2 h-[340px] flex flex-col justify-between">
+    <div className="border p-2 h-[400px] flex flex-col justify-between bg-white">
       <div className="relative mb-2 flex h-[180px] justify-center items-cente">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
@@ -1450,22 +1357,22 @@ const DynamicBrandProductCard = ({ product }) => {
           <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
         </button>
       </div>
-      <div className="mb-1 flex items-center gap-2">
+      <div className="mb-1 flex items-center gap-2 ">
         <div
-          className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs font-bold inline-block mr-1`}
+          className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}
         >
           {stockStatus}
         </div>
         {discount && (
-          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs font-bold inline-block">{discount}</div>
+          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs  inline-block">{discount}</div>
         )}
       </div>
       <Link to={`/product/${product.slug || product._id}`}>
-        <h3 className="text-xs font-medium text-gray-900 mb-1 line-clamp-2 hover:text-blue-600">{product.name}</h3>
+        <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
       </Link>
-      {product.category && <div className="text-xs text-gray-500 mb-1">Category: {categoryName}</div>}
-      <div className="text-xs text-gray-500 mb-1">Inclusive VAT</div>
-      <div className="mb-1 flex items-center gap-2">
+      {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
+      <div className="text-xs text-green-600">Inclusive VAT</div>
+      <div className="flex items-center gap-2">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
@@ -1475,27 +1382,40 @@ const DynamicBrandProductCard = ({ product }) => {
           </div>
         )}
       </div>
-      {/* {showOldPrice && (
-        <div className="text-xs text-green-600 font-medium mb-1">
-          Save {Number(basePrice - priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
-        </div>
-      )} */}
-      <div className="flex items-center mt-auto">
+      <div className="flex items-center">
         {[...Array(5)].map((_, i) => (
           <Star
             key={i}
-            size={8}
+            size={14}
             className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
           />
         ))}
         <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
       </div>
+      <button
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          // Immediate visual feedback
+          e.target.style.transform = 'scale(0.95)'
+          setTimeout(() => {
+            if (e.target) e.target.style.transform = 'scale(1)'
+          }, 100)
+          addToCart(product)
+        }}
+        className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
+        disabled={stockStatus === "Out of Stock"}
+      >
+        <ShoppingBag size={12} />
+        Add to Cart
+      </button>
     </div>
   )
 }
 
-const AccessoriesProductCard = ({ product }) => {
+const DynamicBrandProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
+  const { addToCart } = useCart()
   // Use dynamic discount
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Use dynamic stock status
@@ -1524,8 +1444,125 @@ const AccessoriesProductCard = ({ product }) => {
   // Get category and brand names safely
   const categoryName = product.category?.name || "Unknown"
 
+  // Home page 3/3 products cards section 
   return (
-    <div className="border  rounded-lg p-3 mx-1 hover:shadow-md transition-shadow lg:min-h-[340px] lg:max-h-[360px] lg:min-w-[210px] lg:max-w-[220px] flex flex-col justify-between">
+    <div className="border p-2 h-[400px] flex flex-col justify-between bg-white">
+      <div className="relative mb-2 flex h-[180px] justify-center items-cente">
+        <Link to={`/product/${product.slug || product._id}`}>
+          <img
+            src={product.image || "/placeholder.svg?height=120&width=120"}
+            alt={product.name}
+            className="w-full h-full cover object-contain rounded mx-auto"
+          />
+        </Link>
+        <button
+          className="absolute top-1 right-1 text-gray-400 hover:text-red-500"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
+          }}
+          aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
+        </button>
+      </div>
+      <div className="mb-1 flex items-center gap-2 ">
+        <div
+          className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}
+        >
+          {stockStatus}
+        </div>
+        {discount && (
+          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs  inline-block">{discount}</div>
+        )}
+      </div>
+      <Link to={`/product/${product.slug || product._id}`}>
+        <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
+      </Link>
+      {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
+      <div className="text-xs text-green-600">Inclusive VAT</div>
+      <div className="flex items-center gap-2">
+        <div className="text-red-600 font-bold text-sm">
+          {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+        </div>
+        {showOldPrice && (
+          <div className="text-gray-400 line-through text-xs font-medium">
+            {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+          </div>
+        )}
+      </div>
+      {/* {showOldPrice && (
+        <div className="text-xs text-green-600 font-medium mb-1">
+          Save {Number(basePrice - priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+        </div>
+      )} */}
+      <div className="flex items-center">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            size={14}
+            className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+          />
+        ))}
+        <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
+      </div>
+      <button
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          // Immediate visual feedback
+          e.target.style.transform = 'scale(0.95)'
+          setTimeout(() => {
+            if (e.target) e.target.style.transform = 'scale(1)'
+          }, 100)
+          addToCart(product)
+        }}
+        className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
+        disabled={stockStatus === "Out of Stock"}
+      >
+        <ShoppingBag size={12} />
+        Add to Cart
+      </button>
+    </div>
+  )
+}
+
+const AccessoriesProductCard = ({ product }) => {
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
+  const { addToCart } = useCart()
+  // Use dynamic discount
+  const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
+  // Use dynamic stock status
+  const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
+  // Use dynamic price
+  const basePrice = Number(product.price) || 0
+  const offerPrice = Number(product.offerPrice) || 0
+
+  // Show offer price if it exists and is less than base price
+  const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
+  const showOldPrice = hasValidOffer
+
+  // Determine which price to display
+  let priceToShow = 0
+  if (hasValidOffer) {
+    priceToShow = offerPrice
+  } else if (basePrice > 0) {
+    priceToShow = basePrice
+  } else if (offerPrice > 0) {
+    priceToShow = offerPrice
+  }
+  // Use dynamic reviews
+  const rating = product.rating || 0
+  const numReviews = product.numReviews || 0
+
+  // Get category and brand names safely
+  const categoryName = product.category?.name || "Unknown"
+
+
+  // Home page 6 products cards section 
+  return (
+    <div className="border  rounded-lg p-3 mx-1 hover:shadow-md transition-shadow lg:min-h-[400px] lg:max-h-[360px] lg:min-w-[210px] lg:max-w-[220px] flex flex-col justify-between bg-white">
       <div className="relative  mb-3 flex justify-center items-center min-h-[155px] lg:max-h-[170px] ">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
@@ -1557,16 +1594,16 @@ const AccessoriesProductCard = ({ product }) => {
         )}
       </div>
       <Link to={`/product/${product.slug || product._id}`}>
-        <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2 hover:text-blue-600">{product.name}</h3>
+        <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
       </Link>
-      {product.category && <div className="text-xs text-gray-500 mb-1">Category: {categoryName}</div>}
-      <div className="text-xs text-gray-500 mb-2">Inclusive VAT</div>
-      <div className="mb-1 flex items-center gap-2">
-        <div className="text-red-600 font-bold text-base md:text-lg">
+      {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
+      <div className="text-xs text-green-600">Inclusive VAT</div>
+      <div className="flex items-center gap-2">
+        <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
         {showOldPrice && (
-          <div className="text-gray-400 line-through text-sm font-medium">
+          <div className="text-gray-400 line-through text-xs font-medium">
             {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
           </div>
         )}
@@ -1576,16 +1613,28 @@ const AccessoriesProductCard = ({ product }) => {
           Save {Number(basePrice - priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
       )} */}
-      <div className="flex items-center mt-auto bg-white">
+      <div className="flex items-center">
         {[...Array(5)].map((_, i) => (
           <Star
             key={i}
-            size={10}
+            size={14}
             className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
           />
         ))}
         <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
       </div>
+      <button
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          addToCart(product)
+        }}
+        className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-colors active:scale-95"
+        disabled={stockStatus === "Out of Stock"}
+      >
+        <ShoppingBag size={12} />
+        Add to Cart
+      </button>
     </div>
   )
 }

@@ -1,22 +1,24 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { ChevronLeft, ChevronRight, Heart, Star } from "lucide-react"
+import { ChevronLeft, ChevronRight, Heart, Star, ShoppingBag } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useWishlist } from "../context/WishlistContext"
+import { useCart } from "../context/CartContext"
 
 // Reusable product card component used in both desktop and mobile views
 const ProductCard = ({ product, isMobile = false }) => {
     const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
+    const { addToCart } = useCart()
     const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
     const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
     const basePrice = Number(product.price) || 0
     const offerPrice = Number(product.offerPrice) || 0
-    
+
     // Show offer price if it exists and is less than base price
     const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
     const showOldPrice = hasValidOffer
-    
+
     // Determine which price to display
     let priceToShow = 0
     if (hasValidOffer) {
@@ -44,46 +46,47 @@ const ProductCard = ({ product, isMobile = false }) => {
         : "text-xs font-medium text-black mb-2 line-clamp-2 hover:text-blue-400"
 
     return (
-        <div className={cardClasses} style={!isMobile ? { height: "370px", width: "210px" } : {}}>
-            <button
-                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 z-10"
-                onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
-                }}
-                aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
-            >
-                <Heart size={16} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
-            </button>
-            <div className={imageContainerClasses}>
+        <div
+            className="border p-2 h-[400px] flex flex-col justify-between bg-white"
+            style={isMobile ? {} : { width: "210px" }}
+        >
+            <div className="relative mb-2 flex h-[180px] justify-center items-cente">
                 <Link to={`/product/${product.slug || product._id}`}>
                     <img
                         src={product.image || "/placeholder.svg?height=120&width=120"}
                         alt={product.name}
-                        className={imageClasses}
+                        className="w-full h-full cover object-contain rounded mx-auto"
                     />
                 </Link>
+                <button
+                    className="absolute top-1 right-1 text-gray-400 hover:text-red-500"
+                    onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
+                    }}
+                    aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
+                >
+                    <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
+                </button>
             </div>
-            <div className="mb-2 flex items-center gap-2">
-                <div className={`${getStatusColor(stockStatus)} text-white px-1 py-1 rounded text-xs font-bold inline-block`}>
+            <div className="mb-1 flex items-center gap-2 ">
+                <div
+                    className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}
+                >
                     {stockStatus}
                 </div>
                 {discount && (
-                    <div className="bg-yellow-400 text-white px-1 py-1 rounded text-xs font-bold">
-                        {discount}
-                    </div>
+                    <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs  inline-block">{discount}</div>
                 )}
             </div>
-            <Link to={`/product/${product.slug || product._id}`} className={titleClasses}>
-                {product.name}
+            <Link to={`/product/${product.slug || product._id}`}>
+                <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
             </Link>
-            {!isMobile && product.category && (
-                <div className="text-xs text-gray-500 mb-1">Category: {categoryName}</div>
-            )}
-            <div className="text-xs text-gray-400 mb-2">Inclusive VAT</div>
-            <div className="flex items-center gap-2 mb-1">
-                <div className="text-red-600 font-bold">
+            {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
+            <div className="text-xs text-green-600">Inclusive VAT</div>
+            <div className="flex items-center gap-2">
+                <div className="text-red-600 font-bold text-sm">
                     {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
                 </div>
                 {showOldPrice && (
@@ -92,21 +95,33 @@ const ProductCard = ({ product, isMobile = false }) => {
                     </div>
                 )}
             </div>
-            {/* {showOldPrice && (
-                <div className="text-xs text-green-600 font-medium mb-1">
-                    Save {Number(basePrice - priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
-                </div>
-            )} */}
-            <div className="flex items-center mt-1">
+            <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                     <Star
                         key={i}
-                        size={10}
+                        size={14}
                         className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
                     />
                 ))}
                 <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
             </div>
+            <button
+                onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    // Immediate visual feedback
+                    e.target.style.transform = 'scale(0.95)'
+                    setTimeout(() => {
+                        if (e.target) e.target.style.transform = 'scale(1)'
+                    }, 100)
+                    addToCart(product)
+                }}
+                className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
+                disabled={stockStatus === "Out of Stock"}
+            >
+                <ShoppingBag size={12} />
+                Add to Cart
+            </button>
         </div>
     )
 }
@@ -178,6 +193,7 @@ const BigSaleSection = ({ products = [] }) => {
                     }}
                 ></div>
             </div>
+            
 
             <div className="relative max-w-8xl px-5">
                 <div className="flex justify-end ">

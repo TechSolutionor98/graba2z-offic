@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
-import { Heart, Star } from "lucide-react"
+import { Heart, Star, ShoppingBag } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
+import { useCart } from "../context/CartContext"
 import { useToast } from "../context/ToastContext"
 import { getImageUrl } from "../utils/imageUtils"
 
@@ -13,6 +14,7 @@ const getStatusColor = (status) => {
 
 const HomeStyleProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
+  const { addToCart } = useCart()
   const { showToast } = useToast()
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Treat both 'Available' and 'Available Product' as available
@@ -42,82 +44,82 @@ const HomeStyleProductCard = ({ product }) => {
 
 
   return (
-    <div className="border bg-white rounded-lg p-3  hover:shadow-md transition-shadow min-h-[370px] max-h-[380px] min-w-[190px] max-w-[200px] flex flex-col justify-between">
-      <div className="relative mb-2  flex justify-center items-center min-h-[160px] max-h-[160px]">
+    <div className="border p-2 h-[400px] flex flex-col justify-between bg-white">
+      <div className="relative mb-2 flex h-[180px] justify-center items-cente">
         <Link to={`/product/${product.slug || product._id}`}>
           <img
             src={getImageUrl(product)}
             alt={product.name}
-            className="w-full h-full cover rounded mx-auto"
+            className="w-full h-full cover object-contain rounded mx-auto"
             onError={(e) => {
-              e.target.src = "/placeholder.svg?height=150&width=150"
+              e.target.src = "/placeholder.svg?height=120&width=120"
             }}
           />
         </Link>
         <button
-          className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+          className="absolute top-1 right-1 text-gray-400 hover:text-red-500"
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
-            if (isInWishlist(product._id)) {
-              removeFromWishlist(product._id);
-              showToast && showToast("Removed from wishlist", "info");
-            } else {
-              addToWishlist(product);
-              showToast && showToast("Added to wishlist", "success");
-            }
+            isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
           }}
           aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart size={14} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
+          <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
         </button>
       </div>
-      <div className="mb-2 flex items-center gap-2">
-        {isAvailable ? (
-          <>
-            <div className={`${getStatusColor("Available") } text-white px-2 py-1 rounded text-xs font-bold inline-block mr-1`}>
-              Available
-            </div>
-            {discount && (
-              <div className="bg-yellow-400 text-white px-2 py-1 rounded text-xs font-bold inline-block">{discount}</div>
-            )}
-          </>
-        ) : (
-          <>
-            <div className={`${getStatusColor(stockStatus)} text-white px-2 py-1 rounded text-xs font-bold inline-block mr-1`}>
-              {stockStatus}
-            </div>
-            {discount && (
-              <div className="bg-yellow-400 text-white px-2 py-1 rounded text-xs font-bold inline-block">{discount}</div>
-            )}
-          </>
+      <div className="mb-1 flex items-center gap-2 ">
+        <div
+          className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}
+        >
+          {stockStatus}
+        </div>
+        {discount && (
+          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs  inline-block">{discount}</div>
         )}
       </div>
       <Link to={`/product/${product.slug || product._id}`}>
-        <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2 hover:text-blue-600">{product.name}</h3>
+        <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
       </Link>
-      {product.category && <div className="text-xs text-gray-500 mb-1">Category: {categoryName}</div>}
-      <div className="text-xs text-gray-500 mb-2">Inclusive VAT</div>
-      <div className="mb-1">
-        <div className="text-red-600 font-bold text-base md:text-lg">
+      {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
+      <div className="text-xs text-green-600">Inclusive VAT</div>
+      <div className="flex items-center gap-2">
+        <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
         {showOldPrice && (
-          <div className="text-gray-400 line-through text-sm font-medium">
+          <div className="text-gray-400 line-through text-xs font-medium">
             {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
           </div>
         )}
       </div>
-      <div className="flex items-center mt-auto">
+      <div className="flex items-center">
         {[...Array(5)].map((_, i) => (
           <Star
             key={i}
-            size={10}
+            size={14}
             className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
           />
         ))}
         <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
       </div>
+      <button
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          // Immediate visual feedback
+          e.target.style.transform = 'scale(0.95)'
+          setTimeout(() => {
+            if (e.target) e.target.style.transform = 'scale(1)'
+          }, 100)
+          addToCart(product)
+        }}
+        className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
+        disabled={stockStatus === "Out of Stock"}
+      >
+        <ShoppingBag size={12} />
+        Add to Cart
+      </button>
     </div>
   )
 }
