@@ -408,24 +408,34 @@ class ProductCacheService {
       }
     }
 
-    // Sort products
-    if (filters.sortBy) {
-      switch (filters.sortBy) {
-        case 'price-low':
-          filteredProducts.sort((a, b) => (a.price || 0) - (b.price || 0))
-          break
-        case 'price-high':
-          filteredProducts.sort((a, b) => (b.price || 0) - (a.price || 0))
-          break
-        case 'name':
-          filteredProducts.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-          break
-        case 'newest':
-        default:
-          filteredProducts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          break
+    // Sort products - Always prioritize in-stock products first
+    filteredProducts.sort((a, b) => {
+      // Check if products are in stock
+      const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+      const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+      
+      // In-stock products come first
+      if (aInStock && !bInStock) return -1
+      if (!aInStock && bInStock) return 1
+      
+      // If both have same stock status, apply secondary sorting
+      if (filters.sortBy) {
+        switch (filters.sortBy) {
+          case 'price-low':
+            return (a.price || 0) - (b.price || 0)
+          case 'price-high':
+            return (b.price || 0) - (a.price || 0)
+          case 'name':
+            return (a.name || '').localeCompare(b.name || '')
+          case 'newest':
+          default:
+            return new Date(b.createdAt) - new Date(a.createdAt)
+        }
       }
-    }
+      
+      // Default sorting by newest if no sortBy specified
+      return new Date(b.createdAt) - new Date(a.createdAt)
+    })
 
     return filteredProducts
   }

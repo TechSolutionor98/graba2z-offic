@@ -216,8 +216,20 @@ const Home = () => {
         const promotionalBanners = bannersData.filter((banner) => banner.position === "promotional")
         const mobileData = bannersData.filter((banner) => banner.position === "mobile")
 
-        // Filter featured products
-        const featured = products.filter((product) => product.featured).slice(0, 12)
+        // Filter featured products and sort by stock status (in-stock first)
+        const featured = products
+          .filter((product) => product.featured)
+          .sort((a, b) => {
+            // Check if products are in stock
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            
+            // In-stock products come first
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 12)
 
         // Enhanced brand filtering function
         const filterProductsByBrand = (products, brandName) => {
@@ -275,14 +287,54 @@ const Home = () => {
           });
         };
 
-        // Get brand products
-        const hpData = filterProductsByBrand(products, "HP").slice(0, 3)
-        const dellData = filterProductsByBrand(products, "Dell").slice(0, 3)
-        const acerData = filterProductsByBrand(products, "Acer").slice(0, 3)
-        const asusData = filterProductsByBrand(products, "ASUS").slice(0, 3)
+        // Get brand products and sort by stock status (in-stock first)
+        const hpData = filterProductsByBrand(products, "HP")
+          .sort((a, b) => {
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 3)
+        const dellData = filterProductsByBrand(products, "Dell")
+          .sort((a, b) => {
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 3)
+        const acerData = filterProductsByBrand(products, "Acer")
+          .sort((a, b) => {
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 3)
+        const asusData = filterProductsByBrand(products, "ASUS")
+          .sort((a, b) => {
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 3)
 
-        // Get category products
-        const accessoriesData = filterProductsByMainCategory(products, "Accessories").slice(0, 8)
+        // Get category products and sort by stock status (in-stock first)
+        const accessoriesData = filterProductsByMainCategory(products, "Accessories")
+          .sort((a, b) => {
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 8)
 
         // Get Networking products (DYNAMIC CATEGORY ID BY NAME)
         const networkingCategory = validCategories.find(
@@ -297,24 +349,64 @@ const Home = () => {
               (typeof product.parentCategory === "string" && product.parentCategory === networkingCategory._id) ||
               (typeof product.parentCategory === "object" && product.parentCategory?._id === networkingCategory._id)
             );
-          }).slice(0, 8);
+          })
+          .sort((a, b) => {
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 8);
         }
         console.log("Networking Products found:", networkingData)
 
-        // Get MSI products
-        let msiData = filterProductsByBrand(products, "MSI").slice(0, 3)
+        // Get MSI products and sort by stock status (in-stock first)
+        let msiData = filterProductsByBrand(products, "MSI")
+          .sort((a, b) => {
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 3)
         console.log("MSI Products found:", msiData)
 
-        // Get Lenovo products
-        let lenovoData = filterProductsByBrand(products, "Lenovo").slice(0, 3)
+        // Get Lenovo products and sort by stock status (in-stock first)
+        let lenovoData = filterProductsByBrand(products, "Lenovo")
+          .sort((a, b) => {
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 3)
         console.log("Lenovo Products found:", lenovoData)
 
-        // Get Apple products
-        let appleData = filterProductsByBrand(products, "Apple").slice(0, 3)
+        // Get Apple products and sort by stock status (in-stock first)
+        let appleData = filterProductsByBrand(products, "Apple")
+          .sort((a, b) => {
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 3)
         console.log("Apple Products found:", appleData)
 
-        // Get Samsung products
-        let samsungData = filterProductsByBrand(products, "Samsung").slice(0, 3)
+        // Get Samsung products and sort by stock status (in-stock first)
+        let samsungData = filterProductsByBrand(products, "Samsung")
+          .sort((a, b) => {
+            const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+            const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+            if (aInStock && !bInStock) return -1
+            if (!aInStock && bInStock) return 1
+            return 0
+          })
+          .slice(0, 3)
         console.log("Samsung Products found:", samsungData)
 
         // Alternative search if no networking products found
