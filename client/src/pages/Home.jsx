@@ -772,7 +772,7 @@ const Home = () => {
       {/* Mobile Banner */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
         <img
-          src="hp-banner.jpg"
+          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939738/hp_ntmpcm.png"
           alt="HP Dell Banner Mobile"
           className="w-full h-full cover"
         />
@@ -857,7 +857,7 @@ const Home = () => {
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
         <Link to="/accessories">
         <img
-          src={window.innerWidth < 768 ? "Accessories-1480x560-100-1-600x227.jpg" : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acessories_1_ceg4gu.png"}
+          src={window.innerWidth < 768 ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939734/accessories_back_to_school_gun4tj.png" : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acessories_1_ceg4gu.png"}
           alt="Accessories Promotion Banner"
           className="w-full h-full cover rounded-lg"
         />
@@ -904,7 +904,7 @@ const Home = () => {
       {/* Mobile Banner */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
         <img
-          src="asus.png"
+          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
           alt="HP Dell Banner Mobile"
           className="w-full h-full cover"
         />
@@ -990,7 +990,7 @@ const Home = () => {
       {/* Networking Banner - Desktop/Mobile Responsive */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]"> 
         <img
-          src={window.innerWidth < 768 ? "dddd-768x291.png" : "networking.png"}
+          src={window.innerWidth < 768 ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939743/networking_1_tyt4gl.png" : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png"}
           alt="Networking Banner"
           className="w-full h-full cover rounded-lg"
         />
@@ -1036,7 +1036,7 @@ const Home = () => {
       {/* Mobile Banner */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
         <img
-          src="msi.png"
+          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
           alt="HP Dell Banner Mobile"
           className="w-full h-full cover"
         />
@@ -1129,7 +1129,7 @@ const Home = () => {
          {/* Mobile Banner */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
         <img
-          src="apple-banner-768x290.jpg"
+          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939736/apple_tzrhlx.png"
           alt="HP Dell Banner Mobile"
           className="w-full h-full cover"
         />
@@ -1140,7 +1140,7 @@ const Home = () => {
         <div className="w-1/2">
           <Link to="/hp-products">
             <img
-              src="apple half side.png"
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/apple_half_side_n1cxhc.png"
               alt="HP Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
@@ -1149,7 +1149,7 @@ const Home = () => {
         <div className="w-1/2">
           <Link to="/dell-products">
             <img
-              src="samsung half side.png"
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/samsung_half_side_gtslyc.png"
               alt="Dell Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
