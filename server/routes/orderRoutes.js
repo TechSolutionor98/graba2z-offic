@@ -295,11 +295,32 @@ import { sendOrderPlacedEmail, sendOrderStatusUpdateEmail } from "../utils/email
 
 const router = express.Router()
 
+// Middleware to optionally protect routes (sets req.user if token exists)
+const optionalProtect = asyncHandler(async (req, res, next) => {
+  let token
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    try {
+      token = req.headers.authorization.split(' ')[1]
+      const jwt = await import('jsonwebtoken')
+      const User = await import('../models/userModel.js')
+      
+      const decoded = jwt.default.verify(token, process.env.JWT_SECRET)
+      req.user = await User.default.findById(decoded.id).select('-password')
+    } catch (error) {
+      console.log('Optional auth failed:', error.message)
+      // Don't throw error, just continue without user
+    }
+  }
+  next()
+})
+
 // @desc    Create new order
 // @route   POST /api/orders
-// @access  Public (for guest checkout)
+// @access  Public (supports both authenticated and guest checkout)
 router.post(
   "/",
+  optionalProtect,
   asyncHandler(async (req, res) => {
     const {
       orderItems,
@@ -349,7 +370,7 @@ router.post(
 
     const order = new Order({
       orderItems,
-      ...(req.user ? { user: req.user._id } : {}),
+      user: req.user ? req.user._id : null, // Always set user field, null for guests
       deliveryType,
       shippingAddress: deliveryType === "home" ? shippingAddress : undefined,
       pickupDetails: deliveryType === "pickup" ? pickupDetails : undefined,
@@ -431,8 +452,54 @@ router.get(
   "/myorders",
   protect,
   asyncHandler(async (req, res) => {
-    const orders = await Order.find({ user: req.user._id })
-    res.json(orders)
+    // Find orders directly associated with user
+    const userOrders = await Order.find({ user: req.user._id })
+      .populate('orderItems.product', 'name image')
+      .sort({ createdAt: -1 })
+
+    // Find orders that might be associated through email (for orphaned orders)
+    const emailOrders = await Order.find({
+      user: null,
+      $or: [
+        { 'shippingAddress.email': req.user.email },
+        { 'pickupDetails.email': req.user.email }
+      ]
+    })
+      .populate('orderItems.product', 'name image')
+      .sort({ createdAt: -1 })
+    
+    // Also check for orders with undefined user field
+    const undefinedUserOrders = await Order.find({
+      user: { $exists: false },
+      $or: [
+        { 'shippingAddress.email': req.user.email },
+        { 'pickupDetails.email': req.user.email }
+      ]
+    })
+      .populate('orderItems.product', 'name image')
+      .sort({ createdAt: -1 })
+
+    // Update orphaned orders to associate them with the user
+    const ordersToUpdate = [...emailOrders, ...undefinedUserOrders]
+    if (ordersToUpdate.length > 0) {
+      await Order.updateMany(
+        {
+          _id: { $in: ordersToUpdate.map(order => order._id) }
+        },
+        { user: req.user._id }
+      )
+      
+      // Update the user field in the returned orders
+      ordersToUpdate.forEach(order => {
+        order.user = req.user._id
+      })
+    }
+
+    // Combine and sort all orders
+    const allOrders = [...userOrders, ...ordersToUpdate]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    
+    res.json(allOrders)
   }),
 )
 
