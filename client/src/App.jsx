@@ -45,6 +45,9 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import BackToSchoolGaming from "./pages/BackToSchoolGaming";
 import BackToSchoolProfessional from "./pages/BackToSchoolProfessional";
+import VoucherTerms from "./pages/VoucherTerms";
+import DeliveryTerms from "./pages/DeliveryTerms";
+
 
 // Import admin pages
 import AdminLogin from "./pages/admin/AdminLogin"
@@ -239,6 +242,22 @@ function App() {
                           <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="/backtoschool-acer-gaming" element={<BackToSchoolGaming />} />
                           <Route path="/backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
+
+
+
+
+                          <Route path="/voucher-terms" element={<VoucherTerms />} />
+                       
+                       
+                        <Route path="/delivery-terms" element={<DeliveryTerms />} />
+                       
+                       
+                       
+                       
+                       
+                       
+                       
+                       
                           {/* Protected Routes */}
                           <Route
                             path="/checkout"

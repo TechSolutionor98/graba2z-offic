@@ -1,380 +1,283 @@
-"use client";
+"use client"
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Shield, Lock, Eye, FileText, Users, Globe, Phone, Mail, MapPin, Clock, CreditCard, Database } from "lucide-react";
+import { useState } from "react"
+import { Mail, Phone, Clock, MapPin } from "lucide-react"
 
 export default function PrivacyPolicy() {
-  const navigate = useNavigate();
+  const [language, setLanguage] = useState("english")
 
-  const handleArabicClick = () => {
-    navigate('/privacy-policy-arabic');
-  };
+  const content = {
+    english: {
+      title: "Privacy Policy",
+      
+      company: "Company: Grabatoz powered by Crown Excel General Trading LLC",
+      sections: {
+        introduction: {
+          title: "Introduction",
+          content: `Grabatoz, powered by Crown Excel General Trading LLC ("we," "us," or "our"), respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, and protect your information when you use our website grabatoz.ae and related services.`,
+        },
+        dataCollection: {
+          title: "Data Collection and Usage",
+          points: [
+            "We do not collect personal data from users located in the European Union (EU).",
+            "We use certain authorized third-party service providers, such as payment gateways, analytics tools, and shipping providers, to operate and improve our services. These third parties may collect and process data according to their own privacy policies.",
+            "We collect information you provide voluntarily, such as during registration, purchases, or contacting customer support, and use it solely to provide, personalize, and enhance our services.",
+          ],
+        },
+        cookies: {
+          title: "Cookies and Tracking Technologies",
+          points: [
+            "Our site uses cookies and similar tracking technologies to improve user experience, security, and site functionality.",
+            "Cookies may be used to remember your preferences, enable shopping features, analyze site traffic, and display personalized content or advertisements.",
+            "You may disable cookies via your browser settings; however, some features of our site may not function properly without cookies enabled.",
+          ],
+        },
+        rights: {
+          title: "Your Rights",
+          points: [
+            "You have the right to access, correct, or delete your personal data.",
+            "You may opt out of marketing communications at any time.",
+            "For any privacy-related inquiries or to exercise your rights, please contact us at: customercare@grabatoz.ae",
+          ],
+        },
+        security: {
+          title: "Data Security",
+          content:
+            "We implement appropriate technical and organizational measures to protect your data against unauthorized access, loss, or alteration. However, internet transmissions are not completely secure, and we cannot guarantee absolute security.",
+        },
+        changes: {
+          title: "Changes to This Policy",
+          content:
+            "We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated effective date.",
+        },
+        contact: {
+          title: "Contact Information",
+          details: {
+            website: "Grabatoz.ae",
+            poweredBy: "Powered by Crown Excel General Trading LLC",
+            poBox: "P.O. Box No: 241975, Dubai, UAE",
+            customerService: "Customer Service:",
+            phone: "Tel: +971 4 354 0566",
+            email: "Email: customercare@grabatoz.ae",
+            hours: "Customer service hours: Daily from 9:00 AM to 7:00 PM",
+          },
+        },
+      },
+    },
+    arabic: {
+      title: "سياسة الخصوصية",
+      effectiveDate: "تاريخ النفاذ: [أدخل التاريخ]",
+      company: "شركة: Grabatoz powered by Crown Excel General Trading LLC",
+      sections: {
+        introduction: {
+          title: "مقدمة",
+          content: `تحترم شركة Grabatoz المدعومة من Crown Excel General Trading LLC ("نحن"، "لنا" أو "خاصتنا") خصوصيتك وتلتزم بحماية بياناتك الشخصية. توضح سياسة الخصوصية هذه كيفية جمع معلوماتك واستخدامها وحمايتها عند استخدامك لموقعنا الإلكتروني grabatoz.ae والخدمات ذات الصلة.`,
+        },
+        dataCollection: {
+          title: "جمع واستخدام البيانات",
+          points: [
+            "نحن لا نجمع بيانات شخصية من المستخدمين المقيمين في الاتحاد الأوروبي.",
+            "نستخدم مزودي خدمات من طرف ثالث مخولين، مثل بوابات الدفع وأدوات التحليل ومزودي الشحن، لتشغيل وتحسين خدماتنا. قد يقوم هؤلاء الطرف الثالث بجمع ومعالجة البيانات وفقًا لسياسات الخصوصية الخاصة بهم.",
+            "نجمع المعلومات التي تقدمها طواعيةً، مثل التسجيل أو الشراء أو التواصل مع دعم العملاء، ونستخدمها فقط لتقديم خدماتنا وتخصيصها وتحسينها.",
+          ],
+        },
+        cookies: {
+          title: "ملفات تعريف الارتباط وتقنيات التتبع",
+          points: [
+            "يستخدم موقعنا ملفات تعريف الارتباط وتقنيات التتبع المماثلة لتحسين تجربة المستخدم والأمان ووظائف الموقع.",
+            "قد تُستخدم ملفات تعريف الارتباط لتذكر تفضيلاتك، وتمكين ميزات التسوق، وتحليل حركة الموقع، وعرض محتوى أو إعلانات مخصصة.",
+            "يمكنك تعطيل ملفات تعريف الارتباط من خلال إعدادات المتصفح، لكن بعض ميزات الموقع قد لا تعمل بشكل صحيح بدون تمكين ملفات تعريف الارتباط.",
+          ],
+        },
+        rights: {
+          title: "حقوقك",
+          points: [
+            "لديك الحق في الوصول إلى بياناتك الشخصية وتصحيحها أو حذفها.",
+            "يمكنك إلغاء الاشتراك في الاتصالات التسويقية في أي وقت.",
+            "لأي استفسارات متعلقة بالخصوصية أو لممارسة حقوقك، يرجى التواصل معنا على: customercare@grabatoz.ae",
+          ],
+        },
+        security: {
+          title: "أمان البيانات",
+          content:
+            "نطبق التدابير الفنية والتنظيمية المناسبة لحماية بياناتك من الوصول غير المصرح به أو الفقدان أو التغيير. ومع ذلك، لا يمكن ضمان الأمان الكامل للبيانات أثناء النقل عبر الإنترنت.",
+        },
+        changes: {
+          title: "تغييرات هذه السياسة",
+          content:
+            "قد نقوم بتحديث سياسة الخصوصية هذه من وقت لآخر. سيتم نشر التغييرات على هذه الصفحة مع تاريخ النفاذ المحدث.",
+        },
+        contact: {
+          title: "معلومات الاتصال",
+          details: {
+            website: "Grabatoz.ae",
+            poweredBy: "شركة Crown Excel General Trading LLC",
+            poBox: "صندوق بريد: 241975، دبي",
+            customerService: "خدمة العملاء:",
+            phone: "هاتف: +971 4 354 0566",
+            email: "البريد الإلكتروني: customercare@grabatoz.ae",
+            hours: "ساعات خدمة العملاء: يوميًا من 9:00 صباحًا حتى 7:00 مساءً",
+          },
+        },
+      },
+    },
+  }
+
+  const currentContent = content[language]
+  const isArabic = language === "arabic"
 
   return (
-    <div className="bg-white min-h-screen">
-      {/* Header */}
-      <div className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-12 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="bg-lime-500 rounded-full p-4">
-              <Shield className="w-12 h-12 text-white" />
+    <div className={`min-h-screen bg-gray-50 py-8 px-4 ${isArabic ? "rtl" : "ltr"}`}>
+      <div className="max-w-4xl mx-auto">
+        {/* Language Toggle Buttons */}
+        <div className="flex justify-center gap-4 mb-8">
+          <button
+            onClick={() => setLanguage("english")}
+            className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
+              language === "english"
+                ? "bg-lime-500 text-white hover:bg-lime-600 shadow-lg"
+                : "bg-white border-2 border-lime-500 text-lime-500 hover:bg-lime-50"
+            }`}
+          >
+            English
+          </button>
+          <button
+            onClick={() => setLanguage("arabic")}
+            className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
+              language === "arabic"
+                ? "bg-lime-500 text-white hover:bg-lime-600 shadow-lg"
+                : "bg-white border-2 border-lime-500 text-lime-500 hover:bg-lime-50"
+            }`}
+          >
+            العربية
+          </button>
+        </div>
+
+        {/* Main Card */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{currentContent.title}</h1>
+              <p className="text-gray-600 mb-2">{currentContent.effectiveDate}</p>
+              <p className="text-gray-700 font-medium">{currentContent.company}</p>
             </div>
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Privacy Policy
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Understanding how we collect, use, and protect your personal information at Grabatoz.ae
-          </p>
-          
-          {/* Language Switch Button */}
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={handleArabicClick}
-              className="bg-lime-500 hover:bg-lime-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
-            >
-              العربية Arabic
-            </button>
+
+            {/* Introduction */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 border-b-2 border-lime-500 pb-2">
+                {currentContent.sections.introduction.title}
+              </h2>
+              <p className="text-gray-700 leading-relaxed">{currentContent.sections.introduction.content}</p>
+            </section>
+
+            {/* Data Collection and Usage */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 border-b-2 border-lime-500 pb-2">
+                {currentContent.sections.dataCollection.title}
+              </h2>
+              <ul className="space-y-3">
+                {currentContent.sections.dataCollection.points.map((point, index) => (
+                  <li key={index} className="text-gray-700 leading-relaxed flex items-start">
+                    <span className="inline-block w-2 h-2 bg-lime-500 rounded-full mt-2 mr-3 ml-1 flex-shrink-0"></span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Cookies and Tracking Technologies */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 border-b-2 border-lime-500 pb-2">
+                {currentContent.sections.cookies.title}
+              </h2>
+              <ul className="space-y-3">
+                {currentContent.sections.cookies.points.map((point, index) => (
+                  <li key={index} className="text-gray-700 leading-relaxed flex items-start">
+                    <span className="inline-block w-2 h-2 bg-lime-500 rounded-full mt-2 mr-3 ml-1 flex-shrink-0"></span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Your Rights */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 border-b-2 border-lime-500 pb-2">
+                {currentContent.sections.rights.title}
+              </h2>
+              <ul className="space-y-3">
+                {currentContent.sections.rights.points.map((point, index) => (
+                  <li key={index} className="text-gray-700 leading-relaxed flex items-start">
+                    <span className="inline-block w-2 h-2 bg-lime-500 rounded-full mt-2 mr-3 ml-1 flex-shrink-0"></span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Data Security */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 border-b-2 border-lime-500 pb-2">
+                {currentContent.sections.security.title}
+              </h2>
+              <p className="text-gray-700 leading-relaxed">{currentContent.sections.security.content}</p>
+            </section>
+
+            {/* Changes to This Policy */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 border-b-2 border-lime-500 pb-2">
+                {currentContent.sections.changes.title}
+              </h2>
+              <p className="text-gray-700 leading-relaxed">{currentContent.sections.changes.content}</p>
+            </section>
+
+            {/* Contact Information */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6 border-b-2 border-lime-500 pb-2">
+                {currentContent.sections.contact.title}
+              </h2>
+              <div className="bg-gray-50 rounded-lg p-6 border-l-4 border-lime-500">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-5 h-5 text-lime-500 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-gray-900">{currentContent.sections.contact.details.website}</p>
+                      <p className="text-gray-700">{currentContent.sections.contact.details.poweredBy}</p>
+                      <p className="text-gray-700">{currentContent.sections.contact.details.poBox}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <p className="font-medium text-gray-900 mb-3">
+                      {currentContent.sections.contact.details.customerService}
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <Phone className="w-5 h-5 text-lime-500 flex-shrink-0" />
+                        <span className="text-gray-700">{currentContent.sections.contact.details.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Mail className="w-5 h-5 text-lime-500 flex-shrink-0" />
+                        <a
+                          href="mailto:customercare@grabatoz.ae"
+                          className="text-lime-600 hover:text-lime-800 transition-colors underline"
+                        >
+                          {currentContent.sections.contact.details.email}
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Clock className="w-5 h-5 text-lime-500 flex-shrink-0" />
+                        <span className="text-gray-700">{currentContent.sections.contact.details.hours}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </div>
-
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        
-        {/* Introduction */}
-        <div className="bg-white rounded-lg p-1">
-          <div className="flex flex-col md:flex-row md:items-start gap-4">
-            <div className="flex justify-center md:justify-start">
-              <FileText className="w-8 h-8 text-lime-500 mt-1 flex-shrink-0" />
-            </div>
-            <div className="text-center md:text-left">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Important Notice</h2>
-              <p className="text-gray-700 leading-relaxed">
-                Grabatoz, powered by Crown Excel General Trading LLC ("we," "us," or "our"), respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, and protect your information when you use our website grabatoz.ae and related services.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Privacy Images */}
-        <div className="bg-white rounded-lg mt-5 p-1">
-          <div className="flex flex-col md:flex-row md:items-center gap-3">
-            <div className="flex justify-center md:justify-start">
-              {/* <Eye className="w-8 h-8 text-lime-500" /> */}
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"></h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="relative">
-              <img 
-                src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" 
-                alt="Data Protection" 
-                className="rounded-lg shadow-md object-cover w-full h-48"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center">
-                <p className="text-white font-semibold text-lg">Data Protection</p>
-              </div>
-            </div>
-            <div className="relative">
-              <img 
-                src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" 
-                alt="Secure Information" 
-                className="rounded-lg shadow-md object-cover w-full h-48"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center">
-                <p className="text-white font-semibold text-lg">Secure Information</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Account and Registration */}
-        <section className="bg-white rounded-lg mt-5 p-1">
-          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
-            <div className="flex justify-center md:justify-start">
-              <Users className="w-8 h-8 text-lime-500" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Account and Registration Obligations</h2>
-          </div>
-          
-          <div className="space-y-4 text-gray-700">
-            <p>
-              Grabatoz respect your privacy. This Privacy Policy provides succinctly the manner your data is collected and used by grabatoz.ae. You are advised to please read this Privacy Policy carefully. By accessing the services provided by grabatoz.ae you agree to the collection and use of your data by grabatoz.ae and certain authorized third-party service providers in the manner provided in this Privacy Policy.
-            </p>
-            <p>
-              If you do not agree with this Privacy Policy, please do not use the website ("grabatoz.ae"). This Privacy Policy describes the information, as part of the normal operation of our services; we collect from you and what may happen to that information.
-            </p>
-            <div className="bg-lime-50 border-l-4 border-lime-500 p-4 rounded">
-              <p className="font-medium text-gray-800">
-                By accepting the Privacy Policy during registration, you expressly consent to our use and disclosure of your personal information in accordance with this Privacy Policy.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Privacy Commitment */}
-        <section className="bg-white rounded-lg mt-5 p-1">
-          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
-            <div className="flex justify-center md:justify-start">
-              <Shield className="w-8 h-8 text-lime-500" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Your Privacy – Our Commitment</h2>
-          </div>
-          
-          <div className="space-y-4 text-gray-700">
-            <ul className="list-disc list-inside space-y-2">
-              <li>Feel secure using our site</li>
-              <li>Contact us with privacy concerns</li>
-              <li>Contact Us with your questions or concerns about privacy on this Site</li>
-              <li>Know your data is protected and only used for service enhancement</li>
-            </ul>
-            
-            <div className="bg-lime-50 border-l-4 border-lime-500 p-4 rounded mt-6">
-              <h3 className="font-semibold text-gray-800 mb-2">Privacy Guarantee:</h3>
-              <p className="text-gray-700">
-                <strong>Grabatoz</strong> promises that we will not sell or rent your personal information to third parties (except as provided in this Privacy Policy) without your consent. Your trust and confidence are our highest priority.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Information Collection */}
-        <section className="bg-white rounded-lg mt-5 p-1">
-          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
-            <div className="flex justify-center md:justify-start">
-              <Database className="w-8 h-8 text-lime-500" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Information We Collect</h2>
-          </div>
-          
-          <div className="space-y-4 text-gray-700">
-            <ul className="list-disc list-inside space-y-2">
-              <li>Registration and profile details</li>
-              <li>Transaction and payment card details</li>
-              <li>Anonymous data via cookies (IP, browser, device type)</li>
-              <li>Optional survey, feedback, or promotional data</li>
-            </ul>
-            
-            <div className="mt-6">
-              <h3 className="font-semibold text-lg mb-2">What Information Is or may be collected from You:</h3>
-              <p>
-                Grabatoz.ae collects the details provided by you on registration together with information we learn about you from your use of our service and your visits to our Site. We also collect information about the transactions you undertake including details of payment cards used. We may collect additional information in connection with your participation in any promotions or competitions offered by us.
-              </p>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="font-semibold text-lg mb-2">Personally Identifiable Information:</h3>
-              <p>We may collect the following personally identifiable information about you:</p>
-              <ul className="list-disc list-inside space-y-1 mt-2">
-                <li>Name including first and last name</li>
-                <li>Mobile phone number and contact details</li>
-                <li>Demographic profile (like your age, address)</li>
-                <li>Opinions on the features on our Site</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* Credit Card Security */}
-        <section className="bg-white rounded-lg mt-5 p-1">
-          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
-            <div className="flex justify-center md:justify-start">
-              <CreditCard className="w-8 h-8 text-lime-500" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Credit/Debit Card Security</h2>
-          </div>
-          
-          <div className="space-y-4 text-gray-700">
-            <p>
-              We do not keep any credit card details in our database or server, which is processed through SSL environment. All credit/debit cards details will NOT be sold, shared, rented or leased to any third parties.
-            </p>
-            
-            <div className="bg-lime-50 border-l-4 border-lime-500 p-4 rounded">
-              <h3 className="font-semibold text-gray-800 mb-2">Anonymous Information:</h3>
-              <p className="text-gray-700">
-                We will automatically receive and collect certain anonymous information in standard usage logs through our Web server, including computer-identification information obtained from "cookies" sent to your browser.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Use of Information */}
-        <section className="bg-white rounded-lg mt-5 p-1">
-          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
-            <div className="flex justify-center md:justify-start">
-              <Globe className="w-8 h-8 text-lime-500" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Use of Your Information</h2>
-          </div>
-          
-          <div className="space-y-4 text-gray-700">
-            <ul className="list-disc list-inside space-y-2">
-              <li>Provide and improve personalized services</li>
-              <li>Contact you for service, support, and promotions</li>
-              <li>Send newsletters, surveys, or notifications</li>
-              <li>Analyze site usage and traffic patterns</li>
-            </ul>
-
-            <div className="mt-6">
-              <h3 className="font-semibold text-lg mb-2">Our Use of Your Information:</h3>
-              <p>Use your personal information to:</p>
-              <ul className="list-disc list-inside space-y-1 mt-2">
-                <li>Help us provide personalized features</li>
-                <li>Tailor our Site to your interests</li>
-                <li>Get in touch with you whenever necessary</li>
-                <li>Provide the services requested by you</li>
-                <li>Preserve social history as governed by existing law or policy</li>
-              </ul>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="font-semibold text-lg mb-2">Our Disclosure of Your Information:</h3>
-              <p>We will not use your personal information for any purpose other than to complete a transaction with you. We do not rent, sell or share your personal information and we will not disclose any of your personally identifiable information to third parties unless:</p>
-              <ul className="list-disc list-inside space-y-1 mt-2">
-                <li>We have your permission</li>
-                <li>To provide products or services you've requested</li>
-                <li>To help investigate, prevent or take action regarding unlawful and illegal activities</li>
-                <li>Special circumstances such as compliance with subpoenas, court orders, requests from legal authorities</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* Data Security */}
-        <section className="bg-white rounded-lg mt-5 p-1">
-          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
-            <div className="flex justify-center md:justify-start">
-              <Lock className="w-8 h-8 text-lime-500" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Data Security and Your Rights</h2>
-          </div>
-          
-          <div className="space-y-4 text-gray-700">
-            <p>
-              To protect against the loss, misuse and alteration of the information under our control, we have in place appropriate physical, electronic and managerial procedures.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              <div className="relative">
-                <img 
-                  src="security.jpg" 
-                  alt="Data Security" 
-                  className="rounded-lg shadow-md object-cover w-full h-48"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center">
-                  <p className="text-white font-semibold">Secure Servers</p>
-                </div>
-              </div>
-              <div className="relative">
-                <img 
-                  src="Rights.jpg" 
-                  alt="User Rights" 
-                  className="rounded-lg shadow-md object-cover w-full h-48"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center">
-                  <p className="text-white font-semibold">User Rights</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="font-semibold text-lg mb-2">Your Users' Rights:</h3>
-              <p>You have specific rights concerning your personal data under applicable laws:</p>
-              <ul className="list-disc list-inside space-y-1 mt-2">
-                <li>Right to information</li>
-                <li>Right to rectification or erasure</li>
-                <li>Right to restriction of processing</li>
-                <li>Right to object to processing</li>
-                <li>Right to data portability</li>
-              </ul>
-            </div>
-
-            <div className="bg-lime-50 border-l-4 border-lime-500 p-4 rounded mt-6">
-              <h3 className="font-semibold text-gray-800 mb-2">Cookies and Tracking Technologies:</h3>
-              <p className="text-gray-700">
-                Our site uses cookies and similar tracking technologies to improve user experience, security, and site functionality. You may disable cookies via your browser settings; however, some features may not function properly without cookies enabled.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Updates and Contact */}
-        <section className="bg-white rounded-lg mt-5 p-1">
-          <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
-            <div className="flex justify-center md:justify-start">
-              <FileText className="w-8 h-8 text-lime-500" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Updates and Your Consent</h2>
-          </div>
-          
-          <div className="space-y-4 text-gray-700">
-            <p>
-              This privacy notice may be updated periodically due to legal changes or new features. We recommend checking it regularly for updates.
-            </p>
-            <p>
-              By using the Site, you consent to the collection and use of the information you disclose on grabatoz.ae by Crown Excel General Trading LLC. If we change our Privacy Policy, we will post those changes on this page to keep you informed.
-            </p>
-          </div>
-        </section>
-
-      </div>
-
-      {/* Contact Information */}
-      <section className="bg-gray-50 text-black p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-semibold mb-2">Contact Information</h2>
-            <p className="text-black">Get in touch with our team for any questions or concerns</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="text-center">
-              <div className="flex justify-center mb-2">
-                <Phone className="w-5 h-5 text-lime-500" />
-              </div>
-              <h3 className="font-medium mb-1">Phone</h3>
-              <a href="tel:+97143540566" className="text-lime-500">
-                +971 4 354 0566
-              </a>
-            </div>
-            
-            <div className="text-center">
-              <div className="flex justify-center mb-2">
-                <Mail className="w-5 h-5 text-lime-500" />
-              </div>
-              <h3 className="font-medium mb-1">Email</h3>
-              <a href="mailto:customercare@grabatoz.ae" className="text-lime-500">
-                customercare@grabatoz.ae
-              </a>
-            </div>
-            
-            <div className="text-center">
-              <div className="flex justify-center mb-2">
-                <Clock className="w-5 h-5 text-lime-500" />
-              </div>
-              <h3 className="font-medium mb-1">Hours</h3>
-              <p className="text-lime-500">Daily 9:00 AM - 7:00 PM</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="flex justify-center mb-2">
-                <MapPin className="w-5 h-5 text-lime-500" />
-              </div>
-              <h3 className="font-medium mb-1">Address</h3>
-              <p className="text-lime-500">P.O. Box 241975, Dubai, UAE</p>
-            </div>
-          </div>
-          
-          <div className="text-center pt-4 border-t border-gray-700">
-            <p className="text-black">
-              <strong>Grabatoz.ae</strong><br />
-              <b>Powered by Crown Excel General Trading LLC</b>
-            </p>
-          </div>
-        </div>
-      </section>
     </div>
-  );
+  )
 }

@@ -176,7 +176,7 @@ const Footer = ({ className = "" }) => {
 
             {/* Column 4 - Support */}
             <div className="md:col-span-2">
-              <h3 className="text-2xl font-semibold mb-4">Support</h3>
+              <h3 className="text-2xl font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-white text-sm">
                 <li>
                   <Link to="/refund-return" className="hover:text-lime-400">
@@ -208,13 +208,23 @@ const Footer = ({ className = "" }) => {
                     Track Order
                   </Link>
                 </li>
-             
+
+                <li>
+                  <Link to="/voucher-terms" className="hover:text-lime-400">
+                    Voucher Terms 
+                  </Link>
+                </li>
+             <li>
+                  <Link to="/delivery-terms" className="hover:text-lime-400">
+                    Delivery Terms 
+                  </Link>
+                </li>
               </ul>
             </div>
 
             {/* Column 5 - Legal */}
             <div className="md:col-span-2">
-              <h3 className="text-2xl font-semibold mb-4">Legal</h3>
+              <h3 className="text-2xl font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-white text-sm">
                 <li>
                   <Link to="/about" className="hover:text-lime-400">
