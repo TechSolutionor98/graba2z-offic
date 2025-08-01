@@ -43,6 +43,8 @@ import PaymentSuccess from "./pages/PaymentSuccess"
 import PaymentCancel from "./pages/PaymentCancel"
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import BackToSchoolGaming from "./pages/BackToSchoolGaming";
+import BackToSchoolProfessional from "./pages/BackToSchoolProfessional";
 
 // Import admin pages
 import AdminLogin from "./pages/admin/AdminLogin"
@@ -235,6 +237,8 @@ function App() {
                           <Route path="/payment/cancel" element={<PaymentCancel />} />
                           <Route path="/forgot-password" element={<ForgotPassword />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
+                          <Route path="/backtoschool-acer-gaming" element={<BackToSchoolGaming />} />
+                          <Route path="/backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
                           {/* Protected Routes */}
                           <Route
                             path="/checkout"

@@ -212,6 +212,28 @@ router.get(
   }),
 )
 
+// @desc    Fetch products by SKU array
+// @route   POST /api/products/by-skus
+// @access  Public
+router.post("/by-skus", asyncHandler(async (req, res) => {
+  const { skus } = req.body
+  
+  if (!skus || !Array.isArray(skus)) {
+    return res.status(400).json({ message: "SKUs array is required" })
+  }
+  
+  const products = await Product.find({ 
+    sku: { $in: skus },
+    isActive: true 
+  })
+  .populate("category", "name slug")
+  .populate("subCategory", "name slug")
+  .populate("brand", "name slug")
+  .populate("parentCategory", "name slug")
+  
+  res.json(products)
+}))
+
 // @desc    Fetch single product by ID
 // @route   GET /api/products/:id
 // @access  Public

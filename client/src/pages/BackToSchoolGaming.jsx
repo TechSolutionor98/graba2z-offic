@@ -1,0 +1,195 @@
+import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
+import { productsAPI } from "../services/api"
+import CampaignProductCard from "../components/CampaignProductCard"
+
+const BackToSchoolGaming = () => {
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(false) // Start with false for instant display
+  const [error, setError] = useState(null)
+
+  // Gaming laptop SKUs
+  const gamingSkus = [
+    "NH.QTREM.001",
+    "NH.QTQEM.001"
+  ]
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        // Fetch ONLY the specific products by SKU
+        const gamingProducts = await productsAPI.getBySkus(gamingSkus)
+        
+        console.log('Gaming products found:', gamingProducts.length)
+        console.log('Found products:', gamingProducts.map(p => ({ sku: p.sku, name: p.name })))
+        
+        setProducts(gamingProducts)
+      } catch (err) {
+        console.error("Error fetching gaming products:", err)
+        setError("Failed to load products")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [])
+
+  if (loading && products.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-4">{error}</div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+            {/* Banner Section */}
+      <div className="">
+        {/* Background Image */}
+        <div className=" inset-0">
+          <img
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1754030807/acer_2_d5wwif.png"
+            alt="Acer Gaming Laptops"
+            className="w-full h-full object-cover mt-2"
+          />
+        </div>
+        
+      
+      </div>
+
+
+      {/* Punchline Section */}
+      <div className="bg-white py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            Dominate Every Game with Acer 
+          </h2>
+        
+        </div>
+      </div>
+
+      {/* Products Section */}
+      <div className="bg-white -mt-6 ">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+            Gaming Laptops Collection
+          </h2>
+          
+                    {products.length === 0 ? (
+            <div className="text-center col-span-full py-12">
+              <div className="text-gray-500 text-xl mb-4">No gaming laptops found</div>
+              <p className="text-gray-400">Please check back later or contact us for availability.</p>
+            </div>
+          ) : (
+            <div className="flex justify-center items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 ">
+              {products.map((product) => (
+                <CampaignProductCard key={product._id} product={product} />
+              ))}
+              </div>
+            </div>
+          )}
+          
+          
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="bg-white py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+            Why Choose Acer Gaming Laptops?
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">High Performance</h3>
+              <p className="text-gray-600">
+                Powered by Intel Core i7 processors and NVIDIA RTX graphics for ultimate gaming performance.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">165Hz Display</h3>
+              <p className="text-gray-600">
+                Ultra-smooth 165Hz refresh rate for fluid gameplay and reduced motion blur.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Backlit Keyboard</h3>
+              <p className="text-gray-600">
+                RGB backlit keyboard for gaming in any lighting condition with customizable colors.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Professional Laptops Banner */}
+      <Link to="/backtoschool-acer-professional" className="block">
+        <div className="relative h-80 overflow-hidden group cursor-pointer ">
+          {/* Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
+            style={{
+              backgroundImage: 'url("https://res.cloudinary.com/dyfhsu5v6/image/upload/v1754034599/acer_3_aoqkw2.png")'
+            }}
+          >
+            {/* Dark overlay */}
+            <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-all duration-300"></div>
+          </div>
+          
+          {/* Content */}
+          <div className="relative z-10 h-full flex items-center justify-center">
+            <div className="text-center text-white transform transition-all duration-300 group-hover:scale-110">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200">
+                Shop Professional Laptops
+              </h2>
+              <div className="w-24 h-1 bg-white mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300"></div>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </div>
+  )
+}
+
+export default BackToSchoolGaming

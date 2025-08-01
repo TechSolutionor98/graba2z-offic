@@ -92,51 +92,56 @@ export const authAPI = {
 export const productsAPI = {
   getAll: (params = {}) => {
     const queryString = new URLSearchParams(params).toString()
-    return apiRequest(`/products${queryString ? `?${queryString}` : ""}`)
+    return apiRequest(`/api/products${queryString ? `?${queryString}` : ""}`)
   },
 
-  getById: (id) => apiRequest(`/products/${id}`),
+  getById: (id) => apiRequest(`/api/products/${id}`),
 
   create: (productData) =>
-    apiRequest("/products", {
+    apiRequest("/api/products", {
       method: "POST",
       body: JSON.stringify(productData),
     }),
 
   update: (id, productData) =>
-    apiRequest(`/products/${id}`, {
+    apiRequest(`/api/products/${id}`, {
       method: "PUT",
       body: JSON.stringify(productData),
     }),
 
   delete: (id) =>
-    apiRequest(`/products/${id}`, {
+    apiRequest(`/api/products/${id}`, {
       method: "DELETE",
     }),
 
-  getByCategory: (categoryId) => apiRequest(`/products/category/${categoryId}`),
+  getByCategory: (categoryId) => apiRequest(`/api/products/category/${categoryId}`),
 
-  search: (query) => apiRequest(`/products/search?q=${encodeURIComponent(query)}`),
+  search: (query) => apiRequest(`/api/products/search?q=${encodeURIComponent(query)}`),
 
   getBySlug: (slug) => apiRequest(`/api/products/slug/${slug}`),
+  getBySku: (sku) => apiRequest(`/api/products?search=${encodeURIComponent(sku)}`),
+  getBySkus: (skus) => apiRequest(`/api/products/by-skus`, {
+    method: "POST",
+    body: JSON.stringify({ skus }),
+  }),
 }
 
 // Categories API calls
 export const categoriesAPI = {
-  getAll: () => apiRequest("/categories"),
-  getById: (id) => apiRequest(`/categories/${id}`),
+  getAll: () => apiRequest("/api/categories"),
+  getById: (id) => apiRequest(`/api/categories/${id}`),
   create: (categoryData) =>
-    apiRequest("/categories", {
+    apiRequest("/api/categories", {
       method: "POST",
       body: JSON.stringify(categoryData),
     }),
   update: (id, categoryData) =>
-    apiRequest(`/categories/${id}`, {
+    apiRequest(`/api/categories/${id}`, {
       method: "PUT",
       body: JSON.stringify(categoryData),
     }),
   delete: (id) =>
-    apiRequest(`/categories/${id}`, {
+    apiRequest(`/api/categories/${id}`, {
       method: "DELETE",
     }),
 }
