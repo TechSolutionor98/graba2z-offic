@@ -208,16 +208,7 @@ const Footer = ({ className = "" }) => {
                     Track Order
                   </Link>
                 </li>
-                <li>
-                  <Link to="/wishlist" className="hover:text-lime-400">
-                    Wishlist
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/cart" className="hover:text-lime-400 font-semibold">
-                    Cart
-                  </Link>
-                </li>
+             
               </ul>
             </div>
 
@@ -253,6 +244,16 @@ const Footer = ({ className = "" }) => {
                 <li>
                   <Link to="/register" className="hover:text-lime-400">
                     Register
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/wishlist" className="hover:text-lime-400">
+                    Wishlist
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/cart" className="hover:text-lime-400 font-semibold">
+                    Cart
                   </Link>
                 </li>
               </ul>
