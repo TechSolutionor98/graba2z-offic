@@ -3,6 +3,16 @@ import { Link } from "react-router-dom"
 import { productsAPI } from "../services/api"
 import CampaignProductCard from "../components/CampaignProductCard"
 
+// Helper function to determine status color
+const getStatusColor = (status) => {
+  const statusLower = status.toLowerCase()
+  if (statusLower.includes('available')) return 'bg-green-600 hover:bg-green-700'
+  if (statusLower.includes('out of stock') || statusLower.includes('outofstock')) return 'bg-red-600 hover:bg-red-700'
+  if (statusLower.includes('pre-order') || statusLower.includes('preorder')) return 'bg-blue-600 hover:bg-blue-700'
+  if (statusLower.includes('limited') || statusLower.includes('low stock')) return 'bg-yellow-500 hover:bg-yellow-600'
+  return 'bg-gray-600 hover:bg-gray-700'
+}
+
 const BackToSchoolGaming = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false) // Start with false for instant display
@@ -89,31 +99,102 @@ const BackToSchoolGaming = () => {
         </div>
       </div>
 
-      {/* Products Section */}
-      <div className="bg-white -mt-6 ">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-            Gaming Laptops Collection
-          </h2>
-          
-                    {products.length === 0 ? (
-            <div className="text-center col-span-full py-12">
-              <div className="text-gray-500 text-xl mb-4">No gaming laptops found</div>
-              <p className="text-gray-400">Please check back later or contact us for availability.</p>
-            </div>
-          ) : (
-            <div className="flex justify-center items-center">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 ">
-              {products.map((product) => (
-                <CampaignProductCard key={product._id} product={product} />
-              ))}
-              </div>
-            </div>
-          )}
-          
-          
+      {/* Professional Laptops Collection Section */}
+      <section className="relative my-6 overflow-hidden" style={{ minHeight: '420px' }}>
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <div
+            className="w-full h-full bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: 'url(gaming.png)',
+              height: '100%',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              minHeight: '420px',
+            }}
+          ></div>
         </div>
-      </div>
+
+        {/* Content Container */}
+        <div className="relative max-w-8xl px-5">
+          <div className="flex justify-end">
+            <div className="w-full 2xl:max-w-[1170px] max-w-[900px] relative">
+              {products.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-white text-xl mb-4">No gaming laptops found</div>
+                  <p className="text-gray-200">Please check back later or contact us for availability.</p>
+                </div>
+              ) : (
+                <div className="overflow-hidden my-5 mx-3">
+                  <div className="flex gap-4 justify-center">
+                    {products.slice(0, 2).map((product) => (
+                      <div key={product._id} className="flex-shrink-0">
+                        <div className="border p-2 h-[450px] flex flex-col justify-between bg-white" style={{ width: "240px" }}>
+                          <div className="relative mb-2 flex h-[] justify-center items-center">
+                            <Link to={`/product/${product.slug || product._id}`}>
+                              <img
+                                src={product.image || "/placeholder.svg?height=120&width=120"}
+                                alt={product.name}
+                                className="rounded mx-auto"
+                              />
+                            </Link>
+                          </div>
+                          <div className="mb-1 flex items-center gap-2">
+                            <div className={`${getStatusColor(product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock"))} text-white px-1 py-0.5 rounded text-xs inline-block mr-1`}>
+                              {(product.stockStatus && product.stockStatus.replace(/^\d+\s*/, '').trim()) || (product.countInStock > 0 ? "Available" : "Out of Stock")}
+                            </div>
+                            {product.discount && Number(product.discount) > 0 && (
+                              <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs inline-block">{product.discount}% Off</div>
+                            )}
+                          </div>
+                          <Link to={`/product/${product.slug || product._id}`}>
+                            <h3 className="text-xs font-sm text-gray-900 line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
+                          </Link>
+                          {product.category && <div className="text-xs text-yellow-600">Category: {product.category?.name || product.category}</div>}
+                          <div className="text-xs text-green-600">Inclusive VAT</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-red-600 font-bold text-sm">
+                              {Number(product.offerPrice && product.offerPrice < product.price ? product.offerPrice : product.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+                            </div>
+                            {product.offerPrice && product.offerPrice < product.price && (
+                              <div className="text-gray-400 line-through text-xs font-medium">
+                                {Number(product.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center">
+                            {[...Array(5)].map((_, i) => (
+                              <svg
+                                key={i}
+                                className={`w-3 h-3 ${i < Math.round(product.rating || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                            ))}
+                            <span className="text-xs text-gray-500 ml-1">({product.numReviews || 0})</span>
+                          </div>
+                          <Link
+                            to={`/product/${product.slug || product._id}`}
+                            className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                            View Details
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Features Section */}
       <div className="bg-white py-16">

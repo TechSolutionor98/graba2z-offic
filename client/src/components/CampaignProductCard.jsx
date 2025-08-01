@@ -42,7 +42,7 @@ const CampaignProductCard = ({ product }) => {
 
     return (
         <div
-            className="border p-2 h-[400px] flex flex-col justify-between bg-white"
+            className="border p-2 h-[400px] flex flex-col justify-between bg-black"
             style={{ width: "210px" }}
         >
             <div className="relative mb-2 flex h-[180px] justify-center items-center">

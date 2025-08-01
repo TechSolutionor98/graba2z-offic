@@ -94,29 +94,54 @@ const BackToSchoolGaming = () => {
         </div>
       </div>
 
-      {/* Products Section */}
-      <div className="bg-white -mt-6 ">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+      {/* Products Section with Background */}
+      <div className="relative -mt-6 py-16" style={{ minHeight: '100px' }}>
+        {/* Shared Background Image */}
+        <div className="absolute inset-0">
+          <div
+            className="w-full h-full bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: 'url(2banner.png)',
+              height: '100%',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          ></div>
+        </div>
+
+        {/* Content Container */}
+        <div className="relative container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">
             Gaming Laptops Collection
           </h2>
           
-                    {products.length === 0 ? (
-            <div className="text-center col-span-full py-12">
-              <div className="text-gray-500 text-xl mb-4">No gaming laptops found</div>
-              <p className="text-gray-400">Please check back later or contact us for availability.</p>
+          {products.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-white text-xl mb-4">No gaming laptops found</div>
+              <p className="text-gray-200">Please check back later or contact us for availability.</p>
             </div>
           ) : (
-            <div className="flex justify-center items-center">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ">
-              {products.map((product) => (
-                <CampaignProductCard key={product._id} product={product} />
-              ))}
+            <div className="space-y-12">
+              {/* First 3 Cards - Right Side */}
+              <div className="flex justify-end">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {products.slice(0, 3).map((product) => (
+                    <CampaignProductCard key={product._id} product={product} />
+                  ))}
+                </div>
+              </div>
+              
+              {/* Next 3 Cards - Left Side */}
+              <div className="flex justify-start">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {products.slice(3, 6).map((product) => (
+                    <CampaignProductCard key={product._id} product={product} />
+                  ))}
+                </div>
               </div>
             </div>
           )}
-          
-          
         </div>
       </div>
 
