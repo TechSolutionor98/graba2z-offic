@@ -39,6 +39,8 @@ const Navbar = () => {
   const [searchLoading, setSearchLoading] = useState(false)
   const searchInputRef = useRef(null)
   const searchDropdownRef = useRef(null)
+  const mobileSearchInputRef = useRef(null)
+  const mobileSearchDropdownRef = useRef(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
@@ -108,7 +110,11 @@ const Navbar = () => {
         searchDropdownRef.current &&
         !searchDropdownRef.current.contains(e.target) &&
         searchInputRef.current &&
-        !searchInputRef.current.contains(e.target)
+        !searchInputRef.current.contains(e.target) &&
+        mobileSearchDropdownRef.current &&
+        !mobileSearchDropdownRef.current.contains(e.target) &&
+        mobileSearchInputRef.current &&
+        !mobileSearchInputRef.current.contains(e.target)
       ) {
         setShowSearchDropdown(false)
       }
@@ -473,23 +479,70 @@ const Navbar = () => {
       {/* Mobile Search Overlay */}
       {isMobileSearchOpen && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-50">
-          <div className="w-full bg-white p-4 flex items-center gap-2 shadow-md relative">
-            <form onSubmit={(e) => { handleSearch(e); handleMobileSearchClose(); }} className="flex-1 flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-lime-500"
-                autoFocus
-              />
-              <button type="submit" className="px-4 py-2 bg-lime-500 text-white rounded hover:bg-green-600">
-                <Search size={18} />
+          <div className="w-full bg-white p-4 shadow-md relative">
+            <div className="flex items-center gap-2">
+              <form onSubmit={(e) => { handleSearch(e); handleMobileSearchClose(); }} className="flex-1 relative">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-lime-500"
+                    autoFocus
+                    ref={mobileSearchInputRef}
+                    onFocus={() => { if (searchResults.length > 0) setShowSearchDropdown(true) }}
+                  />
+                  {/* Loading spinner */}
+                  {searchLoading && (
+                    <span className="absolute right-16 top-1/2 transform -translate-y-1/2">
+                      <svg className="animate-spin h-5 w-5 text-lime-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                      </svg>
+                    </span>
+                  )}
+                  <button type="submit" className="px-4 py-2 bg-lime-500 text-white rounded hover:bg-green-600">
+                    <Search size={18} />
+                  </button>
+                </div>
+                {/* Mobile Autocomplete Dropdown */}
+                {showSearchDropdown && searchResults.length > 0 && (
+                  <div ref={mobileSearchDropdownRef} className="absolute left-0 right-0 bg-white border border-gray-200 shadow-lg rounded z-50 mt-2 max-h-96  overflow-y-auto">
+                    {searchResults.map((product) => (
+                      <Link
+                        key={product._id}
+                        to={`/product/${product.slug || product._id}`}
+                        className="flex items-start gap-4 px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
+                        onClick={() => {
+                          setShowSearchDropdown(false)
+                          handleMobileSearchClose()
+                        }}
+                      >
+                        <img src={product.image || "/placeholder.svg"} alt={product.name} className="w-16 h-16 object-contain rounded" />
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</div>
+                          <div className="text-xs text-gray-500 line-clamp-2">{product.description}</div>
+                        </div>
+                      </Link>
+                    ))}
+                    <Link
+                      to={`/shop?search=${encodeURIComponent(searchQuery.trim())}`}
+                      className="block text-center text-lime-600 hover:underline py-2 text-sm font-medium"
+                      onClick={() => {
+                        setShowSearchDropdown(false)
+                        handleMobileSearchClose()
+                      }}
+                    >
+                      View all results
+                    </Link>
+                  </div>
+                )}
+              </form>
+              <button onClick={handleMobileSearchClose} className="ml-2 p-2" aria-label="Close search">
+                <X size={24} className="text-gray-600" />
               </button>
-            </form>
-            <button onClick={handleMobileSearchClose} className="ml-2 p-2" aria-label="Close search">
-              <X size={24} className="text-gray-600" />
-            </button>
+            </div>
           </div>
         </div>
       )}
