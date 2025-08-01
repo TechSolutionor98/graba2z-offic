@@ -34,6 +34,14 @@ import adminRoutes from "./routes/adminRoutes.js"
 import emailTemplateRoutes from "./routes/emailTemplateRoutes.js"
 import newsletterRoutes from "./routes/newsletterRoutes.js"
 
+
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+import appRoutes from "./routes/appRoutes.js"
+
+
+
 dotenv.config()
 
 // Connect to database
@@ -92,6 +100,11 @@ app.use("/api/payment", paymentRoutes)
 app.use("/api/admin", adminRoutes)
 app.use("/api/email-templates", emailTemplateRoutes)
 app.use("/api/newsletter", newsletterRoutes)
+
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+app.use('/api/app', appRoutes)
 
 // Health check route
 app.get("/", (req, res) => {
