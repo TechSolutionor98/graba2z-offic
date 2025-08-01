@@ -607,7 +607,6 @@ const ProductDetails = () => {
                   onMouseEnter={() => !isMobile && setShowRatingDropdown(true)}
                   onMouseLeave={() => !isMobile && setShowRatingDropdown(false)}
                   onClick={handleRatingInteraction}
-                  onTouchStart={handleRatingInteraction}
                 >
                   {[...Array(5)].map((_, i) => (
                     <Star
