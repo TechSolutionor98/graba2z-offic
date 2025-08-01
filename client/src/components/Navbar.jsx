@@ -508,21 +508,21 @@ const Navbar = () => {
                 </div>
                 {/* Mobile Autocomplete Dropdown */}
                 {showSearchDropdown && searchResults.length > 0 && (
-                  <div ref={mobileSearchDropdownRef} className="absolute left-0 right-0 bg-white border border-gray-200 shadow-lg rounded z-50 mt-2 max-h-96  overflow-y-auto">
+                  <div ref={mobileSearchDropdownRef} className="absolute left-0 right-0 bg-white border border-gray-200 shadow-lg rounded z-50 mt-2 max-h-96 overflow-y-auto overflow-x-hidden">
                     {searchResults.map((product) => (
                       <Link
                         key={product._id}
                         to={`/product/${product.slug || product._id}`}
-                        className="flex items-start gap-4 px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
+                        className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
                         onClick={() => {
                           setShowSearchDropdown(false)
                           handleMobileSearchClose()
                         }}
                       >
-                        <img src={product.image || "/placeholder.svg"} alt={product.name} className="w-16 h-16 object-contain rounded" />
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</div>
-                          <div className="text-xs text-gray-500 line-clamp-2">{product.description}</div>
+                        <img src={product.image || "/placeholder.svg"} alt={product.name} className="w-12 h-12 object-contain rounded flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 text-sm break-words">{product.name}</div>
+                          <div className="text-xs text-gray-500 break-words line-clamp-2">{product.description}</div>
                         </div>
                       </Link>
                     ))}

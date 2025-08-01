@@ -2,168 +2,123 @@
 
 import { Link } from "react-router-dom"
 import { useCart } from "../context/CartContext"
-import { ShoppingCart, Heart, Star } from "lucide-react"
+import { ShoppingBag, Heart, Star } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
-import { useToast } from "../context/ToastContext"
+
+// Helper function to determine status color
+const getStatusColor = (status) => {
+    const statusLower = status.toLowerCase()
+    if (statusLower.includes('available')) return 'bg-green-600 hover:bg-green-700'
+    if (statusLower.includes('out of stock') || statusLower.includes('outofstock')) return 'bg-red-600 hover:bg-red-700'
+    if (statusLower.includes('pre-order') || statusLower.includes('preorder')) return 'bg-blue-600 hover:bg-blue-700'
+    if (statusLower.includes('limited') || statusLower.includes('low stock')) return 'bg-yellow-500 hover:bg-yellow-600'
+    return 'bg-gray-600 hover:bg-gray-700'
+}
 
 const CampaignProductCard = ({ product }) => {
-  const { addToCart } = useCart()
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
-  const { showToast } = useToast()
+    const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
+    const { addToCart } = useCart()
+    const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
+    const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
+    const basePrice = Number(product.price) || 0
+    const offerPrice = Number(product.offerPrice) || 0
 
-  const handleAddToCart = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    addToCart(product)
-    showToast && showToast("Added to cart", "success")
-  }
+    // Show offer price if it exists and is less than base price
+    const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
+    const showOldPrice = hasValidOffer
 
-  const formatPrice = (price) => {
-    return `AED ${Number(price).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-  }
-
-  // Use slug if available, otherwise fall back to ID
-  const productUrl = `/product/${product.slug || product._id}`
-
-  // Determine which price to show
-  const hasDiscount = product.discount && Number(product.discount) > 0
-  const basePrice = Number(product.price) || 0
-  const offerPrice = Number(product.offerPrice) || 0
-  
-  // Show offer price if it exists and is less than base price
-  const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
-  const showOldPrice = hasValidOffer || hasDiscount
-  
-  // Determine which price to display
-  let priceToShow = 0
-  if (hasValidOffer) {
-    priceToShow = offerPrice
-  } else if (basePrice > 0) {
-    priceToShow = basePrice
-  } else if (offerPrice > 0) {
-    priceToShow = offerPrice
-  }
-
-  const stockStatus = product.stockStatus || (product.countInStock > 0 ? 'Available Product' : 'Out of Stock')
-  // If stockStatus is explicitly set, use it. Otherwise, check countInStock
-  const isOutOfStock = product.stockStatus 
-    ? stockStatus === 'Out of Stock'
-    : (product.countInStock <= 0)
-
-  // Get category name
-  const categoryName = product.category?.name || product.parentCategory?.name || 'N/A'
-
-  // Get specifications to display
-  const getSpecifications = () => {
-    if (!product.specifications || product.specifications.length === 0) {
-      return []
+    // Determine which price to display
+    let priceToShow = 0
+    if (hasValidOffer) {
+        priceToShow = offerPrice
+    } else if (basePrice > 0) {
+        priceToShow = basePrice
+    } else if (offerPrice > 0) {
+        priceToShow = offerPrice
     }
-    
-    // Common spec keys to look for
-    const commonSpecs = ['Processor', 'RAM', 'Storage', 'Graphics', 'Display', 'Screen', 'OS', 'Operating System']
-    
-    return product.specifications
-      .filter(spec => commonSpecs.some(key => spec.key.toLowerCase().includes(key.toLowerCase())))
-      .slice(0, 6) // Show max 6 specs
-  }
+    const rating = product.rating || 0
+    const numReviews = product.numReviews || 0
+    const categoryName = product.category?.name || ""
 
-  const specs = getSpecifications()
-
-  return (
-    <Link to={productUrl} className="block">
-      <div className="bg-white rounded-lg border-4 border-lime-500 overflow-hidden hover:shadow-lg transition-all duration-300 max-w-sm mx-auto">
-        <div className="relative bg-gray-50 p-6">
-          <img
-            src={product.image || "/placeholder.svg"}
-            alt={product.name}
-            className="w-full h-48 object-contain mx-auto"
-          />
-          
-          {/* Wishlist button */}
-          <button
-            className="absolute top-4 right-4 z-10 text-gray-400 hover:text-red-500 transition-colors"
-            onClick={e => {
-              e.preventDefault(); e.stopPropagation();
-              if (isInWishlist(product._id)) {
-                removeFromWishlist(product._id);
-                showToast && showToast("Removed from wishlist", "info");
-              } else {
-                addToWishlist(product);
-                showToast && showToast("Added to wishlist", "success");
-              }
-            }}
-            aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            <Heart size={24} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
-          </button>
-        </div>
-        
-        <div className="p-4">
-          {/* Stock status badge */}
-          <div className={`inline-block px-3 py-1 rounded text-sm font-bold mb-3 ${
-            stockStatus === 'Available Product' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-          }`}>
-            {stockStatus}
-          </div>
-          
-          {/* Product Name */}
-          <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-3 leading-tight">
-            {product.name}
-          </h3>
-          
-          {/* Category */}
-          <div className="text-sm text-orange-500 mb-2 font-medium">
-            Category: {categoryName}
-          </div>
-          
-          {/* VAT Info */}
-          <div className="text-sm text-gray-600 mb-3">
-            Inclusive VAT
-          </div>
-          
-          {/* Pricing */}
-          <div className="mb-3">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-red-600 text-xl">
-                {priceToShow > 0 ? formatPrice(priceToShow) : 'Contact for Price'}
-              </span>
-              {showOldPrice && basePrice > 0 && (
-                <span className="text-gray-400 line-through text-base">
-                  {formatPrice(basePrice)}
-                </span>
-              )}
+    return (
+        <div
+            className="border p-2 h-[400px] flex flex-col justify-between bg-white"
+            style={{ width: "210px" }}
+        >
+            <div className="relative mb-2 flex h-[180px] justify-center items-center">
+                <Link to={`/product/${product.slug || product._id}`}>
+                    <img
+                        src={product.image || "/placeholder.svg?height=120&width=120"}
+                        alt={product.name}
+                        className="w-full h-full cover object-contain rounded mx-auto"
+                    />
+                </Link>
+                <button
+                    className="absolute top-1 right-1 text-gray-400 hover:text-red-500"
+                    onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
+                    }}
+                    aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
+                >
+                    <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
+                </button>
             </div>
-          </div>
-          
-          {/* Rating */}
-          <div className="flex items-center gap-1 mb-4">
-            {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i} 
-                size={16} 
-                className={i < 4 ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}
-              />
-            ))}
-            <span className="text-sm text-gray-500 ml-1">({product.numReviews || 0})</span>
-          </div>
-          
-          {/* Add to Cart Button */}
-          <button
-            onClick={isOutOfStock ? undefined : handleAddToCart}
-            disabled={isOutOfStock}
-            className={`w-full py-3 px-4 rounded-lg transition-colors duration-200 font-semibold flex items-center justify-center gap-2 ${
-              isOutOfStock 
-                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                : 'bg-green-500 text-white hover:bg-green-600'
-            }`}
-          >
-            <ShoppingCart size={18} />
-            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-          </button>
+            <div className="mb-1 flex items-center gap-2 ">
+                <div
+                    className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}
+                >
+                    {stockStatus}
+                </div>
+                {discount && (
+                    <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs  inline-block">{discount}</div>
+                )}
+            </div>
+            <Link to={`/product/${product.slug || product._id}`}>
+                <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
+            </Link>
+            {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
+            <div className="text-xs text-green-600">Inclusive VAT</div>
+            <div className="flex items-center gap-2">
+                <div className="text-red-600 font-bold text-sm">
+                    {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+                </div>
+                {showOldPrice && (
+                    <div className="text-gray-400 line-through text-xs font-medium">
+                        {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+                    </div>
+                )}
+            </div>
+            <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                    <Star
+                        key={i}
+                        size={14}
+                        className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+                    />
+                ))}
+                <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
+            </div>
+            <button
+                onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    // Immediate visual feedback
+                    e.target.style.transform = 'scale(0.95)'
+                    setTimeout(() => {
+                        if (e.target) e.target.style.transform = 'scale(1)'
+                    }, 100)
+                    addToCart(product)
+                }}
+                className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
+                disabled={stockStatus === "Out of Stock"}
+            >
+                <ShoppingBag size={12} />
+                Add to Cart
+            </button>
         </div>
-      </div>
-    </Link>
-  )
+    )
 }
 
 export default CampaignProductCard
