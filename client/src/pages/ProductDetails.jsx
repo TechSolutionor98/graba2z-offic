@@ -56,6 +56,9 @@ const ProductDetails = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const thumbnailRowRef = useRef(null)
   const [thumbScroll, setThumbScroll] = useState(0)
+  const [showRatingDropdown, setShowRatingDropdown] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const ratingDropdownRef = useRef(null)
 
   // Keyboard navigation
   useEffect(() => {
@@ -80,6 +83,37 @@ const ProductDetails = () => {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [showImageModal, product])
 
+  // Detect mobile devices
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Handle click outside to close dropdown on mobile
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMobile && showRatingDropdown && ratingDropdownRef.current && 
+          !ratingDropdownRef.current.contains(event.target)) {
+        setShowRatingDropdown(false)
+      }
+    }
+
+    if (isMobile && showRatingDropdown) {
+      document.addEventListener('touchstart', handleClickOutside)
+      document.addEventListener('click', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('touchstart', handleClickOutside)
+      document.removeEventListener('click', handleClickOutside)
+    }
+  }, [isMobile, showRatingDropdown])
+
   // Review states
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [reviewData, setReviewData] = useState({
@@ -103,6 +137,29 @@ const ProductDetails = () => {
 
   const formatPrice = (price) => {
     return `${Number(price).toLocaleString()}.00 AED`
+  }
+
+  // Calculate rating distribution
+  const getRatingDistribution = () => {
+    if (!product?.reviews || product.reviews.length === 0) {
+      return { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+    }
+
+    const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+    product.reviews.forEach(review => {
+      const rating = Math.floor(review.rating)
+      if (rating >= 1 && rating <= 5) {
+        distribution[rating]++
+      }
+    })
+    return distribution
+  }
+
+  // Handle rating interaction (hover for desktop, click for mobile)
+  const handleRatingInteraction = () => {
+    if (isMobile) {
+      setShowRatingDropdown(!showRatingDropdown)
+    }
   }
 
   useEffect(() => {
@@ -544,14 +601,52 @@ const ProductDetails = () => {
 
               {/* Rating */}
               <div className="flex items-center space-x-2 mb-4">
-                <div className="flex items-center">
+                <div 
+                  ref={ratingDropdownRef}
+                  className={`flex items-center relative ${isMobile ? 'cursor-pointer' : ''}`}
+                  onMouseEnter={() => !isMobile && setShowRatingDropdown(true)}
+                  onMouseLeave={() => !isMobile && setShowRatingDropdown(false)}
+                  onClick={handleRatingInteraction}
+                  onTouchStart={handleRatingInteraction}
+                >
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      size={16}
+                      size={20}
                       className={i < Math.floor(product.rating || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}
                     />
                   ))}
+                  
+                  {/* Rating Breakdown Dropdown */}
+                  {showRatingDropdown && (
+                    <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 min-w-[200px]">
+                      <div className="text-sm font-medium text-gray-700 mb-2">Rating Breakdown</div>
+                      {(() => {
+                        const distribution = getRatingDistribution()
+                        return [5, 4, 3, 2, 1].map(rating => (
+                          <div key={rating} className="flex items-center justify-between py-1">
+                            <div className="flex items-center space-x-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  size={14}
+                                  className={i < rating ? "text-yellow-400 fill-current" : "text-gray-300"}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">
+                              ({distribution[rating]})
+                            </span>
+                          </div>
+                        ))
+                      })()}
+                      {isMobile && (
+                        <div className="text-xs text-gray-500 mt-2 text-center border-t pt-2">
+                          Tap outside to close
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <span className="text-sm text-gray-600">
                   ({product.numReviews || 0} {product.numReviews === 1 ? "review" : "reviews"})
@@ -627,20 +722,20 @@ const ProductDetails = () => {
               {/* Quantity and Add to Cart */}
               <div className="space-y-4 mb-6">
                 <div className="flex items-center space-x-2 ">
-                  <div className="flex items-center border-2 border-gray-300  rounded-lg">
+                  <div className="flex items-center border-2 border-black  rounded-lg bg-yellow-300">
                     <button
                       onClick={() => handleQuantityChange(-1)}
-                      className="px-3 py-2 text-gray-600 hover:text-red-600 hover:bg-gray-50 transition-colors"
+                      className="px-3 py-2 text-gray-600 hover:text-red-600 transition-colors"
                       disabled={quantity <= 1}
                     >
                       <Minus size={16} />
                     </button>
-                    <span className="px-4 py-2 border-l border-r border-gray-300 min-w-[60px] text-center font-medium">
+                    <span className="px-4 py-2 border-l border-r border-black min-w-[60px] text-center font-medium">
                       {quantity}
                     </span>
                     <button
                       onClick={() => handleQuantityChange(1)}
-                      className="px-3 py-2 text-gray-600 hover:text-green-600 hover:bg-gray-50 transition-colors"
+                      className="px-3 py-2 text-gray-600 hover:text-green-600  transition-colors"
                       disabled={quantity >= (product.maxPurchaseQty || 10)}
                     >
                       <Plus size={16} />
@@ -657,12 +752,17 @@ const ProductDetails = () => {
                       <ShoppingCart size={22} className="mr-2" />
 
                     </button>
+                    {/* Heart btn */}
                     <button
                       onClick={() => isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)}
-                      className="ml-1 flex items-center px-9 py-3 rounded-lg border border-gray-300 bg-white hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors"
+                      className={`ml-1 flex items-center px-9 py-3 rounded-lg border transition-colors ${
+                        isInWishlist(product._id) 
+                          ? "bg-red-500 border-red-500 hover:bg-red-600" 
+                          : "bg-white border-red-500 hover:bg-gray-50"
+                      }`}
                       aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
                     >
-                      <Heart size={20} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
+                      <Heart size={20} className={isInWishlist(product._id) ? "text-red-500 fill-white" : "text-white fill-red-400"} />
                       <span className="">{isInWishlist(product._id) ? "" : ""}</span>
                     </button>
                     <button
