@@ -50,6 +50,10 @@ const Navbar = () => {
   const profileRef = useRef(null);
   const profileButtonRef = useRef(null);
   const [visibleCategoriesCount, setVisibleCategoriesCount] = useState(8);
+  const [isMoreDropdownOpen, setIsMoreDropdownOpen] = useState(false);
+  const moreDropdownTimeoutRef = useRef(null);
+  const [hoveredMoreCategory, setHoveredMoreCategory] = useState(null);
+  const moreCategoryTimeoutRef = useRef(null);
 
   // Fetch categories and subcategories from API
   const fetchCategories = async () => {
@@ -76,6 +80,35 @@ const Navbar = () => {
 
   const toggleMobileCategory = (categoryId) => {
     setExpandedMobileCategory(expandedMobileCategory === categoryId ? null : categoryId)
+  }
+
+  // Handle "More" dropdown hover with delay to prevent flickering
+  const handleMoreDropdownEnter = () => {
+    if (moreDropdownTimeoutRef.current) {
+      clearTimeout(moreDropdownTimeoutRef.current)
+    }
+    setIsMoreDropdownOpen(true)
+  }
+
+  const handleMoreDropdownLeave = () => {
+    moreDropdownTimeoutRef.current = setTimeout(() => {
+      setIsMoreDropdownOpen(false)
+      setHoveredMoreCategory(null) // Also close any open subcategory dropdown
+    }, 150) // Small delay to allow cursor movement to dropdown
+  }
+
+  // Handle subcategory dropdown hover within "More" dropdown
+  const handleMoreCategoryEnter = (categoryId) => {
+    if (moreCategoryTimeoutRef.current) {
+      clearTimeout(moreCategoryTimeoutRef.current)
+    }
+    setHoveredMoreCategory(categoryId)
+  }
+
+  const handleMoreCategoryLeave = () => {
+    moreCategoryTimeoutRef.current = setTimeout(() => {
+      setHoveredMoreCategory(null)
+    }, 150) // Small delay to allow cursor movement to subcategory dropdown
   }
 
   // Instant search effect
@@ -168,6 +201,18 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleProfileClick);
     return () => document.removeEventListener("mousedown", handleProfileClick);
   }, [isProfileOpen]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (moreDropdownTimeoutRef.current) {
+        clearTimeout(moreDropdownTimeoutRef.current)
+      }
+      if (moreCategoryTimeoutRef.current) {
+        clearTimeout(moreCategoryTimeoutRef.current)
+      }
+    }
+  }, []);
 
   // Check if current path is an admin route
   const isAdminRoute = location.pathname.startsWith("/admin")
@@ -379,41 +424,60 @@ const Navbar = () => {
             <div className="flex items-center space-x-16 h-12">
               {/* Category Overflow Dropdown for md+ screens */}
               {categories.length > visibleCategoriesCount && (
-                <div className="relative group hidden md:block">
+                <div
+                  className="relative hidden md:block"
+                  onMouseEnter={handleMoreDropdownEnter}
+                  onMouseLeave={handleMoreDropdownLeave}
+                >
                   <button
                     className="text-white font-medium whitespace-nowrap text-sm flex items-center"
                   >
                     More <ChevronDown size={18} className="ml-1" />
                   </button>
-                  <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border hidden group-hover:block">
-                    {categories.slice(visibleCategoriesCount).map((parentCategory) => {
-                      const categorySubCategories = getSubCategoriesForCategory(parentCategory._id);
-                      return (
-                        <div key={parentCategory._id} className="relative group/category">
-                          <Link
-                            to={generateShopURL({ parentCategory: parentCategory.name })}
-                            className="block px-4 py-2 text-black  font-medium whitespace-nowrap text-sm"
+                  {isMoreDropdownOpen && (
+                    <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border">
+                      {categories.slice(visibleCategoriesCount).map((parentCategory) => {
+                        const categorySubCategories = getSubCategoriesForCategory(parentCategory._id);
+                        return (
+                          <div
+                            key={parentCategory._id}
+                            className="relative"
+                            onMouseEnter={() => handleMoreCategoryEnter(parentCategory._id)}
+                            onMouseLeave={handleMoreCategoryLeave}
                           >
-                            {parentCategory.name}
-                          </Link>
-                          {/* Dropdown for subcategories */}
-                          {categorySubCategories.length > 0 && (
-                            <div className="absolute left-full top-0 ml-2 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border border-gray-200 hidden group-hover/category:block">
-                              {categorySubCategories.map((subCategory) => (
-                                <Link
-                                  key={subCategory._id}
-                                  to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
-                                  className="block px-4 py-2 text-red-600 hover:bg-gray-100 transition-colors duration-200 text-sm"
-                                >
-                                  {subCategory.name}
-                                </Link>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                            <Link
+                              to={generateShopURL({ parentCategory: parentCategory.name })}
+                              className="block px-4 py-2 text-black font-medium whitespace-nowrap text-sm hover:bg-gray-100"
+                              onClick={() => {
+                                setIsMoreDropdownOpen(false)
+                                setHoveredMoreCategory(null)
+                              }}
+                            >
+                              {parentCategory.name}
+                            </Link>
+                            {/* Dropdown for subcategories */}
+                            {hoveredMoreCategory === parentCategory._id && categorySubCategories.length > 0 && (
+                              <div className="absolute left-full top-0 ml-2 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border border-gray-200">
+                                {categorySubCategories.map((subCategory) => (
+                                  <Link
+                                    key={subCategory._id}
+                                    to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
+                                    className="block px-4 py-2 text-red-600 hover:bg-gray-100 transition-colors duration-200 text-sm"
+                                    onClick={() => {
+                                      setIsMoreDropdownOpen(false)
+                                      setHoveredMoreCategory(null)
+                                    }}
+                                  >
+                                    {subCategory.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
               {/* Show responsive number of categories (all on mobile) */}
@@ -705,7 +769,7 @@ const Navbar = () => {
           </Link>
 
 
-           {/* Wishlist */}
+          {/* Wishlist */}
           <Link to="/wishlist" className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500 relative" aria-label="Wishlist">
             <Heart size={20} className="" />
             {wishlist.length > 0 && (
@@ -713,7 +777,7 @@ const Navbar = () => {
                 {wishlist.length}
               </span>
             )}
-             <span className="text-xs mt-1">WishList</span>
+            <span className="text-xs mt-1">WishList</span>
           </Link>
 
           {/* Account */}
