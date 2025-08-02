@@ -45,7 +45,7 @@ export default function TermsAndConditions() {
       <div className="max-w-6xl mx-auto px-6 py-12">
         
         {/* Introduction */}
-        <div className="bg-gray-50 rounded-xl p-8 mb-8">
+        <div className="bg-white rounded-xl p-8 mb-8">
           <div className="flex flex-col md:flex-row md:items-start gap-6">
             <div className="flex justify-center md:justify-start">
               <div className="bg-lime-500 rounded-full p-3">
