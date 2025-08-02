@@ -157,6 +157,16 @@ const Footer = ({ className = "" }) => {
                     </Link>
                   </li>
                 ))}
+                {subCategories.slice(0, 2).map((subCategory) => (
+                  <li key={`sub-${subCategory._id}`}>
+                    <Link to={generateShopURL({ 
+                      parentCategory: subCategory.category?.name || '', 
+                      subCategory: subCategory.name 
+                    })} className="hover:text-lime-400">
+                      {subCategory.name}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -168,6 +178,16 @@ const Footer = ({ className = "" }) => {
                   <li key={category._id}>
                     <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
                       {category.name}
+                    </Link>
+                  </li>
+                ))}
+                {subCategories.slice(4, 8).map((subCategory) => (
+                  <li key={`sub-${subCategory._id}`}>
+                    <Link to={generateShopURL({ 
+                      parentCategory: subCategory.category?.name || '', 
+                      subCategory: subCategory.name 
+                    })} className="hover:text-lime-400">
+                      {subCategory.name}
                     </Link>
                   </li>
                 ))}
@@ -277,7 +297,7 @@ const Footer = ({ className = "" }) => {
         <div className="flex flex-row justify-between items-center space-x-4 p-2">
           {/* 1st Column: Text */}
           <div className="w-1/3">
-            <b>© 2025 Grabatoz Powered By Crown Excel</b>
+            <b> 2025 Grabatoz Powered By Crown Excel</b>
           </div>
 
           {/* 2nd Column: Image */}
@@ -484,7 +504,7 @@ const Footer = ({ className = "" }) => {
 
           {/* Copyright */}
           <div className="text-center text-sm text-gray-300">
-            <p>© 2025 Grabatoz powered by Crown Excel.</p>
+            <p> 2025 Grabatoz powered by Crown Excel.</p>
             <p className="mt-1">Develop By Tech Solutionor</p>
           </div>
         </div>
