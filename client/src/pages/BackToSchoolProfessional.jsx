@@ -94,35 +94,42 @@ const BackToSchoolGaming = () => {
         </div>
       </div>
 
-      {/* Products Section with Background */}
-      <div className="relative -mt-6 py-16" style={{ minHeight: '100px' }}>
-        {/* Shared Background Image */}
-        <div className="absolute inset-0">
-          <div
-            className="w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: 'url(2banner.png)',
-              height: '100%',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-            }}
-          ></div>
-        </div>
-
-        {/* Content Container */}
-        <div className="relative container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
+      {/* Products Section Title */}
+      <div className="bg-white py-8">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-gray-900 text-center">
             Gaming Laptops Collection
           </h2>
-          
-          {products.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-white text-xl mb-4">No gaming laptops found</div>
-              <p className="text-gray-200">Please check back later or contact us for availability.</p>
+        </div>
+      </div>
+
+      {products.length === 0 ? (
+        <div className="bg-gray-100 py-16">
+          <div className="text-center">
+            <div className="text-gray-800 text-xl mb-4">No gaming laptops found</div>
+            <p className="text-gray-600">Please check back later or contact us for availability.</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* First Section - First 3 Cards with Background 1 */}
+          <div className="relative py-16" style={{ minHeight: '100px' }}>
+            {/* Background Image 1 */}
+            <div className="absolute inset-0">
+              <div
+                className="w-full h-full bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: 'url(bg1.png)',
+                  height: '100%',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                }}
+              ></div>
             </div>
-          ) : (
-            <div className="space-y-12">
+
+            {/* Content Container */}
+            <div className="relative container mx-auto px-4">
               {/* First 3 Cards - Right Side */}
               <div className="flex justify-end">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -131,7 +138,27 @@ const BackToSchoolGaming = () => {
                   ))}
                 </div>
               </div>
-              
+            </div>
+          </div>
+
+          {/* Second Section - Next 3 Cards with Background 2 */}
+          <div className="relative py-16" style={{ minHeight: '100px' }}>
+            {/* Background Image 2 */}
+            <div className="absolute inset-0">
+              <div
+                className="w-full h-full bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: 'url(bg2.png)',
+                  height: '100%',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                }}
+              ></div>
+            </div>
+
+            {/* Content Container */}
+            <div className="relative container mx-auto px-4">
               {/* Next 3 Cards - Left Side */}
               <div className="flex justify-start">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -141,9 +168,9 @@ const BackToSchoolGaming = () => {
                 </div>
               </div>
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
 
       {/* Features Section */}
       <div className="bg-white py-16">

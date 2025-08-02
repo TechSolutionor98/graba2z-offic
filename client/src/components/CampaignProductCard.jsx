@@ -42,7 +42,7 @@ const CampaignProductCard = ({ product }) => {
 
     return (
         <div
-            className="border p-2 h-[400px] flex flex-col justify-between bg-black"
+            className="border p-2 h-[400px] flex flex-col justify-between bg-white"
             style={{ width: "210px" }}
         >
             <div className="relative mb-2 flex h-[180px] justify-center items-center">
@@ -111,7 +111,7 @@ const CampaignProductCard = ({ product }) => {
                     }, 100)
                     addToCart(product)
                 }}
-                className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
+                className="mt-2 w-full bg-white hover:bg-lime-400 border border-black hover:border-transparent text-black hover:text-white text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
                 disabled={stockStatus === "Out of Stock"}
             >
                 <ShoppingBag size={12} />
