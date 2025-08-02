@@ -81,7 +81,7 @@ const BackToSchoolGaming = () => {
           <img
             src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1754030807/acer_2_d5wwif.png"
             alt="Acer Gaming Laptops"
-            className="w-full h-full object-cover mt-2"
+            className="w-full h-[200px] lg:h-full bg-cover mt-2"
           />
         </div>
 
@@ -92,7 +92,7 @@ const BackToSchoolGaming = () => {
       {/* Punchline Section */}
       <div className="bg-white py-16">
         <div className="container mx-auto  text-center">
-          <h2 className="text-3xl md:text-5xl font-bold text-lime-500 mb-6">
+          <h2 className="text-2xl md:text-5xl font-bold text-lime-500 mb-6">
             Empowered by Play, Driven by Purpose
           </h2>
           <p>Elevate the Fight. Transcend the Game</p>
