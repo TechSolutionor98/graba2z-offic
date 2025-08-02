@@ -4,6 +4,8 @@ import { Link } from "react-router-dom"
 import { Facebook, Twitter, Instagram, Plus, Minus, Linkedin } from "lucide-react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPinterest } from "@fortawesome/free-brands-svg-icons"
+import { faTiktok } from "@fortawesome/free-brands-svg-icons"
+import { faYoutube } from "@fortawesome/free-brands-svg-icons"
 import { useState, useEffect } from "react"
 import axios from "axios"
 import { generateShopURL } from "../utils/urlUtils"
@@ -127,21 +129,27 @@ const Footer = ({ className = "" }) => {
               )}
 
               {/* Social Icons */}
-              <div className="flex space-x-6 pl-4">
-                <a href="https://www.facebook.com/grabatozae/" className="text-white hover:text-lime-400">
+              <div className="flex space-x-4 pl-4">
+                <a href="https://www.facebook.com/grabatozae/" target="_blank" className="text-white hover:text-lime-400">
                   <Facebook size={20} />
                 </a>
-                <a href="https://x.com/GrabAtoz" className="text-white hover:text-lime-400">
+                <a href="https://x.com/GrabAtoz" target="_blank" className="text-white hover:text-lime-400">
                   <Twitter size={20} />
                 </a>
-                <a href="https://www.instagram.com/grabatoz/" className="text-white hover:text-lime-400">
+                <a href="https://www.instagram.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
                   <Instagram size={20} />
                 </a>
-                <a href="https://www.linkedin.com/company/grabatozae" className="text-white hover:text-lime-400">
+                <a href="https://www.linkedin.com/company/grabatozae" target="_blank" className="text-white hover:text-lime-400">
                   <Linkedin size={20} />
                 </a>
-                <a href="https://www.pinterest.com/grabatoz/" className="text-white hover:text-lime-400">
+                <a href="https://www.pinterest.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
                   <FontAwesomeIcon icon={faPinterest} style={{width: '20px', height: '20px'}} />
+                </a>
+                <a href="https://www.tiktok.com/@grabatoz" target="_blank" className="text-white hover:text-lime-400">
+                  <FontAwesomeIcon icon={faTiktok} style={{width: '20px', height: '20px'}} />
+                </a>
+                <a href="https://www.youtube.com/@grabAtoZ" target="_blank" className="text-white hover:text-lime-400">
+                  <FontAwesomeIcon icon={faYoutube} style={{width: '20px', height: '20px'}} />
                 </a>
               </div>
             </div>
