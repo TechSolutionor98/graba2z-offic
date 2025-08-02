@@ -875,7 +875,7 @@ const Home = () => {
       {/* Desktop Banner - Two separate images side by side */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
         <div className="w-1/2">
-          <Link to="/hp-products">
+          <Link to="/product-brand/hp">
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/hp_half_side_1_iqvlks.png"
               alt="HP Products Banner"
@@ -884,7 +884,7 @@ const Home = () => {
           </Link>
         </div>
         <div className="w-1/2">
-          <Link to="/dell-products">
+          <Link to="/product-brand/dell">
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/dell_half_side_6_igop3u.png"
               alt="Dell Products Banner"
@@ -949,7 +949,7 @@ const Home = () => {
 
       {/* Accessories Banner - Desktop/Mobile Responsive */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
-        <Link to="/accessories">
+        <Link to="/product-category/accessories-components">
         <img
           src={window.innerWidth < 768 ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939734/accessories_back_to_school_gun4tj.png" : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acessories_1_ceg4gu.png"}
           alt="Accessories Promotion Banner"
@@ -1007,7 +1007,7 @@ const Home = () => {
       {/* Desktop Banner - Two separate images side by side */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
         <div className="w-1/2">
-          <Link to="/hp-products">
+          <Link to="/product-brand/acer">
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acer_half_side_jkun9a.png"
               alt="HP Products Banner"
@@ -1016,7 +1016,7 @@ const Home = () => {
           </Link>
         </div>
         <div className="w-1/2">
-          <Link to="/dell-products">
+          <Link to="/product-brand/asus">
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/asus_half_side_aikrmo.png"
               alt="Dell Products Banner"
@@ -1083,11 +1083,14 @@ const Home = () => {
 
       {/* Networking Banner - Desktop/Mobile Responsive */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]"> 
+       
+      <Link to="/product-category/networking">
         <img
           src={window.innerWidth < 768 ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939743/networking_1_tyt4gl.png" : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png"}
           alt="Networking Banner"
           className="w-full h-full cover rounded-lg"
         />
+      </Link>
       </div>
 
       {/* Networking Products Section - Mobile shows 2 products */}
@@ -1139,7 +1142,7 @@ const Home = () => {
       {/* Desktop Banner - Two separate images side by side */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
         <div className="w-1/2">
-          <Link to="/hp-products">
+          <Link to="/product-brand/msi">
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/msi_half_side_1_k4dmhz.png"
               alt="HP Products Banner"
@@ -1148,7 +1151,7 @@ const Home = () => {
           </Link>
         </div>
         <div className="w-1/2">
-          <Link to="/dell-products">
+          <Link to="/product-brand/lenovo">
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/lenovo_half_side_daug2k.png"
               alt="Dell Products Banner"
@@ -1232,7 +1235,7 @@ const Home = () => {
       {/* Desktop Banner - Two separate images side by side */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
         <div className="w-1/2">
-          <Link to="/hp-products">
+          <Link to="/product-brand/apple">
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/apple_half_side_n1cxhc.png"
               alt="HP Products Banner"
@@ -1241,7 +1244,7 @@ const Home = () => {
           </Link>
         </div>
         <div className="w-1/2">
-          <Link to="/dell-products">
+          <Link to="/product-brand/samsung">
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/samsung_half_side_gtslyc.png"
               alt="Dell Products Banner"
