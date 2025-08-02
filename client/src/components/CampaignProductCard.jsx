@@ -42,15 +42,14 @@ const CampaignProductCard = ({ product }) => {
 
     return (
         <div
-            className="border p-2 h-[400px] flex flex-col justify-between bg-white"
-            style={{ width: "210px" }}
+            className="border p-2 h-auto md:h-[400px] flex flex-col justify-between bg-white w-full md:w-[210px]"
         >
-            <div className="relative mb-2 flex h-[180px] justify-center items-center">
+            <div className="relative mb-2 flex md:h-[180px] justify-center items-center">
                 <Link to={`/product/${product.slug || product._id}`}>
                     <img
                         src={product.image || "/placeholder.svg?height=120&width=120"}
                         alt={product.name}
-                        className="w-full h-full cover object-contain rounded mx-auto"
+                        className="w-full h-full cover object-contain rounded mx-auto my-auto"
                     />
                 </Link>
                 <button

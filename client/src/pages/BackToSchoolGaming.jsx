@@ -29,13 +29,13 @@ const BackToSchoolGaming = () => {
       try {
         setLoading(true)
         setError(null)
-        
+
         // Fetch ONLY the specific products by SKU
         const gamingProducts = await productsAPI.getBySkus(gamingSkus)
-        
+
         console.log('Gaming products found:', gamingProducts.length)
         console.log('Found products:', gamingProducts.map(p => ({ sku: p.sku, name: p.name })))
-        
+
         setProducts(gamingProducts)
       } catch (err) {
         console.error("Error fetching gaming products:", err)
@@ -61,8 +61,8 @@ const BackToSchoolGaming = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-600 text-xl mb-4">{error}</div>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
           >
             Try Again
@@ -73,8 +73,8 @@ const BackToSchoolGaming = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-            {/* Banner Section */}
+    <div className="min-h-screen bg-">
+      {/* Banner Section */}
       <div className="">
         {/* Background Image */}
         <div className=" inset-0">
@@ -84,41 +84,43 @@ const BackToSchoolGaming = () => {
             className="w-full h-full object-cover mt-2"
           />
         </div>
-        
-      
+
+
       </div>
 
 
       {/* Punchline Section */}
       <div className="bg-white py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-            Dominate Every Game with Acer 
+        <div className="container mx-auto  text-center">
+          <h2 className="text-3xl md:text-5xl font-bold text-lime-500 mb-6">
+            Empowered by Play, Driven by Purpose
           </h2>
-        
+          <p>Elevate the Fight. Transcend the Game</p>
         </div>
+
+        {/* Banner Image - Full Width */}
+        <div className="mt-8">
+          <img
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1754135972/gaming_banner_ynj5s5.png"
+            alt="Gaming Banner"
+            className="w-full h-full object-cover rounded-lg shadow-lg"
+          />
+        </div>
+      </div>
+
+
+      <div className="container mx-auto  text-center">
+        <h2 className="text-3xl md:text-5xl font-bold text-black mb-6">
+          Best Gaming Laptops
+        </h2>
       </div>
 
       {/* Professional Laptops Collection Section */}
       <section className="relative my-6 overflow-hidden" style={{ minHeight: '420px' }}>
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <div
-            className="w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: 'url(gaming.png)',
-              height: '100%',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              minHeight: '420px',
-            }}
-          ></div>
-        </div>
 
         {/* Content Container */}
-        <div className="relative max-w-8xl px-5">
-          <div className="flex justify-end">
+        <div className="relative max-w-8xl px-2">
+          <div className="flex justify-center md:justify-center">
             <div className="w-full 2xl:max-w-[1170px] max-w-[900px] relative">
               {products.length === 0 ? (
                 <div className="text-center py-12">
@@ -126,17 +128,17 @@ const BackToSchoolGaming = () => {
                   <p className="text-gray-200">Please check back later or contact us for availability.</p>
                 </div>
               ) : (
-                <div className="overflow-hidden my-5 mx-3">
-                  <div className="flex gap-4 justify-center">
+                <div className="overflow-hidden my-5">
+                  <div className="flex gap-2 justify-center">
                     {products.slice(0, 2).map((product) => (
                       <div key={product._id} className="flex-shrink-0">
-                        <div className="border p-2 h-[450px] flex flex-col justify-between bg-white" style={{ width: "240px" }}>
+                        <div className="border p-2  flex flex-col justify-between bg-white" style={{ width: "190px" }}>
                           <div className="relative mb-2 flex h-[] justify-center items-center">
                             <Link to={`/product/${product.slug || product._id}`}>
                               <img
                                 src={product.image || "/placeholder.svg?height=120&width=120"}
                                 alt={product.name}
-                                className="rounded mx-auto"
+                                className="rounded w-full h-full mx-auto"
                               />
                             </Link>
                           </div>
@@ -202,7 +204,7 @@ const BackToSchoolGaming = () => {
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
             Why Choose Acer Gaming Laptops?
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -215,7 +217,7 @@ const BackToSchoolGaming = () => {
                 Powered by Intel Core i7 processors and NVIDIA RTX graphics for ultimate gaming performance.
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,7 +230,7 @@ const BackToSchoolGaming = () => {
                 Ultra-smooth 165Hz refresh rate for fluid gameplay and reduced motion blur.
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,7 +250,7 @@ const BackToSchoolGaming = () => {
       <Link to="/backtoschool-acer-professional" className="block">
         <div className="relative h-80 overflow-hidden group cursor-pointer ">
           {/* Background Image */}
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
             style={{
               backgroundImage: 'url("https://res.cloudinary.com/dyfhsu5v6/image/upload/v1754034599/acer_3_aoqkw2.png")'
@@ -257,7 +259,7 @@ const BackToSchoolGaming = () => {
             {/* Dark overlay */}
             <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-all duration-300"></div>
           </div>
-          
+
           {/* Content */}
           <div className="relative z-10 h-full flex items-center justify-center">
             <div className="text-center text-white transform transition-all duration-300 group-hover:scale-110">
