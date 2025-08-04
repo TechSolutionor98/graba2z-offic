@@ -1,7 +1,7 @@
 const config = {
     // API Configuration - Handle both development and production
     API_URL: import.meta.env.VITE_API_URL || 
-              (import.meta.env.PROD ? "https://graba2z-backend-orpin.vercel.app" : "http://localhost:5000"),
+              (import.meta.env.PROD ? "https://api.grabatoz.ae" : "http://localhost:5000"),
      
 
     // Payment Gateway Configuration
