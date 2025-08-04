@@ -127,7 +127,7 @@ export default function PrivacyPolicy() {
   const isArabic = language === "arabic"
 
   return (
-    <div className={`min-h-screen bg-gray-50 py-8 px-4 ${isArabic ? "rtl" : "ltr"}`}>
+    <div className={`min-h-screen bg-white py-8 px-4 ${isArabic ? "rtl" : "ltr"}`}>
       <div className="max-w-4xl mx-auto">
         {/* Language Toggle Buttons */}
         <div className="flex justify-center gap-4 mb-8">
@@ -135,7 +135,7 @@ export default function PrivacyPolicy() {
             onClick={() => setLanguage("english")}
             className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
               language === "english"
-                ? "bg-lime-500 text-white hover:bg-lime-600 shadow-lg"
+                ? "bg-lime-500 text-white hover:bg-lime-600"
                 : "bg-white border-2 border-lime-500 text-lime-500 hover:bg-lime-50"
             }`}
           >
@@ -145,7 +145,7 @@ export default function PrivacyPolicy() {
             onClick={() => setLanguage("arabic")}
             className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
               language === "arabic"
-                ? "bg-lime-500 text-white hover:bg-lime-600 shadow-lg"
+                ? "bg-lime-500 text-white hover:bg-lime-600"
                 : "bg-white border-2 border-lime-500 text-lime-500 hover:bg-lime-50"
             }`}
           >
@@ -153,8 +153,8 @@ export default function PrivacyPolicy() {
           </button>
         </div>
 
-        {/* Main Card */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        {/* Main Content */}
+        <div className="bg-white">
           <div className="p-8">
             {/* Header */}
             <div className="text-center mb-8">
@@ -232,52 +232,65 @@ export default function PrivacyPolicy() {
               <p className="text-gray-700 leading-relaxed">{currentContent.sections.changes.content}</p>
             </section>
 
-            {/* Contact Information */}
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6 border-b-2 border-lime-500 pb-2">
-                {currentContent.sections.contact.title}
-              </h2>
-              <div className="bg-gray-50 rounded-lg p-6 border-l-4 border-lime-500">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <MapPin className="w-5 h-5 text-lime-500 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900">{currentContent.sections.contact.details.website}</p>
-                      <p className="text-gray-700">{currentContent.sections.contact.details.poweredBy}</p>
-                      <p className="text-gray-700">{currentContent.sections.contact.details.poBox}</p>
-                    </div>
-                  </div>
 
-                  <div className="border-t pt-4">
-                    <p className="font-medium text-gray-900 mb-3">
-                      {currentContent.sections.contact.details.customerService}
-                    </p>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <Phone className="w-5 h-5 text-lime-500 flex-shrink-0" />
-                        <span className="text-gray-700">{currentContent.sections.contact.details.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Mail className="w-5 h-5 text-lime-500 flex-shrink-0" />
-                        <a
-                          href="mailto:customercare@grabatoz.ae"
-                          className="text-lime-600 hover:text-lime-800 transition-colors underline"
-                        >
-                          {currentContent.sections.contact.details.email}
-                        </a>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Clock className="w-5 h-5 text-lime-500 flex-shrink-0" />
-                        <span className="text-gray-700">{currentContent.sections.contact.details.hours}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
           </div>
         </div>
       </div>
+
+      {/* Contact Information */}
+      <section className="bg-gray-50 text-black p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-semibold mb-2">Contact Information</h2>
+            <p className="text-black">Get in touch with our team for any questions or concerns</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <Phone className="w-5 h-5 text-lime-500" />
+              </div>
+              <h3 className="font-medium mb-1">Phone</h3>
+              <a href="tel:+97143540566" className="text-black">
+                +971 4 354 0566
+              </a>
+            </div>
+
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <Mail className="w-5 h-5 text-lime-500" />
+              </div>
+              <h3 className="font-medium mb-1">Email</h3>
+              <a href="mailto:customercare@grabatoz.ae" className="text-black">
+                customercare@grabatoz.ae
+              </a>
+            </div>
+
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <Clock className="w-5 h-5 text-lime-500" />
+              </div>
+              <h3 className="font-medium mb-1">Hours</h3>
+              <p className="text-black">Daily 9:00 AM - 7:00 PM</p>
+            </div>
+
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <MapPin className="w-5 h-5 text-lime-500" />
+              </div>
+              <h3 className="font-medium mb-1">Address</h3>
+              <p className="text-black">P.O. Box 241975, Dubai, UAE</p>
+            </div>
+          </div>
+
+          <div className="text-center pt-4 border-t border-gray-700">
+            <p className="text-black">
+              <strong>Grabatoz.ae</strong><br />
+              <b>Powered by Crown Excel General Trading LLC</b>
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

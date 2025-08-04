@@ -465,31 +465,49 @@ const Footer = ({ className = "" }) => {
           {openSections.connect && (
             <div className="px-4 pb-4">
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-gray-900 mb-3">Connect With Us</h4>
+                {/* <h4 className="text-sm font-semibold text-gray-900 mb-3">Connect With Us</h4> */}
                 <div className="flex space-x-4">
                   <a
-                    href="#"
+                    href="https://www.facebook.com/grabatozae/"
                     className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700"
                   >
                     <Facebook size={20} />
                   </a>
                   <a
-                    href="#"
+                    href="https://x.com/GrabAtoz"
                     className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:bg-gray-800"
                   >
                     <Twitter size={20} />
                   </a>
                   <a
-                    href="#"
+                    href="https://www.instagram.com/grabatoz/"
                     className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center text-white hover:bg-pink-700"
                   >
                     <Instagram size={20} />
                   </a>
                   <a
-                    href="#"
+                    href="https://www.linkedin.com/company/grabatozae"
                     className="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center text-white hover:bg-blue-800"
                   >
                     <Linkedin size={20} />
+                  </a>
+                  <a
+                    href="https://www.pinterest.com/grabatoz/"
+                    className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-700"
+                  >
+                    <FontAwesomeIcon icon={faPinterest} style={{width: '20px', height: '20px'}} />
+                  </a>
+                  <a
+                    href="https://www.tiktok.com/@grabatoz"
+                    className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:bg-gray-800"
+                  >
+                    <FontAwesomeIcon icon={faTiktok} style={{width: '20px', height: '20px'}} />
+                  </a>
+                  <a
+                    href="https://www.youtube.com/@grabAtoZ"
+                    className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-700"
+                  >
+                    <FontAwesomeIcon icon={faYoutube} style={{width: '20px', height: '20px'}} />
                   </a>
                 </div>
               </div>
