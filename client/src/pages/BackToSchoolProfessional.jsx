@@ -214,10 +214,36 @@ const BackToSchoolGaming = () => {
         </div>
       </div>
 
-      {/* Professional Laptops Banner */}
-      <Link to="/backtoschool-acer-gaming" className="block">
-        <div className="relative h-80 overflow-hidden group cursor-pointer ">
-          {/* Background Image */}
+      {/* Mobile Gaming Laptops Banner */}
+      <Link to="/backtoschool-acer-gaming" className="block md:hidden">
+        <div className="relative h-48 overflow-hidden group cursor-pointer">
+          {/* Background Image for Mobile */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
+            style={{
+              backgroundImage: 'url("https://res.cloudinary.com/dyfhsu5v6/image/upload/v1754296194/gaming_lf5dfr.png")'
+            }}
+          >
+            {/* Dark overlay */}
+            <div className="absolute inset-0 bg-black bg-opacity-40 group-hover:bg-opacity-30 transition-all duration-300"></div>
+          </div>
+          
+          {/* Content */}
+          <div className="relative z-10 h-full flex items-center justify-center">
+            <div className="text-center text-white transform transition-all duration-300 group-hover:scale-110">
+              <h2 className="text-2xl font-bold mb-4">
+                Shop Gaming Laptops
+              </h2>
+              <div className="w-16 h-1 bg-white mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </Link>
+
+      {/* Desktop Gaming Laptops Banner */}
+      <Link to="/backtoschool-acer-gaming" className="hidden md:block">
+        <div className="relative h-80 overflow-hidden group cursor-pointer">
+          {/* Background Image for Desktop */}
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
             style={{
