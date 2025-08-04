@@ -33,10 +33,9 @@ const AddSubCategory = () => {
       const response = await axios.get(`${config.API_URL}/api/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      setCategories(Array.isArray(response.data) ? response.data : [])
+      setCategories(response.data)
     } catch (error) {
       console.error("Error fetching categories:", error)
-      setCategories([])
       showToast("Error fetching categories", "error")
     }
   }

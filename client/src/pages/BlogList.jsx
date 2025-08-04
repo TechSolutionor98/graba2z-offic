@@ -54,10 +54,9 @@ const BlogList = () => {
   const fetchCategories = async () => {
     try {
       const { data } = await axios.get(`${API_BASE_URL}/api/blog-categories`)
-      setCategories(Array.isArray(data) ? data : [])
+      setCategories(data)
     } catch (error) {
       console.error("Error fetching categories:", error)
-      setCategories([])
     }
   }
 

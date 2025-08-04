@@ -54,10 +54,9 @@ const AllCoupons = () => {
   const fetchCategories = async () => {
     try {
       const { data } = await axios.get(`${config.API_URL}/api/categories`)
-      setCategories(Array.isArray(data) ? data : [])
+      setCategories(data)
     } catch (error) {
       console.error("Failed to load categories:", error)
-      setCategories([]) // Ensure categories is always an array
     }
   }
 
@@ -252,12 +251,12 @@ const AllCoupons = () => {
                     isMulti
                     options={[
                       { value: "ALL", label: "All Categories" },
-                      ...(Array.isArray(categories) ? categories.map(cat => ({ value: cat._id, label: cat.name })) : [])
+                      ...categories.map(cat => ({ value: cat._id, label: cat.name }))
                     ]}
                     value={
                       formData.categories.includes("ALL")
                         ? [{ value: "ALL", label: "All Categories" }]
-                        : (Array.isArray(categories) ? categories.filter(cat => formData.categories.includes(cat._id)).map(cat => ({ value: cat._id, label: cat.name })) : [])
+                        : categories.filter(cat => formData.categories.includes(cat._id)).map(cat => ({ value: cat._id, label: cat.name }))
                     }
                     onChange={selected => {
                       if (!selected || selected.length === 0) {

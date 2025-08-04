@@ -24,11 +24,10 @@ const BlogCategories = () => {
       const response = await axios.get(`${config.API_URL}/api/blog-categories`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      setCategories(Array.isArray(response.data) ? response.data : [])
+      setCategories(response.data)
     } catch (error) {
       console.error("Error fetching categories:", error)
       showToast("Failed to fetch categories", "error")
-      setCategories([]) // Ensure categories is always an array
     } finally {
       setLoading(false)
     }
@@ -50,11 +49,11 @@ const BlogCategories = () => {
     }
   }
 
-  const filteredCategories = Array.isArray(categories) ? categories.filter(
+  const filteredCategories = categories.filter(
     (category) =>
       category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       category.description?.toLowerCase().includes(searchTerm.toLowerCase()),
-  ) : []
+  )
 
   if (loading) {
     return (
@@ -184,16 +183,16 @@ const BlogCategories = () => {
           {/* Stats */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="text-2xl font-bold text-gray-900">{Array.isArray(categories) ? categories.length : 0}</div>
+              <div className="text-2xl font-bold text-gray-900">{categories.length}</div>
               <div className="text-sm text-gray-600">Total Categories</div>
             </div>
             <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="text-2xl font-bold text-green-600">{Array.isArray(categories) ? categories.filter((cat) => cat.isActive).length : 0}</div>
+              <div className="text-2xl font-bold text-green-600">{categories.filter((cat) => cat.isActive).length}</div>
               <div className="text-sm text-gray-600">Active Categories</div>
             </div>
             <div className="bg-white p-4 rounded-lg border border-gray-200">
               <div className="text-2xl font-bold text-blue-600">
-                {Array.isArray(categories) ? categories.reduce((total, cat) => total + (cat.blogCount || 0), 0) : 0}
+                {categories.reduce((total, cat) => total + (cat.blogCount || 0), 0)}
               </div>
               <div className="text-sm text-gray-600">Total Blogs</div>
             </div>
