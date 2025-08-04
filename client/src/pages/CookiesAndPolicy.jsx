@@ -99,13 +99,13 @@ We use necessary cookies for app navigation, basic functions, and security purpo
           </div>
         </section>
 
-            <div className="flex flex-col-2 md:flex-row justify-center gap-14">
+            <div className="flex flex-col justify-center items-center md:flex-row md:justify-center gap-14">
 
             <div className="rounded-lg mt-6">
               <img
                 src="https://www.nokia.com/sites/default/files/2022-01/cybersecurity4_0.jpg?height=600&width=1920&resize=1"
                 alt="Cookies Inside App"
-                className="w-[900px] h-[300px] rounded-lg bg-cover"
+                className="hidden md:block w-[900px] h-[300px] rounded-lg bg-cover"
               />
             </div>
             
