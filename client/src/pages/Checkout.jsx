@@ -485,8 +485,6 @@ const Checkout = () => {
 
   const processCODPayment = async (orderData) => {
     const token = localStorage.getItem("token")
-    console.log("[Checkout] Using token:", token)
-    console.log("[Checkout] Sending orderData:", orderData)
     try {
       const axiosConfig = {}
       if (token) {
@@ -502,7 +500,6 @@ const Checkout = () => {
         },
         axiosConfig,
       )
-      console.log("[Checkout] Order response:", response)
       return { success: true, order: response.data }
     } catch (error) {
       console.error("[Checkout] Order error:", error, error.response?.data)
@@ -718,29 +715,24 @@ const Checkout = () => {
   }
 
   const handleSubmit = async (e) => {
-    console.log("[Checkout] handleSubmit called")
     e.preventDefault()
 
     if (cartItems.length === 0) {
-      console.log("[Checkout] Early return: cart is empty")
       setError("Your cart is empty")
       return
     }
 
     // Validate based on delivery type
     if (deliveryType === "home" && !validateHomeDelivery()) {
-      console.log("[Checkout] Early return: home delivery validation failed")
       return
     }
 
     if (deliveryType === "pickup" && !validatePickup()) {
-      console.log("[Checkout] Early return: pickup validation failed")
       return
     }
 
     // Validate payment method
     if (!validatePayment()) {
-      console.log("[Checkout] Early return: payment validation failed")
       return
     }
 
@@ -907,7 +899,6 @@ const Checkout = () => {
               country: "UAE",
             },
           }
-          console.log("[Checkout] Sending address/phone to backend:", payload)
           await axios.put(
             `${config.API_URL}/api/users/profile`,
             payload,
@@ -927,7 +918,6 @@ const Checkout = () => {
         try {
           const token = localStorage.getItem("token")
           const payload = { phone: pickupDetails.phone }
-          console.log("[Checkout] Sending pickup phone to backend:", payload)
           await axios.put(
             `${config.API_URL}/api/users/profile`,
             payload,
@@ -1507,7 +1497,7 @@ const Checkout = () => {
         </div>
 
         {/* Order Summary Sidebar */}
-        <div className="lg:col-span-2 ">
+        <div className="lg:col-span-2 mt-4">
           <div className="rounded-lg shadow-md shadow-lime-500 p-4 lg:mx-9 sticky top-4">
             <div className="flex items-center mb-6">
               <div className="bg-lime-100 p-2 rounded-full">

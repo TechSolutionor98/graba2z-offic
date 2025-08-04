@@ -180,7 +180,7 @@ const Cart = () => {
                     {/* Mobile Card */}
                     <div className="block sm:hidden">
                       <div className="flex flex-row items-center mb-3">
-                        <div className="w-30 h-20 flex-shrink-0 overflow-hidden rounded-md bg-white">
+                        <div className="w-20 h-20 flex-shrink-0 overflow-hidden rounded-md bg-white">
                           <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-full contain" />
                         </div>
                         <div className="flex-1 ml-4">
@@ -358,7 +358,7 @@ const Cart = () => {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             {/* <div className="bg-white rounded-lg shadow-md  p-6"> */}
-          <div className="bg-white rounded-lg shadow-md shadow-lime-500 p-6">
+          <div className="bg-white rounded-lg shadow-md shadow-lime-500 p-6 ">
 
               <h2 className="text-lg font-medium text-gray-900 mb-4">Order Summary</h2>
 
