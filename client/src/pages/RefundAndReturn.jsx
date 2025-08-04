@@ -248,8 +248,8 @@ export default function RefundAndReturn() {
           <p className="text-red-400"><strong>Grabatoz reserves the right to:</strong> </p>
           <div className="space-y-4 text-gray-700">
             <ol>
-              <li>	Refuse returns that do not meet the conditions stated above.</li>
-              <li>	Take appropriate action against policy abuse, which may include warnings, return restrictions, or account suspension.</li>
+              <li>	Refuse returns that do not meet the conditions stated above.</li>
+              <li>	Take appropriate action against policy abuse, which may include warnings, return restrictions, or account suspension.</li>
             </ol>
           </div>
         </section>
@@ -264,8 +264,8 @@ export default function RefundAndReturn() {
 
           <div className="space-y-4 text-gray-700">
             <ol>
-              <li>	Products found defective upon delivery are eligible for full refund or exchange after verification.</li>
-              <li>	Claims made after 15 days will be processed as warranty claims.</li>
+              <li>Products found defective upon delivery are eligible for full refund or exchange after verification.</li>
+              <li>Claims made after 15 days will be processed as warranty claims.</li>
             </ol>
 
             {/* Image Section */}
