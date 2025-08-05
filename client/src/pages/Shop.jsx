@@ -317,6 +317,14 @@ const Shop = () => {
     }
   }, [location.pathname, location.search, brands]);
 
+  // Add useEffect hook to parse search parameter from URL and update searchQuery state
+  useEffect(() => {
+    const urlParams = parseShopURL(location.pathname, location.search);
+    if (urlParams.search) {
+      setSearchQuery(urlParams.search);
+    }
+  }, [location.pathname, location.search]);
+
   // Debug: Log all loaded categories and subcategories
   useEffect(() => {
     if (categories.length > 0) {
