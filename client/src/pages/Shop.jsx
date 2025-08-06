@@ -688,7 +688,8 @@ const Shop = () => {
                           name="category"
                           checked={selectedCategory === "all"}
                           onChange={() => handleCategoryChange("all")}
-                          className="mr-2"
+                          onClick={(e) => e.stopPropagation()} // Prevent event bubbling
+                          className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
                         />
                         <span className="text-sm text-gray-700">All Categories</span>
                       </label>
@@ -699,9 +700,10 @@ const Shop = () => {
                             name="category"
                             checked={selectedCategory === category._id}
                             onChange={() => handleCategoryChange(category._id)}
-                            className="mr-2"
+                            onClick={(e) => e.stopPropagation()} // Prevent event bubbling
+                            className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
                           />
-                          <span className="text-sm text-gray-700 font-medium">{category.name}</span>
+                          <span className="text-sm text-gray-700">{category.name}</span>
                         </label>
                       ))}
                     </div>
@@ -721,7 +723,8 @@ const Shop = () => {
                             name="subcategory"
                             checked={selectedSubCategories[0] === subcat._id}
                             onChange={() => handleSubCategoryChange(subcat._id)}
-                            className="mr-2"
+                            onClick={(e) => e.stopPropagation()} // Prevent event bubbling
+                            className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
                           />
                           <span className="text-sm text-gray-700">{subcat.name}</span>
                         </label>
@@ -761,7 +764,8 @@ const Shop = () => {
                                 type="checkbox"
                                 checked={selectedBrands.includes(brand._id)}
                                 onChange={() => handleBrandChange(brand._id)}
-                                className="mr-2 text-green-600 focus:ring-green-500"
+                                onClick={(e) => e.stopPropagation()} // Prevent event bubbling
+                                className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300 rounded"
                               />
                               <span className="text-sm text-gray-700">{brand.name}</span>
                             </label>
@@ -780,32 +784,35 @@ const Shop = () => {
                     <label className="flex items-center">
                       <input
                         type="radio"
-                        name="stockFilter"
-                        checked={stockFilters.onSale}
-                        onChange={() => handleStockFilterChange("onSale")}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700">On sale</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="stockFilter"
+                        name="stock-status"
                         checked={stockFilters.inStock}
                         onChange={() => handleStockFilterChange("inStock")}
-                        className="mr-2"
+                        onClick={(e) => e.stopPropagation()} // Prevent event bubbling
+                        className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
                       />
-                      <span className="text-sm text-gray-700">In stock</span>
+                      <span className="text-sm text-gray-700">In Stock</span>
                     </label>
                     <label className="flex items-center">
                       <input
                         type="radio"
-                        name="stockFilter"
+                        name="stock-status"
                         checked={stockFilters.outOfStock}
                         onChange={() => handleStockFilterChange("outOfStock")}
-                        className="mr-2"
+                        onClick={(e) => e.stopPropagation()} // Prevent event bubbling
+                        className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
                       />
-                      <span className="text-sm text-gray-700">Out of stock</span>
+                      <span className="text-sm text-gray-700">Out of Stock</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="stock-status"
+                        checked={stockFilters.onSale}
+                        onChange={() => handleStockFilterChange("onSale")}
+                        onClick={(e) => e.stopPropagation()} // Prevent event bubbling
+                        className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
+                      />
+                      <span className="text-sm text-gray-700">On Sale</span>
                     </label>
                   </div>
                 </div>
