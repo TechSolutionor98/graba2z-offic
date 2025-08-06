@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import ImageUpload from "../ImageUpload"
 import TipTapEditor from "../TipTapEditor"
-import { Plus, X } from "lucide-react"
+import { Plus, X } from 'lucide-react'
 
 import config from "../../config/config"
 const ProductForm = ({ product, onSubmit, onCancel }) => {
@@ -26,7 +26,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     description: "",
     shortDescription: "",
     buyingPrice: "",
-    price: "",
+    price: "", // This will be the final calculated price (base + tax)
     offerPrice: "",
     discount: "",
     image: "",
@@ -46,6 +46,11 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     featured: false,
     stockStatus: "Available Product",
   })
+
+  // New states for price calculation
+  const [basePrice, setBasePrice] = useState("") // This will be the input for the base price
+  const [taxAmount, setTaxAmount] = useState(0)
+  const [taxRate, setTaxRate] = useState(0)
 
   const units = [
     { value: "piece", label: "Piece" },
@@ -76,6 +81,47 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     fetchTaxes()
   }, [])
 
+  // Set tax rate when formData.tax or taxes change
+  useEffect(() => {
+    if (formData.tax && taxes.length > 0) {
+      const selectedTax = taxes.find(t => t._id === formData.tax)
+      setTaxRate(selectedTax ? Number(selectedTax.rate) : 0)
+    } else {
+      setTaxRate(0)
+    }
+  }, [formData.tax, taxes])
+
+  // Main price calculation effect
+  useEffect(() => {
+    const base = Number(basePrice) || 0
+    let offer = Number(formData.offerPrice) || 0
+    let discount = Number(formData.discount) || 0
+
+    // If both base and offer price are provided, calculate discount
+    if (base > 0 && offer > 0) {
+      discount = Math.max(0, Math.round(((base - offer) / base) * 100))
+    }
+    // If discount is set and offer price is not manually entered, calculate offer price
+    // This condition ensures that if offerPrice is manually set, it takes precedence
+    if (discount > 0 && (isNaN(Number(formData.offerPrice)) || Number(formData.offerPrice) === 0)) {
+      offer = base - (base * discount / 100)
+    }
+
+    // Tax calculation base is offer if present, else base
+    const priceBaseForTax = offer > 0 ? offer : base
+    const tax = taxRate
+    const taxAmt = priceBaseForTax * (tax / 100)
+
+    setTaxAmount(taxAmt)
+    setFormData(prev => ({
+      ...prev,
+      offerPrice: offer.toFixed(2),
+      discount: discount,
+      price: (priceBaseForTax + taxAmt).toFixed(2) // Update formData.price with the final calculated price
+    }))
+  }, [basePrice, taxRate, formData.offerPrice, formData.discount])
+
+
   useEffect(() => {
     fetchParentCategories()
     fetchBrands()
@@ -84,6 +130,24 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         (typeof product.category === "object" && product.category ? product.category._id : product.category) ||
         (typeof product.subCategory === "object" && product.subCategory ? product.subCategory._id : product.subCategory) ||
         "";
+
+      // Determine initial tax rate for reverse calculation of basePrice
+      let initialTaxRate = 0;
+      if (product.tax && taxes.length > 0) {
+        const productTaxId = typeof product.tax === 'object' ? product.tax._id : product.tax;
+        const selectedTax = taxes.find(t => t._id === productTaxId);
+        initialTaxRate = selectedTax ? Number(selectedTax.rate) : 0;
+      }
+
+      // Calculate basePrice from product.price (which is the final price from backend)
+      // finalPrice = basePrice * (1 + taxRate/100) => basePrice = finalPrice / (1 + taxRate/100)
+      const productFinalPrice = Number(product.price) || 0;
+      const calculatedBasePrice = productFinalPrice > 0 && initialTaxRate >= 0
+        ? (productFinalPrice / (1 + initialTaxRate / 100)).toFixed(2)
+        : "";
+
+      setBasePrice(calculatedBasePrice); // Set the new basePrice state
+
       setFormData({
         name: product.name || "",
         sku: product.sku || "",
@@ -96,7 +160,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         description: product.description || "",
         shortDescription: product.shortDescription || "",
         buyingPrice: product.buyingPrice || "",
-        price: product.price || "",
+        price: product.price || "", // This remains the final price from the backend
         offerPrice: product.offerPrice || "",
         discount: product.discount || "",
         image: product.image || "",
@@ -106,7 +170,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         maxPurchaseQty: product.maxPurchaseQty || "10",
         weight: product.weight || "",
         unit: product.unit || "piece",
-        tax: product.tax || "0",
+        tax: typeof product.tax === "object" && product.tax ? product.tax._id : product.tax || "0", // Ensure tax ID is set
         tags: Array.isArray(product.tags) ? product.tags.join(", ") : "",
         specifications: product.specifications || [],
         isActive: product.isActive !== undefined ? product.isActive : true,
@@ -117,7 +181,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         stockStatus: product.stockStatus || "Available Product",
       })
     }
-  }, [product])
+  }, [product, taxes]) // Add taxes to dependency array for initialTaxRate calculation
 
   useEffect(() => {
     if (
@@ -201,10 +265,14 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }))
+    if (name === "basePrice") { // Handle the new basePrice input
+      setBasePrice(value);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }))
+    }
 
     // Auto-generate slug from name
     if (name === "name" && !formData.slug) {
@@ -283,8 +351,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    if (Number(formData.buyingPrice) < 0 || Number(formData.offerPrice) < 0 || Number(formData.price) < 0) {
-      alert("Buying price, selling price, and offer price cannot be less than 0.");
+    if (Number(formData.buyingPrice) < 0 || Number(basePrice) < 0 || Number(formData.offerPrice) < 0) {
+      alert("Buying price, base price, and offer price cannot be less than 0.");
       setLoading(false);
       return;
     }
@@ -299,7 +367,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         category: formData.category,
         subCategory: formData.category || null,
         buyingPrice: Number.parseFloat(formData.buyingPrice) || 0,
-        price: Number.parseFloat(formData.price) || 0,
+        price: Number.parseFloat(formData.price) || 0, // This is now the final calculated price
         offerPrice: Number.parseFloat(formData.offerPrice) || 0,
         discount: Number.parseFloat(formData.discount) || 0,
         countInStock: Number.parseInt(formData.countInStock) || 0,
@@ -484,18 +552,18 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Selling Price <span className="text-red-500">*</span>
+              Base Price <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
-              name="price"
-              value={formData.price}
+              name="basePrice"
+              value={basePrice}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="0.00"
               step="0.01"
-              required
               min="0"
+              required
             />
           </div>
 
@@ -524,7 +592,20 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               placeholder="0"
               min="0"
               max="100"
+              readOnly={Number(basePrice) > 0 && Number(formData.offerPrice) > 0} // Read-only if base and offer are set
             />
+          </div>
+        </div>
+
+        {/* Tax-inclusive price summary */}
+        <div className="mt-4 bg-gray-50 border border-gray-200 rounded p-4">
+          <div className="flex flex-wrap gap-4 items-center text-sm">
+            <div>Base Price: <b>{Number(basePrice).toFixed(2) || '0.00'} AED</b></div>
+            <div>Offer Price: <b>{Number(formData.offerPrice).toFixed(2) || '0.00'} AED</b></div>
+            <div>Discount: <b>{Number(formData.discount).toFixed(0) || '0'}%</b></div>
+            <div>Tax: <b>{taxRate}%</b></div>
+            <div>Tax Amount: <b>{taxAmount.toFixed(2)} AED</b></div>
+            <div className="text-green-700 font-bold">Final Price (Saved): {Number(formData.price).toFixed(2)} AED <span className="text-xs text-red-500 ml-2">Inclusive tax</span></div>
           </div>
         </div>
 
@@ -645,7 +726,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tax</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tax
+              {formData.tax && <span className="ml-2 text-xs text-red-500">Inclusive tax</span>}
+            </label>
             <select
               name="tax"
               value={formData.tax}
