@@ -45,11 +45,11 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
 
   const handleInputMin = (e) => {
     const value = e.target.value;
-    // Handle empty input by setting to 0
-    if (value === "" || isNaN(value)) {
-      setInputMin(0);
-      setRange([min, range[1]]);
-    } else {
+    // If input is empty, set to empty string to allow clearing
+    if (value === "") {
+      setInputMin("");
+    } else if (!isNaN(value)) {
+      // Only update if it's a valid number
       const numericValue = Number(value);
       setInputMin(numericValue);
       setRange([numericValue, range[1]]);
@@ -58,11 +58,11 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
 
   const handleInputMax = (e) => {
     const value = e.target.value;
-    // Handle empty input by setting to 0
-    if (value === "" || isNaN(value)) {
-      setInputMax(0);
-      setRange([range[0], max]);
-    } else {
+    // If input is empty, set to empty string to allow clearing
+    if (value === "") {
+      setInputMax("");
+    } else if (!isNaN(value)) {
+      // Only update if it's a valid number
       const numericValue = Number(value);
       setInputMax(numericValue);
       setRange([range[0], numericValue]);
@@ -70,22 +70,21 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
   };
 
   const handleMinFocus = (e) => {
-    // Only clear if the current value is 0
-    if (inputMin === 0) {
-      setInputMin("");
-    }
+    // Always clear the input on focus for better UX
+    setInputMin("");
   };
 
   const handleMaxFocus = (e) => {
-    // Only clear if the current value is 0
-    if (inputMax === 0) {
-      setInputMax("");
-    }
+    // Always clear the input on focus for better UX
+    setInputMax("");
   };
 
   const handleApply = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    onApply([inputMin, inputMax]);
+    // Ensure we have valid numbers before applying
+    const minValue = inputMin === "" ? 0 : Number(inputMin);
+    const maxValue = inputMax === "" ? max : Number(inputMax);
+    onApply([minValue, maxValue]);
   };
 
   return (
@@ -117,6 +116,12 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
           max={inputMax}
           onChange={handleInputMin}
           onFocus={handleMinFocus}
+          onBlur={() => {
+            // When input loses focus, if it's empty, set it to 0
+            if (inputMin === "") {
+              setInputMin(0);
+            }
+          }}
         />
         <input
           type="number"
@@ -126,6 +131,12 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
           max={max}
           onChange={handleInputMax}
           onFocus={handleMaxFocus}
+          onBlur={() => {
+            // When input loses focus, if it's empty, set it to max
+            if (inputMax === "") {
+              setInputMax(max);
+            }
+          }}
         />
       </div>
       <button
