@@ -695,8 +695,8 @@ const Shop = () => {
                             className="absolute opacity-0 w-0 h-0"
                           />
                           <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === "all"
-                              ? 'border-lime-600 bg-lime-600'
-                              : 'border-gray-300'
+                            ? 'border-lime-600 bg-lime-600'
+                            : 'border-gray-300'
                             }`}>
                             {selectedCategory === "all" && (
                               <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -721,8 +721,8 @@ const Shop = () => {
                               className="absolute opacity-0 w-0 h-0"
                             />
                             <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === category._id
-                                ? 'border-lime-600 bg-lime-600'
-                                : 'border-gray-300'
+                              ? 'border-lime-600 bg-lime-600'
+                              : 'border-gray-300'
                               }`}>
                               {selectedCategory === category._id && (
                                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -758,8 +758,8 @@ const Shop = () => {
                               className="absolute opacity-0 w-0 h-0"
                             />
                             <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedSubCategories[0] === subcat._id
-                                ? 'border-lime-600 bg-lime-600'
-                                : 'border-gray-300'
+                              ? 'border-lime-600 bg-lime-600'
+                              : 'border-gray-300'
                               }`}>
                               {selectedSubCategories[0] === subcat._id && (
                                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -811,8 +811,8 @@ const Shop = () => {
                                   className="absolute opacity-0 w-0 h-0"
                                 />
                                 <div className={`w-4 h-4 border-2 flex items-center justify-center mr-2 ${selectedBrands.includes(brand._id)
-                                    ? 'border-lime-600 bg-lime-600'
-                                    : 'border-gray-300 rounded'
+                                  ? 'border-lime-600 bg-lime-600'
+                                  : 'border-gray-300 rounded'
                                   }`}>
                                   {selectedBrands.includes(brand._id) && (
                                     <svg className="w-3 h-3 text-white" viewBox="0 0 20 20" fill="currentColor">
@@ -849,8 +849,8 @@ const Shop = () => {
                           className="absolute opacity-0 w-0 h-0"
                         />
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.inStock
-                            ? 'border-lime-600 bg-lime-600'
-                            : 'border-gray-300'
+                          ? 'border-lime-600 bg-lime-600'
+                          : 'border-gray-300'
                           }`}>
                           {stockFilters.inStock && (
                             <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -873,8 +873,8 @@ const Shop = () => {
                           className="absolute opacity-0 w-0 h-0"
                         />
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.outOfStock
-                            ? 'border-lime-600 bg-lime-600'
-                            : 'border-gray-300'
+                          ? 'border-lime-600 bg-lime-600'
+                          : 'border-gray-300'
                           }`}>
                           {stockFilters.outOfStock && (
                             <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -897,8 +897,8 @@ const Shop = () => {
                           className="absolute opacity-0 w-0 h-0"
                         />
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.onSale
-                            ? 'border-lime-600 bg-lime-600'
-                            : 'border-gray-300'
+                          ? 'border-lime-600 bg-lime-600'
+                          : 'border-gray-300'
                           }`}>
                           {stockFilters.onSale && (
                             <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -979,8 +979,8 @@ const Shop = () => {
                           className="absolute opacity-0 w-0 h-0"
                         />
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === "all"
-                            ? 'border-lime-600 bg-lime-600'
-                            : 'border-gray-300'
+                          ? 'border-lime-600 bg-lime-600'
+                          : 'border-gray-300'
                           }`}>
                           {selectedCategory === "all" && (
                             <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -1005,8 +1005,8 @@ const Shop = () => {
                             className="absolute opacity-0 w-0 h-0"
                           />
                           <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === category._id
-                              ? 'border-lime-600 bg-lime-600'
-                              : 'border-gray-300'
+                            ? 'border-lime-600 bg-lime-600'
+                            : 'border-gray-300'
                             }`}>
                             {selectedCategory === category._id && (
                               <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -1042,8 +1042,8 @@ const Shop = () => {
                             className="absolute opacity-0 w-0 h-0"
                           />
                           <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedSubCategories[0] === subcat._id
-                              ? 'border-lime-600 bg-lime-600'
-                              : 'border-gray-300'
+                            ? 'border-lime-600 bg-lime-600'
+                            : 'border-gray-300'
                             }`}>
                             {selectedSubCategories[0] === subcat._id && (
                               <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -1120,8 +1120,8 @@ const Shop = () => {
                         className="absolute opacity-0 w-0 h-0"
                       />
                       <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.inStock
-                          ? 'border-lime-600 bg-lime-600'
-                          : 'border-gray-300'
+                        ? 'border-lime-600 bg-lime-600'
+                        : 'border-gray-300'
                         }`}>
                         {stockFilters.inStock && (
                           <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -1144,8 +1144,8 @@ const Shop = () => {
                         className="absolute opacity-0 w-0 h-0"
                       />
                       <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.outOfStock
-                          ? 'border-lime-600 bg-lime-600'
-                          : 'border-gray-300'
+                        ? 'border-lime-600 bg-lime-600'
+                        : 'border-gray-300'
                         }`}>
                         {stockFilters.outOfStock && (
                           <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -1168,8 +1168,8 @@ const Shop = () => {
                         className="absolute opacity-0 w-0 h-0"
                       />
                       <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.onSale
-                          ? 'border-lime-600 bg-lime-600'
-                          : 'border-gray-300'
+                        ? 'border-lime-600 bg-lime-600'
+                        : 'border-gray-300'
                         }`}>
                         {stockFilters.onSale && (
                           <div className="w-2 h-2 rounded-full bg-white"></div>
