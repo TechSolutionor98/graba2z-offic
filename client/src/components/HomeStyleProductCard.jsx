@@ -258,7 +258,7 @@ const HomeStyleProductCard = ({ product }) => {
           }, 100)
           addToCart(product)
         }}
-        className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
+        className="w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
         disabled={stockStatus === "Out of Stock"}
       >
         <ShoppingBag size={12} />
