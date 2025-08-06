@@ -89,7 +89,7 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
 
   return (
     <div className="">
-    
+
       <Slider
         range
         min={min}
@@ -192,7 +192,7 @@ const Shop = () => {
 
       // Use the productCache service instead of direct API call
       const allProducts = await productCache.getProducts();
-      
+
       if (!allProducts || allProducts.length === 0) {
         setError("No products available");
         setLoading(false);
@@ -204,7 +204,7 @@ const Shop = () => {
       if (stockFilters.inStock) stockStatusFilters.push('inStock')
       if (stockFilters.outOfStock) stockStatusFilters.push('outOfStock')
       if (stockFilters.onSale) stockStatusFilters.push('onSale')
-      
+
       const filters = {
         parent_category: selectedCategory !== "all" ? selectedCategory : null,
         category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
@@ -247,15 +247,15 @@ const Shop = () => {
         await loadAndFilterProducts();
         return;
       }
-      
 
-      
+
+
       // Apply filters
       const stockStatusFilters = []
       if (stockFilters.inStock) stockStatusFilters.push('inStock')
       if (stockFilters.outOfStock) stockStatusFilters.push('outOfStock')
       if (stockFilters.onSale) stockStatusFilters.push('onSale')
-      
+
       const filters = {
         parent_category: selectedCategory !== "all" ? selectedCategory : null,
         category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
@@ -282,7 +282,7 @@ const Shop = () => {
       }
 
       setProducts(filteredProducts);
-      
+
     } catch (err) {
       // Fallback to API if cache fails
       await loadAndFilterProducts();
@@ -300,7 +300,7 @@ const Shop = () => {
   // Filter products from cache when filters change (no API calls)
   useEffect(() => {
     if (fetchTimeout.current) clearTimeout(fetchTimeout.current);
-    
+
     fetchTimeout.current = setTimeout(() => {
       filterProductsFromCache();
     }, 100); // 100ms debounce for instant filtering
@@ -477,18 +477,18 @@ const Shop = () => {
   const handleCategoryChange = (categoryId) => {
     setSelectedCategory(categoryId)
     setSelectedSubCategories([])
-    
+
     // Find the category object to get its name for URL generation
     const categoryObj = categories.find(cat => cat._id === categoryId);
     const categoryName = categoryObj ? categoryObj.name : categoryId;
-    
+
     // Generate SEO-friendly URL
     const url = generateShopURL({
       parentCategory: categoryId !== "all" ? categoryName : null,
       brand: selectedBrands.length > 0 ? brands.find(b => b._id === selectedBrands[0])?.name : null,
       search: searchQuery || null
     });
-    
+
     navigate(url);
   }
 
@@ -505,14 +505,14 @@ const Shop = () => {
       parentId = selectedCategory;
     }
     setSelectedCategory(parentId);
-    
+
     // Find the category and subcategory objects to get their names for URL generation
     const categoryObj = categories.find(cat => cat._id === parentId);
     const subcategoryObj = subCategories.find(sub => sub._id === subCatId);
-    
+
     const categoryName = categoryObj ? categoryObj.name : parentId;
     const subcategoryName = subcategoryObj ? subcategoryObj.name : subCatId;
-    
+
     // Generate SEO-friendly URL
     const url = generateShopURL({
       parentCategory: parentId !== "all" ? categoryName : null,
@@ -520,7 +520,7 @@ const Shop = () => {
       brand: selectedBrands.length > 0 ? brands.find(b => b._id === selectedBrands[0])?.name : null,
       search: searchQuery || null
     });
-    
+
     // Debug log for subcategory change
     console.log('handleSubCategoryChange called with:', { subCatId, parentId, subcatObj, url, subCategories });
     navigate(url);
@@ -528,24 +528,24 @@ const Shop = () => {
 
   const handleBrandChange = (brandId) => {
     setSelectedBrands((prev) => (prev.includes(brandId) ? prev.filter((b) => b !== brandId) : [...prev, brandId]))
-    
+
     // Update URL with brand filter
-    const newSelectedBrands = selectedBrands.includes(brandId) 
-      ? selectedBrands.filter((b) => b !== brandId) 
+    const newSelectedBrands = selectedBrands.includes(brandId)
+      ? selectedBrands.filter((b) => b !== brandId)
       : [...selectedBrands, brandId];
-    
+
     const categoryObj = categories.find(cat => cat._id === selectedCategory);
-    const subcategoryObj = selectedSubCategories.length > 0 
-      ? subCategories.find(sub => sub._id === selectedSubCategories[0]) 
+    const subcategoryObj = selectedSubCategories.length > 0
+      ? subCategories.find(sub => sub._id === selectedSubCategories[0])
       : null;
-    
+
     const url = generateShopURL({
       parentCategory: selectedCategory !== "all" ? (categoryObj?.name || selectedCategory) : null,
       subcategory: subcategoryObj?.name || (selectedSubCategories[0] || null),
       brand: newSelectedBrands.length > 0 ? brands.find(b => b._id === newSelectedBrands[0])?.name : null,
       search: searchQuery || null
     });
-    
+
     navigate(url);
   }
 
@@ -562,20 +562,20 @@ const Shop = () => {
   const handleSearchChange = (e) => {
     const newSearchQuery = e.target.value;
     setSearchQuery(newSearchQuery);
-    
+
     // Update URL with search query
     const categoryObj = categories.find(cat => cat._id === selectedCategory);
-    const subcategoryObj = selectedSubCategories.length > 0 
-      ? subCategories.find(sub => sub._id === selectedSubCategories[0]) 
+    const subcategoryObj = selectedSubCategories.length > 0
+      ? subCategories.find(sub => sub._id === selectedSubCategories[0])
       : null;
-    
+
     const url = generateShopURL({
       parentCategory: selectedCategory !== "all" ? (categoryObj?.name || selectedCategory) : null,
       subcategory: subcategoryObj?.name || (selectedSubCategories[0] || null),
       brand: selectedBrands.length > 0 ? brands.find(b => b._id === selectedBrands[0])?.name : null,
       search: newSearchQuery || null
     });
-    
+
     navigate(url);
   }
 
@@ -682,7 +682,7 @@ const Shop = () => {
                   </button>
                   {showCategoryFilter && (
                     <div className="mt-4 space-y-2">
-                      <div 
+                      <div
                         className="flex items-center cursor-pointer"
                         onClick={() => handleCategoryChange("all")}
                       >
@@ -694,11 +694,10 @@ const Shop = () => {
                             readOnly
                             className="absolute opacity-0 w-0 h-0"
                           />
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                            selectedCategory === "all" 
-                              ? 'border-lime-600 bg-lime-600' 
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === "all"
+                              ? 'border-lime-600 bg-lime-600'
                               : 'border-gray-300'
-                          }`}>
+                            }`}>
                             {selectedCategory === "all" && (
                               <div className="w-2 h-2 rounded-full bg-white"></div>
                             )}
@@ -706,10 +705,10 @@ const Shop = () => {
                         </div>
                         <span className="text-sm text-gray-700">All Categories</span>
                       </div>
-                      
+
                       {categories.map((category) => (
-                        <div 
-                          key={category._id} 
+                        <div
+                          key={category._id}
                           className="flex items-center cursor-pointer"
                           onClick={() => handleCategoryChange(category._id)}
                         >
@@ -721,11 +720,10 @@ const Shop = () => {
                               readOnly
                               className="absolute opacity-0 w-0 h-0"
                             />
-                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                              selectedCategory === category._id 
-                                ? 'border-lime-600 bg-lime-600' 
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === category._id
+                                ? 'border-lime-600 bg-lime-600'
                                 : 'border-gray-300'
-                            }`}>
+                              }`}>
                               {selectedCategory === category._id && (
                                 <div className="w-2 h-2 rounded-full bg-white"></div>
                               )}
@@ -746,8 +744,8 @@ const Shop = () => {
                     </button>
                     <div className="mt-4 space-y-2">
                       {subCategories.map((subcat) => (
-                        <div 
-                          key={subcat._id} 
+                        <div
+                          key={subcat._id}
                           className="flex items-center cursor-pointer"
                           onClick={() => handleSubCategoryChange(subcat._id)}
                         >
@@ -759,11 +757,10 @@ const Shop = () => {
                               readOnly
                               className="absolute opacity-0 w-0 h-0"
                             />
-                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                              selectedSubCategories[0] === subcat._id 
-                                ? 'border-lime-600 bg-lime-600' 
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedSubCategories[0] === subcat._id
+                                ? 'border-lime-600 bg-lime-600'
                                 : 'border-gray-300'
-                            }`}>
+                              }`}>
                               {selectedSubCategories[0] === subcat._id && (
                                 <div className="w-2 h-2 rounded-full bg-white"></div>
                               )}
@@ -775,6 +772,63 @@ const Shop = () => {
                     </div>
                   </div>
                 )}
+                {brands.length > 0 && (
+                  <div className="border-b pb-4">
+                    <button
+                      onClick={() => setShowBrandFilter(!showBrandFilter)}
+                      className="flex items-center justify-between w-full text-left font-medium text-gray-900"
+                    >
+                      Brands
+                      {showBrandFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    {showBrandFilter && (
+                      <div className="mt-4 space-y-3">
+                        <div className="relative">
+                          <Search
+                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                            size={16}
+                          />
+                          <input
+                            type="text"
+                            placeholder="Search brands"
+                            value={brandSearch}
+                            onChange={(e) => setBrandSearch(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        </div>
+                        <div className="max-h-48 overflow-y-auto space-y-2">
+                          {filteredBrands.map((brand) => (
+                            <div
+                              key={brand._id}
+                              className="flex items-center cursor-pointer"
+                              onClick={() => handleBrandChange(brand._id)}
+                            >
+                              <div className="relative flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedBrands.includes(brand._id)}
+                                  readOnly
+                                  className="absolute opacity-0 w-0 h-0"
+                                />
+                                <div className={`w-4 h-4 border-2 flex items-center justify-center mr-2 ${selectedBrands.includes(brand._id)
+                                    ? 'border-lime-600 bg-lime-600'
+                                    : 'border-gray-300 rounded'
+                                  }`}>
+                                  {selectedBrands.includes(brand._id) && (
+                                    <svg className="w-3 h-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </div>
+                              </div>
+                              <span className="text-sm text-gray-700">{brand.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Stock/On Sale Filter */}
                 <div className="border-b pb-4">
@@ -782,7 +836,7 @@ const Shop = () => {
                     Stock Status
                   </button>
                   <div className="mt-4 space-y-2">
-                    <div 
+                    <div
                       className="flex items-center cursor-pointer"
                       onClick={() => handleStockFilterChange("inStock")}
                     >
@@ -794,11 +848,10 @@ const Shop = () => {
                           readOnly
                           className="absolute opacity-0 w-0 h-0"
                         />
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                          stockFilters.inStock 
-                            ? 'border-lime-600 bg-lime-600' 
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.inStock
+                            ? 'border-lime-600 bg-lime-600'
                             : 'border-gray-300'
-                        }`}>
+                          }`}>
                           {stockFilters.inStock && (
                             <div className="w-2 h-2 rounded-full bg-white"></div>
                           )}
@@ -807,7 +860,7 @@ const Shop = () => {
                       <span className="text-sm text-gray-700">In Stock</span>
                     </div>
 
-                    <div 
+                    <div
                       className="flex items-center cursor-pointer"
                       onClick={() => handleStockFilterChange("outOfStock")}
                     >
@@ -819,11 +872,10 @@ const Shop = () => {
                           readOnly
                           className="absolute opacity-0 w-0 h-0"
                         />
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                          stockFilters.outOfStock 
-                            ? 'border-lime-600 bg-lime-600' 
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.outOfStock
+                            ? 'border-lime-600 bg-lime-600'
                             : 'border-gray-300'
-                        }`}>
+                          }`}>
                           {stockFilters.outOfStock && (
                             <div className="w-2 h-2 rounded-full bg-white"></div>
                           )}
@@ -832,7 +884,7 @@ const Shop = () => {
                       <span className="text-sm text-gray-700">Out of Stock</span>
                     </div>
 
-                    <div 
+                    <div
                       className="flex items-center cursor-pointer"
                       onClick={() => handleStockFilterChange("onSale")}
                     >
@@ -844,11 +896,10 @@ const Shop = () => {
                           readOnly
                           className="absolute opacity-0 w-0 h-0"
                         />
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                          stockFilters.onSale 
-                            ? 'border-lime-600 bg-lime-600' 
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.onSale
+                            ? 'border-lime-600 bg-lime-600'
                             : 'border-gray-300'
-                        }`}>
+                          }`}>
                           {stockFilters.onSale && (
                             <div className="w-2 h-2 rounded-full bg-white"></div>
                           )}
@@ -858,6 +909,9 @@ const Shop = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Brands Filter */}
+
               </div>
             </div>
           </div>
@@ -912,7 +966,7 @@ const Shop = () => {
                 </button>
                 {showCategoryFilter && (
                   <div className="mt-4 space-y-2">
-                    <div 
+                    <div
                       className="flex items-center cursor-pointer"
                       onClick={() => handleCategoryChange("all")}
                     >
@@ -924,11 +978,10 @@ const Shop = () => {
                           readOnly
                           className="absolute opacity-0 w-0 h-0"
                         />
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                          selectedCategory === "all" 
-                            ? 'border-lime-600 bg-lime-600' 
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === "all"
+                            ? 'border-lime-600 bg-lime-600'
                             : 'border-gray-300'
-                        }`}>
+                          }`}>
                           {selectedCategory === "all" && (
                             <div className="w-2 h-2 rounded-full bg-white"></div>
                           )}
@@ -936,10 +989,10 @@ const Shop = () => {
                       </div>
                       <span className="text-sm text-gray-700">All Categories</span>
                     </div>
-                    
+
                     {categories.map((category) => (
-                      <div 
-                        key={category._id} 
+                      <div
+                        key={category._id}
                         className="flex items-center cursor-pointer"
                         onClick={() => handleCategoryChange(category._id)}
                       >
@@ -951,11 +1004,10 @@ const Shop = () => {
                             readOnly
                             className="absolute opacity-0 w-0 h-0"
                           />
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                            selectedCategory === category._id 
-                              ? 'border-lime-600 bg-lime-600' 
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === category._id
+                              ? 'border-lime-600 bg-lime-600'
                               : 'border-gray-300'
-                          }`}>
+                            }`}>
                             {selectedCategory === category._id && (
                               <div className="w-2 h-2 rounded-full bg-white"></div>
                             )}
@@ -976,8 +1028,8 @@ const Shop = () => {
                   </button>
                   <div className="mt-4 space-y-2">
                     {subCategories.map((subcat) => (
-                      <div 
-                        key={subcat._id} 
+                      <div
+                        key={subcat._id}
                         className="flex items-center cursor-pointer"
                         onClick={() => handleSubCategoryChange(subcat._id)}
                       >
@@ -989,11 +1041,10 @@ const Shop = () => {
                             readOnly
                             className="absolute opacity-0 w-0 h-0"
                           />
-                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                            selectedSubCategories[0] === subcat._id 
-                              ? 'border-lime-600 bg-lime-600' 
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedSubCategories[0] === subcat._id
+                              ? 'border-lime-600 bg-lime-600'
                               : 'border-gray-300'
-                          }`}>
+                            }`}>
                             {selectedSubCategories[0] === subcat._id && (
                               <div className="w-2 h-2 rounded-full bg-white"></div>
                             )}
@@ -1056,7 +1107,7 @@ const Shop = () => {
                   Stock
                 </button>
                 <div className="mt-4 space-y-2">
-                  <div 
+                  <div
                     className="flex items-center cursor-pointer"
                     onClick={() => handleStockFilterChange("inStock")}
                   >
@@ -1068,11 +1119,10 @@ const Shop = () => {
                         readOnly
                         className="absolute opacity-0 w-0 h-0"
                       />
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                        stockFilters.inStock 
-                          ? 'border-lime-600 bg-lime-600' 
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.inStock
+                          ? 'border-lime-600 bg-lime-600'
                           : 'border-gray-300'
-                      }`}>
+                        }`}>
                         {stockFilters.inStock && (
                           <div className="w-2 h-2 rounded-full bg-white"></div>
                         )}
@@ -1081,7 +1131,7 @@ const Shop = () => {
                     <span className="text-sm text-gray-700">In Stock</span>
                   </div>
 
-                  <div 
+                  <div
                     className="flex items-center cursor-pointer"
                     onClick={() => handleStockFilterChange("outOfStock")}
                   >
@@ -1093,11 +1143,10 @@ const Shop = () => {
                         readOnly
                         className="absolute opacity-0 w-0 h-0"
                       />
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                        stockFilters.outOfStock 
-                          ? 'border-lime-600 bg-lime-600' 
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.outOfStock
+                          ? 'border-lime-600 bg-lime-600'
                           : 'border-gray-300'
-                      }`}>
+                        }`}>
                         {stockFilters.outOfStock && (
                           <div className="w-2 h-2 rounded-full bg-white"></div>
                         )}
@@ -1106,7 +1155,7 @@ const Shop = () => {
                     <span className="text-sm text-gray-700">Out of Stock</span>
                   </div>
 
-                  <div 
+                  <div
                     className="flex items-center cursor-pointer"
                     onClick={() => handleStockFilterChange("onSale")}
                   >
@@ -1118,11 +1167,10 @@ const Shop = () => {
                         readOnly
                         className="absolute opacity-0 w-0 h-0"
                       />
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                        stockFilters.onSale 
-                          ? 'border-lime-600 bg-lime-600' 
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${stockFilters.onSale
+                          ? 'border-lime-600 bg-lime-600'
                           : 'border-gray-300'
-                      }`}>
+                        }`}>
                         {stockFilters.onSale && (
                           <div className="w-2 h-2 rounded-full bg-white"></div>
                         )}
