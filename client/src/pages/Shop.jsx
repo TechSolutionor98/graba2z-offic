@@ -682,33 +682,62 @@ const Shop = () => {
                   </button>
                   {showCategoryFilter && (
                     <div className="mt-4 space-y-2">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="category"
-                          checked={selectedCategory === "all"}
-                          onChange={() => handleCategoryChange("all")}
-                          onClick={(e) => e.stopPropagation()} // Prevent event bubbling
-                          className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
-                        />
-                        <span className="text-sm text-gray-700">All Categories</span>
-                      </label>
-                      {categories.map((category) => (
-                        <label key={category._id} className="flex items-center">
+                      <div 
+                        className="flex items-center cursor-pointer"
+                        onClick={() => handleCategoryChange("all")}
+                      >
+                        <div className="relative flex items-center">
                           <input
                             type="radio"
-                            name="category"
-                            checked={selectedCategory === category._id}
-                            onChange={() => handleCategoryChange(category._id)}
-                            onClick={(e) => e.stopPropagation()} // Prevent event bubbling
-                            className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
+                            name="category-group"
+                            checked={selectedCategory === "all"}
+                            readOnly
+                            className="absolute opacity-0 w-0 h-0"
                           />
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                            selectedCategory === "all" 
+                              ? 'border-lime-600 bg-lime-600' 
+                              : 'border-gray-300'
+                          }`}>
+                            {selectedCategory === "all" && (
+                              <div className="w-2 h-2 rounded-full bg-white"></div>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-sm text-gray-700">All Categories</span>
+                      </div>
+                      
+                      {categories.map((category) => (
+                        <div 
+                          key={category._id} 
+                          className="flex items-center cursor-pointer"
+                          onClick={() => handleCategoryChange(category._id)}
+                        >
+                          <div className="relative flex items-center">
+                            <input
+                              type="radio"
+                              name="category-group"
+                              checked={selectedCategory === category._id}
+                              readOnly
+                              className="absolute opacity-0 w-0 h-0"
+                            />
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                              selectedCategory === category._id 
+                                ? 'border-lime-600 bg-lime-600' 
+                                : 'border-gray-300'
+                            }`}>
+                              {selectedCategory === category._id && (
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                              )}
+                            </div>
+                          </div>
                           <span className="text-sm text-gray-700">{category.name}</span>
-                        </label>
+                        </div>
                       ))}
                     </div>
                   )}
                 </div>
+
                 {/* Subcategories Filter */}
                 {subCategories.length > 0 && (
                   <div className="border-b pb-4">
@@ -717,113 +746,117 @@ const Shop = () => {
                     </button>
                     <div className="mt-4 space-y-2">
                       {subCategories.map((subcat) => (
-                        <label key={subcat._id} className="flex items-center">
-                          <input
-                            type="radio"
-                            name="subcategory"
-                            checked={selectedSubCategories[0] === subcat._id}
-                            onChange={() => handleSubCategoryChange(subcat._id)}
-                            onClick={(e) => e.stopPropagation()} // Prevent event bubbling
-                            className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
-                          />
+                        <div 
+                          key={subcat._id} 
+                          className="flex items-center cursor-pointer"
+                          onClick={() => handleSubCategoryChange(subcat._id)}
+                        >
+                          <div className="relative flex items-center">
+                            <input
+                              type="radio"
+                              name="subcategory-group"
+                              checked={selectedSubCategories[0] === subcat._id}
+                              readOnly
+                              className="absolute opacity-0 w-0 h-0"
+                            />
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                              selectedSubCategories[0] === subcat._id 
+                                ? 'border-lime-600 bg-lime-600' 
+                                : 'border-gray-300'
+                            }`}>
+                              {selectedSubCategories[0] === subcat._id && (
+                                <div className="w-2 h-2 rounded-full bg-white"></div>
+                              )}
+                            </div>
+                          </div>
                           <span className="text-sm text-gray-700">{subcat.name}</span>
-                        </label>
+                        </div>
                       ))}
                     </div>
                   </div>
                 )}
-                {/* Brands Filter */}
-                {brands.length > 0 && (
-                  <div className="border-b pb-4">
-                    <button
-                      onClick={() => setShowBrandFilter(!showBrandFilter)}
-                      className="flex items-center justify-between w-full text-left font-medium text-gray-900"
-                    >
-                      Brands
-                      {showBrandFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
-                    </button>
-                    {showBrandFilter && (
-                      <div className="mt-4 space-y-3">
-                        <div className="relative">
-                          <Search
-                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                            size={16}
-                          />
-                          <input
-                            type="text"
-                            placeholder="Search brands"
-                            value={brandSearch}
-                            onChange={(e) => setBrandSearch(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                          />
-                        </div>
-                        <div className="max-h-48 overflow-y-auto space-y-2">
-                          {filteredBrands.map((brand) => (
-                            <label key={brand._id} className="flex items-center">
-                              <input
-                                type="checkbox"
-                                checked={selectedBrands.includes(brand._id)}
-                                onChange={() => handleBrandChange(brand._id)}
-                                onClick={(e) => e.stopPropagation()} // Prevent event bubbling
-                                className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300 rounded"
-                              />
-                              <span className="text-sm text-gray-700">{brand.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+
                 {/* Stock/On Sale Filter */}
                 <div className="border-b pb-4">
                   <button className="flex items-center justify-between w-full text-left font-medium text-gray-900">
-                    Stock
+                    Stock Status
                   </button>
                   <div className="mt-4 space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="stock-status"
-                        checked={stockFilters.inStock}
-                        onChange={() => handleStockFilterChange("inStock")}
-                        onClick={(e) => e.stopPropagation()} // Prevent event bubbling
-                        className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
-                      />
+                    <div 
+                      className="flex items-center cursor-pointer"
+                      onClick={() => handleStockFilterChange("inStock")}
+                    >
+                      <div className="relative flex items-center">
+                        <input
+                          type="radio"
+                          name="stock-group"
+                          checked={stockFilters.inStock}
+                          readOnly
+                          className="absolute opacity-0 w-0 h-0"
+                        />
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                          stockFilters.inStock 
+                            ? 'border-lime-600 bg-lime-600' 
+                            : 'border-gray-300'
+                        }`}>
+                          {stockFilters.inStock && (
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                      </div>
                       <span className="text-sm text-gray-700">In Stock</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="stock-status"
-                        checked={stockFilters.outOfStock}
-                        onChange={() => handleStockFilterChange("outOfStock")}
-                        onClick={(e) => e.stopPropagation()} // Prevent event bubbling
-                        className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
-                      />
+                    </div>
+
+                    <div 
+                      className="flex items-center cursor-pointer"
+                      onClick={() => handleStockFilterChange("outOfStock")}
+                    >
+                      <div className="relative flex items-center">
+                        <input
+                          type="radio"
+                          name="stock-group"
+                          checked={stockFilters.outOfStock}
+                          readOnly
+                          className="absolute opacity-0 w-0 h-0"
+                        />
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                          stockFilters.outOfStock 
+                            ? 'border-lime-600 bg-lime-600' 
+                            : 'border-gray-300'
+                        }`}>
+                          {stockFilters.outOfStock && (
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                      </div>
                       <span className="text-sm text-gray-700">Out of Stock</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="stock-status"
-                        checked={stockFilters.onSale}
-                        onChange={() => handleStockFilterChange("onSale")}
-                        onClick={(e) => e.stopPropagation()} // Prevent event bubbling
-                        className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300"
-                      />
+                    </div>
+
+                    <div 
+                      className="flex items-center cursor-pointer"
+                      onClick={() => handleStockFilterChange("onSale")}
+                    >
+                      <div className="relative flex items-center">
+                        <input
+                          type="radio"
+                          name="stock-group"
+                          checked={stockFilters.onSale}
+                          readOnly
+                          className="absolute opacity-0 w-0 h-0"
+                        />
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                          stockFilters.onSale 
+                            ? 'border-lime-600 bg-lime-600' 
+                            : 'border-gray-300'
+                        }`}>
+                          {stockFilters.onSale && (
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                      </div>
                       <span className="text-sm text-gray-700">On Sale</span>
-                    </label>
+                    </div>
                   </div>
-                </div>
-                {/* Clear Filters Button */}
-                <div className="pt-4">
-                  <button
-                    onClick={clearAllFilters}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                  >
-                    Clear All Filters
-                  </button>
                 </div>
               </div>
             </div>
@@ -879,27 +912,57 @@ const Shop = () => {
                 </button>
                 {showCategoryFilter && (
                   <div className="mt-4 space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="category"
-                        checked={selectedCategory === "all"}
-                        onChange={() => handleCategoryChange("all")}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700">All Categories</span>
-                    </label>
-                    {categories.map((category) => (
-                      <label key={category._id} className="flex items-center">
+                    <div 
+                      className="flex items-center cursor-pointer"
+                      onClick={() => handleCategoryChange("all")}
+                    >
+                      <div className="relative flex items-center">
                         <input
                           type="radio"
-                          name="category"
-                          checked={selectedCategory === category._id}
-                          onChange={() => handleCategoryChange(category._id)}
-                          className="mr-2"
+                          name="category-group"
+                          checked={selectedCategory === "all"}
+                          readOnly
+                          className="absolute opacity-0 w-0 h-0"
                         />
-                        <span className="text-sm text-gray-700 font-medium">{category.name}</span>
-                      </label>
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                          selectedCategory === "all" 
+                            ? 'border-lime-600 bg-lime-600' 
+                            : 'border-gray-300'
+                        }`}>
+                          {selectedCategory === "all" && (
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-sm text-gray-700">All Categories</span>
+                    </div>
+                    
+                    {categories.map((category) => (
+                      <div 
+                        key={category._id} 
+                        className="flex items-center cursor-pointer"
+                        onClick={() => handleCategoryChange(category._id)}
+                      >
+                        <div className="relative flex items-center">
+                          <input
+                            type="radio"
+                            name="category-group"
+                            checked={selectedCategory === category._id}
+                            readOnly
+                            className="absolute opacity-0 w-0 h-0"
+                          />
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                            selectedCategory === category._id 
+                              ? 'border-lime-600 bg-lime-600' 
+                              : 'border-gray-300'
+                          }`}>
+                            {selectedCategory === category._id && (
+                              <div className="w-2 h-2 rounded-full bg-white"></div>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-sm text-gray-700">{category.name}</span>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -912,19 +975,32 @@ const Shop = () => {
                     {categories.find((cat) => cat._id === selectedCategory)?.name} Subcategories
                   </button>
                   <div className="mt-4 space-y-2">
-                    {/* Debug log for subcategory filter render */}
-                    {console.log('Rendering subcategory filter:', subCategories)}
                     {subCategories.map((subcat) => (
-                      <label key={subcat._id} className="flex items-center">
-                        <input
-                          type="radio"
-                          name="subcategory"
-                          checked={selectedSubCategories[0] === subcat._id}
-                          onChange={() => handleSubCategoryChange(subcat._id)}
-                          className="mr-2"
-                        />
+                      <div 
+                        key={subcat._id} 
+                        className="flex items-center cursor-pointer"
+                        onClick={() => handleSubCategoryChange(subcat._id)}
+                      >
+                        <div className="relative flex items-center">
+                          <input
+                            type="radio"
+                            name="subcategory-group"
+                            checked={selectedSubCategories[0] === subcat._id}
+                            readOnly
+                            className="absolute opacity-0 w-0 h-0"
+                          />
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                            selectedSubCategories[0] === subcat._id 
+                              ? 'border-lime-600 bg-lime-600' 
+                              : 'border-gray-300'
+                          }`}>
+                            {selectedSubCategories[0] === subcat._id && (
+                              <div className="w-2 h-2 rounded-full bg-white"></div>
+                            )}
+                          </div>
+                        </div>
                         <span className="text-sm text-gray-700">{subcat.name}</span>
-                      </label>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -962,7 +1038,8 @@ const Shop = () => {
                               type="checkbox"
                               checked={selectedBrands.includes(brand._id)}
                               onChange={() => handleBrandChange(brand._id)}
-                              className="mr-2 text-green-600 focus:ring-green-500"
+                              onClick={(e) => e.stopPropagation()} // Prevent event bubbling
+                              className="mr-2 h-4 w-4 text-lime-600 focus:ring-lime-500 border-gray-300 rounded"
                             />
                             <span className="text-sm text-gray-700">{brand.name}</span>
                           </label>
@@ -979,39 +1056,81 @@ const Shop = () => {
                   Stock
                 </button>
                 <div className="mt-4 space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="stockFilter"
-                      checked={stockFilters.onSale}
-                      onChange={() => handleStockFilterChange("onSale")}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">On sale</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="stockFilter"
-                      checked={stockFilters.inStock}
-                      onChange={() => handleStockFilterChange("inStock")}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">In stock</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="stockFilter"
-                      checked={stockFilters.outOfStock}
-                      onChange={() => handleStockFilterChange("outOfStock")}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">Out of stock</span>
-                  </label>
-                
+                  <div 
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleStockFilterChange("inStock")}
+                  >
+                    <div className="relative flex items-center">
+                      <input
+                        type="radio"
+                        name="stock-group"
+                        checked={stockFilters.inStock}
+                        readOnly
+                        className="absolute opacity-0 w-0 h-0"
+                      />
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                        stockFilters.inStock 
+                          ? 'border-lime-600 bg-lime-600' 
+                          : 'border-gray-300'
+                      }`}>
+                        {stockFilters.inStock && (
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-700">In Stock</span>
+                  </div>
+
+                  <div 
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleStockFilterChange("outOfStock")}
+                  >
+                    <div className="relative flex items-center">
+                      <input
+                        type="radio"
+                        name="stock-group"
+                        checked={stockFilters.outOfStock}
+                        readOnly
+                        className="absolute opacity-0 w-0 h-0"
+                      />
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                        stockFilters.outOfStock 
+                          ? 'border-lime-600 bg-lime-600' 
+                          : 'border-gray-300'
+                      }`}>
+                        {stockFilters.outOfStock && (
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-700">Out of Stock</span>
+                  </div>
+
+                  <div 
+                    className="flex items-center cursor-pointer"
+                    onClick={() => handleStockFilterChange("onSale")}
+                  >
+                    <div className="relative flex items-center">
+                      <input
+                        type="radio"
+                        name="stock-group"
+                        checked={stockFilters.onSale}
+                        readOnly
+                        className="absolute opacity-0 w-0 h-0"
+                      />
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                        stockFilters.onSale 
+                          ? 'border-lime-600 bg-lime-600' 
+                          : 'border-gray-300'
+                      }`}>
+                        {stockFilters.onSale && (
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-700">On Sale</span>
+                  </div>
                 </div>
-             
               </div>
 
               {/* Clear Filters Button */}
