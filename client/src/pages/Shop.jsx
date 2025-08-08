@@ -209,11 +209,9 @@ const Shop = () => {
       Object.keys(filters).forEach(key => filters[key] === null && delete filters[key]);
 
       const data = await productCache.getProducts(filters);
-      // Ensure products is always an array
-      const productsArray = Array.isArray(data.products) ? data.products : [];
-      setProducts(productsArray);
-      setTotalPages(data.pages || 1);
-      setTotalProductsCount(data.totalCount || 0);
+      setProducts(data.products);
+      setTotalPages(data.pages);
+      setTotalProductsCount(data.totalCount);
 
       // Dynamically set min/max price based on fetched products if not already set by user
       if (data.products.length > 0 && priceRange[0] === 0 && priceRange[1] === 10000) {
