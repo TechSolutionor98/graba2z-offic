@@ -50,50 +50,46 @@ class ProductCacheService {
 
       const response = await axios.get(`${config.API_URL}/api/products`, { params });
       
-      if (response.data && Array.isArray(response.data.products)) {
-        const products = response.data.products.map(product => ({
-          _id: product._id,
-          name: product.name,
-          price: product.price,
-          basePrice: product.basePrice,
-          offerPrice: product.offerPrice,
-          brand: product.brand,
-          category: product.category,
-          parentCategory: product.parentCategory,
-          countInStock: product.countInStock,
-          stockStatus: product.stockStatus,
-          discount: product.discount,
-          featured: product.featured,
-          slug: product.slug,
-          image: product.image,
-          galleryImages: product.galleryImages,
-          rating: product.rating,
-          numReviews: product.numReviews,
-          description: product.description,
-          tags: product.tags,
-          createdAt: product.createdAt,
-        }));
+      // Ensure we always have a valid response structure
+      const responseData = response.data || {};
+      const products = Array.isArray(responseData.products) 
+        ? responseData.products.map(product => ({
+            _id: product._id,
+            name: product.name,
+            price: product.price || 0,
+            basePrice: product.basePrice || product.price || 0,
+            offerPrice: product.offerPrice || product.price || 0,
+            brand: product.brand || {},
+            category: product.category || {},
+            parentCategory: product.parentCategory || {},
+            countInStock: product.countInStock || 0,
+            stockStatus: product.stockStatus || 'Out of Stock',
+            discount: product.discount || 0,
+            featured: Boolean(product.featured),
+            slug: product.slug || '',
+            image: product.image || '',
+            galleryImages: Array.isArray(product.galleryImages) ? product.galleryImages : [],
+            rating: typeof product.rating === 'number' ? product.rating : 0,
+            numReviews: product.numReviews || 0,
+            description: product.description || '',
+            tags: Array.isArray(product.tags) ? product.tags : [],
+            createdAt: product.createdAt || new Date().toISOString(),
+          }))
+        : [];
 
-        // Cache the fetched page
-        this.pageCache.set(cacheKey, {
-          products: products,
-          timestamp: now,
-          totalCount: response.data.totalCount,
-          pages: response.data.pages,
-          page: response.data.page,
-        });
-        this.lastFetchTimestamp = now; // Update global fetch timestamp
+      // Cache the fetched page with default values
+      const cacheData = {
+        products: products,
+        timestamp: now,
+        totalCount: typeof responseData.totalCount === 'number' ? responseData.totalCount : 0,
+        pages: typeof responseData.pages === 'number' ? responseData.pages : 1,
+        page: typeof responseData.page === 'number' ? responseData.page : 1,
+      };
+      
+      this.pageCache.set(cacheKey, cacheData);
+      this.lastFetchTimestamp = now;
 
-        return {
-          products: products,
-          totalCount: response.data.totalCount,
-          pages: response.data.pages,
-          page: response.data.page,
-        };
-      } else {
-        console.error('Invalid products data received:', response.data);
-        return { products: [], totalCount: 0, pages: 0, page: 1 };
-      }
+      return cacheData;
     } catch (error) {
       console.error('Error fetching products:', error);
       throw error;
