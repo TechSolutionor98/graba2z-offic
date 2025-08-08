@@ -1,132 +1,956 @@
-import config from "../config/config.js"
-import axios from 'axios'; // Import axios for API calls
+// import config from "../config/config.js"
 
-// Product Caching Service (simplified for paginated API)
+// // Product Caching Service with compression and size management
+// class ProductCacheService {
+//   constructor() {
+//     this.CACHE_KEY = 'graba2z_products_cache'
+//     this.CACHE_CHUNK_PREFIX = 'graba2z_products_chunk_'
+//     this.CACHE_EXPIRY = 30 * 60 * 1000 // 30 minutes
+//     this.MAX_CACHE_SIZE = 1 * 1024 * 1024 // 1MB per chunk (reduced)
+//     this.MAX_CHUNKS = 20 // More chunks, smaller size
+//   }
+
+//   // Compress data using JSON.stringify and btoa
+//   compressData(data) {
+//     try {
+//       const jsonString = JSON.stringify(data)
+//       return btoa(encodeURIComponent(jsonString))
+//     } catch (error) {
+//       return null
+//     }
+//   }
+
+//   // Decompress data
+//   decompressData(compressedData) {
+//     try {
+//       const jsonString = decodeURIComponent(atob(compressedData))
+//       return JSON.parse(jsonString)
+//     } catch (error) {
+//       return null
+//     }
+//   }
+
+//   // Check if cache is valid
+//   isCacheValid() {
+//     const cached = localStorage.getItem(this.CACHE_KEY)
+//     if (!cached) return false
+
+//     try {
+//       const data = this.decompressData(cached)
+//       if (!data) return false
+      
+//       const now = Date.now()
+//       return data.timestamp && (now - data.timestamp) < this.CACHE_EXPIRY
+//     } catch (error) {
+//       return false
+//     }
+//   }
+
+//   // Get cached products
+//   getCachedProducts() {
+//     if (!this.isCacheValid()) return null
+
+//     try {
+//       const cached = localStorage.getItem(this.CACHE_KEY)
+//       const data = this.decompressData(cached)
+      
+//       if (!data) return null
+
+//       // Check if data is chunked
+//       if (data.isChunked) {
+//         return this.getCachedProductsChunked(data)
+//       }
+
+//       return data?.products || []
+//     } catch (error) {
+//       return null
+//     }
+//   }
+
+//   // Get cached products from chunked storage
+//   getCachedProductsChunked(metadata) {
+//     try {
+//       const allProducts = []
+      
+//       for (let i = 0; i < metadata.chunkCount; i++) {
+//         const chunkKey = `${this.CACHE_CHUNK_PREFIX}${i}`
+        
+//         // Try localStorage first, then sessionStorage
+//         let chunkData = localStorage.getItem(chunkKey)
+//         let storageType = 'localStorage'
+        
+//         if (!chunkData) {
+//           chunkData = sessionStorage.getItem(chunkKey)
+//           storageType = 'sessionStorage'
+//         }
+        
+//         if (!chunkData) {
+//           return null
+//         }
+
+//         const chunk = this.decompressData(chunkData)
+//         if (!chunk || !chunk.products) {
+//           return null
+//         }
+
+//         allProducts.push(...chunk.products)
+//       }
+
+//       return allProducts
+
+//     } catch (error) {
+//       return null
+//     }
+//   }
+
+//     // Set products in cache with chunked storage
+//   async setCachedProducts(products) {
+//     try {
+
+      
+//       // Create ultra-minimal product data (only core fields)
+//       const minimalProducts = products.map(product => ({
+//         _id: product._id,
+//         name: product.name,
+//         price: product.price,
+//         basePrice: product.basePrice,
+//         offerPrice: product.offerPrice,
+//         brand: product.brand,
+//         category: product.category,
+//         parentCategory: product.parentCategory,
+//         countInStock: product.countInStock,
+//         stockStatus: product.stockStatus,
+//         discount: product.discount,
+//         featured: product.featured,
+//         slug: product.slug,
+//         image: product.image,
+//         galleryImages: product.galleryImages
+//       }))
+
+//       // Try single cache first
+//       const cacheData = {
+//         products: minimalProducts,
+//         timestamp: Date.now(),
+//         isMinimal: true
+//       }
+
+//       const compressedData = this.compressData(cacheData)
+//       if (!compressedData) {
+//         throw new Error('Failed to compress data')
+//       }
+
+//       const dataSize = new Blob([compressedData]).size
+      
+//       if (dataSize <= this.MAX_CACHE_SIZE) {
+//         localStorage.setItem(this.CACHE_KEY, compressedData)
+//         return
+//       }
+
+//       // If too large, try chunked storage
+//       return await this.setCachedProductsChunked(minimalProducts)
+
+//     } catch (error) {
+//       throw error
+//     }
+//   }
+
+//   // Set products in cache using chunked storage
+//   async setCachedProductsChunked(products) {
+//     try {
+//       const chunkSize = Math.ceil(products.length / this.MAX_CHUNKS)
+//       const chunks = []
+      
+//       // Split products into chunks
+//       for (let i = 0; i < products.length; i += chunkSize) {
+//         chunks.push(products.slice(i, i + chunkSize))
+//       }
+
+
+
+//       // Store chunk metadata
+//       const metadata = {
+//         totalProducts: products.length,
+//         chunkCount: chunks.length,
+//         timestamp: Date.now(),
+//         isChunked: true
+//       }
+
+//       localStorage.setItem(this.CACHE_KEY, this.compressData(metadata))
+
+//       // Store each chunk
+//       for (let i = 0; i < chunks.length; i++) {
+//         const chunkData = {
+//           products: chunks[i],
+//           chunkIndex: i,
+//           timestamp: Date.now()
+//         }
+
+//         const compressedChunk = this.compressData(chunkData)
+//         const chunkSize = new Blob([compressedChunk]).size
+
+//         if (chunkSize > this.MAX_CACHE_SIZE) {
+//           // Try sessionStorage as fallback
+//           try {
+//             sessionStorage.setItem(`${this.CACHE_CHUNK_PREFIX}${i}`, compressedChunk)
+//           } catch (sessionError) {
+//             throw new Error(`Chunk ${i} is too large for both localStorage and sessionStorage: ${chunkSize} bytes`)
+//           }
+//         } else {
+//           localStorage.setItem(`${this.CACHE_CHUNK_PREFIX}${i}`, compressedChunk)
+//         }
+//       }
+
+//       return true
+
+//     } catch (error) {
+//       // Clean up any partial chunks
+//       this.clearCache()
+//       throw error
+//     }
+//   }
+
+//   // Clear cache
+//   clearCache() {
+//     // Clear main cache
+//     localStorage.removeItem(this.CACHE_KEY)
+//     sessionStorage.removeItem(this.CACHE_KEY)
+    
+//     // Clear chunked cache from both storages
+//     for (let i = 0; i < this.MAX_CHUNKS; i++) {
+//       localStorage.removeItem(`${this.CACHE_CHUNK_PREFIX}${i}`)
+//       sessionStorage.removeItem(`${this.CACHE_CHUNK_PREFIX}${i}`)
+//     }
+    
+
+//   }
+
+//   // Force refresh cache (clear and fetch new data)
+//   async forceRefreshCache() {
+//     this.clearCache()
+//     const products = await this.fetchAndCacheProducts()
+//     return products
+//   }
+
+//   // Test cache functionality
+//   async testCache() {
+//     // Check current cache
+//     const stats = this.getCacheStats()
+    
+//     // Try to get products
+//     const products = await this.getProducts()
+    
+//     // Check if cache was used
+//     const newStats = this.getCacheStats()
+    
+//     // Test storage availability
+//     const storageTest = {
+//       localStorage: this.testStorage('localStorage'),
+//       sessionStorage: this.testStorage('sessionStorage')
+//     }
+    
+//     return { products, cacheUsed: newStats.hasCache, storageTest }
+//   }
+
+//   // Test storage availability
+//   testStorage(storageType) {
+//     try {
+//       const testKey = 'test_storage'
+//       const testValue = 'test'
+      
+//       if (storageType === 'localStorage') {
+//         localStorage.setItem(testKey, testValue)
+//         const result = localStorage.getItem(testKey) === testValue
+//         localStorage.removeItem(testKey)
+//         return result
+//       } else if (storageType === 'sessionStorage') {
+//         sessionStorage.setItem(testKey, testValue)
+//         const result = sessionStorage.getItem(testKey) === testValue
+//         sessionStorage.removeItem(testKey)
+//         return result
+//       }
+//       return false
+//     } catch (error) {
+//       return false
+//     }
+//   }
+
+//     // Fetch products from API and cache them
+//   async fetchAndCacheProducts() {
+//     try {
+//       const response = await fetch(`${config.API_URL}/api/products`)
+//       if (!response.ok) {
+//         throw new Error('Failed to fetch products')
+//       }
+//       const products = await response.json()
+      
+//       // Always try to cache products
+//       try {
+//         await this.setCachedProducts(products)
+//       } catch (cacheError) {
+//         // Continue without cache - the app will still work
+//       }
+      
+//       return products
+//     } catch (error) {
+//       throw error
+//     }
+//   }
+
+//       // Get products (from cache or API)
+//   async getProducts() {
+//     // Check if we have valid cached data
+//     if (this.isCacheValid()) {
+//       const cachedProducts = this.getCachedProducts()
+//       if (cachedProducts && cachedProducts.length > 0) {
+//         return cachedProducts
+//       }
+//     }
+
+//     // Fetch from API if no valid cache
+//     return await this.fetchAndCacheProducts()
+//   }
+
+//   // Filter products by category and parent_category
+//   filterProducts(products, filters = {}) {
+//     if (!products || !Array.isArray(products)) {
+//       return []
+//     }
+
+//     let filteredProducts = [...products]
+
+//     // Filter by category
+//     if (filters.category && filters.category !== 'all') {
+//       filteredProducts = filteredProducts.filter(product => {
+//         if (!product.category) return false
+        
+//         const categoryId = typeof product.category === 'string' 
+//           ? product.category 
+//           : product.category._id
+        
+//         return categoryId === filters.category
+//       })
+//     }
+
+//     // Filter by parent_category
+//     if (filters.parent_category && filters.parent_category !== 'all') {
+//       filteredProducts = filteredProducts.filter(product => {
+//         if (!product.parentCategory) return false
+        
+//         const parentCategoryId = typeof product.parentCategory === 'string' 
+//           ? product.parentCategory 
+//           : product.parentCategory._id
+        
+//         return parentCategoryId === filters.parent_category
+//       })
+//     }
+
+//     // Filter by brand
+//     if (filters.brand && filters.brand.length > 0) {
+//       filteredProducts = filteredProducts.filter(product => {
+//         if (!product.brand) return false
+        
+//         const brandId = typeof product.brand === 'string' 
+//           ? product.brand 
+//           : product.brand._id
+        
+//         return filters.brand.includes(brandId)
+//       })
+//     }
+
+//     // Filter by search query
+//     if (filters.search && filters.search.trim()) {
+//       const searchTerm = filters.search.toLowerCase().trim()
+//       filteredProducts = filteredProducts.filter(product => {
+//         const name = (product.name || '').toLowerCase()
+//         const description = (product.description || '').toLowerCase()
+//         const brandName = product.brand?.name?.toLowerCase() || ''
+        
+//         return name.includes(searchTerm) || 
+//                description.includes(searchTerm) || 
+//                brandName.includes(searchTerm)
+//       })
+//     }
+
+//     // Filter by price range
+//     if (filters.priceRange && Array.isArray(filters.priceRange)) {
+//       const [minPrice, maxPrice] = filters.priceRange
+//       filteredProducts = filteredProducts.filter(product => {
+//         const price = product.price || 0
+//         return price >= minPrice && price <= maxPrice
+//       })
+//     }
+
+//     // Filter by stock status (supports multiple filters)
+//     if (filters.stockStatus) {
+//       const stockFilters = Array.isArray(filters.stockStatus) ? filters.stockStatus : [filters.stockStatus]
+      
+//       if (stockFilters.length > 0) {
+//         filteredProducts = filteredProducts.filter(product => {
+//           // If any stock filter matches, include the product
+//           const matches = stockFilters.some(filter => {
+//             switch (filter) {
+//               case 'inStock':
+//                 // Product is in stock if stockStatus is "Available Product" OR countInStock > 0
+//                 return product.stockStatus === "Available Product" || (product.countInStock || 0) > 0
+//               case 'outOfStock':
+//                 // Product is out of stock if stockStatus is "Out of Stock" AND countInStock === 0
+//                 return product.stockStatus === "Out of Stock" && (product.countInStock || 0) === 0
+//               case 'onSale':
+//                 // Product is on sale if has discount > 0 OR offerPrice < price
+//                 return (product.discount && product.discount > 0) || 
+//                        (product.offerPrice && product.offerPrice > 0 && product.offerPrice < product.price)
+//               default:
+//                 return false
+//             }
+//           })
+//           return matches
+//         })
+//       }
+//     }
+
+//     // Sort products - Always prioritize in-stock products first
+//     filteredProducts.sort((a, b) => {
+//       // Check if products are in stock
+//       const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+//       const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+      
+//       // In-stock products come first
+//       if (aInStock && !bInStock) return -1
+//       if (!aInStock && bInStock) return 1
+      
+//       // If both have same stock status, apply secondary sorting
+//       if (filters.sortBy) {
+//         switch (filters.sortBy) {
+//           case 'price-low':
+//             return (a.price || 0) - (b.price || 0)
+//           case 'price-high':
+//             return (b.price || 0) - (a.price || 0)
+//           case 'name':
+//             return (a.name || '').localeCompare(b.name || '')
+//           case 'newest':
+//           default:
+//             return new Date(b.createdAt) - new Date(a.createdAt)
+//         }
+//       }
+      
+//       // Default sorting by newest if no sortBy specified
+//       return new Date(b.createdAt) - new Date(a.createdAt)
+//     })
+
+//     return filteredProducts
+//   }
+
+//   // Get cache statistics
+//   getCacheStats() {
+//     const cached = localStorage.getItem(this.CACHE_KEY)
+//     if (!cached) {
+//       return { hasCache: false, itemCount: 0, age: null, cacheType: 'none' }
+//     }
+
+//     try {
+//       const data = this.decompressData(cached)
+//       if (!data) {
+//         return { hasCache: false, itemCount: 0, age: null, cacheType: 'none' }
+//       }
+      
+//       const age = Date.now() - data.timestamp
+//       let cacheType = 'full'
+//       if (data.isEssential) cacheType = 'essential'
+//       if (data.isMinimal) cacheType = 'minimal'
+//       if (data.isUltraMinimal) cacheType = 'ultra-minimal'
+//       if (data.isChunked) cacheType = 'chunked'
+      
+//       const itemCount = data.isChunked ? data.totalProducts : (data.products?.length || 0)
+      
+//       return {
+//         hasCache: true,
+//         itemCount: itemCount,
+//         age: age,
+//         isValid: age < this.CACHE_EXPIRY,
+//         cacheType: cacheType,
+//         chunks: data.isChunked ? data.chunkCount : null
+//       }
+//     } catch (error) {
+//       return { hasCache: false, itemCount: 0, age: null, cacheType: 'none' }
+//     }
+//   }
+// }
+
+// // Create singleton instance
+// const productCache = new ProductCacheService()
+
+// export default productCache 
+
+
+
+
+
+
+import config from "../config/config.js"
+
+// Product Caching Service with compression and size management
 class ProductCacheService {
   constructor() {
     this.CACHE_KEY = "graba2z_products_cache"
-    this.CACHE_EXPIRY = 5 * 60 * 1000 // 5 minutes for page cache
-    this.pageCache = new Map(); // Cache for individual pages
-    this.lastFetchTimestamp = 0;
+    this.CACHE_CHUNK_PREFIX = "graba2z_products_chunk_"
+    this.CACHE_EXPIRY = 30 * 60 * 1000 // 30 minutes
+    this.MAX_CACHE_SIZE = 1 * 1024 * 1024 // 1MB per chunk (reduced)
+    this.MAX_CHUNKS = 20 // More chunks, smaller size
   }
 
-  // Helper to generate a unique key for page cache
-  _getPageCacheKey(filters) {
-    return JSON.stringify(filters);
+  // Compress data using JSON.stringify and btoa
+  compressData(data) {
+    try {
+      const jsonString = JSON.stringify(data)
+      return btoa(encodeURIComponent(jsonString))
+    } catch (error) {
+      return null
+    }
+  }
+
+  // Decompress data
+  decompressData(compressedData) {
+    try {
+      const jsonString = decodeURIComponent(atob(compressedData))
+      return JSON.parse(jsonString)
+    } catch (error) {
+      return null
+    }
+  }
+
+  // Check if cache is valid
+  isCacheValid() {
+    const cached = localStorage.getItem(this.CACHE_KEY)
+    if (!cached) return false
+
+    try {
+      const data = this.decompressData(cached)
+      if (!data) return false
+
+      const now = Date.now()
+      return data.timestamp && now - data.timestamp < this.CACHE_EXPIRY
+    } catch (error) {
+      return false
+    }
+  }
+
+  // Get cached products
+  getCachedProducts() {
+    if (!this.isCacheValid()) return null
+
+    try {
+      const cached = localStorage.getItem(this.CACHE_KEY)
+      const data = this.decompressData(cached)
+
+      if (!data) return null
+
+      // Check if data is chunked
+      if (data.isChunked) {
+        return this.getCachedProductsChunked(data)
+      }
+
+      return data?.products || []
+    } catch (error) {
+      return null
+    }
+  }
+
+  // Get cached products from chunked storage
+  getCachedProductsChunked(metadata) {
+    try {
+      const allProducts = []
+
+      for (let i = 0; i < metadata.chunkCount; i++) {
+        const chunkKey = `${this.CACHE_CHUNK_PREFIX}${i}`
+
+        // Try localStorage first, then sessionStorage
+        let chunkData = localStorage.getItem(chunkKey)
+        let storageType = "localStorage"
+
+        if (!chunkData) {
+          chunkData = sessionStorage.getItem(chunkKey)
+          storageType = "sessionStorage"
+        }
+
+        if (!chunkData) {
+          return null
+        }
+
+        const chunk = this.decompressData(chunkData)
+        if (!chunk || !chunk.products) {
+          return null
+        }
+
+        allProducts.push(...chunk.products)
+      }
+
+      return allProducts
+    } catch (error) {
+      return null
+    }
+  }
+
+  // Set products in cache with chunked storage
+  async setCachedProducts(products) {
+    try {
+      // Create ultra-minimal product data (only core fields)
+      const minimalProducts = products.map((product) => ({
+        _id: product._id,
+        name: product.name,
+        price: product.price,
+        basePrice: product.basePrice,
+        offerPrice: product.offerPrice,
+        brand: product.brand,
+        category: product.category,
+        parentCategory: product.parentCategory,
+        countInStock: product.countInStock,
+        stockStatus: product.stockStatus,
+        discount: product.discount,
+        featured: product.featured,
+        slug: product.slug,
+        image: product.image,
+        galleryImages: product.galleryImages,
+        rating: product.rating,
+        numReviews: product.numReviews,
+      }))
+
+      // Try single cache first
+      const cacheData = {
+        products: minimalProducts,
+        timestamp: Date.now(),
+        isMinimal: true,
+      }
+
+      const compressedData = this.compressData(cacheData)
+      if (!compressedData) {
+        throw new Error("Failed to compress data")
+      }
+
+      const dataSize = new Blob([compressedData]).size
+
+      if (dataSize <= this.MAX_CACHE_SIZE) {
+        localStorage.setItem(this.CACHE_KEY, compressedData)
+        return
+      }
+
+      // If too large, try chunked storage
+      return await this.setCachedProductsChunked(minimalProducts)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  // Set products in cache using chunked storage
+  async setCachedProductsChunked(products) {
+    try {
+      const chunkSize = Math.ceil(products.length / this.MAX_CHUNKS)
+      const chunks = []
+
+      // Split products into chunks
+      for (let i = 0; i < products.length; i += chunkSize) {
+        chunks.push(products.slice(i, i + chunkSize))
+      }
+
+      // Store chunk metadata
+      const metadata = {
+        totalProducts: products.length,
+        chunkCount: chunks.length,
+        timestamp: Date.now(),
+        isChunked: true,
+      }
+
+      localStorage.setItem(this.CACHE_KEY, this.compressData(metadata))
+
+      // Store each chunk
+      for (let i = 0; i < chunks.length; i++) {
+        const chunkData = {
+          products: chunks[i],
+          chunkIndex: i,
+          timestamp: Date.now(),
+        }
+
+        const compressedChunk = this.compressData(chunkData)
+        const chunkSize = new Blob([compressedChunk]).size
+
+        if (chunkSize > this.MAX_CACHE_SIZE) {
+          // Try sessionStorage as fallback
+          try {
+            sessionStorage.setItem(`${this.CACHE_CHUNK_PREFIX}${i}`, compressedChunk)
+          } catch (sessionError) {
+            throw new Error(`Chunk ${i} is too large for both localStorage and sessionStorage: ${chunkSize} bytes`)
+          }
+        } else {
+          localStorage.setItem(`${this.CACHE_CHUNK_PREFIX}${i}`, compressedChunk)
+        }
+      }
+
+      return true
+    } catch (error) {
+      // Clean up any partial chunks
+      this.clearCache()
+      throw error
+    }
+  }
+
+  // Clear cache
+  clearCache() {
+    // Clear main cache
+    localStorage.removeItem(this.CACHE_KEY)
+    sessionStorage.removeItem(this.CACHE_KEY)
+
+    // Clear chunked cache from both storages
+    for (let i = 0; i < this.MAX_CHUNKS; i++) {
+      localStorage.removeItem(`${this.CACHE_CHUNK_PREFIX}${i}`)
+      sessionStorage.removeItem(`${this.CACHE_CHUNK_PREFIX}${i}`)
+    }
+  }
+
+  // Force refresh cache (clear and fetch new data)
+  async forceRefreshCache() {
+    this.clearCache()
+    const products = await this.fetchAndCacheProducts()
+    return products
+  }
+
+  // Test cache functionality
+  async testCache() {
+    // Check current cache
+    const stats = this.getCacheStats()
+
+    // Try to get products
+    const products = await this.getProducts()
+
+    // Check if cache was used
+    const newStats = this.getCacheStats()
+
+    // Test storage availability
+    const storageTest = {
+      localStorage: this.testStorage("localStorage"),
+      sessionStorage: this.testStorage("sessionStorage"),
+    }
+
+    return { products, cacheUsed: newStats.hasCache, storageTest }
+  }
+
+  // Test storage availability
+  testStorage(storageType) {
+    try {
+      const testKey = "test_storage"
+      const testValue = "test"
+
+      if (storageType === "localStorage") {
+        localStorage.setItem(testKey, testValue)
+        const result = localStorage.getItem(testKey) === testValue
+        localStorage.removeItem(testKey)
+        return result
+      } else if (storageType === "sessionStorage") {
+        sessionStorage.setItem(testKey, testValue)
+        const result = sessionStorage.getItem(testKey) === testValue
+        sessionStorage.removeItem(testKey)
+        return result
+      }
+      return false
+    } catch (error) {
+      return false
+    }
+  }
+
+  // Fetch products from API and cache them
+  async fetchAndCacheProducts() {
+    try {
+      const response = await fetch(`${config.API_URL}/api/products`)
+      if (!response.ok) {
+        throw new Error("Failed to fetch products")
+      }
+      const products = await response.json()
+
+      // Always try to cache products
+      try {
+        await this.setCachedProducts(products)
+      } catch (cacheError) {
+        // Continue without cache - the app will still work
+      }
+
+      return products
+    } catch (error) {
+      throw error
+    }
   }
 
   // Get products (from cache or API)
-  async getProducts(filters = {}) {
-    const cacheKey = this._getPageCacheKey(filters);
-    const cachedData = this.pageCache.get(cacheKey);
-    const now = Date.now();
+  async getProducts() {
+    // Check if we have valid cached data
+    if (this.isCacheValid()) {
+      const cachedProducts = this.getCachedProducts()
+      if (cachedProducts && cachedProducts.length > 0) {
+        return cachedProducts
+      }
+    }
 
-    // Check if cached data exists and is still valid
-    if (cachedData && (now - cachedData.timestamp < this.CACHE_EXPIRY)) {
-      return cachedData.products;
+    // Fetch from API if no valid cache
+    return await this.fetchAndCacheProducts()
+  }
+
+  // Filter products by category and parent_category
+  filterProducts(products, filters = {}) {
+    if (!products || !Array.isArray(products)) {
+      return []
+    }
+
+    let filteredProducts = [...products]
+
+    // Filter by category
+    if (filters.category && filters.category !== "all") {
+      filteredProducts = filteredProducts.filter((product) => {
+        if (!product.category) return false
+
+        const categoryId = typeof product.category === "string" ? product.category : product.category._id
+
+        return categoryId === filters.category
+      })
+    }
+
+    // Filter by parent_category
+    if (filters.parent_category && filters.parent_category !== "all") {
+      filteredProducts = filteredProducts.filter((product) => {
+        if (!product.parentCategory) return false
+
+        const parentCategoryId =
+          typeof product.parentCategory === "string" ? product.parentCategory : product.parentCategory._id
+
+        return parentCategoryId === filters.parent_category
+      })
+    }
+
+    // Filter by brand
+    if (filters.brand && filters.brand.length > 0) {
+      filteredProducts = filteredProducts.filter((product) => {
+        if (!product.brand) return false
+
+        const brandId = typeof product.brand === "string" ? product.brand : product.brand._id
+
+        return filters.brand.includes(brandId)
+      })
+    }
+
+    // Filter by search query
+    if (filters.search && filters.search.trim()) {
+      const searchTerm = filters.search.toLowerCase().trim()
+      filteredProducts = filteredProducts.filter((product) => {
+        const name = (product.name || "").toLowerCase()
+        const description = (product.description || "").toLowerCase()
+        const brandName = product.brand?.name?.toLowerCase() || ""
+
+        return name.includes(searchTerm) || description.includes(searchTerm) || brandName.includes(searchTerm)
+      })
+    }
+
+    // Filter by price range
+    if (filters.priceRange && Array.isArray(filters.priceRange)) {
+      const [minPrice, maxPrice] = filters.priceRange
+      filteredProducts = filteredProducts.filter((product) => {
+        const price = product.price || 0
+        return price >= minPrice && price <= maxPrice
+      })
+    }
+
+    // Filter by stock status (supports multiple filters)
+    if (filters.stockStatus) {
+      const stockFilters = Array.isArray(filters.stockStatus) ? filters.stockStatus : [filters.stockStatus]
+
+      if (stockFilters.length > 0) {
+        filteredProducts = filteredProducts.filter((product) => {
+          // If any stock filter matches, include the product
+          const matches = stockFilters.some((filter) => {
+            switch (filter) {
+              case "inStock":
+                // Product is in stock if stockStatus is "Available Product" OR countInStock > 0
+                return product.stockStatus === "Available Product" || (product.countInStock || 0) > 0
+              case "outOfStock":
+                // Product is out of stock if stockStatus is "Out of Stock" AND countInStock === 0
+                return product.stockStatus === "Out of Stock" && (product.countInStock || 0) === 0
+              case "onSale":
+                // Product is on sale if has discount > 0 OR offerPrice < price
+                return (
+                  (product.discount && product.discount > 0) ||
+                  (product.offerPrice && product.offerPrice > 0 && product.offerPrice < product.price)
+                )
+              default:
+                return false
+            }
+          })
+          return matches
+        })
+      }
+    }
+
+    // Sort products - Always prioritize in-stock products first
+    filteredProducts.sort((a, b) => {
+      // Check if products are in stock
+      const aInStock =
+        a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+      const bInStock =
+        b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+
+      // In-stock products come first
+      if (aInStock && !bInStock) return -1
+      if (!aInStock && bInStock) return 1
+
+      // If both have same stock status, apply secondary sorting
+      if (filters.sortBy) {
+        switch (filters.sortBy) {
+          case "price-low":
+            return (a.price || 0) - (b.price || 0)
+          case "price-high":
+            return (b.price || 0) - (a.price || 0)
+          case "name":
+            return (a.name || "").localeCompare(b.name || "")
+          case "newest":
+          default:
+            return new Date(b.createdAt) - new Date(a.createdAt)
+        }
+      }
+
+      // Default sorting by newest if no sortBy specified
+      return new Date(b.createdAt) - new Date(a.createdAt)
+    })
+
+    return filteredProducts
+  }
+
+  // Get cache statistics
+  getCacheStats() {
+    const cached = localStorage.getItem(this.CACHE_KEY)
+    if (!cached) {
+      return { hasCache: false, itemCount: 0, age: null, cacheType: "none" }
     }
 
     try {
-      // Construct query parameters for the API
-      const params = {
-        page: filters.page || 1,
-        limit: filters.limit || 20,
-        search: filters.search || undefined,
-        category: filters.category || undefined,
-        subcategory: filters.subcategory || undefined,
-        parentCategory: filters.parent_category || undefined,
-        brand: filters.brand || undefined,
-        sortBy: filters.sortBy || undefined,
-        minPrice: filters.priceRange ? filters.priceRange[0] : undefined,
-        maxPrice: filters.priceRange ? filters.priceRange[1] : undefined,
-        // Add stock status filters if needed by the API
-        inStock: filters.stockStatus?.includes('inStock') || undefined,
-        outOfStock: filters.stockStatus?.includes('outOfStock') || undefined,
-        onSale: filters.stockStatus?.includes('onSale') || undefined,
-      };
+      const data = this.decompressData(cached)
+      if (!data) {
+        return { hasCache: false, itemCount: 0, age: null, cacheType: "none" }
+      }
 
-      // Remove undefined values to avoid sending empty query params
-      Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
+      const age = Date.now() - data.timestamp
+      let cacheType = "full"
+      if (data.isEssential) cacheType = "essential"
+      if (data.isMinimal) cacheType = "minimal"
+      if (data.isUltraMinimal) cacheType = "ultra-minimal"
+      if (data.isChunked) cacheType = "chunked"
 
-      const response = await axios.get(`${config.API_URL}/api/products`, { params });
-      
-      if (response.data && Array.isArray(response.data.products)) {
-        const products = response.data.products.map(product => ({
-          _id: product._id,
-          name: product.name,
-          price: product.price,
-          basePrice: product.basePrice,
-          offerPrice: product.offerPrice,
-          brand: product.brand,
-          category: product.category,
-          parentCategory: product.parentCategory,
-          countInStock: product.countInStock,
-          stockStatus: product.stockStatus,
-          discount: product.discount,
-          featured: product.featured,
-          slug: product.slug,
-          image: product.image,
-          galleryImages: product.galleryImages,
-          rating: product.rating,
-          numReviews: product.numReviews,
-          description: product.description,
-          tags: product.tags,
-          createdAt: product.createdAt,
-        }));
+      const itemCount = data.isChunked ? data.totalProducts : data.products?.length || 0
 
-        // Cache the fetched page
-        this.pageCache.set(cacheKey, {
-          products: products,
-          timestamp: now,
-          totalCount: response.data.totalCount,
-          pages: response.data.pages,
-          page: response.data.page,
-        });
-        this.lastFetchTimestamp = now; // Update global fetch timestamp
-
-        return {
-          products: products,
-          totalCount: response.data.totalCount,
-          pages: response.data.pages,
-          page: response.data.page,
-        };
-      } else {
-        console.error('Invalid products data received:', response.data);
-        return { products: [], totalCount: 0, pages: 0, page: 1 };
+      return {
+        hasCache: true,
+        itemCount: itemCount,
+        age: age,
+        isValid: age < this.CACHE_EXPIRY,
+        cacheType: cacheType,
+        chunks: data.isChunked ? data.chunkCount : null,
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
-      throw error;
+      return { hasCache: false, itemCount: 0, age: null, cacheType: "none" }
     }
-  }
-
-  // Clear all cached pages
-  clearCache() {
-    this.pageCache.clear();
-    this.lastFetchTimestamp = 0;
-  }
-
-  // Force refresh cache (clear and fetch new data for a specific page/filters)
-  async forceRefreshCache(filters = {}) {
-    this.clearCache(); // Clear all cache
-    return await this.getProducts(filters); // Fetch the requested page
-  }
-
-  // Get cache statistics (for debugging)
-  getCacheStats() {
-    const now = Date.now();
-    let totalCachedProducts = 0;
-    this.pageCache.forEach(entry => {
-      totalCachedProducts += entry.products.length;
-    });
-
-    return {
-      hasCache: this.pageCache.size > 0,
-      cachedPages: this.pageCache.size,
-      totalCachedProducts: totalCachedProducts,
-      lastFetch: this.lastFetchTimestamp,
-      cacheAge: this.lastFetchTimestamp ? now - this.lastFetchTimestamp : null,
-    };
   }
 }
 
