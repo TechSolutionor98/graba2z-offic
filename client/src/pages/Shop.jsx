@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Search, ChevronDown, Minus, X, Filter as FilterIcon } from "lucide-react"
+import { Search, ChevronDown, Minus, X, FilterIcon } from 'lucide-react'
 import axios from "axios"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
-import productCache from "../services/productCache"
+import productCache from "../services/productCache" // Updated import
 import { generateShopURL, parseShopURL, findCategoryByIdentifier, findSubcategoryByIdentifier, createSlug } from "../utils/urlUtils"
 
 import config from "../config/config"
@@ -37,6 +37,12 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
   const [inputMin, setInputMin] = useState(range[0]);
   const [inputMax, setInputMax] = useState(range[1]);
 
+  useEffect(() => {
+    setRange(initialRange);
+    setInputMin(initialRange[0]);
+    setInputMax(initialRange[1]);
+  }, [initialRange]);
+
   const handleSliderChange = (values) => {
     setRange(values);
     setInputMin(values[0]);
@@ -45,11 +51,9 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
 
   const handleInputMin = (e) => {
     const value = e.target.value;
-    // If input is empty, set to empty string to allow clearing
     if (value === "") {
       setInputMin("");
     } else if (!isNaN(value)) {
-      // Only update if it's a valid number
       const numericValue = Number(value);
       setInputMin(numericValue);
       setRange([numericValue, range[1]]);
@@ -58,11 +62,9 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
 
   const handleInputMax = (e) => {
     const value = e.target.value;
-    // If input is empty, set to empty string to allow clearing
     if (value === "") {
       setInputMax("");
     } else if (!isNaN(value)) {
-      // Only update if it's a valid number
       const numericValue = Number(value);
       setInputMax(numericValue);
       setRange([range[0], numericValue]);
@@ -70,19 +72,16 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
   };
 
   const handleMinFocus = (e) => {
-    // Always clear the input on focus for better UX
     setInputMin("");
   };
 
   const handleMaxFocus = (e) => {
-    // Always clear the input on focus for better UX
     setInputMax("");
   };
 
   const handleApply = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    // Ensure we have valid numbers before applying
-    const minValue = inputMin === "" ? 0 : Number(inputMin);
+    const minValue = inputMin === "" ? min : Number(inputMin);
     const maxValue = inputMax === "" ? max : Number(inputMax);
     onApply([minValue, maxValue]);
   };
@@ -117,9 +116,8 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
           onChange={handleInputMin}
           onFocus={handleMinFocus}
           onBlur={() => {
-            // When input loses focus, if it's empty, set it to 0
             if (inputMin === "") {
-              setInputMin(0);
+              setInputMin(min);
             }
           }}
         />
@@ -132,7 +130,6 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
           onChange={handleInputMax}
           onFocus={handleMaxFocus}
           onBlur={() => {
-            // When input loses focus, if it's empty, set it to max
             if (inputMax === "") {
               setInputMax(max);
             }
@@ -164,14 +161,20 @@ const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedBrands, setSelectedBrands] = useState([])
-  const [priceRange, setPriceRange] = useState([0, 10000])
-  const [maxPrice, setMaxPrice] = useState(10000)
+  const [priceRange, setPriceRange] = useState([0, 10000]) // Default initial range
+  const [maxPrice, setMaxPrice] = useState(10000) // Max price from all products
+  const [minPrice, setMinPrice] = useState(0); // Min price from all products
   const [sortBy, setSortBy] = useState("newest")
   const [brandSearch, setBrandSearch] = useState("")
   const [subCategories, setSubCategories] = useState([])
   const [selectedSubCategories, setSelectedSubCategories] = useState([])
   const [stockFilters, setStockFilters] = useState({ inStock: false, outOfStock: false, onSale: false })
-  const [minPrice, setMinPrice] = useState(0);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const [productsPerPage] = useState(20) // Number of products to fetch per page
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalProductsCount, setTotalProductsCount] = useState(0)
 
   // Filter panel states
   const [showPriceFilter, setShowPriceFilter] = useState(true)
@@ -179,135 +182,74 @@ const Shop = () => {
   const [showBrandFilter, setShowBrandFilter] = useState(true)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  const [productsToShow, setProductsToShow] = useState(20)
-  const [delayedLoading, setDelayedLoading] = useState(false)
   const fetchTimeout = useRef();
-  const loadingTimeout = useRef();
 
-  // Load and filter products using cache
-  const loadAndFilterProducts = async () => {
+  // Function to fetch products from the API with filters and pagination
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-
-      // Use the productCache service instead of direct API call
-      const allProducts = await productCache.getProducts();
-
-      if (!allProducts || allProducts.length === 0) {
-        setError("No products available");
-        setLoading(false);
-        return;
-      }
-
-      // Apply filters
-      const stockStatusFilters = []
-      if (stockFilters.inStock) stockStatusFilters.push('inStock')
-      if (stockFilters.outOfStock) stockStatusFilters.push('outOfStock')
-      if (stockFilters.onSale) stockStatusFilters.push('onSale')
-
       const filters = {
+        page: currentPage,
+        limit: productsPerPage,
         parent_category: selectedCategory !== "all" ? selectedCategory : null,
         category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
-        brand: selectedBrands.length > 0 ? selectedBrands : null,
+        brand: selectedBrands.length > 0 ? selectedBrands[0] : null, // Assuming single brand selection for API
         search: searchQuery || null,
-        priceRange: priceRange,
-        stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
-        sortBy: sortBy
+        minPrice: priceRange[0],
+        maxPrice: priceRange[1],
+        sortBy: sortBy,
+        // Pass stock filters if needed by your API
+        // inStock: stockFilters.inStock || null,
+        // outOfStock: stockFilters.outOfStock || null,
+        // onSale: stockFilters.onSale || null,
       };
 
-      const filteredProducts = productCache.filterProducts(allProducts, filters);
+      // Remove null values from filters before sending to API
+      Object.keys(filters).forEach(key => filters[key] === null && delete filters[key]);
 
-      if (filteredProducts.length > 0) {
-        const prices = filteredProducts.map((p) => p.price || 0);
-        const minProductPrice = Math.min(...prices);
-        const max = Math.max(...prices);
-        setMaxPrice(max);
-        // Only reset price range if it matches the default (user hasn't changed it)
-        if (priceRange[0] === 0 && priceRange[1] === 10000) {
-          setPriceRange([minProductPrice, max]);
-        }
-        // Save minProductPrice in state for use in PriceFilter
-        setMinPrice(minProductPrice);
+      const data = await productCache.getProducts(filters);
+      setProducts(data.products);
+      setTotalPages(data.pages);
+      setTotalProductsCount(data.totalCount);
+
+      // Dynamically set min/max price based on fetched products if not already set by user
+      if (data.products.length > 0 && priceRange[0] === 0 && priceRange[1] === 10000) {
+        const prices = data.products.map(p => p.price || 0);
+        const currentMin = Math.min(...prices);
+        const currentMax = Math.max(...prices);
+        setMinPrice(currentMin);
+        setMaxPrice(currentMax);
+        setPriceRange([currentMin, currentMax]);
+      } else if (data.products.length === 0) {
+        setMinPrice(0);
+        setMaxPrice(10000);
+        setPriceRange([0, 10000]);
       }
-
-      setProducts(filteredProducts);
-      setLoading(false);
-    } catch (err) {
-      setError("Error loading products");
-      setLoading(false);
-    }
-  };
-
-  // Filter products from cache without API calls (for instant filtering)
-  const filterProductsFromCache = async () => {
-    try {
-      // Get cached products
-      const allProducts = await productCache.getProducts();
-      if (!allProducts || allProducts.length === 0) {
-        await loadAndFilterProducts();
-        return;
-      }
-
-
-
-      // Apply filters
-      const stockStatusFilters = []
-      if (stockFilters.inStock) stockStatusFilters.push('inStock')
-      if (stockFilters.outOfStock) stockStatusFilters.push('outOfStock')
-      if (stockFilters.onSale) stockStatusFilters.push('onSale')
-
-      const filters = {
-        parent_category: selectedCategory !== "all" ? selectedCategory : null,
-        category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
-        brand: selectedBrands.length > 0 ? selectedBrands : null,
-        search: searchQuery || null,
-        priceRange: priceRange,
-        stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
-        sortBy: sortBy
-      };
-
-      const filteredProducts = productCache.filterProducts(allProducts, filters);
-
-      if (filteredProducts.length > 0) {
-        const prices = filteredProducts.map((p) => p.price || 0);
-        const minProductPrice = Math.min(...prices);
-        const max = Math.max(...prices);
-        setMaxPrice(max);
-        // Only reset price range if it matches the default (user hasn't changed it)
-        if (priceRange[0] === 0 && priceRange[1] === 10000) {
-          setPriceRange([minProductPrice, max]);
-        }
-        // Save minProductPrice in state for use in PriceFilter
-        setMinPrice(minProductPrice);
-      }
-
-      setProducts(filteredProducts);
 
     } catch (err) {
-      // Fallback to API if cache fails
-      await loadAndFilterProducts();
+      setError("Error loading products. Please try again.");
+      console.error("Error fetching products:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Fetch categories and brands on mount
   useEffect(() => {
-    fetchCategories()
-    fetchBrands()
-    fetchBanners()
-    loadAndFilterProducts()
-  }, [])
+    fetchCategories();
+    fetchBrands();
+    fetchBanners();
+  }, []);
 
-  // Filter products from cache when filters change (no API calls)
+  // Effect to fetch products whenever filters or pagination changes
   useEffect(() => {
     if (fetchTimeout.current) clearTimeout(fetchTimeout.current);
-
     fetchTimeout.current = setTimeout(() => {
-      filterProductsFromCache();
-    }, 100); // 100ms debounce for instant filtering
-    return () => {
-      clearTimeout(fetchTimeout.current);
-    };
-  }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, sortBy]);
+      fetchProducts();
+    }, 300); // Debounce API calls
+    return () => clearTimeout(fetchTimeout.current);
+  }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, sortBy, currentPage]);
 
   // 1. On URL or categories change: set selectedCategory from the slug.
   useEffect(() => {
@@ -366,23 +308,11 @@ const Shop = () => {
     }
   }, [location.pathname, location.search]);
 
-  // Debug: Log all loaded categories and subcategories
+  // Reset current page to 1 when filters change (except for actual page change)
   useEffect(() => {
-    if (categories.length > 0) {
-      console.log('All loaded categories:', categories.map(c => ({ name: c.name, slug: c.slug, _id: c._id })));
-    }
-  }, [categories]);
+    setCurrentPage(1);
+  }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, sortBy]);
 
-  useEffect(() => {
-    if (subCategories.length > 0) {
-      console.log('All loaded subcategories:', subCategories.map(s => ({ name: s.name, slug: s.slug, _id: s._id })));
-    }
-  }, [subCategories]);
-
-  // Reset productsToShow when filters change or products are refetched
-  useEffect(() => {
-    setProductsToShow(20)
-  }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, products.length])
 
   const fetchCategories = async () => {
     try {
@@ -477,6 +407,7 @@ const Shop = () => {
   const handleCategoryChange = (categoryId) => {
     setSelectedCategory(categoryId)
     setSelectedSubCategories([])
+    setCurrentPage(1); // Reset to first page on category change
 
     // Find the category object to get its name for URL generation
     const categoryObj = categories.find(cat => cat._id === categoryId);
@@ -495,6 +426,8 @@ const Shop = () => {
   // When a subcategory is selected, set both parent and subcategory in the filter
   const handleSubCategoryChange = (subCatId) => {
     setSelectedSubCategories([subCatId]);
+    setCurrentPage(1); // Reset to first page on subcategory change
+
     // Find the parent category for this subcategory
     const subcatObj = subCategories.find((sub) => sub._id === subCatId);
     // category could be either an object or a string
@@ -521,13 +454,12 @@ const Shop = () => {
       search: searchQuery || null
     });
 
-    // Debug log for subcategory change
-    console.log('handleSubCategoryChange called with:', { subCatId, parentId, subcatObj, url, subCategories });
     navigate(url);
   }
 
   const handleBrandChange = (brandId) => {
     setSelectedBrands((prev) => (prev.includes(brandId) ? prev.filter((b) => b !== brandId) : [...prev, brandId]))
+    setCurrentPage(1); // Reset to first page on brand change
 
     // Update URL with brand filter
     const newSelectedBrands = selectedBrands.includes(brandId)
@@ -556,12 +488,14 @@ const Shop = () => {
       newState[key] = true
       return newState
     })
+    setCurrentPage(1); // Reset to first page on stock filter change
   }
 
   // Handle search query changes and update URL
   const handleSearchChange = (e) => {
     const newSearchQuery = e.target.value;
     setSearchQuery(newSearchQuery);
+    setCurrentPage(1); // Reset to first page on search change
 
     // Update URL with search query
     const categoryObj = categories.find(cat => cat._id === selectedCategory);
@@ -583,9 +517,12 @@ const Shop = () => {
     setSelectedCategory("all")
     setSelectedBrands([])
     setSelectedSubCategories([])
-    setPriceRange([0, maxPrice])
+    setPriceRange([0, 10000]) // Reset to default max price
+    setMinPrice(0); // Reset min price
+    setMaxPrice(10000); // Reset max price
     setSearchQuery("")
     setStockFilters({ inStock: false, outOfStock: false, onSale: false })
+    setCurrentPage(1); // Reset to first page
     navigate("/shop")
   }
 
@@ -609,17 +546,19 @@ const Shop = () => {
     )
   }
 
-  // Add debug log before rendering
-  console.log('Products being rendered:', products)
-
   // Get selected subcategory object
   const selectedSubCategoryObj = subCategories.find(
     (sub) => sub._id === selectedSubCategories[0]
   );
 
-  // 1. Add a handler for sort dropdown
+  // Handler for sort dropdown
   const handleSortChange = (e) => {
     setSortBy(e.target.value);
+    setCurrentPage(1); // Reset to first page on sort change
+  };
+
+  const handleLoadMore = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
   };
 
   return (
@@ -1227,7 +1166,7 @@ const Shop = () => {
                       </p>
                       <div className="flex items-center space-x-4">
                         <span className="bg-white text-blue-600 px-4 py-2 rounded-full font-semibold">
-                          {products.length} Products Available
+                          {totalProductsCount} Products Available
                         </span>
                       </div>
                     </div>
@@ -1255,7 +1194,7 @@ const Shop = () => {
                     ? selectedSubCategoryObj.name
                     : categories.find((cat) => cat._id === selectedCategory)?.name || "All Products"}
                 </h1>
-                <p className="text-gray-600 mt-1">{products.length} products found</p>
+                <p className="text-gray-600 mt-1">{totalProductsCount} products found</p>
               </div>
 
               {/* Sort Dropdown */}
@@ -1277,14 +1216,14 @@ const Shop = () => {
             {products.length > 0 ? (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {products.slice(0, productsToShow).map((product) => (
+                  {products.map((product) => (
                     <HomeStyleProductCard key={product._id} product={product} />
                   ))}
                 </div>
-                {productsToShow < products.length && (
+                {currentPage < totalPages && (
                   <div className="flex justify-center mt-8">
                     <button
-                      onClick={() => setProductsToShow((prev) => prev + 20)}
+                      onClick={handleLoadMore}
                       className="px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition-colors font-semibold"
                     >
                       Load More
