@@ -226,7 +226,7 @@ const ProductDetails = () => {
 
   const handleBuyNow = () => {
     handleAddToCart();
-    navigate('/checkout');
+    navigate('/cart');
   };
 
   const handleImageClick = (index) => {
