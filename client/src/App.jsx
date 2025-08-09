@@ -94,6 +94,7 @@ import BlogTopics from "./pages/admin/BlogTopics"
 import BlogRating from "./pages/admin/BlogRating"
 import AddBulkProducts from "./pages/admin/AddBulkProducts"
 import EditCategory from "./pages/admin/EditCategory";
+import EditSubCategory from "./pages/admin/EditSubCategory";
 
 // Order status pages
 import ReceivedOrders from "./pages/admin/ReceivedOrders"
@@ -163,6 +164,7 @@ function App() {
                           <Route path="categories/trash" element={<TrashCategories />} />
                           <Route path="subcategories" element={<AdminSubCategories />} />
                           <Route path="subcategories/add" element={<AddSubCategory />} />
+                          <Route path="subcategories/edit/:id" element={<EditSubCategory />} />
                           <Route path="brands" element={<AdminBrands />} />
                           <Route path="brands/add" element={<AddBrand />} />
                           <Route path="edit-brand/:id" element={<AddBrand />} />
