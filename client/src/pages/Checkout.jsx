@@ -1204,12 +1204,21 @@ const Checkout = () => {
                       </div>
                     )}
 
-                    <button
-                      type="submit"
-                      className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3 mt-2"
-                    >
-                      Continue
-                    </button>
+                    <div className="mt-8 flex gap-4">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/cart')}
+                        className="flex-1 border border-gray-300 hover:bg-gray-100 text-gray-700 bg-red-400 font-semibold py-3 px-6 rounded-lg transition duration-300"
+                      >
+                        Back to Cart
+                      </button>
+                      <button
+                        type="submit"
+                        className="flex-1 bg-lime-500 hover:bg-lime-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-300"
+                      >
+                        Continue to Summary
+                      </button>
+                    </div>
                   </form>
                 )}
 
