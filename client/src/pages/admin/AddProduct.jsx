@@ -10,6 +10,7 @@ import { ArrowLeft, Plus, X } from "lucide-react"
 import axios from "axios"
 
 import config from "../../config/config"
+
 const AddProduct = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -31,8 +32,8 @@ const AddProduct = () => {
     subCategory: "",
     barcode: "",
     buyingPrice: "",
-    price: "",
-    offerPrice: "",
+    price: "", // This will be base price + tax
+    offerPrice: "", // This will be offer price + tax
     discount: "",
     image: "",
     galleryImages: [],
@@ -56,8 +57,10 @@ const AddProduct = () => {
     stockStatus: "",
     specifications: [],
   })
-  const [basePrice, setBasePrice] = useState("")
-  const [taxAmount, setTaxAmount] = useState(0)
+
+  // Separate state for prices without tax (for display)
+  const [basePriceWithoutTax, setBasePriceWithoutTax] = useState("")
+  const [offerPriceWithoutTax, setOfferPriceWithoutTax] = useState("")
   const [taxRate, setTaxRate] = useState(0)
 
   useEffect(() => {
@@ -75,32 +78,49 @@ const AddProduct = () => {
 
   useEffect(() => {
     if (formData.tax && taxes.length > 0) {
-      const selectedTax = taxes.find(t => t._id === formData.tax)
+      const selectedTax = taxes.find((t) => t._id === formData.tax)
       setTaxRate(selectedTax ? Number(selectedTax.rate) : 0)
     } else {
       setTaxRate(0)
     }
   }, [formData.tax, taxes])
 
+  // Calculate prices with tax whenever base price, offer price or tax changes
   useEffect(() => {
-    const base = Number(basePrice) || 0
-    let offer = Number(formData.offerPrice) || 0
-    let discount = Number(formData.discount) || 0
-    // If both base and offer price are provided, calculate discount
-    if (base > 0 && offer > 0) {
-      discount = Math.max(0, Math.round(((base - offer) / base) * 100))
+    const baseWithoutTax = Number(basePriceWithoutTax) || 0
+    const offerWithoutTax = Number(offerPriceWithoutTax) || 0
+    const tax = taxRate || 0
+
+    // Calculate base price with tax
+    if (baseWithoutTax > 0) {
+      const baseTaxAmount = baseWithoutTax * (tax / 100)
+      const finalBasePrice = baseWithoutTax + baseTaxAmount
+      setFormData((prev) => ({
+        ...prev,
+        price: finalBasePrice.toFixed(2),
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        price: "",
+      }))
     }
-    // If discount is set and offer price is not manually entered, calculate offer price
-    if (discount > 0 && (!formData.offerPrice || formData.offerPrice === "0")) {
-      offer = base - (base * discount / 100)
+
+    // Calculate offer price with tax
+    if (offerWithoutTax > 0) {
+      const offerTaxAmount = offerWithoutTax * (tax / 100)
+      const finalOfferPrice = offerWithoutTax + offerTaxAmount
+      setFormData((prev) => ({
+        ...prev,
+        offerPrice: finalOfferPrice.toFixed(2),
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        offerPrice: "",
+      }))
     }
-    // Tax calculation base is offer if present, else base
-    const priceBase = offer > 0 ? offer : base
-    const tax = taxRate
-    const taxAmt = priceBase * (tax / 100)
-    setTaxAmount(taxAmt)
-    setFormData(prev => ({ ...prev, offerPrice: offer.toFixed(2), discount: discount, price: (priceBase + taxAmt).toFixed(2) }))
-  }, [basePrice, taxRate, formData.offerPrice])
+  }, [basePriceWithoutTax, offerPriceWithoutTax, taxRate])
 
   const fetchAllData = async () => {
     try {
@@ -115,10 +135,8 @@ const AddProduct = () => {
 
       const headers = { Authorization: `Bearer ${token}` }
 
-      // Fetch all required data with correct endpoints
       const fetchPromises = []
 
-      // Categories
       fetchPromises.push(
         axios.get(`${config.API_URL}/api/categories`, { headers }).catch((err) => {
           console.log("Categories API error:", err)
@@ -126,7 +144,6 @@ const AddProduct = () => {
         }),
       )
 
-      // Brands
       fetchPromises.push(
         axios.get(`${config.API_URL}/api/brands`, { headers }).catch((err) => {
           console.log("Brands API error:", err)
@@ -134,7 +151,6 @@ const AddProduct = () => {
         }),
       )
 
-      // Taxes
       fetchPromises.push(
         axios.get(`${config.API_URL}/api/tax`, { headers }).catch((err) => {
           console.log("Tax API error:", err)
@@ -142,7 +158,6 @@ const AddProduct = () => {
         }),
       )
 
-      // Units
       fetchPromises.push(
         axios.get(`${config.API_URL}/api/units`, { headers }).catch((err) => {
           console.log("Units API error:", err)
@@ -150,7 +165,6 @@ const AddProduct = () => {
         }),
       )
 
-      // Warranties
       fetchPromises.push(
         axios.get(`${config.API_URL}/api/warranty`, { headers }).catch((err) => {
           console.log("Warranty API error:", err)
@@ -158,7 +172,6 @@ const AddProduct = () => {
         }),
       )
 
-      // Volumes
       fetchPromises.push(
         axios.get(`${config.API_URL}/api/volumes`, { headers }).catch((err) => {
           console.log("Volumes API error:", err)
@@ -166,7 +179,6 @@ const AddProduct = () => {
         }),
       )
 
-      // Colors
       fetchPromises.push(
         axios.get(`${config.API_URL}/api/colors`, { headers }).catch((err) => {
           console.log("Colors API error:", err)
@@ -174,7 +186,6 @@ const AddProduct = () => {
         }),
       )
 
-      // Sizes
       fetchPromises.push(
         axios.get(`${config.API_URL}/api/sizes`, { headers }).catch((err) => {
           console.log("Sizes API error:", err)
@@ -243,12 +254,57 @@ const AddProduct = () => {
       [name]: type === "checkbox" ? checked : value,
     }))
 
-    // Auto-generate slug from name
     if (name === "name" && value) {
       setFormData((prev) => ({
         ...prev,
         slug: generateSlug(value),
       }))
+    }
+  }
+
+  // Handle base price change
+  const handleBasePriceChange = (e) => {
+    const basePrice = e.target.value
+    setBasePriceWithoutTax(basePrice)
+  }
+
+  // Handle offer price change and calculate discount
+  const handleOfferPriceChange = (e) => {
+    const offerPrice = e.target.value
+    const basePrice = Number(basePriceWithoutTax) || 0
+
+    setOfferPriceWithoutTax(offerPrice)
+
+    // Calculate discount when offer price changes
+    if (basePrice > 0 && offerPrice) {
+      const offer = Number(offerPrice)
+      if (offer > 0) {
+        const discount = Math.max(0, Math.round(((basePrice - offer) / basePrice) * 100))
+        setFormData((prev) => ({
+          ...prev,
+          discount: discount.toString(),
+        }))
+      }
+    }
+  }
+
+  // Handle discount change and calculate offer price
+  const handleDiscountChange = (e) => {
+    const discount = e.target.value
+    const basePrice = Number(basePriceWithoutTax) || 0
+
+    setFormData((prev) => ({
+      ...prev,
+      discount: discount,
+    }))
+
+    // Calculate offer price when discount changes
+    if (basePrice > 0 && discount) {
+      const discountNum = Number(discount)
+      if (discountNum >= 0 && discountNum <= 100) {
+        const offerPrice = basePrice - (basePrice * discountNum) / 100
+        setOfferPriceWithoutTax(offerPrice.toFixed(2))
+      }
     }
   }
 
@@ -295,7 +351,6 @@ const AddProduct = () => {
     })
   }
 
-  // Handle multi-select for colors
   const handleColorChange = (colorId) => {
     setFormData((prev) => ({
       ...prev,
@@ -305,7 +360,6 @@ const AddProduct = () => {
     }))
   }
 
-  // Handle multi-select for sizes
   const handleSizeChange = (sizeId) => {
     setFormData((prev) => ({
       ...prev,
@@ -315,7 +369,6 @@ const AddProduct = () => {
     }))
   }
 
-  // Specification handlers
   const addSpecification = () => {
     setFormData((prev) => ({
       ...prev,
@@ -355,13 +408,13 @@ const AddProduct = () => {
         name: formData.name,
         sku: formData.sku,
         slug: formData.slug,
-        parentCategory: formData.category, // main category
-        category: formData.subCategory,    // subcategory
-        subCategory: formData.subCategory || null, // for backward compatibility
+        parentCategory: formData.category,
+        category: formData.subCategory,
+        subCategory: formData.subCategory || null,
         barcode: formData.barcode,
         buyingPrice: Number.parseFloat(formData.buyingPrice) || 0,
-        price: Number.parseFloat(formData.price) || 0,
-        offerPrice: Number.parseFloat(formData.offerPrice) || 0,
+        price: Number.parseFloat(formData.price) || 0, // Base price + tax
+        offerPrice: Number.parseFloat(formData.offerPrice) || 0, // Offer price + tax
         discount: Number.parseFloat(formData.discount) || 0,
         image: formData.image,
         galleryImages: formData.galleryImages.filter((img) => img !== ""),
@@ -408,7 +461,6 @@ const AddProduct = () => {
       <AdminSidebar />
       <div className="flex-1 ml-64 overflow-auto">
         <div className="p-8">
-          {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
               <button
@@ -424,7 +476,6 @@ const AddProduct = () => {
             <h1 className="text-3xl font-bold text-gray-900">Add New Product</h1>
           </div>
 
-          {/* Debug Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <h3 className="text-sm font-medium text-blue-800 mb-2">Data Status:</h3>
             <div className="grid grid-cols-4 gap-4 text-xs">
@@ -440,7 +491,6 @@ const AddProduct = () => {
             </div>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -544,7 +594,6 @@ const AddProduct = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Stock Status <span className="text-red-500">*</span>
                   </label>
-
                   <select
                     name="stockStatus"
                     value={formData.stockStatus}
@@ -583,13 +632,12 @@ const AddProduct = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Base Price <span className="text-red-500">*</span>
+                    Base Price (Before Tax) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
-                    name="basePrice"
-                    value={basePrice}
-                    onChange={e => setBasePrice(e.target.value)}
+                    value={basePriceWithoutTax}
+                    onChange={handleBasePriceChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     step="0.01"
                     min="0"
@@ -598,14 +646,11 @@ const AddProduct = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Offer Price
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Offer Price (Before Tax)</label>
                   <input
                     type="number"
-                    name="offerPrice"
-                    value={formData.offerPrice}
-                    onChange={handleChange}
+                    value={offerPriceWithoutTax}
+                    onChange={handleOfferPriceChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     step="0.01"
                     min="0"
@@ -618,23 +663,88 @@ const AddProduct = () => {
                     type="number"
                     name="discount"
                     value={formData.discount}
-                    onChange={handleChange}
+                    onChange={handleDiscountChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     min="0"
                     max="100"
-                    readOnly={basePrice && formData.offerPrice}
                   />
                 </div>
               </div>
-              {/* Tax-inclusive price summary */}
-              <div className="mt-4 bg-gray-50 border border-gray-200 rounded p-4">
-                <div className="flex flex-wrap gap-4 items-center text-sm">
-                  <div>Base Price: <b>{basePrice || 0} AED</b></div>
-                  <div>Offer Price: <b>{formData.offerPrice || 0} AED</b></div>
-                  <div>Discount: <b>{formData.discount || 0}%</b></div>
-                  <div>Tax: <b>{taxRate}%</b></div>
-                  <div>Tax Amount: <b>{taxAmount.toFixed(2)} AED</b></div>
-                  <div className="text-green-700 font-bold">Final Price (Saved): {formData.price} AED <span className="text-xs text-red-500 ml-2">Inclusive tax</span></div>
+
+              {/* Tax Selection */}
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tax/VAT <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="tax"
+                  value={formData.tax}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select Tax/VAT</option>
+                  {taxes.map((tax) => (
+                    <option key={tax._id} value={tax._id}>
+                      {tax.name} ({tax.rate}%)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price Summary */}
+              <div className="mt-6 bg-gray-50 border border-gray-200 rounded p-4">
+                <h3 className="text-sm font-medium text-gray-800 mb-3">Price Summary:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Base Price Section */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Base Price Breakdown:</h4>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Base Price (Before Tax):</span>
+                        <span className="font-semibold">{basePriceWithoutTax || 0} AED</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Tax ({taxRate}%):</span>
+                        <span className="font-semibold">
+                          {basePriceWithoutTax ? ((Number(basePriceWithoutTax) * taxRate) / 100).toFixed(2) : 0} AED
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t pt-1">
+                        <span className="text-gray-600 font-medium">Final Base Price (With Tax):</span>
+                        <span className="font-bold text-blue-600">{formData.price || 0} AED</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Offer Price Section */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Offer Price Breakdown:</h4>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Offer Price (Before Tax):</span>
+                        <span className="font-semibold">{offerPriceWithoutTax || 0} AED</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Tax ({taxRate}%):</span>
+                        <span className="font-semibold">
+                          {offerPriceWithoutTax ? ((Number(offerPriceWithoutTax) * taxRate) / 100).toFixed(2) : 0} AED
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t pt-1">
+                        <span className="text-gray-600 font-medium">Final Offer Price (With Tax):</span>
+                        <span className="font-bold text-green-600">{formData.offerPrice || 0} AED</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Discount Display */}
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 font-medium">Discount:</span>
+                    <span className="font-bold text-red-600">{formData.discount || 0}%</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -643,7 +753,6 @@ const AddProduct = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Product Images</h2>
 
-              {/* Main Image */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Main Image <span className="text-red-500">*</span>
@@ -655,7 +764,6 @@ const AddProduct = () => {
                 />
               </div>
 
-              {/* Gallery Images */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Gallery Images</label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -694,25 +802,6 @@ const AddProduct = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Product Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tax
-                    {formData.tax && <span className="ml-2 text-xs text-red-500">Inclusive tax</span>}
-                  </label>
-                  <select
-                    name="tax"
-                    value={formData.tax}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select a Tax</option>
-                    {taxes.map((tax) => (
-                      <option key={tax._id} value={tax._id}>
-                        {tax.name} ({tax.rate}%)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
                   <select
@@ -796,7 +885,7 @@ const AddProduct = () => {
               </div>
             </div>
 
-            {/* Colors (Multi-select) */}
+            {/* Colors */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Colors (Select Multiple)</h2>
               {colors.length > 0 ? (
@@ -823,14 +912,9 @@ const AddProduct = () => {
               ) : (
                 <div className="text-gray-500 text-center py-4">No colors available. Please add colors first.</div>
               )}
-              {formData.selectedColors.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600">Selected: {formData.selectedColors.length} color(s)</p>
-                </div>
-              )}
             </div>
 
-            {/* Sizes (Multi-select) */}
+            {/* Sizes */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Sizes (Select Multiple)</h2>
               {sizes.length > 0 ? (
@@ -853,14 +937,9 @@ const AddProduct = () => {
               ) : (
                 <div className="text-gray-500 text-center py-4">No sizes available. Please add sizes first.</div>
               )}
-              {formData.selectedSizes.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600">Selected: {formData.selectedSizes.length} size(s)</p>
-                </div>
-              )}
             </div>
 
-            {/* Product Specifications */}
+            {/* Specifications */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-gray-900">Product Specifications</h2>
@@ -932,15 +1011,6 @@ const AddProduct = () => {
                   </button>
                 </div>
               )}
-
-              {formData.specifications.length > 0 && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800">
-                    {formData.specifications.length} specification{formData.specifications.length !== 1 ? "s" : ""}{" "}
-                    added
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* Status Settings */}
@@ -976,7 +1046,7 @@ const AddProduct = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Can Purchasable:</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Can Purchase:</label>
                   <div className="space-y-2">
                     <div className="flex items-center">
                       <input
