@@ -479,7 +479,7 @@ const Cart = () => {
               {cartTotal < 500 && cartTotal > 0 && (
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-700">
-                    Purchase for {formatPrice(500 - cartTotal)} or more to enable free shipping
+                  You are just {formatPrice(500 - cartTotal)} aways from free shipping. Shop more to get free and express delivery.
                   </p>
                 </div>
               )}
