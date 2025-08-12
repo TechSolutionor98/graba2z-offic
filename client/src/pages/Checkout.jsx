@@ -1204,19 +1204,20 @@ const Checkout = () => {
                       </div>
                     )}
 
-                    <div className="mt-8 flex gap-4">
+                    <div className="mt-8 flex gap-4 ">
                       <button
                         type="button"
                         onClick={() => navigate('/cart')}
-                        className="flex-1 border border-gray-300 hover:bg-gray-100 text-gray-700 bg-red-400 font-semibold py-3 px-6 rounded-lg transition duration-300"
+                        className="flex-1 border border-gray-300 hover:bg-gray-100 text-gray-700 bg-red-400 font-semibold lg:py-3 lg:px-6 py-2 px-3 rounded-lg transition duration-300"
                       >
                         Back to Cart
                       </button>
                       <button
                         type="submit"
-                        className="flex-1 bg-lime-500 hover:bg-lime-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-300"
+                        className="flex-1 bg-lime-500 hover:bg-lime-600 text-white font-semibold lg:py-3 lg:px-6 py-2 px-3 rounded-lg transition duration-300"
                       >
-                        Continue to Summary
+                         <span className="block lg:hidden">Continue Summary</span> {/* Mobile */}
+                         <span className="hidden lg:block">Continue to Summary</span> {/* Desktop */}
                       </button>
                     </div>
                   </form>
@@ -1563,7 +1564,7 @@ const Checkout = () => {
               {cartTotals.totalBasePrice > cartTotals.totalOfferPrice && (
                 <>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Base Price Total</span>
+                    <span className="text-gray-600">Sale Price Total</span>
                     <span className="text-gray-500 line-through">{formatPrice(cartTotals.totalBasePrice)}</span>
                   </div>
                   <div className="flex justify-between text-sm">

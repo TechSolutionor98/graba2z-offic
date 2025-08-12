@@ -379,7 +379,7 @@ const Cart = () => {
                 {cartTotals.totalBasePrice > cartTotals.totalOfferPrice && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Base Price Total</span>
+                      <span className="text-gray-600">Sale Price Total</span>
                       <span className="text-gray-500 line-through">{formatPrice(cartTotals.totalBasePrice)}</span>
                     </div>
                     <div className="flex justify-between">
