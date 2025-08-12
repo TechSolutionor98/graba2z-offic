@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
@@ -12,6 +12,9 @@ const Login = () => {
   const location = useLocation()
   const { login } = useAuth()
   const { showToast } = useToast()
+  
+  // Check if user is coming from checkout page
+  const isFromCheckout = location.state?.from?.pathname === "/checkout"
 
   const [formData, setFormData] = useState({
     email: "",
@@ -163,14 +166,16 @@ const Login = () => {
                     "Sign in"
                   )}
                 </button>
-                {/* Guest Mode Button */}
-                <button
-                  type="button"
-                  className="w-full flex justify-center py-3 px-4 mt-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 transition-all duration-200"
-                  onClick={() => navigate("/guest")}
-                >
-                  Continue as Guest
-                </button>
+                {/* Guest Mode Button - Only show when coming from checkout */}
+                {isFromCheckout && (
+                  <button
+                    type="button"
+                    className="w-full flex justify-center py-3 px-4 mt-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 transition-all duration-200"
+                    onClick={() => navigate("/guest")}
+                  >
+                    Continue as Guest
+                  </button>
+                )}
                 <p className="mt-4 text-md text-gray-600">
                   Don't have an account?{" "}
                   <Link to="/register" className="font-semibold text-gray-900 hover:text-gray-700 transition-colors">
