@@ -155,7 +155,12 @@ const Cart = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Shopping Cart</h1>
+        <Link to="/" className="px-2 py-2 lg:px-5 lg:py-2 text-sm font-medium text-white bg-lime-600 rounded-md">
+          Continue Shopping
+        </Link>
+      </div>
       
 
       {cartItems.length === 0 ? (
@@ -197,7 +202,7 @@ const Cart = () => {
                         {pricingDetails.hasDiscount ? (
                           <>
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-600">Base Price:</span>
+                              <span className="text-gray-600">Sale Price:</span>
                               <span className="line-through text-gray-500">{formatPrice(pricingDetails.basePrice)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
@@ -278,7 +283,7 @@ const Cart = () => {
                               {pricingDetails.hasDiscount ? (
                                 <>
                                   <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-gray-600">Base Price:</span>
+                                    <span className="text-gray-600">Sale Price:</span>
                                     <span className="line-through text-gray-500">{formatPrice(pricingDetails.basePrice)}</span>
                                   </div>
                                   <div className="flex justify-between text-sm mb-1">
@@ -365,14 +370,6 @@ const Cart = () => {
           
           <div className="lg:col-span-1">
             {/* <div className="bg-white rounded-lg shadow-md  p-6"> */}
-
-
-       
-
-
-
-
-
           <div className="bg-white rounded-lg shadow-md shadow-lime-500 p-6 ">
 
               <h2 className="text-lg font-medium text-gray-900 mb-4">Order Summary</h2>
@@ -536,9 +533,6 @@ const Cart = () => {
                   Checkout
                 </Link>
 
-                <Link to="/" className="w-full text-center block mt-4 text-black hover:text-lime-500">
-                  Continue Shopping
-                </Link>
               </div>
             </div>
           </div>
