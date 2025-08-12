@@ -36,51 +36,67 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   return (
     <div ref={ref} className="bg-white pl-8 pr-8 pb-8 max-w-4xl mx-auto font-sans">
       {/* Header */}
-      <div className="bg-white text-black p-8 rounded-t-lg relative overflow-hidden">
-        <div className="absolute inset-0 bg"></div>
-        <div className="relative z-10 flex justify-between items-start">
-          <div className="flex items-center space-x-6">
-            <div className=" ">
-              <img
-                src="/admin-logo.svg"
-                alt="Company Logo"
-                className="w-52 h-52 object-contain"
-                onError={(e) => {
-                  e.target.style.display = "none"
-                  e.target.nextSibling.style.display = "flex"
-                }}
-              />
-              
-            
-            <div>
-              <p className="text-black text-sm italic mb-3">Your Complete Shopping Destination</p>
-              <div className="text-sm text-black space-y-1">
-                <p>✉️ Email: orders@graba2z.com</p>
-                <p>🌐 Website: www.graba2z.com</p>
-              </div>
-              </div>
+      <div className=" text-black rounded-t-lg relative overflow-hidden">
+        <div className="absolute inset-0" />
+        {/* Top row: two columns with logos */}
+        <div className="relative z-10 flex justify-between items-start w-full">
+          {/* Left Logo */}
+          <div className="flex-shrink-0">
+            <img
+              src="/admin-logo.svg"
+              alt="Left Logo"
+              className="w-40 h-20 object-contain"
+              onError={(e) => {
+                e.target.style.display = "none"
+                e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
+              }}
+            />
+          </div>
+          {/* Right Logo */}
+          <div className="flex-shrink-0">
+            <img
+              src="/BLACK.png"
+              alt="Right Logo"
+              className="w-40 h-20 object-contain"
+              onError={(e) => {
+                e.target.style.display = "none"
+                e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-between items-start gap-6">
+          <div className="w-1/2 p-5 ">
+            <h2 className="text-2xl font-bold mb-1">COMPANY</h2>
+            <p className="text-black text-sm italic mb-2">Your Complete Shopping Destination</p>
+            <div className="text-sm text-black space-y-1">
+              <p>✉️ Email: orders@grabatoz.com</p>
+              <p>🌐 Website: www.grabatoz.com</p>
             </div>
           </div>
-          <div className="text-right bg-white/10 p-6 rounded-xl backdrop-blur-sm">
-            <h2 className="text-2xl font-bold mb-2">INVOICE</h2>
+
+          <div className="w-1/2 text-end p-5   rounded-xl backdrop-blur-sm max-w-xs ml-auto">
+            <h2 className="text-2xl font-bold mb-1">INVOICE</h2>
             <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
             <div className="text-sm">📅 Date: {orderDate}</div>
             <div className="text-xs mt-2 opacity-80">🖨️ Printed: {currentDate}</div>
           </div>
+
         </div>
       </div>
 
       {/* Order Summary Section */}
-      <div className="bg-white p-6 border-l-4 border-lime-500">
-        <h3 className="text-2xl font-bold text-lime-800 mb-4 uppercase tracking-wide">📋 Order Summary</h3>
+      <div className="bg-white  border-l-4 pl-2 border-lime-500">
+        <h3 className="text-2xl font-bold text-lime-800 mb-2 uppercase tracking-wide">📋 Order Summary</h3>
 
         {/* Addresses */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-6 mb-2">
           {/* Shipping Address */}
-          <div className="bg-white border-2 border-lime-200 rounded-lg p-6 relative">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lime-400 to-lime-600"></div>
-            <h4 className="text-lg font-bold text-lime-800 mb-4 flex items-center">🚚 Shipping Address</h4>
-            <div className="space-y-2 text-sm">
+          <div className="bg-white border-2 border-lime-200 rounded-lg px-3 relative">
+            <div className="absolute top-0 left-0 right-0  bg-gradient-to-r from-lime-400 to-lime-600"></div>
+            <h4 className="text-lg font-bold text-lime-800 flex items-center">🚚 Shipping Address</h4>
+            <div className=" text-sm">
               <p className="font-semibold text-gray-900 text-base">{order.shippingAddress?.name || "N/A"}</p>
               <p className="text-gray-700">{order.shippingAddress?.address || "N/A"}</p>
               <p className="text-gray-700">
@@ -93,10 +109,10 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
 
           {/* Billing Address */}
-          <div className="bg-white border-2 border-lime-200 rounded-lg p-6 relative">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lime-400 to-lime-600"></div>
-            <h4 className="text-lg font-bold text-lime-800 mb-4 flex items-center">💳 Billing Address</h4>
-            <div className="space-y-2 text-sm">
+          <div className="bg-white border-2 border-lime-200 rounded-lg p-3 relative">
+            <div className="absolute top-0 left-0 right-0  bg-gradient-to-r from-lime-400 to-lime-600"></div>
+            <h4 className="text-lg font-bold text-lime-800 flex items-center">💳 Billing Address</h4>
+            <div className="text-sm">
               <p className="font-semibold text-gray-900 text-base">
                 {order.billingAddress?.name || order.shippingAddress?.name || "N/A"}
               </p>
@@ -115,14 +131,14 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         </div>
 
         {/* Products Table */}
-        <div className="mb-8">
+        <div className="mb-2">
           <table className="w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
             <thead>
               <tr className="bg-gradient-to-r from-lime-500 to-lime-600 text-white">
                 <th className="text-left p-4 font-bold"> Product</th>
                 <th className="text-left p-4 font-bold"> Type</th>
                 <th className="text-center p-4 font-bold"> Quantity</th>
-                <th className="text-right p-4 font-bold"> Unit Price</th>
+                <th className="text-right p-4 font-bold">Price</th>
                 <th className="text-right p-4 font-bold"> Total</th>
               </tr>
             </thead>
@@ -136,19 +152,19 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                   <td className="p-4 text-right font-bold text-lime-600">{formatPrice(item.price * item.quantity)}</td>
                 </tr>
               )) || (
-                <tr>
-                  <td colSpan="5" className="p-8 text-center text-gray-500">
-                    No items found
-                  </td>
-                </tr>
-              )}
+                  <tr>
+                    <td colSpan="5" className="p-8 text-center text-gray-500">
+                      No items found
+                    </td>
+                  </tr>
+                )}
             </tbody>
           </table>
         </div>
 
         {/* Totals */}
-        <div className="bg-white border-2 border-lime-200 rounded-lg p-6">
-          <div className="space-y-3">
+        <div className="bg-white border-2 border-lime-200 rounded-lg p-3">
+          <div className="space-y-1">
             <div className="flex justify-between text-gray-700">
               <span>💰 Sub-Total:</span>
               <span className="font-medium">{formatPrice(order.itemsPrice || 0)}</span>
@@ -169,8 +185,8 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                 <span className="font-medium text-green-600">-{formatPrice(order.discountAmount)}</span>
               </div>
             )}
-            <div className="border-t-2 border-lime-500 pt-3 mt-4">
-              <div className="flex justify-between text-xl font-bold text-lime-800 bg-lime-100 p-4 rounded-lg">
+            <div className="border-t-2 border-lime-500">
+              <div className="flex justify-between text-xl font-bold text-lime-800 bg-lime-100 p-2 rounded-lg">
                 <span> TOTAL AMOUNT:</span>
                 <span>{formatPrice(order.totalPrice || 0)}</span>
               </div>
@@ -179,7 +195,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         </div>
 
         {/* Status Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 bg-yellow-50 p-6 rounded-lg border-2 border-yellow-200">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
           <div className="space-y-4">
             <div>
               <p className="font-semibold text-gray-800 mb-2">💳 Payment Status:</p>
@@ -213,6 +229,48 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               </div>
             )}
           </div>
+        </div> */}
+
+        <div className="flex justify-between gap-6 mt-2 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
+          {/* Section 1 */}
+          <div className="space-y-4 w-1/3">
+            <div>
+              <p className="font-semibold text-gray-800 mb-2">💳 Payment Status:</p>
+              <span
+                className={`px-4 py-2 rounded-full text-sm font-bold ${order.isPaid ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                  }`}
+              >
+                {order.isPaid ? "✅ Paid" : "❌ Unpaid"}
+              </span>
+            </div>
+          </div>
+
+          {/* Section 2 */}
+          <div className="space-y-4 w-1/3">
+            <div>
+              <p className="font-semibold text-gray-800">💰 Payment Method:</p>
+              <p className="text-gray-700">{order.paymentMethod || "Card"}</p>
+            </div>
+          </div>
+
+          {/* Section 3 */}
+          <div className="space-y-4 w-1/3">
+            {order.trackingId && (
+              <div>
+                <p className="font-semibold text-gray-800">📦 Tracking ID:</p>
+                <code className="bg-gray-100 px-3 py-1 rounded text-sm font-mono">
+                  {order.trackingId}
+                </code>
+              </div>
+            )}
+
+            {order.paidAt && (
+              <div>
+                <p className="font-semibold text-gray-800">✅ Paid At:</p>
+                <p className="text-gray-700">{new Date(order.paidAt).toLocaleString()}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Notes */}
@@ -224,7 +282,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         )}
       </div>
 
-  
+
     </div>
   )
 })
@@ -754,8 +812,7 @@ const OnlineOrders = () => {
                               toggleStatusDropdown(order._id)
                             }}
                             className={`px-3 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity
-                            ${
-                              order.status === "Processing"
+                            ${order.status === "Processing"
                                 ? "bg-yellow-100 text-yellow-800"
                                 : order.status === "Confirmed"
                                   ? "bg-lime-100 text-lime-800"
@@ -768,7 +825,7 @@ const OnlineOrders = () => {
                                         : order.status === "Cancelled"
                                           ? "bg-red-100 text-red-800"
                                           : "bg-gray-100 text-gray-800"
-                            }`}
+                              }`}
                           >
                             {order.status || "Processing"}
                             <ChevronDown size={12} className="ml-1" />
@@ -949,8 +1006,7 @@ const OnlineOrders = () => {
                     ))}
                   </select>
                   <span
-                    className={`px-3 py-1 text-sm font-medium rounded-full ${
-                      selectedOrder.status === "Processing"
+                    className={`px-3 py-1 text-sm font-medium rounded-full ${selectedOrder.status === "Processing"
                         ? "bg-yellow-100 text-yellow-800"
                         : selectedOrder.status === "Confirmed"
                           ? "bg-lime-100 text-lime-800"
@@ -963,7 +1019,7 @@ const OnlineOrders = () => {
                                 : selectedOrder.status === "Cancelled"
                                   ? "bg-red-100 text-red-800"
                                   : "bg-gray-100 text-gray-800"
-                    }`}
+                      }`}
                   >
                     {selectedOrder.status || "Processing"}
                   </span>
