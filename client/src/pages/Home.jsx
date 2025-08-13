@@ -2758,13 +2758,15 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Mobile Banner */}
+      {/* Mobile Banner (now clickable linking to HP brand page) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <img
-          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939738/hp_ntmpcm.png"
-          alt="HP Dell Banner Mobile"
-          className="w-full h-full cover"
-        />
+        <Link to="/product-brand/hp" aria-label="Browse HP products">
+          <img
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939738/hp_ntmpcm.png"
+            alt="HP Products Banner Mobile"
+            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+          />
+        </Link>
       </div>
 
       {/* Desktop Banner - Two separate images side by side */}
