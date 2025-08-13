@@ -94,7 +94,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         {/* Addresses */}
         <div className="grid grid-cols-2 md:grid-cols-2 gap-6 mb-2">
           {/* Shipping Address */}
-          <div className="bg-white border-2 border-lime-200 rounded-lg px-3 relative">
+          <div className="bg-white border-2 border-lime-200 rounded-lg px-3 py-1 relative">
             <div className="absolute top-0 left-0 right-0  bg-gradient-to-r from-lime-400 to-lime-600"></div>
             <h4 className="text-lg font-bold text-lime-800 flex items-center">🚚 Shipping Address</h4>
             <div className=" text-sm">
@@ -110,7 +110,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
 
           {/* Billing Address */}
-          <div className="bg-white border-2 border-lime-200 rounded-lg p-3 relative">
+          <div className="bg-white border-2 border-lime-200 rounded-lg px-3 py-1 relative">
             <div className="absolute top-0 left-0 right-0  bg-gradient-to-r from-lime-400 to-lime-600"></div>
             <h4 className="text-lg font-bold text-lime-800 flex items-center">💳 Billing Address</h4>
             <div className="text-sm">
