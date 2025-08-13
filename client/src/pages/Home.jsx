@@ -2736,6 +2736,7 @@ const Home = () => {
           </div>
         </div>
 
+
         {/* Mobile - Simple Grid */}
         <div className="md:hidden grid grid-cols-2 gap-3">
           <div>
