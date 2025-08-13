@@ -136,7 +136,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
             <thead>
               <tr className="bg-gradient-to-r from-lime-500 to-lime-600 text-white">
                 <th className="text-left p-4 font-bold"> Product</th>
-                <th className="text-left p-4 font-bold"> Type</th>
+                <th className="text-left p-4 font-bold"> SKU</th>
                 <th className="text-center p-4 font-bold"> Quantity</th>
                 <th className="text-right p-4 font-bold">Price</th>
                 <th className="text-right p-4 font-bold"> Total</th>
@@ -146,7 +146,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               {order.orderItems?.map((item, index) => (
                 <tr key={item._id || index} className={`border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
                   <td className="p-4 font-medium text-gray-900">{item.name}</td>
-                  <td className="p-4 text-gray-600">Product</td>
+                  <td className="p-4 text-gray-600 whitespace-nowrap">{item.product?.sku || item.sku || "-"}</td>
                   <td className="p-4 text-center font-semibold text-lime-600">{item.quantity}</td>
                   <td className="p-4 text-right font-medium">{formatPrice(item.price)}</td>
                   <td className="p-4 text-right font-bold text-lime-600">{formatPrice(item.price * item.quantity)}</td>
@@ -169,6 +169,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               <span>💰 Sub-Total:</span>
               <span className="font-medium">{formatPrice(order.itemsPrice || 0)}</span>
             </div>
+
+            <div className="flex justify-between text-gray-700">
+              <span>✔️ Tax (VAT):</span>
+              <span className="font-medium">Included</span>
+            </div>
+
             <div className="flex justify-between text-gray-700">
               <span>🚚 Shipping Charge:</span>
               <span className="font-medium">{formatPrice(order.shippingPrice || 0)}</span>
@@ -179,6 +185,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                 <span className="font-medium">{formatPrice(order.taxPrice)}</span>
               </div>
             )}
+
             {order.discountAmount > 0 && (
               <div className="flex justify-between text-gray-700">
                 <span>🎉 Discount:</span>
@@ -1007,18 +1014,18 @@ const OnlineOrders = () => {
                   </select>
                   <span
                     className={`px-3 py-1 text-sm font-medium rounded-full ${selectedOrder.status === "Processing"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : selectedOrder.status === "Confirmed"
-                          ? "bg-lime-100 text-lime-800"
-                          : selectedOrder.status === "Shipped"
-                            ? "bg-purple-100 text-purple-800"
-                            : selectedOrder.status === "Out for Delivery"
-                              ? "bg-indigo-100 text-indigo-800"
-                              : selectedOrder.status === "Delivered"
-                                ? "bg-green-100 text-green-800"
-                                : selectedOrder.status === "Cancelled"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-800"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : selectedOrder.status === "Confirmed"
+                        ? "bg-lime-100 text-lime-800"
+                        : selectedOrder.status === "Shipped"
+                          ? "bg-purple-100 text-purple-800"
+                          : selectedOrder.status === "Out for Delivery"
+                            ? "bg-indigo-100 text-indigo-800"
+                            : selectedOrder.status === "Delivered"
+                              ? "bg-green-100 text-green-800"
+                              : selectedOrder.status === "Cancelled"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-gray-100 text-gray-800"
                       }`}
                   >
                     {selectedOrder.status || "Processing"}
