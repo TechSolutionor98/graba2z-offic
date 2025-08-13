@@ -2720,17 +2720,17 @@ const Home = () => {
         {/* Desktop & Tablet - Grid Layout */}
         <div className="hidden md:flex justify-between gap-4">
           <div className="w-1/3 lg:w-1/3">
-            <Link to="/product-brand/lenovo" aria-label="Browse Lenovo products">
+            <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
               <img src="Untitled-1.png" alt="Lenovo Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
             </Link>
           </div>
           <div className="w-1/3 lg:w-1/3">
-            <Link to="/product-brand/acer" aria-label="Browse Acer products">
+            <Link to="/product-category/laptops?brand=Acer" aria-label="Browse Acer products">
               <img src="acer 2.png" alt="Acer Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
             </Link>
           </div>
           <div className="w-1/3 lg:w-1/3 hidden lg:block">
-            <Link to="/product-brand/asus" aria-label="Browse Asus products">
+            <Link to="/product-category/laptops?brand=Asus" aria-label="Browse Asus products">
               <img src="asus-2.png" alt="Asus Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
             </Link>
           </div>
@@ -2739,12 +2739,12 @@ const Home = () => {
         {/* Mobile - Simple Grid */}
         <div className="md:hidden grid grid-cols-2 gap-3">
           <div>
-            <Link to="/product-brand/lenovo" aria-label="Browse Lenovo products">
+            <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
               <img src="Untitled-1.png" alt="Lenovo Banner" className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer" />
             </Link>
           </div>
           <div>
-            <Link to="/product-brand/msi" aria-label="Browse Acer products">
+            <Link to="/product-category/laptops?brand=MSI" aria-label="Browse Acer products">
               <img src="Untitled-123.png" alt="Acer Banner" className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer" />
             </Link>
           </div>
