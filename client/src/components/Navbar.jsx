@@ -1600,9 +1600,19 @@ const Navbar = () => {
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center">
                 <UserCircle size={24} className="text-gray-600 mr-2" />
-                <span className="text-gray-700 ">
-                  {isAuthenticated ? `Hello, ${user?.name || "User"}` : "Hello, Sign in"}
-                </span>
+                {isAuthenticated ? (
+                  <span className="text-gray-700">{`Hello, ${user?.name || "User"}`}</span>
+                ) : (
+                  <button
+                    onClick={() => {
+                      closeMobileMenu()
+                      navigate('/login')
+                    }}
+                    className="text-gray-700 font-medium hover:text-lime-600 transition-colors"
+                  >
+                    Hello, <span className="underline">Sign in</span>
+                  </button>
+                )}
               </div>
               <button onClick={closeMobileMenu} className="p-1">
                 <X size={24} className="text-gray-600" />
@@ -1658,7 +1668,7 @@ const Navbar = () => {
                   >
                     <div className="flex items-center">
                       <Grid3X3 size={16} className="mr-3" />
-                      <span>All In One</span>
+                      <span>All Categories</span>
                     </div>
                     <span className="text-gray-400 text-2xl font-bold">›</span>
                   </Link>

@@ -469,45 +469,54 @@ const Footer = ({ className = "" }) => {
                 <div className="flex space-x-4">
                   <a
                     href="https://www.facebook.com/grabatozae/"
-                    className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700"
+                    className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-100"
+                    aria-label="Facebook"
                   >
-                    <Facebook size={20} />
+                    <Facebook size={20} className="text-[#1877F2]" />
                   </a>
                   <a
                     href="https://x.com/GrabAtoz"
-                    className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:bg-gray-800"
+                    className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-100"
+                    aria-label="X (Twitter)"
                   >
-                    <Twitter size={20} />
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 text-black fill-current" role="img">
+                      <path d="M18.25 2h3.5l-7.66 8.73L24 22h-6.87l-5.02-6.58L6.3 22H2.8l8.2-9.34L0 2h7.04l4.54 6.02L18.25 2z" />
+                    </svg>
                   </a>
                   <a
                     href="https://www.instagram.com/grabatoz/"
-                    className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center text-white hover:bg-pink-700"
+                    className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-100"
+                    aria-label="Instagram"
                   >
-                    <Instagram size={20} />
+                    <Instagram size={20} className="text-[#E4405F]" />
                   </a>
                   <a
                     href="https://www.linkedin.com/company/grabatozae"
-                    className="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center text-white hover:bg-blue-800"
+                    className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-100"
+                    aria-label="LinkedIn"
                   >
-                    <Linkedin size={20} />
+                    <Linkedin size={20} className="text-[#0A66C2]" />
                   </a>
                   <a
                     href="https://www.pinterest.com/grabatoz/"
-                    className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-700"
+                    className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-100"
+                    aria-label="Pinterest"
                   >
-                    <FontAwesomeIcon icon={faPinterest} style={{width: '20px', height: '20px'}} />
+                    <FontAwesomeIcon icon={faPinterest} style={{width: '20px', height: '20px', color: '#E60023'}} />
                   </a>
                   <a
                     href="https://www.tiktok.com/@grabatoz"
-                    className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:bg-gray-800"
+                    className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-100"
+                    aria-label="TikTok"
                   >
-                    <FontAwesomeIcon icon={faTiktok} style={{width: '20px', height: '20px'}} />
+                    <FontAwesomeIcon icon={faTiktok} style={{width: '20px', height: '20px', color: '#000'}} />
                   </a>
                   <a
                     href="https://www.youtube.com/@grabAtoZ"
-                    className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-700"
+                    className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-100"
+                    aria-label="YouTube"
                   >
-                    <FontAwesomeIcon icon={faYoutube} style={{width: '20px', height: '20px'}} />
+                    <FontAwesomeIcon icon={faYoutube} style={{width: '20px', height: '20px', color: '#FF0000'}} />
                   </a>
                 </div>
               </div>

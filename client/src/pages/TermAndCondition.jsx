@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Shield, FileText, Users, CreditCard, Globe, Phone, Mail, MapPin, Clock } from "lucide-react";
 
 export default function TermsAndConditions() {
@@ -446,7 +446,7 @@ export default function TermsAndConditions() {
               <div className="flex-1 text-center md:text-left">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">19. Privacy Policy</h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
-                  <p>Your use of Grabatoz.ae is subject to our Privacy Policy, which outlines how we collect, use, and protect your personal data. We do not sell or rent your data without your consent. See our full Privacy Policy for more details.</p>
+                  <p>Your use of Grabatoz.ae is subject to our Privacy Policy, which outlines how we collect, use, and protect your personal data. We do not sell or rent your data without your consent. See our full <Link to="/privacy-policy" className="text-lime-600 hover:underline font-medium">Privacy Policy</Link> for more details.</p>
                 </div>
               </div>
             </div>
