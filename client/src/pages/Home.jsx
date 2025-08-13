@@ -2720,23 +2720,33 @@ const Home = () => {
         {/* Desktop & Tablet - Grid Layout */}
         <div className="hidden md:flex justify-between gap-4">
           <div className="w-1/3 lg:w-1/3">
-            <img src="Untitled-1.png" alt="Image 1" className="w-full h-auto rounded-lg cover" />
+            <Link to="/product-brand/lenovo" aria-label="Browse Lenovo products">
+              <img src="Untitled-1.png" alt="Lenovo Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
+            </Link>
           </div>
           <div className="w-1/3 lg:w-1/3">
-            <img src="acer 2.png" alt="Image 2" className="w-full h-auto rounded-lg cover" />
+            <Link to="/product-brand/acer" aria-label="Browse Acer products">
+              <img src="acer 2.png" alt="Acer Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
+            </Link>
           </div>
           <div className="w-1/3 lg:w-1/3 hidden lg:block">
-            <img src="asus-2.png" alt="Image 3" className="w-full h-auto rounded-lg cover" />
+            <Link to="/product-brand/asus" aria-label="Browse Asus products">
+              <img src="asus-2.png" alt="Asus Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
+            </Link>
           </div>
         </div>
 
         {/* Mobile - Simple Grid */}
         <div className="md:hidden grid grid-cols-2 gap-3">
           <div>
-            <img src="Untitled-1.png" alt="Image 1" className="w-full h-auto rounded-lg cover" />
+            <Link to="/product-brand/lenovo" aria-label="Browse Lenovo products">
+              <img src="Untitled-1.png" alt="Lenovo Banner" className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer" />
+            </Link>
           </div>
           <div>
-            <img src="Untitled-123.png" alt="Image 2" className="w-full h-auto rounded-lg cover" />
+            <Link to="/product-brand/msi" aria-label="Browse Acer products">
+              <img src="Untitled-123.png" alt="Acer Banner" className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer" />
+            </Link>
           </div>
         </div>
       </div>
@@ -2896,13 +2906,15 @@ const Home = () => {
         />
       </div> */}
 
-      {/* Mobile Banner */}
+      {/* Mobile Banner Asus */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <img
-          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
-          alt="HP Dell Banner Mobile"
-          className="w-full h-full cover"
-        />
+        <Link to="/product-brand/asus" aria-label="Browse ASUS products">
+          <img
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
+            alt="ASUS Products Banner Mobile"
+            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+          />
+        </Link>
       </div>
 
       {/* Desktop Banner - Two separate images side by side */}
@@ -3034,13 +3046,15 @@ const Home = () => {
         />
       </div> */}
 
-      {/* Mobile Banner */}
+      {/* Mobile Banner MSI */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <img
-          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
-          alt="HP Dell Banner Mobile"
-          className="w-full h-full cover"
-        />
+        <Link to="/product-brand/msi" aria-label="Browse MSI products">
+          <img
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
+            alt="MSI Products Banner Mobile"
+            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+          />
+        </Link>
       </div>
 
       {/* Desktop Banner - Two separate images side by side */}
@@ -3127,13 +3141,15 @@ const Home = () => {
         />
       </div> */}
 
-      {/* Mobile Banner */}
+      {/* Mobile Banner Apple */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <img
-          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939736/apple_tzrhlx.png"
-          alt="HP Dell Banner Mobile"
-          className="w-full h-full cover"
-        />
+        <Link to="/product-brand/apple" aria-label="Browse Apple products">
+          <img
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939736/apple_tzrhlx.png"
+            alt="Apple Products Banner Mobile"
+            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+          />
+        </Link>
       </div>
 
       {/* Desktop Banner - Two separate images side by side */}
