@@ -68,11 +68,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
 
         <div className="flex justify-between items-start gap-6">
           <div className="w-1/2 p-5 ">
-            <h2 className="text-2xl font-bold mb-1">COMPANY</h2>
-            <p className="text-black text-sm italic mb-2">Your Complete Shopping Destination</p>
+            <h2 className="text-2xl font-bold mb-1">CONTACT DETAILS</h2>
+            <p className="text-black text-sm italic mb-2"><strong>We Are Here For You</strong></p>
             <div className="text-sm text-black space-y-1">
               <p>✉️ Email: orders@grabatoz.com</p>
               <p>🌐 Website: www.grabatoz.com</p>
+              <p>📞 Phone: +971 50 860 4360</p>
             </div>
           </div>
 
