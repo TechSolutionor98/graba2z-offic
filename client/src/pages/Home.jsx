@@ -2906,13 +2906,15 @@ const Home = () => {
         />
       </div> */}
 
-      {/* Mobile Banner */}
+      {/* Mobile Banner Asus */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <img
-          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
-          alt="HP Dell Banner Mobile"
-          className="w-full h-full cover"
-        />
+        <Link to="/product-brand/asus" aria-label="Browse ASUS products">
+          <img
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
+            alt="ASUS Products Banner Mobile"
+            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+          />
+        </Link>
       </div>
 
       {/* Desktop Banner - Two separate images side by side */}
@@ -3044,13 +3046,15 @@ const Home = () => {
         />
       </div> */}
 
-      {/* Mobile Banner */}
+      {/* Mobile Banner MSI */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <img
-          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
-          alt="HP Dell Banner Mobile"
-          className="w-full h-full cover"
-        />
+        <Link to="/product-brand/msi" aria-label="Browse MSI products">
+          <img
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
+            alt="MSI Products Banner Mobile"
+            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+          />
+        </Link>
       </div>
 
       {/* Desktop Banner - Two separate images side by side */}
@@ -3137,13 +3141,15 @@ const Home = () => {
         />
       </div> */}
 
-      {/* Mobile Banner */}
+      {/* Mobile Banner Apple */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <img
-          src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939736/apple_tzrhlx.png"
-          alt="HP Dell Banner Mobile"
-          className="w-full h-full cover"
-        />
+        <Link to="/product-brand/apple" aria-label="Browse Apple products">
+          <img
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939736/apple_tzrhlx.png"
+            alt="Apple Products Banner Mobile"
+            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+          />
+        </Link>
       </div>
 
       {/* Desktop Banner - Two separate images side by side */}
