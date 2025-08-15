@@ -1597,25 +1597,25 @@ const Navbar = () => {
           {/* Drawer */}
           <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
             {/* Drawer Header */}
-            <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center justify-between p-4 bg-lime-500 text-white">
               <div className="flex items-center">
-                <UserCircle size={24} className="text-gray-600 mr-2" />
+                <UserCircle size={24} className="text-white mr-2" />
                 {isAuthenticated ? (
-                  <span className="text-gray-700">{`Hello, ${user?.name || "User"}`}</span>
+                  <span className="text-white">{`Hello, ${user?.name || "User"}`}</span>
                 ) : (
                   <button
                     onClick={() => {
                       closeMobileMenu()
                       navigate('/login')
                     }}
-                    className="text-gray-700 font-medium hover:text-lime-600 transition-colors"
+                    className="text-white font-medium hover:text-white/90 transition-colors"
                   >
                     Hello, <span className="underline">Sign in</span>
                   </button>
                 )}
               </div>
               <button onClick={closeMobileMenu} className="p-1">
-                <X size={24} className="text-gray-600" />
+                <X size={24} className="text-white" />
               </button>
             </div>
 
@@ -1651,9 +1651,12 @@ const Navbar = () => {
 
               {/* Shop by Category */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">Shop by Category</h3>
-                  <Link to="/shop" className="text-sm text-lime-600 hover:text-lime-700" onClick={closeMobileMenu}>
+                <div className="flex items-center justify-between mb-4 bg-lime-500 text-white rounded px-3 py-2">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
+                    <Grid3X3 size={18} className="text-white" />
+                    All Category
+                  </h3>
+                  <Link to="/shop" className="text-sm text-white hover:text-white/90" onClick={closeMobileMenu}>
                     See All
                   </Link>
                 </div>
@@ -1661,7 +1664,7 @@ const Navbar = () => {
                 {/* Dynamic Categories List for Mobile */}
                 <div className="space-y-2">
                   {/* All In One */}
-                  <Link
+                  {/* <Link
                     to="/shop"
                     className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg"
                     onClick={closeMobileMenu}
@@ -1671,7 +1674,7 @@ const Navbar = () => {
                       <span>All Categories</span>
                     </div>
                     <span className="text-gray-400 text-2xl font-bold">›</span>
-                  </Link>
+                  </Link> */}
 
                   {/* Dynamic Categories with Click-to-Expand */}
                   {categories.map((parentCategory) => {
@@ -1692,11 +1695,16 @@ const Navbar = () => {
 
                           {/* Toggle button for subcategories */}
                           {categorySubCategories.length > 0 ? (
-                            <button onClick={() => toggleMobileCategory(parentCategory._id)} className="p-1 ml-2">
+                            <button
+                              onClick={() => toggleMobileCategory(parentCategory._id)}
+                              aria-label={isExpanded ? "Collapse subcategories" : "Expand subcategories"}
+                              aria-expanded={isExpanded}
+                              className="ml-2 inline-flex items-center justify-center w-9 h-9 rounded-full bg-lime-500 text-white shadow-sm hover:bg-lime-600 active:scale-95 transition"
+                           >
                               {isExpanded ? (
-                                <ChevronDown size={16} className="text-gray-400" />
+                                <ChevronDown size={20} className="text-white" />
                               ) : (
-                                <ChevronRight size={16} className="text-gray-400" />
+                                <ChevronRight size={20} className="text-white" />
                               )}
                             </button>
                           ) : (
