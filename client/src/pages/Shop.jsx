@@ -1383,6 +1383,76 @@ if (typeof document !== "undefined" && !document.getElementById("bounce-keyframe
   document.head.appendChild(style)
 }
 
+// Right-anchored custom dropdown to avoid right overflow
+const SortDropdown = ({ value, onChange }) => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const options = [
+    { value: "newest", label: "Newest First" },
+    { value: "price-low", label: "Price: Low to High" },
+    { value: "price-high", label: "Price: High to Low" },
+    { value: "name", label: "Name: A-Z" },
+  ]
+
+  const current = options.find((o) => o.value === value)?.label || "Sort"
+
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("mousedown", onDocClick)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", onDocClick)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [])
+
+  const handleSelect = (val) => {
+    // Maintain existing handler signature: pass an event-like object
+    onChange?.({ target: { value: val } })
+    setOpen(false)
+  }
+
+  return (
+    <div className="relative inline-block text-left" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((s) => !s)}
+        className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center gap-2"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="truncate max-w-[46vw] sm:max-w-none">{current}</span>
+        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <ul
+          className="absolute right-0 mt-1 w-56 max-w-[80vw] bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden"
+          role="listbox"
+        >
+          {options.map((opt) => (
+            <li key={opt.value} role="option" aria-selected={opt.value === value}>
+              <button
+                type="button"
+                onClick={() => handleSelect(opt.value)}
+                className={`w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 ${
+                  opt.value === value ? "font-semibold" : ""
+                }`}
+              >
+                {opt.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 const PriceFilter = ({ min, max, onApply, initialRange }) => {
   const [range, setRange] = useState(initialRange || [min, max])
   const [inputMin, setInputMin] = useState(range[0])
@@ -2053,15 +2123,18 @@ const Shop = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Mobile Filter Button */}
-        <div className="block md:hidden mb-4">
+        {/* Top Action Bar (mobile only): Filter + Sort */}
+  <div className="flex items-center justify-between mb-4 md:hidden">
           <button
-            className="flex items-center gap-2 px-4 py-2 bg-lime-500 text-white rounded font-semibold shadow hover:bg-lime-600 transition"
+            className="flex md:hidden items-center gap-2 px-4 py-2 bg-lime-500 text-white rounded font-semibold shadow hover:bg-lime-600 transition"
             onClick={() => setIsMobileFilterOpen(true)}
           >
             <FilterIcon size={20} />
             Filter
           </button>
+          <div className="ml-auto relative z-20 md:hidden">
+            <SortDropdown value={sortBy} onChange={handleSortChange} />
+          </div>
         </div>
         {/* Mobile Filter Drawer */}
         {isMobileFilterOpen && (
@@ -2663,8 +2736,8 @@ const Shop = () => {
             )}
 
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-              <div>
+            <div className="flex flex-row justify-between items-center mb-6 relative z-10">
+              <div className="flex-1 min-w-0">
                 <h1 className="text-2xl font-bold text-gray-900">
                   {searchQuery.trim() ? (
                     <>
@@ -2684,12 +2757,12 @@ const Shop = () => {
                 <p className="text-gray-600 mt-1">{products.length} products found</p>
               </div>
 
-              {/* Sort Dropdown */}
-              <div className="mt-4 sm:mt-0">
+              {/* Desktop Sort Dropdown (original placement) */}
+              <div className="hidden md:block mt-0 flex-shrink-0 relative z-20">
                 <select
                   value={sortBy}
                   onChange={handleSortChange}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="newest">Newest First</option>
                   <option value="price-low">Price: Low to High</option>
