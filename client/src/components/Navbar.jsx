@@ -1026,16 +1026,13 @@ const Navbar = () => {
   // Hide dropdown on outside click
   useEffect(() => {
     function handleClick(e) {
-      if (
-        searchDropdownRef.current &&
-        !searchDropdownRef.current.contains(e.target) &&
-        searchInputRef.current &&
-        !searchInputRef.current.contains(e.target) &&
-        mobileSearchDropdownRef.current &&
-        !mobileSearchDropdownRef.current.contains(e.target) &&
-        mobileSearchInputRef.current &&
-        !mobileSearchInputRef.current.contains(e.target)
-      ) {
+      const clickedInside =
+        (searchDropdownRef.current && searchDropdownRef.current.contains(e.target)) ||
+        (searchInputRef.current && searchInputRef.current.contains(e.target)) ||
+        (mobileSearchDropdownRef.current && mobileSearchDropdownRef.current.contains(e.target)) ||
+        (mobileSearchInputRef.current && mobileSearchInputRef.current.contains(e.target))
+
+      if (!clickedInside) {
         setShowSearchDropdown(false)
       }
     }
