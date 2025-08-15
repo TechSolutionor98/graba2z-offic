@@ -2138,11 +2138,11 @@ const Shop = () => {
         </div>
         {/* Mobile Filter Drawer */}
         {isMobileFilterOpen && (
-          <div className="fixed inset-0 z-50 flex">
+          <div className="fixed inset-0 z-[9999] flex">
             {/* Overlay */}
-            <div className="fixed inset-0 bg-black bg-opacity-40" onClick={() => setIsMobileFilterOpen(false)}></div>
+            <div className="fixed inset-0 bg-black bg-opacity-40 z-10" onClick={() => setIsMobileFilterOpen(false)}></div>
             {/* Drawer */}
-            <div className="relative bg-white w-80 max-w-full h-full shadow-xl p-6 overflow-y-auto ml-auto animate-slideInRight">
+            <div className="relative bg-white w-80 max-w-full h-full shadow-xl ml-auto animate-slideInRight flex flex-col z-20">
               <button
                 className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700"
                 onClick={() => setIsMobileFilterOpen(false)}
@@ -2151,7 +2151,7 @@ const Shop = () => {
                 <X size={24} />
               </button>
               {/* Filter Content (copied from sidebar) */}
-              <div className="space-y-6 mt-6">
+              <div className="flex-1 overflow-y-auto space-y-6 mt-6 p-6">
                 {/* Price Filter */}
                 <div className="border-b pb-4">
                   <button
@@ -2413,6 +2413,26 @@ const Shop = () => {
                 </div>
 
                 {/* Brands Filter */}
+              </div>
+              {/* Footer actions */}
+              <div className="p-4 border-t bg-white flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearAllFilters()
+                    setIsMobileFilterOpen(false)
+                  }}
+                  className="flex-1 px-4 py-2 border border-red-600 text-red-600 rounded-md font-semibold hover:bg-red-50"
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="flex-1 px-4 py-2 bg-lime-600 text-white rounded-md font-semibold hover:bg-lime-700"
+                >
+                  Apply
+                </button>
               </div>
             </div>
           </div>
