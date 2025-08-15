@@ -223,15 +223,16 @@ export default function RefundAndReturn() {
 
           <div className="space-y-4 text-gray-700">
             <p>
-              Once the returned product is <strong>received and verified </strong> by our <strong>product inspection team,</strong>  a <strong>refund or exchange</strong>  will be initiated.
-              •	Refunds will be issued to the <strong>riginal payment method</strong>o used at the time of purchase.
-              •	Exchanges will be processed based on <strong>product availability</strong> and customer preference.
-              •	The process will begin <strong> immediately after successful inspection</strong>  of the returned item.
-              <strong>Important please note</strong>   that the inspection ensures the product is in its <strong>original condition, unused,</strong>  and in <strong>original packaging,</strong>  as per our return policy.
-              Processing may vary upon the payment process services provider it takes minimum 2 or in some cases upto 15 business days.
-              	All refunds are processed in AED; international transactions are automatically converted to your local currency by your payment provider.
-
+              Once the returned product is <strong>received and verified</strong> by our <strong>product inspection team,</strong> a <strong>refund or exchange</strong> will be initiated with in <strong>15 days.</strong>
             </p>
+            <ul className="list-disc list-inside space-y-2 ml-4">
+              <li>Refunds will be issued to the <strong>original payment method</strong> used at the time of purchase.</li>
+              <li>Exchanges will be processed based on <strong>product availability</strong> and customer preference.</li>
+              <li>The process will begin <strong>immediately after successful inspection</strong> of the returned item.</li>
+              <li><strong>Important:</strong> the inspection ensures the product is in its <strong>original condition, unused,</strong> and in <strong>original packaging,</strong> as per our return policy.</li>
+              <li>Processing time may vary based on the payment service provider; it takes a minimum of 2 or in some cases up to 15 business days.</li>
+              <li>All refunds are processed in AED; international transactions are automatically converted to your local currency by your payment provider.</li>
+            </ul>
           </div>
         </section>
 
@@ -259,15 +260,29 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <AlertTriangle className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Defective or Damaged Items</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Defective (Damaged) & Non-Defective Items</h2>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center gap-6 text-gray-700">
             <div className="flex-1 space-y-4">
-              <ol className="list-disc list-inside space-y-2">
-                <li>Products found defective upon delivery are eligible for full refund or exchange after verification.</li>
-                <li>Claims made after 15 days will be processed as warranty claims.</li>
-              </ol>
+              <ul className="list-none space-y-3">
+                <li>
+                  <span className="font-semibold list-none">Defective Items:</span>
+                  <ul className="list-disc list-inside ml-5 space-y-1">
+                    <li>Report within 15 days of delivery with order details and photos.</li>
+                    <li>We will verify and arrange a replacement or refund.</li>
+                    <li>Return shipping for defective items will be covered by us.</li>
+                  </ul>
+                </li>
+                <li>
+                  <span className="font-semibold list-none">Non-Defective Items:</span>
+                  <ul className="list-disc list-inside ml-5 space-y-1">
+                    <li>Returns accepted only if the item is unused and in original packaging.</li>
+                    <li>Must be requested within 15 days of delivery.</li>
+                    <li>Return shipping costs are the customer’s responsibility.</li>
+                  </ul>
+                </li>
+              </ul>
             </div>
 
             {/* Image Section - right on desktop, below on mobile */}
