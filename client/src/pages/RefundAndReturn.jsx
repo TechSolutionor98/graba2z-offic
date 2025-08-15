@@ -262,19 +262,23 @@ export default function RefundAndReturn() {
             <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Defective or Damaged Items</h2>
           </div>
 
-          <div className="space-y-4 text-gray-700">
-            <ol>
-              <li>Products found defective upon delivery are eligible for full refund or exchange after verification.</li>
-              <li>Claims made after 15 days will be processed as warranty claims.</li>
-            </ol>
+          <div className="flex flex-col md:flex-row md:items-center gap-6 text-gray-700">
+            <div className="flex-1 space-y-4">
+              <ol className="list-disc list-inside space-y-2">
+                <li>Products found defective upon delivery are eligible for full refund or exchange after verification.</li>
+                <li>Claims made after 15 days will be processed as warranty claims.</li>
+              </ol>
+            </div>
 
-            {/* Image Section */}
-            <div className="rounded-lg overflow-hidden shadow mt-6">
-              <img
-                src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                alt="Policy Enforcement and Account Management"
-                className="w-full h-48 object-cover"
-              />
+            {/* Image Section - right on desktop, below on mobile */}
+            <div className="md:w-1/3">
+              <div className="rounded-lg overflow-hidden shadow md:mt-0 mt-6">
+                <img
+                  src="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  alt="Defective device inspection and repair"
+                  className="w-full h-auto md:h-48 object-cover"
+                />
+              </div>
             </div>
           </div>
         </section>

@@ -1,7 +1,7 @@
 "use client"
 
 import { Link } from "react-router-dom"
-import { Facebook, Twitter, Instagram, Plus, Minus, Linkedin } from "lucide-react"
+import { Facebook, Instagram, Plus, Minus, Linkedin } from "lucide-react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPinterest } from "@fortawesome/free-brands-svg-icons"
 import { faTiktok } from "@fortawesome/free-brands-svg-icons"
@@ -133,8 +133,10 @@ const Footer = ({ className = "" }) => {
                 <a href="https://www.facebook.com/grabatozae/" target="_blank" className="text-white hover:text-lime-400">
                   <Facebook size={20} />
                 </a>
-                <a href="https://x.com/GrabAtoz" target="_blank" className="text-white hover:text-lime-400">
-                  <Twitter size={20} />
+                <a href="https://x.com/GrabAtoz" target="_blank" className="text-white hover:text-lime-400 transition-colors duration-200 ease-in-out" aria-label="X (Twitter)">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" role="img">
+                    <path d="M18.25 2h3.5l-7.66 8.73L24 22h-6.87l-5.02-6.58L6.3 22H2.8l8.2-9.34L0 2h7.04l4.54 6.02L18.25 2z" />
+                  </svg>
                 </a>
                 <a href="https://www.instagram.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
                   <Instagram size={20} />
