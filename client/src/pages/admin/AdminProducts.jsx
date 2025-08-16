@@ -21,6 +21,8 @@ const AdminProducts = () => {
   const [totalPages, setTotalPages] = useState(1)
   const PRODUCTS_PER_PAGE = 20
   const { showToast } = useToast()
+  const [justEditedId, setJustEditedId] = useState(null)
+  const [highlightTimer, setHighlightTimer] = useState(null)
 
   const formatPrice = (price) => {
     return `AED ${price.toLocaleString()}`
@@ -51,6 +53,18 @@ const AdminProducts = () => {
     fetchProducts()
     fetchCategories()
   }, [page, searchTerm, filterCategory])
+
+  // On mount, check if a product was edited on previous navigation
+  useEffect(() => {
+    const lastEdited = sessionStorage.getItem("lastEditedProductId")
+    if (lastEdited) {
+      setJustEditedId(lastEdited)
+      sessionStorage.removeItem("lastEditedProductId")
+    }
+    return () => {
+      if (highlightTimer) clearTimeout(highlightTimer)
+    }
+  }, [])
 
   const fetchProducts = async () => {
     try {
@@ -221,9 +235,25 @@ const AdminProducts = () => {
       // Refresh product list
       await fetchProducts()
       setShowForm(false)
+      // Determine the affected product id
+      const affectedId = editingProduct ? editingProduct._id : response?.data?._id
       setEditingProduct(null)
       setError(null)
       showToast("Product saved successfully", "success")
+
+      // Highlight the affected product row
+      if (affectedId) {
+        setJustEditedId(affectedId)
+        sessionStorage.setItem("lastEditedProductId", affectedId)
+        // Scroll into view once products are rendered
+        setTimeout(() => {
+          const el = document.getElementById(`product-row-${affectedId}`)
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
+        }, 250)
+        // Clear highlight after a few seconds
+        const t = setTimeout(() => setJustEditedId(null), 3500)
+        setHighlightTimer(t)
+      }
     } catch (error) {
       console.error("❌ Failed to save product:", error)
       console.error("❌ Error response:", error.response?.data)
@@ -416,7 +446,15 @@ const AdminProducts = () => {
                             console.log('Product.category.category:', product.category?.category);
                             console.log('Categories list:', categories);
                             return (
-                              <tr key={product._id} className="hover:bg-gray-50">
+                              <tr
+                                key={product._id}
+                                id={`product-row-${product._id}`}
+                className={`hover:bg-gray-50 transition-colors ${
+                                  justEditedId === product._id
+                  ? "bg-lime-300 ring-2 ring-lime-500 animate-pulse"
+                                    : ""
+                                }`}
+                              >
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="flex items-center">
                                     <div className="h-10 w-10 flex-shrink-0">
