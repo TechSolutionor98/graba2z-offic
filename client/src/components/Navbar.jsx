@@ -1626,7 +1626,7 @@ const Navbar = () => {
                   onClick={closeMobileMenu}
                 >
                   <Package size={20} className="mr-3" />
-                  My Orders
+                  <strong>My Orders</strong>
                 </Link>
                 <Link
                   to="/track-order"
@@ -1634,7 +1634,7 @@ const Navbar = () => {
                   onClick={closeMobileMenu}
                 >
                   <Truck size={20} className="mr-3" />
-                  Track Order
+                  <strong>Track Order</strong>
                 </Link>
                 <Link
                   to="/help"
@@ -1642,7 +1642,7 @@ const Navbar = () => {
                   onClick={closeMobileMenu}
                 >
                   <HelpCircle size={20} className="mr-3" />
-                  Help Center
+                  <strong>Help Center</strong>
                 </Link>
               </div>
 
@@ -1681,13 +1681,13 @@ const Navbar = () => {
                     return (
                       <div key={parentCategory._id}>
                         {/* Parent Category Item */}
-                        <div className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg">
                           <Link
                             to={generateShopURL({ parentCategory: parentCategory.name })}
                             className="flex items-center flex-1"
                             onClick={closeMobileMenu}
                           >
-                            <span>{parentCategory.name}</span>
+              <strong>{parentCategory.name}</strong>
                           </Link>
 
                           {/* Toggle button for subcategories */}
@@ -1711,7 +1711,7 @@ const Navbar = () => {
 
                         {/* Subcategories - Only show when expanded */}
                         {isExpanded && categorySubCategories.length > 0 && (
-                          <div className="ml-4 space-y-1 pb-2">
+          <div className="ml-4 space-y-1 pb-2">
                             {categorySubCategories.map((subCategory) => (
                               <Link
                                 key={subCategory._id}
@@ -1722,7 +1722,7 @@ const Navbar = () => {
                                 className="block py-2 px-2 text-red-600 hover:bg-gray-50 rounded-lg text-sm"
                                 onClick={closeMobileMenu}
                               >
-                                {subCategory.name}
+            <strong>{subCategory.name}</strong>
                               </Link>
                             ))}
                           </div>
