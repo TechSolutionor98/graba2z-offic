@@ -301,6 +301,40 @@ const Shop = () => {
       }
     }
 
+    // Fallback: If still nothing, try character-by-character trimming from the end
+    // This helps when the user pastes a SKU with extra suffix characters (no spaces)
+    const trimmed = searchTerm.trim()
+    for (let len = trimmed.length - 1; len >= 3; len--) {
+      const currentSearchTerm = trimmed.slice(0, len)
+      try {
+        const allProducts = await productCache.getProducts()
+        if (!allProducts || allProducts.length === 0) continue
+
+        const stockStatusFilters = []
+        if (stockFilters.inStock) stockStatusFilters.push("inStock")
+        if (stockFilters.outOfStock) stockStatusFilters.push("outOfStock")
+        if (stockFilters.onSale) stockStatusFilters.push("onSale")
+
+        const filters = {
+          parent_category: selectedCategory !== "all" ? selectedCategory : null,
+          category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
+          brand: selectedBrands.length > 0 ? selectedBrands : null,
+          search: currentSearchTerm,
+          priceRange: priceRange,
+          stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
+          sortBy: sortBy,
+        }
+
+        const filteredProducts = productCache.filterProducts(allProducts, filters)
+        if (filteredProducts.length > 0) {
+          setActualSearchQuery(currentSearchTerm)
+          return filteredProducts
+        }
+      } catch (err) {
+        console.error("Error in char-trim search:", err)
+      }
+    }
+
     // If no results found even with single word, set actual search to original
     setActualSearchQuery(searchTerm)
     return []

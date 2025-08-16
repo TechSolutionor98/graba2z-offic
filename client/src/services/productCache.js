@@ -597,6 +597,7 @@ class ProductCacheService {
       const minimalProducts = products.map((product) => ({
         _id: product._id,
         name: product.name,
+  sku: product.sku, // include SKU for client-side search
         price: product.price,
         basePrice: product.basePrice,
         offerPrice: product.offerPrice,
@@ -783,6 +784,10 @@ class ProductCacheService {
     if (this.isCacheValid()) {
       const cachedProducts = this.getCachedProducts()
       if (cachedProducts && cachedProducts.length > 0) {
+        // Migration: if cache doesn't include SKU, refresh once
+        if (typeof cachedProducts[0]?.sku === "undefined") {
+          return await this.fetchAndCacheProducts()
+        }
         return cachedProducts
       }
     }
@@ -840,8 +845,14 @@ class ProductCacheService {
         const name = (product.name || "").toLowerCase()
         const description = (product.description || "").toLowerCase()
         const brandName = product.brand?.name?.toLowerCase() || ""
+        const sku = (product.sku || "").toLowerCase()
 
-        return name.includes(searchTerm) || description.includes(searchTerm) || brandName.includes(searchTerm)
+        return (
+          name.includes(searchTerm) ||
+          description.includes(searchTerm) ||
+          brandName.includes(searchTerm) ||
+          sku.includes(searchTerm)
+        )
       })
     }
 
