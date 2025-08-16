@@ -975,21 +975,45 @@ const Navbar = () => {
     }, 150) // Small delay to allow cursor movement to subcategory dropdown
   }
 
-  // Function to check if search query matches a product exactly
+  // Function to check if search query matches a product's SKU (or name) exactly
   const findExactProductMatch = async (query) => {
     if (!query || query.trim().length === 0) return null
 
+    const normalized = query.trim().toLowerCase()
     try {
+      // 1) Try exact SKU lookup via dedicated endpoint (more reliable than fuzzy search)
+      const skuCandidates = Array.from(
+        new Set([query.trim(), query.trim().toUpperCase(), query.trim().toLowerCase()]),
+      )
+      try {
+        const skuResp = await axios.post(`${config.API_URL}/api/products/by-skus`, { skus: skuCandidates })
+        if (Array.isArray(skuResp.data) && skuResp.data.length > 0) {
+          // Prefer exact case-insensitive match if multiple
+          const exactSku = skuResp.data.find(
+            (p) => p.sku && String(p.sku).trim().toLowerCase() === normalized,
+          )
+          return exactSku || skuResp.data[0]
+        }
+      } catch (e) {
+        // ignore and fall back to search
+      }
+
+      // 2) Fallback to existing search endpoint and scan results
       const { data } = await axios.get(
         `${config.API_URL}/api/products?search=${encodeURIComponent(query.trim())}&limit=50`,
       )
 
-      // Look for exact match (case-insensitive)
-      const exactMatch = data.find(
-        (product) => product.name && product.name.toLowerCase().trim() === query.toLowerCase().trim(),
+      // First, try exact SKU match (case-insensitive)
+      const exactSkuMatch = data.find(
+        (product) => product.sku && String(product.sku).trim().toLowerCase() === normalized,
       )
+      if (exactSkuMatch) return exactSkuMatch
 
-      return exactMatch || null
+      // Fallback: exact name match (to preserve prior behavior)
+      const exactNameMatch = data.find(
+        (product) => product.name && String(product.name).trim().toLowerCase() === normalized,
+      )
+      return exactNameMatch || null
     } catch (error) {
       console.error("Error finding exact product match:", error)
       return null
