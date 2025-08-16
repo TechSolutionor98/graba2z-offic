@@ -451,7 +451,7 @@ const AdminProducts = () => {
                                 id={`product-row-${product._id}`}
                 className={`hover:bg-gray-50 transition-colors ${
                                   justEditedId === product._id
-                  ? "bg-lime-300 ring-2 ring-lime-500 animate-pulse"
+                  ? "bg-lime-100 ring-2 ring-lime-500 animate-pulse"
                                     : ""
                                 }`}
                               >
