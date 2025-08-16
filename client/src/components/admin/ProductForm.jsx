@@ -123,54 +123,70 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     fetchParentCategories()
     fetchBrands()
     if (product) {
-      const resolvedCategory =
+      const parentId =
+        (typeof product.parentCategory === "object" && product.parentCategory
+          ? product.parentCategory._id
+          : product.parentCategory) || ""
+      const resolvedCategoryId =
         (typeof product.category === "object" && product.category ? product.category._id : product.category) ||
-        (typeof product.subCategory === "object" && product.subCategory
-          ? product.subCategory._id
-          : product.subCategory) ||
+        (typeof product.subCategory === "object" && product.subCategory ? product.subCategory._id : product.subCategory) ||
         ""
 
-      setBasePrice(product.price ? product.price.toString() : "")
-      setOriginalOfferPrice(product.offerPrice ? product.offerPrice.toString() : "")
+      setBasePrice(product.price ? String(product.price) : "")
+      setOriginalOfferPrice(product.offerPrice ? String(product.offerPrice) : "")
 
-      setFormData({
-        name: product.name || "",
-        sku: product.sku || "",
-        slug: product.slug || "",
-        barcode: product.barcode || "",
-        brand: typeof product.brand === "object" && product.brand ? product.brand._id : product.brand || "",
-        parentCategory:
-          typeof product.parentCategory === "object" && product.parentCategory
-            ? product.parentCategory._id
-            : product.parentCategory || "",
-        category: resolvedCategory,
-        subCategory:
-          typeof product.subCategory === "object" && product.subCategory
-            ? product.subCategory._id
-            : product.subCategory || "",
-        description: product.description || "",
-        shortDescription: product.shortDescription || "",
-        buyingPrice: product.buyingPrice || "",
-        price: product.price || "",
-        offerPrice: product.offerPrice || "",
-        discount: product.discount || "",
-        image: product.image || "",
-        galleryImages: product.galleryImages || [],
-        countInStock: product.countInStock || "",
-        lowStockWarning: product.lowStockWarning || "5",
-        maxPurchaseQty: product.maxPurchaseQty || "10",
-        weight: product.weight || "",
-        unit: product.unit || "piece",
-        tax: typeof product.tax === "object" && product.tax ? product.tax._id : product.tax || "0",
-        tags: Array.isArray(product.tags) ? product.tags.join(", ") : "",
-        specifications: product.specifications || [],
-        isActive: product.isActive !== undefined ? product.isActive : true,
-        canPurchase: product.canPurchase !== undefined ? product.canPurchase : true,
-        showStockOut: product.showStockOut !== undefined ? product.showStockOut : true,
-        refundable: product.refundable !== undefined ? product.refundable : true,
-        featured: product.featured || false,
-        stockStatus: product.stockStatus || "Available Product",
-      })
+      const preload = async () => {
+        if (parentId) {
+          await fetchSubCategories(String(parentId))
+        }
+        setFormData({
+          name: product.name || "",
+          sku: product.sku || "",
+          slug: product.slug || "",
+          barcode: product.barcode || "",
+          brand:
+            (typeof product.brand === "object" && product.brand ? product.brand._id : product.brand)
+              ? String(typeof product.brand === "object" && product.brand ? product.brand._id : product.brand)
+              : "",
+          parentCategory: parentId ? String(parentId) : "",
+          category: resolvedCategoryId ? String(resolvedCategoryId) : "",
+          subCategory:
+            (typeof product.subCategory === "object" && product.subCategory ? product.subCategory._id : product.subCategory)
+              ? String(
+                  typeof product.subCategory === "object" && product.subCategory
+                    ? product.subCategory._id
+                    : product.subCategory,
+                )
+              : "",
+          description: product.description || "",
+          shortDescription: product.shortDescription || "",
+          buyingPrice: product.buyingPrice || "",
+          price: product.price || "",
+          offerPrice: product.offerPrice || "",
+          discount: product.discount || "",
+          image: product.image || "",
+          galleryImages: product.galleryImages || [],
+          countInStock: product.countInStock || "",
+          lowStockWarning: product.lowStockWarning || "5",
+          maxPurchaseQty: product.maxPurchaseQty || "10",
+          weight: product.weight || "",
+          unit: product.unit || "piece",
+          tax:
+            (typeof product.tax === "object" && product.tax ? product.tax._id : product.tax)
+              ? String(typeof product.tax === "object" && product.tax ? product.tax._id : product.tax)
+              : "0",
+          tags: Array.isArray(product.tags) ? product.tags.join(", ") : "",
+          specifications: product.specifications || [],
+          isActive: product.isActive !== undefined ? product.isActive : true,
+          canPurchase: product.canPurchase !== undefined ? product.canPurchase : true,
+          showStockOut: product.showStockOut !== undefined ? product.showStockOut : true,
+          refundable: product.refundable !== undefined ? product.refundable : true,
+          featured: product.featured || false,
+          stockStatus: product.stockStatus || "Available Product",
+        })
+      }
+
+      preload()
     }
   }, [product]) // Removed taxes from dependencies to prevent recalculation loops
 
