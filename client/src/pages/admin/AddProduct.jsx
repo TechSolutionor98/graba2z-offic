@@ -58,7 +58,7 @@ const AddProduct = () => {
     specifications: [],
   })
 
-  // Separate state for prices without tax (for display)
+  // Separate state for price inputs (treated as tax-inclusive per business rule)
   const [basePriceWithoutTax, setBasePriceWithoutTax] = useState("")
   const [offerPriceWithoutTax, setOfferPriceWithoutTax] = useState("")
   const [taxRate, setTaxRate] = useState(0)
@@ -85,19 +85,15 @@ const AddProduct = () => {
     }
   }, [formData.tax, taxes])
 
-  // Calculate prices with tax whenever base price, offer price or tax changes
+  // Keep entered prices as final (tax-inclusive). Selecting Tax/VAT is informational only.
   useEffect(() => {
     const baseWithoutTax = Number(basePriceWithoutTax) || 0
     const offerWithoutTax = Number(offerPriceWithoutTax) || 0
-    const tax = taxRate || 0
-
-    // Calculate base price with tax
+    // Do NOT add tax again; treat entered values as final prices (tax already included)
     if (baseWithoutTax > 0) {
-      const baseTaxAmount = baseWithoutTax * (tax / 100)
-      const finalBasePrice = baseWithoutTax + baseTaxAmount
       setFormData((prev) => ({
         ...prev,
-        price: finalBasePrice.toFixed(2),
+        price: baseWithoutTax.toFixed(2),
       }))
     } else {
       setFormData((prev) => ({
@@ -106,13 +102,10 @@ const AddProduct = () => {
       }))
     }
 
-    // Calculate offer price with tax
     if (offerWithoutTax > 0) {
-      const offerTaxAmount = offerWithoutTax * (tax / 100)
-      const finalOfferPrice = offerWithoutTax + offerTaxAmount
       setFormData((prev) => ({
         ...prev,
-        offerPrice: finalOfferPrice.toFixed(2),
+        offerPrice: offerWithoutTax.toFixed(2),
       }))
     } else {
       setFormData((prev) => ({
@@ -120,7 +113,7 @@ const AddProduct = () => {
         offerPrice: "",
       }))
     }
-  }, [basePriceWithoutTax, offerPriceWithoutTax, taxRate])
+  }, [basePriceWithoutTax, offerPriceWithoutTax])
 
   const fetchAllData = async () => {
     try {
@@ -702,12 +695,27 @@ const AddProduct = () => {
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Base Price (Before Tax):</span>
-                        <span className="font-semibold">{basePriceWithoutTax || 0} AED</span>
+                        <span className="font-semibold">
+                          {(() => {
+                            const rate = (Number(taxRate) || 0) / 100
+                            const withTax = Number(formData.price) || 0
+                            if (!withTax || rate <= 0) return (Number(basePriceWithoutTax) || 0).toString() + ' AED'
+                            const beforeTax = withTax / (1 + rate)
+                            return beforeTax.toFixed(2) + ' AED'
+                          })()}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Tax ({taxRate}%):</span>
                         <span className="font-semibold">
-                          {basePriceWithoutTax ? ((Number(basePriceWithoutTax) * taxRate) / 100).toFixed(2) : 0} AED
+                          {(() => {
+                            const rate = (Number(taxRate) || 0) / 100
+                            const withTax = Number(formData.price) || 0
+                            if (!withTax || rate <= 0) return '0 AED'
+                            const beforeTax = withTax / (1 + rate)
+                            const taxAmt = withTax - beforeTax
+                            return taxAmt.toFixed(2) + ' AED'
+                          })()}
                         </span>
                       </div>
                       <div className="flex justify-between border-t pt-1">
@@ -723,12 +731,27 @@ const AddProduct = () => {
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Offer Price (Before Tax):</span>
-                        <span className="font-semibold">{offerPriceWithoutTax || 0} AED</span>
+                        <span className="font-semibold">
+                          {(() => {
+                            const rate = (Number(taxRate) || 0) / 100
+                            const withTax = Number(formData.offerPrice) || 0
+                            if (!withTax || rate <= 0) return (Number(offerPriceWithoutTax) || 0).toString() + ' AED'
+                            const beforeTax = withTax / (1 + rate)
+                            return beforeTax.toFixed(2) + ' AED'
+                          })()}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Tax ({taxRate}%):</span>
                         <span className="font-semibold">
-                          {offerPriceWithoutTax ? ((Number(offerPriceWithoutTax) * taxRate) / 100).toFixed(2) : 0} AED
+                          {(() => {
+                            const rate = (Number(taxRate) || 0) / 100
+                            const withTax = Number(formData.offerPrice) || 0
+                            if (!withTax || rate <= 0) return '0 AED'
+                            const beforeTax = withTax / (1 + rate)
+                            const taxAmt = withTax - beforeTax
+                            return taxAmt.toFixed(2) + ' AED'
+                          })()}
                         </span>
                       </div>
                       <div className="flex justify-between border-t pt-1">
