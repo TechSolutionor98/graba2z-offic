@@ -55,6 +55,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   const [taxRate, setTaxRate] = useState(0)
   const [originalOfferPrice, setOriginalOfferPrice] = useState("")
   const [isCalculating, setIsCalculating] = useState(false)
+  const [editingField, setEditingField] = useState(null) // 'offer' | 'discount' | null
 
   const units = [
     { value: "piece", label: "Piece" },
@@ -96,48 +97,27 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   }, [formData.tax, taxes])
 
   useEffect(() => {
-    if (isCalculating) return // Prevent recursive calls
-
+    // Only recompute VAT breakdown and keep formData values in sync with inputs.
     const base = Number(basePrice) || 0
-    let offer = Number(originalOfferPrice) || 0
-    let discount = Number(formData.discount) || 0
-
-    // Only calculate if we have valid prices
-    if (base <= 0 && offer <= 0) return
-
-    setIsCalculating(true)
-
-    // If both base and offer price are provided, calculate discount
-    if (base > 0 && offer > 0) {
-      discount = Math.max(0, Math.round(((base - offer) / base) * 100))
-    }
-    // If discount is set and offer price is not manually entered, calculate offer price
-    else if (discount > 0 && base > 0 && offer <= 0) {
-      offer = base - (base * discount) / 100
-      setOriginalOfferPrice(offer.toFixed(2))
-    }
+    const offer = Number(originalOfferPrice) || 0
 
     const tax = taxRate
-    let finalOfferPrice = offer
-
-    // If there's an offer price and tax rate, add tax to original offer price
-    if (offer > 0 && tax > 0) {
-      finalOfferPrice = offer + offer * (tax / 100)
+    const includedTax = (amount, rate) => {
+      if (!amount || amount <= 0 || !rate || rate <= 0) return 0
+      return amount - amount / (1 + rate / 100)
     }
 
-    // Tax amount for display purposes
-    const taxAmt = offer > 0 ? offer * (tax / 100) : 0
-
+    const displayBase = offer > 0 ? offer : base
+    const taxAmt = includedTax(displayBase, tax)
     setTaxAmount(taxAmt)
+
+    // Do not round while typing; just mirror to formData
     setFormData((prev) => ({
       ...prev,
-      offerPrice: finalOfferPrice.toFixed(2), // Store offer price + tax
-      discount: discount,
-      price: base.toFixed(2), // Keep base price as simple price
+      offerPrice: originalOfferPrice,
+      price: basePrice === "" ? prev.price : base.toFixed(2),
     }))
-
-    setIsCalculating(false)
-  }, [basePrice, taxRate, originalOfferPrice, formData.discount]) // Added formData.discount back for real-time updates
+  }, [basePrice, taxRate, originalOfferPrice])
 
   useEffect(() => {
     fetchParentCategories()
@@ -280,8 +260,58 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
 
   const handleOfferPriceChange = (e) => {
     const value = e.target.value
+    setEditingField("offer")
     setOriginalOfferPrice(value)
-    // Don't update formData.offerPrice directly - let useEffect handle the calculation
+
+    const base = Number(basePrice)
+    const offer = Number(value)
+    if (!isNaN(base) && base > 0 && value !== "") {
+      const calcDiscount = Math.max(0, Math.round(((base - offer) / base) * 100))
+      setFormData((prev) => ({ ...prev, discount: String(calcDiscount) }))
+    } else {
+      // When offer is cleared, clear discount (but don't touch if user is editing discount)
+      if (editingField !== "discount") {
+        setFormData((prev) => ({ ...prev, discount: "" }))
+      }
+    }
+  }
+
+  const handleOfferPriceBlur = () => {
+    setEditingField(null)
+    if (originalOfferPrice === "") return
+    const n = Number(originalOfferPrice)
+    if (!isNaN(n)) {
+      const fixed = n.toFixed(2)
+      setOriginalOfferPrice(fixed)
+      setFormData((prev) => ({ ...prev, offerPrice: fixed }))
+    }
+  }
+
+  const handleDiscountChange = (e) => {
+    const value = e.target.value
+    setEditingField("discount")
+    // Update discount immediately
+    setFormData((prev) => ({ ...prev, discount: value }))
+
+    const base = Number(basePrice)
+    const disc = Number(value)
+    if (!isNaN(base) && base > 0 && value !== "") {
+      const offer = base - (base * Math.min(Math.max(disc, 0), 100)) / 100
+      const offerStr = offer.toFixed(2)
+      setOriginalOfferPrice(offerStr)
+      setFormData((prev) => ({ ...prev, offerPrice: offerStr }))
+    } else if (value === "") {
+      // If discount cleared, keep offer as is (user may type it)
+    }
+  }
+
+  const handleDiscountBlur = () => {
+    setEditingField(null)
+    const d = Number(formData.discount)
+    if (!isNaN(d)) {
+      const clamped = Math.min(Math.max(Math.round(d), 0), 100)
+      setFormData((prev) => ({ ...prev, discount: String(clamped) }))
+    }
   }
 
   const handleDescriptionChange = (content) => {
@@ -362,36 +392,20 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       if (!taxValue || taxValue === "0" || taxValue === 0) {
         taxValue = undefined
       }
-      
-      // Calculate tax amount if tax is selected
-      let finalOfferPrice = Number.parseFloat(originalOfferPrice) || 0;
-      let finalBasePrice = Number.parseFloat(basePrice) || 0;
-      
-      if (taxValue && taxValue !== "0" && taxValue !== 0) {
-        // Find the selected tax rate
-        const selectedTax = taxes.find((t) => t._id === taxValue);
-        const taxRate = selectedTax ? Number(selectedTax.rate) : 0;
-        
-        // Add tax to both base price and offer price if tax rate is greater than 0
-        if (taxRate > 0) {
-          // Add tax to base price
-          finalBasePrice = finalBasePrice + (finalBasePrice * taxRate / 100);
-          
-          // Add tax to offer price if it exists
-          if (finalOfferPrice > 0) {
-            finalOfferPrice = finalOfferPrice + (finalOfferPrice * taxRate / 100);
-          }
-        }
-      }
-      
+      // IMPORTANT: Do not add tax again on submit.
+      // We treat basePrice and formData.offerPrice as already tax-inclusive (informational VAT only).
+  const finalBasePrice = Number.parseFloat(basePrice) || 0
+  // Use the visible Offer Price input; if blank, treat as 0
+  const finalOfferPrice = originalOfferPrice !== "" ? Number.parseFloat(originalOfferPrice) || 0 : 0
+
       const productData = {
         ...formData,
         parentCategory: formData.parentCategory,
         category: formData.category,
         subCategory: formData.category || null,
         buyingPrice: Number.parseFloat(formData.buyingPrice) || 0,
-        price: finalBasePrice, // Now includes tax if applied
-        offerPrice: finalOfferPrice, // Now includes tax if applied
+        price: finalBasePrice, // Save as-is (tax-inclusive; no re-add)
+        offerPrice: finalOfferPrice, // Save as-is (tax-inclusive; no re-add)
         discount: Number.parseFloat(formData.discount) || 0,
         countInStock: Number.parseInt(formData.countInStock) || 0,
         lowStockWarning: Number.parseInt(formData.lowStockWarning) || 5,
@@ -420,13 +434,14 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   // Debug log for taxes
   console.log("Fetched taxes:", taxes)
 
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-xl font-bold mb-6">{product ? "Edit Product" : "Add New Product"}</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4" >
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Product Name <span className="text-red-500">*</span>
@@ -604,25 +619,25 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               name="offerPrice"
               value={originalOfferPrice}
               onChange={handleOfferPriceChange}
+              onBlur={handleOfferPriceBlur}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter offer price (before tax)"
               min="0"
               step="0.01"
             />
-            {originalOfferPrice > 0 && (
+            {/* {Number(originalOfferPrice) > 0 && (
               <p className="text-xs text-gray-600 mt-1">
                 {taxRate > 0 ? (
                   <span className="text-blue-600 font-medium">
-                    Final offer price with {taxRate}% VAT: AED{" "}
-                    {(Number(originalOfferPrice) * (1 + taxRate / 100)).toFixed(2)}
+                    Includes approx VAT {taxRate}%: AED {(
+                      Number(originalOfferPrice) - Number(originalOfferPrice) / (1 + taxRate / 100)
+                    ).toFixed(2)}
                   </span>
                 ) : (
-                  <span className="text-gray-500">
-                    No tax applied - Final price: AED {Number(originalOfferPrice).toFixed(2)}
-                  </span>
+                  <span className="text-gray-500">No VAT selected</span>
                 )}
               </p>
-            )}
+            )} */}
           </div>
 
           <div>
@@ -631,12 +646,12 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               type="number"
               name="discount"
               value={formData.discount}
-              onChange={handleInputChange}
+              onChange={handleDiscountChange}
+              onBlur={handleDiscountBlur}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="0"
               min="0"
               max="100"
-              readOnly={Number(basePrice) > 0 && Number(originalOfferPrice) > 0} // Read-only if base and offer are set
             />
           </div>
         </div>
