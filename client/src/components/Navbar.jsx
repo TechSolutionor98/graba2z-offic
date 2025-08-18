@@ -918,6 +918,8 @@ const Navbar = () => {
   const moreDropdownTimeoutRef = useRef(null)
   const [hoveredMoreCategory, setHoveredMoreCategory] = useState(null)
   const moreCategoryTimeoutRef = useRef(null)
+  // Tiny in-memory cache to speed up repeated candidate lookups during typing
+  const liveSearchCacheRef = useRef(new Map())
 
   // Fetch categories and subcategories from API
   const fetchCategories = async () => {
@@ -1020,31 +1022,98 @@ const Navbar = () => {
     }
   }
 
-  // Instant search effect
+  // Instant search effect with progressive fallback (words → characters)
   useEffect(() => {
-    if (searchQuery.trim().length === 0) {
+    const q = searchQuery.trim()
+    if (q.length === 0) {
       setSearchResults([])
       setShowSearchDropdown(false)
       setSearchLoading(false)
       return
     }
+
+    let cancelled = false
     setSearchLoading(true)
+
+    // Build candidate queries: full, then drop trailing words, then drop trailing characters
+    const buildCandidates = (input) => {
+      const unique = new Set()
+      const out = []
+      const push = (s) => {
+        const v = s.trim()
+        if (v && !unique.has(v)) {
+          unique.add(v)
+          out.push(v)
+        }
+      }
+
+      push(input)
+      const words = input.split(/\s+/)
+      // Word-prefix candidates (drop last word progressively)
+      for (let i = words.length - 1; i >= 1; i--) {
+        push(words.slice(0, i).join(" "))
+        if (out.length >= 4) break
+      }
+      // Character-prefix candidates (strategic trims instead of letter-by-letter for speed)
+      const base = words[0]
+      if (base && base.length > 3) {
+        const p70 = base.slice(0, Math.max(3, Math.floor(base.length * 0.7)))
+        const p50 = base.slice(0, Math.max(3, Math.floor(base.length * 0.5)))
+        push(p70)
+        push(p50)
+      }
+      return out
+    }
+
     const fetchResults = async () => {
       try {
-        const { data } = await axios.get(
-          `${config.API_URL}/api/products?search=${encodeURIComponent(searchQuery.trim())}&limit=5`,
-        )
-        setSearchResults(data)
-        setShowSearchDropdown(true)
-      } catch (err) {
+        const candidates = buildCandidates(q)
+        for (const cand of candidates) {
+          try {
+            // 1) Check tiny in-memory cache first
+            const cached = liveSearchCacheRef.current.get(cand)
+            if (cached) {
+              if (!cancelled) {
+                if (Array.isArray(cached) && cached.length > 0) {
+                  setSearchResults(cached)
+                  setShowSearchDropdown(true)
+                  return
+                }
+              }
+            }
+
+            // 2) Fallback to API
+            const { data } = await axios.get(`${config.API_URL}/api/products?search=${encodeURIComponent(cand)}&limit=5`)
+            if (cancelled) return
+            // Cache result (including empty) to speed up subsequent key strokes
+            liveSearchCacheRef.current.set(cand, Array.isArray(data) ? data : [])
+            // Simple cache pruning
+            if (liveSearchCacheRef.current.size > 100) {
+              liveSearchCacheRef.current.clear()
+            }
+
+            if (Array.isArray(data) && data.length > 0) {
+              setSearchResults(data)
+              setShowSearchDropdown(true)
+              return
+            }
+          } catch (_) {
+            // ignore and try next candidate
+          }
+        }
+        // No candidates found
         setSearchResults([])
         setShowSearchDropdown(false)
       } finally {
-        setSearchLoading(false)
+        if (!cancelled) setSearchLoading(false)
       }
     }
-    const timeout = setTimeout(fetchResults, 250)
-    return () => clearTimeout(timeout)
+
+    const timeout = setTimeout(fetchResults, 180)
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
+    }
   }, [searchQuery])
 
   // Hide dropdown on outside click
