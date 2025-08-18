@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import ProductForm from "../../components/admin/ProductForm"
 import { useToast } from "../../context/ToastContext"
-import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square } from "lucide-react"
 
 import config from "../../config/config"
+import { exportProductsToExcel } from "../../utils/exportToExcel"
 const AdminProducts = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
@@ -23,6 +24,15 @@ const AdminProducts = () => {
   const { showToast } = useToast()
   const [justEditedId, setJustEditedId] = useState(null)
   const [highlightTimer, setHighlightTimer] = useState(null)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [brands, setBrands] = useState([])
+  const [exportParent, setExportParent] = useState("any")
+  const [exportSubcat, setExportSubcat] = useState("any")
+  const [exportBrand, setExportBrand] = useState("any")
+  const [exportSubcategories, setExportSubcategories] = useState([])
+
+  // Derived counters
+  const totalSelected = useMemo(() => selectedIds.size, [selectedIds])
 
   const formatPrice = (price) => {
     return `AED ${price.toLocaleString()}`
@@ -54,6 +64,10 @@ const AdminProducts = () => {
     fetchCategories()
   }, [page, searchTerm, filterCategory])
 
+  useEffect(() => {
+    fetchBrands()
+  }, [])
+
   // On mount, check if a product was edited on previous navigation
   useEffect(() => {
     const lastEdited = sessionStorage.getItem("lastEditedProductId")
@@ -65,6 +79,109 @@ const AdminProducts = () => {
       if (highlightTimer) clearTimeout(highlightTimer)
     }
   }, [])
+
+  useEffect(() => {
+    fetchExportSubcategories(exportParent)
+    setExportSubcat('any')
+  }, [exportParent])
+
+  // Selection helpers
+  const toggleSelectOne = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const isAllOnPageSelected = useMemo(() => {
+    if (!products || products.length === 0) return false
+    return products.every(p => selectedIds.has(p._id))
+  }, [products, selectedIds])
+
+  const toggleSelectPage = () => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (isAllOnPageSelected) {
+        products.forEach(p => next.delete(p._id))
+      } else {
+        products.forEach(p => next.add(p._id))
+      }
+      return next
+    })
+  }
+
+  const clearSelection = () => setSelectedIds(new Set())
+
+  // Export helpers
+  const handleExport = (scope = "selected") => {
+    const filenameBase = [
+      "products",
+      scope,
+      filterCategory && filterCategory !== 'all' ? `cat-${filterCategory}` : null,
+      searchTerm ? `q-${searchTerm.replace(/\s+/g, '-')}` : null,
+      `p${page}`
+    ].filter(Boolean).join('_')
+
+    if (scope === "selected") {
+      exportProductsToExcel(products.filter(p => selectedIds.has(p._id)), `${filenameBase}.xlsx`)
+    } else if (scope === "page") {
+      exportProductsToExcel(products, `${filenameBase}.xlsx`)
+    } else if (scope === "all") {
+      // Fetch all with current filters ignoring pagination
+      fetchAllForExport().then(all => exportProductsToExcel(all, `${filenameBase}.xlsx`))
+    }
+  }
+
+  const handleExportByFilters = async () => {
+    const overrides = {}
+    if (exportParent && exportParent !== 'any') overrides.parentCategory = exportParent
+    if (exportSubcat && exportSubcat !== 'any') overrides.subcategory = exportSubcat
+    const all = await fetchAllForExport(overrides)
+    let filtered = all
+    if (exportBrand && exportBrand !== 'any') {
+      filtered = all.filter(p => {
+        const id = (p.brand && (p.brand._id || p.brand)) || ''
+        return String(id) === String(exportBrand)
+      })
+    }
+    const fname = [
+      'products',
+      exportParent && exportParent !== 'any' ? `parent-${exportParent}` : null,
+      exportSubcat && exportSubcat !== 'any' ? `sub-${exportSubcat}` : null,
+      exportBrand && exportBrand !== 'any' ? `brand-${exportBrand}` : null,
+    ].filter(Boolean).join('_') || 'products_filtered'
+    exportProductsToExcel(filtered, `${fname}.xlsx`)
+  }
+
+  const fetchAllForExport = async (overrides = {}) => {
+    const token = getAdminToken()
+    if (!token) return []
+    try {
+      const params = { limit: 1000, page: 1 }
+      if (searchTerm.trim() !== "") params.search = searchTerm.trim()
+      if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
+      Object.assign(params, overrides)
+      // We may need to loop if more than 1000
+      let all = []
+      let currentPage = 1
+      while (true) {
+        const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { ...params, page: currentPage }
+        })
+        const batch = data.products || []
+        all = all.concat(batch)
+        if (!data.totalCount || all.length >= data.totalCount || batch.length === 0) break
+        currentPage += 1
+      }
+      return all
+    } catch (e) {
+      console.error('Export fetchAll error', e)
+      showToast('Failed to fetch all products for export', 'error')
+      return []
+    }
+  }
 
   const fetchProducts = async () => {
     try {
@@ -121,6 +238,26 @@ const AdminProducts = () => {
       setCategories(data)
     } catch (error) {
       console.error("Failed to load categories:", error)
+    }
+  }
+
+  const fetchBrands = async () => {
+    try {
+      const { data } = await axios.get(`${config.API_URL}/api/brands`)
+      setBrands(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error("Failed to load brands:", error)
+    }
+  }
+
+  const fetchExportSubcategories = async (parentId) => {
+    try {
+      const params = {}
+      if (parentId && parentId !== 'any') params.category = parentId
+      const { data } = await axios.get(`${config.API_URL}/api/subcategories`, { params })
+      setExportSubcategories(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error("Failed to load subcategories:", error)
     }
   }
 
@@ -325,6 +462,33 @@ const AdminProducts = () => {
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+            <div className="flex items-center gap-2">
+              {totalSelected > 0 && (
+                <span className="text-sm text-gray-600">{totalSelected} selected</span>
+              )}
+              <button
+                onClick={() => handleExport('selected')}
+                disabled={totalSelected === 0}
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm ${totalSelected === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                title="Download selected"
+              >
+                <Download size={16} /> Only Selected Products
+              </button>
+              <button
+                onClick={() => handleExport('page')}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-gray-50"
+                title="Download this page"
+              >
+                <Download size={16} /> This page Products 
+              </button>
+              <button
+                onClick={() => handleExport('all')}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-gray-50"
+                title="Download all (with current filters)"
+              >
+                <Download size={16} /> All Products
+              </button>
+            </div>
 
           </div>
 
@@ -377,6 +541,42 @@ const AdminProducts = () => {
                 </div>
               </div>
 
+              {/* Export by filters: parent category, subcategory, brand */}
+              <div className="mb-4 flex flex-col md:flex-row gap-3 md:items-end">
+                <div className="md:w-56">
+                  <label className="block text-xs text-gray-500 mb-1">Parent Category</label>
+                  <select value={exportParent} onChange={(e) => setExportParent(e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2">
+                    <option value="any">All</option>
+                    {categories.map(c => (
+                      <option key={c._id} value={c._id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:w-56">
+                  <label className="block text-xs text-gray-500 mb-1">Subcategory</label>
+                  <select value={exportSubcat} onChange={(e) => setExportSubcat(e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2">
+                    <option value="any">All</option>
+                    {exportSubcategories.map(s => (
+                      <option key={s._id} value={s._id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:w-56">
+                  <label className="block text-xs text-gray-500 mb-1">Brand</label>
+                  <select value={exportBrand} onChange={(e) => setExportBrand(e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2">
+                    <option value="any">All</option>
+                    {brands.map(b => (
+                      <option key={b._id} value={b._id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:ml-auto">
+                  <button onClick={handleExportByFilters} className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-gray-50" title="Download by selected filters">
+                    <Download size={16} /> Download by filters
+                  </button>
+                </div>
+              </div>
+
               {loading ? (
                 <div className="flex justify-center items-center h-64">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
@@ -387,6 +587,17 @@ const AdminProducts = () => {
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <button
+                              onClick={toggleSelectPage}
+                              className={`inline-flex items-center gap-1 rounded focus:outline-none  ${
+                                isAllOnPageSelected ? 'text-lime-500 hover:text-lime-600' : 'text-gray-600 hover:text-gray-800'
+                              }`}
+                            >
+                              {isAllOnPageSelected ? <CheckSquare size={16} /> : <Square size={16} />}
+                              <span className="sr-only">Select page</span>
+                            </button>
+                          </th>
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -455,6 +666,14 @@ const AdminProducts = () => {
                                     : ""
                                 }`}
                               >
+                                <td className="px-4 py-4 whitespace-nowrap">
+                                  <button
+                                    onClick={() => toggleSelectOne(product._id)}
+                                    className={`${selectedIds.has(product._id) ? 'text-lime-500 hover:text-lime-600' : 'text-gray-600 hover:text-gray-800'} rounded focus:outline-none`}
+                                  >
+                                    {selectedIds.has(product._id) ? <CheckSquare size={16} /> : <Square size={16} />}
+                                  </button>
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="flex items-center">
                                     <div className="h-10 w-10 flex-shrink-0">
@@ -523,6 +742,13 @@ const AdminProducts = () => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                   <div className="flex items-center justify-end space-x-2">
+                                    <button
+                                      onClick={() => exportProductsToExcel([product], `product_${product.sku || product._id}.xlsx`)}
+                                      className="text-gray-700 hover:text-gray-900"
+                                      title="Download this product"
+                                    >
+                                      <Download size={18} />
+                                    </button>
                                  
                                     <button
                                       onClick={() => handleEdit(product)}
@@ -543,7 +769,7 @@ const AdminProducts = () => {
                           })
                         ) : (
                           <tr>
-                            <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                            <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
                               No products found
                             </td>
                           </tr>
@@ -551,6 +777,12 @@ const AdminProducts = () => {
                       </tbody>
                     </table>
                   </div>
+                </div>
+              )}
+              {/* Clear selection */}
+              {totalSelected > 0 && (
+                <div className="flex justify-between items-center mt-3">
+                  <button onClick={clearSelection} className="text-xs text-gray-600 hover:underline">Clear selection</button>
                 </div>
               )}
               {/* Pagination Controls */}
