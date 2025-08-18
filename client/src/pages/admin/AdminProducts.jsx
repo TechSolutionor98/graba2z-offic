@@ -464,26 +464,26 @@ const AdminProducts = () => {
             <h1 className="text-2xl font-bold text-gray-900">Products</h1>
             <div className="flex items-center gap-2">
               {totalSelected > 0 && (
-                <span className="text-sm text-gray-600">{totalSelected} selected</span>
+                <span className="text-sm text-lime-500">{totalSelected} selected</span>
               )}
               <button
                 onClick={() => handleExport('selected')}
                 disabled={totalSelected === 0}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm ${totalSelected === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm ${totalSelected === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white'}`}
                 title="Download selected"
               >
                 <Download size={16} /> Only Selected Products
               </button>
               <button
                 onClick={() => handleExport('page')}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-gray-50"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-white"
                 title="Download this page"
               >
                 <Download size={16} /> This page Products 
               </button>
               <button
                 onClick={() => handleExport('all')}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-gray-50"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-white"
                 title="Download all (with current filters)"
               >
                 <Download size={16} /> All Products
@@ -571,7 +571,7 @@ const AdminProducts = () => {
                   </select>
                 </div>
                 <div className="md:ml-auto">
-                  <button onClick={handleExportByFilters} className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-gray-50" title="Download by selected filters">
+                  <button onClick={handleExportByFilters} className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-white" title="Download by selected filters">
                     <Download size={16} /> Download by filters
                   </button>
                 </div>
