@@ -234,7 +234,8 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedBrands, setSelectedBrands] = useState([])
   const [priceRange, setPriceRange] = useState([0, 10000])
-  const [maxPrice, setMaxPrice] = useState(10000)
+  const [maxPrice, setMaxPrice] = useState(10000) // Will be set to global highest product price
+  const [globalMaxPrice, setGlobalMaxPrice] = useState(null)
   const [sortBy, setSortBy] = useState("newest")
   const [brandSearch, setBrandSearch] = useState("")
   const [subCategories, setSubCategories] = useState([])
@@ -385,11 +386,11 @@ const Shop = () => {
       if (filteredProducts.length > 0) {
         const prices = filteredProducts.map((p) => p.price || 0)
         const minProductPrice = Math.min(...prices)
-        const max = Math.max(...prices)
-        setMaxPrice(max)
+        const filteredMax = Math.max(...prices)
+        // Do not mutate maxPrice here; keep global upper bound fixed
         // Only reset price range if it matches the default (user hasn't changed it)
         if (priceRange[0] === 0 && priceRange[1] === 10000) {
-          setPriceRange([minProductPrice, max])
+          setPriceRange([minProductPrice, globalMaxPrice != null ? globalMaxPrice : filteredMax])
         }
         // Save minProductPrice in state for use in PriceFilter
         setMinPrice(minProductPrice)
@@ -443,11 +444,11 @@ const Shop = () => {
       if (filteredProducts.length > 0) {
         const prices = filteredProducts.map((p) => p.price || 0)
         const minProductPrice = Math.min(...prices)
-        const max = Math.max(...prices)
-        setMaxPrice(max)
+        const filteredMax = Math.max(...prices)
+        // Do not mutate maxPrice here; keep global upper bound fixed
         // Only reset price range if it matches the default (user hasn't changed it)
         if (priceRange[0] === 0 && priceRange[1] === 10000) {
-          setPriceRange([minProductPrice, max])
+          setPriceRange([minProductPrice, globalMaxPrice != null ? globalMaxPrice : filteredMax])
         }
         // Save minProductPrice in state for use in PriceFilter
         setMinPrice(minProductPrice)
@@ -466,6 +467,28 @@ const Shop = () => {
     fetchBrands()
     fetchBanners()
     loadAndFilterProducts()
+  }, [])
+
+  // Compute and fix the global maximum product price on mount (upper bound only)
+  useEffect(() => {
+    const computeGlobalMax = async () => {
+      try {
+        const allProducts = await productCache.getProducts()
+        if (allProducts && allProducts.length > 0) {
+          const prices = allProducts.map((p) => p.price || 0)
+          const globalMax = Math.max(...prices)
+          setGlobalMaxPrice(globalMax)
+          setMaxPrice(globalMax)
+          // If initial priceRange is still default, expand upper bound to global max
+          if (priceRange[0] === 0 && priceRange[1] === 10000) {
+            setPriceRange([0, globalMax])
+          }
+        }
+      } catch (e) {
+        // ignore; keep fallback maxPrice
+      }
+    }
+    computeGlobalMax()
   }, [])
 
   // Filter products from cache when filters change (no API calls)
