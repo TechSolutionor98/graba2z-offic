@@ -62,6 +62,31 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   
   <!-- End Meta Pixel Code -->
 
+
+
+
+
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": product.name,
+      "image": product.images.map(img=>img.url), // array of absolute URLs
+      "description": product.description,
+      "sku": product.sku,
+      "brand": { "@type": "Brand", "name": product.brand },
+      "offers": {
+        "@type": "Offer",
+        "url": ${baseUrl}/product/${product.slug},
+        "priceCurrency": product.currency,
+        "price": product.price,
+        "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+      },
+      ...(product.aggregateRating && { "aggregateRating": product.aggregateRating }),
+      ...(product.shipping && { "shippingDetails": product.shipping }),
+      ...(product.returnPolicy && { "hasMerchantReturnPolicy": product.returnPolicy })
+    })}
+  </script>
   
   
   
