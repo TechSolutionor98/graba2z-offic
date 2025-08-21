@@ -455,6 +455,31 @@ const ProductDetails = () => {
     return null
   }
 
+  // Track product view in Google Tag Manager
+  useEffect(() => {
+    if (product && product._id) {
+      // Push product view to data layer
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'view_item',
+        'ecommerce': {
+          'currency': 'AED',
+          'value': product.offerPrice && product.offerPrice > 0 ? product.offerPrice : product.price,
+          'items': [{
+            'item_id': product._id,
+            'item_name': product.name,
+            'item_category': product.parentCategory?.name || product.category?.name || 'Uncategorized',
+            'item_brand': product.brand?.name || 'Unknown',
+            'price': product.offerPrice && product.offerPrice > 0 ? product.offerPrice : product.price,
+            'quantity': 1
+          }]
+        }
+      });
+      
+      console.log('Product view tracked:', product.name); // For debugging
+    }
+  }, [product]);
+
   return (
     <div className="bg-white min-h-screen">
       <div className="max-w-8xl mx-auto px-4 py-6">

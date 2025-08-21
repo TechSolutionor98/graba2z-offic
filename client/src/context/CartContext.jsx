@@ -1,4 +1,3 @@
-
 "use client"
 
 import { createContext, useState, useEffect, useContext } from "react"
@@ -40,52 +39,77 @@ export const CartProvider = ({ children }) => {
   }, [cartItems])
 
   const addToCart = (product, quantity = 1) => {
-    // Determine the correct price to use
-    const basePrice = Number(product.price) || 0
-    const offerPrice = Number(product.offerPrice) || 0
+    const existingItem = cartItems.find((item) => item._id === product._id)
+    const finalPrice = product.offerPrice && product.offerPrice > 0 ? product.offerPrice : product.price
     
-    // Logic: Use offer price if it exists and is valid, otherwise use base price
-    let finalPrice = basePrice  // Default to base price
-    
-    if (offerPrice > 0 && offerPrice < basePrice) {
-      // Valid offer price exists, use it
-      finalPrice = offerPrice
-    }
-    // If offer price is 0 or null, finalPrice remains as basePrice
-    
-    // Create cart item with correct pricing
-    const cartItem = {
-      ...product,
-      price: finalPrice,           // The price we're charging (offer price or base price)
-      originalPrice: basePrice,    // Store original price for display
-      basePrice: basePrice,        // Store base price for calculations
-      offerPrice: offerPrice || 0, // Store offer price for reference (0 if null)
-      quantity
-    }
-    
-    setCartItems((prevItems) => {
-      const existingItemIndex = prevItems.findIndex((item) => item._id === product._id)
-
-      if (existingItemIndex > -1) {
-        // Item exists, update quantity
-        const updatedItems = [...prevItems]
-        updatedItems[existingItemIndex] = {
-          ...updatedItems[existingItemIndex],
-          quantity: updatedItems[existingItemIndex].quantity + quantity,
-        }
-        showToast(`Updated ${product.name} quantity in cart`, "success")
-        return updatedItems
-      } else {
-        // Item doesn't exist, add new item
-        showToast(`Added ${product.name} to cart`, "success")
-        return [...prevItems, cartItem]
+    if (existingItem) {
+      // Item exists, update quantity
+      const updatedItems = cartItems.map((item) =>
+        item._id === product._id ? { ...item, quantity: item.quantity + quantity } : item
+      )
+      setCartItems(updatedItems)
+      showToast(`Updated ${product.name} quantity in cart`, "success")
+    } else {
+      // Item doesn't exist, add new item
+      const newItem = {
+        ...product,
+        price: finalPrice,           // The price we're charging (offer price or base price)
+        originalPrice: product.price,    // Store original price for display
+        basePrice: product.price,        // Store base price for calculations
+        offerPrice: product.offerPrice || 0, // Store offer price for reference (0 if null)
+        quantity
       }
-    })
+      setCartItems([...cartItems, newItem])
+      showToast(`Added ${product.name} to cart`, "success")
+    }
+
+    // Push add to cart event to data layer
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      'event': 'add_to_cart',
+      'ecommerce': {
+        'currency': 'AED',
+        'value': finalPrice * quantity,
+        'items': [{
+          'item_id': product._id,
+          'item_name': product.name,
+          'item_category': product.parentCategory?.name || product.category?.name || 'Uncategorized',
+          'item_brand': product.brand?.name || 'Unknown',
+          'price': finalPrice,
+          'quantity': quantity
+        }]
+      }
+    });
+
+    console.log('Add to cart tracked:', product.name, quantity); // For debugging
   }
 
   const removeFromCart = (productId) => {
     const product = cartItems.find((item) => item._id === productId)
-    setCartItems((prevItems) => prevItems.filter((item) => item._id !== productId))
+    
+    if (product) {
+      // Push remove from cart event to data layer
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'remove_from_cart',
+        'ecommerce': {
+          'currency': 'AED',
+          'value': product.price * product.quantity,
+          'items': [{
+            'item_id': product._id,
+            'item_name': product.name,
+            'item_category': product.parentCategory?.name || product.category?.name || 'Uncategorized',
+            'item_brand': product.brand?.name || 'Unknown',
+            'price': product.price,
+            'quantity': product.quantity
+          }]
+        }
+      });
+      
+      console.log('Remove from cart tracked:', product.name); // For debugging
+    }
+    
+    setCartItems(cartItems.filter((item) => item._id !== productId))
     if (product) {
       showToast(`Removed ${product.name} from cart`, "success")
     }

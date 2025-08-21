@@ -56,6 +56,30 @@ const Cart = () => {
     fetchTax()
   }, [])
 
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      // Push view cart event to data layer
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'view_cart',
+        'ecommerce': {
+          'currency': 'AED',
+          'value': cartTotal,
+          'items': cartItems.map(item => ({
+            'item_id': item._id,
+            'item_name': item.name,
+            'item_category': item.parentCategory?.name || item.category?.name || 'Uncategorized',
+            'item_brand': item.brand?.name || 'Unknown',
+            'price': item.price,
+            'quantity': item.quantity
+          }))
+        }
+      });
+      
+      console.log('View cart tracked, items:', cartItems.length); // For debugging
+    }
+  }, []); // Run only once when component mounts
+
   const handleQuantityChange = (productId, newQuantity) => {
     updateQuantity(productId, newQuantity)
   }

@@ -1,8 +1,31 @@
-import React from "react"
-import { useNavigate } from "react-router-dom"
+import React, { useEffect } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 
 const PaymentSuccess = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search)
+    const orderId = urlParams.get('orderId') || urlParams.get('order_id')
+    const total = urlParams.get('total') || urlParams.get('amount')
+    
+    if (orderId) {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'purchase',
+        'ecommerce': {
+          'transaction_id': orderId,
+          'currency': 'AED',
+          'value': total || 0,
+          'payment_type': 'online_payment'
+        }
+      });
+      
+      console.log('Purchase tracked (Online Payment):', orderId); // For debugging
+    }
+  }, [location])
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="bg-lime-100 rounded-full w-24 h-24 flex items-center justify-center mb-6">
@@ -20,4 +43,4 @@ const PaymentSuccess = () => {
   )
 }
 
-export default PaymentSuccess 
+export default PaymentSuccess

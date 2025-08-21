@@ -1032,6 +1032,31 @@ const Checkout = () => {
     animation: "bounce 1s infinite",
   }
 
+  // Track begin_checkout event
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      // Push begin checkout event to data layer
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'begin_checkout',
+        'ecommerce': {
+          'currency': 'AED',
+          'value': finalTotal,
+          'items': cartItems.map(item => ({
+            'item_id': item._id,
+            'item_name': item.name,
+            'item_category': item.parentCategory?.name || item.category?.name || 'Uncategorized',
+            'item_brand': item.brand?.name || 'Unknown',
+            'price': item.price,
+            'quantity': item.quantity
+          }))
+        }
+      });
+      
+      console.log('Begin checkout tracked, total:', finalTotal); // For debugging
+    }
+  }, []); // Empty dependency array to run only once when component mounts
+
   if (cartItems.length === 0) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-10 text-center">
