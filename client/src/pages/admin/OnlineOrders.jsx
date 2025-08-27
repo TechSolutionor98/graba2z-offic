@@ -45,13 +45,13 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           <img
               src="/BLACK.png"
               alt="Right Logo"
-              className="w-40 h-20 object-contain"
+              className="w-50 h-20 object-contain"
               onError={(e) => {
                 e.target.style.display = "none"
                 e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
               }}
             />
-            TRN: 100349772200003
+          <p className="ml-7"> TRN: 100349772200003</p>
           </div>
           
           {/* Right Logo */}
@@ -69,7 +69,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
         </div>
 
-        <div className="flex justify-between items-start gap-6">
+        <div className="flex justify-between items-start gap-6 ml-2">
           <div className="w-1/2 p-5 ">
             <h2 className="text-2xl font-bold mb-1">CONTACT DETAILS</h2>
             <p className="text-black text-sm italic mb-2"><strong>We Are Here For You</strong></p>
@@ -81,7 +81,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
 
           <div className="w-1/2 text-end p-5   rounded-xl backdrop-blur-sm max-w-xs ml-auto">
-            <h2 className="text-2xl font-bold mb-1">INVOICE</h2>
+            <h2 className="text-2xl font-bold mb-1">TAX INVOICE</h2>
             <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
             <div className="text-sm">📅 Date: {orderDate}</div>
            
