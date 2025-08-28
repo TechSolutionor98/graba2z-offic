@@ -42,7 +42,21 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         <div className="relative z-10 flex justify-between items-start w-full">
           {/* Left Logo */}
           <div className="flex-shrink-0">
-            <img
+          <img
+              src="/BLACK.png"
+              alt="Right Logo"
+              className="w-50 h-20 object-contain"
+              onError={(e) => {
+                e.target.style.display = "none"
+                e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
+              }}
+            />
+          <p className="ml-7"> TRN: 100349772200003</p>
+          </div>
+          
+          {/* Right Logo */}
+          <div className="flex-shrink-0">
+             <img
               src="/admin-logo.svg"
               alt="Left Logo"
               className="w-40 h-20 object-contain"
@@ -51,22 +65,11 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                 e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
               }}
             />
-          </div>
-          {/* Right Logo */}
-          <div className="flex-shrink-0">
-            <img
-              src="/BLACK.png"
-              alt="Right Logo"
-              className="w-40 h-20 object-contain"
-              onError={(e) => {
-                e.target.style.display = "none"
-                e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
-              }}
-            />
+           A Brand By Crown Excel
           </div>
         </div>
 
-        <div className="flex justify-between items-start gap-6">
+        <div className="flex justify-between items-start gap-6 ml-2">
           <div className="w-1/2 p-5 ">
             <h2 className="text-2xl font-bold mb-1">CONTACT DETAILS</h2>
             <p className="text-black text-sm italic mb-2"><strong>We Are Here For You</strong></p>
@@ -78,10 +81,10 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
 
           <div className="w-1/2 text-end p-5   rounded-xl backdrop-blur-sm max-w-xs ml-auto">
-            <h2 className="text-2xl font-bold mb-1">INVOICE</h2>
+            <h2 className="text-2xl font-bold mb-1">TAX INVOICE</h2>
             <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
             <div className="text-sm">📅 Date: {orderDate}</div>
-            <div className="text-xs mt-2 opacity-80">🖨️ Printed: {currentDate}</div>
+           
           </div>
 
         </div>
@@ -170,29 +173,43 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               <span>💰 Sub-Total:</span>
               <span className="font-medium">{formatPrice(order.itemsPrice || 0)}</span>
             </div>
+            {/* Discount amount (AED) - now placed right below Sub-Total */}
+            {(() => {
+              const subtotal = Number(order.itemsPrice || 0)
+              const shipping = Number(order.shippingPrice || 0)
+              const tax = Number(order.taxPrice || 0)
+              const total = Number(order.totalPrice || 0)
+              // Prefer explicit discountAmount if present; otherwise derive it from totals
+              const explicit = Number(order.discountAmount || 0)
+              let expected = subtotal + shipping + (tax > 0 ? tax : 0)
+              const derived = total > 0 ? Math.max(0, expected - total) : 0
+              const discountAmt = explicit > 0 ? explicit : derived
+              return discountAmt > 0 ? (
+                <div className="flex justify-between text-gray-700">
+                  <span>🎉 Discount:</span>
+                  <span className="font-medium text-gray-700">-{formatPrice(discountAmt)}</span>
+                </div>
+              ) : null
+            })()}
 
-            <div className="flex justify-between text-gray-700">
-              <span>✔️ Tax (VAT):</span>
-              <span className="font-medium">Included</span>
-            </div>
+            {(() => {
+              const total = Number(order.totalPrice || 0)
+              const vat = total > 0 ? total * 0.05 : 0
+              return (
+                <div className="flex justify-between text-gray-700">
+                  <span>✔️ Tax (VAT):</span>
+                  <span className="font-medium">{formatPrice(vat)}</span>
+                </div>
+              )
+            })()}
 
             <div className="flex justify-between text-gray-700">
               <span>🚚 Shipping Charge:</span>
               <span className="font-medium">{formatPrice(order.shippingPrice || 0)}</span>
             </div>
-            {order.taxPrice > 0 && (
-              <div className="flex justify-between text-gray-700">
-                <span>🧾 Tax:</span>
-                <span className="font-medium">{formatPrice(order.taxPrice)}</span>
-              </div>
-            )}
+            {/* Removed redundant "Tax" row; VAT above reflects 5% of dynamic Total Price */}
 
-            {order.discountAmount > 0 && (
-              <div className="flex justify-between text-gray-700">
-                <span>🎉 Discount:</span>
-                <span className="font-medium text-green-600">-{formatPrice(order.discountAmount)}</span>
-              </div>
-            )}
+            {/* Discount line already shown above under Shipping Charge */}
             <div className="border-t-2 border-lime-500">
               <div className="flex justify-between text-xl font-bold text-lime-800 bg-lime-100 p-2 rounded-lg">
                 <span> TOTAL AMOUNT:</span>
@@ -290,7 +307,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         )}
       </div>
 
-
+         <div className="text-xs text-end mt-2 opacity-80">🖨️ Printed: {currentDate}</div>
     </div>
   )
 })
