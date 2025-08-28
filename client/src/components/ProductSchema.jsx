@@ -10,23 +10,27 @@ const ProductSchema = ({ product }) => {
       existingSchema.remove();
     }
 
-    // Create properly structured schema
+    // Create clean schema with proper structure
     const schema = {
       "@context": "https://schema.org/",
       "@type": "Product",
       "name": product.name || product.title,
-      "image": product.image || product.thumbnail,
-      "description": product.description || product.shortDescription || product.name,
+      "image": [product.image || product.thumbnail],
+      "description": product.description ? product.description.replace(/<[^>]*>/g, '') : '', // Remove HTML tags
       "url": window.location.href,
       "sku": product.sku || product._id,
+      "category": typeof product.category === 'string' ? product.category : product.category?.name,
       "brand": {
         "@type": "Brand",
-        "name": product.brand,
+        "name": typeof product.brand === 'string' ? product.brand : product.brand?.name || "Dell"
       },
-      "category": product.category?.name ,
+      "manufacturer": {
+        "@type": "Organization", 
+        "name": typeof product.brand === 'string' ? product.brand : product.brand?.name || "Dell"
+      },
       "offers": {
         "@type": "Offer",
-        "price": product.price?.toString() ,
+        "price": product.price?.toString() || "0",
         "priceCurrency": "AED",
         "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
         "url": window.location.href,
@@ -37,21 +41,13 @@ const ProductSchema = ({ product }) => {
       }
     };
 
-    // Add manufacturer if brand exists
-    if (product.brand) {
-      schema.manufacturer = {
-        "@type": "Organization",
-        "name": product.brand
-      };
-    }
-
-    // Add rating only if it exists and is valid
+    // Add rating if exists
     if (product.rating && product.rating > 0) {
       schema.aggregateRating = {
         "@type": "AggregateRating",
         "ratingValue": product.rating.toString(),
         "bestRating": "5",
-        "worstRating": "1",
+        "worstRating": "1", 
         "ratingCount": (product.reviewCount || 1).toString()
       };
     }
