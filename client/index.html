@@ -68,30 +68,39 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 
 
-
-  <script type="application/ld+json">
-    {JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": product.name,
-      "image": product.images.map(img=>img.url), // array of absolute URLs
-      "description": product.description,
-      "sku": product.sku,
-      "brand": { "@type": "Brand", "name": product.brand },
-      "offers": {
-        "@type": "Offer",
-        "url": ${baseUrl}/product/${product.slug},
-        "priceCurrency": product.currency,
-        "price": product.price,
-        "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-      },
-      ...(product.aggregateRating && { "aggregateRating": product.aggregateRating }),
-      ...(product.shipping && { "shippingDetails": product.shipping }),
-      ...(product.returnPolicy && { "hasMerchantReturnPolicy": product.returnPolicy })
-    })}
-  </script>
-  
-  
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "Grab A to Z Products ",
+  "image": "https://www.silveredgepackaging.com/wp-content/uploads/2021/09/Cardboard-Pizza-Box-5-min.webp",
+  "description": "Grab A to Z Products ",
+  "url": "https://www.silveredgepackaging.com/product/custom-cardboard-pizza-box/",
+  "brand": {
+    "@type": "Brand",
+    "name": "Grab AtoZ"
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "USD",
+    "price": "0.1",
+    "availability": "http://schema.org/InStock",
+    "seller": {
+      "@type": "Organization",
+      "name": "Silver Edge Packaging",
+      "telephone": "+1(888) 507-2025",
+      "email": "sales@silveredgepackaging.com"
+    }
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.0",
+    "bestRating": "5",
+    "worstRating": "1",
+    "ratingCount": "24"
+  }
+}
+</script>
   
   
   </head>
