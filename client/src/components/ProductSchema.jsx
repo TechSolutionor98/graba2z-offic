@@ -10,23 +10,24 @@ const ProductSchema = ({ product }) => {
       existingSchema.remove();
     }
 
-    // Create new schema with proper structure
+    // Create properly structured schema
     const schema = {
       "@context": "https://schema.org/",
       "@type": "Product",
       "name": product.name || product.title,
-      "image": Array.isArray(product.images) ? product.images : [product.image || product.thumbnail],
-      "description": product.description || product.shortDescription,
+      "image": product.image || product.thumbnail,
+      "description": product.description || product.shortDescription || product.name,
       "url": window.location.href,
       "sku": product.sku || product._id,
       "brand": {
         "@type": "Brand",
-        "name": product.brand || "Grab AtoZ"  // This should be a string, not an object
+        "name": product.brand,
       },
+      "category": product.category?.name ,
       "offers": {
         "@type": "Offer",
+        "price": product.price?.toString() ,
         "priceCurrency": "AED",
-        "price": product.price?.toString() || "0",
         "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
         "url": window.location.href,
         "seller": {
@@ -36,7 +37,15 @@ const ProductSchema = ({ product }) => {
       }
     };
 
-    // Add rating if exists
+    // Add manufacturer if brand exists
+    if (product.brand) {
+      schema.manufacturer = {
+        "@type": "Organization",
+        "name": product.brand
+      };
+    }
+
+    // Add rating only if it exists and is valid
     if (product.rating && product.rating > 0) {
       schema.aggregateRating = {
         "@type": "AggregateRating",
@@ -45,11 +54,6 @@ const ProductSchema = ({ product }) => {
         "worstRating": "1",
         "ratingCount": (product.reviewCount || 1).toString()
       };
-    }
-
-    // Add category if exists
-    if (product.category) {
-      schema.category = product.category;
     }
 
     // Inject schema
