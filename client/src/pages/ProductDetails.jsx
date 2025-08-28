@@ -33,6 +33,7 @@ import { productsAPI } from "../services/api.js"
 import { trackProductView } from '../utils/gtmTracking';
 
 import config from "../config/config"
+import ProductSchema from '../components/ProductSchema';
 
 const WHATSAPP_NUMBER = '971508604360'; // Replace with your WhatsApp number
 
@@ -1289,6 +1290,9 @@ const ProductDetails = () => {
           )}
         </div>
       </div>
+
+      {/* ADD ONLY THIS LINE */}
+      <ProductSchema product={product} />
 
       {/* Image Modal */}
       {showImageModal && (
