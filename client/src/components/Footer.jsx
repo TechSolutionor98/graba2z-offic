@@ -267,9 +267,9 @@ const Footer = ({ className = "" }) => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/blogs" className="hover:text-lime-400">
-                    Blog
-                  </Link>
+                  <a href="https://blog.grabatoz.ae/"  rel="noopener noreferrer" className="hover:text-lime-400">
+  Blog
+</a>
                 </li>
                 <li>
                   <Link to="/shop" className="hover:text-lime-400">
@@ -374,9 +374,9 @@ const Footer = ({ className = "" }) => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/blogs" className="text-gray-700 hover:text-orange-500">
-                    Blog
-                  </Link>
+                   <a href="https://blog.grabatoz.ae/" rel="noopener noreferrer" className="text-gray-700 hover:text-orange-500">
+    Blog
+  </a>
                 </li>
                 <li>
                   <Link to="/shop" className="text-gray-700 hover:text-orange-500">
