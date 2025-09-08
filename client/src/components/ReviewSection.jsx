@@ -26,6 +26,7 @@ const ReviewSection = ({ productId }) => {
     totalReviews: 0,
     ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
   });
+
   const [loading, setLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -65,12 +66,25 @@ const ReviewSection = ({ productId }) => {
       setLoading(true);
       const response = await axios.get(`/api/reviews/product/${productId}?page=${currentPage}&limit=10`);
       
-      setReviews(response.data.reviews);
-      setStats(response.data.stats);
-      setTotalPages(response.data.pagination.totalPages);
+      setReviews(response.data.reviews || []);
+      // Add null checks and default values
+      setStats({
+        averageRating: response.data.stats?.averageRating || 0,
+        totalReviews: response.data.stats?.totalReviews || 0,
+        ratingDistribution: response.data.stats?.ratingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+      });
+      setTotalPages(response.data.pagination?.totalPages || 1);
     } catch (error) {
       console.error('Error fetching reviews:', error);
       showToast('Error loading reviews', 'error');
+      // Set default values on error
+      setReviews([]);
+      setStats({
+        averageRating: 0,
+        totalReviews: 0,
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+      });
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -243,16 +257,16 @@ const ReviewSection = ({ productId }) => {
       {/* Review Summary */}
       <div className="bg-gray-50 rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Overall Rating */}
+          {/* Overall Rating - Add null checks */}
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-900 mb-2">
-              {stats.averageRating.toFixed(1)}
+              {(stats?.averageRating || 0).toFixed(1)}
             </div>
             <div className="flex justify-center mb-2">
-              {renderStars(Math.round(stats.averageRating))}
+              {renderStars(Math.round(stats?.averageRating || 0))}
             </div>
             <div className="text-gray-600">
-              Based on {stats.totalReviews} review{stats.totalReviews !== 1 ? 's' : ''}
+              Based on {stats?.totalReviews || 0} review{(stats?.totalReviews || 0) !== 1 ? 's' : ''}
             </div>
           </div>
 
