@@ -73,6 +73,12 @@ import AdminSubCategories from "./pages/admin/AdminSubCategories"
 import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
 
+// Add review management imports
+import AdminReviews from "./pages/admin/AdminReviews";
+import AdminReviewsPending from "./pages/admin/AdminReviewsPending";
+import AdminReviewsApproved from "./pages/admin/AdminReviewsApproved";
+import AdminReviewsRejected from "./pages/admin/AdminReviewsRejected";
+
 // Add other admin pages as needed
 import AddProduct from "./pages/admin/AddProduct"
 import AddCategory from "./pages/admin/AddCategory"
@@ -157,6 +163,13 @@ function App() {
                           <Route path="orders/on-hold" element={<OnHold />} />
                           <Route path="orders/rejected" element={<Rejected />} />
                           <Route path="orders/online" element={<OnlineOrders />} />
+                          
+                          {/* Review Management Routes */}
+                          <Route path="reviews" element={<AdminReviews />} />
+                          <Route path="reviews/pending" element={<AdminReviewsPending />} />
+                          <Route path="reviews/approved" element={<AdminReviewsApproved />} />
+                          <Route path="reviews/rejected" element={<AdminReviewsRejected />} />
+                          
                           <Route path="users" element={<AdminUsers />} />
                           <Route path="categories" element={<AdminCategories />} />
                           <Route path="categories/add" element={<AddCategory />} />
@@ -244,22 +257,9 @@ function App() {
                           <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="/backtoschool-acer-gaming" element={<BackToSchoolGaming />} />
                           <Route path="/backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
-
-
-
-
                           <Route path="/voucher-terms" element={<VoucherTerms />} />
-                       
-                       
-                        <Route path="/delivery-terms" element={<DeliveryTerms />} />
-                       
-                       
-                       
-                       
-                       
-                       
-                       
-                       
+                          <Route path="/delivery-terms" element={<DeliveryTerms />} />
+                          
                           {/* Protected Routes */}
                           <Route
                             path="/checkout"

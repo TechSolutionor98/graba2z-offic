@@ -1,8 +1,11 @@
 const config = {
     // API Configuration - Handle both development and production
-    API_URL: import.meta.env.VITE_API_URL || 
-              (import.meta.env.PROD ? "https://api.grabatoz.ae" : "http://localhost:5000"),
+    //API_URL:  'localhost:5000', // Make sure to include http:// or https://
+     API_URL: import.meta.env.VITE_API_URL || 'https://api.grabatoz.ae',
+   
      
+ 
+
 
     // Payment Gateway Configuration
     TAMARA_API_KEY: import.meta.env.VITE_TAMARA_API_KEY,

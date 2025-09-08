@@ -23,6 +23,7 @@ import {
   BookOpen,
   Truck,
   Phone,
+  Star, // Add Star icon for reviews
 } from "lucide-react"
 
 const AdminSidebar = () => {
@@ -44,6 +45,7 @@ const AdminSidebar = () => {
     blogs: false,
     subcategories: false,
     coupons: false,
+    reviews: false, // Add reviews dropdown
   })
 
   // Auto-open dropdowns based on current route
@@ -109,6 +111,11 @@ const AdminSidebar = () => {
     // Coupons dropdown - open if any coupon-related route is active
     if (path.includes("/admin/coupons")) {
       newOpenDropdowns.coupons = true
+    }
+
+    // Reviews dropdown - open if any review-related route is active
+    if (path.includes("/admin/reviews")) {
+      newOpenDropdowns.reviews = true
     }
 
     // Individual dropdowns
@@ -305,6 +312,17 @@ const AdminSidebar = () => {
         { title: "Delivered", path: "/admin/orders/delivered" },
         { title: "On Hold", path: "/admin/orders/on-hold" },
         { title: "Rejected", path: "/admin/orders/rejected" },
+      ],
+    },
+    {
+      title: "Reviews",
+      icon: Star,
+      dropdown: "reviews",
+      items: [
+        { title: "All Reviews", path: "/admin/reviews" },
+        { title: "Pending Reviews", path: "/admin/reviews/pending" },
+        { title: "Approved Reviews", path: "/admin/reviews/approved" },
+        { title: "Rejected Reviews", path: "/admin/reviews/rejected" },
       ],
     },
     {
