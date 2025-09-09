@@ -1,199 +1,193 @@
-import React, { useState, useEffect, useRef } from 'react';
+"use client"
+
+import { useState, useEffect, useRef } from "react"
 // Fix the import - use useAuth hook instead of AuthContext
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
-import axios from 'axios';
-import { 
-  Star, 
-  Upload, 
-  X, 
-  ThumbsUp, 
-  Flag, 
-  User,
-  Image as ImageIcon,
-  CheckCircle,
-  AlertCircle
-} from 'lucide-react';
+import { useAuth } from "../context/AuthContext"
+import { useToast } from "../context/ToastContext"
+import axios from "axios"
+import config from "../config/config.js"
+import { Star, X, ThumbsUp, Flag, User, ImageIcon, CheckCircle } from "lucide-react"
 
 const ReviewSection = ({ productId }) => {
   // Use the useAuth hook instead of AuthContext
-  const { user } = useAuth();
-  const { showToast } = useToast();
-  
-  const [reviews, setReviews] = useState([]);
+  const { user } = useAuth()
+  const { showToast } = useToast()
+
+  const [reviews, setReviews] = useState([])
   const [stats, setStats] = useState({
     averageRating: 0,
     totalReviews: 0,
-    ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
-  });
+    ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+  })
 
-  const [loading, setLoading] = useState(true);
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [submittingReview, setSubmittingReview] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const fileInputRef = useRef(null);
-  
+  const [loading, setLoading] = useState(true)
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [submittingReview, setSubmittingReview] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const fileInputRef = useRef(null)
+
   const [reviewForm, setReviewForm] = useState({
     rating: 5,
-    comment: '',
-    name: user?.name || '',
-    email: user?.email || ''
-  });
+    comment: "",
+    name: user?.name || "",
+    email: user?.email || "",
+  })
 
   // Fetch reviews when component mounts or page changes
   useEffect(() => {
     if (productId) {
-      fetchReviews();
+      fetchReviews()
     }
-  }, [productId, currentPage]);
+  }, [productId, currentPage])
 
   // Update form when user changes
   useEffect(() => {
     if (user) {
-      setReviewForm(prev => ({
+      setReviewForm((prev) => ({
         ...prev,
-        name: user.name || '',
-        email: user.email || ''
-      }));
+        name: user.name || "",
+        email: user.email || "",
+      }))
     }
-  }, [user]);
+  }, [user])
 
   const fetchReviews = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(`/api/reviews/product/${productId}?page=${currentPage}&limit=10`);
-      
-      setReviews(response.data.reviews || []);
+      setLoading(true)
+      const response = await axios.get(
+        `${config.API_URL}/api/reviews/product/${productId}?page=${currentPage}&limit=10`,
+      )
+
+      setReviews(response.data.reviews || [])
       // Add null checks and default values
       setStats({
         averageRating: response.data.stats?.averageRating || 0,
         totalReviews: response.data.stats?.totalReviews || 0,
-        ratingDistribution: response.data.stats?.ratingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
-      });
-      setTotalPages(response.data.pagination?.totalPages || 1);
+        ratingDistribution: response.data.stats?.ratingDistribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      })
+      setTotalPages(response.data.pagination?.totalPages || 1)
     } catch (error) {
-      console.error('Error fetching reviews:', error);
-      showToast('Error loading reviews', 'error');
+      console.error("Error fetching reviews:", error)
+      showToast("Error loading reviews", "error")
       // Set default values on error
-      setReviews([]);
+      setReviews([])
       setStats({
         averageRating: 0,
         totalReviews: 0,
-        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
-      });
-      setTotalPages(1);
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      })
+      setTotalPages(1)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleImageSelect = (event) => {
-    const file = event.target.files[0];
+    const file = event.target.files[0]
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        showToast('Please select an image file', 'error');
-        return;
+      if (!file.type.startsWith("image/")) {
+        showToast("Please select an image file", "error")
+        return
       }
 
       // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
-        showToast('Image size must be less than 5MB', 'error');
-        return;
+        showToast("Image size must be less than 5MB", "error")
+        return
       }
 
-      setSelectedImage(file);
-      
+      setSelectedImage(file)
+
       // Create preview
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onload = (e) => {
-        setImagePreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
+        setImagePreview(e.target.result)
+      }
+      reader.readAsDataURL(file)
     }
-  };
+  }
 
   const removeImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
+    setSelectedImage(null)
+    setImagePreview(null)
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = ""
     }
-  };
+  }
 
   const handleSubmitReview = async (e) => {
-    e.preventDefault();
-    
+    e.preventDefault()
+
     // Validation
     if (!reviewForm.comment.trim()) {
-      showToast('Please write a review comment', 'error');
-      return;
+      showToast("Please write a review comment", "error")
+      return
     }
 
     if (!user && (!reviewForm.name.trim() || !reviewForm.email.trim())) {
-      showToast('Please provide your name and email', 'error');
-      return;
+      showToast("Please provide your name and email", "error")
+      return
     }
 
     try {
-      setSubmittingReview(true);
+      setSubmittingReview(true)
 
-      const formData = new FormData();
-      formData.append('productId', productId);
-      formData.append('rating', reviewForm.rating);
-      formData.append('comment', reviewForm.comment.trim());
-      
+      const formData = new FormData()
+      formData.append("productId", productId)
+      formData.append("rating", reviewForm.rating)
+      formData.append("comment", reviewForm.comment.trim())
+
       if (!user) {
-        formData.append('name', reviewForm.name.trim());
-        formData.append('email', reviewForm.email.trim());
+        formData.append("name", reviewForm.name.trim())
+        formData.append("email", reviewForm.email.trim())
       }
 
       if (selectedImage) {
-        formData.append('image', selectedImage);
+        formData.append("image", selectedImage)
       }
 
-      const config = {
+      const requestConfig = {
         headers: {
-          'Content-Type': 'multipart/form-data',
-        }
-      };
+          "Content-Type": "multipart/form-data",
+        },
+      }
 
       // Add auth token if user is logged in
       if (user) {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token")
         if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+          requestConfig.headers.Authorization = `Bearer ${token}`
         }
       }
 
-      await axios.post('/api/reviews', formData, config);
+      await axios.post(`${config.API_URL}/api/reviews`, formData, requestConfig)
 
-      showToast('Review submitted successfully! It will be visible after admin approval.', 'success');
-      
+      showToast("Review submitted successfully! It will be visible after admin approval.", "success")
+
       // Reset form
       setReviewForm({
         rating: 5,
-        comment: '',
-        name: user?.name || '',
-        email: user?.email || ''
-      });
-      removeImage();
-      setShowReviewForm(false);
-      
-      // Refresh reviews
-      fetchReviews();
+        comment: "",
+        name: user?.name || "",
+        email: user?.email || "",
+      })
+      removeImage()
+      setShowReviewForm(false)
 
+      // Refresh reviews
+      fetchReviews()
     } catch (error) {
-      console.error('Error submitting review:', error);
-      const message = error.response?.data?.message || 'Error submitting review';
-      showToast(message, 'error');
+      console.error("Error submitting review:", error)
+      const message = error.response?.data?.message || "Error submitting review"
+      showToast(message, "error")
     } finally {
-      setSubmittingReview(false);
+      setSubmittingReview(false)
     }
-  };
+  }
 
   const renderStars = (rating, interactive = false, onRate = null) => {
     return (
@@ -203,29 +197,23 @@ const ReviewSection = ({ productId }) => {
             key={star}
             type="button"
             onClick={() => interactive && onRate && onRate(star)}
-            className={`${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'} transition-transform`}
+            className={`${interactive ? "cursor-pointer hover:scale-110" : "cursor-default"} transition-transform`}
             disabled={!interactive}
           >
-            <Star
-              className={`w-5 h-5 ${
-                star <= rating 
-                  ? 'text-yellow-400 fill-current' 
-                  : 'text-gray-300'
-              }`}
-            />
+            <Star className={`w-5 h-5 ${star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"}`} />
           </button>
         ))}
       </div>
-    );
-  };
+    )
+  }
 
   const renderRatingDistribution = () => {
     return (
       <div className="space-y-2">
         {[5, 4, 3, 2, 1].map((rating) => {
-          const count = stats.ratingDistribution[rating] || 0;
-          const percentage = stats.totalReviews > 0 ? (count / stats.totalReviews) * 100 : 0;
-          
+          const count = stats.ratingDistribution[rating] || 0
+          const percentage = stats.totalReviews > 0 ? (count / stats.totalReviews) * 100 : 0
+
           return (
             <div key={rating} className="flex items-center space-x-2">
               <span className="text-sm font-medium w-3">{rating}</span>
@@ -238,18 +226,18 @@ const ReviewSection = ({ productId }) => {
               </div>
               <span className="text-sm text-gray-600 w-8">{count}</span>
             </div>
-          );
+          )
         })}
       </div>
-    );
-  };
+    )
+  }
 
   if (loading) {
     return (
       <div className="flex justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-500"></div>
       </div>
-    );
+    )
   }
 
   return (
@@ -259,14 +247,10 @@ const ReviewSection = ({ productId }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Overall Rating - Add null checks */}
           <div className="text-center">
-            <div className="text-4xl font-bold text-gray-900 mb-2">
-              {(stats?.averageRating || 0).toFixed(1)}
-            </div>
-            <div className="flex justify-center mb-2">
-              {renderStars(Math.round(stats?.averageRating || 0))}
-            </div>
+            <div className="text-4xl font-bold text-gray-900 mb-2">{(stats?.averageRating || 0).toFixed(1)}</div>
+            <div className="flex justify-center mb-2">{renderStars(Math.round(stats?.averageRating || 0))}</div>
             <div className="text-gray-600">
-              Based on {stats?.totalReviews || 0} review{(stats?.totalReviews || 0) !== 1 ? 's' : ''}
+              Based on {stats?.totalReviews || 0} review{(stats?.totalReviews || 0) !== 1 ? "s" : ""}
             </div>
           </div>
 
@@ -298,8 +282,8 @@ const ReviewSection = ({ productId }) => {
             <h4 className="text-lg font-medium text-gray-900">Write a Review</h4>
             <button
               onClick={() => {
-                setShowReviewForm(false);
-                removeImage();
+                setShowReviewForm(false)
+                removeImage()
               }}
               className="text-gray-400 hover:text-gray-600"
             >
@@ -310,39 +294,29 @@ const ReviewSection = ({ productId }) => {
           <form onSubmit={handleSubmitReview} className="space-y-4">
             {/* Rating */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your Rating
-              </label>
-              {renderStars(reviewForm.rating, true, (rating) => 
-                setReviewForm(prev => ({ ...prev, rating }))
-              )}
+              <label className="block text-sm font-medium text-gray-700 mb-2">Your Rating</label>
+              {renderStars(reviewForm.rating, true, (rating) => setReviewForm((prev) => ({ ...prev, rating })))}
             </div>
 
             {/* Guest User Fields */}
             {!user && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Name *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
                   <input
                     type="text"
                     value={reviewForm.name}
-                    onChange={(e) => setReviewForm(prev => ({ ...prev, name: e.target.value }))
-                    }
+                    onChange={(e) => setReviewForm((prev) => ({ ...prev, name: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Email *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Your Email *</label>
                   <input
                     type="email"
                     value={reviewForm.email}
-                    onChange={(e) => setReviewForm(prev => ({ ...prev, email: e.target.value }))
-                    }
+                    onChange={(e) => setReviewForm((prev) => ({ ...prev, email: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     required
                   />
@@ -352,13 +326,10 @@ const ReviewSection = ({ productId }) => {
 
             {/* Comment */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Your Review *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Your Review *</label>
               <textarea
                 value={reviewForm.comment}
-                onChange={(e) => setReviewForm(prev => ({ ...prev, comment: e.target.value }))
-                }
+                onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Share your experience with this product..."
@@ -368,10 +339,8 @@ const ReviewSection = ({ productId }) => {
 
             {/* Image Upload */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Add Photo (Optional)
-              </label>
-              
+              <label className="block text-sm font-medium text-gray-700 mb-2">Add Photo (Optional)</label>
+
               {!imagePreview ? (
                 <div
                   onClick={() => fileInputRef.current?.click()}
@@ -384,7 +353,7 @@ const ReviewSection = ({ productId }) => {
               ) : (
                 <div className="relative inline-block">
                   <img
-                    src={imagePreview}
+                    src={imagePreview || "/placeholder.svg"}
                     alt="Review preview"
                     className="w-32 h-32 object-cover rounded-lg border"
                   />
@@ -397,14 +366,8 @@ const ReviewSection = ({ productId }) => {
                   </button>
                 </div>
               )}
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
-                className="hidden"
-              />
+
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
             </div>
 
             {/* Submit Button */}
@@ -412,8 +375,8 @@ const ReviewSection = ({ productId }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setShowReviewForm(false);
-                  removeImage();
+                  setShowReviewForm(false)
+                  removeImage()
                 }}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
               >
@@ -427,7 +390,7 @@ const ReviewSection = ({ productId }) => {
                 {submittingReview && (
                   <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
                 )}
-                <span>{submittingReview ? 'Submitting...' : 'Submit Review'}</span>
+                <span>{submittingReview ? "Submitting..." : "Submit Review"}</span>
               </button>
             </div>
           </form>
@@ -461,9 +424,7 @@ const ReviewSection = ({ productId }) => {
                     </div>
                     <div className="flex items-center space-x-2">
                       {renderStars(review.rating)}
-                      <span className="text-sm text-gray-500">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </span>
+                      <span className="text-sm text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
@@ -474,10 +435,10 @@ const ReviewSection = ({ productId }) => {
               {review.image && (
                 <div className="mb-3">
                   <img
-                    src={`/uploads/reviews/${review.image}`}
+                    src={`${config.API_URL}/uploads/reviews/${review.image}`}
                     alt="Review"
                     className="w-32 h-32 object-cover rounded-lg border cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => window.open(`/uploads/reviews/${review.image}`, '_blank')}
+                    onClick={() => window.open(`${config.API_URL}/uploads/reviews/${review.image}`, "_blank")}
                   />
                 </div>
               )}
@@ -501,29 +462,27 @@ const ReviewSection = ({ productId }) => {
       {totalPages > 1 && (
         <div className="flex justify-center space-x-2">
           <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
             className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
-          
+
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
               className={`px-3 py-2 border rounded-md ${
-                page === currentPage
-                  ? 'bg-green-600 text-white border-green-600'
-                  : 'border-gray-300 hover:bg-gray-50'
+                page === currentPage ? "bg-green-600 text-white border-green-600" : "border-gray-300 hover:bg-gray-50"
               }`}
             >
               {page}
             </button>
           ))}
-          
+
           <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
             className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -532,7 +491,7 @@ const ReviewSection = ({ productId }) => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ReviewSection;
+export default ReviewSection

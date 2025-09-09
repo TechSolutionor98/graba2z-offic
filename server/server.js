@@ -73,18 +73,22 @@ const app = express()
 // // CORS configuration
 app.use(cors({
   origin: [
-  'https://www.graba2z.ae',
-  'https://www.grabatoz.ae',
-'http://localhost:3000'
+    'https://www.graba2z.ae',
+    'https://www.grabatoz.ae',
+    'http://localhost:3000'
   ],
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
-  exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
-  maxAge: 5,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Changed from allowMethods
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'], // Changed from allowHeaders
+  exposedHeaders: ['WWW-Authenticate', 'Server-Authorization'], // Changed from exposeHeaders
+  maxAge: 86400, // Changed from 5
   credentials: true,
-  keepHeadersOnError: true
+  optionsSuccessStatus: 200 // Added this
 }));
 
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.send();
+});
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));
 
