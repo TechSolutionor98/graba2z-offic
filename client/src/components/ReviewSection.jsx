@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-// Fix the import - use useAuth hook instead of AuthContext
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import axios from "axios"
@@ -9,7 +8,6 @@ import config from "../config/config.js"
 import { Star, X, ThumbsUp, Flag, User, ImageIcon, CheckCircle } from "lucide-react"
 
 const ReviewSection = ({ productId }) => {
-  // Use the useAuth hook instead of AuthContext
   const { user } = useAuth()
   const { showToast } = useToast()
 
@@ -27,6 +25,7 @@ const ReviewSection = ({ productId }) => {
   const [totalPages, setTotalPages] = useState(1)
   const [selectedImage, setSelectedImage] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
+  const [guestReviewIds, setGuestReviewIds] = useState([])
   const fileInputRef = useRef(null)
 
   const [reviewForm, setReviewForm] = useState({
@@ -36,33 +35,58 @@ const ReviewSection = ({ productId }) => {
     email: user?.email || "",
   })
 
-  // Fetch reviews when component mounts or page changes
+  useEffect(() => {
+    const storedGuestReviews = localStorage.getItem(`guestReviews_${productId}`)
+    if (storedGuestReviews) {
+      try {
+        setGuestReviewIds(JSON.parse(storedGuestReviews))
+      } catch (error) {
+        console.error("Error parsing guest reviews from localStorage:", error)
+      }
+    }
+  }, [productId])
+
   useEffect(() => {
     if (productId) {
       fetchReviews()
     }
-  }, [productId, currentPage])
-
-  // Update form when user changes
-  useEffect(() => {
-    if (user) {
-      setReviewForm((prev) => ({
-        ...prev,
-        name: user.name || "",
-        email: user.email || "",
-      }))
-    }
-  }, [user])
+  }, [productId, currentPage, guestReviewIds])
 
   const fetchReviews = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(
-        `${config.API_URL}/api/reviews/product/${productId}?page=${currentPage}&limit=10`,
-      )
 
-      setReviews(response.data.reviews || [])
-      // Add null checks and default values
+      const requestConfig = {}
+      if (user) {
+        const token = localStorage.getItem("token")
+        if (token) {
+          requestConfig.headers = {
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      }
+
+      let url = `${config.API_URL}/api/reviews/product/${productId}?page=${currentPage}&limit=10`
+      if (!user && guestReviewIds.length > 0) {
+        url += `&guestReviewIds=${guestReviewIds.join(",")}`
+      }
+
+      console.log("* Frontend - Constructing URL:", url)
+      console.log("* Frontend - Guest review IDs:", guestReviewIds)
+      console.log("* Frontend - User authenticated:", !!user)
+      console.log("* Frontend - Product ID:", productId)
+
+      const response = await axios.get(url, requestConfig)
+
+      const filteredReviews = response.data.reviews || []
+
+      console.log("* Raw reviews from backend:", filteredReviews)
+      console.log("* Guest review IDs stored:", guestReviewIds)
+      console.log("* User logged in:", !!user)
+
+      console.log("* Final filtered reviews:", filteredReviews)
+
+      setReviews(filteredReviews)
       setStats({
         averageRating: response.data.stats?.averageRating || 0,
         totalReviews: response.data.stats?.totalReviews || 0,
@@ -72,7 +96,6 @@ const ReviewSection = ({ productId }) => {
     } catch (error) {
       console.error("Error fetching reviews:", error)
       showToast("Error loading reviews", "error")
-      // Set default values on error
       setReviews([])
       setStats({
         averageRating: 0,
@@ -85,44 +108,9 @@ const ReviewSection = ({ productId }) => {
     }
   }
 
-  const handleImageSelect = (event) => {
-    const file = event.target.files[0]
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        showToast("Please select an image file", "error")
-        return
-      }
-
-      // Validate file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        showToast("Image size must be less than 5MB", "error")
-        return
-      }
-
-      setSelectedImage(file)
-
-      // Create preview
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setImagePreview(e.target.result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const removeImage = () => {
-    setSelectedImage(null)
-    setImagePreview(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
-    }
-  }
-
   const handleSubmitReview = async (e) => {
     e.preventDefault()
 
-    // Validation
     if (!reviewForm.comment.trim()) {
       showToast("Please write a review comment", "error")
       return
@@ -156,7 +144,6 @@ const ReviewSection = ({ productId }) => {
         },
       }
 
-      // Add auth token if user is logged in
       if (user) {
         const token = localStorage.getItem("token")
         if (token) {
@@ -164,11 +151,30 @@ const ReviewSection = ({ productId }) => {
         }
       }
 
-      await axios.post(`${config.API_URL}/api/reviews`, formData, requestConfig)
+      const response = await axios.post(`${config.API_URL}/api/reviews`, formData, requestConfig)
+
+      if (!user && response.data.review) {
+        const reviewId = response.data.review._id || response.data.review.id
+        console.log("* Backend response:", response.data.review)
+        console.log("* Storing guest review ID:", reviewId)
+
+        if (reviewId) {
+          const newGuestReviewIds = [...guestReviewIds, reviewId]
+          setGuestReviewIds(newGuestReviewIds)
+          localStorage.setItem(`guestReviews_${productId}`, JSON.stringify(newGuestReviewIds))
+          console.log("* Updated guest review IDs:", newGuestReviewIds)
+
+          console.log("* Forcing immediate refetch with new guest review ID")
+          setTimeout(() => {
+            const storedIds = JSON.parse(localStorage.getItem(`guestReviews_${productId}`) || "[]")
+            console.log("* IDs from localStorage before refetch:", storedIds)
+            setGuestReviewIds(storedIds)
+          }, 100)
+        }
+      }
 
       showToast("Review submitted successfully! It will be visible after admin approval.", "success")
 
-      // Reset form
       setReviewForm({
         rating: 5,
         comment: "",
@@ -178,14 +184,46 @@ const ReviewSection = ({ productId }) => {
       removeImage()
       setShowReviewForm(false)
 
-      // Refresh reviews
-      fetchReviews()
+      setTimeout(() => {
+        fetchReviews()
+      }, 500)
     } catch (error) {
       console.error("Error submitting review:", error)
       const message = error.response?.data?.message || "Error submitting review"
       showToast(message, "error")
     } finally {
       setSubmittingReview(false)
+    }
+  }
+
+  const handleImageSelect = (event) => {
+    const file = event.target.files[0]
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        showToast("Please select an image file", "error")
+        return
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("Image size must be less than 5MB", "error")
+        return
+      }
+
+      setSelectedImage(file)
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeImage = () => {
+    setSelectedImage(null)
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
@@ -242,10 +280,8 @@ const ReviewSection = ({ productId }) => {
 
   return (
     <div className="space-y-6">
-      {/* Review Summary */}
       <div className="bg-gray-50 rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Overall Rating - Add null checks */}
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-900 mb-2">{(stats?.averageRating || 0).toFixed(1)}</div>
             <div className="flex justify-center mb-2">{renderStars(Math.round(stats?.averageRating || 0))}</div>
@@ -254,7 +290,6 @@ const ReviewSection = ({ productId }) => {
             </div>
           </div>
 
-          {/* Rating Distribution */}
           <div>
             <h4 className="font-medium text-gray-900 mb-3">Rating Breakdown</h4>
             {renderRatingDistribution()}
@@ -262,7 +297,6 @@ const ReviewSection = ({ productId }) => {
         </div>
       </div>
 
-      {/* Write Review Button */}
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-semibold text-gray-900">Customer Reviews</h3>
         {!showReviewForm && (
@@ -275,7 +309,6 @@ const ReviewSection = ({ productId }) => {
         )}
       </div>
 
-      {/* Review Form */}
       {showReviewForm && (
         <div className="bg-white border rounded-lg p-6">
           <div className="flex justify-between items-center mb-4">
@@ -292,13 +325,11 @@ const ReviewSection = ({ productId }) => {
           </div>
 
           <form onSubmit={handleSubmitReview} className="space-y-4">
-            {/* Rating */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Your Rating</label>
               {renderStars(reviewForm.rating, true, (rating) => setReviewForm((prev) => ({ ...prev, rating })))}
             </div>
 
-            {/* Guest User Fields */}
             {!user && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -324,7 +355,6 @@ const ReviewSection = ({ productId }) => {
               </div>
             )}
 
-            {/* Comment */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Your Review *</label>
               <textarea
@@ -337,7 +367,6 @@ const ReviewSection = ({ productId }) => {
               />
             </div>
 
-            {/* Image Upload */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Add Photo (Optional)</label>
 
@@ -370,7 +399,6 @@ const ReviewSection = ({ productId }) => {
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
             </div>
 
-            {/* Submit Button */}
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
@@ -397,7 +425,6 @@ const ReviewSection = ({ productId }) => {
         </div>
       )}
 
-      {/* Reviews List */}
       <div className="space-y-4">
         {reviews.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
@@ -419,6 +446,16 @@ const ReviewSection = ({ productId }) => {
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <CheckCircle className="w-3 h-3 mr-1" />
                           Verified Purchase
+                        </span>
+                      )}
+                      {review.status === "pending" && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          Pending Approval
+                        </span>
+                      )}
+                      {((user && review.user === user.id) || (!user && guestReviewIds.includes(review._id))) && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          Your Review
                         </span>
                       )}
                     </div>
@@ -458,7 +495,6 @@ const ReviewSection = ({ productId }) => {
         )}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center space-x-2">
           <button
