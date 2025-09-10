@@ -11,6 +11,9 @@ const initialState = {
   isAuthenticated: false,
   loading: true,
   error: null,
+  admin: null,
+  adminToken: localStorage.getItem("adminToken"),
+  isAdminAuthenticated: false,
 }
 
 // Action types
@@ -28,6 +31,8 @@ const AUTH_ACTIONS = {
   CLEAR_ERROR: "CLEAR_ERROR",
   SET_LOADING: "SET_LOADING",
   UPDATE_PROFILE: "UPDATE_PROFILE",
+  ADMIN_LOGIN_SUCCESS: "ADMIN_LOGIN_SUCCESS",
+  ADMIN_LOGOUT: "ADMIN_LOGOUT",
 }
 
 // Reducer
@@ -78,6 +83,26 @@ const authReducer = (state, action) => {
         user: null,
         token: null,
         isAuthenticated: false,
+        loading: false,
+        error: null,
+      }
+
+    case AUTH_ACTIONS.ADMIN_LOGIN_SUCCESS:
+      return {
+        ...state,
+        admin: action.payload.admin,
+        adminToken: action.payload.token,
+        isAdminAuthenticated: true,
+        loading: false,
+        error: null,
+      }
+
+    case AUTH_ACTIONS.ADMIN_LOGOUT:
+      return {
+        ...state,
+        admin: null,
+        adminToken: null,
+        isAdminAuthenticated: false,
         loading: false,
         error: null,
       }
@@ -246,16 +271,29 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await adminAPI.login(credentials)
       localStorage.setItem("adminToken", data.token)
+      dispatch({
+        type: AUTH_ACTIONS.ADMIN_LOGIN_SUCCESS,
+        payload: {
+          admin: data,
+          token: data.token,
+        },
+      })
       return { ...data, success: true }
     } catch (error) {
       return { success: false, message: error.message }
     }
   }
 
+  const adminLogout = () => {
+    localStorage.removeItem("adminToken")
+    dispatch({ type: AUTH_ACTIONS.ADMIN_LOGOUT })
+  }
+
   const value = {
     ...state,
     login,
     adminLogin,
+    adminLogout,
     register,
     verifyEmail,
     resendVerification,

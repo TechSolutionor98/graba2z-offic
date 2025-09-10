@@ -12,6 +12,10 @@ import AdminRoute from "./components/AdminRoute"
 import ScrollToTop from "./components/ScrollToTop"
 import CacheStatus from "./components/CacheStatus"
 
+// Import admin components
+import AdminHeader from "./components/admin/AdminHeader"
+import AdminSidebar from "./components/admin/AdminSidebar"
+
 // Import pages
 import Home from "./pages/Home"
 import Shop from "./pages/Shop"
@@ -149,70 +153,75 @@ function App() {
                     path="/admin/*"
                     element={
                       <AdminRoute>
-                        <Routes>
-                          <Route path="dashboard" element={<AdminDashboard />} />
-                          <Route path="products" element={<AdminProducts />} />
-                          <Route path="products/add" element={<AddProduct />} />
-                          <Route path="products/bulk-add" element={<AddBulkProducts />} />
-                          <Route path="orders" element={<AdminOrders />} />
-                          <Route path="orders/received" element={<ReceivedOrders />} />
-                          <Route path="orders/in-progress" element={<InprogressOrders />} />
-                          <Route path="orders/ready-for-shipment" element={<ReadyForShipment />} />
-                          <Route path="orders/on-the-way" element={<OnTheWay />} />
-                          <Route path="orders/delivered" element={<Delivered />} />
-                          <Route path="orders/on-hold" element={<OnHold />} />
-                          <Route path="orders/rejected" element={<Rejected />} />
-                          <Route path="orders/online" element={<OnlineOrders />} />
-                          
-                          {/* Review Management Routes */}
-                          <Route path="reviews" element={<AdminReviews />} />
-                          <Route path="reviews/pending" element={<AdminReviewsPending />} />
-                          <Route path="reviews/approved" element={<AdminReviewsApproved />} />
-                          <Route path="reviews/rejected" element={<AdminReviewsRejected />} />
-                          
-                          <Route path="users" element={<AdminUsers />} />
-                          <Route path="categories" element={<AdminCategories />} />
-                          <Route path="categories/add" element={<AddCategory />} />
-                          <Route path="categories/edit/:id" element={<EditCategory />} />
-                          <Route path="categories/trash" element={<TrashCategories />} />
-                          <Route path="subcategories" element={<AdminSubCategories />} />
-                          <Route path="subcategories/add" element={<AddSubCategory />} />
-                          <Route path="subcategories/edit/:id" element={<EditSubCategory />} />
-                          <Route path="brands" element={<AdminBrands />} />
-                          <Route path="brands/add" element={<AddBrand />} />
-                          <Route path="edit-brand/:id" element={<AddBrand />} />
-                          <Route path="colors" element={<AdminColors />} />
-                          <Route path="colors/add" element={<AddColor />} />
-                          <Route path="sizes" element={<AdminSizes />} />
-                          <Route path="sizes/add" element={<AddSize />} />
-                          <Route path="units" element={<AdminUnits />} />
-                          <Route path="units/add" element={<AddUnit />} />
-                          <Route path="volumes" element={<AdminVolumes />} />
-                          <Route path="volumes/add" element={<AddVolume />} />
-                          <Route path="warranty" element={<AdminWarranty />} />
-                          <Route path="warranty/add" element={<AddWarranty />} />
-                          <Route path="tax" element={<AdminTax />} />
-                          <Route path="tax/add" element={<AddTax />} />
-                          <Route path="coupons" element={<AllCoupons />} />
-                          <Route path="coupons/all" element={<AllCoupons />} />
-                          <Route path="banners" element={<AdminBanners />} />
-                          <Route path="delivery-charges" element={<AdminDeliveryCharges />} />
-                          <Route path="delivery-charges/add" element={<AddDeliveryCharge />} />
-                          <Route path="settings" element={<AdminSettings />} />
-                          <Route path="blogs" element={<AdminBlogs />} />
-                          <Route path="blogs/add" element={<AddBlog />} />
-                          <Route path="blogs/edit/:id" element={<EditBlog />} />
-                          <Route path="blogs/categories" element={<BlogCategories />} />
-                          <Route path="blogs/categories/add" element={<AddBlogCategory />} />
-                          <Route path="blogs/topics" element={<BlogTopics />} />
-                          <Route path="blogs/topics/add" element={<AddBlogTopic />} />
-                          <Route path="blogs/rating" element={<BlogRating />} />
-                          <Route path="request-callbacks" element={<AdminRequestCallbacks />} />
-                          <Route path="email-templates" element={<AdminEmailTemplates />} />
-                          <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                     
+                        <div className="min-h-screen bg-gray-100">
+                          <AdminSidebar />
+                          <AdminHeader />
+                          <div className=" ">
+                            <Routes>
+                              <Route path="dashboard" element={<AdminDashboard />} />
+                              <Route path="products" element={<AdminProducts />} />
+                              <Route path="products/add" element={<AddProduct />} />
+                              <Route path="products/bulk-add" element={<AddBulkProducts />} />
+                              <Route path="orders" element={<AdminOrders />} />
+                              <Route path="orders/received" element={<ReceivedOrders />} />
+                              <Route path="orders/in-progress" element={<InprogressOrders />} />
+                              <Route path="orders/ready-for-shipment" element={<ReadyForShipment />} />
+                              <Route path="orders/on-the-way" element={<OnTheWay />} />
+                              <Route path="orders/delivered" element={<Delivered />} />
+                              <Route path="orders/on-hold" element={<OnHold />} />
+                              <Route path="orders/rejected" element={<Rejected />} />
+                              <Route path="orders/online" element={<OnlineOrders />} />
+                              
+                              {/* Review Management Routes */}
+                              <Route path="reviews" element={<AdminReviews />} />
+                              <Route path="reviews/pending" element={<AdminReviewsPending />} />
+                              <Route path="reviews/approved" element={<AdminReviewsApproved />} />
+                              <Route path="reviews/rejected" element={<AdminReviewsRejected />} />
+                              
+                              <Route path="users" element={<AdminUsers />} />
+                              <Route path="categories" element={<AdminCategories />} />
+                              <Route path="categories/add" element={<AddCategory />} />
+                              <Route path="categories/edit/:id" element={<EditCategory />} />
+                              <Route path="categories/trash" element={<TrashCategories />} />
+                              <Route path="subcategories" element={<AdminSubCategories />} />
+                              <Route path="subcategories/add" element={<AddSubCategory />} />
+                              <Route path="subcategories/edit/:id" element={<EditSubCategory />} />
+                              <Route path="brands" element={<AdminBrands />} />
+                              <Route path="brands/add" element={<AddBrand />} />
+                              <Route path="edit-brand/:id" element={<AddBrand />} />
+                              <Route path="colors" element={<AdminColors />} />
+                              <Route path="colors/add" element={<AddColor />} />
+                              <Route path="sizes" element={<AdminSizes />} />
+                              <Route path="sizes/add" element={<AddSize />} />
+                              <Route path="units" element={<AdminUnits />} />
+                              <Route path="units/add" element={<AddUnit />} />
+                              <Route path="volumes" element={<AdminVolumes />} />
+                              <Route path="volumes/add" element={<AddVolume />} />
+                              <Route path="warranty" element={<AdminWarranty />} />
+                              <Route path="warranty/add" element={<AddWarranty />} />
+                              <Route path="tax" element={<AdminTax />} />
+                              <Route path="tax/add" element={<AddTax />} />
+                              <Route path="coupons" element={<AllCoupons />} />
+                              <Route path="coupons/all" element={<AllCoupons />} />
+                              <Route path="banners" element={<AdminBanners />} />
+                              <Route path="delivery-charges" element={<AdminDeliveryCharges />} />
+                              <Route path="delivery-charges/add" element={<AddDeliveryCharge />} />
+                              <Route path="settings" element={<AdminSettings />} />
+                              <Route path="blogs" element={<AdminBlogs />} />
+                              <Route path="blogs/add" element={<AddBlog />} />
+                              <Route path="blogs/edit/:id" element={<EditBlog />} />
+                              <Route path="blogs/categories" element={<BlogCategories />} />
+                              <Route path="blogs/categories/add" element={<AddBlogCategory />} />
+                              <Route path="blogs/topics" element={<BlogTopics />} />
+                              <Route path="blogs/topics/add" element={<AddBlogTopic />} />
+                              <Route path="blogs/rating" element={<BlogRating />} />
+                              <Route path="request-callbacks" element={<AdminRequestCallbacks />} />
+                              <Route path="email-templates" element={<AdminEmailTemplates />} />
+                              <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
+                              <Route path="*" element={<NotFound />} />
+                            </Routes>
+                          </div>
+                        </div>
                       </AdminRoute>
                     }
                   />

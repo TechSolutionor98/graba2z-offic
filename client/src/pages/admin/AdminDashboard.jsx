@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import axios from "axios"
 import { useAuth } from "../../context/AuthContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { ShoppingBag, Users, DollarSign, TrendingUp } from "lucide-react"
@@ -44,6 +43,7 @@ const AdminDashboard = () => {
     return (
       <div className="min-h-screen bg-gray-100">
         <AdminSidebar />
+      
         <div className="ml-64 flex justify-center items-center h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
         </div>
@@ -55,6 +55,7 @@ const AdminDashboard = () => {
     return (
       <div className="min-h-screen bg-gray-100">
         <AdminSidebar />
+        
         <div className="ml-64 p-8">
           <div className="bg-red-50 text-red-600 p-4 rounded-md">{error}</div>
         </div>
@@ -65,14 +66,11 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <AdminSidebar />
+    
 
-      <div className="ml-64 p-8">
+      <div className="ml-64 pt-16 p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <div>
-            <span className="text-gray-600 mr-2">Welcome,</span>
-            <span className="font-medium">{admin?.name || "Admin"}</span>
-          </div>
         </div>
 
         {/* Stats Cards */}
@@ -182,15 +180,15 @@ const AdminDashboard = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {order.deliveryType === 'pickup' ? (
+                      {order.deliveryType === "pickup" ? (
                         <>
-                          <div className="text-sm text-gray-900">{order.pickupDetails?.location || 'N/A'}</div>
-                          <div className="text-sm text-gray-500">{order.pickupDetails?.phone || 'N/A'}</div>
+                          <div className="text-sm text-gray-900">{order.pickupDetails?.location || "N/A"}</div>
+                          <div className="text-sm text-gray-500">{order.pickupDetails?.phone || "N/A"}</div>
                         </>
                       ) : (
                         <>
-                          <div className="text-sm text-gray-900">{order.shippingAddress?.name || 'N/A'}</div>
-                          <div className="text-sm text-gray-500">{order.shippingAddress?.email || 'N/A'}</div>
+                          <div className="text-sm text-gray-900">{order.shippingAddress?.name || "N/A"}</div>
+                          <div className="text-sm text-gray-500">{order.shippingAddress?.email || "N/A"}</div>
                         </>
                       )}
                     </td>
