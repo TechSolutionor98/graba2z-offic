@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useToast } from '../../context/ToastContext';
-import { useAuth } from '../../context/AuthContext';
-import axios from 'axios';
-import config from '../../config/config';
+"use client"
+
+import { useState, useEffect, useMemo } from "react"
+import { useToast } from "../../context/ToastContext"
+import { useAuth } from "../../context/AuthContext"
+import axios from "axios"
 import {
   Star,
   Eye,
@@ -14,406 +15,379 @@ import {
   ChevronRight,
   User,
   MessageSquare,
-  Image as ImageIcon,
+  ImageIcon,
   CheckCircle,
   XCircle,
   Clock,
-  AlertTriangle,
-  RefreshCw
-} from 'lucide-react';
+  RefreshCw,
+  Shield,
+  Mail,
+} from "lucide-react"
 
 const ReviewManagement = () => {
-  const { showToast } = useToast();
-  const { user, isLoading: authLoading } = useAuth();
-  
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast()
+  const { user, isLoading: authLoading } = useAuth()
+
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState({
     pending: 0,
     approved: 0,
     rejected: 0,
-    total: 0
-  });
-  
+    total: 0,
+  })
+
   // Filter and pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
+  const [dateFilter, setDateFilter] = useState("all")
+  const [customDateRange, setCustomDateRange] = useState({ start: "", end: "" })
+
   // Modal states
-  const [selectedReview, setSelectedReview] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
-  const [actionLoading, setActionLoading] = useState(false);
+  const [selectedReview, setSelectedReview] = useState(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectReason, setRejectReason] = useState("")
+  const [actionLoading, setActionLoading] = useState(false)
 
   // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+      setDebouncedSearchTerm(searchTerm)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   // Fetch reviews when dependencies change
   useEffect(() => {
     if (!authLoading) {
-      fetchReviews();
+      fetchReviews()
     }
-  }, [currentPage, statusFilter, debouncedSearchTerm, authLoading]);
+  }, [currentPage, statusFilter, debouncedSearchTerm, dateFilter, customDateRange, authLoading])
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('adminToken') || 
-                  localStorage.getItem('token') || 
-                  localStorage.getItem('authToken');
-    
+    const token =
+      localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
     return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    };
-  };
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    }
+  }
 
   // Get the correct API base URL
   const getApiBaseUrl = () => {
-    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    return isDevelopment ? 'http://localhost:5000' : 'https://api.grabatoz.ae';
-  };
-
-  // Debug function - ADD THIS
-  const debugImageSystem = async () => {
-    console.log('🔍 Starting comprehensive image system debug...');
-    
-    try {
-      const baseUrl = getApiBaseUrl();
-      
-      // Step 1: Test basic server connectivity
-      console.log('Step 1: Testing basic server connectivity...');
-      try {
-        const basicTest = await axios.get(`${baseUrl}/api/test`);
-        console.log('✅ Basic server test:', basicTest.data);
-        showToast('Server connectivity: OK', 'success');
-      } catch (error) {
-        console.error('❌ Basic server test failed:', error);
-        showToast('Server connectivity: FAILED', 'error');
-        return;
-      }
-      
-      // Step 2: Test if uploads directory exists
-      console.log('Step 2: Testing uploads access...');
-      try {
-        const uploadsTest = await fetch(`${baseUrl}/uploads/reviews/review-1756991028194-104904771.jpeg`);
-        console.log('📁 Uploads test response:', uploadsTest.status);
-        
-        if (uploadsTest.ok) {
-          showToast('Image access: SUCCESS!', 'success');
-        } else {
-          showToast(`Image access failed: ${uploadsTest.status}`, 'error');
-        }
-      } catch (error) {
-        console.error('❌ Uploads test failed:', error);
-        showToast('Uploads access: FAILED', 'error');
-      }
-      
-    } catch (error) {
-      console.error('❌ Debug failed:', error);
-      showToast(`Debug failed: ${error.message}`, 'error');
-    }
-  };
-
-  // Test direct image access - ADD THIS  
-  const testDirectImageAccess = async () => {
-    const baseUrl = getApiBaseUrl();
-    const testImage = 'review-1756991028194-104904771.jpeg';
-    const testUrl = `${baseUrl}/uploads/reviews/${testImage}`;
-    
-    console.log('🖼️ Testing direct image access:', testUrl);
-    
-    try {
-      const response = await fetch(testUrl);
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-      
-      if (response.ok) {
-        showToast('Direct image access: SUCCESS!', 'success');
-      } else {
-        showToast(`Direct access failed: ${response.status}`, 'error');
-      }
-    } catch (error) {
-      console.error('❌ Direct image test error:', error);
-      showToast(`Direct test error: ${error.message}`, 'error');
-    }
-  };
+    const isDevelopment = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    return isDevelopment ? "http://localhost:5000" : "https://api.grabatoz.ae"
+  }
 
   const fetchReviews = async () => {
     try {
-      setLoading(true);
-      
-      const token = localStorage.getItem('adminToken') || 
-                    localStorage.getItem('token') || 
-                    localStorage.getItem('authToken');
-      
+      setLoading(true)
+
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
       if (!token) {
-        console.log('No token found');
-        showToast('Please login as admin first', 'error');
-        return;
+        console.log("No token found")
+        showToast("Please login as admin first", "error")
+        return
       }
 
       // Build query parameters
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: '10'
-      });
+        limit: "10",
+      })
 
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter);
+      if (statusFilter !== "all") {
+        params.append("status", statusFilter)
       }
 
       if (debouncedSearchTerm.trim()) {
-        params.append('search', debouncedSearchTerm.trim());
+        params.append("search", debouncedSearchTerm.trim())
       }
 
-      const baseURL = getApiBaseUrl();
-      const url = `${baseURL}/api/admin/reviews?${params}`;
-      
-      console.log('Fetching from:', url);
+      if (dateFilter !== "all") {
+        const now = new Date()
+        let startDate, endDate
+
+        switch (dateFilter) {
+          case "today":
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+            endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+            break
+          case "week":
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            endDate = now
+            break
+          case "month":
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+            break
+          case "custom":
+            if (customDateRange.start && customDateRange.end) {
+              startDate = new Date(customDateRange.start)
+              endDate = new Date(customDateRange.end)
+              endDate.setHours(23, 59, 59, 999) // End of day
+            }
+            break
+        }
+
+        if (startDate && endDate) {
+          params.append("startDate", startDate.toISOString())
+          params.append("endDate", endDate.toISOString())
+        }
+      }
+
+      const baseURL = getApiBaseUrl()
+      const url = `${baseURL}/api/admin/reviews?${params}`
+
+      console.log("Fetching from:", url)
 
       const response = await axios.get(url, {
-        headers: getAuthHeaders()
-      });
+        headers: getAuthHeaders(),
+      })
 
-      console.log('Reviews response:', response.data);
+      console.log("Reviews response:", response.data)
 
       if (response.data) {
-        setReviews(response.data.reviews || []);
-        setStats(response.data.stats || { pending: 0, approved: 0, rejected: 0, total: 0 });
-        setTotalPages(response.data.pagination?.totalPages || 1);
+        setReviews(response.data.reviews || [])
+        setStats(response.data.stats || { pending: 0, approved: 0, rejected: 0, total: 0 })
+        setTotalPages(response.data.pagination?.totalPages || 1)
       }
-
     } catch (error) {
-      console.error('Error fetching reviews:', error);
-      
+      console.error("Error fetching reviews:", error)
+
       if (error.response?.status === 401) {
-        showToast('Authentication failed. Please login as admin.', 'error');
+        showToast("Authentication failed. Please login as admin.", "error")
       } else if (error.response?.status === 403) {
-        showToast('Access denied. Admin privileges required.', 'error');
+        showToast("Access denied. Admin privileges required.", "error")
       } else {
-        const errorMessage = error.response?.data?.message || error.message || 'Error loading reviews';
-        showToast(errorMessage, 'error');
+        const errorMessage = error.response?.data?.message || error.message || "Error loading reviews"
+        showToast(errorMessage, "error")
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  // Image component with fallbacks - ADD THIS
+  // Image component with fallbacks
   const ImageWithFallback = ({ imagePath, alt = "Review Image" }) => {
-    const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
-    const [hasError, setHasError] = useState(false);
-    
+    const [currentUrlIndex, setCurrentUrlIndex] = useState(0)
+    const [hasError, setHasError] = useState(false)
+
     const possibleUrls = useMemo(() => {
-      if (!imagePath) return [];
-      
-      const baseURL = getApiBaseUrl();
-      
+      if (!imagePath) return []
+
+      const baseURL = getApiBaseUrl()
+
       return [
         `${baseURL}/uploads/reviews/${imagePath}`,
         `${baseURL}/uploads/${imagePath}`,
         `${baseURL}${imagePath}`,
-        imagePath.startsWith('http') ? imagePath : `${baseURL}/${imagePath}`
-      ];
-    }, [imagePath]);
-    
+        imagePath.startsWith("http") ? imagePath : `${baseURL}/${imagePath}`,
+      ]
+    }, [imagePath])
+
     const handleImageError = () => {
-      console.log('❌ Image failed to load:', possibleUrls[currentUrlIndex]);
-      
+      console.log("❌ Image failed to load:", possibleUrls[currentUrlIndex])
+
       if (currentUrlIndex < possibleUrls.length - 1) {
-        setCurrentUrlIndex(currentUrlIndex + 1);
-        console.log('🔄 Trying next URL:', possibleUrls[currentUrlIndex + 1]);
+        setCurrentUrlIndex(currentUrlIndex + 1)
+        console.log("🔄 Trying next URL:", possibleUrls[currentUrlIndex + 1])
       } else {
-        setHasError(true);
-        console.log('❌ All image URLs failed');
+        setHasError(true)
+        console.log("❌ All image URLs failed")
       }
-    };
-    
+    }
+
     const handleImageLoad = () => {
-      console.log('✅ Image loaded successfully:', possibleUrls[currentUrlIndex]);
-      setHasError(false);
-    };
-    
+      console.log("✅ Image loaded successfully:", possibleUrls[currentUrlIndex])
+      setHasError(false)
+    }
+
     if (!imagePath || hasError) {
       return (
         <div className="w-32 h-32 bg-gray-200 rounded-lg border flex flex-col items-center justify-center text-gray-500 text-xs p-2">
           <ImageIcon className="w-8 h-8 mb-1" />
           <span>No Image</span>
         </div>
-      );
+      )
     }
-    
+
     return (
       <div className="relative">
         <img
-          src={possibleUrls[currentUrlIndex]}
+          src={possibleUrls[currentUrlIndex] || "/placeholder.svg"}
           alt={alt}
           className="w-32 h-32 object-cover rounded-lg border cursor-pointer hover:opacity-90"
           onError={handleImageError}
           onLoad={handleImageLoad}
-          onClick={() => window.open(possibleUrls[currentUrlIndex], '_blank')}
+          onClick={() => window.open(possibleUrls[currentUrlIndex], "_blank")}
         />
         <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg">
           URL {currentUrlIndex + 1}/{possibleUrls.length}
         </div>
       </div>
-    );
-  };
+    )
+  }
 
-  // Add your other functions (handleApproveReview, handleRejectReview, etc.)
-  const handleApproveReview = async (reviewId, adminNotes = '') => {
+  const handleApproveReview = async (reviewId, adminNotes = "") => {
     try {
-      setActionLoading(true);
-      const baseURL = getApiBaseUrl();
+      setActionLoading(true)
+      const baseURL = getApiBaseUrl()
 
       const response = await axios.put(
-        `${baseURL}/api/admin/reviews/${reviewId}/approve`, 
+        `${baseURL}/api/admin/reviews/${reviewId}/approve`,
         { adminNotes },
-        { headers: getAuthHeaders() }
-      );
+        { headers: getAuthHeaders() },
+      )
 
-      showToast('Review approved successfully', 'success');
-      fetchReviews();
-      setShowDetailModal(false);
-
+      showToast("Review approved successfully", "success")
+      fetchReviews()
+      setShowDetailModal(false)
     } catch (error) {
-      console.error('Error approving review:', error);
-      const errorMessage = error.response?.data?.message || 'Error approving review';
-      showToast(errorMessage, 'error');
+      console.error("Error approving review:", error)
+      const errorMessage = error.response?.data?.message || "Error approving review"
+      showToast(errorMessage, "error")
     } finally {
-      setActionLoading(false);
+      setActionLoading(false)
     }
-  };
+  }
 
   const handleRejectReview = async () => {
     if (!rejectReason.trim()) {
-      showToast('Please provide a reason for rejection', 'error');
-      return;
+      showToast("Please provide a reason for rejection", "error")
+      return
     }
 
     try {
-      setActionLoading(true);
-      const baseURL = getApiBaseUrl();
+      setActionLoading(true)
+      const baseURL = getApiBaseUrl()
 
       const response = await axios.put(
-        `${baseURL}/api/admin/reviews/${selectedReview._id}/reject`, 
+        `${baseURL}/api/admin/reviews/${selectedReview._id}/reject`,
         { adminNotes: rejectReason },
-        { headers: getAuthHeaders() }
-      );
+        { headers: getAuthHeaders() },
+      )
 
-      showToast('Review rejected successfully', 'success');
-      fetchReviews();
-      setShowRejectModal(false);
-      setShowDetailModal(false);
-      setRejectReason('');
-
+      showToast("Review rejected successfully", "success")
+      fetchReviews()
+      setShowRejectModal(false)
+      setShowDetailModal(false)
+      setRejectReason("")
     } catch (error) {
-      console.error('Error rejecting review:', error);
-      const errorMessage = error.response?.data?.message || 'Error rejecting review';
-      showToast(errorMessage, 'error');
+      console.error("Error rejecting review:", error)
+      const errorMessage = error.response?.data?.message || "Error rejecting review"
+      showToast(errorMessage, "error")
     } finally {
-      setActionLoading(false);
+      setActionLoading(false)
     }
-  };
+  }
 
   const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
-      return;
+    if (!window.confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
+      return
     }
 
     try {
-      setActionLoading(true);
-      const baseURL = getApiBaseUrl();
+      setActionLoading(true)
+      const baseURL = getApiBaseUrl()
 
       const response = await axios.delete(`${baseURL}/api/admin/reviews/${reviewId}`, {
-        headers: getAuthHeaders()
-      });
+        headers: getAuthHeaders(),
+      })
 
-      showToast('Review deleted successfully', 'success');
-      fetchReviews();
-      setShowDetailModal(false);
-
+      showToast("Review deleted successfully", "success")
+      fetchReviews()
+      setShowDetailModal(false)
     } catch (error) {
-      console.error('Error deleting review:', error);
-      const errorMessage = error.response?.data?.message || 'Error deleting review';
-      showToast(errorMessage, 'error');
+      console.error("Error deleting review:", error)
+      const errorMessage = error.response?.data?.message || "Error deleting review"
+      showToast(errorMessage, "error")
     } finally {
-      setActionLoading(false);
+      setActionLoading(false)
     }
-  };
+  }
 
   const openDetailModal = async (review) => {
     try {
-      const baseURL = getApiBaseUrl();
+      const baseURL = getApiBaseUrl()
       const response = await axios.get(`${baseURL}/api/admin/reviews/${review._id}`, {
-        headers: getAuthHeaders()
-      });
-      
-      setSelectedReview(response.data.review);
-      setShowDetailModal(true);
+        headers: getAuthHeaders(),
+      })
 
+      setSelectedReview(response.data.review)
+      setShowDetailModal(true)
     } catch (error) {
-      console.error('Error fetching review details:', error);
-      const errorMessage = error.response?.data?.message || 'Error loading review details';
-      showToast(errorMessage, 'error');
+      console.error("Error fetching review details:", error)
+      const errorMessage = error.response?.data?.message || "Error loading review details"
+      showToast(errorMessage, "error")
     }
-  };
+  }
 
   // Render functions
   const renderStars = (rating) => {
     return (
       <div className="flex items-center space-x-1">
         {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`w-4 h-4 ${
-              star <= rating 
-                ? 'text-yellow-400 fill-current' 
-                : 'text-gray-300'
-            }`}
-          />
+          <Star key={star} className={`w-4 h-4 ${star <= rating ? "text-yellow-400 fill-current" : "text-gray-300"}`} />
         ))}
       </div>
-    );
-  };
+    )
+  }
 
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: {
         icon: Clock,
-        color: 'bg-yellow-100 text-yellow-800',
-        text: 'Pending'
+        color: "bg-yellow-100 text-yellow-800",
+        text: "Pending",
       },
       approved: {
         icon: CheckCircle,
-        color: 'bg-green-100 text-green-800',
-        text: 'Approved'
+        color: "bg-green-100 text-green-800",
+        text: "Approved",
       },
       rejected: {
         icon: XCircle,
-        color: 'bg-red-100 text-red-800',
-        text: 'Rejected'
-      }
-    };
+        color: "bg-red-100 text-red-800",
+        text: "Rejected",
+      },
+    }
 
-    const config = statusConfig[status] || statusConfig.pending;
-    const IconComponent = config.icon;
+    const config = statusConfig[status] || statusConfig.pending
+    const IconComponent = config.icon
 
     return (
       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
         <IconComponent className="w-3 h-3 mr-1" />
         {config.text}
       </span>
-    );
-  };
+    )
+  }
+
+  const getReviewTypeBadge = (review) => {
+    if (review.user) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <Shield className="w-3 h-3 mr-1" />
+          Registered User
+        </span>
+      )
+    } else {
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+          <Mail className="w-3 h-3 mr-1" />
+          Guest (Email Verified)
+        </span>
+      )
+    }
+  }
 
   // Show loading while auth is loading
   if (authLoading) {
@@ -422,7 +396,7 @@ const ReviewManagement = () => {
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
         <p className="text-gray-600">Loading...</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -444,32 +418,6 @@ const ReviewManagement = () => {
         </div>
       </div>
 
-      {/* Debug/Test Buttons */}
-      {/* <div className="mb-4 space-x-2">
-        <button onClick={debugImageSystem} className="px-4 py-2 bg-red-600 text-white rounded">
-          Debug Image System
-        </button>
-        <button onClick={testDirectImageAccess} className="px-4 py-2 bg-orange-600 text-white rounded">
-          Test Direct Image
-        </button>
-      </div> */}
-
-      {/* Debug Info */}
-      {/* <div className="mb-4 p-4 bg-gray-100 rounded-lg text-sm">
-        <strong>Debug Info:</strong><br />
-        Current Hostname: {window.location.hostname}<br />
-        Environment: {window.location.hostname === 'localhost' ? 'Development' : 'Production'}<br />
-        Base URL: {getApiBaseUrl()}<br />
-        Auth Loading: {authLoading ? 'Yes' : 'No'}<br />
-        User: {user?.email || 'Not logged in'}<br />
-        Is Admin: {user?.isAdmin ? 'Yes' : 'No'}<br />
-        Role: {user?.role || 'N/A'}<br />
-        Admin Token: {localStorage.getItem('adminToken') ? 'Present' : 'Missing'}<br />
-        Reviews Count: {reviews.length}<br />
-        Loading: {loading ? 'Yes' : 'No'}
-      </div> */}
-
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
@@ -480,27 +428,29 @@ const ReviewManagement = () => {
             <MessageSquare className="w-8 h-8 text-blue-500" />
           </div>
         </div>
-        
+
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Auto-Approved</p>
+              <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
+              <p className="text-xs text-gray-500">Logged-in users + verified guests</p>
+            </div>
+            <CheckCircle className="w-8 h-8 text-green-500" />
+          </div>
+        </div>
+
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Pending</p>
               <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+              <p className="text-xs text-gray-500">Manual review required</p>
             </div>
             <Clock className="w-8 h-8 text-yellow-500" />
           </div>
         </div>
-        
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Approved</p>
-              <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
-        
+
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -512,13 +462,10 @@ const ReviewManagement = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white rounded-lg shadow mb-6 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search Reviews
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Search Reviews</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
@@ -530,11 +477,9 @@ const ReviewManagement = () => {
               />
             </div>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filter by Status
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
             <select
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={statusFilter}
@@ -546,6 +491,41 @@ const ReviewManagement = () => {
               <option value="rejected">Rejected</option>
             </select>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Date</label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            >
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">Last 7 Days</option>
+              <option value="month">This Month</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </div>
+
+          {dateFilter === "custom" && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+              <div className="flex space-x-2">
+                <input
+                  type="date"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={customDateRange.start}
+                  onChange={(e) => setCustomDateRange((prev) => ({ ...prev, start: e.target.value }))}
+                />
+                <input
+                  type="date"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={customDateRange.end}
+                  onChange={(e) => setCustomDateRange((prev) => ({ ...prev, end: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -570,9 +550,7 @@ const ReviewManagement = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -611,11 +589,12 @@ const ReviewManagement = () => {
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{review.name}</div>
                           <div className="text-sm text-gray-500">{review.email}</div>
+                          <div className="mt-1">{getReviewTypeBadge(review)}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{review.product?.name || 'Product not found'}</div>
+                      <div className="text-sm text-gray-900">{review.product?.name || "Product not found"}</div>
                       {review.image && (
                         <div className="flex items-center mt-1 text-xs text-blue-600">
                           <ImageIcon className="w-3 h-3 mr-1" />
@@ -628,13 +607,9 @@ const ReviewManagement = () => {
                       <div className="text-sm text-gray-500">{review.rating}/5</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs truncate">
-                        {review.comment}
-                      </div>
+                      <div className="text-sm text-gray-900 max-w-xs truncate">{review.comment}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(review.status)}
-                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(review.status)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(review.createdAt).toLocaleDateString()}
                     </td>
@@ -647,8 +622,8 @@ const ReviewManagement = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        
-                        {review.status === 'pending' && (
+
+                        {review.status === "pending" && (
                           <>
                             <button
                               onClick={() => handleApproveReview(review._id)}
@@ -660,8 +635,8 @@ const ReviewManagement = () => {
                             </button>
                             <button
                               onClick={() => {
-                                setSelectedReview(review);
-                                setShowRejectModal(true);
+                                setSelectedReview(review)
+                                setShowRejectModal(true)
                               }}
                               className="text-red-600 hover:text-red-900"
                               title="Reject"
@@ -671,7 +646,7 @@ const ReviewManagement = () => {
                             </button>
                           </>
                         )}
-                        
+
                         <button
                           onClick={() => handleDeleteReview(review._id)}
                           className="text-red-600 hover:text-red-900"
@@ -711,7 +686,7 @@ const ReviewManagement = () => {
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing page <span className="font-medium">{currentPage}</span> of{' '}
+                  Showing page <span className="font-medium">{currentPage}</span> of{" "}
                   <span className="font-medium">{totalPages}</span>
                 </p>
               </div>
@@ -724,33 +699,41 @@ const ReviewManagement = () => {
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
-                  
+
                   {[...Array(totalPages)].map((_, index) => {
-                    const page = index + 1;
-                    if (page === currentPage || page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                    const page = index + 1
+                    if (
+                      page === currentPage ||
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
                       return (
                         <button
                           key={page}
                           onClick={() => setCurrentPage(page)}
                           className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                             page === currentPage
-                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                              ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                              : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
                           }`}
                         >
                           {page}
                         </button>
-                      );
+                      )
                     } else if (page === currentPage - 2 || page === currentPage + 2) {
                       return (
-                        <span key={page} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                        <span
+                          key={page}
+                          className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                        >
                           ...
                         </span>
-                      );
+                      )
                     }
-                    return null;
+                    return null
                   })}
-                  
+
                   <button
                     onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
                     disabled={currentPage === totalPages}
@@ -772,14 +755,11 @@ const ReviewManagement = () => {
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Review Details</h3>
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
+                <button onClick={() => setShowDetailModal(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-6 h-6" />
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -791,12 +771,17 @@ const ReviewManagement = () => {
                     <span className="font-medium">{selectedReview.email}</span>
                   </div>
                 </div>
-                
+
+                <div>
+                  <span className="text-sm text-gray-600 block">Review Type</span>
+                  {getReviewTypeBadge(selectedReview)}
+                </div>
+
                 <div>
                   <span className="text-sm text-gray-600 block">Product</span>
-                  <span className="font-medium">{selectedReview.product?.name || 'Product not found'}</span>
+                  <span className="font-medium">{selectedReview.product?.name || "Product not found"}</span>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="text-sm text-gray-600 block">Rating</span>
@@ -810,19 +795,19 @@ const ReviewManagement = () => {
                     {getStatusBadge(selectedReview.status)}
                   </div>
                 </div>
-                
+
                 <div>
                   <span className="text-sm text-gray-600 block mb-1">Comment</span>
                   <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{selectedReview.comment}</p>
                 </div>
-                
+
                 {selectedReview.image && (
                   <div>
                     <span className="text-sm text-gray-600 block mb-1">Attached Image</span>
                     <ImageWithFallback imagePath={selectedReview.image} />
                   </div>
                 )}
-                
+
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                   <div>
                     <span className="block">Submitted</span>
@@ -835,17 +820,19 @@ const ReviewManagement = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {selectedReview.adminNotes && (
                   <div>
                     <span className="text-sm text-gray-600 block mb-1">Admin Notes</span>
-                    <p className="text-gray-900 bg-yellow-50 p-3 rounded-lg border border-yellow-200">{selectedReview.adminNotes}</p>
+                    <p className="text-gray-900 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                      {selectedReview.adminNotes}
+                    </p>
                   </div>
                 )}
               </div>
-              
+
               <div className="mt-6 flex justify-end space-x-3">
-                {selectedReview.status === 'pending' && (
+                {selectedReview.status === "pending" && (
                   <>
                     <button
                       onClick={() => handleApproveReview(selectedReview._id)}
@@ -892,18 +879,13 @@ const ReviewManagement = () => {
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Reject Review</h3>
-                <button
-                  onClick={() => setShowRejectModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
+                <button onClick={() => setShowRejectModal(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-6 h-6" />
                 </button>
               </div>
-              
+
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for rejection
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Reason for rejection</label>
                 <textarea
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   rows="4"
@@ -912,7 +894,7 @@ const ReviewManagement = () => {
                   onChange={(e) => setRejectReason(e.target.value)}
                 />
               </div>
-              
+
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setShowRejectModal(false)}
@@ -925,7 +907,7 @@ const ReviewManagement = () => {
                   disabled={actionLoading || !rejectReason.trim()}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
                 >
-                  {actionLoading ? 'Rejecting...' : 'Reject Review'}
+                  {actionLoading ? "Rejecting..." : "Reject Review"}
                 </button>
               </div>
             </div>
@@ -933,7 +915,7 @@ const ReviewManagement = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ReviewManagement;
+export default ReviewManagement

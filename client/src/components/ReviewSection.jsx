@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import axios from "axios"
 import config from "../config/config.js"
-import { Star, X, ThumbsUp, Flag, User, ImageIcon, CheckCircle } from "lucide-react"
+import { Star, X, ThumbsUp, Flag, User, ImageIcon, CheckCircle, Mail, Shield } from "lucide-react"
 
 const ReviewSection = ({ productId }) => {
   const { user } = useAuth()
@@ -27,6 +27,14 @@ const ReviewSection = ({ productId }) => {
   const [imagePreview, setImagePreview] = useState(null)
   const [guestReviewIds, setGuestReviewIds] = useState([])
   const fileInputRef = useRef(null)
+
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [verificationId, setVerificationId] = useState(null)
+  const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""])
+  const [verifyingCode, setVerifyingCode] = useState(false)
+  const [resendingCode, setResendingCode] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const verificationInputRefs = useRef([])
 
   const [reviewForm, setReviewForm] = useState({
     rating: 5,
@@ -51,6 +59,13 @@ const ReviewSection = ({ productId }) => {
       fetchReviews()
     }
   }, [productId, currentPage, guestReviewIds])
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [resendCooldown])
 
   const fetchReviews = async () => {
     try {
@@ -153,46 +168,161 @@ const ReviewSection = ({ productId }) => {
 
       const response = await axios.post(`${config.API_URL}/api/reviews`, formData, requestConfig)
 
-      if (!user && response.data.review) {
-        const reviewId = response.data.review._id || response.data.review.id
-        console.log("* Backend response:", response.data.review)
-        console.log("* Storing guest review ID:", reviewId)
+      if (user) {
+        showToast("Review submitted and published successfully!", "success")
 
-        if (reviewId) {
-          const newGuestReviewIds = [...guestReviewIds, reviewId]
-          setGuestReviewIds(newGuestReviewIds)
-          localStorage.setItem(`guestReviews_${productId}`, JSON.stringify(newGuestReviewIds))
-          console.log("* Updated guest review IDs:", newGuestReviewIds)
+        setReviewForm({
+          rating: 5,
+          comment: "",
+          name: user?.name || "",
+          email: user?.email || "",
+        })
+        removeImage()
+        setShowReviewForm(false)
 
-          console.log("* Forcing immediate refetch with new guest review ID")
-          setTimeout(() => {
-            const storedIds = JSON.parse(localStorage.getItem(`guestReviews_${productId}`) || "[]")
-            console.log("* IDs from localStorage before refetch:", storedIds)
-            setGuestReviewIds(storedIds)
-          }, 100)
+        setTimeout(() => {
+          fetchReviews()
+        }, 500)
+      } else {
+        if (response.data.requiresVerification) {
+          setVerificationId(response.data.verificationId)
+          setShowVerificationModal(true)
+          setShowReviewForm(false)
+          showToast("Please check your email for a verification code", "info")
         }
       }
-
-      showToast("Review submitted successfully! It will be visible after admin approval.", "success")
-
-      setReviewForm({
-        rating: 5,
-        comment: "",
-        name: user?.name || "",
-        email: user?.email || "",
-      })
-      removeImage()
-      setShowReviewForm(false)
-
-      setTimeout(() => {
-        fetchReviews()
-      }, 500)
     } catch (error) {
       console.error("Error submitting review:", error)
       const message = error.response?.data?.message || "Error submitting review"
       showToast(message, "error")
     } finally {
       setSubmittingReview(false)
+    }
+  }
+
+  const handleVerificationInputChange = (index, value) => {
+    // Only allow numbers
+    if (!/^\d*$/.test(value)) return
+
+    const newCode = [...verificationCode]
+    newCode[index] = value
+
+    setVerificationCode(newCode)
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      verificationInputRefs.current[index + 1]?.focus()
+    }
+
+    // Auto-submit when all fields are filled
+    if (newCode.every((digit) => digit !== "") && newCode.join("").length === 6) {
+      handleVerifyCode(newCode.join(""))
+    }
+  }
+
+  const handleVerificationKeyDown = (index, e) => {
+    // Handle backspace
+    if (e.key === "Backspace" && !verificationCode[index] && index > 0) {
+      verificationInputRefs.current[index - 1]?.focus()
+    }
+
+    // Handle arrow keys
+    if (e.key === "ArrowLeft" && index > 0) {
+      verificationInputRefs.current[index - 1]?.focus()
+    }
+    if (e.key === "ArrowRight" && index < 5) {
+      verificationInputRefs.current[index + 1]?.focus()
+    }
+  }
+
+  const handleVerificationPaste = (e) => {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6)
+
+    if (pastedData.length === 6) {
+      const newCode = pastedData.split("")
+      setVerificationCode(newCode)
+
+      // Focus last input
+      verificationInputRefs.current[5]?.focus()
+
+      // Auto-submit
+      handleVerifyCode(pastedData)
+    }
+  }
+
+  const handleVerifyCode = async (code) => {
+    if (!verificationId || code.length !== 6) {
+      showToast("Please enter all 6 digits", "error")
+      return
+    }
+
+    setVerifyingCode(true)
+
+    try {
+      const response = await axios.post(`${config.API_URL}/api/reviews/verify-email`, {
+        verificationId,
+        code,
+      })
+
+      if (response.data.review) {
+        const reviewId = response.data.review.id
+        const newGuestReviewIds = [...guestReviewIds, reviewId]
+        setGuestReviewIds(newGuestReviewIds)
+        localStorage.setItem(`guestReviews_${productId}`, JSON.stringify(newGuestReviewIds))
+      }
+
+      showToast("Email verified successfully! Your review has been published.", "success")
+
+      // Reset form and close modals
+      setReviewForm({
+        rating: 5,
+        comment: "",
+        name: "",
+        email: "",
+      })
+      removeImage()
+      setShowVerificationModal(false)
+      setVerificationCode(["", "", "", "", "", ""])
+      setVerificationId(null)
+
+      // Refresh reviews
+      setTimeout(() => {
+        fetchReviews()
+      }, 500)
+    } catch (error) {
+      console.error("Error verifying code:", error)
+      const message = error.response?.data?.message || "Invalid or expired verification code"
+      showToast(message, "error")
+      setVerificationCode(["", "", "", "", "", ""])
+      verificationInputRefs.current[0]?.focus()
+    } finally {
+      setVerifyingCode(false)
+    }
+  }
+
+  const handleResendVerificationCode = async () => {
+    if (!verificationId) {
+      showToast("Verification session expired. Please submit your review again.", "error")
+      setShowVerificationModal(false)
+      return
+    }
+
+    setResendingCode(true)
+
+    try {
+      await axios.post(`${config.API_URL}/api/reviews/resend-verification`, {
+        verificationId,
+      })
+
+      showToast("Verification code sent successfully!", "success")
+      setResendCooldown(60) // 60 second cooldown
+    } catch (error) {
+      console.error("Error resending code:", error)
+      const message = error.response?.data?.message || "Failed to resend code. Please try again."
+      showToast(message, "error")
+    } finally {
+      setResendingCode(false)
     }
   }
 
@@ -324,6 +454,22 @@ const ReviewSection = ({ productId }) => {
             </button>
           </div>
 
+          {user ? (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+              <Shield className="w-5 h-5 text-green-600" />
+              <span className="text-green-800 text-sm">
+                <strong>Logged in as {user.name}</strong> - Your review will be published immediately
+              </span>
+            </div>
+          ) : (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center space-x-2">
+              <Mail className="w-5 h-5 text-blue-600" />
+              <span className="text-blue-800 text-sm">
+                <strong>Guest Review</strong> - We'll send a verification code to your email before publishing
+              </span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmitReview} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Your Rating</label>
@@ -422,6 +568,88 @@ const ReviewSection = ({ productId }) => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {showVerificationModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-md shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Verify Your Email</h3>
+                <button
+                  onClick={() => {
+                    setShowVerificationModal(false)
+                    setVerificationCode(["", "", "", "", "", ""])
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="text-center mb-6">
+                <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-green-100 mb-4">
+                  <Mail className="h-6 w-6 text-green-600" />
+                </div>
+                <p className="text-sm text-gray-600">
+                  We've sent a 6-digit verification code to your email address. Please enter it below to publish your
+                  review.
+                </p>
+              </div>
+
+              <div className="mb-6">
+                <div className="flex justify-center space-x-2">
+                  {verificationCode.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (verificationInputRefs.current[index] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleVerificationInputChange(index, e.target.value)}
+                      onKeyDown={(e) => handleVerificationKeyDown(index, e)}
+                      onPaste={handleVerificationPaste}
+                      className="w-12 h-12 text-center text-2xl font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
+                      disabled={verifyingCode}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col space-y-3">
+                <button
+                  onClick={() => handleVerifyCode(verificationCode.join(""))}
+                  disabled={verifyingCode || verificationCode.some((digit) => digit === "")}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {verifyingCode && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                  )}
+                  <span>{verifyingCode ? "Verifying..." : "Verify & Publish Review"}</span>
+                </button>
+
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">
+                    Didn't receive the code?{" "}
+                    <button
+                      type="button"
+                      onClick={handleResendVerificationCode}
+                      disabled={resendingCode || resendCooldown > 0}
+                      className="font-medium text-green-600 hover:text-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {resendingCode
+                        ? "Sending..."
+                        : resendCooldown > 0
+                          ? `Resend in ${resendCooldown}s`
+                          : "Resend Code"}
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
