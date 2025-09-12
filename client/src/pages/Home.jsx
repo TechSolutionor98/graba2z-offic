@@ -5,13 +5,10 @@
 // import productCache from "../services/productCache"
 // import { createSlug, generateShopURL } from "../utils/urlUtils"
 
-
-
 // import BigSaleSection from "../components/BigSaleSection"
 // import {
 //   Star,
 //   Heart,
-//   ChevronLeft,
 //   ChevronRight,
 //   CreditCard,
 //   Truck,
@@ -30,10 +27,9 @@
 // import CategorySlider from "../components/CategorySlider"
 // import { useWishlist } from "../context/WishlistContext"
 // import { useCart } from "../context/CartContext"
-// import BrandSlider from "../components/BrandSlider";
+// import BrandSlider from "../components/BrandSlider"
 
 // import config from "../config/config"
-// import NewsletterModal from "../components/NewsletterModal"
 
 // const API_BASE_URL = `${config.API_URL}`
 
@@ -73,16 +69,16 @@
 //   const [selectedBrand, setSelectedBrand] = useState(null)
 //   const [isTransitioning, setIsTransitioning] = useState(false)
 //   const [brandCurrentIndex, setBrandCurrentIndex] = useState(0)
-//   const [brandIndex, setBrandIndex] = useState(0); // <-- moved here
+//   const [brandIndex, setBrandIndex] = useState(0) // <-- moved here
 //   const sliderRef = useRef(null)
 //   const [scrollX, setScrollX] = useState(0)
 //   const [isAutoScrolling, setIsAutoScrolling] = useState(true)
 //   const [deviceType, setDeviceType] = useState(() => {
-//     if (typeof window !== 'undefined') {
-//       return window.innerWidth < 768 ? 'Mobile' : 'Desktop';
+//     if (typeof window !== "undefined") {
+//       return window.innerWidth < 768 ? "Mobile" : "Desktop"
 //     }
-//     return 'Desktop';
-//   });
+//     return "Desktop"
+//   })
 
 //   // Notification popup state
 //   const [showNotifPopup, setShowNotifPopup] = useState(false)
@@ -95,11 +91,11 @@
 
 //   useEffect(() => {
 //     function handleResize() {
-//       setDeviceType(window.innerWidth < 768 ? 'Mobile' : 'Desktop');
+//       setDeviceType(window.innerWidth < 768 ? "Mobile" : "Desktop")
 //     }
-//     window.addEventListener('resize', handleResize);
-//     return () => window.removeEventListener('resize', handleResize);
-//   }, []);
+//     window.addEventListener("resize", handleResize)
+//     return () => window.removeEventListener("resize", handleResize)
+//   }, [])
 
 //   useEffect(() => {
 //     if (!localStorage.getItem(NOTIF_POPUP_KEY)) {
@@ -135,13 +131,12 @@
 //         // Get products from cache or API
 //         const products = await productCache.getProducts()
 
-//         const [categoriesResponse, brandsResponse, bannersResponse, upgradeFeaturesResponse] =
-//           await Promise.all([
-//             axios.get(`${API_BASE_URL}/api/categories`),
-//             axios.get(`${API_BASE_URL}/api/brands`),
-//             axios.get(`${API_BASE_URL}/api/banners?active=true`),
-//             axios.get(`${API_BASE_URL}/api/upgrade-features?active=true`).catch(() => ({ data: [] })),
-//           ])
+//         const [categoriesResponse, brandsResponse, bannersResponse, upgradeFeaturesResponse] = await Promise.all([
+//           axios.get(`${API_BASE_URL}/api/categories`),
+//           axios.get(`${API_BASE_URL}/api/brands`),
+//           axios.get(`${API_BASE_URL}/api/banners?active=true`),
+//           axios.get(`${API_BASE_URL}/api/upgrade-features?active=true`).catch(() => ({ data: [] })),
+//         ])
 
 //         const categoriesData = categoriesResponse.data
 //         const brandsData = brandsResponse.data
@@ -155,42 +150,42 @@
 //         // Filter and validate categories - ensure they have proper structure
 //         const validCategories = Array.isArray(categoriesData)
 //           ? categoriesData.filter((cat) => {
-//             const isValid =
-//               cat &&
-//               typeof cat === "object" &&
-//               cat.name &&
-//               typeof cat.name === "string" &&
-//               cat.name.trim() !== "" &&
-//               cat.isActive !== false &&
-//               !cat.isDeleted &&
-//               !cat.name.match(/^[0-9a-fA-F]{24}$/) // Not an ID
+//               const isValid =
+//                 cat &&
+//                 typeof cat === "object" &&
+//                 cat.name &&
+//                 typeof cat.name === "string" &&
+//                 cat.name.trim() !== "" &&
+//                 cat.isActive !== false &&
+//                 !cat.isDeleted &&
+//                 !cat.name.match(/^[0-9a-fA-F]{24}$/) // Not an ID
 
-//             if (!isValid) {
-//               console.warn("Invalid category found:", cat)
-//             }
-//             return isValid
-//           })
+//               if (!isValid) {
+//                 console.warn("Invalid category found:", cat)
+//               }
+//               return isValid
+//             })
 //           : []
 
 //         // Filter and validate brands - ensure they have proper structure and names
 //         const validBrands = Array.isArray(brandsData)
 //           ? brandsData.filter((brand) => {
-//             const isValid =
-//               brand &&
-//               typeof brand === "object" &&
-//               brand.name &&
-//               typeof brand.name === "string" &&
-//               brand.name.trim() !== "" &&
-//               brand.isActive !== false &&
-//               !brand.name.match(/^[0-9a-fA-F]{24}$/) && // Not an ID
-//               brand.logo && // Has logo
-//               brand.logo.trim() !== ""
+//               const isValid =
+//                 brand &&
+//                 typeof brand === "object" &&
+//                 brand.name &&
+//                 typeof brand.name === "string" &&
+//                 brand.name.trim() !== "" &&
+//                 brand.isActive !== false &&
+//                 !brand.name.match(/^[0-9a-fA-F]{24}$/) && // Not an ID
+//                 brand.logo && // Has logo
+//                 brand.logo.trim() !== ""
 
-//             if (!isValid) {
-//               console.warn("Invalid brand found:", brand)
-//             }
-//             return isValid
-//           })
+//               if (!isValid) {
+//                 console.warn("Invalid brand found:", brand)
+//               }
+//               return isValid
+//             })
 //           : []
 
 //         // Create brand lookup maps
@@ -221,9 +216,15 @@
 //           .filter((product) => product.featured)
 //           .sort((a, b) => {
 //             // Check if products are in stock
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
-            
+//             const aInStock =
+//               a.stockStatus === "Available" ||
+//               a.stockStatus === "Available Product" ||
+//               (!a.stockStatus && a.countInStock > 0)
+//             const bInStock =
+//               b.stockStatus === "Available" ||
+//               b.stockStatus === "Available Product" ||
+//               (!b.stockStatus && b.countInStock > 0)
+
 //             // In-stock products come first
 //             if (aInStock && !bInStock) return -1
 //             if (!aInStock && bInStock) return 1
@@ -276,22 +277,28 @@
 //         // Enhanced main category filtering function
 //         const filterProductsByMainCategory = (products, mainCategoryName) => {
 //           return products.filter((product) => {
-//             if (!product.parentCategory) return false;
-//             let mainCatName = "";
+//             if (!product.parentCategory) return false
+//             let mainCatName = ""
 //             if (typeof product.parentCategory === "string") {
-//               mainCatName = categoryIdToName[product.parentCategory] || product.parentCategory;
+//               mainCatName = categoryIdToName[product.parentCategory] || product.parentCategory
 //             } else if (typeof product.parentCategory === "object" && product.parentCategory?.name) {
-//               mainCatName = product.parentCategory.name;
+//               mainCatName = product.parentCategory.name
 //             }
-//             return mainCatName.toLowerCase().includes(mainCategoryName.toLowerCase());
-//           });
-//         };
+//             return mainCatName.toLowerCase().includes(mainCategoryName.toLowerCase())
+//           })
+//         }
 
 //         // Get brand products and sort by stock status (in-stock first)
 //         const hpData = filterProductsByBrand(products, "HP")
 //           .sort((a, b) => {
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+//             const aInStock =
+//               a.stockStatus === "Available" ||
+//               a.stockStatus === "Available Product" ||
+//               (!a.stockStatus && a.countInStock > 0)
+//             const bInStock =
+//               b.stockStatus === "Available" ||
+//               b.stockStatus === "Available Product" ||
+//               (!b.stockStatus && a.countInStock > 0)
 //             if (aInStock && !bInStock) return -1
 //             if (!aInStock && bInStock) return 1
 //             return 0
@@ -299,8 +306,14 @@
 //           .slice(0, 3)
 //         const dellData = filterProductsByBrand(products, "Dell")
 //           .sort((a, b) => {
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+//             const aInStock =
+//               a.stockStatus === "Available" ||
+//               a.stockStatus === "Available Product" ||
+//               (!a.stockStatus && a.countInStock > 0)
+//             const bInStock =
+//               b.stockStatus === "Available" ||
+//               b.stockStatus === "Available Product" ||
+//               (!b.stockStatus && b.countInStock > 0)
 //             if (aInStock && !bInStock) return -1
 //             if (!aInStock && bInStock) return 1
 //             return 0
@@ -308,8 +321,14 @@
 //           .slice(0, 3)
 //         const acerData = filterProductsByBrand(products, "Acer")
 //           .sort((a, b) => {
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+//             const aInStock =
+//               a.stockStatus === "Available" ||
+//               a.stockStatus === "Available Product" ||
+//               (!a.stockStatus && a.countInStock > 0)
+//             const bInStock =
+//               b.stockStatus === "Available" ||
+//               b.stockStatus === "Available Product" ||
+//               (!b.stockStatus && b.countInStock > 0)
 //             if (aInStock && !bInStock) return -1
 //             if (!aInStock && bInStock) return 1
 //             return 0
@@ -317,8 +336,14 @@
 //           .slice(0, 3)
 //         const asusData = filterProductsByBrand(products, "ASUS")
 //           .sort((a, b) => {
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+//             const aInStock =
+//               a.stockStatus === "Available" ||
+//               a.stockStatus === "Available Product" ||
+//               (!a.stockStatus && a.countInStock > 0)
+//             const bInStock =
+//               b.stockStatus === "Available" ||
+//               b.stockStatus === "Available Product" ||
+//               (!b.stockStatus && b.countInStock > 0)
 //             if (aInStock && !bInStock) return -1
 //             if (!aInStock && bInStock) return 1
 //             return 0
@@ -328,8 +353,14 @@
 //         // Get category products and sort by stock status (in-stock first)
 //         const accessoriesData = filterProductsByMainCategory(products, "Accessories")
 //           .sort((a, b) => {
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+//             const aInStock =
+//               a.stockStatus === "Available" ||
+//               a.stockStatus === "Available Product" ||
+//               (!a.stockStatus && a.countInStock > 0)
+//             const bInStock =
+//               b.stockStatus === "Available" ||
+//               b.stockStatus === "Available Product" ||
+//               (!b.stockStatus && b.countInStock > 0)
 //             if (aInStock && !bInStock) return -1
 //             if (!aInStock && bInStock) return 1
 //             return 0
@@ -338,34 +369,47 @@
 
 //         // Get Networking products (DYNAMIC CATEGORY ID BY NAME)
 //         const networkingCategory = validCategories.find(
-//           cat => cat.name && cat.name.trim().toLowerCase() === "networking"
-//         );
-//         let networkingData = [];
+//           (cat) => cat.name && cat.name.trim().toLowerCase() === "networking",
+//         )
+//         let networkingData = []
 //         if (networkingCategory) {
-//           networkingData = products.filter(product => {
-//             return (
-//               (typeof product.category === "string" && product.category === networkingCategory._id) ||
-//               (typeof product.category === "object" && product.category?._id === networkingCategory._id) ||
-//               (typeof product.parentCategory === "string" && product.parentCategory === networkingCategory._id) ||
-//               (typeof product.parentCategory === "object" && product.parentCategory?._id === networkingCategory._id)
-//             );
-//           })
-//           .sort((a, b) => {
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
-//             if (aInStock && !bInStock) return -1
-//             if (!aInStock && bInStock) return 1
-//             return 0
-//           })
-//           .slice(0, 8);
+//           networkingData = products
+//             .filter((product) => {
+//               return (
+//                 (typeof product.category === "string" && product.category === networkingCategory._id) ||
+//                 (typeof product.category === "object" && product.category?._id === networkingCategory._id) ||
+//                 (typeof product.parentCategory === "string" && product.parentCategory === networkingCategory._id) ||
+//                 (typeof product.parentCategory === "object" && product.parentCategory?._id === networkingCategory._id)
+//               )
+//             })
+//             .sort((a, b) => {
+//               const aInStock =
+//                 a.stockStatus === "Available" ||
+//                 a.stockStatus === "Available Product" ||
+//                 (!a.stockStatus && a.countInStock > 0)
+//               const bInStock =
+//                 b.stockStatus === "Available" ||
+//                 b.stockStatus === "Available Product" ||
+//                 (!b.stockStatus && b.countInStock > 0)
+//               if (aInStock && !bInStock) return -1
+//               if (!aInStock && bInStock) return 1
+//               return 0
+//             })
+//             .slice(0, 8)
 //         }
 //         console.log("Networking Products found:", networkingData)
 
 //         // Get MSI products and sort by stock status (in-stock first)
 //         let msiData = filterProductsByBrand(products, "MSI")
 //           .sort((a, b) => {
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+//             const aInStock =
+//               a.stockStatus === "Available" ||
+//               a.stockStatus === "Available Product" ||
+//               (!a.stockStatus && a.countInStock > 0)
+//             const bInStock =
+//               b.stockStatus === "Available" ||
+//               b.stockStatus === "Available Product" ||
+//               (!b.stockStatus && b.countInStock > 0)
 //             if (aInStock && !bInStock) return -1
 //             if (!aInStock && bInStock) return 1
 //             return 0
@@ -376,8 +420,14 @@
 //         // Get Lenovo products and sort by stock status (in-stock first)
 //         let lenovoData = filterProductsByBrand(products, "Lenovo")
 //           .sort((a, b) => {
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+//             const aInStock =
+//               a.stockStatus === "Available" ||
+//               a.stockStatus === "Available Product" ||
+//               (!a.stockStatus && a.countInStock > 0)
+//             const bInStock =
+//               b.stockStatus === "Available" ||
+//               b.stockStatus === "Available Product" ||
+//               (!b.stockStatus && b.countInStock > 0)
 //             if (aInStock && !bInStock) return -1
 //             if (!aInStock && bInStock) return 1
 //             return 0
@@ -388,8 +438,14 @@
 //         // Get Apple products and sort by stock status (in-stock first)
 //         let appleData = filterProductsByBrand(products, "Apple")
 //           .sort((a, b) => {
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+//             const aInStock =
+//               a.stockStatus === "Available" ||
+//               a.stockStatus === "Available Product" ||
+//               (!a.stockStatus && a.countInStock > 0)
+//             const bInStock =
+//               b.stockStatus === "Available" ||
+//               b.stockStatus === "Available Product" ||
+//               (!b.stockStatus && b.countInStock > 0)
 //             if (aInStock && !bInStock) return -1
 //             if (!aInStock && bInStock) return 1
 //             return 0
@@ -400,8 +456,14 @@
 //         // Get Samsung products and sort by stock status (in-stock first)
 //         let samsungData = filterProductsByBrand(products, "Samsung")
 //           .sort((a, b) => {
-//             const aInStock = a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
-//             const bInStock = b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+//             const aInStock =
+//               a.stockStatus === "Available" ||
+//               a.stockStatus === "Available Product" ||
+//               (!a.stockStatus && a.countInStock > 0)
+//             const bInStock =
+//               b.stockStatus === "Available" ||
+//               b.stockStatus === "Available Product" ||
+//               (!b.stockStatus && b.countInStock > 0)
 //             if (aInStock && !bInStock) return -1
 //             if (!aInStock && bInStock) return 1
 //             return 0
@@ -552,7 +614,7 @@
 //       if (!sliderRef.current) return
 //       const track = sliderRef.current
 //       const totalWidth = track.scrollWidth / 2 // width of one set
-//       let nextScrollX = scrollX + speed
+//       const nextScrollX = scrollX + speed
 //       if (nextScrollX >= totalWidth) {
 //         // Instantly reset to the start (no animation)
 //         track.style.transition = "none"
@@ -601,7 +663,7 @@
 //   }, [brandCurrentIndex, brands.length])
 
 //   const handleCategoryClick = (categoryName) => {
-//     const category = categories.find(cat => cat.name === categoryName)
+//     const category = categories.find((cat) => cat.name === categoryName)
 //     if (category && category.name) {
 //       navigate(generateShopURL({ parentCategory: category.name }))
 //     } else {
@@ -661,7 +723,7 @@
 
 //   // Calculate how many brands are visible at once
 //   const getVisibleCount = () => {
-//     if (typeof window !== 'undefined') {
+//     if (typeof window !== "undefined") {
 //       if (window.innerWidth < 768) return 4
 //       if (window.innerWidth < 1024) return 6
 //     }
@@ -669,21 +731,21 @@
 //   }
 //   const visibleCount = getVisibleCount()
 //   // Remove duplicate totalBrands declaration; use the one for featured brands section only
-//   const totalBrands = brands.length;
+//   const totalBrands = brands.length
 //   const getVisibleBrands = () => {
-//     if (!brands.length) return [];
-//     let visible = [];
+//     if (!brands.length) return []
+//     const visible = []
 //     for (let i = 0; i < visibleCount; i++) {
-//       visible.push(brands[(brandIndex + i) % totalBrands]);
+//       visible.push(brands[(brandIndex + i) % totalBrands])
 //     }
-//     return visible;
-//   };
+//     return visible
+//   }
 //   const handlePrevBrand = () => {
-//     setBrandIndex((prev) => (prev - 1 + totalBrands) % totalBrands);
-//   };
+//     setBrandIndex((prev) => (prev - 1 + totalBrands) % totalBrands)
+//   }
 //   const handleNextBrand = () => {
-//     setBrandIndex((prev) => (prev + 1) % totalBrands);
-//   };
+//     setBrandIndex((prev) => (prev + 1) % totalBrands)
+//   }
 
 //   const handleNotifDeny = () => {
 //     setShowNotifPopup(false)
@@ -694,11 +756,7 @@
 //   }
 //   const handleNotifEmailChange = (e) => setNotifEmail(e.target.value)
 //   const handleNotifPrefChange = (value) => {
-//     setNotifPrefs((prev) =>
-//       prev.includes(value)
-//         ? prev.filter((v) => v !== value)
-//         : [...prev, value]
-//     )
+//     setNotifPrefs((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]))
 //   }
 //   const handleNotifEmailSubmit = async (e) => {
 //     e.preventDefault()
@@ -746,13 +804,21 @@
 //                 <div className="flex items-center mb-4">
 //                   <img src="/g.png" alt="Logo" className="w-16 h-18 rounded-full mr-4" />
 //                   <div>
-//                     <h2 className="text-lg font-bold text-black mb-1">This website would like to send you awesome updates and offers!</h2>
-//                     <p className="text-gray-600 text-sm">Notifications can be turned off anytime from browser settings.</p>
+//                     <h2 className="text-lg font-bold text-black mb-1">
+//                       This website would like to send you awesome updates and offers!
+//                     </h2>
+//                     <p className="text-gray-600 text-sm">
+//                       Notifications can be turned off anytime from browser settings.
+//                     </p>
 //                   </div>
 //                 </div>
 //                 <div className="flex justify-end gap-2 mt-4">
-//                   <button className="px-4 py-2 rounded bg-gray-200 text-black font-semibold" onClick={handleNotifDeny}>Don't Allow</button>
-//                   <button className="px-4 py-2 rounded bg-lime-500 text-white font-semibold" onClick={handleNotifAllow}>Allow</button>
+//                   <button className="px-4 py-2 rounded bg-gray-200 text-black font-semibold" onClick={handleNotifDeny}>
+//                     Don't Allow
+//                   </button>
+//                   <button className="px-4 py-2 rounded bg-lime-500 text-white font-semibold" onClick={handleNotifAllow}>
+//                     Allow
+//                   </button>
 //                 </div>
 //               </>
 //             )}
@@ -784,7 +850,7 @@
 //                 </div>
 //                 {/* Preferences checkboxes */}
 //                 <div className="flex flex-col md:flex-row gap-6 mb-2">
-//                   {NEWSLETTER_OPTIONS.map(opt => (
+//                   {NEWSLETTER_OPTIONS.map((opt) => (
 //                     <label key={opt.value} className="flex items-center text-black font-normal cursor-pointer">
 //                       <input
 //                         type="checkbox"
@@ -800,7 +866,9 @@
 //                 </div>
 //                 {notifError && <div className="text-red-500 text-sm mb-2">{notifError}</div>}
 //                 <div className="flex justify-end">
-//                   <button type="button" className="px-3 py-1 text-xs text-gray-500 underline" onClick={handleNotifDeny}>Cancel</button>
+//                   <button type="button" className="px-3 py-1 text-xs text-gray-500 underline" onClick={handleNotifDeny}>
+//                     Cancel
+//                   </button>
 //                 </div>
 //               </form>
 //             )}
@@ -814,7 +882,11 @@
 //           </div>
 //         </div>
 //       )}
-//       <BannerSlider banners={heroBanners.filter(banner => banner.deviceType && banner.deviceType.toLowerCase() === deviceType.toLowerCase())} />
+//       <BannerSlider
+//         banners={heroBanners.filter(
+//           (banner) => banner.deviceType && banner.deviceType.toLowerCase() === deviceType.toLowerCase(),
+//         )}
+//       />
 //       {/* Categories Section - Infinite Loop Scroll */}
 //       <CategorySlider categories={categories} onCategoryClick={handleCategoryClick} />
 
@@ -823,23 +895,34 @@
 //         {/* Desktop & Tablet - Grid Layout */}
 //         <div className="hidden md:flex justify-between gap-4">
 //           <div className="w-1/3 lg:w-1/3">
-//             <img src="Untitled-1.png" alt="Image 1" className="w-full h-auto rounded-lg cover" />
+//             <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
+//               <img src="Untitled-1.png" alt="Lenovo Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
+//             </Link>
 //           </div>
 //           <div className="w-1/3 lg:w-1/3">
-//             <img src="acer 2.png" alt="Image 2" className="w-full h-auto rounded-lg cover" />
+//             <Link to="/product-category/laptops?brand=Acer" aria-label="Browse Acer products">
+//               <img src="acer 2.png" alt="Acer Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
+//             </Link>
 //           </div>
 //           <div className="w-1/3 lg:w-1/3 hidden lg:block">
-//             <img src="asus-2.png" alt="Image 3" className="w-full h-auto rounded-lg cover" />
+//             <Link to="/product-category/laptops?brand=Asus" aria-label="Browse Asus products">
+//               <img src="asus-2.png" alt="Asus Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
+//             </Link>
 //           </div>
 //         </div>
+
 
 //         {/* Mobile - Simple Grid */}
 //         <div className="md:hidden grid grid-cols-2 gap-3">
 //           <div>
-//             <img src="Untitled-1.png" alt="Image 1" className="w-full h-auto rounded-lg cover" />
+//             <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
+//               <img src="Untitled-1.png" alt="Lenovo Banner" className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer" />
+//             </Link>
 //           </div>
 //           <div>
-//             <img src="Untitled-123.png" alt="Image 2" className="w-full h-auto rounded-lg cover" />
+//             <Link to="/product-category/laptops?brand=MSI" aria-label="Browse Acer products">
+//               <img src="Untitled-123.png" alt="Acer Banner" className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer" />
+//             </Link>
 //           </div>
 //         </div>
 //       </div>
@@ -861,15 +944,15 @@
 //         </div>
 //       </section>
 
-
-
-//       {/* Mobile Banner */}
+//       {/* Mobile Banner (now clickable linking to HP brand page) */}
 //       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-//         <img
-//           src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939738/hp_ntmpcm.png"
-//           alt="HP Dell Banner Mobile"
-//           className="w-full h-full cover"
-//         />
+//         <Link to="/product-brand/hp" aria-label="Browse HP products">
+//           <img
+//             src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939738/hp_ntmpcm.png"
+//             alt="HP Products Banner Mobile"
+//             className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+//           />
+//         </Link>
 //       </div>
 
 //       {/* Desktop Banner - Two separate images side by side */}
@@ -950,11 +1033,15 @@
 //       {/* Accessories Banner - Desktop/Mobile Responsive */}
 //       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
 //         <Link to="/product-category/accessories-components">
-//         <img
-//           src={window.innerWidth < 768 ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939734/accessories_back_to_school_gun4tj.png" : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acessories_1_ceg4gu.png"}
-//           alt="Accessories Promotion Banner"
-//           className="w-full h-full cover rounded-lg"
-//         />
+//           <img
+//             src={
+//               window.innerWidth < 768
+//                 ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939734/accessories_back_to_school_gun4tj.png"
+//                 : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acessories_1_ceg4gu.png"
+//             }
+//             alt="Accessories Promotion Banner"
+//             className="w-full h-full cover rounded-lg"
+//           />
 //         </Link>
 //       </div>
 
@@ -995,13 +1082,15 @@
 //         />
 //       </div> */}
 
-//       {/* Mobile Banner */}
+//       {/* Mobile Banner Asus */}
 //       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-//         <img
-//           src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
-//           alt="HP Dell Banner Mobile"
-//           className="w-full h-full cover"
-//         />
+//         <Link to="/product-brand/asus" aria-label="Browse ASUS products">
+//           <img
+//             src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
+//             alt="ASUS Products Banner Mobile"
+//             className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+//           />
+//         </Link>
 //       </div>
 
 //       {/* Desktop Banner - Two separate images side by side */}
@@ -1082,15 +1171,18 @@
 //       </section>
 
 //       {/* Networking Banner - Desktop/Mobile Responsive */}
-//       <div className="mx-3 my-4 h-[160px] lg:h-[300px]"> 
-       
-//       <Link to="/product-category/networking">
-//         <img
-//           src={window.innerWidth < 768 ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939743/networking_1_tyt4gl.png" : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png"}
-//           alt="Networking Banner"
-//           className="w-full h-full cover rounded-lg"
-//         />
-//       </Link>
+//       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
+//         <Link to="/product-category/networking">
+//           <img
+//             src={
+//               window.innerWidth < 768
+//                 ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939743/networking_1_tyt4gl.png"
+//                 : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png"
+//             }
+//             alt="Networking Banner"
+//             className="w-full h-full cover rounded-lg"
+//           />
+//         </Link>
 //       </div>
 
 //       {/* Networking Products Section - Mobile shows 2 products */}
@@ -1130,13 +1222,15 @@
 //         />
 //       </div> */}
 
-//       {/* Mobile Banner */}
+//       {/* Mobile Banner MSI */}
 //       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-//         <img
-//           src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
-//           alt="HP Dell Banner Mobile"
-//           className="w-full h-full cover"
-//         />
+//         <Link to="/product-brand/msi" aria-label="Browse MSI products">
+//           <img
+//             src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
+//             alt="MSI Products Banner Mobile"
+//             className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+//           />
+//         </Link>
 //       </div>
 
 //       {/* Desktop Banner - Two separate images side by side */}
@@ -1223,13 +1317,15 @@
 //         />
 //       </div> */}
 
-//          {/* Mobile Banner */}
+//       {/* Mobile Banner Apple */}
 //       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-//         <img
-//           src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939736/apple_tzrhlx.png"
-//           alt="HP Dell Banner Mobile"
-//           className="w-full h-full cover"
-//         />
+//         <Link to="/product-brand/apple" aria-label="Browse Apple products">
+//           <img
+//             src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939736/apple_tzrhlx.png"
+//             alt="Apple Products Banner Mobile"
+//             className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+//           />
+//         </Link>
 //       </div>
 
 //       {/* Desktop Banner - Two separate images side by side */}
@@ -1330,9 +1426,7 @@
 //       )}
 
 //       {/* Featured Brands Section - Use BrandSlider component */}
-//       {brands.length > 0 && (
-//         <BrandSlider brands={brands} onBrandClick={handleBrandClick} />
-//       )}
+//       {brands.length > 0 && <BrandSlider brands={brands} onBrandClick={handleBrandClick} />}
 
 //       {/* Core Service Section - Responsive: Desktop(4 in row), Mobile(2x2 grid) */}
 //       <section className="py-8 md:py-10 bg-white mt-2">
@@ -1397,8 +1491,6 @@
 //   )
 // }
 
-
-
 // const MobileProductCard = ({ product }) => {
 //   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
 //   const { addToCart } = useCart()
@@ -1423,9 +1515,10 @@
 //   } else if (offerPrice > 0) {
 //     priceToShow = offerPrice
 //   }
-//   // Use dynamic reviews
-//   const rating = product.rating || 0
-//   const numReviews = product.numReviews || 0
+
+//   // Fix rating and reviews display
+//   const rating = Number(product.rating) || 0
+//   const numReviews = Number(product.numReviews) || 0
 
 //   // Get category and brand names safely
 //   const categoryName = product.category?.name || "Unknown"
@@ -1453,9 +1546,7 @@
 //         </button>
 //       </div>
 //       <div className="mb-1 flex items-center gap-2 ">
-//         <div
-//           className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}
-//         >
+//         <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}>
 //           {stockStatus}
 //         </div>
 //         {discount && (
@@ -1477,24 +1568,27 @@
 //           </div>
 //         )}
 //       </div>
+
+//       {/* Rating and Reviews Section - Fixed */}
 //       <div className="flex items-center">
 //         {[...Array(5)].map((_, i) => (
 //           <Star
 //             key={i}
 //             size={14}
-//             className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+//             className={`${i < Math.round(Number(product.rating) || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
 //           />
 //         ))}
-//         <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
+//         <span className="text-xs text-gray-500 ml-1">({Number(product.numReviews) || 0})</span>
 //       </div>
+
 //       <button
 //         onClick={(e) => {
 //           e.preventDefault()
 //           e.stopPropagation()
 //           // Immediate visual feedback
-//           e.target.style.transform = 'scale(0.95)'
+//           e.target.style.transform = "scale(0.95)"
 //           setTimeout(() => {
-//             if (e.target) e.target.style.transform = 'scale(1)'
+//             if (e.target) e.target.style.transform = "scale(1)"
 //           }, 100)
 //           addToCart(product)
 //         }}
@@ -1532,14 +1626,15 @@
 //   } else if (offerPrice > 0) {
 //     priceToShow = offerPrice
 //   }
-//   // Use dynamic reviews
-//   const rating = product.rating || 0
-//   const numReviews = product.numReviews || 0
+
+//   // Fix rating and reviews display
+//   const rating = Number(product.rating) || 0
+//   const numReviews = Number(product.numReviews) || 0
 
 //   // Get category and brand names safely
 //   const categoryName = product.category?.name || "Unknown"
 
-//   // Home page 3/3 products cards section 
+//   // Home page 3/3 products cards section
 //   return (
 //     <div className="border p-2 h-[400px] flex flex-col justify-between bg-white">
 //       <div className="relative mb-2 flex h-[180px] justify-center items-cente">
@@ -1563,9 +1658,7 @@
 //         </button>
 //       </div>
 //       <div className="mb-1 flex items-center gap-2 ">
-//         <div
-//           className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}
-//         >
+//         <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}>
 //           {stockStatus}
 //         </div>
 //         {discount && (
@@ -1587,29 +1680,27 @@
 //           </div>
 //         )}
 //       </div>
-//       {/* {showOldPrice && (
-//         <div className="text-xs text-green-600 font-medium mb-1">
-//           Save {Number(basePrice - priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
-//         </div>
-//       )} */}
+
+//       {/* Rating and Reviews Section - Fixed */}
 //       <div className="flex items-center">
 //         {[...Array(5)].map((_, i) => (
 //           <Star
 //             key={i}
 //             size={14}
-//             className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+//             className={`${i < Math.round(Number(product.rating) || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
 //           />
 //         ))}
-//         <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
+//         <span className="text-xs text-gray-500 ml-1">({Number(product.numReviews) || 0})</span>
 //       </div>
+
 //       <button
 //         onClick={(e) => {
 //           e.preventDefault()
 //           e.stopPropagation()
 //           // Immediate visual feedback
-//           e.target.style.transform = 'scale(0.95)'
+//           e.target.style.transform = "scale(0.95)"
 //           setTimeout(() => {
-//             if (e.target) e.target.style.transform = 'scale(1)'
+//             if (e.target) e.target.style.transform = "scale(1)"
 //           }, 100)
 //           addToCart(product)
 //         }}
@@ -1647,15 +1738,15 @@
 //   } else if (offerPrice > 0) {
 //     priceToShow = offerPrice
 //   }
-//   // Use dynamic reviews
-//   const rating = product.rating || 0
-//   const numReviews = product.numReviews || 0
+
+//   // Fix rating and reviews display
+//   const rating = Number(product.rating) || 0
+//   const numReviews = Number(product.numReviews) || 0
 
 //   // Get category and brand names safely
 //   const categoryName = product.category?.name || "Unknown"
 
-
-//   // Home page 6 products cards section 
+//   // Home page 6 products cards section
 //   return (
 //     <div className="border  rounded-lg p-3 mx-1 hover:shadow-md transition-shadow lg:min-h-[400px] lg:max-h-[360px] lg:min-w-[210px] lg:max-w-[220px] flex flex-col justify-between bg-white">
 //       <div className="relative  mb-3 flex justify-center items-center min-h-[155px] lg:max-h-[170px] ">
@@ -1685,7 +1776,9 @@
 //           {stockStatus}
 //         </div>
 //         {discount && (
-//           <div className="bg-yellow-400 text-white lg:px-1 px-0.5 py-1 rounded text-xs font-bold inline-block">{discount}</div>
+//           <div className="bg-yellow-400 text-white lg:px-1 px-0.5 py-1 rounded text-xs font-bold inline-block">
+//             {discount}
+//           </div>
 //         )}
 //       </div>
 //       <Link to={`/product/${product.slug || product._id}`}>
@@ -1703,21 +1796,19 @@
 //           </div>
 //         )}
 //       </div>
-//       {/* {showOldPrice && (
-//         <div className="text-xs text-green-600 font-medium mb-1">
-//           Save {Number(basePrice - priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
-//         </div>
-//       )} */}
+
+//       {/* Rating and Reviews Section - Fixed */}
 //       <div className="flex items-center">
 //         {[...Array(5)].map((_, i) => (
 //           <Star
 //             key={i}
 //             size={14}
-//             className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+//             className={`${i < Math.round(Number(product.rating) || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
 //           />
 //         ))}
-//         <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
+//         <span className="text-xs text-gray-500 ml-1">({Number(product.numReviews) || 0})</span>
 //       </div>
+
 //       <button
 //         onClick={(e) => {
 //           e.preventDefault()
@@ -1756,8 +1847,9 @@
 //     <div className="rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 group">
 //       <div className="flex items-start space-x-4">
 //         <div
-//           className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center ${feature.iconColor || "bg-blue-100"
-//             } group-hover:scale-110 transition-transform duration-300`}
+//           className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center ${
+//             feature.iconColor || "bg-blue-100"
+//           } group-hover:scale-110 transition-transform duration-300`}
 //         >
 //           <div className={`${feature.iconTextColor || "text-blue-600"}`}>{getIconComponent(feature.icon)}</div>
 //         </div>
@@ -1799,8 +1891,9 @@
 //           {feature.badge && (
 //             <div className="mt-3">
 //               <span
-//                 className={`inline-block px-2 py-1 md:px-3 md:py-1 text-xs font-medium rounded-full ${feature.badgeColor || "bg-green-100 text-green-800"
-//                   }`}
+//                 className={`inline-block px-2 py-1 md:px-3 md:py-1 text-xs font-medium rounded-full ${
+//                   feature.badgeColor || "bg-green-100 text-green-800"
+//                 }`}
 //               >
 //                 {feature.badge}
 //               </span>
@@ -1820,6 +1913,87 @@
 // }
 
 // export default Home
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2040,7 +2214,7 @@ const Home = () => {
         const featured = products
           .filter((product) => product.featured)
           .sort((a, b) => {
-            // Check if products are in stock
+            // Check if products are in stock or pre-order
             const aInStock =
               a.stockStatus === "Available" ||
               a.stockStatus === "Available Product" ||
@@ -2050,10 +2224,19 @@ const Home = () => {
               b.stockStatus === "Available Product" ||
               (!b.stockStatus && b.countInStock > 0)
 
-            // In-stock products come first
-            if (aInStock && !bInStock) return -1
-            if (!aInStock && bInStock) return 1
-            return 0
+            const aPreOrder = a.stockStatus === "PreOrder"
+            const bPreOrder = b.stockStatus === "PreOrder"
+
+            // Priority: In-stock first, then pre-order, then others
+            if (aInStock && !bInStock && !bPreOrder) return -1
+            if (!aInStock && !aPreOrder && (bInStock || bPreOrder)) return 1
+            if (aPreOrder && !bInStock && !bPreOrder) return -1
+            if (!aInStock && !aPreOrder && bPreOrder) return 1
+
+            // If both have same priority level, sort by updatedAt (newest first)
+            const aUpdated = new Date(a.updatedAt || a.createdAt || 0)
+            const bUpdated = new Date(b.updatedAt || b.createdAt || 0)
+            return bUpdated - aUpdated
           })
           .slice(0, 12)
 
@@ -2721,32 +2904,51 @@ const Home = () => {
         <div className="hidden md:flex justify-between gap-4">
           <div className="w-1/3 lg:w-1/3">
             <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
-              <img src="Untitled-1.png" alt="Lenovo Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
+              <img
+                src="Untitled-1.png"
+                alt="Lenovo Banner"
+                className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
+              />
             </Link>
           </div>
           <div className="w-1/3 lg:w-1/3">
             <Link to="/product-category/laptops?brand=Acer" aria-label="Browse Acer products">
-              <img src="acer 2.png" alt="Acer Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
+              <img
+                src="acer 2.png"
+                alt="Acer Banner"
+                className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
+              />
             </Link>
           </div>
           <div className="w-1/3 lg:w-1/3 hidden lg:block">
             <Link to="/product-category/laptops?brand=Asus" aria-label="Browse Asus products">
-              <img src="asus-2.png" alt="Asus Banner" className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer" />
+              <img
+                src="asus-2.png"
+                alt="Asus Banner"
+                className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
+              />
             </Link>
           </div>
         </div>
-
 
         {/* Mobile - Simple Grid */}
         <div className="md:hidden grid grid-cols-2 gap-3">
           <div>
             <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
-              <img src="Untitled-1.png" alt="Lenovo Banner" className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer" />
+              <img
+                src="Untitled-1.png"
+                alt="Lenovo Banner"
+                className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer"
+              />
             </Link>
           </div>
           <div>
             <Link to="/product-category/laptops?brand=MSI" aria-label="Browse Acer products">
-              <img src="Untitled-123.png" alt="Acer Banner" className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer" />
+              <img
+                src="Untitled-123.png"
+                alt="Acer Banner"
+                className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer"
+              />
             </Link>
           </div>
         </div>
