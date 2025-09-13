@@ -2953,7 +2953,7 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <div className=" flex items-center justify-center mt-2 mx-4">
+      <div className=" flex items-center justify-center mt-2 mx-2">
         <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757761484/tamara_tabby_kooxbn.webp" alt="" className="w-full  sm:mx-4 h-auto rounded-lg" />
       </div>
 
