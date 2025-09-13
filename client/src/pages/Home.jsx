@@ -3351,7 +3351,7 @@ const Home = () => {
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
         <Link to="/product-brand/apple" aria-label="Browse Apple products">
           <img
-            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939736/apple_tzrhlx.png"
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757769951/apple_half_side_n1cxhc.png"
             alt="Apple Products Banner Mobile"
             className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
           />
@@ -3363,7 +3363,7 @@ const Home = () => {
         <div className="w-1/2">
           <Link to="/product-brand/apple">
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/apple_half_side_n1cxhc.png"
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757769951/apple_half_side_n1cxhc.png"
               alt="HP Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
