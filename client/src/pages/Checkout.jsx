@@ -532,6 +532,9 @@ const Checkout = () => {
         return
       }
 
+      // Map tabby to card for payment processing
+      const actualPaymentMethod = selectedPaymentMethod === "tabby" ? "card" : selectedPaymentMethod
+
       // Prepare order data
       const orderData = {
         orderItems: cartItems.map((item) => ({
@@ -542,14 +545,15 @@ const Checkout = () => {
           quantity: item.quantity,
         })),
         itemsPrice: cartTotal,
-        shippingPrice: deliveryCharge, // Include delivery charge
-        totalPrice: finalTotal, // Include delivery charge
+        shippingPrice: deliveryCharge,
+        totalPrice: finalTotal,
         deliveryType: deliveryType,
-        paymentMethod: selectedPaymentMethod,
+        paymentMethod: actualPaymentMethod, // Use actual payment method (card for tabby)
         paymentStatus: "pending",
         isPaid: false,
         customerNotes: customerNotes.trim() || undefined,
       }
+
       if (deliveryType === "home") {
         orderData.shippingAddress = {
           name: formData.name,
@@ -560,7 +564,7 @@ const Checkout = () => {
           state: formData.state,
           zipCode: formData.zipCode,
         }
-        if (selectedPaymentMethod === "cod") {
+        if (actualPaymentMethod === "cod") {
           orderData.billingAddress = { ...orderData.shippingAddress }
         }
       } else if (deliveryType === "pickup") {
@@ -610,14 +614,13 @@ const Checkout = () => {
         console.log("Purchase tracked (COD):", orderId) // For debugging
       }
 
-      // Now initiate payment, passing orderId as reference
-      if (selectedPaymentMethod === "card") {
-        // N-Genius: pass orderId as reference
+      // Now initiate payment based on selected method
+      if (selectedPaymentMethod === "card" || selectedPaymentMethod === "tabby") {
+        // Both card and tabby use N-Genius card payment
         const response = await axios.post(`${config.API_URL}/api/payment/ngenius/card`, {
           amount: finalTotal,
           currencyCode: "AED",
           orderId: orderId,
-          // Add redirect URLs for success/cancel
           redirectUrl: `${window.location.origin}/payment/success`,
           cancelUrl: `${window.location.origin}/payment/cancel`,
         })
@@ -628,7 +631,7 @@ const Checkout = () => {
           throw new Error("Payment URL not received from N-Genius")
         }
       } else if (selectedPaymentMethod === "tamara") {
-        // Tamara: pass orderId as order_reference_id
+        // Tamara payment logic
         const tamaraPayload = {
           total_amount: {
             amount: finalTotal,
@@ -685,62 +688,6 @@ const Checkout = () => {
         } else {
           throw new Error("Payment URL not received from Tamara")
         }
-      } else if (selectedPaymentMethod === "tabby") {
-        // Tabby: pass orderId as reference_id
-        const tabbyPayload = {
-          payment: {
-            amount: finalTotal.toString(),
-            currency: "AED",
-            description: `Order payment for ${cartItems.length} items`,
-            buyer: {
-              phone: `+971${formData.phone}`,
-              email: formData.email,
-              name: formData.name,
-            },
-            shipping_address: {
-              city: formData.city,
-              address: formData.address,
-              zip: formData.zipCode,
-            },
-            order: {
-              tax_amount: taxAmount.toString(),
-              shipping_amount: deliveryCharge.toString(),
-              discount_amount: "0.00",
-              updated_at: new Date().toISOString(),
-              reference_id: orderId,
-              items: cartItems.map((item) => ({
-                title: item.name,
-                description: item.description || item.name,
-                quantity: item.quantity,
-                unit_price: item.price.toString(),
-                discount_amount: "0.00",
-                reference_id: item._id,
-                image_url: item.image,
-                product_url: `${window.location.origin}/product/${item.slug || item._id}`,
-                category: item.category || "Electronics",
-              })),
-            },
-            order_history: [],
-            meta: {
-              order_id: orderId,
-              customer: formData.email,
-            },
-          },
-          lang: "en",
-          merchant_code: process.env.REACT_APP_TABBY_MERCHANT_CODE,
-          merchant_urls: {
-            success: `${window.location.origin}/payment/success`,
-            cancel: `${window.location.origin}/payment/cancel`,
-            failure: `${window.location.origin}/payment/cancel`,
-          },
-        }
-        const response = await axios.post(`${config.API_URL}/api/payment/tabby/checkout`, tabbyPayload)
-        const paymentUrl = response.data?.checkout_url || response.data?.payment_url
-        if (paymentUrl) {
-          window.location.href = paymentUrl
-        } else {
-          throw new Error("Payment URL not received from Tabby")
-        }
       }
     } catch (error) {
       setError(error.response?.data?.message || error.message || "Failed to process order/payment. Please try again.")
@@ -749,7 +696,11 @@ const Checkout = () => {
   }
 
   const handlePaymentMethodSelect = (paymentMethod) => {
+    // Keep the visual selection as-is, but map tabby to card internally for processing
     setSelectedPaymentMethod(paymentMethod)
+
+    // For tracking purposes, use actual payment method (map tabby to card)
+    const actualPaymentMethod = paymentMethod === "tabby" ? "card" : paymentMethod
 
     // Track add payment info event
     if (cartItems.length > 0) {
@@ -759,7 +710,7 @@ const Checkout = () => {
         ecommerce: {
           currency: "AED",
           value: finalTotal,
-          payment_type: paymentMethod,
+          payment_type: actualPaymentMethod, // Use the actual payment method for tracking
           items: cartItems.map((item) => ({
             item_id: item._id,
             item_name: item.name,
@@ -771,7 +722,7 @@ const Checkout = () => {
         },
       })
 
-      console.log("Add payment info tracked:", paymentMethod) // For debugging
+      console.log("Add payment info tracked:", actualPaymentMethod) // For debugging
     }
   }
 
@@ -1544,16 +1495,38 @@ const Checkout = () => {
                     </div>
                   )}
 
-                  {(selectedPaymentMethod === "tamara" || selectedPaymentMethod === "tabby") && (
+                  {selectedPaymentMethod === "tamara" && (
                     <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="h-5 w-5 text-blue-600" />
                         <span className="font-semibold text-blue-800">Buy Now, Pay Later</span>
                       </div>
                       <p className="text-sm text-blue-700">
-                        {selectedPaymentMethod === "tamara"
-                          ? "Split your purchase into 3 interest-free installments with Tamara."
-                          : "Split your purchase into 4 interest-free installments with Tabby."}
+                        Split your purchase into 3 interest-free installments with Tamara.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod === "tabby" && (
+                    <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg mb-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="h-5 w-5 text-purple-600" />
+                        <span className="font-semibold text-purple-800">Split into 4 Payments</span>
+                      </div>
+                      <p className="text-sm text-purple-700">
+                        Split your purchase into 4 interest-free installments with Tabby.
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedPaymentMethod === "card" && (
+                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="h-5 w-5 text-blue-600" />
+                        <span className="font-semibold text-blue-800">Card Payment</span>
+                      </div>
+                      <p className="text-sm text-blue-700">
+                        Pay securely with your credit or debit card.
                       </p>
                     </div>
                   )}
@@ -1565,12 +1538,9 @@ const Checkout = () => {
                     >
                       Back
                     </button>
-                    {/* Use createOrderThenPay for online payments, handleSubmit for COD */}
                     <button
                       onClick={
-                        selectedPaymentMethod === "card" ||
-                        selectedPaymentMethod === "tamara" ||
-                        selectedPaymentMethod === "tabby"
+                        selectedPaymentMethod === "card" || selectedPaymentMethod === "tamara" || selectedPaymentMethod === "tabby"
                           ? createOrderThenPay
                           : handleSubmit
                       }
