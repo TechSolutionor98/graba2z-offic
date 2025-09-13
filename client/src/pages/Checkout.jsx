@@ -63,36 +63,43 @@ const STORES = [
 const PAYMENT_METHODS = [
   {
     id: "tamara",
-    name: "Tamara",
-    description: "Buy now, pay later in 3 installments",
-    iconUrls: [{ src: "/tamara.png", size: "big" }],
-    color: "bg-green-50 border-green-200",
+    name: "",
+    description: "",
+    iconUrls: [
+      { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764221/tamara_card_lh6vev.webp", size: "big" },
+    ],
+    color: "", // Remove background color
   },
   {
     id: "tabby",
-    name: "Tabby",
-    description: "Split your purchase into 4 payments",
-    iconUrls: [{ src: "/tabby.png", size: "big" }],
-    color: "bg-purple-50 border-purple-200",
+    name: "",
+    description: "",
+    iconUrls: [
+      { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764220/tabby_card_lpsmhh.webp", size: "big" },
+    ],
+    color: "", // Remove background color
   },
   {
     id: "card",
-    name: "Pay By Card",
-    description: "Credit/Debit card payment",
+    name: "",
+    description: "",
     iconUrls: [
-      { src: "/master.png", size: "medium" },
-      { src: "/visa.png", size: "medium" },
+      {
+        src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764222/master_visa_card_q9zo4b.webp",
+        size: "big",
+      },
     ],
-    color: "bg-blue-50 border-blue-200",
+    color: "", // Remove background color
   },
   {
     id: "cod",
-    name: "Cash On Delivery",
-    description: "Pay when you receive your order",
-    iconUrls: [{ src: "/currencyAED.png", size: "big" }],
-    color: "bg-yellow-50 border-yellow-200",
+    name: "",
+    description: "",
+    iconUrls: [{ src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764221/cash_qk1cws.webp", size: "big" }],
+    color: "", // Remove background color
   },
 ]
+
 
 const bounceKeyframes = `
 @keyframes bounce {
@@ -1243,7 +1250,7 @@ const Checkout = () => {
                         <button
                           type="button"
                           onClick={() => navigate("/cart")}
-                          className="flex-1 border border-gray-300 hover:bg-gray-100 text-gray-700 bg-red-400 font-semibold lg:py-3 lg:px-6 py-2 px-3 rounded-lg transition duration-300"
+                          className="flex-1 border border-gray-300 hover:bg-gray-100 text-gray-700 bg-red-500 font-semibold lg:py-3 lg:px-6 py-2 px-3 rounded-lg transition duration-300"
                         >
                           Back to Cart
                         </button>
@@ -1435,49 +1442,44 @@ const Checkout = () => {
                 <div>
                   <h3 className="font-bold text-lg mb-6">Payment Method</h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
                     {PAYMENT_METHODS.map((method) => (
                       <div
                         key={method.id}
-                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                        className={` rounded-lg p-4 cursor-pointer transition-all relative ${
                           selectedPaymentMethod === method.id
                             ? "border-lime-500 bg-lime-50"
-                            : `${method.color} hover:border-gray-300`
+                            : "border-gray-200 hover:border-gray-300 bg-white"
                         }`}
                         onClick={() => handlePaymentMethodSelect(method.id)}
                       >
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value={method.id}
-                            checked={selectedPaymentMethod === method.id}
-                            onChange={() => setSelectedPaymentMethod(method.id)}
-                            className="accent-lime-500"
-                          />
-                          <div className="flex items-center gap-3">
-                            <div>
-                              <div className="font-semibold text-gray-900">{method.name}</div>
-                              <div className="text-sm text-gray-600">{method.description}</div>
-                            </div>
-                            <div className="flex gap-2 ml-5 flex-wrap">
-                              {method.iconUrls.map((icon, idx) => (
-                                <img
-                                  key={idx}
-                                  src={icon.src || "/placeholder.svg"}
-                                  alt={method.name}
-                                  className={
-                                    icon.size === "big"
-                                      ? "w-20 h-12 md:w-28 md:h-16 object-contain max-w-full"
-                                      : icon.size === "medium"
-                                        ? "w-14 h-8 md:w-16 md:h-10 object-contain max-w-full"
-                                        : "w-10 h-6 md:w-12 md:h-8 object-contain max-w-full"
-                                  }
-                                />
-                              ))}
-                            </div>
+                        {/* Radio button positioned at top-left corner */}
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value={method.id}
+                          checked={selectedPaymentMethod === method.id}
+                          onChange={() => setSelectedPaymentMethod(method.id)}
+                          className="absolute top-20 left-16 accent-lime-500 w-4 h-4"
+                        />
+                        
+                        {/* Image container centered */}
+                        <div className="flex items-center justify-center pt-2">
+                          <div className="flex gap-2 flex-wrap justify-center">
+                            {method.iconUrls.map((icon, idx) => (
+                              <img
+                                key={idx}
+                                src={icon.src || "/placeholder.svg"}
+                                alt={method.name}
+                                className={`w-60 h-48 md:w-60 md:h-36 object-contain rounded-lg transition-all ${
+                                  selectedPaymentMethod === method.id
+                                    ? " border-lime-500"
+                                    : " border-gray-200"
+                                }`}
+                              />
+                            ))}
                           </div>
-                        </label>
+                        </div>
                       </div>
                     ))}
                   </div>
