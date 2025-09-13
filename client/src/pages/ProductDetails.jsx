@@ -920,13 +920,13 @@ const ProductDetails = () => {
 
         {/* Tabs Section */}
         <div className="bg-white rounded-lg shadow-sm mt-8">
-          <div className="border-b">
+          <div className="border-b bg-lime-500">
             <div className="flex space-x-8 px-6">
               <button
                 onClick={() => setActiveTab("description")}
                 className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${activeTab === "description"
-                  ? "border-green-500 text-green-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "border-white text-white"
+                  : "border-transparent text-black hover:text-gray-700"
                   }`}
               >
                 Product Description
@@ -934,8 +934,8 @@ const ProductDetails = () => {
               <button
                 onClick={() => setActiveTab("information")}
                 className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${activeTab === "information"
-                  ? "border-green-500 text-green-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "border-white text-white"
+                  : "border-transparent text-black hover:text-gray-700"
                   }`}
               >
                 More Information
@@ -943,8 +943,8 @@ const ProductDetails = () => {
               <button
                 onClick={() => setActiveTab("reviews")}
                 className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${activeTab === "reviews"
-                  ? "border-green-500 text-green-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                   ? "border-white text-white"
+                  : "border-transparent text-black hover:text-gray-700"
                   }`}
               >
                 Reviews ({product.numReviews || 0})
