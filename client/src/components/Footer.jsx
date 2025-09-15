@@ -153,7 +153,13 @@ const Footer = ({ className = "" }) => {
                 <a href="https://www.youtube.com/@grabAtoZ" target="_blank" className="text-white hover:text-lime-400">
                   <FontAwesomeIcon icon={faYoutube} style={{width: '20px', height: '20px'}} />
                 </a>
+
+                  
               </div>
+
+                <div className="flex  pt-7 px-3 space-x-2">
+              <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757938965/google_pj1cxc.webp" alt="Google Play" className="rounded-lg h-12" />
+            </div>
             </div>
 
             {/* Column 2 - Top Categories */}
@@ -317,9 +323,8 @@ const Footer = ({ className = "" }) => {
 
           {/* 3rd Column: App Store Images */}
           <div className="w-1/3 justify-end flex items-center">
-            <div className="flex space-x-2">
-              <img src="/google_play.png" alt="Google Play" className="rounded-lg h-9" />
-              <img src="/app_store.png" alt="App Store" className="rounded-lg h-9" />
+            <div className="flex space-x-3">
+              <h3 className="font-bold px-3">Made with ❤️ By Tech Solutionor</h3>
             </div>
           </div>
         </div>
@@ -521,6 +526,9 @@ const Footer = ({ className = "" }) => {
                     <FontAwesomeIcon icon={faYoutube} style={{width: '20px', height: '20px', color: '#FF0000'}} />
                   </a>
                 </div>
+
+
+            
               </div>
             </div>
           )}

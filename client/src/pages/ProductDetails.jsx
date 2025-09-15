@@ -884,33 +884,22 @@ const ProductDetails = () => {
 
               {/* Payment Methods */}
               <div className="border-t pt-4">
-                <h4 className="font-bold text-gray-900 text-sm mb-3">Payment Methods:</h4>
-                {/* <div className="flex items-center space-x-2 flex-wrap gap-2">
-                  <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">VISA</div>
-                  <div className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">MASTER</div>
-                  <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">COD</div>
-                </div> */}
-                <div className="flex ml-8 items-center space-x-2 flex-wrap gap-2">
-                  <div className="px-2 py-1 rounded flex items-center gap-1">
-                    <img src="/master.png" alt="master" className="w-10" />
+                <h4 className="font-bold text-white p-2 rounded-lg bg-red-500 text-center text-md mb-3">Payment Methods : </h4>
+                <div className=" ml-8 items-center space-x-2 flex-wrap gap-2">
+                  <div className="px-2 py-1 rounded flex items-center ">
+                    <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757919726/1st_logo_v8x2hc.webp" alt="master" className="w-auto" />
 
                   </div>
-                  <div className="px-2 py-1 rounded flex items-center gap-1">
-                    <img src="/visa.png" alt="visa" className="w-12" />
+                  <div className="px-2 py-1 rounded flex items-center ">
+                    <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757937381/2nd_logo_x6jzhz.webp" alt="visa" className="w-auto" />
 
                   </div>
-                  <div className="px-2 py-1 rounded flex items-center gap-1">
-                    <img src="/tamara.png" alt="tamara" className="w-20" />
+                  <div className="px-2 py-1 rounded flex items-center ">
+                    <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757937401/3rd_logo_fmwdkp.webp" alt="tamara" className="w-auto" />
 
                   </div>
-                  <div className="px-2 py-1 rounded flex items-center gap-1">
-                    <img src="/tabby.png" alt="tabby" className="w-16" />
-
-                  </div>
-                  <div className="px-2 py-1 rounded flex items-center gap-1">
-                    <img src="/cod.png" alt="cod" className=" w-10" />
-
-                  </div>
+                
+                 
                 </div>
 
               </div>
