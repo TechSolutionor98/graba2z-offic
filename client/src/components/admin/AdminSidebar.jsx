@@ -23,7 +23,8 @@ import {
   BookOpen,
   Truck,
   Phone,
-  Star, // Add Star icon for reviews
+  Star,
+  TrendingUp,
 } from "lucide-react"
 
 const AdminSidebar = () => {
@@ -46,6 +47,7 @@ const AdminSidebar = () => {
     subcategories: false,
     coupons: false,
     reviews: false, // Add reviews dropdown
+    stockAdjustment: false, // Added stockAdjustment dropdown state
   })
 
   // Auto-open dropdowns based on current route
@@ -116,6 +118,10 @@ const AdminSidebar = () => {
     // Reviews dropdown - open if any review-related route is active
     if (path.includes("/admin/reviews")) {
       newOpenDropdowns.reviews = true
+    }
+
+    if (path.includes("/admin/stock-adjustment")) {
+      newOpenDropdowns.stockAdjustment = true
     }
 
     // Individual dropdowns
@@ -291,6 +297,15 @@ const AdminSidebar = () => {
       ],
     },
     {
+      title: "Stock Adjustment",
+      icon: TrendingUp,
+      dropdown: "stockAdjustment",
+      items: [
+        { title: "Price Adjustment", path: "/admin/stock-adjustment/price-adjustment" },
+        { title: "Reports", path: "/admin/stock-adjustment/reports" },
+      ],
+    },
+    {
       title: "Delivery Charges",
       icon: Truck,
       dropdown: "deliveryCharges",
@@ -358,9 +373,7 @@ const AdminSidebar = () => {
       title: "Coupons",
       icon: Percent,
       dropdown: "coupons",
-      items: [
-        { title: "All Coupons", path: "/admin/coupons/all" },
-      ],
+      items: [{ title: "All Coupons", path: "/admin/coupons/all" }],
     },
     {
       title: "Email Templates",
@@ -430,8 +443,8 @@ const AdminSidebar = () => {
           to={item.path}
           className={`block ${paddingLeft} py-2 ${textSize} transition-colors duration-200 ${
             isActive(item.path)
-              ? "bg-lime-100 text-lime-800 border-r-2 border-lime-400"
-              : "text-gray-600 hover:bg-gray-200"
+              ? "bg-lime-100 text-lime-800 border-r-4 border-lime-400"
+              : "text-gray-700 hover:bg-gray-100"
           }`}
         >
           {item.title}

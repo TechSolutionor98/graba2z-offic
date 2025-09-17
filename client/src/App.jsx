@@ -117,6 +117,28 @@ import Rejected from "./pages/admin/Rejected"
 import OnlineOrders from "./pages/admin/OnlineOrders"
 import TrashCategories from "./pages/admin/TrashCategories"
 
+
+
+
+
+
+
+
+
+
+
+// Stock Adjustment page imports
+import PriceAdjustment from "./pages/admin/PriceAdjustment"
+import PriceAdjustmentReports from "./pages/admin/PriceAdjustmentReports"
+
+
+
+
+
+
+
+
+
 function WhatsAppButton() {
   return (
     <a
@@ -219,6 +241,24 @@ function App() {
                               <Route path="email-templates" element={<AdminEmailTemplates />} />
                               <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
                               <Route path="*" element={<NotFound />} />
+                            
+                            
+                            
+
+
+
+
+                          {/* Stock Adjustment routes */}
+                              <Route path="stock-adjustment/price-adjustment" element={<PriceAdjustment />} />
+                              <Route path="stock-adjustment/reports" element={<PriceAdjustmentReports />} />
+
+
+
+                            
+                            
+                            
+                            
+                            
                             </Routes>
                           </div>
                         </div>
