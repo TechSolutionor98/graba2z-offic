@@ -17,7 +17,7 @@ const Delivered = () => {
   const { showToast } = useToast()
 
   const formatPrice = (price) => {
-    return `Rs ${price.toLocaleString()}`
+    return `AED ${price.toLocaleString()}`
   }
 
   useEffect(() => {
@@ -37,6 +37,7 @@ const Delivered = () => {
         return
       }
 
+      console.log("[DEBUG] Fetching all orders...")
       const { data } = await axios.get(`${config.API_URL}/api/admin/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -44,8 +45,20 @@ const Delivered = () => {
         },
       })
 
-      const deliveredOrders = data.filter((order) => order.status === "Delivered")
+      console.log("[DEBUG] Total orders received:", data.length)
+      console.log("[DEBUG] All order statuses:", data.map((order) => ({ id: order._id.slice(-6), status: order.status })))
+
+      // Filter for delivered orders with case-insensitive comparison
+      const deliveredOrders = data.filter((order) => {
+        const status = order.status?.toLowerCase().trim()
+        return status === "delivered"
+      })
+
+      console.log("[DEBUG] Filtered delivered orders:", deliveredOrders.length)
+      console.log("[DEBUG] Delivered orders IDs:", deliveredOrders.map((order) => order._id.slice(-6)))
+
       setOrders(deliveredOrders)
+      setError(null) // Clear any previous errors
       setLoading(false)
     } catch (error) {
       console.error("Error fetching orders:", error)
@@ -88,12 +101,19 @@ const Delivered = () => {
     setSelectedOrder(null)
   }
 
-  const filteredOrders = orders.filter(
-    (order) =>
-      order._id.includes(searchTerm) ||
-      order.shippingAddress.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.shippingAddress.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  // Also update the filteredOrders logic to handle potential null values:
+  const filteredOrders = orders.filter((order) => {
+    const searchLower = searchTerm.toLowerCase()
+    const orderId = order._id || ""
+    const customerName = order.shippingAddress?.name || ""
+    const customerEmail = order.shippingAddress?.email || ""
+
+    return (
+      orderId.includes(searchTerm) ||
+      customerName.toLowerCase().includes(searchLower) ||
+      customerEmail.toLowerCase().includes(searchLower)
+    )
+  })
 
   return (
     <div className="min-h-screen bg-gray-100">
