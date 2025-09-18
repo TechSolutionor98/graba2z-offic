@@ -85,14 +85,17 @@ const AdminSidebar = () => {
     // Orders dropdown - open if any order-related route is active
     if (
       path.includes("/admin/orders") ||
-      path.includes("/admin/online-orders") ||
-      path.includes("/admin/received-orders") ||
-      path.includes("/admin/inprogress-orders") ||
-      path.includes("/admin/ready-shipment") ||
-      path.includes("/admin/on-the-way") ||
-      path.includes("/admin/delivered") ||
-      path.includes("/admin/on-hold") ||
-      path.includes("/admin/rejected")
+      path.includes("/admin/orders/new") ||
+      path.includes("/admin/orders/online") ||
+      path.includes("/admin/orders/received") ||
+      path.includes("/admin/orders/confirmed") ||
+      path.includes("/admin/orders/processing") ||
+      path.includes("/admin/orders/ready-for-shipment") ||
+      path.includes("/admin/orders/on-the-way") ||
+      path.includes("/admin/orders/delivered") ||
+      path.includes("/admin/orders/on-hold") ||
+      path.includes("/admin/orders/cancelled") ||
+      path.includes("/admin/orders/deleted")
     ) {
       newOpenDropdowns.orders = true
     }
@@ -319,14 +322,17 @@ const AdminSidebar = () => {
       icon: ShoppingCart,
       dropdown: "orders",
       items: [
-        { title: "Online Orders", path: "/admin/orders/online" },
-        { title: "Received Orders", path: "/admin/orders/received" },
-        { title: "Inprogress Orders", path: "/admin/orders/in-progress" },
+        { title: "New Orders", path: "/admin/orders/new" },
+        // { title: "Online Orders", path: "/admin/orders/online" },
+        // { title: "Received Orders", path: "/admin/orders/received" },
+        { title: "Confirmed", path: "/admin/orders/confirmed" },
+        { title: "Processing", path: "/admin/orders/processing" },
         { title: "Ready for Shipment", path: "/admin/orders/ready-for-shipment" },
         { title: "On the Way", path: "/admin/orders/on-the-way" },
         { title: "Delivered", path: "/admin/orders/delivered" },
         { title: "On Hold", path: "/admin/orders/on-hold" },
-        { title: "Rejected", path: "/admin/orders/rejected" },
+        { title: "Cancelled", path: "/admin/orders/cancelled" },
+        { title: "Deleted", path: "/admin/orders/deleted" },
       ],
     },
     {

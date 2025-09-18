@@ -118,7 +118,12 @@ import OnlineOrders from "./pages/admin/OnlineOrders"
 import TrashCategories from "./pages/admin/TrashCategories"
 
 
-
+import NewOrders from "./pages/admin/NewOrders"
+import ConfirmedOrders from "./pages/admin/ConfirmedOrders"
+import ProcessingOrders from "./pages/admin/ProcessingOrders"
+import OnHoldOrders from "./pages/admin/OnHoldOrders"
+import CancelledOrders from "./pages/admin/CancelledOrders"
+import DeletedOrders from "./pages/admin/DeletedOrders"
 
 
 
@@ -256,6 +261,28 @@ function App() {
 
                             
                             
+
+
+
+
+         {/* New Order Status Routes */}
+                              <Route path="orders/new" element={<NewOrders />} />
+                              <Route path="orders/confirmed" element={<ConfirmedOrders />} />
+                              <Route path="orders/processing" element={<ProcessingOrders />} />
+                              <Route path="orders/on-hold" element={<OnHoldOrders />} />
+                              <Route path="orders/cancelled" element={<CancelledOrders />} />
+                              <Route path="orders/deleted" element={<DeletedOrders />} />
+
+
+
+
+
+
+
+
+
+
+
                             
                             
                             
