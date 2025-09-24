@@ -100,7 +100,6 @@ const PAYMENT_METHODS = [
   },
 ]
 
-
 const bounceKeyframes = `
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
@@ -385,26 +384,47 @@ const Checkout = () => {
         currency: "AED",
       },
       shipping_amount: {
-        amount: 0,
+        amount: deliveryCharge,
         currency: "AED",
       },
       tax_amount: {
-        amount: taxAmount,
+        amount: 0, // VAT is included in prices
+        currency: "AED",
       },
       order_reference_id: `ORDER_${Date.now()}`,
       order_number: `ORD_${Date.now()}`,
+      description: `Order for ${cartItems.length} items from Graba2z`,
+      country_code: "AE",
+      payment_type: "PAY_BY_INSTALMENTS",
+      instalments: 3,
+      locale: "en_US",
+      platform: "Graba2z Online Store",
+      is_mobile: window.innerWidth <= 768,
       consumer: {
         first_name: formData.name.split(" ")[0] || "Customer",
-        last_name: formData.name.split(" ")[1] || "",
-        phone_number: `+971${formData.phone}`,
+        last_name: formData.name.split(" ").slice(1).join(" ") || "User",
+        phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
         email: formData.email,
       },
-      shipping_address: {
-        first_name: formData.name.split(" ")[0] || "Customer",
-        last_name: formData.name.split(" ")[1] || "",
-        line1: formData.address,
-        city: formData.city,
+      billing_address: {
+        city: formData.city || "Dubai",
         country_code: "AE",
+        first_name: formData.name.split(" ")[0] || "Customer",
+        last_name: formData.name.split(" ").slice(1).join(" ") || "User",
+        line1: formData.address || "Dubai, UAE",
+        line2: "",
+        phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
+        region: formData.state || "Dubai",
+      },
+      shipping_address: {
+        city: formData.city || "Dubai",
+        country_code: "AE",
+        first_name: formData.name.split(" ")[0] || "Customer",
+        last_name: formData.name.split(" ").slice(1).join(" ") || "User",
+        line1: formData.address || "Dubai, UAE",
+        line2: "",
+        phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
+        region: formData.state || "Dubai",
       },
       items: cartItems.map((item) => ({
         name: item.name,
@@ -422,14 +442,20 @@ const Checkout = () => {
         },
       })),
       merchant_url: {
-        success: `${window.location.origin}/orders?success=true`,
-        failure: `${window.location.origin}/checkout?error=payment_failed`,
-        cancel: `${window.location.origin}/checkout`,
-        notification: `${window.location.origin}/api/webhooks/tamara`,
+        success: `${window.location.origin}/payment/success`,
+        failure: `${window.location.origin}/payment/cancel`,
+        cancel: `${window.location.origin}/payment/cancel`,
+        notification: `${config.API_URL}/api/webhooks/tamara`,
       },
     }
 
-    const response = await axios.post(`${config.API_URL}/api/payment/tamara/checkout`, tamaraPayload)
+    const token = localStorage.getItem("token")
+    const axiosConfig = {}
+    if (token) {
+      axiosConfig.headers = { Authorization: `Bearer ${token}` }
+    }
+
+    const response = await axios.post(`${config.API_URL}/api/payment/tamara/checkout`, tamaraPayload, axiosConfig)
     return response.data
   }
 
@@ -645,26 +671,47 @@ const Checkout = () => {
             currency: "AED",
           },
           shipping_amount: {
-            amount: 0,
+            amount: deliveryCharge,
             currency: "AED",
           },
           tax_amount: {
-            amount: taxAmount,
+            amount: 0, // VAT is included in prices
+            currency: "AED",
           },
           order_reference_id: orderId,
           order_number: `ORD_${orderId}`,
+          description: `Order for ${cartItems.length} items from Graba2z`,
+          country_code: "AE",
+          payment_type: "PAY_BY_INSTALMENTS",
+          instalments: 3,
+          locale: "en_US",
+          platform: "Graba2z Online Store",
+          is_mobile: window.innerWidth <= 768,
           consumer: {
             first_name: formData.name.split(" ")[0] || "Customer",
-            last_name: formData.name.split(" ")[1] || "",
-            phone_number: `+971${formData.phone}`,
+            last_name: formData.name.split(" ").slice(1).join(" ") || "User",
+            phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
             email: formData.email,
           },
-          shipping_address: {
-            first_name: formData.name.split(" ")[0] || "Customer",
-            last_name: formData.name.split(" ")[1] || "",
-            line1: formData.address,
-            city: formData.city,
+          billing_address: {
+            city: formData.city || "Dubai",
             country_code: "AE",
+            first_name: formData.name.split(" ")[0] || "Customer",
+            last_name: formData.name.split(" ").slice(1).join(" ") || "User",
+            line1: formData.address || "Dubai, UAE",
+            line2: "",
+            phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
+            region: formData.state || "Dubai",
+          },
+          shipping_address: {
+            city: formData.city || "Dubai",
+            country_code: "AE",
+            first_name: formData.name.split(" ")[0] || "Customer",
+            last_name: formData.name.split(" ").slice(1).join(" ") || "User",
+            line1: formData.address || "Dubai, UAE",
+            line2: "",
+            phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
+            region: formData.state || "Dubai",
           },
           items: cartItems.map((item) => ({
             name: item.name,
@@ -685,10 +732,16 @@ const Checkout = () => {
             success: `${window.location.origin}/payment/success`,
             failure: `${window.location.origin}/payment/cancel`,
             cancel: `${window.location.origin}/payment/cancel`,
-            notification: `${window.location.origin}/api/webhooks/tamara`,
+            notification: `${config.API_URL}/api/webhooks/tamara`,
           },
         }
-        const response = await axios.post(`${config.API_URL}/api/payment/tamara/checkout`, tamaraPayload)
+
+        const axiosConfig = {}
+        if (token) {
+          axiosConfig.headers = { Authorization: `Bearer ${token}` }
+        }
+
+        const response = await axios.post(`${config.API_URL}/api/payment/tamara/checkout`, tamaraPayload, axiosConfig)
         const paymentUrl = response.data?.checkout_url || response.data?.payment_url
         if (paymentUrl) {
           window.location.href = paymentUrl
@@ -1462,7 +1515,7 @@ const Checkout = () => {
                           onChange={() => setSelectedPaymentMethod(method.id)}
                           className="absolute top-20 left-16 accent-lime-500 w-4 h-4"
                         />
-                        
+
                         {/* Image container centered */}
                         <div className="flex items-center justify-center pt-2">
                           <div className="flex gap-2 flex-wrap justify-center">
@@ -1472,9 +1525,7 @@ const Checkout = () => {
                                 src={icon.src || "/placeholder.svg"}
                                 alt={method.name}
                                 className={`w-60 h-48 md:w-60 md:h-36 object-contain rounded-lg transition-all ${
-                                  selectedPaymentMethod === method.id
-                                    ? " border-lime-500"
-                                    : " border-gray-200"
+                                  selectedPaymentMethod === method.id ? " border-lime-500" : " border-gray-200"
                                 }`}
                               />
                             ))}
@@ -1527,9 +1578,7 @@ const Checkout = () => {
                         <Clock className="h-5 w-5 text-blue-600" />
                         <span className="font-semibold text-blue-800">Card Payment</span>
                       </div>
-                      <p className="text-sm text-blue-700">
-                        Pay securely with your credit or debit card.
-                      </p>
+                      <p className="text-sm text-blue-700">Pay securely with your credit or debit card.</p>
                     </div>
                   )}
 
@@ -1542,7 +1591,9 @@ const Checkout = () => {
                     </button>
                     <button
                       onClick={
-                        selectedPaymentMethod === "card" || selectedPaymentMethod === "tamara" || selectedPaymentMethod === "tabby"
+                        selectedPaymentMethod === "card" ||
+                        selectedPaymentMethod === "tamara" ||
+                        selectedPaymentMethod === "tabby"
                           ? createOrderThenPay
                           : handleSubmit
                       }

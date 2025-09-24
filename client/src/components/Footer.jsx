@@ -324,7 +324,7 @@ const Footer = ({ className = "" }) => {
           {/* 3rd Column: App Store Images */}
           <div className="w-1/3 justify-end flex items-center">
             <div className="flex space-x-3">
-              <h3 className="font-bold px-3">Made with ❤️ By Tech Solutionor</h3>
+              <h3 className="font-bold px-3">Developed By <span className="text-lime-500">Tech Solutionor </span></h3>
             </div>
           </div>
         </div>
