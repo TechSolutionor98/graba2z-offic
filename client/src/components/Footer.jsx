@@ -324,7 +324,7 @@ const Footer = ({ className = "" }) => {
           {/* 3rd Column: App Store Images */}
           <div className="w-1/3 justify-end flex items-center">
             <div className="flex space-x-3">
-              <h3 className="font-bold px-3">Developed By <span className="text-lime-500">Tech Solutionor </span></h3>
+              <h3 className="font-bold px-3">Developed By <span className="text-lime-500"><a href="https://techsolutionor.com" target="_blank" rel="noopener noreferrer">Tech Solutionor</a></span></h3>
             </div>
           </div>
         </div>
@@ -550,7 +550,7 @@ const Footer = ({ className = "" }) => {
           {/* Copyright */}
           <div className="text-center text-sm text-gray-300">
             <p> 2025 Grabatoz powered by Crown Excel.</p>
-            <p className="mt-1">Develop By Tech Solutionor</p>
+            <p className="mt-1">Develop By <a href="https://techsolutionor.com" target="_blank" rel="noopener noreferrer">Tech Solutionor</a></p>
           </div>
         </div>
       </footer>
