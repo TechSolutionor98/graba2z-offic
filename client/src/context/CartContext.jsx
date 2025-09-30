@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useState, useEffect, useContext } from "react"
+import { createContext, useState, useEffect, useContext, useCallback } from "react"
 import { useToast } from "./ToastContext"
 
 const CartContext = createContext()
@@ -14,6 +14,10 @@ export const CartProvider = ({ children }) => {
   })
   const [cartCount, setCartCount] = useState(0)
   const [cartTotal, setCartTotal] = useState(0)
+  const [bundleGroups, setBundleGroups] = useState(() => {
+    const storedBundles = localStorage.getItem("bundleGroups")
+    return storedBundles ? JSON.parse(storedBundles) : {}
+  })
   const [deliveryOptions, setDeliveryOptions] = useState([])
   const [selectedDelivery, setSelectedDelivery] = useState(null)
   const [tax, setTax] = useState(null)
@@ -24,6 +28,7 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     // Update localStorage when cart changes
     localStorage.setItem("cart", JSON.stringify(cartItems))
+    localStorage.setItem("bundleGroups", JSON.stringify(bundleGroups))
 
     // Update cart count
     const count = cartItems.reduce((total, item) => total + item.quantity, 0)
@@ -36,108 +41,226 @@ export const CartProvider = ({ children }) => {
       return total + itemPrice * itemQuantity
     }, 0)
     setCartTotal(total)
-  }, [cartItems])
+  }, [cartItems, bundleGroups])
 
-  const addToCart = (product, quantity = 1) => {
-    const existingItem = cartItems.find((item) => item._id === product._id)
-    const finalPrice = product.offerPrice && product.offerPrice > 0 ? product.offerPrice : product.price
+  // Enhanced addToCart function with bundle price support
+  const addToCart = useCallback((product, quantity = 1, bundleId = null) => {
+    console.log(`🛒 Adding to cart:`, {
+      productName: product.name,
+      productId: product._id,
+      quantity,
+      bundleId,
+      bundlePrice: product.bundlePrice,
+      isBundleItem: product.isBundleItem,
+      currentCartSize: cartItems.length
+    })
     
-    if (existingItem) {
-      // Item exists, update quantity
-      const updatedItems = cartItems.map((item) =>
-        item._id === product._id ? { ...item, quantity: item.quantity + quantity } : item
-      )
-      setCartItems(updatedItems)
-      showToast(`Updated ${product.name} quantity in cart`, "success")
-    } else {
-      // Item doesn't exist, add new item
-      const newItem = {
-        ...product,
-        price: finalPrice,           // The price we're charging (offer price or base price)
-        originalPrice: product.price,    // Store original price for display
-        basePrice: product.price,        // Store base price for calculations
-        offerPrice: product.offerPrice || 0, // Store offer price for reference (0 if null)
-        quantity
+    if (!product || !product._id) {
+      console.error('❌ Invalid product data:', product)
+      showToast('Invalid product data', 'error')
+      return
+    }
+    
+    setCartItems(prevItems => {
+      console.log('Previous cart items:', prevItems.length)
+      
+      const existingItemIndex = prevItems.findIndex(item => {
+        // For bundle items, match both product ID and bundle ID
+        if (bundleId && item.bundleId) {
+          return item._id === product._id && item.bundleId === bundleId
+        }
+        // For regular items, just match product ID (no bundle)
+        return item._id === product._id && !item.bundleId
+      })
+
+      if (existingItemIndex > -1) {
+        // Update existing item
+        const updatedItems = [...prevItems]
+        updatedItems[existingItemIndex].quantity += quantity
+        return updatedItems
+      } else {
+        // Add new item
+        const cartItem = {
+          ...product,
+          quantity,
+          cartId: `${product._id}_${bundleId || 'regular'}_${Date.now()}`,
+          bundleId: bundleId || null,
+          isBundleItem: product.isBundleItem || false,
+          bundleDiscount: product.bundleDiscount || false,
+          originalPrice: product.originalPrice || product.price,
+          // Use bundle price if it's a bundle item, otherwise use regular price
+          price: product.bundlePrice || product.price
+        }
+        
+        return [...prevItems, cartItem]
       }
-      setCartItems([...cartItems, newItem])
-      showToast(`Added ${product.name} to cart`, "success")
+    })
+
+    // Track bundle relationships
+    if (bundleId) {
+      setBundleGroups(prev => {
+        const updated = {
+          ...prev,
+          [bundleId]: [...(prev[bundleId] || []), product._id].filter((id, index, self) => self.indexOf(id) === index)
+        }
+        console.log('Updated bundle groups:', updated)
+        return updated
+      })
     }
 
     // Push add to cart event to data layer
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
-      'event': 'add_to_cart',
-      'ecommerce': {
-        'currency': 'AED',
-        'value': finalPrice * quantity,
-        'items': [{
-          'item_id': product._id,
-          'item_name': product.name,
-          'item_category': product.parentCategory?.name || product.category?.name || 'Uncategorized',
-          'item_brand': product.brand?.name || 'Unknown',
-          'price': finalPrice,
-          'quantity': quantity
-        }]
-      }
-    });
-
-    console.log('Add to cart tracked:', product.name, quantity); // For debugging
-  }
-
-  const removeFromCart = (productId) => {
-    const product = cartItems.find((item) => item._id === productId)
-    
-    if (product) {
-      // Push remove from cart event to data layer
+    try {
+      const finalPrice = product.isBundleItem && product.bundlePrice 
+        ? product.bundlePrice 
+        : (product.offerPrice && product.offerPrice > 0 ? product.offerPrice : product.price)
+      
       window.dataLayer = window.dataLayer || [];
       window.dataLayer.push({
-        'event': 'remove_from_cart',
+        'event': 'add_to_cart',
         'ecommerce': {
           'currency': 'AED',
-          'value': product.price * product.quantity,
+          'value': finalPrice * quantity,
           'items': [{
             'item_id': product._id,
             'item_name': product.name,
             'item_category': product.parentCategory?.name || product.category?.name || 'Uncategorized',
             'item_brand': product.brand?.name || 'Unknown',
-            'price': product.price,
-            'quantity': product.quantity
+            'price': finalPrice,
+            'quantity': quantity,
+            'bundle_discount': product.bundleDiscount || false
           }]
         }
       });
-      
-      console.log('Remove from cart tracked:', product.name); // For debugging
+      console.log('✅ GTM tracking successful for:', product.name);
+    } catch (error) {
+      console.error('❌ GTM tracking error:', error);
+    }
+
+    // Show success toast
+    setTimeout(() => {
+      const message = product.bundleDiscount 
+        ? `Added ${product.name} to cart with bundle discount!`
+        : `Added ${product.name} to cart`
+      showToast(message, "success")
+    }, 100)
+
+  }, [cartItems, showToast])
+
+  // Function to get items grouped by bundle
+  const getGroupedCartItems = useCallback(() => {
+    const grouped = {}
+    const standaloneItems = []
+    
+    cartItems.forEach(item => {
+      if (item.bundleId) {
+        if (!grouped[item.bundleId]) {
+          grouped[item.bundleId] = {
+            bundleId: item.bundleId,
+            items: [],
+            total: 0,
+            savings: 0
+          }
+        }
+        grouped[item.bundleId].items.push(item)
+        
+        // Calculate bundle totals
+        const itemTotal = (item.offerPrice > 0 ? item.offerPrice : item.price) * item.quantity
+        const itemSavings = item.originalPrice ? (item.originalPrice - (item.offerPrice > 0 ? item.offerPrice : item.price)) * item.quantity : 0
+        
+        grouped[item.bundleId].total += itemTotal
+        grouped[item.bundleId].savings += itemSavings
+      } else {
+        standaloneItems.push(item)
+      }
+    })
+    
+    return { grouped, standaloneItems }
+  }, [cartItems])
+
+  const removeFromCart = useCallback((productId, bundleId = null) => {
+    const product = cartItems.find((item) => item._id === productId && item.bundleId === bundleId)
+    
+    if (product) {
+      // Push remove from cart event to data layer
+      try {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          'event': 'remove_from_cart',
+          'ecommerce': {
+            'currency': 'AED',
+            'value': product.price * product.quantity,
+            'items': [{
+              'item_id': product._id,
+              'item_name': product.name,
+              'item_category': product.parentCategory?.name || product.category?.name || 'Uncategorized',
+              'item_brand': product.brand?.name || 'Unknown',
+              'price': product.price,
+              'quantity': product.quantity
+            }]
+          }
+        });
+        console.log('Remove from cart tracked:', product.name);
+      } catch (error) {
+        console.error('GTM tracking error:', error);
+      }
     }
     
-    setCartItems(cartItems.filter((item) => item._id !== productId))
+    setCartItems(prevItems => prevItems.filter((item) => !(item._id === productId && item.bundleId === bundleId)))
+    
     if (product) {
       showToast(`Removed ${product.name} from cart`, "success")
     }
-  }
+  }, [cartItems, showToast])
 
-  const updateQuantity = (productId, quantity) => {
+  // Function to remove entire bundle
+  const removeBundleFromCart = useCallback((bundleId) => {
+    const bundleItems = cartItems.filter(item => item.bundleId === bundleId)
+    
+    setCartItems(prevItems => prevItems.filter(item => item.bundleId !== bundleId))
+    
+    setBundleGroups(prev => {
+      const newGroups = { ...prev }
+      delete newGroups[bundleId]
+      return newGroups
+    })
+    
+    if (bundleItems.length > 0) {
+      showToast(`Removed bundle with ${bundleItems.length} items from cart`, "success")
+    }
+  }, [cartItems, showToast])
+
+  const updateQuantity = useCallback((productId, quantity, bundleId = null) => {
     if (quantity <= 0) {
-      removeFromCart(productId)
+      removeFromCart(productId, bundleId)
       return
     }
 
-    const product = cartItems.find((item) => item._id === productId)
-    setCartItems((prevItems) => prevItems.map((item) => (item._id === productId ? { ...item, quantity } : item)))
+    const product = cartItems.find((item) => item._id === productId && item.bundleId === bundleId)
+    setCartItems((prevItems) => 
+      prevItems.map((item) => 
+        (item._id === productId && item.bundleId === bundleId) 
+          ? { ...item, quantity } 
+          : item
+      )
+    )
+    
     if (product) {
       showToast(`Updated ${product.name} quantity`, "success")
     }
-  }
+  }, [cartItems, removeFromCart, showToast])
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCartItems([])
+    setBundleGroups({})
     localStorage.removeItem("cart")
+    localStorage.removeItem("bundleGroups")
     showToast("Cart cleared", "success")
-  }
+  }, [showToast])
 
   // Calculate final total with delivery charges
-  const calculateFinalTotal = (deliveryCharge = 0) => {
+  const calculateFinalTotal = useCallback((deliveryCharge = 0) => {
     return cartTotal + deliveryCharge - couponDiscount
-  }
+  }, [cartTotal, couponDiscount])
 
   return (
     <CartContext.Provider
@@ -145,10 +268,13 @@ export const CartProvider = ({ children }) => {
         cartItems,
         cartCount,
         cartTotal, // This is the authoritative cart total
+        bundleGroups,
         addToCart,
         removeFromCart,
+        removeBundleFromCart,
         updateQuantity,
         clearCart,
+        getGroupedCartItems,
         deliveryOptions,
         setDeliveryOptions,
         selectedDelivery,

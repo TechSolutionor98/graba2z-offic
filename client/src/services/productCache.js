@@ -493,7 +493,7 @@ class ProductCacheService {
   constructor() {
     this.CACHE_KEY = "graba2z_products_cache"
     this.CACHE_CHUNK_PREFIX = "graba2z_products_chunk_"
-    this.CACHE_EXPIRY = 30 * 60 * 1000 // 30 minutes
+    this.CACHE_EXPIRY = 8 * 60 * 60 * 1000 // 8hrs
     this.MAX_CACHE_SIZE = 1 * 1024 * 1024 // 1MB per chunk (reduced)
     this.MAX_CHUNKS = 20 // More chunks, smaller size
   }

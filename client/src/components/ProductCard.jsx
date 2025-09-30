@@ -2,7 +2,7 @@
 
 import { Link } from "react-router-dom"
 import { useCart } from "../context/CartContext"
-import { ShoppingCart, Heart, Star } from "lucide-react"
+import { ShoppingCart, Heart, Star, ShoppingBag } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useToast } from "../context/ToastContext"
 
@@ -43,6 +43,7 @@ const ProductCard = ({ product }) => {
   } else if (offerPrice > 0) {
     priceToShow = offerPrice
   }
+  
   const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
 
   // Fix rating and reviews display
@@ -50,9 +51,9 @@ const ProductCard = ({ product }) => {
   const numReviews = Number(product.numReviews) || 0
 
   return (
-    <div className="card group">
-      <Link to={productUrl} className="block">
-        <div className="relative overflow-hidden">
+    <div className="card group border rounded-lg overflow-hidden bg-white h-full flex flex-col">
+      <Link to={productUrl} className="block flex-1 flex flex-col">
+        <div className="relative overflow-hidden flex-shrink-0">
           <img
             src={product.image || "/placeholder.svg"}
             alt={product.name}
@@ -97,8 +98,8 @@ const ProductCard = ({ product }) => {
             </button>
           </div>
         </div>
-        <div className="p-5">
-          <h3 className="font-medium text-gray-900 mb-1 truncate">{product.name}</h3>
+        <div className="p-5 flex-1 flex flex-col">
+          <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">{product.name}</h3>
           <p className="text-gray-500 text-sm mb-2">{product.brand?.name || product.brand || "N/A"}</p>
 
           {/* Rating and Reviews Section - Updated */}
@@ -106,7 +107,7 @@ const ProductCard = ({ product }) => {
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                size={14}
+                size={16}
                 className={`${i < Math.round(rating) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
               />
             ))}
@@ -120,6 +121,16 @@ const ProductCard = ({ product }) => {
             <div className="text-xs text-gray-400 line-through font-medium mb-1">{formatPrice(basePrice)}</div>
           )}
           <div className="text-xs text-gray-500 mb-1">Inclusive VAT</div>
+          
+          {/* Mobile Add to Cart Button */}
+          <button
+            onClick={handleAddToCart}
+            className="mt-auto w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-sm font-medium py-2 px-2 rounded flex items-center justify-center gap-1 transition-all duration-200 md:hidden"
+            disabled={stockStatus === "Out of Stock"}
+          >
+            <ShoppingBag size={14} />
+            Add to Cart
+          </button>
         </div>
       </Link>
     </div>
@@ -127,4 +138,3 @@ const ProductCard = ({ product }) => {
 }
 
 export default ProductCard
-  
