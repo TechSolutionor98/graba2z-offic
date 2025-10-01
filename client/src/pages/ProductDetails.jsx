@@ -3421,24 +3421,36 @@ const ProductDetails = () => {
               {/* Tabby/Tamara info rows (triggers) */}
               <div className="space-y-3 mb-4">
                 {/* Tamara row */}
-                <div className="border rounded-xl p-3 bg-white">
-                  <div className="text-sm text-gray-700">
-                    Or split in 4 payments of{" "}
-                    <span className="font-semibold text-gray-900">{formatPerMonth(getEffectivePrice() / 4)}</span> - No
-                    late fees, Sharia compliant!
-                    <button
+                 <button
                       type="button"
                       onClick={() => setShowTamaraModal(true)}
                       className="ml-2 underline font-medium text-gray-900 hover:text-black"
                     >
+                <div className="border rounded-xl p-3 bg-white">
+                  
+                  <div className="text-sm text-gray-700">
+                    Or split in 4 payments of{" "}
+                    <span className="font-semibold text-gray-900">{formatPerMonth(getEffectivePrice() / 4)}</span> - No
+                    late fees, Sharia compliant!
+                   
                       More options
-                    </button>
+                 
                     <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold text-gray-900 bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 align-middle">
                       tamara
                     </span>
                   </div>
                 </div>
+                   </button>
+
+
+
+
                 {/* Tabby row */}
+                     <button
+                      type="button"
+                      onClick={() => setShowTabbyModal(true)}
+                      className="underline font-medium text-gray-900 hover:text-black"
+                    >
                 <div className="border rounded-xl p-3 bg-white">
                   <div className="text-sm text-gray-700 flex items-center gap-2 flex-wrap">
                     <span>
@@ -3446,18 +3458,15 @@ const ProductDetails = () => {
                       <span className="font-semibold text-gray-900">{formatPerMonth(getEffectivePrice() / 12)}</span> or
                       4 interest-free payments.
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowTabbyModal(true)}
-                      className="underline font-medium text-gray-900 hover:text-black"
-                    >
+               
                       Learn more
-                    </button>
+                    
                     <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-md text-[12px] font-extrabold text-white bg-emerald-600">
                       tabby
                     </span>
                   </div>
                 </div>
+                </button>
               </div>
 
               {/* Quantity and Add to Cart */}
