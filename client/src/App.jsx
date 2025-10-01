@@ -146,6 +146,7 @@ import PriceAdjustmentReports from "./pages/admin/PriceAdjustmentReports"
 
 
 
+
 function DefaultCanonical() {
   const location = useLocation()
   if (location.pathname !== "/") {
@@ -163,6 +164,20 @@ function DefaultCanonical() {
 
 
 
+
+function RouteCanonical() {
+  const location = useLocation()
+  if (location.pathname === "/") return null
+  const href =
+    typeof window !== "undefined"
+      ? `${window.location.origin.replace(/\/+$/, "")}${location.pathname}`
+      : location.pathname || "/"
+  return (
+    <Helmet prioritizeSeoTags>
+      <link rel="canonical" href={href} />
+    </Helmet>
+  )
+}
 
 
 
@@ -322,6 +337,7 @@ function App() {
                     path="/*"
                     element={
                       <>
+                         <RouteCanonical />
                         <Navbar />
                         <Routes>
                           <Route path="/" element={<Home />} />
