@@ -3105,11 +3105,11 @@ const ProductDetails = () => {
   const getStockBadge = () => {
     switch (product.stockStatus) {
       case "Available Product":
-        return <span className="bg-lime-500 text-white text-xs font-bold px-3 py-1 rounded">In Stock</span>
+        return <span className="bg-lime-500 text-white text-md font-bold px-3 py-1 rounded">In Stock</span>
       case "Out of Stock":
-        return <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded">Out of Stock</span>
+        return <span className="bg-red-500 text-white text-md font-bold px-3 py-1 rounded">Out of Stock</span>
       case "PreOrder":
-        return <span className="bg-orange-100 text-white text-sm font-medium px-3 py-1 rounded">Pre-order</span>
+        return <span className="bg-orange-100 text-white text-md font-medium px-3 py-1 rounded">Pre-order</span>
       default:
         return null
     }
@@ -3124,7 +3124,7 @@ const ProductDetails = () => {
     if (hasValidOffer) {
       const discountPercentage = Math.round(((basePrice - offerPrice) / basePrice) * 100)
       return (
-        <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+        <span className="bg-red-600 text-white text-md font-medium px-3 py-md rounded">
           -{discountPercentage}%
         </span>
       )
@@ -3375,9 +3375,9 @@ const ProductDetails = () => {
                           <div className="text-xl text-gray-500 line-through font-medium">{formatPrice(basePrice)}</div>
                         )}
                       </div>
-                      <div className="text-sm text-gray-600">Including VAT</div>
+                      <div className="text-md text-black">Including VAT</div>
                       {hasValidOffer && (
-                        <div className="text-sm text-green-600 font-medium">
+                        <div className="text-lg text-emerald-800 font-medium">
                           You Save {formatPrice(basePrice - priceToShow)}
                           {product.discount > 0 && ` (${product.discount}%)`}
                         </div>
@@ -3646,7 +3646,7 @@ const ProductDetails = () => {
 
               {/* Payment Methods */}
               <div className="border-t pt-4">
-                <h4 className="font-bold text-white p-2 rounded-lg bg-red-500 text-center text-md mb-3">
+                <h4 className="font-bold text-white p-2 rounded-lg bg-red-600 text-center text-md mb-3">
                   Payment Methods :{" "}
                 </h4>
                 <div className=" ml-8 items-center space-x-2 flex-wrap gap-2">
@@ -3681,9 +3681,9 @@ const ProductDetails = () => {
         <FrequentlyBoughtTogether />
 
         {/* Tabs Section */}
-        <div className="bg-white rounded-lg shadow-sm mt-8">
+        {/* <div className="bg-white rounded-lg shadow-sm mt-8">
           <div className="border-b bg-lime-500">
-            <div className="flex justify-between space-x-8 px-6">
+            <div className="flex  space-x-8 px-6">
               <button
                 onClick={() => setActiveTab("description")}
                 className={`py-4 px-2 border-b-2 font-bold text-md transition-colors ${
@@ -3780,7 +3780,191 @@ const ProductDetails = () => {
               </div>
             )}
           </div>
+        </div> */}
+
+
+
+
+
+
+
+
+
+<div className="bg-white rounded-lg shadow-sm mt-8">
+  <div className="border-b bg-lime-500">
+    <div className="flex space-x-4 px-6 py-2">
+      <button
+        onClick={() => setActiveTab("description")}
+        className={`py-3 px-6 rounded-lg font-bold text-md transition-all ${
+          activeTab === "description"
+            ? "bg-white text-lime-700 shadow-md"
+            : "bg-lime-600 text-white hover:bg-lime-700"
+        }`}
+      >
+        Product Description
+      </button>
+      <button
+        onClick={() => setActiveTab("information")}
+        className={`py-3 px-6 rounded-lg font-bold text-md transition-all ${
+          activeTab === "information"
+            ? "bg-white text-lime-700 shadow-md"
+            : "bg-lime-600 text-white hover:bg-lime-700"
+        }`}
+      >
+        More Information
+      </button>
+      <button
+        onClick={() => setActiveTab("reviews")}
+        className={`py-3 px-6 rounded-lg font-bold text-md transition-all ${
+          activeTab === "reviews"
+            ? "bg-white text-lime-700 shadow-md"
+            : "bg-lime-600 text-white hover:bg-lime-700"
+        }`}
+      >
+        Reviews ({reviewStats.totalReviews || 0})
+      </button>
+    </div>
+  </div>
+
+  <div className="p-6">
+    {activeTab === "description" && (
+      <div>
+        <h3 className="text-lg font-bold mb-4">Product Description</h3>
+        <div className="prose max-w-none">
+          <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: product.description }} />
         </div>
+      </div>
+    )}
+
+    {activeTab === "information" && (
+      <div>
+        <h3 className="text-lg font-bold mb-4">More Information</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <tbody>
+              <tr className="bg-gray-50">
+                <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">Brand</td>
+                <td className="border border-gray-200 px-4 py-3 text-gray-700">
+                  {product.brand?.name || product.brand || "N/A"}
+                </td>
+              </tr>
+              <tr className="bg-white">
+                <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">
+                  Model Number
+                </td>
+                <td className="border border-gray-200 px-4 py-3 text-gray-700">{product.sku || "N/A"}</td>
+              </tr>
+              <tr className="bg-white">
+                <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">Category</td>
+                <td className="border border-gray-200 px-4 py-3 text-gray-700">
+                  {product.category?.name || product.category || "N/A"}
+                </td>
+              </tr>
+              {product.warranty && (
+                <tr className="bg-white">
+                  <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">Warranty</td>
+                  <td className="border border-gray-200 px-4 py-3 text-gray-700">{product.warranty}</td>
+                </tr>
+              )}
+
+              {product.specifications &&
+                product.specifications.length > 0 &&
+                product.specifications.map((spec, index) => (
+                  <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                    <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">
+                      {spec.key}
+                    </td>
+                    <td className="border border-gray-200 px-4 py-3 text-gray-700">{spec.value}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+
+    {activeTab === "reviews" && (
+      <div data-review-section>
+        <ReviewSection productId={product._id} onStatsUpdate={setReviewStats} />
+      </div>
+    )}
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         {/* Related Products */}
         <div className="mt-12">
