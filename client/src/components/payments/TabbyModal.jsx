@@ -60,7 +60,7 @@ export default function TabbyModal({ amount = 0, onClose }) {
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <img src="https://levantine.ae/wp-content/uploads/2023/03/tabby-badge.png" className="h-12 w-auto" alt="" srcset="" />
+          <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1759294149/tabby-logo-1_oqkdwm.png" className="h-12 w-auto" alt="" srcset="" />
           <button
             onClick={onClose}
             aria-label="Close"
