@@ -12,6 +12,11 @@ import AdminRoute from "./components/AdminRoute"
 import ScrollToTop from "./components/ScrollToTop"
 import CacheStatus from "./components/CacheStatus"
 
+
+import { Helmet } from "react-helmet-async"
+import { useLocation } from "react-router-dom"
+
+
 // Import admin components
 import AdminHeader from "./components/admin/AdminHeader"
 import AdminSidebar from "./components/admin/AdminSidebar"
@@ -141,6 +146,24 @@ import PriceAdjustmentReports from "./pages/admin/PriceAdjustmentReports"
 
 
 
+function DefaultCanonical() {
+  const location = useLocation()
+  if (location.pathname !== "/") {
+    return null
+  }
+  const href = typeof window !== "undefined" ? `${window.location.origin.replace(/\/+$/, "")}/` : "/"
+  return (
+    <Helmet prioritizeSeoTags>
+      {/* Default Site Title can be adjusted by SEO team */}
+      <title>Grabatoz</title>
+      <link rel="canonical" href={href} />
+    </Helmet>
+  )
+}
+
+
+
+
 
 
 
@@ -171,6 +194,7 @@ function App() {
         <CartProvider>
           <WishlistProvider>
             <Router>
+                <DefaultCanonical />
               <ScrollToTop />
               <div className="App">
                 <Routes>
