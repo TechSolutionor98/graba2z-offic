@@ -39,7 +39,7 @@ export async function checkServerHealth() {
           method: "GET",
           headers: { Accept: "application/json" },
         },
-        300,
+        3000,
       )
 
       if (res.ok) return true
