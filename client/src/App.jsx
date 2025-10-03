@@ -11,7 +11,7 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import AdminRoute from "./components/AdminRoute"
 import ScrollToTop from "./components/ScrollToTop"
 import CacheStatus from "./components/CacheStatus"
-
+import ServerGate from "./components/ServerGate"
 
 import { Helmet } from "react-helmet-async"
 import { useLocation } from "react-router-dom"
@@ -211,6 +211,7 @@ function App() {
             <Router>
                 <DefaultCanonical />
               <ScrollToTop />
+                 <ServerGate>
               <div className="App">
                 <Routes>
                   {/* Admin Routes */}
@@ -418,6 +419,7 @@ function App() {
                   />
                 </Routes>
               </div>
+              </ServerGate>
             </Router>
           </WishlistProvider>
         </CartProvider>
@@ -427,3 +429,4 @@ function App() {
 }
 
 export default App
+
