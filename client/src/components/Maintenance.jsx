@@ -46,30 +46,30 @@ const MaintenancePage = () => {
           {/* Right Side - Content */}
           <div className="lg:w-1/2 text-center lg:text-left">
             {/* Main Heading */}
-            <h1 className="text-4xl font-bold text-gray-800 mb-6">
+            <h1 className="text-4xl font-bold text-gray-900 mb-6">
               We're Making Improvements
             </h1>
 
             {/* Description */}
-            <p className="text-lg text-gray-600 mb-6">
+            <p className="text-lg text-gray-800 mb-6">
               Our website is currently undergoing scheduled maintenance to bring you an even better experience.
             </p>
 
             {/* Status Badge */}
-            <div className="inline-block bg-lime-500 text-white px-6 py-2 rounded-full font-semibold mb-6">
+            <div className="inline-block bg-lime-600 text-white px-6 py-2 rounded-full font-semibold mb-6">
               MAINTENANCE IN PROGRESS
             </div>
 
             {/* Progress Bar */}
             <div className="w-full bg-gray-200 rounded-full h-3 mb-6 overflow-hidden">
               <div 
-                className="bg-lime-500 h-3 rounded-full animate-pulse"
+                className="bg-lime-600 h-3 rounded-full animate-pulse"
                 style={{ width: '70%' }}
               ></div>
             </div>
 
             {/* Additional Info */}
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-800 mb-6">
               We're deploying new changes and enhancements. The site will be available again as soon as possible.
             </p>
 
@@ -77,23 +77,23 @@ const MaintenancePage = () => {
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <button 
                 onClick={handleContactUs}
-                className="bg-lime-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-lime-600 transition-colors duration-300 flex-1"
+                className="bg-lime-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-lime-700 transition-colors duration-300 flex-1"
               >
                 Contact Us 
               </button>
               <button 
                 onClick={handleCheckStatus}
-                className="border-2 border-lime-500 text-lime-500 px-8 py-3 rounded-full font-semibold hover:bg-lime-500 hover:text-white transition-colors duration-300 flex-1"
+                className="border-2 border-lime-600 text-lime-700 px-8 py-3 rounded-full font-semibold hover:bg-lime-600 hover:text-white transition-colors duration-300 flex-1"
               >
                 Check Status
               </button>
             </div>
 
             {/* Estimated Time */}
-            <div className=" p-4 bg-lime-50 rounded-lg">
-              <p className="text-gray-700">
+            <div className="p-4 bg-lime-100 rounded-lg">
+              <p className="text-gray-900">
                 <span className="font-semibold">Estimated completion:</span>{' '}
-                <span className="text-lime-600">30-45 minutes</span>
+                <span className="text-lime-700 font-semibold">30-45 minutes</span>
               </p>
             </div>
 
