@@ -519,283 +519,1022 @@ const ProductDetails = () => {
     setShowImageModal(true)
   }
 
+  // const fetchFrequentlyBought = async () => {
+  //   setFrequentlyBoughtLoading(true)
+  //   try {
+  //     const complementaryProducts = []
+
+  //     // Get product category and name to determine what accessories to show
+  //     const productName = product.name?.toLowerCase() || ""
+  //     const categoryName = product.category?.name?.toLowerCase() || ""
+  //     const brandName = product.brand?.name?.toLowerCase() || ""
+
+  //     console.log("Product details:", { productName, categoryName, brandName })
+
+  //     // Define complementary product logic based on main product type
+  //     if (categoryName.includes("laptop") || productName.includes("laptop")) {
+  //       // For laptops, get exactly 2 diverse accessories - one from each category
+  //       const accessoryCategories = [
+  //         {
+  //           name: "mouse",
+  //           searches: ["wireless mouse", "bluetooth mouse", "gaming mouse"],
+  //           keywords: ["mouse"],
+  //         },
+  //         {
+  //           name: "headphones",
+  //           searches: ["bluetooth headphones", "wireless headset", "gaming headset", "earbuds"],
+  //           keywords: ["headphone", "headset", "earbuds", "earphone"],
+  //         },
+  //         {
+  //           name: "keyboard",
+  //           searches: ["wireless keyboard", "bluetooth keyboard", "mechanical keyboard"],
+  //           keywords: ["keyboard"],
+  //         },
+  //         {
+  //           name: "accessories",
+  //           searches: ["laptop bag", "laptop stand", "cooling pad", "webcam", "usb hub", "portable speaker"],
+  //           keywords: ["bag", "stand", "cooling", "webcam", "hub", "speaker", "charger"],
+  //         },
+  //       ]
+
+  //       // Get one product from each category to ensure diversity - LIMIT TO 2
+  //       for (const category of accessoryCategories) {
+  //         let foundInCategory = false
+
+  //         for (const searchTerm of category.searches) {
+  //           if (foundInCategory) break
+
+  //           try {
+  //             const response = await axios.get(
+  //               `${config.API_URL}/api/products?search=${encodeURIComponent(searchTerm)}&limit=10`,
+  //             )
+  //             const accessories = response.data.filter(
+  //               (p) =>
+  //                 p._id !== product._id &&
+  //                 // Exclude main product categories
+  //                 !p.name?.toLowerCase().includes("laptop") &&
+  //                 !p.name?.toLowerCase().includes("desktop") &&
+  //                 !p.name?.toLowerCase().includes("computer") &&
+  //                 !p.name?.toLowerCase().includes("pc") &&
+  //                 !p.name?.toLowerCase().includes("monitor") &&
+  //                 !p.name?.toLowerCase().includes("aio") &&
+  //                 // Include only relevant accessories
+  //                 category.keywords.some(
+  //                   (keyword) =>
+  //                     p.name?.toLowerCase().includes(keyword) || p.category?.name?.toLowerCase().includes(keyword),
+  //                 ),
+  //             )
+
+  //             if (accessories.length > 0) {
+  //               // Add first matching product from this category
+  //               complementaryProducts.push(accessories[0])
+  //               foundInCategory = true
+  //               console.log(`Found ${category.name}:`, accessories[0].name)
+  //             }
+  //           } catch (error) {
+  //             console.log(`Search failed for: ${searchTerm}`)
+  //           }
+  //         }
+
+  //         // Stop when we have exactly 2 diverse products
+  //         if (complementaryProducts.length >= 2) break
+  //       }
+  //     } else if (categoryName.includes("desktop") || productName.includes("desktop")) {
+  //       // For desktops, get exactly 2 accessories
+  //       const desktopCategories = [
+  //         {
+  //           name: "monitor",
+  //           searches: ["monitor", "display"],
+  //           keywords: ["monitor", "display"],
+  //         },
+  //         {
+  //           name: "keyboard",
+  //           searches: ["wireless keyboard", "mechanical keyboard"],
+  //           keywords: ["keyboard"],
+  //         },
+  //         {
+  //           name: "mouse",
+  //           searches: ["wireless mouse", "gaming mouse"],
+  //           keywords: ["mouse"],
+  //         },
+  //       ]
+
+  //       for (const category of desktopCategories) {
+  //         let foundInCategory = false
+
+  //         for (const searchTerm of category.searches) {
+  //           if (foundInCategory) break
+
+  //           try {
+  //             const response = await axios.get(
+  //               `${config.API_URL}/api/products?search=${encodeURIComponent(searchTerm)}&limit=10`,
+  //             )
+  //             const accessories = response.data.filter(
+  //               (p) =>
+  //                 p._id !== product._id &&
+  //                 !p.name?.toLowerCase().includes("desktop") &&
+  //                 !p.name?.toLowerCase().includes("laptop") &&
+  //                 category.keywords.some((keyword) => p.name?.toLowerCase().includes(keyword)),
+  //             )
+
+  //             if (accessories.length > 0) {
+  //               complementaryProducts.push(accessories[0])
+  //               foundInCategory = true
+  //             }
+  //           } catch (error) {
+  //             console.log(`Search failed for: ${searchTerm}`)
+  //           }
+  //         }
+
+  //         // Stop when we have exactly 2 products
+  //         if (complementaryProducts.length >= 2) break
+  //       }
+  //     } else if (categoryName.includes("mobile") || categoryName.includes("phone") || productName.includes("phone")) {
+  //       // For phones, get exactly 2 phone accessories
+  //       const phoneCategories = [
+  //         {
+  //           name: "case",
+  //           searches: ["phone case", "mobile case"],
+  //           keywords: ["case", "cover"],
+  //         },
+  //         {
+  //           name: "charger",
+  //           searches: ["wireless charger", "phone charger", "power bank"],
+  //           keywords: ["charger", "power bank", "charging"],
+  //         },
+  //         {
+  //           name: "audio",
+  //           searches: ["wireless earbuds", "bluetooth headphones"],
+  //           keywords: ["earbuds", "headphone", "earphone"],
+  //         },
+  //       ]
+
+  //       for (const category of phoneCategories) {
+  //         let foundInCategory = false
+
+  //         for (const searchTerm of category.searches) {
+  //           if (foundInCategory) break
+
+  //           try {
+  //             const response = await axios.get(
+  //               `${config.API_URL}/api/products?search=${encodeURIComponent(searchTerm)}&limit=10`,
+  //             )
+  //             const accessories = response.data.filter(
+  //               (p) =>
+  //                 p._id !== product._id &&
+  //                 !p.name?.toLowerCase().includes("phone") &&
+  //                 !p.name?.toLowerCase().includes("mobile") &&
+  //                 category.keywords.some((keyword) => p.name?.toLowerCase().includes(keyword)),
+  //             )
+
+  //             if (accessories.length > 0) {
+  //               complementaryProducts.push(accessories[0])
+  //               foundInCategory = true
+  //             }
+  //           } catch (error) {
+  //             console.log(`Search failed for: ${searchTerm}`)
+  //           }
+  //         }
+
+  //         // Stop when we have exactly 2 products
+  //         if (complementaryProducts.length >= 2) break
+  //       }
+  //     }
+
+  //     // Remove duplicates and ensure exactly 2 items
+  //     const uniqueProducts = complementaryProducts
+  //       .filter((product, index, self) => index === self.findIndex((p) => p._id === product._id))
+  //       .slice(0, 2) // LIMIT TO EXACTLY 2 ACCESSORIES
+
+  //     console.log("Found complementary products:", uniqueProducts.length)
+  //     console.log(
+  //       "Products:",
+  //       uniqueProducts.map((p) => ({
+  //         name: p.name,
+  //         category: p.category?.name,
+  //         type: p.name?.toLowerCase().includes("mouse")
+  //           ? "mouse"
+  //           : p.name?.toLowerCase().includes("keyboard")
+  //             ? "keyboard"
+  //             : p.name?.toLowerCase().includes("headphone") || p.name?.toLowerCase().includes("headset")
+  //               ? "audio"
+  //               : "other",
+  //       })),
+  //     )
+
+  //     // If we don't have exactly 2, try fallback
+  //     if (uniqueProducts.length < 2) {
+  //       console.log(`Only found ${uniqueProducts.length} accessories, trying fallback...`)
+
+  //       try {
+  //         const fallbackResponse = await axios.get(`${config.API_URL}/api/products?limit=50`)
+  //         const fallbackAccessories = fallbackResponse.data.filter(
+  //           (p) =>
+  //             p._id !== product._id &&
+  //             (p.category?.name?.toLowerCase().includes("accessories") ||
+  //               p.name?.toLowerCase().includes("mouse") ||
+  //               p.name?.toLowerCase().includes("keyboard") ||
+  //               p.name?.toLowerCase().includes("headphone") ||
+  //               p.name?.toLowerCase().includes("speaker")) &&
+  //             // Exclude main product categories
+  //             !p.name?.toLowerCase().includes("laptop") &&
+  //             !p.name?.toLowerCase().includes("desktop") &&
+  //             !p.name?.toLowerCase().includes("computer") &&
+  //             !p.name?.toLowerCase().includes("phone") &&
+  //             !p.name?.toLowerCase().includes("tablet") &&
+  //             !p.name?.toLowerCase().includes("monitor") &&
+  //             !uniqueProducts.some((existing) => existing._id === p._id), // Don't duplicate
+  //         )
+
+  //         // Add fallback products to reach exactly 2 total
+  //         const needed = 2 - uniqueProducts.length
+  //         uniqueProducts.push(...fallbackAccessories.slice(0, needed))
+
+  //         console.log(
+  //           "Added fallback accessories:",
+  //           fallbackAccessories.slice(0, needed).map((p) => p.name),
+  //         )
+  //       } catch (error) {
+  //         console.error("Fallback accessories search failed:", error)
+  //       }
+  //     }
+
+  //     // Final check - ensure we have exactly 2 or hide the section
+  //     if (uniqueProducts.length === 0) {
+  //       console.log("No accessories found at all, hiding section")
+  //       setFrequentlyBought([])
+  //       setSelectedBundleItems({})
+  //       return
+  //     }
+
+  //     // Set the found products (limit to exactly 2)
+  //     const finalProducts = uniqueProducts.slice(0, 2)
+  //     setFrequentlyBought(finalProducts)
+
+  //     console.log(
+  //       "Final selected products:",
+  //       finalProducts.map((p) => ({ name: p.name, category: p.category?.name })),
+  //     )
+
+  //     // Auto-select ALL bundle items (current product + exactly 2 accessories = 3 total)
+  //     const autoSelectedItems = {
+  //       [product._id]: true, // Current product always selected
+  //     }
+
+  //     // Auto-select all found accessories (exactly 2)
+  //     finalProducts.forEach((item) => {
+  //       autoSelectedItems[item._id] = true
+  //     })
+
+  //     console.log("Auto-selected bundle items (total 3):", autoSelectedItems)
+  //     console.log("Bundle will have:", Object.keys(autoSelectedItems).length, "items total")
+  //     setSelectedBundleItems(autoSelectedItems)
+  //   } catch (error) {
+  //     console.error("Error fetching frequently bought products:", error)
+  //     setFrequentlyBought([])
+  //   } finally {
+  //     setFrequentlyBoughtLoading(false)
+  //   }
+  // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// CHANGE: replace frequently-bought logic with category-specific accessory mapping
+  // const fetchFrequentlyBought = async () => {
+  //   setFrequentlyBoughtLoading(true)
+  //   try {
+  //     if (!product) {
+  //       setFrequentlyBought([])
+  //       setSelectedBundleItems({})
+  //       return
+  //     }
+
+  //     const name = (product.name || "").toLowerCase()
+  //     const catName = (product.category?.name || "").toLowerCase()
+
+  //     // Helper: check if a text includes any of the words
+  //     const includesAny = (txt, words) => words.some((w) => txt.includes(w))
+
+  //     // Map primary product types to targeted accessory groups
+  //     const GROUPS = [
+  //       {
+  //         match: ["laptop", "notebook", "macbook"],
+  //         suggestions: [
+  //           {
+  //             label: "keyboard",
+  //             keywords: ["keyboard"],
+  //             searches: ["keyboard", "wireless keyboard", "bluetooth keyboard", "mechanical keyboard"],
+  //           },
+  //           {
+  //             label: "mouse",
+  //             keywords: ["mouse"],
+  //             searches: ["mouse", "wireless mouse", "gaming mouse", "bluetooth mouse"],
+  //           },
+  //           {
+  //             label: "laptop bag",
+  //             keywords: ["bag", "sleeve", "backpack"],
+  //             searches: ["laptop bag", "laptop sleeve", "laptop backpack"],
+  //           },
+  //           { label: "mouse pad", keywords: ["pad", "mat"], searches: ["mouse pad", "gaming mouse pad", "mouse mat"] },
+  //           {
+  //             label: "headphones",
+  //             keywords: ["headphone", "headset", "earbuds", "earphone"],
+  //             searches: ["headphones", "headset", "earbuds"],
+  //           },
+  //           { label: "hdmi cable", keywords: ["hdmi"], searches: ["hdmi cable"] },
+  //         ],
+  //         excludeMain: ["laptop", "desktop", "monitor", "aio", "computer", "pc"],
+  //       },
+  //       {
+  //         match: ["printer"],
+  //         suggestions: [
+  //           { label: "usb cable", keywords: ["usb", "cable"], searches: ["usb cable", "printer cable"] },
+  //           { label: "router", keywords: ["router"], searches: ["router"] },
+  //           { label: "switch", keywords: ["switch"], searches: ["network switch", "gigabit switch"] },
+  //           {
+  //             label: "ethernet cable",
+  //             keywords: ["ethernet", "lan", "network"],
+  //             searches: ["ethernet cable", "lan cable", "network cable"],
+  //           },
+  //         ],
+  //         excludeMain: ["printer"],
+  //       },
+  //       {
+  //         match: ["monitor", "lcd", "led"],
+  //         suggestions: [
+  //           { label: "hdmi cable", keywords: ["hdmi"], searches: ["hdmi cable"] },
+  //           {
+  //             label: "displayport cable",
+  //             keywords: ["displayport", "dp"],
+  //             searches: ["displayport cable", "dp cable"],
+  //           },
+  //           {
+  //             label: "network cable",
+  //             keywords: ["ethernet", "lan", "network"],
+  //             searches: ["ethernet cable", "lan cable", "network cable"],
+  //           },
+  //           { label: "keyboard", keywords: ["keyboard"], searches: ["keyboard", "wireless keyboard"] },
+  //           { label: "mouse", keywords: ["mouse"], searches: ["mouse", "wireless mouse"] },
+  //         ],
+  //         excludeMain: ["monitor", "laptop", "desktop", "aio", "computer", "pc"],
+  //       },
+  //       {
+  //         match: ["desktop", "pc", "computer"],
+  //         suggestions: [
+  //           { label: "monitor", keywords: ["monitor", "display"], searches: ["monitor", "display"] },
+  //           { label: "keyboard", keywords: ["keyboard"], searches: ["keyboard", "mechanical keyboard"] },
+  //           { label: "mouse", keywords: ["mouse"], searches: ["mouse", "gaming mouse"] },
+  //           { label: "ram", keywords: ["ram", "memory", "ddr"], searches: ["ram", "ddr4", "ddr5 memory"] },
+  //           { label: "ssd", keywords: ["ssd", "nvme", "solid state"], searches: ["ssd", "nvme ssd"] },
+  //           { label: "hdmi cable", keywords: ["hdmi"], searches: ["hdmi cable"] },
+  //           { label: "network cable", keywords: ["ethernet", "lan", "network"], searches: ["ethernet cable"] },
+  //         ],
+  //         excludeMain: ["desktop", "laptop", "monitor", "computer", "pc"],
+  //       },
+  //     ]
+
+  //     // Determine which group applies
+  //     const activeGroup = GROUPS.find((g) => includesAny(name, g.match) || includesAny(catName, g.match)) || null
+
+  //     // If nothing matched, show a safe set of generic accessories
+  //     const fallbackSuggestions = [
+  //       { label: "mouse", keywords: ["mouse"], searches: ["mouse", "wireless mouse"] },
+  //       { label: "keyboard", keywords: ["keyboard"], searches: ["keyboard"] },
+  //       { label: "hdmi cable", keywords: ["hdmi"], searches: ["hdmi cable"] },
+  //       { label: "network cable", keywords: ["ethernet", "lan", "network"], searches: ["ethernet cable"] },
+  //     ]
+
+  //     const suggestions = activeGroup?.suggestions || fallbackSuggestions
+  //     const excludeWords = activeGroup?.excludeMain || []
+
+  //     const results = []
+  //     const seen = new Set()
+  //     const MAX_ITEMS = 8
+
+  //     // Helper: add product if unique and relevant
+  //     const tryAddProduct = (p) => {
+  //       if (!p || seen.has(p._id) || p._id === product._id) return
+  //       const pname = (p.name || "").toLowerCase()
+  //       const pcat = (p.category?.name || "").toLowerCase()
+  //       // Exclude main-category items
+  //       if (includesAny(pname, excludeWords) || includesAny(pcat, excludeWords)) return
+  //       seen.add(p._id)
+  //       results.push(p)
+  //     }
+
+  //     // For each suggestion, query with its search terms and filter by keywords to stay relevant
+  //     for (const s of suggestions) {
+  //       for (const term of s.searches) {
+  //         if (results.length >= MAX_ITEMS) break
+  //         try {
+  //           const { data } = await axios.get(
+  //             `${config.API_URL}/api/products?search=${encodeURIComponent(term)}&limit=20`,
+  //           )
+  //           data
+  //             .filter((p) => {
+  //               const pname = (p.name || "").toLowerCase()
+  //               const pcat = (p.category?.name || "").toLowerCase()
+  //               return s.keywords.some((kw) => pname.includes(kw) || pcat.includes(kw))
+  //             })
+  //             .forEach(tryAddProduct)
+  //         } catch {
+  //           // ignore individual search errors and continue
+  //         }
+  //         if (results.length >= MAX_ITEMS) break
+  //       }
+  //       if (results.length >= MAX_ITEMS) break
+  //     }
+
+  //     // If still empty, do a broad fallback scan
+  //     if (results.length === 0) {
+  //       try {
+  //         const { data } = await axios.get(`${config.API_URL}/api/products?limit=100`)
+  //         data
+  //           .filter((p) => {
+  //             const pname = (p.name || "").toLowerCase()
+  //             const pcat = (p.category?.name || "").toLowerCase()
+  //             return (
+  //               [
+  //                 "mouse",
+  //                 "keyboard",
+  //                 "headphone",
+  //                 "earbuds",
+  //                 "bag",
+  //                 "hdmi",
+  //                 "ethernet",
+  //                 "router",
+  //                 "switch",
+  //                 "ssd",
+  //                 "ram",
+  //               ].some((kw) => pname.includes(kw) || pcat.includes(kw)) &&
+  //               !includesAny(pname, excludeWords) &&
+  //               !includesAny(pcat, excludeWords)
+  //             )
+  //           })
+  //           .slice(0, MAX_ITEMS)
+  //           .forEach(tryAddProduct)
+  //       } catch {
+  //         // ignore
+  //       }
+  //     }
+
+  //     setFrequentlyBought(results)
+  //     // Pre-select up to 3 accessories plus the current product
+  //     const autoSelected = { [product._id]: true }
+  //     results.slice(0, 3).forEach((p) => (autoSelected[p._id] = true))
+  //     setSelectedBundleItems(autoSelected)
+  //   } catch (err) {
+  //     setFrequentlyBought([])
+  //     setSelectedBundleItems({})
+  //   } finally {
+  //     setFrequentlyBoughtLoading(false)
+  //   }
+  // }
+
+
+
+
+
   const fetchFrequentlyBought = async () => {
-    setFrequentlyBoughtLoading(true)
-    try {
-      const complementaryProducts = []
+  setFrequentlyBoughtLoading(true);
+  try {
+    if (!product) {
+      setFrequentlyBought([]);
+      setSelectedBundleItems({});
+      return;
+    }
 
-      // Get product category and name to determine what accessories to show
-      const productName = product.name?.toLowerCase() || ""
-      const categoryName = product.category?.name?.toLowerCase() || ""
-      const brandName = product.brand?.name?.toLowerCase() || ""
+    const productName = (product.name || "").toLowerCase();
+    const categoryName = (product.category?.name || "").toLowerCase();
+    const brandName = (product.brand?.name || "").toLowerCase();
 
-      console.log("Product details:", { productName, categoryName, brandName })
+    console.log("Finding accessories for:", { productName, categoryName, brandName });
 
-      // Define complementary product logic based on main product type
-      if (categoryName.includes("laptop") || productName.includes("laptop")) {
-        // For laptops, get exactly 2 diverse accessories - one from each category
-        const accessoryCategories = [
+    // Enhanced accessory mapping with multiple options for each category
+    const ACCESSORY_MAPPING = {
+      laptop: [
+        // First combination set
+        [
           {
-            name: "mouse",
+            category: "mouse",
             searches: ["wireless mouse", "bluetooth mouse", "gaming mouse"],
-            keywords: ["mouse"],
+            keywords: ["mouse", "wireless", "bluetooth"],
+            exclude: ["laptop", "desktop", "computer", "monitor"],
           },
           {
-            name: "headphones",
-            searches: ["bluetooth headphones", "wireless headset", "gaming headset", "earbuds"],
-            keywords: ["headphone", "headset", "earbuds", "earphone"],
-          },
-          {
-            name: "keyboard",
-            searches: ["wireless keyboard", "bluetooth keyboard", "mechanical keyboard"],
-            keywords: ["keyboard"],
-          },
-          {
-            name: "accessories",
-            searches: ["laptop bag", "laptop stand", "cooling pad", "webcam", "usb hub", "portable speaker"],
-            keywords: ["bag", "stand", "cooling", "webcam", "hub", "speaker", "charger"],
-          },
-        ]
-
-        // Get one product from each category to ensure diversity - LIMIT TO 2
-        for (const category of accessoryCategories) {
-          let foundInCategory = false
-
-          for (const searchTerm of category.searches) {
-            if (foundInCategory) break
-
-            try {
-              const response = await axios.get(
-                `${config.API_URL}/api/products?search=${encodeURIComponent(searchTerm)}&limit=10`,
-              )
-              const accessories = response.data.filter(
-                (p) =>
-                  p._id !== product._id &&
-                  // Exclude main product categories
-                  !p.name?.toLowerCase().includes("laptop") &&
-                  !p.name?.toLowerCase().includes("desktop") &&
-                  !p.name?.toLowerCase().includes("computer") &&
-                  !p.name?.toLowerCase().includes("pc") &&
-                  !p.name?.toLowerCase().includes("monitor") &&
-                  !p.name?.toLowerCase().includes("aio") &&
-                  // Include only relevant accessories
-                  category.keywords.some(
-                    (keyword) =>
-                      p.name?.toLowerCase().includes(keyword) || p.category?.name?.toLowerCase().includes(keyword),
-                  ),
-              )
-
-              if (accessories.length > 0) {
-                // Add first matching product from this category
-                complementaryProducts.push(accessories[0])
-                foundInCategory = true
-                console.log(`Found ${category.name}:`, accessories[0].name)
-              }
-            } catch (error) {
-              console.log(`Search failed for: ${searchTerm}`)
-            }
+            category: "laptop bag",
+            searches: ["laptop bag", "laptop backpack", "laptop case"],
+            keywords: ["bag", "backpack", "case", "sleeve"],
+            exclude: ["laptop", "desktop", "monitor"],
           }
-
-          // Stop when we have exactly 2 diverse products
-          if (complementaryProducts.length >= 2) break
-        }
-      } else if (categoryName.includes("desktop") || productName.includes("desktop")) {
-        // For desktops, get exactly 2 accessories
-        const desktopCategories = [
+        ],
+        // Second combination set
+        [
           {
-            name: "monitor",
-            searches: ["monitor", "display"],
-            keywords: ["monitor", "display"],
+            category: "keyboard",
+            searches: ["wireless keyboard", "bluetooth keyboard"],
+            keywords: ["keyboard", "wireless", "bluetooth"],
+            exclude: ["laptop", "desktop", "monitor"],
           },
           {
-            name: "keyboard",
-            searches: ["wireless keyboard", "mechanical keyboard"],
-            keywords: ["keyboard"],
+            category: "headphones",
+            searches: ["wireless headphones", "bluetooth headset"],
+            keywords: ["headphone", "headset", "wireless"],
+            exclude: ["laptop", "desktop", "monitor", "phone"],
+          }
+        ],
+        // Third combination set
+        [
+          {
+            category: "laptop stand",
+            searches: ["laptop stand", "laptop cooler"],
+            keywords: ["stand", "cooler", "cooling", "pad"],
+            exclude: ["laptop", "desktop", "monitor"],
           },
           {
-            name: "mouse",
+            category: "usb hub",
+            searches: ["usb hub", "type c hub", "docking station"],
+            keywords: ["hub", "adapter", "docking", "usb"],
+            exclude: ["laptop", "desktop", "monitor"],
+          }
+        ],
+        // Fourth combination set
+        [
+          {
+            category: "mouse",
             searches: ["wireless mouse", "gaming mouse"],
-            keywords: ["mouse"],
+            keywords: ["mouse", "wireless", "gaming"],
+            exclude: ["laptop", "desktop", "computer", "monitor"],
           },
-        ]
-
-        for (const category of desktopCategories) {
-          let foundInCategory = false
-
-          for (const searchTerm of category.searches) {
-            if (foundInCategory) break
-
-            try {
-              const response = await axios.get(
-                `${config.API_URL}/api/products?search=${encodeURIComponent(searchTerm)}&limit=10`,
-              )
-              const accessories = response.data.filter(
-                (p) =>
-                  p._id !== product._id &&
-                  !p.name?.toLowerCase().includes("desktop") &&
-                  !p.name?.toLowerCase().includes("laptop") &&
-                  category.keywords.some((keyword) => p.name?.toLowerCase().includes(keyword)),
-              )
-
-              if (accessories.length > 0) {
-                complementaryProducts.push(accessories[0])
-                foundInCategory = true
-              }
-            } catch (error) {
-              console.log(`Search failed for: ${searchTerm}`)
-            }
+          {
+            category: "usb hub",
+            searches: ["usb hub", "type c hub"],
+            keywords: ["hub", "adapter", "usb"],
+            exclude: ["laptop", "desktop", "monitor"],
           }
-
-          // Stop when we have exactly 2 products
-          if (complementaryProducts.length >= 2) break
-        }
-      } else if (categoryName.includes("mobile") || categoryName.includes("phone") || productName.includes("phone")) {
-        // For phones, get exactly 2 phone accessories
-        const phoneCategories = [
-          {
-            name: "case",
-            searches: ["phone case", "mobile case"],
-            keywords: ["case", "cover"],
-          },
-          {
-            name: "charger",
-            searches: ["wireless charger", "phone charger", "power bank"],
-            keywords: ["charger", "power bank", "charging"],
-          },
-          {
-            name: "audio",
-            searches: ["wireless earbuds", "bluetooth headphones"],
-            keywords: ["earbuds", "headphone", "earphone"],
-          },
         ]
+      ],
 
-        for (const category of phoneCategories) {
-          let foundInCategory = false
-
-          for (const searchTerm of category.searches) {
-            if (foundInCategory) break
-
-            try {
-              const response = await axios.get(
-                `${config.API_URL}/api/products?search=${encodeURIComponent(searchTerm)}&limit=10`,
-              )
-              const accessories = response.data.filter(
-                (p) =>
-                  p._id !== product._id &&
-                  !p.name?.toLowerCase().includes("phone") &&
-                  !p.name?.toLowerCase().includes("mobile") &&
-                  category.keywords.some((keyword) => p.name?.toLowerCase().includes(keyword)),
-              )
-
-              if (accessories.length > 0) {
-                complementaryProducts.push(accessories[0])
-                foundInCategory = true
-              }
-            } catch (error) {
-              console.log(`Search failed for: ${searchTerm}`)
-            }
+      printer: [
+        // First combination set
+        [
+          {
+            category: "cables",
+            searches: ["usb cable", "printer cable", "usb type b cable"],
+            keywords: ["cable", "usb", "printer"],
+            exclude: ["laptop", "desktop", "monitor"],
+          },
+          {
+            category: "ink",
+            searches: ["printer ink", "ink cartridge"],
+            keywords: ["ink", "cartridge", "toner"],
+            exclude: ["laptop", "desktop", "monitor"],
           }
+        ],
+        // Second combination set
+        [
+          {
+            category: "router",
+            searches: ["wifi router", "wireless router"],
+            keywords: ["router", "wifi", "wireless"],
+            exclude: ["laptop", "desktop", "monitor"],
+          },
+          {
+            category: "paper",
+            searches: ["a4 paper", "photo paper"],
+            keywords: ["paper", "a4", "photo"],
+            exclude: ["laptop", "desktop", "monitor"],
+          }
+        ],
+        // Third combination set
+        [
+          {
+            category: "switch",
+            searches: ["network switch", "ethernet switch"],
+            keywords: ["switch", "network", "ethernet"],
+            exclude: ["laptop", "desktop", "monitor"],
+          },
+          {
+            category: "cables",
+            searches: ["power cable", "extension cord"],
+            keywords: ["cable", "power", "extension"],
+            exclude: ["laptop", "desktop", "monitor"],
+          }
+        ]
+      ],
 
-          // Stop when we have exactly 2 products
-          if (complementaryProducts.length >= 2) break
-        }
+      lcd: [
+        // First combination set
+        [
+          {
+            category: "hdmi cable",
+            searches: ["hdmi cable", "hdmi to hdmi"],
+            keywords: ["hdmi", "cable"],
+            exclude: ["laptop", "desktop", "monitor"],
+          },
+          {
+            category: "keyboard",
+            searches: ["wired keyboard", "usb keyboard"],
+            keywords: ["keyboard", "wired", "usb"],
+            exclude: ["laptop", "desktop", "monitor"],
+          }
+        ],
+        // Second combination set
+        [
+          {
+            category: "vga cable",
+            searches: ["vga cable", "vga to vga"],
+            keywords: ["vga", "cable"],
+            exclude: ["laptop", "desktop", "monitor"],
+          },
+          {
+            category: "mouse",
+            searches: ["wired mouse", "usb mouse"],
+            keywords: ["mouse", "wired", "usb"],
+            exclude: ["laptop", "desktop", "monitor"],
+          }
+        ],
+        // Third combination set
+        [
+          {
+            category: "network cable",
+            searches: ["ethernet cable", "lan cable"],
+            keywords: ["ethernet", "lan", "cable"],
+            exclude: ["laptop", "desktop", "monitor"],
+          },
+          {
+            category: "monitor stand",
+            searches: ["monitor stand", "vesa mount"],
+            keywords: ["stand", "mount", "vesa"],
+            exclude: ["laptop", "desktop", "monitor"],
+          }
+        ]
+      ],
+
+      desktop: [
+        // First combination set
+        [
+          {
+            category: "keyboard",
+            searches: ["gaming keyboard", "mechanical keyboard"],
+            keywords: ["keyboard", "gaming", "mechanical"],
+            exclude: ["laptop", "desktop", "monitor"],
+          },
+          {
+            category: "mouse",
+            searches: ["gaming mouse", "optical mouse"],
+            keywords: ["mouse", "gaming", "optical"],
+            exclude: ["laptop", "desktop", "monitor"],
+          }
+        ],
+        // Second combination set
+        [
+          {
+            category: "ram",
+            searches: ["ddr4 ram", "desktop ram"],
+            keywords: ["ram", "ddr4", "memory"],
+            exclude: ["laptop", "monitor"],
+          },
+          {
+            category: "ssd",
+            searches: ["ssd", "solid state drive"],
+            keywords: ["ssd", "solid state", "nvme"],
+            exclude: ["laptop", "monitor"],
+          }
+        ],
+        // Third combination set
+        [
+          {
+            category: "monitor",
+            searches: ["led monitor", "computer monitor"],
+            keywords: ["monitor", "led", "display"],
+            exclude: ["laptop", "desktop", "computer"],
+          },
+          {
+            category: "hdmi cable",
+            searches: ["hdmi cable", "hdmi 2.0"],
+            keywords: ["hdmi", "cable"],
+            exclude: ["laptop", "desktop", "monitor"],
+          }
+        ],
+        // Fourth combination set
+        [
+          {
+            category: "hard disk",
+            searches: ["hard disk", "internal hdd"],
+            keywords: ["hard disk", "hdd", "internal"],
+            exclude: ["laptop", "monitor", "external"],
+          },
+          {
+            category: "network cable",
+            searches: ["ethernet cable", "lan cable"],
+            keywords: ["ethernet", "lan", "cable"],
+            exclude: ["laptop", "desktop", "monitor"],
+          }
+        ]
+      ]
+    };
+
+    // Determine product type
+    const getProductType = () => {
+      if (productName.includes('laptop') || categoryName.includes('laptop')) {
+        return 'laptop';
+      } else if (productName.includes('printer') || categoryName.includes('printer')) {
+        return 'printer';
+      } else if (productName.includes('lcd') || productName.includes('led') || 
+                 productName.includes('monitor') || categoryName.includes('monitor')) {
+        return 'lcd';
+      } else if (productName.includes('desktop') || categoryName.includes('desktop') ||
+                 productName.includes('computer') && !productName.includes('laptop')) {
+        return 'desktop';
       }
+      return 'laptop';
+    };
 
-      // Remove duplicates and ensure exactly 2 items
-      const uniqueProducts = complementaryProducts
-        .filter((product, index, self) => index === self.findIndex((p) => p._id === product._id))
-        .slice(0, 2) // LIMIT TO EXACTLY 2 ACCESSORIES
+    const productType = getProductType();
+    console.log(`Detected product type: ${productType}`);
 
-      console.log("Found complementary products:", uniqueProducts.length)
-      console.log(
-        "Products:",
-        uniqueProducts.map((p) => ({
-          name: p.name,
-          category: p.category?.name,
-          type: p.name?.toLowerCase().includes("mouse")
-            ? "mouse"
-            : p.name?.toLowerCase().includes("keyboard")
-              ? "keyboard"
-              : p.name?.toLowerCase().includes("headphone") || p.name?.toLowerCase().includes("headset")
-                ? "audio"
-                : "other",
-        })),
-      )
+    const complementaryProducts = [];
+    const seenProductIds = new Set([product._id]);
 
-      // If we don't have exactly 2, try fallback
-      if (uniqueProducts.length < 2) {
-        console.log(`Only found ${uniqueProducts.length} accessories, trying fallback...`)
+    // Get all combination sets for this product type
+    const combinationSets = ACCESSORY_MAPPING[productType] || ACCESSORY_MAPPING.laptop;
+    
+    // Rotate through different combinations (you can use timestamp, random, or store in state)
+    const rotationIndex = Math.floor(Date.now() / 60000) % combinationSets.length; // Changes every minute
+    // Alternative: const rotationIndex = Math.floor(Math.random() * combinationSets.length);
+    
+    const selectedCombination = combinationSets[rotationIndex];
+    console.log(`Using combination set ${rotationIndex + 1} of ${combinationSets.length}`);
+
+    // Find products for the selected combination
+    for (const accessory of selectedCombination) {
+      if (complementaryProducts.length >= 2) break;
+
+      for (const searchTerm of accessory.searches) {
+        if (complementaryProducts.length >= 2) break;
 
         try {
-          const fallbackResponse = await axios.get(`${config.API_URL}/api/products?limit=50`)
-          const fallbackAccessories = fallbackResponse.data.filter(
-            (p) =>
-              p._id !== product._id &&
-              (p.category?.name?.toLowerCase().includes("accessories") ||
-                p.name?.toLowerCase().includes("mouse") ||
-                p.name?.toLowerCase().includes("keyboard") ||
-                p.name?.toLowerCase().includes("headphone") ||
-                p.name?.toLowerCase().includes("speaker")) &&
-              // Exclude main product categories
-              !p.name?.toLowerCase().includes("laptop") &&
-              !p.name?.toLowerCase().includes("desktop") &&
-              !p.name?.toLowerCase().includes("computer") &&
-              !p.name?.toLowerCase().includes("phone") &&
-              !p.name?.toLowerCase().includes("tablet") &&
-              !p.name?.toLowerCase().includes("monitor") &&
-              !uniqueProducts.some((existing) => existing._id === p._id), // Don't duplicate
-          )
+          const response = await axios.get(
+            `${config.API_URL}/api/products?search=${encodeURIComponent(searchTerm)}&limit=8`
+          );
 
-          // Add fallback products to reach exactly 2 total
-          const needed = 2 - uniqueProducts.length
-          uniqueProducts.push(...fallbackAccessories.slice(0, needed))
+          // Find the most relevant product from this search
+          const relevantProduct = response.data.find(p => {
+            if (!p || seenProductIds.has(p._id)) return false;
+            
+            const pName = (p.name || "").toLowerCase();
+            const pCategory = (p.category?.name || "").toLowerCase();
+            
+            // Must match at least one keyword
+            const matchesKeywords = accessory.keywords.some(keyword => 
+              pName.includes(keyword) || pCategory.includes(keyword)
+            );
+            
+            // Must NOT contain any excluded words
+            const isExcluded = accessory.exclude.some(excludeWord =>
+              pName.includes(excludeWord) || pCategory.includes(excludeWord)
+            );
 
-          console.log(
-            "Added fallback accessories:",
-            fallbackAccessories.slice(0, needed).map((p) => p.name),
-          )
+            const isRelevantPrice = p.price > 0 && p.price < 2000;
+
+            return matchesKeywords && !isExcluded && isRelevantPrice;
+          });
+
+          if (relevantProduct) {
+            complementaryProducts.push({
+              ...relevantProduct,
+              accessoryType: accessory.category
+            });
+            seenProductIds.add(relevantProduct._id);
+            console.log(`Found ${accessory.category}: ${relevantProduct.name}`);
+            break;
+          }
         } catch (error) {
-          console.error("Fallback accessories search failed:", error)
+          console.log(`Search failed for: ${searchTerm}`, error);
         }
       }
-
-      // Final check - ensure we have exactly 2 or hide the section
-      if (uniqueProducts.length === 0) {
-        console.log("No accessories found at all, hiding section")
-        setFrequentlyBought([])
-        setSelectedBundleItems({})
-        return
-      }
-
-      // Set the found products (limit to exactly 2)
-      const finalProducts = uniqueProducts.slice(0, 2)
-      setFrequentlyBought(finalProducts)
-
-      console.log(
-        "Final selected products:",
-        finalProducts.map((p) => ({ name: p.name, category: p.category?.name })),
-      )
-
-      // Auto-select ALL bundle items (current product + exactly 2 accessories = 3 total)
-      const autoSelectedItems = {
-        [product._id]: true, // Current product always selected
-      }
-
-      // Auto-select all found accessories (exactly 2)
-      finalProducts.forEach((item) => {
-        autoSelectedItems[item._id] = true
-      })
-
-      console.log("Auto-selected bundle items (total 3):", autoSelectedItems)
-      console.log("Bundle will have:", Object.keys(autoSelectedItems).length, "items total")
-      setSelectedBundleItems(autoSelectedItems)
-    } catch (error) {
-      console.error("Error fetching frequently bought products:", error)
-      setFrequentlyBought([])
-    } finally {
-      setFrequentlyBoughtLoading(false)
     }
+
+    // If we couldn't find both items from the selected combination, try other combinations
+    if (complementaryProducts.length < 2) {
+      console.log("Trying alternative combinations...");
+      
+      for (let i = 0; i < combinationSets.length && complementaryProducts.length < 2; i++) {
+        if (i === rotationIndex) continue; // Skip the already tried combination
+        
+        const altCombination = combinationSets[i];
+        
+        for (const accessory of altCombination) {
+          if (complementaryProducts.length >= 2) break;
+
+          for (const searchTerm of accessory.searches) {
+            if (complementaryProducts.length >= 2) break;
+
+            try {
+              const response = await axios.get(
+                `${config.API_URL}/api/products?search=${encodeURIComponent(searchTerm)}&limit=8`
+              );
+
+              const relevantProduct = response.data.find(p => {
+                if (!p || seenProductIds.has(p._id)) return false;
+                
+                const pName = (p.name || "").toLowerCase();
+                const pCategory = (p.category?.name || "").toLowerCase();
+                
+                const matchesKeywords = accessory.keywords.some(keyword => 
+                  pName.includes(keyword) || pCategory.includes(keyword)
+                );
+                
+                const isExcluded = accessory.exclude.some(excludeWord =>
+                  pName.includes(excludeWord) || pCategory.includes(excludeWord)
+                );
+
+                const isRelevantPrice = p.price > 0 && p.price < 2000;
+
+                return matchesKeywords && !isExcluded && isRelevantPrice;
+              });
+
+              if (relevantProduct) {
+                complementaryProducts.push({
+                  ...relevantProduct,
+                  accessoryType: accessory.category
+                });
+                seenProductIds.add(relevantProduct._id);
+                console.log(`Found alternative ${accessory.category}: ${relevantProduct.name}`);
+                break;
+              }
+            } catch (error) {
+              console.log(`Alternative search failed for: ${searchTerm}`, error);
+            }
+          }
+        }
+      }
+    }
+
+    console.log("Final frequently bought together (1+2):", [
+      { name: product.name, type: 'main' },
+      ...complementaryProducts.map(p => ({
+        name: p.name,
+        accessoryType: p.accessoryType,
+        price: p.price
+      }))
+    ]);
+
+    setFrequentlyBought(complementaryProducts);
+
+    // Auto-select current product + found accessories
+    const autoSelectedItems = {
+      [product._id]: true,
+    };
+
+    complementaryProducts.forEach(item => {
+      autoSelectedItems[item._id] = true;
+    });
+
+    setSelectedBundleItems(autoSelectedItems);
+
+  } catch (error) {
+    console.error("Error fetching frequently bought products:", error);
+    setFrequentlyBought([]);
+  } finally {
+    setFrequentlyBoughtLoading(false);
   }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const handleAddBundleToCart = async () => {
     console.log("=== Add Bundle to Cart Started ===")
@@ -2026,11 +2765,11 @@ const ProductDetails = () => {
       )}
 
       {/* WhatsApp Float Button */}
-      <div className="fixed bottom-6 right-6 z-40">
+      {/* <div className="fixed bottom-6 right-6 z-40">
         <button className="bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition-colors">
-          <MessageCircle size={24} />
+          <MessageCircle size={4} />
         </button>
-      </div>
+      </div> */}
 
       {showCallbackModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
