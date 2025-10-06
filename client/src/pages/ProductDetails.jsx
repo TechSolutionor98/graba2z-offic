@@ -150,7 +150,17 @@ const ProductDetails = () => {
   const [couponCopied, setCouponCopied] = useState(null)
 
   const formatPrice = (price) => {
-    return `${Number(price).toLocaleString()}.00 AED`
+    const num = Number(price)
+    if (isNaN(num)) return "0.00 AED"
+    // Check if number is an integer (no decimal part)
+    if (Number.isInteger(num)) {
+      return `${num.toLocaleString()}.00 AED`
+    }
+    // Preserve up to 2 decimal places if backend already has them (e.g., 2078.96)
+    const fixed = num.toFixed(2)
+    // Remove trailing zeros but keep two if both are needed for .10 style? requirement says keep backend decimals; we keep exactly given decimals if provided.
+    // Since backend provided decimals, show them (2 places) without extra .00
+    return `${Number(fixed).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`
   }
 
   const calculateDiscountedPrice = (price, discountPercent = 25) => {
@@ -378,7 +388,7 @@ const ProductDetails = () => {
       <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-semibold text-gray-900">Frequently Bought Together</h3>
-          <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">25% OFF BUNDLE</div>
+          <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">25% OFF BUNDLE</div>
         </div>
 
         <div className="space-y-4">
@@ -480,7 +490,7 @@ const ProductDetails = () => {
               <ShoppingCart size={20} />
               Add all {selectedCount} to Cart
               {bundleTotals.savings > 0 && (
-                <span className="text-xs bg-white text-red-500 px-2 py-1 rounded-full">
+                <span className="text-xs bg-white text-red-600 px-2 py-1 rounded-full">
                   Save {formatPrice(bundleTotals.savings)}
                 </span>
               )}
@@ -1739,39 +1749,52 @@ const ProductDetails = () => {
 
   // Helper function to get stock badge
   const getStockBadge = () => {
+    // Unified badge style for all stock statuses
+    const baseClass =
+      "inline-flex items-center justify-center min-h-[32px] px-4 py-1 rounded-md text-sm font-bold leading-none";
     switch (product.stockStatus) {
       case "Available Product":
-        return <span className="bg-lime-500 text-white text-md font-bold px-3 py-1 rounded">In Stock</span>
+        return (
+          <span className={baseClass + " bg-lime-500 text-white"}>In Stock</span>
+        );
       case "Out of Stock":
-        return <span className="bg-red-500 text-white text-md font-bold px-3 py-1 rounded">Out of Stock</span>
+        return (
+          <span className={baseClass + " bg-red-500 text-white"}>Out of Stock</span>
+        );
       case "PreOrder":
-        return <span className="bg-orange-100 text-white text-md font-medium px-3 py-1 rounded">Pre-order</span>
+        return (
+          <span className={baseClass + " bg-orange-400 text-white"}>Pre-order</span>
+        );
       default:
-        return null
+        return null;
     }
-  }
+  } // end getStockBadge
 
   // Helper function to get discount badge
   const getDiscountBadge = () => {
-    const basePrice = Number(product.price) || 0
-    const offerPrice = Number(product.offerPrice) || 0
-    const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
-
+    const basePrice = Number(product.price) || 0;
+    const offerPrice = Number(product.offerPrice) || 0;
+    const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice;
+    // Unified badge style for discount
+    const badgeClass =
+      "inline-flex items-center justify-center min-h-[32px] px-4 py-1 rounded-md text-sm font-bold leading-none bg-red-600 text-white";
     if (hasValidOffer) {
-      const discountPercentage = Math.round(((basePrice - offerPrice) / basePrice) * 100)
+      const discountPercentage = Math.round(((basePrice - offerPrice) / basePrice) * 100);
       return (
-        <span className="bg-red-600 text-white text-md font-medium px-3 py-md rounded">
+        <span className={badgeClass}>
           -{discountPercentage}%
         </span>
-      )
+      );
     } else if (product.discount > 0) {
       // Fallback if only discount percentage is provided
       return (
-        <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">-{product.discount}%</span>
-      )
+        <span className={badgeClass}>
+          -{product.discount}%
+        </span>
+      );
     }
-    return null
-  }
+    return null;
+  } // end getDiscountBadge
 
   return (
     <div className="bg-white min-h-screen">
@@ -1903,8 +1926,10 @@ const ProductDetails = () => {
             <div className="bg-white rounded-lg p-2">
               {/* Status Badges */}
               <div className="flex items-center gap-2 mb-4">
-                {getStockBadge()}
-                {getDiscountBadge()}
+                <div className="flex items-center gap-2">
+                  {getStockBadge()}
+                  {getDiscountBadge()}
+                </div>
               </div>
               <h1 className="text-xl font-bold text-gray-900 mb-4">{product.name}</h1>
 
@@ -1942,7 +1967,7 @@ const ProductDetails = () => {
                         i < Math.floor(reviewStats.averageRating || 0)
                           ? "text-yellow-400 fill-current"
                           : "text-gray-300"
-                      } cursor-pointer hover:scale-110 transition-transform duration-200`}
+                      } cursor-pointer  hover:scale-110 transition-transform duration-200`}
                       onClick={(e) => {
                         e.stopPropagation() // Prevent triggering the parent div's onClick
                         scrollToReviewSection()
@@ -2060,16 +2085,17 @@ const ProductDetails = () => {
                  <button
                       type="button"
                       onClick={() => setShowTamaraModal(true)}
-                      className="ml-2 underline font-medium text-gray-900 hover:text-black"
+                      className="ml-2 font-medium text-gray-900 hover:text-black"
                     >
                 <div className="border rounded-xl p-3 bg-white">
                   
                   <div className="text-sm text-gray-700">
                     Or split in 4 payments of{" "}
-                    <span className="font-semibold text-gray-900">{formatPerMonth(getEffectivePrice() / 4)}</span> - No
-                    late fees, Sharia compliant!
-                   
-                      More options
+                    <span className="font-semibold text-gray-900">{formatPerMonth(getEffectivePrice() / 4)}</span>
+                     - No 
+                    late fees,
+                    
+                     Sharia compliant! <br /> More options
                  
                     <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold text-gray-900 bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 align-middle">
                       tamara
@@ -2085,7 +2111,7 @@ const ProductDetails = () => {
                      <button
                       type="button"
                       onClick={() => setShowTabbyModal(true)}
-                      className="underline font-medium text-gray-900 hover:text-black"
+                      className="font-medium text-gray-900 hover:text-black"
                     >
                 <div className="border rounded-xl p-3 bg-white">
                   <div className="text-sm text-gray-700 flex items-center gap-2 flex-wrap">
@@ -2451,7 +2477,7 @@ const ProductDetails = () => {
       </button>
       <button
         onClick={() => setActiveTab("reviews")}
-        className={`flex-1 py-3 px-2 mx-1 rounded-lg font-bold text-sm sm:text-md transition-all whitespace-nowrap ${
+        className={`flex-1 py-3 px-2 mx-1  rounded-lg font-bold text-sm sm:text-md transition-all whitespace-nowrap ${
           activeTab === "reviews"
             ? "bg-white text-lime-700 shadow-md"
             : "bg-lime-700 text-white hover:bg-lime-800"

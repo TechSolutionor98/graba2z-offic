@@ -1650,7 +1650,7 @@ const DynamicBrandProductCard = ({ product }) => {
           <img
             src={product.image || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
-            className="w-full h-full cover rounded mx-auto"
+            className="w-full h-[165px] cover rounded mx-auto"
           />
         </Link>
         <button
@@ -1810,7 +1810,7 @@ const AccessoriesProductCard = ({ product }) => {
       </div>
 
       {/* Rating and Reviews Section - Fixed with 20px stars */}
-      <div className="flex items-center mb-2 min-h-[24px]">
+      <div className="flex items-center  min-h-[24px]">
         <div className="flex items-center">
           {[...Array(5)].map((_, i) => (
             <Star
