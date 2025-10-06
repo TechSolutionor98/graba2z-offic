@@ -150,7 +150,17 @@ const ProductDetails = () => {
   const [couponCopied, setCouponCopied] = useState(null)
 
   const formatPrice = (price) => {
-    return `${Number(price).toLocaleString()}.00 AED`
+    const num = Number(price)
+    if (isNaN(num)) return "0.00 AED"
+    // Check if number is an integer (no decimal part)
+    if (Number.isInteger(num)) {
+      return `${num.toLocaleString()}.00 AED`
+    }
+    // Preserve up to 2 decimal places if backend already has them (e.g., 2078.96)
+    const fixed = num.toFixed(2)
+    // Remove trailing zeros but keep two if both are needed for .10 style? requirement says keep backend decimals; we keep exactly given decimals if provided.
+    // Since backend provided decimals, show them (2 places) without extra .00
+    return `${Number(fixed).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`
   }
 
   const calculateDiscountedPrice = (price, discountPercent = 25) => {
