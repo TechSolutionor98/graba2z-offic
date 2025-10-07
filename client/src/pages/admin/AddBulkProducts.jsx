@@ -3,6 +3,7 @@
 import config from "../../config/config"
 import { useState } from "react"
 import Papa from "papaparse"
+import AdminSidebar from "../../components/admin/AdminSidebar" // Add this import
 
 const AddBulkProducts = () => {
   const [previewProducts, setPreviewProducts] = useState([])
@@ -157,149 +158,152 @@ const AddBulkProducts = () => {
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Add Bulk Products</h1>
+    <div className="min-h-screen bg-gray-100">
+      <AdminSidebar />
+      <div className="ml-64 p-8">
+        <h1 className="text-2xl font-bold mb-6">Add Bulk Products</h1>
 
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-        <h3 className="font-semibold text-yellow-800 mb-2">CSV Format Guidelines:</h3>
-        <ul className="text-sm text-yellow-700 space-y-1">
-          <li>• Use CSV format with column headers: name, parent_category, category, brand, price, etc.</li>
-          <li>
-            • <strong>parent_category</strong>: Main category (shown in navbar, e.g., "Electronics")
-          </li>
-          <li>
-            • <strong>category</strong>: Subcategory (shown in dropdown, e.g., "Smartphones")
-          </li>
-          <li>• Categories and Brands will be created automatically if they don't exist</li>
-          <li>• Required fields: name, parent_category, price</li>
-          <li>• Stock Status options: "Available Product", "Out of Stock", "PreOrder"</li>
-          <li>• Boolean fields (showStockOut, canPurchase, refundable): use "true" or "false"</li>
-        </ul>
-      </div>
-
-      <div className="flex gap-4 mb-6">
-        <label className="bg-lime-500 hover:bg-lime-600 text-white px-6 py-2 rounded cursor-pointer">
-          Import CSV File
-          <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
-        </label>
-        <button onClick={handleExport} className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded">
-          Download Sample CSV
-        </button>
-        {fileName && <span className="text-gray-600 ml-2 flex items-center">📄 {fileName}</span>}
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-          <p className="text-red-700">{error}</p>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-yellow-800 mb-2">CSV Format Guidelines:</h3>
+          <ul className="text-sm text-yellow-700 space-y-1">
+            <li>• Use CSV format with column headers: name, parent_category, category, brand, price, etc.</li>
+            <li>
+              • <strong>parent_category</strong>: Main category (shown in navbar, e.g., "Electronics")
+            </li>
+            <li>
+              • <strong>category</strong>: Subcategory (shown in dropdown, e.g., "Smartphones")
+            </li>
+            <li>• Categories and Brands will be created automatically if they don't exist</li>
+            <li>• Required fields: name, parent_category, price</li>
+            <li>• Stock Status options: "Available Product", "Out of Stock", "PreOrder"</li>
+            <li>• Boolean fields (showStockOut, canPurchase, refundable): use "true" or "false"</li>
+          </ul>
         </div>
-      )}
 
-      {loading && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <p className="text-blue-700">Processing...</p>
+        <div className="flex gap-4 mb-6">
+          <label className="bg-lime-500 hover:bg-lime-600 text-white px-6 py-2 rounded cursor-pointer">
+            Import CSV File
+            <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
+          </label>
+          <button onClick={handleExport} className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded">
+            Download Sample CSV
+          </button>
+          {fileName && <span className="text-gray-600 ml-2 flex items-center">📄 {fileName}</span>}
         </div>
-      )}
 
-      {(previewProducts.length > 0 || invalidRows.length > 0) && (
-        <div className="mb-4">
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-            <h3 className="font-semibold mb-2">Import Summary:</h3>
-            <div className="flex gap-6 mb-2">
-              <span>Total Rows: {previewProducts.length + invalidRows.length}</span>
-              <span className="text-green-600">✓ Valid: {previewProducts.length}</span>
-              <span className="text-red-600">✗ Invalid: {invalidRows.length}</span>
-            </div>
-
-            {invalidRows.length > 0 && (
-              <div className="mt-3">
-                <h4 className="font-medium text-red-600 mb-2">Invalid Rows:</h4>
-                <div className="max-h-32 overflow-y-auto">
-                  {invalidRows.slice(0, 5).map((row, i) => (
-                    <div key={i} className="text-sm text-red-600">
-                      Row {row.row}: {row.reason}
-                    </div>
-                  ))}
-                  {invalidRows.length > 5 && (
-                    <div className="text-sm text-red-600">...and {invalidRows.length - 5} more</div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {previewProducts.length > 0 && (
-              <button
-                onClick={handleBulkSave}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded mt-3"
-                disabled={loading}
-              >
-                {loading ? "Saving..." : `Save ${previewProducts.length} Products`}
-              </button>
-            )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-700">{error}</p>
           </div>
-        </div>
-      )}
+        )}
 
-      {saveResult && (
-        <div className="mb-4">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="font-semibold text-green-800 mb-2">Save Results:</h3>
-            <div className="flex gap-6 mb-2">
-              <span>Total: {saveResult.total}</span>
-              <span className="text-green-600">✓ Success: {saveResult.success}</span>
-              <span className="text-red-600">✗ Failed: {saveResult.failed}</span>
-            </div>
+        {loading && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-blue-700">Processing...</p>
+          </div>
+        )}
 
-            {saveResult.failed > 0 && saveResult.results && (
-              <div className="mt-3">
-                <h4 className="font-medium text-red-600 mb-2">Failed Products:</h4>
-                <div className="max-h-32 overflow-y-auto">
-                  {saveResult.results
-                    .filter((r) => r.status === "error")
-                    .slice(0, 5)
-                    .map((r, i) => (
+        {(previewProducts.length > 0 || invalidRows.length > 0) && (
+          <div className="mb-4">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+              <h3 className="font-semibold mb-2">Import Summary:</h3>
+              <div className="flex gap-6 mb-2">
+                <span>Total Rows: {previewProducts.length + invalidRows.length}</span>
+                <span className="text-green-600">✓ Valid: {previewProducts.length}</span>
+                <span className="text-red-600">✗ Invalid: {invalidRows.length}</span>
+              </div>
+
+              {invalidRows.length > 0 && (
+                <div className="mt-3">
+                  <h4 className="font-medium text-red-600 mb-2">Invalid Rows:</h4>
+                  <div className="max-h-32 overflow-y-auto">
+                    {invalidRows.slice(0, 5).map((row, i) => (
                       <div key={i} className="text-sm text-red-600">
-                        {r.product?.name || `Product ${i + 1}`}: {r.message}
+                        Row {row.row}: {row.reason}
                       </div>
                     ))}
+                    {invalidRows.length > 5 && (
+                      <div className="text-sm text-red-600">...and {invalidRows.length - 5} more</div>
+                    )}
+                  </div>
                 </div>
+              )}
+
+              {previewProducts.length > 0 && (
+                <button
+                  onClick={handleBulkSave}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded mt-3"
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : `Save ${previewProducts.length} Products`}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {saveResult && (
+          <div className="mb-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h3 className="font-semibold text-green-800 mb-2">Save Results:</h3>
+              <div className="flex gap-6 mb-2">
+                <span>Total: {saveResult.total}</span>
+                <span className="text-green-600">✓ Success: {saveResult.success}</span>
+                <span className="text-red-600">✗ Failed: {saveResult.failed}</span>
               </div>
+
+              {saveResult.failed > 0 && saveResult.results && (
+                <div className="mt-3">
+                  <h4 className="font-medium text-red-600 mb-2">Failed Products:</h4>
+                  <div className="max-h-32 overflow-y-auto">
+                    {saveResult.results
+                      .filter((r) => r.status === "error")
+                      .slice(0, 5)
+                      .map((r, i) => (
+                        <div key={i} className="text-sm text-red-600">
+                          {r.product?.name || `Product ${i + 1}`}: {r.message}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {previewProducts.length > 0 && (
+          <div className="overflow-x-auto bg-white rounded shadow p-4">
+            <h3 className="font-semibold mb-3">Preview Products ({previewProducts.length})</h3>
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="px-2 py-1 text-left">Name</th>
+                  <th className="px-2 py-1 text-left">Parent Category</th>
+                  <th className="px-2 py-1 text-left">Sub Category</th>
+                  <th className="px-2 py-1 text-left">Brand</th>
+                  <th className="px-2 py-1 text-left">Price</th>
+                  <th className="px-2 py-1 text-left">Stock Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {previewProducts.slice(0, 20).map((product, i) => (
+                  <tr key={i} className="border-b">
+                    <td className="px-2 py-1">{product.name || "N/A"}</td>
+                    <td className="px-2 py-1">{product.parentCategory?.name || product.parentCategory || "N/A"}</td>
+                    <td className="px-2 py-1">{product.category?.name || product.category || "N/A"}</td>
+                    <td className="px-2 py-1">{product.brand?.name || product.brand || "N/A"}</td>
+                    <td className="px-2 py-1">{product.price || 0}</td>
+                    <td className="px-2 py-1">{product.stockStatus || "Available Product"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {previewProducts.length > 20 && (
+              <div className="text-xs text-gray-500 mt-2">Showing first 20 of {previewProducts.length} products...</div>
             )}
           </div>
-        </div>
-      )}
-
-      {previewProducts.length > 0 && (
-        <div className="overflow-x-auto bg-white rounded shadow p-4">
-          <h3 className="font-semibold mb-3">Preview Products ({previewProducts.length})</h3>
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="px-2 py-1 text-left">Name</th>
-                <th className="px-2 py-1 text-left">Parent Category</th>
-                <th className="px-2 py-1 text-left">Sub Category</th>
-                <th className="px-2 py-1 text-left">Brand</th>
-                <th className="px-2 py-1 text-left">Price</th>
-                <th className="px-2 py-1 text-left">Stock Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {previewProducts.slice(0, 20).map((product, i) => (
-                <tr key={i} className="border-b">
-                  <td className="px-2 py-1">{product.name || "N/A"}</td>
-                  <td className="px-2 py-1">{product.parentCategory?.name || product.parentCategory || "N/A"}</td>
-                  <td className="px-2 py-1">{product.category?.name || product.category || "N/A"}</td>
-                  <td className="px-2 py-1">{product.brand?.name || product.brand || "N/A"}</td>
-                  <td className="px-2 py-1">{product.price || 0}</td>
-                  <td className="px-2 py-1">{product.stockStatus || "Available Product"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {previewProducts.length > 20 && (
-            <div className="text-xs text-gray-500 mt-2">Showing first 20 of {previewProducts.length} products...</div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
