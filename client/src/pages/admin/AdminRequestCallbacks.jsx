@@ -92,6 +92,7 @@ const AdminRequestCallbacks = () => {
                   <th className="px-4 py-2 text-left">Name</th>
                   <th className="px-4 py-2 text-left">Email</th>
                   <th className="px-4 py-2 text-left">Phone</th>
+                  <th className="px-4 py-2 text-left">Date</th> {/* Added Date column */}
                   <th className="px-4 py-2 text-left">Status</th>
                   <th className="px-4 py-2 text-left">Actions</th>
                 </tr>
@@ -102,6 +103,17 @@ const AdminRequestCallbacks = () => {
                     <td className="px-4 py-2">{req.name}</td>
                     <td className="px-4 py-2">{req.email}</td>
                     <td className="px-4 py-2">{req.phone}</td>
+                    <td className="px-4 py-2">
+                      {req.createdAt
+                        ? new Date(req.createdAt).toLocaleString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : 'N/A'}
+                    </td>
                     <td className="px-4 py-2 relative">
                       <span
                         className={`px-3 py-1 rounded font-semibold text-xs cursor-pointer select-none
