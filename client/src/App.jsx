@@ -11,6 +11,12 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import AdminRoute from "./components/AdminRoute"
 import ScrollToTop from "./components/ScrollToTop"
 import CacheStatus from "./components/CacheStatus"
+import CreateOrder from "./pages/admin/CreateOrder"
+
+
+
+
+
 
 import { Helmet } from "react-helmet-async"
 import { useLocation } from "react-router-dom"
@@ -318,7 +324,7 @@ function App() {
 
 
 
-
+                              <Route path="orders/create" element={<CreateOrder />} />
 
 
 
