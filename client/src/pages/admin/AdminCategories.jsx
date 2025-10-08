@@ -62,7 +62,8 @@ const AdminCategories = () => {
           return
         }
 
-        const response = await fetch(`/api/categories/${id}`, {
+        // Fix: Use the full API URL with config.API_URL
+        const response = await fetch(`${config.API_URL}/api/categories/${id}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -75,9 +76,19 @@ const AdminCategories = () => {
           fetchCategories()
         } else if (response.status === 401) {
           showToast("Authentication failed. Please login again.", "error")
+        } else if (response.status === 405) {
+          showToast("Delete operation not supported for this category", "error")
         } else {
-          const errorData = await response.json()
-          showToast(errorData.message || "Error deleting category", "error")
+          // Fix: Handle cases where response might not be JSON
+          let errorMessage = "Error deleting category"
+          try {
+            const errorData = await response.json()
+            errorMessage = errorData.message || errorMessage
+          } catch (jsonError) {
+            // If response is not JSON, use default error message
+            console.warn("Response is not JSON:", jsonError)
+          }
+          showToast(errorMessage, "error")
         }
       } catch (error) {
         console.error("Error deleting category:", error)
