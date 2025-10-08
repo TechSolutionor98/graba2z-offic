@@ -15,7 +15,8 @@ const ForgotPassword = () => {
     setError("");
     setSuccess("");
     try {
-      await authAPI.forgotPassword(email);
+      // Convert email to lowercase before sending
+      await authAPI.forgotPassword(email.trim().toLowerCase());
       setSuccess("If this email is registered, a reset link has been sent.");
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
@@ -69,4 +70,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword; 
+export default ForgotPassword;

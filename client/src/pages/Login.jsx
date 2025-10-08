@@ -44,7 +44,13 @@ const Login = () => {
       setLoading(true)
       setError("")
 
-      const result = await login(formData)
+      // Convert email to lowercase before sending to API
+      const loginData = {
+        email: formData.email.trim().toLowerCase(), // Add this conversion
+        password: formData.password
+      }
+
+      const result = await login(loginData)
 
       if (result.success) {
         showToast && showToast("Logged in successfully!", "success")
