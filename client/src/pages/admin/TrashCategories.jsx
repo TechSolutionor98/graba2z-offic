@@ -34,17 +34,29 @@ const TrashCategories = () => {
   }
 
   const restoreCategory = async (id) => {
-    try {
-      const token = localStorage.getItem("adminToken")
-      await apiRequest(`/api/categories/${id}/restore`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      showToast("Category restored successfully!", "success")
-      fetchTrashCategories()
-    } catch (error) {
-      console.error("Error restoring category:", error)
-      showToast("Failed to restore category", "error")
+    if (window.confirm("Are you sure you want to restore this category?")) {
+      try {
+        const token = localStorage.getItem("adminToken")
+        
+        const response = await fetch(`${config.API_URL}/api/categories/${id}/restore`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+
+        if (response.ok) {
+          showToast("Category restored successfully!", "success")
+          fetchTrashCategories()
+        } else {
+          const errorData = await response.json()
+          showToast(errorData.message || "Failed to restore category", "error")
+        }
+      } catch (error) {
+        console.error("Error restoring category:", error)
+        showToast("Failed to restore category", "error")
+      }
     }
   }
 
@@ -52,12 +64,22 @@ const TrashCategories = () => {
     if (window.confirm("Are you sure you want to permanently delete this category? This action cannot be undone.")) {
       try {
         const token = localStorage.getItem("adminToken")
-        await apiRequest(`/api/categories/${id}/permanent`, {
+        
+        const response = await fetch(`${config.API_URL}/api/categories/${id}/permanent`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         })
-        showToast("Category permanently deleted!", "success")
-        fetchTrashCategories()
+
+        if (response.ok) {
+          showToast("Category permanently deleted!", "success")
+          fetchTrashCategories()
+        } else {
+          const errorData = await response.json()
+          showToast(errorData.message || "Failed to delete category", "error")
+        }
       } catch (error) {
         console.error("Error deleting category:", error)
         showToast("Failed to delete category", "error")
