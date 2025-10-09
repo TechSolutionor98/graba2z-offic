@@ -132,29 +132,105 @@ const AddBulkProducts = () => {
   }
 
   const handleBulkSave = async () => {
+    if (previewProducts.length === 0) {
+      setError("No products to save")
+      return
+    }
+
     setLoading(true)
+    setError("")
     setSaveResult(null)
+
     try {
       const token = getAdminToken()
-      const res = await fetch(`${config.API_URL}/api/products/bulk-save`, {
+      if (!token) {
+        setError("No authentication token found")
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch(`${config.API_URL}/api/products/bulk`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ products: previewProducts }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || "Bulk save failed")
 
-      console.log("Save response:", data)
-      setSaveResult(data)
-    } catch (err) {
-      console.error("Save error:", err)
-      setError(err.message)
+      const result = await response.json()
+
+      if (response.ok) {
+        // Structure the result properly
+        const structuredResult = {
+          total: previewProducts.length,
+          success: result.successCount || 0,
+          failed: result.failedCount || 0,
+          results: result.results || [], // This should contain both success and failed items
+          failedProducts: result.failedProducts || [], // Backup array of just failed products
+          successfulProducts: result.successfulProducts || []
+        }
+
+        setSaveResult(structuredResult)
+        
+        // Clear preview if all successful
+        if (structuredResult.failed === 0) {
+          setPreviewProducts([])
+          setFileName("")
+        }
+      } else {
+        setError(result.message || "Failed to save products")
+      }
+    } catch (error) {
+      console.error("Error saving products:", error)
+      setError("Error saving products: " + error.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  const downloadFailedProducts = () => {
+    if (!saveResult) return
+
+    let failedProducts = []
+
+    // Try multiple ways to get failed products data
+    if (saveResult.results) {
+      failedProducts = saveResult.results
+        .filter((result) => result.status === "error" || result.success === false)
+        .map((result, index) => ({
+          name: result.product?.name || result.name || previewProducts[result.originalIndex || index]?.name || 'Unknown',
+          sku: result.product?.sku || result.sku || previewProducts[result.originalIndex || index]?.sku || '',
+          price: result.product?.price || result.price || previewProducts[result.originalIndex || index]?.price || '',
+          brand: result.product?.brand || result.brand || previewProducts[result.originalIndex || index]?.brand || '',
+          category: result.product?.category || result.category || previewProducts[result.originalIndex || index]?.category || '',
+          parent_category: result.product?.parent_category || result.parent_category || previewProducts[result.originalIndex || index]?.parent_category || '',
+          error_reason: result.message || result.error || result.errorMessage || 'Unknown error',
+          error_details: result.details || ''
+        }))
+    } else if (saveResult.failedProducts) {
+      failedProducts = saveResult.failedProducts.map((product) => ({
+        ...product,
+        error_reason: product.error || product.errorMessage || 'Unknown error'
+      }))
+    }
+
+    if (failedProducts.length === 0) {
+      alert('No failed products data available to download')
+      return
+    }
+
+    // Convert to CSV
+    const csv = Papa.unparse(failedProducts)
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", `failed_products_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   return (
@@ -244,27 +320,143 @@ const AddBulkProducts = () => {
 
         {saveResult && (
           <div className="mb-4">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 mb-2">Save Results:</h3>
-              <div className="flex gap-6 mb-2">
-                <span>Total: {saveResult.total}</span>
-                <span className="text-green-600">✓ Success: {saveResult.success}</span>
-                <span className="text-red-600">✗ Failed: {saveResult.failed}</span>
+            <div className={`border rounded-lg p-4 ${
+              saveResult.failed > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'
+            }`}>
+              <h3 className={`font-semibold mb-2 ${
+                saveResult.failed > 0 ? 'text-yellow-800' : 'text-green-800'
+              }`}>
+                Save Results:
+              </h3>
+              
+              <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-white rounded border">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{saveResult.total}</div>
+                  <div className="text-sm text-gray-600">Total</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{saveResult.success}</div>
+                  <div className="text-sm text-gray-600">Success</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">{saveResult.failed}</div>
+                  <div className="text-sm text-gray-600">Failed</div>
+                </div>
               </div>
 
-              {saveResult.failed > 0 && saveResult.results && (
-                <div className="mt-3">
-                  <h4 className="font-medium text-red-600 mb-2">Failed Products:</h4>
-                  <div className="max-h-32 overflow-y-auto">
-                    {saveResult.results
-                      .filter((r) => r.status === "error")
-                      .slice(0, 5)
-                      .map((r, i) => (
-                        <div key={i} className="text-sm text-red-600">
-                          {r.product?.name || `Product ${i + 1}`}: {r.message}
-                        </div>
-                      ))}
+              {saveResult.success > 0 && (
+                <div className="mb-4 p-3 bg-green-100 rounded">
+                  <p className="text-green-800 font-medium">
+                    ✅ {saveResult.success} products saved successfully!
+                  </p>
+                </div>
+              )}
+
+              {saveResult.failed > 0 && (saveResult.results || saveResult.failedProducts) && (
+                <div className="mt-4">
+                  <h4 className="font-medium text-red-600 mb-3 flex items-center">
+                    ❌ Failed Products ({saveResult.failed}):
+                  </h4>
+                  
+                  <div className="max-h-96 overflow-y-auto border rounded bg-white">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-red-50 sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2 text-left border-b">#</th>
+                          <th className="px-3 py-2 text-left border-b">Product Name</th>
+                          <th className="px-3 py-2 text-left border-b">SKU</th>
+                          <th className="px-3 py-2 text-left border-b">Error Reason</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* Try multiple ways to get failed products */}
+                        {(() => {
+                          let failedItems = []
+                          
+                          // Method 1: From results array
+                          if (saveResult.results) {
+                            failedItems = saveResult.results
+                              .map((result, index) => ({ ...result, originalIndex: index }))
+                              .filter((result) => result.status === "error" || result.success === false)
+                          }
+                          
+                          // Method 2: From failedProducts array (backup)
+                          if (failedItems.length === 0 && saveResult.failedProducts) {
+                            failedItems = saveResult.failedProducts.map((product, index) => ({
+                              product: product,
+                              message: product.error || product.errorMessage || 'Unknown error',
+                              originalIndex: index
+                            }))
+                          }
+
+                          // Method 3: If still empty, show a message
+                          if (failedItems.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan="4" className="px-3 py-4 text-center text-gray-500">
+                                  No detailed error information available. Check console for more details.
+                                </td>
+                              </tr>
+                            )
+                          }
+
+                          return failedItems.map((result, failedIndex) => (
+                            <tr key={failedIndex} className="border-b hover:bg-gray-50">
+                              <td className="px-3 py-2 text-gray-500">
+                                {result.originalIndex + 1}
+                              </td>
+                              <td className="px-3 py-2">
+                                <div className="font-medium text-gray-900">
+                                  {result.product?.name || result.name || previewProducts[result.originalIndex]?.name || 'Unknown Product'}
+                                </div>
+                              </td>
+                              <td className="px-3 py-2 text-gray-600">
+                                {result.product?.sku || result.sku || previewProducts[result.originalIndex]?.sku || 'N/A'}
+                              </td>
+                              <td className="px-3 py-2">
+                                <div className="text-red-600">
+                                  {result.message || result.error || result.errorMessage || 'Unknown error'}
+                                </div>
+                                {result.details && (
+                                  <div className="text-xs text-red-500 mt-1">
+                                    {result.details}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        })()}
+                      </tbody>
+                    </table>
                   </div>
+                  
+                  {saveResult.failed > 10 && (
+                    <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                      💡 Tip: You can download the failed products as CSV to fix issues and re-upload
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Add download failed products button */}
+              {saveResult.failed > 0 && saveResult.results && (
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={downloadFailedProducts}
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded text-sm"
+                  >
+                    📥 Download Failed Products CSV
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSaveResult(null)
+                      setPreviewProducts([])
+                      setFileName("")
+                    }}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm"
+                  >
+                    🔄 Start Over
+                  </button>
                 </div>
               )}
             </div>
