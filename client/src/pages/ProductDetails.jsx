@@ -1637,7 +1637,7 @@ const ProductDetails = () => {
     setCouponError(null)
 
     try {
-      const response = await axios.get(`${config.API_URL}/api/coupons/public`)
+      const response = await axios.get(`${config.API_URL}/api/coupons`)
       setPublicCoupons(response.data)
     } catch (error) {
       console.error("Error fetching coupons:", error)
