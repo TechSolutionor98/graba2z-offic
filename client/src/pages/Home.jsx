@@ -1090,7 +1090,7 @@ const Home = () => {
         </div>
 
         {accessoriesProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8 ">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8 gap-2 ">
             {accessoriesProducts
               .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : window.innerWidth < 1536 ? 6 : 8)
               .map((product) => (
@@ -1221,7 +1221,7 @@ const Home = () => {
         </div>
 
         {networkingProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8 gap-2">
             {networkingProducts
               .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : window.innerWidth < 1536 ? 6 : 8)
               .map((product) => (
@@ -1636,6 +1636,14 @@ const DynamicBrandProductCard = ({ product }) => {
     priceToShow = offerPrice
   }
 
+  // Fallback: compute discount % if not provided from admin and we have a valid offer
+  let computedDiscount = null
+  if (!discount && hasValidOffer && basePrice > 0 && offerPrice > 0) {
+    const pct = Math.round(((basePrice - offerPrice) / basePrice) * 100)
+    if (pct > 0) computedDiscount = `${pct}% Off`
+  }
+  const finalDiscountLabel = discount || computedDiscount
+
   // Fix rating and reviews display
   const rating = Number(product.rating) || 0
   const numReviews = Number(product.numReviews) || 0
@@ -1645,12 +1653,13 @@ const DynamicBrandProductCard = ({ product }) => {
 
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
-      <div className="relative mb-2 flex h-[190px] justify-center items-center">
-        <Link to={`/product/${product.slug || product._id}`}>
+      <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
+        <Link to={`/product/${product.slug || product._id}`} className="w-full h-full flex items-center justify-center">
           <img
             src={product.image || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
-            className="w-full h-[165px] cover rounded mx-auto"
+            className="w-full h-full object-contain bg-white rounded mx-auto mb-4"
+            style={{maxHeight:165}}
           />
         </Link>
         <button
@@ -1664,25 +1673,23 @@ const DynamicBrandProductCard = ({ product }) => {
         >
           <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
         </button>
-      </div>
-      
-      <div className="mb-1 flex items-center gap-2">
-        <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs inline-block mr-1`}>
-          {stockStatus}
+        {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
+        <div className="absolute inset-x-0 -bottom-2 px-2 flex items-center gap-2 z-10">
+          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus}</div>
+          {finalDiscountLabel && (
+            <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
+              {finalDiscountLabel}
+            </div>
+          )}
         </div>
-        {discount && (
-          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs inline-block">{discount}</div>
-        )}
       </div>
       
       <Link to={`/product/${product.slug || product._id}`}>
-        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px] mb-1">{product.name}</h3>
+        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">{product.name}</h3>
       </Link>
-      
-      {product.category && <div className="text-xs text-yellow-600 mb-1">Category: {categoryName}</div>}
-      <div className="text-xs text-green-600 mb-1">Inclusive VAT</div>
-      
-      <div className="flex items-center gap-2 mb-1">
+      {product.category && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
+      <div className="text-xs text-green-600">Inclusive VAT</div>
+      <div className="flex items-center gap-2">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
@@ -1752,6 +1759,14 @@ const AccessoriesProductCard = ({ product }) => {
     priceToShow = offerPrice
   }
 
+  // Fallback: compute discount % if not provided from admin
+  let computedDiscount = null
+  if (!discount && hasValidOffer && basePrice > 0 && offerPrice > 0) {
+    const pct = Math.round(((basePrice - offerPrice) / basePrice) * 100)
+    if (pct > 0) computedDiscount = `${pct}% Off`
+  }
+  const finalDiscountLabel = discount || computedDiscount
+
   // Fix rating and reviews display
   const rating = Number(product.rating) || 0
   const numReviews = Number(product.numReviews) || 0
@@ -1760,17 +1775,18 @@ const AccessoriesProductCard = ({ product }) => {
   const categoryName = product.category?.name || "Unknown"
 
   return (
-    <div className="border rounded-lg p-3 mx-1 hover:shadow-md transition-shadow lg:min-h-[410px] lg:max-h-[410px] lg:min-w-[210px] lg:max-w-[220px] flex flex-col justify-between bg-white">
-      <div className="relative  mb-3 flex justify-center items-center min-h-[155px] lg:max-h-[170px] ">
-        <Link to={`/product/${product.slug || product._id}`}>
+    <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
+      <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
+        <Link to={`/product/${product.slug || product._id}`} className="w-full h-full flex items-center justify-center">
           <img
-            src={product.image || "/placeholder.svg?height=150&width=150"}
+            src={product.image || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
-            className="w-full h-[165px] cover rounded mx-auto"
+            className="w-full h-full object-contain bg-white rounded mx-auto mb-4"
+            style={{maxHeight:165}}
           />
         </Link>
         <button
-          className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+          className="absolute top-1 right-1 text-gray-400 hover:text-red-500"
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -1778,27 +1794,24 @@ const AccessoriesProductCard = ({ product }) => {
           }}
           aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart size={14} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
+          <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
         </button>
-      </div>
-      <div className="mb-2 flex items-center lg:gap-4">
-        <div
-          className={`${getStatusColor(stockStatus)} text-white px-0.5 lg:px-1 py-1 rounded text-xs font-bold inline-block mr-1`}
-        >
-          {stockStatus}
+        {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
+        <div className="absolute inset-x-0 -bottom-2 px-2 flex items-center gap-2 z-10">
+          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus}</div>
+          {finalDiscountLabel && (
+            <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
+              {finalDiscountLabel}
+            </div>
+          )}
         </div>
-        {discount && (
-          <div className="bg-yellow-400 text-white lg:px-1 px-0.5 py-1 rounded text-xs font-bold inline-block">
-            {discount}
-          </div>
-        )}
       </div>
       <Link to={`/product/${product.slug || product._id}`}>
-        <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
+        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">{product.name}</h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
+      {product.category && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
       <div className="text-xs text-green-600">Inclusive VAT</div>
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
@@ -1810,7 +1823,7 @@ const AccessoriesProductCard = ({ product }) => {
       </div>
 
       {/* Rating and Reviews Section - Fixed with 20px stars */}
-      <div className="flex items-center  min-h-[24px]">
+      <div className="flex items-center min-h-[24px]">
         <div className="flex items-center">
           {[...Array(5)].map((_, i) => (
             <Star
@@ -1827,9 +1840,11 @@ const AccessoriesProductCard = ({ product }) => {
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
+          e.target.style.transform = "scale(0.95)"
+          setTimeout(() => { if (e.target) e.target.style.transform = "scale(1)" }, 100)
           addToCart(product)
         }}
-        className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-colors active:scale-95"
+        className=" w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
         disabled={stockStatus === "Out of Stock"}
       >
         <ShoppingBag size={12} />
