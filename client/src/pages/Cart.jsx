@@ -2,7 +2,7 @@
 
 import { Link } from "react-router-dom"
 import { useCart } from "../context/CartContext"
-import { Trash2, Minus, Plus, ShoppingBag, Package } from "lucide-react"
+import { Trash2, Minus, Plus, ShoppingBag, Package, X, Percent, Gift } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import axios from "axios"
 
@@ -31,6 +31,13 @@ const Cart = () => {
   const [couponInput, setCouponInput] = useState("")
   const [couponLoading, setCouponLoading] = useState(false)
   const [couponError, setCouponError] = useState("")
+  
+  // Coupon modal states
+  const [showCouponsModal, setShowCouponsModal] = useState(false)
+  const [publicCoupons, setPublicCoupons] = useState([])
+  const [loadingCoupons, setLoadingCoupons] = useState(false)
+  const [couponModalError, setCouponModalError] = useState(null)
+  const [couponCopied, setCouponCopied] = useState(null)
 
   // Add debugging
   useEffect(() => {
@@ -134,6 +141,68 @@ const Cart = () => {
     } finally {
       setCouponLoading(false)
     }
+  }
+
+  // Coupon modal functions
+  const COUPON_COLORS = [
+    {
+      main: "bg-gradient-to-r from-yellow-100 to-yellow-200",
+      stub: "bg-yellow-300",
+      border: "border-yellow-400",
+      text: "text-yellow-800",
+      barcode: "bg-yellow-50",
+    },
+    {
+      main: "bg-gradient-to-r from-blue-100 to-blue-200",
+      stub: "bg-blue-300",
+      border: "border-blue-400",
+      text: "text-blue-800",
+      barcode: "bg-blue-50",
+    },
+    {
+      main: "bg-gradient-to-r from-green-100 to-green-200",
+      stub: "bg-green-300",
+      border: "border-green-400",
+      text: "text-green-800",
+      barcode: "bg-green-50",
+    },
+    {
+      main: "bg-gradient-to-r from-purple-100 to-purple-200",
+      stub: "bg-purple-300",
+      border: "border-purple-400",
+      text: "text-purple-800",
+      barcode: "bg-purple-50",
+    },
+  ]
+
+  const handleOpenCouponsModal = async () => {
+    console.log('Opening coupons modal...')
+    setShowCouponsModal(true)
+    setLoadingCoupons(true)
+    setCouponModalError(null)
+
+    try {
+      console.log('Fetching coupons from:', `${config.API_URL}/api/coupons`)
+      const response = await axios.get(`${config.API_URL}/api/coupons`)
+      console.log('Coupons response:', response.data)
+      setPublicCoupons(response.data)
+    } catch (error) {
+      console.error("Error fetching coupons:", error)
+      setCouponModalError("Failed to load coupons")
+    } finally {
+      setLoadingCoupons(false)
+    }
+  }
+
+  const handleCloseCouponsModal = () => {
+    setShowCouponsModal(false)
+    setCouponCopied(null)
+  }
+
+  const handleCopyCoupon = (couponCode, couponId) => {
+    navigator.clipboard.writeText(couponCode)
+    setCouponCopied(couponId)
+    setTimeout(() => setCouponCopied(null), 2000)
   }
 
   const formatPrice = (price) => {
@@ -409,9 +478,18 @@ const Cart = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Shopping Cart</h1>
-        <Link to="/" className="px-2 py-2 lg:px-5 lg:py-2 text-sm font-medium text-white bg-lime-600 rounded-md">
-          Continue Shopping
-        </Link>
+        <div className="flex space-x-3">
+          <button
+            onClick={handleOpenCouponsModal}
+            className="px-2 py-2 lg:px-5 lg:py-2 text-sm font-medium text-black bg-yellow-400 hover:bg-yellow-500 rounded-md transition-colors flex items-center"
+          >
+            <Gift size={16} className="mr-2" />
+            Available Coupons
+          </button>
+          <Link to="/" className="px-2 py-2 lg:px-5 lg:py-2 text-sm font-medium text-white bg-lime-600 rounded-md">
+            Continue Shopping
+          </Link>
+        </div>
       </div>
       
       {cartItems.length === 0 ? (
@@ -645,6 +723,132 @@ const Cart = () => {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Coupons Modal */}
+      {showCouponsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[80vh] overflow-y-auto shadow-lg relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={handleCloseCouponsModal}
+            >
+              <X size={24} />
+            </button>
+            <h2 className="text-2xl font-bold mb-4 text-center">Available Coupons</h2>
+            {loadingCoupons ? (
+              <div className="flex justify-center items-center h-32">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-yellow-500"></div>
+              </div>
+            ) : couponModalError ? (
+              <div className="text-red-500 text-center">{couponModalError}</div>
+            ) : publicCoupons.length === 0 ? (
+              <div className="text-gray-500 text-center">No coupons available at the moment.</div>
+            ) : (
+              <div className="space-y-4">
+                {publicCoupons.map((coupon, idx) => {
+                  console.log('Rendering coupon:', coupon); // Debug log
+                  const color = COUPON_COLORS[idx % COUPON_COLORS.length]
+                  const categories =
+                    coupon.categories && coupon.categories.length > 0
+                      ? coupon.categories.map((cat) => cat.name || cat).join(", ")
+                      : "All Categories"
+                  return (
+                    <div key={coupon._id || idx} className="relative flex items-center w-full">
+                      {/* Ticket Style - Horizontal Layout */}
+                      <div
+                        className={`w-full flex shadow-md relative overflow-visible transition-all duration-500 ease-out opacity-100 translate-y-0 ${color.border}`}
+                        style={{ minHeight: 100 }}
+                      >
+                        {/* Left stub - Compact */}
+                        <div
+                          className={`flex flex-col items-center justify-center py-2 px-2 ${color.stub} border-l-2 border-t-2 border-b-2 ${color.border} rounded-l-lg relative`}
+                          style={{ minWidth: 60 }}
+                        >
+                          <span
+                            className="text-[8px] font-bold tracking-widest text-gray-700 rotate-180"
+                            style={{ writingMode: "vertical-rl" }}
+                          >
+                            DISCOUNT
+                          </span>
+                          {/* Barcode effect - Smaller */}
+                          <div
+                            className={`w-4 h-6 mt-1 flex flex-col justify-between ${color.barcode}`}
+                            style={{ borderRadius: 2 }}
+                          >
+                            {[...Array(5)].map((_, i) => (
+                              <div
+                                key={i}
+                                className={`h-0.5 ${i % 2 === 0 ? "bg-gray-700" : "bg-gray-400"} w-full rounded`}
+                              ></div>
+                            ))}
+                          </div>
+                        </div>
+                        {/* Main ticket - Responsive Layout */}
+                        <div
+                          className={`flex-1 ${color.main} border-r-2 border-t-2 border-b-2 ${color.border} rounded-r-lg p-3 flex flex-col md:flex-row md:items-center relative overflow-hidden`}
+                        >
+                          {/* Cut edges */}
+                          <div
+                            className={`absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full border-2 ${color.border}`}
+                          ></div>
+                          <div
+                            className={`absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full border-2 ${color.border}`}
+                          ></div>
+
+                          {/* Mobile: Vertical Layout, Desktop: Horizontal Layout */}
+                          <div className="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-4 flex-1">
+                            {/* Discount Info */}
+                            <div className="flex items-center justify-between md:flex-col md:items-center md:justify-center">
+                              <span className="text-xs font-semibold text-gray-500 tracking-widest">GIFT COUPON</span>
+                              <span className={`text-xl font-bold flex items-center ${color.text}`}>
+                                {coupon.discountType === "percentage" && <Percent className="w-4 h-4 mr-1" />}
+                                {coupon.discountType === "percentage"
+                                  ? `${coupon.discountValue}%`
+                                  : `AED ${coupon.discountValue}`}
+                              </span>
+                            </div>
+
+                            {/* Promo Code */}
+                            <div className="flex flex-col items-center flex-1">
+                              <span className="block text-sm font-bold text-gray-900 mb-2">PROMO CODE</span>
+                              <div className="flex items-center w-full justify-center">
+                                <span
+                                  className={`inline-block bg-white border ${color.border} rounded px-3 py-1 font-mono text-sm font-bold ${color.text} tracking-widest`}
+                                >
+                                  {coupon.code}
+                                </span>
+                                <button
+                                  className={`ml-2 px-2 py-1 text-xs ${color.stub} hover:brightness-110 text-black rounded transition-colors font-semibold border ${color.border} focus:outline-none focus:ring-2 focus:ring-yellow-300`}
+                                  onClick={() => handleCopyCoupon(coupon.code, coupon._id)}
+                                >
+                                  {couponCopied === coupon._id ? "Copied!" : "Copy"}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Details - Mobile: Full width, Desktop: Right aligned */}
+                          <div className="flex flex-col md:items-end text-left md:text-right space-y-1 mt-3 md:mt-0">
+                            <div className="text-xs text-gray-600 md:max-w-xs">{coupon.description}</div>
+                            <div className="flex flex-col md:items-end space-y-1">
+                              <div className="text-xs text-gray-500">Min: AED {coupon.minOrderAmount || 0}</div>
+                              <div className="text-xs text-gray-500">
+                                Valid: {new Date(coupon.validFrom).toLocaleDateString()} -{" "}
+                                {new Date(coupon.validUntil).toLocaleDateString()}
+                              </div>
+                              <div className="text-xs font-semibold text-gray-700">{categories}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
