@@ -555,6 +555,15 @@ export const CartProvider = ({ children }) => {
     setCartTotal(total)
   }, [cartItems, bundleGroups])
 
+  // Effect to handle coupon validation when cart changes
+  useEffect(() => {
+    // If cart is empty, clear any applied coupon
+    if (cartItems.length === 0 && coupon) {
+      setCoupon(null)
+      setCouponDiscount(0)
+    }
+  }, [cartItems.length, coupon])
+
   // Enhanced addToCart function with bundle price support
   const addToCart = useCallback(
     (product, quantity = 1, bundleId = null) => {
@@ -707,6 +716,12 @@ export const CartProvider = ({ children }) => {
     return { grouped, standaloneItems }
   }, [cartItems])
 
+  // Helper function to clear coupon
+  const clearCoupon = useCallback(() => {
+    setCoupon(null)
+    setCouponDiscount(0)
+  }, [])
+
   const removeFromCart = useCallback(
     (productId, bundleId = null) => {
       const product = cartItems.find((item) => item._id === productId && item.bundleId === bundleId)
@@ -791,6 +806,7 @@ export const CartProvider = ({ children }) => {
     setBundleGroups({})
     localStorage.removeItem("cart")
     localStorage.removeItem("bundleGroups")
+    
     showToast("Cart cleared", "success")
   }, [showToast])
 
@@ -825,6 +841,7 @@ export const CartProvider = ({ children }) => {
         setCoupon,
         couponDiscount,
         setCouponDiscount,
+        clearCoupon,
         calculateFinalTotal,
       }}
     >
