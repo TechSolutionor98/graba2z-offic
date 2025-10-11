@@ -282,7 +282,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     const base = Number(basePrice)
     const offer = Number(value)
     if (!isNaN(base) && base > 0 && value !== "") {
-      const calcDiscount = Math.max(0, Math.round(((base - offer) / base) * 100))
+      const calcDiscount = Math.max(0, ((base - offer) / base) * 100).toFixed(2)
       setFormData((prev) => ({ ...prev, discount: String(calcDiscount) }))
     } else {
       // When offer is cleared, clear discount (but don't touch if user is editing discount)
@@ -325,7 +325,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     setEditingField(null)
     const d = Number(formData.discount)
     if (!isNaN(d)) {
-      const clamped = Math.min(Math.max(Math.round(d), 0), 100)
+      const clamped = Math.min(Math.max(d, 0), 100).toFixed(2)
       setFormData((prev) => ({ ...prev, discount: String(clamped) }))
     }
   }
@@ -682,7 +682,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               Offer Price: <b>{Number(formData.offerPrice).toFixed(2) || "0.00"} AED</b>
             </div>
             <div>
-              Discount: <b>{Number(formData.discount).toFixed(0) || "0"}%</b>
+              Discount: <b>{Number(formData.discount).toFixed(2) || "0.00"}%</b>
             </div>
             <div>
               Tax: <b>{taxRate}%</b>
