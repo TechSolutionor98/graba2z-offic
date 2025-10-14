@@ -2844,19 +2844,40 @@ const Shop = () => {
   // Get SEO content for meta tags (prioritize subcategory over category)
   const seoContent = subcategoryObj?.seoContent || categoryObj?.seoContent || '';
   
-  // Generate SEO title from content or fallback to default
-  const seoTitle = seoContent
-    ? generateSEOTitle(subcategoryObj?.name || categoryObj?.name || '', seoContent)
-    : (subcategoryObj && `${subcategoryObj.name} — Shop`) ||
+  // Check for redirects - prioritize subcategory redirect over category redirect
+  const redirectUrl = subcategoryObj?.redirectUrl || categoryObj?.redirectUrl || '';
+  
+  // Handle redirect if URL is set
+  useEffect(() => {
+    if (redirectUrl && redirectUrl.trim() !== '') {
+      // Check if it's an external URL or internal path
+      if (redirectUrl.startsWith('http://') || redirectUrl.startsWith('https://')) {
+        // External redirect
+        window.location.href = redirectUrl;
+      } else {
+        // Internal redirect using React Router
+        navigate(redirectUrl);
+      }
+    }
+  }, [redirectUrl, navigate]);
+  
+  // Use custom meta title/description if available, otherwise generate from SEO content
+  const customMetaTitle = subcategoryObj?.metaTitle || categoryObj?.metaTitle || '';
+  const customMetaDescription = subcategoryObj?.metaDescription || categoryObj?.metaDescription || '';
+  
+  // Generate SEO title - prioritize custom meta title, then content-based, then default
+  const seoTitle = customMetaTitle || 
+    (seoContent ? generateSEOTitle(subcategoryObj?.name || categoryObj?.name || '', seoContent) : 
+      (subcategoryObj && `${subcategoryObj.name} — Shop`) ||
       (categoryObj && `${categoryObj.name} — Shop`) ||
-      (searchQuery?.trim() ? `Search: ${searchQuery.trim()} — Shop` : "Shop — Grabatoz");
+      (searchQuery?.trim() ? `Search: ${searchQuery.trim()} — Shop` : "Shop — Grabatoz"));
 
-  // Generate SEO description from content or fallback to default
-  const seoDescription = seoContent
-    ? createMetaDescription(seoContent, 160)
-    : (subcategoryObj && `Browse ${subcategoryObj.name} products at great prices.`) ||
+  // Generate SEO description - prioritize custom meta description, then content-based, then default
+  const seoDescription = customMetaDescription || 
+    (seoContent ? createMetaDescription(seoContent, 160) :
+      (subcategoryObj && `Browse ${subcategoryObj.name} products at great prices.`) ||
       (categoryObj && `Explore top ${categoryObj.name} products.`) ||
-      "Explore our catalog and find your next purchase at Grabatoz.";
+      "Explore our catalog and find your next purchase at Grabatoz.");
 
   return (
     <div className="min-h-screen bg-gray-50">

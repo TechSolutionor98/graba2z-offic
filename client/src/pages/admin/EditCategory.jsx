@@ -17,6 +17,9 @@ const EditCategory = () => {
     name: "",
     description: "",
     seoContent: "",
+    metaTitle: "",
+    metaDescription: "",
+    redirectUrl: "",
     image: "",
     isActive: true,
     sortOrder: 0,
@@ -38,6 +41,9 @@ const EditCategory = () => {
             name: data.name || "",
             description: data.description || "",
             seoContent: data.seoContent || "",
+            metaTitle: data.metaTitle || "",
+            metaDescription: data.metaDescription || "",
+            redirectUrl: data.redirectUrl || "",
             image: data.image || "",
             isActive: data.isActive !== undefined ? data.isActive : true,
             sortOrder: data.sortOrder || 0,
@@ -164,6 +170,63 @@ const EditCategory = () => {
                   placeholder="Enter detailed SEO content for this category..."
                 />
                 <p className="text-sm text-gray-500 mt-1">This content will be displayed on the category page for SEO purposes.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta Title
+                  <span className="ml-2 text-xs text-gray-500">
+                    ({formData.metaTitle.length}/60 characters)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  name="metaTitle"
+                  value={formData.metaTitle}
+                  onChange={handleChange}
+                  maxLength={60}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter custom meta title (optional)"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Custom title for search engines. If left empty, will be auto-generated from SEO content.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta Description
+                  <span className="ml-2 text-xs text-gray-500">
+                    ({formData.metaDescription.length}/160 characters)
+                  </span>
+                </label>
+                <textarea
+                  name="metaDescription"
+                  value={formData.metaDescription}
+                  onChange={handleChange}
+                  maxLength={160}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter custom meta description (optional)"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Custom description for search results. If left empty, will be auto-generated from SEO content.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Redirect URL</label>
+                <input
+                  type="text"
+                  name="redirectUrl"
+                  value={formData.redirectUrl}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., /shop/new-category or https://example.com"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Optional redirect URL. Use internal path (e.g., /shop/new-category) or external URL (e.g., https://example.com).
+                </p>
               </div>
 
               <div>

@@ -18,6 +18,9 @@ const EditSubCategory = () => {
     name: "",
     description: "",
     seoContent: "",
+    metaTitle: "",
+    metaDescription: "",
+    redirectUrl: "",
     image: "",
     category: "",
     isActive: true,
@@ -56,6 +59,9 @@ const EditSubCategory = () => {
         name: subCategoryData.name || "",
         description: subCategoryData.description || "",
         seoContent: subCategoryData.seoContent || "",
+        metaTitle: subCategoryData.metaTitle || "",
+        metaDescription: subCategoryData.metaDescription || "",
+        redirectUrl: subCategoryData.redirectUrl || "",
         image: subCategoryData.image || "",
         category: subCategoryData.category?._id || subCategoryData.category || "",
         isActive: subCategoryData.isActive !== undefined ? subCategoryData.isActive : true,
@@ -205,6 +211,75 @@ const EditSubCategory = () => {
                   placeholder="Enter detailed SEO content for this subcategory..."
                 />
                 <p className="text-sm text-gray-500 mt-1">This content will be displayed on the subcategory page for SEO purposes.</p>
+              </div>
+
+              {/* Meta Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta Title
+                  <span className="text-gray-500 text-xs ml-2">(50-60 characters recommended)</span>
+                </label>
+                <input
+                  type="text"
+                  name="metaTitle"
+                  value={formData.metaTitle}
+                  onChange={handleChange}
+                  maxLength={60}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Best Laser Printers in UAE | Grabatoz"
+                />
+                <div className="flex justify-between mt-1">
+                  <p className="text-sm text-gray-500">
+                    SEO title that appears in search engine results
+                  </p>
+                  <span className="text-xs text-gray-400">
+                    {formData.metaTitle.length}/60
+                  </span>
+                </div>
+              </div>
+
+              {/* Meta Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta Description
+                  <span className="text-gray-500 text-xs ml-2">(150-160 characters recommended)</span>
+                </label>
+                <textarea
+                  name="metaDescription"
+                  value={formData.metaDescription}
+                  onChange={handleChange}
+                  rows={3}
+                  maxLength={160}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Discover high-quality laser printers for home and office. Fast printing, energy efficient. Free UAE delivery."
+                />
+                <div className="flex justify-between mt-1">
+                  <p className="text-sm text-gray-500">
+                    Description that appears below the title in search results
+                  </p>
+                  <span className="text-xs text-gray-400">
+                    {formData.metaDescription.length}/160
+                  </span>
+                </div>
+              </div>
+
+              {/* Redirect URL */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Redirect URL
+                  <span className="text-gray-500 text-xs ml-2">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  name="redirectUrl"
+                  value={formData.redirectUrl}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., /shop/new-subcategory-name or https://example.com/page"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  If set, visitors will be redirected to this URL when accessing this subcategory
+                </p>
               </div>
 
               <div>
