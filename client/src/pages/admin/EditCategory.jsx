@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "../../context/ToastContext";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import ImageUpload from "../../components/ImageUpload";
+import TipTapEditor from "../../components/TipTapEditor";
 import { ArrowLeft } from "lucide-react";
 import axios from "axios";
 import config from "../../config/config";
@@ -15,6 +16,7 @@ const EditCategory = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    seoContent: "",
     image: "",
     isActive: true,
     sortOrder: 0,
@@ -35,6 +37,7 @@ const EditCategory = () => {
           setFormData({
             name: data.name || "",
             description: data.description || "",
+            seoContent: data.seoContent || "",
             image: data.image || "",
             isActive: data.isActive !== undefined ? data.isActive : true,
             sortOrder: data.sortOrder || 0,
@@ -59,6 +62,13 @@ const EditCategory = () => {
     setFormData((prev) => ({
       ...prev,
       image: imageUrl,
+    }));
+  };
+
+  const handleSeoContentChange = (content) => {
+    setFormData((prev) => ({
+      ...prev,
+      seoContent: content,
     }));
   };
 
@@ -145,6 +155,17 @@ const EditCategory = () => {
                   placeholder="Enter category description..."
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">SEO Content</label>
+                <TipTapEditor
+                  content={formData.seoContent}
+                  onChange={handleSeoContentChange}
+                  placeholder="Enter detailed SEO content for this category..."
+                />
+                <p className="text-sm text-gray-500 mt-1">This content will be displayed on the category page for SEO purposes.</p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category Image</label>
                 <ImageUpload onImageUpload={handleImageUpload} currentImage={formData.image} />

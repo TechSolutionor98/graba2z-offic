@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import ImageUpload from "../../components/ImageUpload"
+import TipTapEditor from "../../components/TipTapEditor"
 import { ArrowLeft } from "lucide-react"
 import axios from "axios"
 
@@ -17,6 +18,7 @@ const AddSubCategory = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    seoContent: "",
     image: "",
     category: "",
     isActive: true,
@@ -52,6 +54,13 @@ const AddSubCategory = () => {
     setFormData((prev) => ({
       ...prev,
       image: imageUrl,
+    }))
+  }
+
+  const handleSeoContentChange = (content) => {
+    setFormData((prev) => ({
+      ...prev,
+      seoContent: content,
     }))
   }
 
@@ -160,6 +169,16 @@ const AddSubCategory = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter subcategory description..."
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">SEO Content</label>
+                <TipTapEditor
+                  content={formData.seoContent}
+                  onChange={handleSeoContentChange}
+                  placeholder="Enter detailed SEO content for this subcategory..."
+                />
+                <p className="text-sm text-gray-500 mt-1">This content will be displayed on the subcategory page for SEO purposes.</p>
               </div>
 
               <div>

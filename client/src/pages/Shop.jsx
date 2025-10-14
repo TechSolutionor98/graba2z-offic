@@ -2008,7 +2008,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
 import ProductSchema from "../components/ProductSchema"
-import SEO from "../components/SEO" // </CHANGE> add SEO helper imports
+import SEO from "../components/SEO"
 import productCache from "../services/productCache"
 import {
   generateShopURL,
@@ -2016,7 +2016,8 @@ import {
   createSlug,
   findCategoryByIdentifier,
   findSubcategoryByIdentifier,
-} from "../utils/urlUtils" // </CHANGE> add SEO helper imports
+} from "../utils/urlUtils"
+import { createMetaDescription, generateSEOTitle } from "../utils/seoHelpers"
 
 import config from "../config/config"
 import "rc-slider/assets/index.css"
@@ -2817,9 +2818,6 @@ const Shop = () => {
     )
   }
 
-  // Add debug log before rendering
-  console.log("Products being rendered:", products)
-
   // Get selected subcategory object
   const selectedSubCategoryObj = subCategories.find((sub) => sub._id === selectedSubCategories[0])
 
@@ -2843,15 +2841,22 @@ const Shop = () => {
   const subcategoryObj =
     selectedSubCategories.length > 0 ? subCategories.find((s) => s._id === selectedSubCategories[0]) : null
 
-  const seoTitle =
-    (subcategoryObj && `${subcategoryObj.name} — Shop`) ||
-    (categoryObj && `${categoryObj.name} — Shop`) ||
-    (searchQuery?.trim() ? `Search: ${searchQuery.trim()} — Shop` : "Shop — Grabatoz")
+  // Get SEO content for meta tags (prioritize subcategory over category)
+  const seoContent = subcategoryObj?.seoContent || categoryObj?.seoContent || '';
+  
+  // Generate SEO title from content or fallback to default
+  const seoTitle = seoContent
+    ? generateSEOTitle(subcategoryObj?.name || categoryObj?.name || '', seoContent)
+    : (subcategoryObj && `${subcategoryObj.name} — Shop`) ||
+      (categoryObj && `${categoryObj.name} — Shop`) ||
+      (searchQuery?.trim() ? `Search: ${searchQuery.trim()} — Shop` : "Shop — Grabatoz");
 
-  const seoDescription =
-    (subcategoryObj && `Browse ${subcategoryObj.name} products at great prices.`) ||
-    (categoryObj && `Explore top ${categoryObj.name} products.`) ||
-    "Explore our catalog and find your next purchase at Grabatoz."
+  // Generate SEO description from content or fallback to default
+  const seoDescription = seoContent
+    ? createMetaDescription(seoContent, 160)
+    : (subcategoryObj && `Browse ${subcategoryObj.name} products at great prices.`) ||
+      (categoryObj && `Explore top ${categoryObj.name} products.`) ||
+      "Explore our catalog and find your next purchase at Grabatoz.";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -3548,6 +3553,52 @@ const Shop = () => {
             )}
           </div>
         </div>
+
+        {/* SEO Content Section - Full Width */}
+        {!searchQuery.trim() && selectedCategory && selectedCategory !== "all" && (
+          (() => {
+            const currentCategory = categories.find((cat) => cat._id === selectedCategory)
+            const currentSubCategory = selectedSubCategoryObj
+            
+            // Show subcategory content if subcategory is selected, otherwise show category content
+            const seoContent = currentSubCategory?.seoContent || currentCategory?.seoContent
+            
+            // Only render if there's actual content
+            if (seoContent && seoContent.trim()) {
+              return (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 mb-12">
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-10 lg:p-12">
+                    <div 
+                      className="seo-content prose prose-base md:prose-lg lg:prose-xl max-w-none
+                        prose-headings:font-bold prose-headings:text-gray-900 
+                        prose-h1:text-2xl md:prose-h1:text-4xl lg:prose-h1:text-5xl prose-h1:mb-6 prose-h1:leading-tight
+                        prose-h2:text-xl md:prose-h2:text-3xl lg:prose-h2:text-4xl prose-h2:mt-10 prose-h2:mb-5 prose-h2:leading-snug
+                        prose-h3:text-lg md:prose-h3:text-2xl lg:prose-h3:text-3xl prose-h3:mt-8 prose-h3:mb-4 prose-h3:leading-snug
+                        prose-h4:text-base md:prose-h4:text-xl lg:prose-h4:text-2xl prose-h4:mt-6 prose-h4:mb-3
+                        prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-5 prose-p:text-base md:prose-p:text-lg lg:prose-p:text-xl
+                        prose-a:text-blue-600 prose-a:font-medium prose-a:no-underline hover:prose-a:underline hover:prose-a:text-blue-700
+                        prose-strong:text-gray-900 prose-strong:font-bold
+                        prose-em:text-gray-800 prose-em:italic
+                        prose-ul:my-6 prose-ul:space-y-2
+                        prose-ol:my-6 prose-ol:space-y-2
+                        prose-li:text-gray-700 prose-li:leading-relaxed prose-li:text-base md:prose-li:text-lg lg:prose-li:text-xl
+                        prose-img:rounded-lg prose-img:shadow-lg prose-img:my-8 prose-img:w-full
+                        prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-gray-700 prose-blockquote:my-6
+                        prose-code:text-sm prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded
+                        prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto
+                        prose-table:w-full prose-table:border-collapse prose-table:my-8
+                        prose-th:border prose-th:border-gray-300 prose-th:bg-gray-50 prose-th:p-3 prose-th:text-left prose-th:font-semibold
+                        prose-td:border prose-td:border-gray-300 prose-td:p-3
+                        first:prose-h1:mt-0 first:prose-h2:mt-0 first:prose-h3:mt-0"
+                      dangerouslySetInnerHTML={{ __html: seoContent }}
+                    />
+                  </div>
+                </div>
+              )
+            }
+            return null
+          })()
+        )}
       </div>
     </div>
   )
