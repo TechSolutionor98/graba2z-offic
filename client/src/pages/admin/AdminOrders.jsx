@@ -19,15 +19,32 @@ const AdminOrders = () => {
 
   const statusOptions = [
     { value: "all", label: "All Orders" },
+    { value: "New", label: "New" },
     { value: "Processing", label: "Processing" },
     { value: "Confirmed", label: "Confirmed" },
+    { value: "Ready for Shipment", label: "Ready for Shipment" },
     { value: "Shipped", label: "Shipped" },
+    { value: "On the Way", label: "On the Way" },
     { value: "Out for Delivery", label: "Out for Delivery" },
     { value: "Delivered", label: "Delivered" },
+    { value: "On Hold", label: "On Hold" },
     { value: "Cancelled", label: "Cancelled" },
+    { value: "Returned", label: "Returned" },
   ]
 
-  const orderStatusOptions = ["Processing", "Confirmed", "Shipped", "Out for Delivery", "Delivered", "Cancelled"]
+  const orderStatusOptions = [
+    "New",
+    "Processing", 
+    "Confirmed", 
+    "Ready for Shipment",
+    "Shipped", 
+    "On the Way",
+    "Out for Delivery", 
+    "Delivered",
+    "On Hold", 
+    "Cancelled",
+    "Returned"
+  ]
   const paymentStatusOptions = ["Paid", "Unpaid"]
 
   const formatPrice = (price) => {
