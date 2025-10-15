@@ -2844,23 +2844,6 @@ const Shop = () => {
   // Get SEO content for meta tags (prioritize subcategory over category)
   const seoContent = subcategoryObj?.seoContent || categoryObj?.seoContent || '';
   
-  // Check for redirects - prioritize subcategory redirect over category redirect
-  const redirectUrl = subcategoryObj?.redirectUrl || categoryObj?.redirectUrl || '';
-  
-  // Handle redirect if URL is set
-  useEffect(() => {
-    if (redirectUrl && redirectUrl.trim() !== '') {
-      // Check if it's an external URL or internal path
-      if (redirectUrl.startsWith('http://') || redirectUrl.startsWith('https://')) {
-        // External redirect
-        window.location.href = redirectUrl;
-      } else {
-        // Internal redirect using React Router
-        navigate(redirectUrl);
-      }
-    }
-  }, [redirectUrl, navigate]);
-  
   // Use custom meta title/description if available, otherwise generate from SEO content
   const customMetaTitle = subcategoryObj?.metaTitle || categoryObj?.metaTitle || '';
   const customMetaDescription = subcategoryObj?.metaDescription || categoryObj?.metaDescription || '';
