@@ -9,6 +9,8 @@ import Underline from "@tiptap/extension-underline"
 import BulletList from "@tiptap/extension-bullet-list"
 import OrderedList from "@tiptap/extension-ordered-list"
 import ListItem from "@tiptap/extension-list-item"
+import Heading from "@tiptap/extension-heading"
+import Placeholder from "@tiptap/extension-placeholder"
 import { useState, useEffect, useRef } from "react"
 import {
   Bold,
@@ -24,6 +26,7 @@ import {
   ChevronDown,
 } from "lucide-react"
 import ImageUpload from "./ImageUpload"
+import "./TipTapEditor.css"
 
 const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description..." }) => {
   const [showImageUpload, setShowImageUpload] = useState(false)
@@ -36,15 +39,25 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
   // Create editor instance
   const editor = useEditor({
     extensions: [
+      // Disable list & heading from StarterKit so we can add configured versions below
       StarterKit.configure({
         bulletList: false,
         orderedList: false,
         listItem: false,
+        heading: false,
       }),
       Underline,
+      // list item must be registered before list containers
+      ListItem,
       BulletList,
       OrderedList,
-      ListItem,
+      // Add heading explicitly to ensure heading levels are available and work with TextAlign
+      Heading.configure({
+        levels: [1, 2, 3, 4, 5, 6],
+      }),
+      Placeholder.configure({
+        placeholder: placeholder,
+      }),
       Image.configure({
         HTMLAttributes: {
           class: "max-w-full h-auto rounded-lg my-4",
@@ -70,7 +83,7 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[200px] p-4",
+        class: "focus:outline-none min-h-[200px] p-4",
       },
     },
   })
@@ -280,7 +293,7 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
 
       {/* Editor Content */}
       <div className="min-h-[200px]">
-        <EditorContent editor={editor} className="prose prose-sm max-w-none" placeholder={placeholder} />
+        <EditorContent editor={editor} />
       </div>
 
       {/* Image Upload Modal */}
