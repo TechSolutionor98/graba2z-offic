@@ -36,6 +36,7 @@ import ReviewSection from "../components/ReviewSection"
 import TabbyModal from "../components/payments/TabbyModal"
 import TamaraModal from "../components/payments/TamaraModal"
 import SEO from "../components/SEO"
+import TipTapRenderer from "../components/TipTapRenderer"
 
 const WHATSAPP_NUMBER = "971508604360" // Replace with your WhatsApp number
 
@@ -2072,9 +2073,9 @@ const ProductDetails = () => {
               {product.shortDescription && (
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3">Key Features:</h3>
-                  <div
-                    className="text-sm text-gray-700 prose prose-sm max-w-none line-clamp-5 sm:line-clamp-none"
-                    dangerouslySetInnerHTML={{ __html: product.shortDescription }}
+                  <TipTapRenderer 
+                    content={product.shortDescription} 
+                    className="text-sm line-clamp-5 sm:line-clamp-none"
                   />
                 </div>
               )}
@@ -2383,9 +2384,7 @@ const ProductDetails = () => {
             {activeTab === "description" && (
               <div>
                 <h3 className="text-lg font-bold mb-4">Product Description</h3>
-                <div className="prose max-w-none">
-                  <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: product.description }} />
-                </div>
+                <TipTapRenderer content={product.description} />
               </div>
             )}
 
@@ -2491,9 +2490,7 @@ const ProductDetails = () => {
     {activeTab === "description" && (
       <div>
         <h3 className="text-lg font-bold mb-4">Product Description</h3>
-        <div className="prose max-w-none">
-          <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: product.description }} />
-        </div>
+        <TipTapRenderer content={product.description} />
       </div>
     )}
 
