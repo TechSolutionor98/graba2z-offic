@@ -1,5 +1,6 @@
 import React from 'react';
 import './TipTapRenderer.css';
+import './TipTapEditor.css'; // Import TipTap Editor styles for proper rendering
 
 const TipTapRenderer = ({ content, className = '' }) => {
   if (!content) return null;
@@ -16,8 +17,8 @@ const TipTapRenderer = ({ content, className = '' }) => {
         prose-a:text-blue-600 prose-a:font-medium prose-a:no-underline hover:prose-a:underline hover:prose-a:text-blue-700
         prose-strong:text-gray-900 prose-strong:font-bold
         prose-em:text-gray-800 prose-em:italic
-        prose-ul:my-6 prose-ul:space-y-2
-        prose-ol:my-6 prose-ol:space-y-2
+        prose-ul:my-6 prose-ul:space-y-2 prose-ul:list-disc prose-ul:pl-6
+        prose-ol:my-6 prose-ol:space-y-2 prose-ol:list-decimal prose-ol:pl-6
         prose-li:text-gray-700 prose-li:leading-relaxed prose-li:marker:text-blue-600
         prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-gray-700 prose-blockquote:my-6
         prose-code:text-sm prose-code:bg-gray-100 prose-code:px-2 prose-code:py-1 prose-code:rounded
