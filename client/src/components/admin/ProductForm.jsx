@@ -309,15 +309,18 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     // Update discount immediately
     setFormData((prev) => ({ ...prev, discount: value }))
 
-    const base = Number(basePrice)
+    const offer = Number(originalOfferPrice)
     const disc = Number(value)
-    if (!isNaN(base) && base > 0 && value !== "") {
-      const offer = base - (base * Math.min(Math.max(disc, 0), 100)) / 100
-      const offerStr = offer.toFixed(2)
-      setOriginalOfferPrice(offerStr)
-      setFormData((prev) => ({ ...prev, offerPrice: offerStr }))
-    } else if (value === "") {
-      // If discount cleared, keep offer as is (user may type it)
+    if (!isNaN(offer) && offer > 0 && value !== "") {
+      // Calculate base price from offer price and discount
+      // Formula: basePrice = offerPrice / (1 - discount/100)
+      const discountPercent = Math.min(Math.max(disc, 0), 99.99) // Max 99.99% to avoid division by zero
+      const base = offer / (1 - discountPercent / 100)
+      const baseStr = base.toFixed(2)
+      setBasePrice(baseStr)
+    } else if (value === "" || disc === 0) {
+      // If discount cleared or 0, base price equals offer price
+      setBasePrice(originalOfferPrice)
     }
   }
 

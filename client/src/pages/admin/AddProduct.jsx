@@ -281,22 +281,26 @@ const AddProduct = () => {
     }
   }
 
-  // Handle discount change and calculate offer price
+  // Handle discount change and calculate base price
   const handleDiscountChange = (e) => {
     const discount = e.target.value
-    const basePrice = Number(basePriceWithoutTax) || 0
+    const offerPrice = Number(offerPriceWithoutTax) || 0
 
     setFormData((prev) => ({
       ...prev,
       discount: discount,
     }))
 
-    // Calculate offer price when discount changes
-    if (basePrice > 0 && discount) {
+    // Calculate base price when discount changes (keeping offer price fixed)
+    if (offerPrice > 0 && discount) {
       const discountNum = Number(discount)
-      if (discountNum >= 0 && discountNum <= 100) {
-        const offerPrice = basePrice - (basePrice * discountNum) / 100
-        setOfferPriceWithoutTax(offerPrice.toFixed(2))
+      if (discountNum >= 0 && discountNum < 100) {
+        // Formula: basePrice = offerPrice / (1 - discount/100)
+        const basePrice = offerPrice / (1 - discountNum / 100)
+        setBasePriceWithoutTax(basePrice.toFixed(2))
+      } else if (discountNum === 0) {
+        // If discount is 0, base price equals offer price
+        setBasePriceWithoutTax(offerPrice.toFixed(2))
       }
     }
   }
