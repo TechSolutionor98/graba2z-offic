@@ -1256,7 +1256,7 @@ const Navbar = () => {
             {/* Logo - Exact Grabatoz Style */}
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-48 h-  flex items-center justify-center">
-                <img src="/admin-logo.svg" alt="Logo" className="w-full h-full" />
+                <img src="/new-logo.webp" alt="Logo" className="w-full h-full" />
               </div>
             </Link>
 
