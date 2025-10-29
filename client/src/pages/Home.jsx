@@ -1090,9 +1090,9 @@ const Home = () => {
         </div>
 
         {accessoriesProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8 gap-2 ">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 ">
             {accessoriesProducts
-              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : window.innerWidth < 1536 ? 6 : 8)
+              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 6)
               .map((product) => (
                 <AccessoriesProductCard key={product._id} product={product} />
               ))}
@@ -1221,9 +1221,9 @@ const Home = () => {
         </div>
 
         {networkingProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-8 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
             {networkingProducts
-              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : window.innerWidth < 1536 ? 6 : 8)
+              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 6)
               .map((product) => (
                 <AccessoriesProductCard key={product._id} product={product} />
               ))}
