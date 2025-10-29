@@ -5,8 +5,7 @@ import { WishlistProvider } from "./context/WishlistContext"
 import { ToastProvider } from "./context/ToastContext"
  
 // Import components
-import Navbar from "./components/Navbar"
-import Footer from "./components/Footer"
+import Layout from "./components/Layout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import AdminRoute from "./components/AdminRoute"
 import ScrollToTop from "./components/ScrollToTop"
@@ -184,29 +183,6 @@ function RouteCanonical() {
   )
 }
 
-
-
-
-function WhatsAppButton() {
-  return (
-    <a
-      href="https://wa.me/971508604360"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="fixed bottom-16 md:bottom-8 right-4 z-50"
-      aria-label="Chat on WhatsApp"
-      style={{ transition: 'transform 0.2s' }}
-    >
-      <img
-        src="/whatsapp.png"
-        alt="WhatsApp"
-        className="w-14 h-14 rounded-full border-2   hover:scale-110"
-        style={{ background: '#25D366' }}
-      />
-    </a>
-  );
-}
-
 function App() {
   return (
     <ToastProvider>
@@ -339,89 +315,82 @@ function App() {
                   />
 
                   {/* Public Routes */}
-                  <Route
-                    path="/*"
-                    element={
-                      <>
-                         <RouteCanonical />
-                        <Navbar />
-                        <Routes>
-                          <Route path="/" element={<Home />} />
-                          <Route path="/shop" element={<Shop />} />
-                          <Route path="/shop/:parentCategory" element={<Shop />} />
-                          <Route path="/shop/:parentCategory/:subcategory" element={<Shop />} />
-                          <Route path="/product-category" element={<Shop />} />
-                          <Route path="/product-category/:parentCategory" element={<Shop />} />
-                          <Route path="/product-category/:parentCategory/:subcategory" element={<Shop />} />
-                          <Route path="/product-brand/:brand" element={<Shop />} />
-                          <Route path="/product/:slug" element={<ProductDetails />} />
-                          <Route path="/cart" element={<Cart />} />
-                          <Route path="/login" element={<Login />} />
-                          <Route path="/register" element={<Register />} />
-                          <Route path="/verify-email" element={<EmailVerification />} />
-                          <Route path="/track-order" element={<TrackOrder />} />
-                          <Route path="/about" element={<About />} />
-                          <Route path="/blogs" element={<BlogList />} />
-                          <Route path="/blogs/:slug" element={<BlogPost />} />
-                          <Route path="/privacy-policy" element={<PrivacyAndPolicy />} />
-                          <Route path="/privacy-policy-arabic" element={<ArabicContent />} />
-                          <Route path="/disclaimer-policy" element={<DisclaimerPolicy />} />
-                          <Route path="/terms-conditions" element={<TermAndCondition />} />
-                          <Route path="/refund-return" element={<RefundAndReturn />} />
-                          <Route path="/cookies-policy" element={<CookiesAndPolicy />} />
-                          <Route path="/bulk-purchase" element={<ReqBulkPurchase />} />
-                          <Route path="/contact" element={<ContactUs />} />
-                          <Route path="/guest" element={<Guest />} />
-                          <Route path="/guest-order" element={<GuestOrder />} />
-                          <Route path="/payment/success" element={<PaymentSuccess />} />
-                          <Route path="/payment/cancel" element={<PaymentCancel />} />
-                          <Route path="/forgot-password" element={<ForgotPassword />} />
-                          <Route path="/reset-password" element={<ResetPassword />} />
-                          <Route path="/backtoschool-acer-gaming" element={<BackToSchoolGaming />} />
-                          <Route path="/backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
-                          <Route path="/voucher-terms" element={<VoucherTerms />} />
-                          <Route path="/delivery-terms" element={<DeliveryTerms />} />
-                          
-                          {/* Protected Routes */}
-                          <Route
-                            path="/checkout"
-                            element={
-                              <ProtectedRoute>
-                                <Checkout />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/profile"
-                            element={
-                              <ProtectedRoute>
-                                <Profile />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/orders"
-                            element={
-                              <ProtectedRoute>
-                                <UserOrders />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/wishlist"
-                            element={
-                              <ProtectedRoute>
-                                <Wishlist />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route path="*" element={<NotFound />} />
-                        </Routes>
-                        <Footer />
-                        <WhatsAppButton />
-                      </>
-                    }
-                  />
+                  <Route path="*" element={
+                    <>
+                      <RouteCanonical />
+                      <Layout />
+                    </>
+                  }>
+                    <Route index element={<Home />} />
+                    <Route path="shop" element={<Shop />} />
+                    <Route path="shop/:parentCategory" element={<Shop />} />
+                    <Route path="shop/:parentCategory/:subcategory" element={<Shop />} />
+                    <Route path="product-category" element={<Shop />} />
+                    <Route path="product-category/:parentCategory" element={<Shop />} />
+                    <Route path="product-category/:parentCategory/:subcategory" element={<Shop />} />
+                    <Route path="product-brand/:brand" element={<Shop />} />
+                    <Route path="product/:slug" element={<ProductDetails />} />
+                    <Route path="cart" element={<Cart />} />
+                    <Route path="login" element={<Login />} />
+                    <Route path="register" element={<Register />} />
+                    <Route path="verify-email" element={<EmailVerification />} />
+                    <Route path="track-order" element={<TrackOrder />} />
+                    <Route path="about" element={<About />} />
+                    <Route path="blogs" element={<BlogList />} />
+                    <Route path="blogs/:slug" element={<BlogPost />} />
+                    <Route path="privacy-policy" element={<PrivacyAndPolicy />} />
+                    <Route path="privacy-policy-arabic" element={<ArabicContent />} />
+                    <Route path="disclaimer-policy" element={<DisclaimerPolicy />} />
+                    <Route path="terms-conditions" element={<TermAndCondition />} />
+                    <Route path="refund-return" element={<RefundAndReturn />} />
+                    <Route path="cookies-policy" element={<CookiesAndPolicy />} />
+                    <Route path="bulk-purchase" element={<ReqBulkPurchase />} />
+                    <Route path="contact" element={<ContactUs />} />
+                    <Route path="guest" element={<Guest />} />
+                    <Route path="guest-order" element={<GuestOrder />} />
+                    <Route path="payment/success" element={<PaymentSuccess />} />
+                    <Route path="payment/cancel" element={<PaymentCancel />} />
+                    <Route path="forgot-password" element={<ForgotPassword />} />
+                    <Route path="reset-password" element={<ResetPassword />} />
+                    <Route path="backtoschool-acer-gaming" element={<BackToSchoolGaming />} />
+                    <Route path="backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
+                    <Route path="voucher-terms" element={<VoucherTerms />} />
+                    <Route path="delivery-terms" element={<DeliveryTerms />} />
+                    
+                    {/* Protected Routes */}
+                    <Route
+                      path="checkout"
+                      element={
+                        <ProtectedRoute>
+                          <Checkout />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="profile"
+                      element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="orders"
+                      element={
+                        <ProtectedRoute>
+                          <UserOrders />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="wishlist"
+                      element={
+                        <ProtectedRoute>
+                          <Wishlist />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Route>
                 </Routes>
               </div>
               
