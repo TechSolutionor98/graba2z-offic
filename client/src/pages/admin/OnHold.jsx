@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
-import { Search, Eye, RefreshCw, Pause, Play } from "lucide-react"
+import { Search, Eye, RefreshCw, Pause, Play, ChevronDown, X, Package, CreditCard, MapPin, Clock } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 
 import config from "../../config/config"
@@ -14,7 +14,83 @@ const OnHold = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [processingAction, setProcessingAction] = useState(false)
+  const [showStatusDropdown, setShowStatusDropdown] = useState({})
+  const [showPaymentDropdown, setShowPaymentDropdown] = useState({})
   const { showToast } = useToast()
+
+  const orderStatusOptions = [
+    "New",
+    "Processing",
+    "Confirmed",
+    "Ready For Shipment",
+    "Shipped",
+    "Delivered",
+    "Cancelled",
+    "Returned",
+    "On Hold"
+  ]
+
+  const paymentStatusOptions = [
+    "Unpaid",
+    "Paid",
+    "Partially Paid",
+    "Refunded",
+    "Failed"
+  ]
+
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      setProcessingAction(true)
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token")
+      
+      await axios.put(
+        `${config.API_URL}/api/orders/${orderId}`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      
+      fetchOrders()
+      showToast("Order status updated successfully", "success")
+    } catch (error) {
+      console.error("Error updating order status:", error)
+      showToast("Failed to update order status", "error")
+    } finally {
+      setProcessingAction(false)
+      setShowStatusDropdown({})
+    }
+  }
+
+  const handleUpdatePayment = async (orderId, isPaid) => {
+    try {
+      setProcessingAction(true)
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token")
+      
+      await axios.put(
+        `${config.API_URL}/api/orders/${orderId}/pay`,
+        { isPaid },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      
+      fetchOrders()
+      showToast("Payment status updated successfully", "success")
+    } catch (error) {
+      console.error("Error updating payment status:", error)
+      showToast("Failed to update payment status", "error")
+    } finally {
+      setProcessingAction(false)
+      setShowPaymentDropdown({})
+    }
+  }
 
   const formatPrice = (price) => {
     return `Rs ${price.toLocaleString()}`
@@ -72,7 +148,7 @@ const OnHold = () => {
       )
 
       setOrders(orders.filter((order) => order._id !== orderId))
-      showToast("Order resumed successfully!", "success")
+      showToast("Order processed successfully!", "success")
       setProcessingAction(false)
     } catch (error) {
       console.error("Error resuming order:", error)
@@ -151,14 +227,18 @@ const OnHold = () => {
                       Customer
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Payment
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Hold Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Reason
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Items
-                    </th>
+                    {/* Removed Items column */}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Total
                     </th>
@@ -178,15 +258,76 @@ const OnHold = () => {
                         <div className="text-sm text-gray-500">{order.shippingAddress.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowStatusDropdown({ ...showStatusDropdown, [order._id]: !showStatusDropdown[order._id] })}
+                            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <span className={`
+                              inline-block w-2 h-2 rounded-full mr-2
+                              ${order.status === 'Delivered' ? 'bg-green-500' : 
+                                order.status === 'Cancelled' ? 'bg-red-500' : 
+                                order.status === 'On Hold' ? 'bg-yellow-500' : 'bg-blue-500'}
+                            `}></span>
+                            {order.status}
+                            <ChevronDown className="ml-2 h-4 w-4" />
+                          </button>
+                          
+                          {showStatusDropdown[order._id] && (
+                            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg">
+                              <div className="py-1">
+                                {orderStatusOptions.map((status) => (
+                                  <button
+                                    key={status}
+                                    onClick={() => handleUpdateStatus(order._id, status)}
+                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                  >
+                                    {status}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowPaymentDropdown({ ...showPaymentDropdown, [order._id]: !showPaymentDropdown[order._id] })}
+                            className={`inline-flex items-center px-2.5 py-1.5 border shadow-sm text-xs font-medium rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+                              ${order.isPaid ? 
+                                'border-green-300 text-green-700 bg-green-50' : 
+                                'border-red-300 text-red-700 bg-red-50'}`}
+                          >
+                            {order.isPaid ? 'Paid' : 'Unpaid'}
+                            <ChevronDown className="ml-2 h-4 w-4" />
+                          </button>
+                          
+                          {showPaymentDropdown[order._id] && (
+                            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg">
+                              <div className="py-1">
+                                {paymentStatusOptions.map((status) => (
+                                  <button
+                                    key={status}
+                                    onClick={() => handleUpdatePayment(order._id, status === 'Paid')}
+                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                  >
+                                    {status}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{new Date(order.updatedAt).toLocaleDateString()}</div>
                         <div className="text-sm text-gray-500">{new Date(order.updatedAt).toLocaleTimeString()}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{order.holdReason || "Payment Issue"}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{order.orderItems.length} items</div>
-                      </td>
+                      {/* Removed Items column */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatPrice(order.totalPrice)}
                       </td>
@@ -202,7 +343,7 @@ const OnHold = () => {
                           onClick={() => handleResumeOrder(order._id)}
                           className="text-green-600 hover:text-green-900"
                           disabled={processingAction}
-                          title="Resume Order"
+                          title="Process Order"
                         >
                           <Play size={18} />
                         </button>
@@ -228,55 +369,181 @@ const OnHold = () => {
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <div className="p-6 border-b">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Order #{selectedOrder._id.slice(-6)}</h2>
-                <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-500 text-2xl">
-                  &times;
-                </button>
+            {/* Header with navigation breadcrumb */}
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <div>
+                <div className="flex items-center space-x-2 text-sm text-gray-500 mb-1">
+                  <span>Dashboard</span>
+                  <span>/</span>
+                  <span>On Hold Orders</span>
+                  <span>/</span>
+                  <span className="text-blue-600">View</span>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Order ID: {selectedOrder._id.slice(-6)}</h2>
               </div>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100"
+              >
+                <X size={24} />
+              </button>
             </div>
 
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Customer Information</h3>
-                  <p className="text-gray-600">
-                    <span className="font-medium">Name:</span> {selectedOrder.shippingAddress.name}
-                  </p>
-                  <p className="text-gray-600">
-                    <span className="font-medium">Email:</span> {selectedOrder.shippingAddress.email}
-                  </p>
-                  <p className="text-gray-600">
-                    <span className="font-medium">Phone:</span> {selectedOrder.shippingAddress.phone}
-                  </p>
-                  <p className="text-gray-600">
-                    <span className="font-medium">Hold Reason:</span> {selectedOrder.holdReason || "Payment Issue"}
-                  </p>
+              {/* Status Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Package className="text-green-600" size={20} />
+                    <div>
+                      <p className="text-sm text-gray-600">Status</p>
+                      <p className="font-semibold text-green-900">{selectedOrder.status}</p>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Hold Actions</h3>
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => handleResumeOrder(selectedOrder._id)}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md flex items-center justify-center"
-                      disabled={processingAction}
-                    >
-                      <Play size={18} className="mr-2" />
-                      Resume Order
-                    </button>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <CreditCard className="text-blue-600" size={20} />
+                    <div>
+                      <p className="text-sm text-gray-600">Payment Type</p>
+                      <p className="font-semibold text-blue-900">
+                        {selectedOrder.paymentMethod || "Cash on Delivery"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="text-purple-600" size={20} />
+                    <div>
+                      <p className="text-sm text-gray-600">Order Type</p>
+                      <p className="font-semibold text-purple-900">Delivery</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="text-gray-600" size={20} />
+                    <div>
+                      <p className="text-sm text-gray-600">Created At</p>
+                      <p className="font-semibold text-gray-900">
+                        {new Date(selectedOrder.createdAt).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <button
-                  onClick={handleCloseModal}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md"
-                >
-                  Close
-                </button>
+              {/* Update Order Status Section */}
+              <div className="bg-white border rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Update Order Status</h3>
+                <div className="flex items-center space-x-4">
+                  <select
+                    value={selectedOrder.status}
+                    onChange={(e) => handleUpdateStatus(selectedOrder._id, e.target.value)}
+                    className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={processingAction}
+                  >
+                    {orderStatusOptions.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800">
+                    Current: {selectedOrder.status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Update Payment Status Section */}
+              <div className="bg-white border rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Update Payment Status</h3>
+                <div className="flex items-center space-x-4">
+                  <select
+                    value={selectedOrder.isPaid ? 'Paid' : 'Unpaid'}
+                    onChange={(e) => handleUpdatePayment(selectedOrder._id, e.target.value === 'Paid')}
+                    className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={processingAction}
+                  >
+                    {paymentStatusOptions.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  <span className={`px-3 py-1 text-sm font-medium rounded-full ${
+                    selectedOrder.isPaid 
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    Current: {selectedOrder.isPaid ? 'Paid' : 'Unpaid'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Order Items Section */}
+              <div className="bg-white border rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
+                <div className="space-y-4">
+                  {selectedOrder.orderItems?.map((item, index) => (
+                    <div
+                      key={item._id || index}
+                      className="flex items-center justify-between py-3 border-b last:border-b-0"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-14 h-14 object-contain" />
+                          ) : (
+                            <Package size={24} className="text-gray-400" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900">{item.name}</h4>
+                          <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium text-gray-900">
+                          AED {(item.price * item.quantity).toFixed(2)}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          AED {item.price.toFixed(2)} each
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Total */}
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex justify-between text-lg font-semibold">
+                    <span>Total Amount:</span>
+                    <span>AED {selectedOrder.totalPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-4 pt-4 border-t">
+                  <button
+                    onClick={handleCloseModal}
+                    className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => handleResumeOrder(selectedOrder._id)}
+                    className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+                    disabled={processingAction}
+                  >
+                    <Play size={20} />
+                    Process Order
+                  </button>
+                </div>
               </div>
             </div>
           </div>
