@@ -30,13 +30,7 @@ const OnHold = () => {
     "On Hold"
   ]
 
-  const paymentStatusOptions = [
-    "Unpaid",
-    "Paid",
-    "Partially Paid",
-    "Refunded",
-    "Failed"
-  ]
+  const paymentStatusOptions = ["Unpaid", "Paid"]
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
@@ -291,34 +285,15 @@ const OnHold = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="relative">
-                          <button
-                            onClick={() => setShowPaymentDropdown({ ...showPaymentDropdown, [order._id]: !showPaymentDropdown[order._id] })}
-                            className={`inline-flex items-center px-2.5 py-1.5 border shadow-sm text-xs font-medium rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-                              ${order.isPaid ? 
-                                'border-green-300 text-green-700 bg-green-50' : 
-                                'border-red-300 text-red-700 bg-red-50'}`}
-                          >
-                            {order.isPaid ? 'Paid' : 'Unpaid'}
-                            <ChevronDown className="ml-2 h-4 w-4" />
-                          </button>
-                          
-                          {showPaymentDropdown[order._id] && (
-                            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg">
-                              <div className="py-1">
-                                {paymentStatusOptions.map((status) => (
-                                  <button
-                                    key={status}
-                                    onClick={() => handleUpdatePayment(order._id, status === 'Paid')}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                  >
-                                    {status}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        <button
+                          onClick={() => handleUpdatePayment(order._id, !order.isPaid)}
+                          className={`inline-flex items-center px-2.5 py-1.5 border shadow-sm text-xs font-medium rounded
+                            ${order.isPaid ? 
+                              'border-green-300 text-green-700 bg-green-50' : 
+                              'border-red-300 text-red-700 bg-red-50'}`}
+                        >
+                          {order.isPaid ? 'Paid' : 'Unpaid'}
+                        </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{new Date(order.updatedAt).toLocaleDateString()}</div>
@@ -461,27 +436,19 @@ const OnHold = () => {
 
               {/* Update Payment Status Section */}
               <div className="bg-white border rounded-lg p-4 mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Update Payment Status</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Status</h3>
                 <div className="flex items-center space-x-4">
-                  <select
-                    value={selectedOrder.isPaid ? 'Paid' : 'Unpaid'}
-                    onChange={(e) => handleUpdatePayment(selectedOrder._id, e.target.value === 'Paid')}
-                    className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  <button
+                    onClick={() => handleUpdatePayment(selectedOrder._id, !selectedOrder.isPaid)}
+                    className={`px-4 py-2 border rounded-md font-medium ${
+                      selectedOrder.isPaid 
+                        ? 'border-green-300 text-green-700 bg-green-50 hover:bg-green-100' 
+                        : 'border-red-300 text-red-700 bg-red-50 hover:bg-red-100'
+                    }`}
                     disabled={processingAction}
                   >
-                    {paymentStatusOptions.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                  <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                    selectedOrder.isPaid 
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    Current: {selectedOrder.isPaid ? 'Paid' : 'Unpaid'}
-                  </span>
+                    {selectedOrder.isPaid ? 'Paid' : 'Unpaid'}
+                  </button>
                 </div>
               </div>
 
