@@ -18,6 +18,8 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
+  const [filterSubcategory, setFilterSubcategory] = useState("all")
+  const [filterBrand, setFilterBrand] = useState("all")
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const PRODUCTS_PER_PAGE = 20
@@ -25,14 +27,44 @@ const AdminProducts = () => {
   const [justEditedId, setJustEditedId] = useState(null)
   const [highlightTimer, setHighlightTimer] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
+  const [selectAllMode, setSelectAllMode] = useState(false) // Track if "select all" is active
+  const [allProductIds, setAllProductIds] = useState([]) // Store all product IDs for select all
+  const [loadingSelectAll, setLoadingSelectAll] = useState(false) // Track select all loading
   const [brands, setBrands] = useState([])
-  const [exportParent, setExportParent] = useState("any")
-  const [exportSubcat, setExportSubcat] = useState("any")
-  const [exportBrand, setExportBrand] = useState("any")
-  const [exportSubcategories, setExportSubcategories] = useState([])
+  const [subcategories, setSubcategories] = useState([])
+  const [filteredSubcategories, setFilteredSubcategories] = useState([])
+  const [categoryProductCount, setCategoryProductCount] = useState(0)
 
   // Derived counters
-  const totalSelected = useMemo(() => selectedIds.size, [selectedIds])
+  const totalSelected = useMemo(() => {
+    return selectAllMode ? allProductIds.length : selectedIds.size
+  }, [selectedIds, selectAllMode, allProductIds])
+
+  // Get count of products for current category/subcategory filter
+  const fetchFilteredCount = async () => {
+    try {
+      const token = getAdminToken()
+      if (!token) return
+
+      const params = {}
+      if (filterCategory && filterCategory !== "all") {
+        params.parentCategory = filterCategory
+      }
+      if (filterSubcategory && filterSubcategory !== "all") {
+        params.category = filterSubcategory
+      }
+      
+      const { data } = await axios.get(`${config.API_URL}/api/products/admin/count`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params
+      })
+      
+      setCategoryProductCount(data.totalCount || 0)
+    } catch (error) {
+      console.error("Failed to fetch product count:", error)
+      setCategoryProductCount(0)
+    }
+  }
 
   const formatPrice = (price) => {
     return `AED ${price.toLocaleString()}`
@@ -62,10 +94,11 @@ const AdminProducts = () => {
   useEffect(() => {
     fetchProducts()
     fetchCategories()
-  }, [page, searchTerm, filterCategory])
+  }, [page, searchTerm, filterCategory, filterSubcategory, filterBrand])
 
   useEffect(() => {
     fetchBrands()
+    fetchSubcategories()
   }, [])
 
   // On mount, check if a product was edited on previous navigation
@@ -80,38 +113,99 @@ const AdminProducts = () => {
     }
   }, [])
 
+  // Filter subcategories based on selected category
   useEffect(() => {
-    fetchExportSubcategories(exportParent)
-    setExportSubcat('any')
-  }, [exportParent])
+    if (filterCategory === "all") {
+      setFilteredSubcategories(subcategories)
+    } else {
+      setFilteredSubcategories(subcategories.filter(sub => sub.category && sub.category._id === filterCategory))
+    }
+    // Reset subcategory filter when category changes
+    setFilterSubcategory("all")
+    // Fetch new count when category changes
+    fetchFilteredCount()
+  }, [filterCategory, subcategories])
+
+  // Update count when subcategory changes
+  useEffect(() => {
+    fetchFilteredCount()
+  }, [filterSubcategory])
 
   // Selection helpers
   const toggleSelectOne = (id) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id); else next.add(id)
-      return next
-    })
+    if (selectAllMode) {
+      // If in select all mode, switch to individual selection mode
+      setSelectAllMode(false)
+      setAllProductIds([])
+      // Start with just this product deselected (or selected if it wasn't selected)
+      const currentPageIds = new Set(products.map(p => p._id))
+      currentPageIds.delete(id) // Remove the clicked item
+      setSelectedIds(currentPageIds)
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        if (next.has(id)) next.delete(id); else next.add(id)
+        return next
+      })
+    }
   }
 
   const isAllOnPageSelected = useMemo(() => {
     if (!products || products.length === 0) return false
+    if (selectAllMode) return true
     return products.every(p => selectedIds.has(p._id))
-  }, [products, selectedIds])
+  }, [products, selectedIds, selectAllMode])
+
+  const isAllProductsSelected = useMemo(() => {
+    return selectAllMode
+  }, [selectAllMode])
 
   const toggleSelectPage = () => {
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      if (isAllOnPageSelected) {
-        products.forEach(p => next.delete(p._id))
-      } else {
-        products.forEach(p => next.add(p._id))
-      }
-      return next
-    })
+    if (selectAllMode) {
+      // If all are selected, deselect all
+      setSelectAllMode(false)
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        if (isAllOnPageSelected) {
+          products.forEach(p => next.delete(p._id))
+        } else {
+          products.forEach(p => next.add(p._id))
+        }
+        return next
+      })
+    }
   }
 
-  const clearSelection = () => setSelectedIds(new Set())
+  const toggleSelectAll = async () => {
+    if (selectAllMode) {
+      // Deselect all
+      setSelectAllMode(false)
+      setSelectedIds(new Set())
+      setAllProductIds([])
+    } else {
+      // Select all products across all pages - just get the count, not the actual IDs
+      setLoadingSelectAll(true)
+      try {
+        const totalCount = await getProductCount()
+        console.log('Total product count:', totalCount)
+        setAllProductIds(new Array(totalCount).fill(null).map((_, i) => `temp_${i}`)) // Create temp IDs for count
+        setSelectAllMode(true)
+        setSelectedIds(new Set()) // Clear individual selections
+        showToast(`Selected all ${totalCount} products`, 'success')
+      } catch (error) {
+        console.error('Error selecting all products:', error)
+        showToast('Failed to select all products', 'error')
+      }
+      setLoadingSelectAll(false)
+    }
+  }
+
+  const clearSelection = () => {
+    setSelectAllMode(false)
+    setSelectedIds(new Set())
+  }
 
   // Export helpers
   const handleExport = (scope = "selected") => {
@@ -124,7 +218,13 @@ const AdminProducts = () => {
     ].filter(Boolean).join('_')
 
     if (scope === "selected") {
-      exportProductsToExcel(products.filter(p => selectedIds.has(p._id)), `${filenameBase}.xlsx`)
+      if (selectAllMode) {
+        // Export all products with current filters (same as filtered results)
+        handleExportByCurrentFilters()
+      } else {
+        // Export only selected products on current page
+        exportProductsToExcel(products.filter(p => selectedIds.has(p._id)), `${filenameBase}.xlsx`)
+      }
     } else if (scope === "page") {
       exportProductsToExcel(products, `${filenameBase}.xlsx`)
     } else if (scope === "all") {
@@ -133,25 +233,45 @@ const AdminProducts = () => {
     }
   }
 
-  const handleExportByFilters = async () => {
+  const handleExportByCurrentFilters = async () => {
     const overrides = {}
-    if (exportParent && exportParent !== 'any') overrides.parentCategory = exportParent
-    if (exportSubcat && exportSubcat !== 'any') overrides.subcategory = exportSubcat
+    if (filterCategory && filterCategory !== 'all') overrides.parentCategory = filterCategory
+    if (filterSubcategory && filterSubcategory !== 'all') overrides.category = filterSubcategory
+    if (filterBrand && filterBrand !== 'all') overrides.brand = filterBrand
+    if (searchTerm.trim()) overrides.search = searchTerm.trim()
+    
     const all = await fetchAllForExport(overrides)
-    let filtered = all
-    if (exportBrand && exportBrand !== 'any') {
-      filtered = all.filter(p => {
-        const id = (p.brand && (p.brand._id || p.brand)) || ''
-        return String(id) === String(exportBrand)
-      })
-    }
     const fname = [
-      'products',
-      exportParent && exportParent !== 'any' ? `parent-${exportParent}` : null,
-      exportSubcat && exportSubcat !== 'any' ? `sub-${exportSubcat}` : null,
-      exportBrand && exportBrand !== 'any' ? `brand-${exportBrand}` : null,
-    ].filter(Boolean).join('_') || 'products_filtered'
-    exportProductsToExcel(filtered, `${fname}.xlsx`)
+      'products_filtered',
+      filterCategory && filterCategory !== 'all' ? `cat-${filterCategory}` : null,
+      filterSubcategory && filterSubcategory !== 'all' ? `sub-${filterSubcategory}` : null,
+      filterBrand && filterBrand !== 'all' ? `brand-${filterBrand}` : null,
+      searchTerm ? `search-${searchTerm.replace(/\s+/g, '-')}` : null,
+    ].filter(Boolean).join('_') || 'products_current_filters'
+    exportProductsToExcel(all, `${fname}.xlsx`)
+  }
+
+  const getProductCount = async () => {
+    const token = getAdminToken()
+    if (!token) return 0
+    try {
+      const params = {}
+      if (searchTerm.trim() !== "") params.search = searchTerm.trim()
+      if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
+      if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
+      if (filterBrand && filterBrand !== "all") params.brand = filterBrand
+      
+      const { data } = await axios.get(`${config.API_URL}/api/products/admin/count`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params
+      })
+      
+      return data.totalCount || 0
+    } catch (e) {
+      console.error('Get product count error', e)
+      showToast('Failed to get product count', 'error')
+      return 0
+    }
   }
 
   const fetchAllForExport = async (overrides = {}) => {
@@ -161,6 +281,8 @@ const AdminProducts = () => {
       const params = { limit: 1000, page: 1 }
       if (searchTerm.trim() !== "") params.search = searchTerm.trim()
       if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
+      if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
+      if (filterBrand && filterBrand !== "all") params.brand = filterBrand
       Object.assign(params, overrides)
       // We may need to loop if more than 1000
       let all = []
@@ -193,10 +315,12 @@ const AdminProducts = () => {
         return
       }
 
-      // Build query params for search, category, pagination
+      // Build query params for search, category, subcategory, brand, pagination
       const params = { limit: PRODUCTS_PER_PAGE, page }
       if (searchTerm.trim() !== "") params.search = searchTerm.trim()
       if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
+      if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
+      if (filterBrand && filterBrand !== "all") params.brand = filterBrand
 
       const { data, headers } = await axios.get(`${config.API_URL}/api/products/admin`, {
         headers: {
@@ -250,14 +374,15 @@ const AdminProducts = () => {
     }
   }
 
-  const fetchExportSubcategories = async (parentId) => {
+  const fetchSubcategories = async () => {
     try {
-      const params = {}
-      if (parentId && parentId !== 'any') params.category = parentId
-      const { data } = await axios.get(`${config.API_URL}/api/subcategories`, { params })
-      setExportSubcategories(Array.isArray(data) ? data : [])
+      const { data } = await axios.get(`${config.API_URL}/api/subcategories`)
+      // Filter out subcategories without valid category reference
+      const validSubcategories = Array.isArray(data) ? data.filter(sub => sub && sub.category && sub.category._id) : []
+      setSubcategories(validSubcategories)
     } catch (error) {
       console.error("Failed to load subcategories:", error)
+      setSubcategories([])
     }
   }
 
@@ -449,10 +574,10 @@ const AdminProducts = () => {
   // Update: Only filter on frontend for search by name, brand, or exact SKU (case-insensitive)
   // Remove filteredProducts and use products directly in rendering
 
-  // Add useEffect to refetch products when searchTerm or filterCategory changes
+  // Add useEffect to refetch products when filters change
   useEffect(() => {
     fetchProducts();
-  }, [searchTerm, filterCategory]);
+  }, [searchTerm, filterCategory, filterSubcategory, filterBrand]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -460,36 +585,15 @@ const AdminProducts = () => {
 
       <div className="ml-64 min-h-screen">
         <div className="p-8">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-            <div className="flex items-center gap-2">
-              {totalSelected > 0 && (
-                <span className="text-sm text-lime-500">{totalSelected} selected</span>
-              )}
-              <button
-                onClick={() => handleExport('selected')}
-                disabled={totalSelected === 0}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm ${totalSelected === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white'}`}
-                title="Download selected"
-              >
-                <Download size={16} /> Only Selected Products
-              </button>
-              <button
-                onClick={() => handleExport('page')}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-white"
-                title="Download this page"
-              >
-                <Download size={16} /> This page Products 
-              </button>
-              <button
-                onClick={() => handleExport('all')}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-white"
-                title="Download all (with current filters)"
-              >
-                <Download size={16} /> All Products
-              </button>
-            </div>
-
+            <button
+              onClick={handleAddNew}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              <Plus size={16} />
+              Add Product
+            </button>
           </div>
 
           {error && (
@@ -510,70 +614,145 @@ const AdminProducts = () => {
             <ProductForm product={editingProduct} onSubmit={handleFormSubmit} onCancel={handleFormCancel} />
           ) : (
             <>
-              <div className="mb-6 flex flex-col md:flex-row gap-4">
-                <div className="relative md:w-80">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Search name, sku, brands..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="relative md:w-64">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Tag size={18} className="text-gray-400" />
+              {/* Search and Filters Section */}
+              <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Filter & Search Products</h3>
+                
+                {/* Filter Controls and Search */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
+                    <select
+                      value={filterCategory}
+                      onChange={(e) => setFilterCategory(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Categories</option>
+                      {categories.map((category) => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <select
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
-                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="all">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category._id} value={category._id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
 
-              {/* Export by filters: parent category, subcategory, brand */}
-              <div className="mb-4 flex flex-col md:flex-row gap-3 md:items-end">
-                <div className="md:w-56">
-                  <label className="block text-xs text-gray-500 mb-1">Parent Category</label>
-                  <select value={exportParent} onChange={(e) => setExportParent(e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option value="any">All</option>
-                    {categories.map(c => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
-                    ))}
-                  </select>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
+                    <select
+                      value={filterSubcategory}
+                      onChange={(e) => setFilterSubcategory(e.target.value)}
+                      disabled={filterCategory === "all"}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    >
+                      <option value="all">{filterCategory === "all" ? "Select Category First" : "All Subcategories"}</option>
+                      {filteredSubcategories.map((subcategory) => (
+                        <option key={subcategory._id} value={subcategory._id}>
+                          {subcategory.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
+                    <select
+                      value={filterBrand}
+                      onChange={(e) => setFilterBrand(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Brands</option>
+                      {brands.map((brand) => (
+                        <option key={brand._id} value={brand._id}>
+                          {brand.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      <input
+                        type="text"
+                        placeholder="Name, SKU, Brand..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9 pr-3 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="md:w-56">
-                  <label className="block text-xs text-gray-500 mb-1">Subcategory</label>
-                  <select value={exportSubcat} onChange={(e) => setExportSubcat(e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option value="any">All</option>
-                    {exportSubcategories.map(s => (
-                      <option key={s._id} value={s._id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="md:w-56">
-                  <label className="block text-xs text-gray-500 mb-1">Brand</label>
-                  <select value={exportBrand} onChange={(e) => setExportBrand(e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2">
-                    <option value="any">All</option>
-                    {brands.map(b => (
-                      <option key={b._id} value={b._id}>{b.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="md:ml-auto">
-                  <button onClick={handleExportByFilters} className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm hover:bg-white" title="Download by selected filters">
-                    <Download size={16} /> Download by filters
-                  </button>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    {(searchTerm || filterCategory !== "all" || filterSubcategory !== "all" || filterBrand !== "all") && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm("")
+                          setFilterCategory("all")
+                          setFilterSubcategory("all")
+                          setFilterBrand("all")
+                        }}
+                        className="text-sm text-gray-600 hover:text-gray-800 underline"
+                      >
+                        Clear all filters
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={toggleSelectAll}
+                          disabled={loadingSelectAll}
+                          className={`px-3 py-1 text-sm rounded border ${
+                            selectAllMode 
+                              ? 'bg-blue-50 border-blue-300 text-blue-700' 
+                              : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                          } ${loadingSelectAll ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          {loadingSelectAll ? 'Loading...' : 'Select All Pages'}
+                        </button>
+                        
+                        {totalSelected > 0 && (
+                          <button
+                            onClick={clearSelection}
+                            className="px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+                          >
+                            Clear Selection
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Show category/subcategory product count */}
+                      {(filterCategory !== "all" || filterSubcategory !== "all") && (
+                        <div className="text-sm text-gray-600">
+                          {categoryProductCount} product{categoryProductCount !== 1 ? 's' : ''} in{' '}
+                          {filterSubcategory !== "all" 
+                            ? subcategories.find(s => s._id === filterSubcategory)?.name
+                            : categories.find(c => c._id === filterCategory)?.name}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Download Options - Only show when there are products selected */}
+                    {totalSelected > 0 && (
+                      <div className="flex items-center gap-4">
+                        <div className="text-sm text-blue-700">
+                          {selectAllMode ? `${totalSelected} products selected` : `${totalSelected} product${totalSelected > 1 ? 's' : ''} selected`}
+                        </div>
+                        <button
+                          onClick={() => handleExport('selected')}
+                          className="inline-flex items-center gap-1 px-4 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+                        >
+                          <Download size={14} /> Selected Products
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -588,15 +767,20 @@ const AdminProducts = () => {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <button
-                              onClick={toggleSelectPage}
-                              className={`inline-flex items-center gap-1 rounded focus:outline-none  ${
-                                isAllOnPageSelected ? 'text-lime-500 hover:text-lime-600' : 'text-gray-600 hover:text-gray-800'
-                              }`}
-                            >
-                              {isAllOnPageSelected ? <CheckSquare size={16} /> : <Square size={16} />}
-                              <span className="sr-only">Select page</span>
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={toggleSelectPage}
+                                className={`inline-flex items-center rounded focus:outline-none ${
+                                  isAllOnPageSelected ? 'text-lime-500 hover:text-lime-600' : 'text-gray-600 hover:text-gray-800'
+                                }`}
+                                title="Select/deselect current page"
+                              >
+                                {isAllOnPageSelected ? <CheckSquare size={16} /> : <Square size={16} />}
+                              </button>
+                              {selectAllMode && (
+                                <span className="text-xs text-blue-600 font-medium">ALL</span>
+                              )}
+                            </div>
                           </th>
                           <th
                             scope="col"
@@ -669,9 +853,9 @@ const AdminProducts = () => {
                                 <td className="px-4 py-4 whitespace-nowrap">
                                   <button
                                     onClick={() => toggleSelectOne(product._id)}
-                                    className={`${selectedIds.has(product._id) ? 'text-lime-500 hover:text-lime-600' : 'text-gray-600 hover:text-gray-800'} rounded focus:outline-none`}
+                                    className={`${(selectAllMode || selectedIds.has(product._id)) ? 'text-lime-500 hover:text-lime-600' : 'text-gray-600 hover:text-gray-800'} rounded focus:outline-none`}
                                   >
-                                    {selectedIds.has(product._id) ? <CheckSquare size={16} /> : <Square size={16} />}
+                                    {(selectAllMode || selectedIds.has(product._id)) ? <CheckSquare size={16} /> : <Square size={16} />}
                                   </button>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -779,12 +963,7 @@ const AdminProducts = () => {
                   </div>
                 </div>
               )}
-              {/* Clear selection */}
-              {totalSelected > 0 && (
-                <div className="flex justify-between items-center mt-3">
-                  <button onClick={clearSelection} className="text-xs text-gray-600 hover:underline">Clear selection</button>
-                </div>
-              )}
+
               {/* Pagination Controls */}
               {totalPages > 1 && (
                 <div className="flex justify-center items-center gap-2 my-4">

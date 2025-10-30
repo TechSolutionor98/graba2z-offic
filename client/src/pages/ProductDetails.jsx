@@ -279,7 +279,7 @@ const ProductDetails = () => {
       // Try to get related products from the same category
       const { data } = await axios.get(`${config.API_URL}/api/products?category=${product.category._id}&limit=12`)
       let filtered = data.filter((p) => p._id !== product._id)
-      if (filtered.length === 0) {
+      if (filtered.length === 0) { 
         // If no related products, fetch all products and pick random ones (excluding current)
         const allRes = await axios.get(`${config.API_URL}/api/products`)
         filtered = allRes.data.filter((p) => p._id !== product._id)
