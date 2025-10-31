@@ -20,6 +20,7 @@ const AdminProducts = () => {
   const [filterCategory, setFilterCategory] = useState("all")
   const [filterSubcategory, setFilterSubcategory] = useState("all")
   const [filterBrand, setFilterBrand] = useState("all")
+  const [filterStatus, setFilterStatus] = useState("all") // New filter for active/inactive
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const PRODUCTS_PER_PAGE = 20
@@ -94,7 +95,7 @@ const AdminProducts = () => {
   useEffect(() => {
     fetchProducts()
     fetchCategories()
-  }, [page, searchTerm, filterCategory, filterSubcategory, filterBrand])
+  }, [page, searchTerm, filterCategory, filterSubcategory, filterBrand, filterStatus])
 
   useEffect(() => {
     fetchBrands()
@@ -238,6 +239,7 @@ const AdminProducts = () => {
     if (filterCategory && filterCategory !== 'all') overrides.parentCategory = filterCategory
     if (filterSubcategory && filterSubcategory !== 'all') overrides.category = filterSubcategory
     if (filterBrand && filterBrand !== 'all') overrides.brand = filterBrand
+    if (filterStatus && filterStatus !== 'all') overrides.isActive = filterStatus === 'active'
     if (searchTerm.trim()) overrides.search = searchTerm.trim()
     
     const all = await fetchAllForExport(overrides)
@@ -246,6 +248,7 @@ const AdminProducts = () => {
       filterCategory && filterCategory !== 'all' ? `cat-${filterCategory}` : null,
       filterSubcategory && filterSubcategory !== 'all' ? `sub-${filterSubcategory}` : null,
       filterBrand && filterBrand !== 'all' ? `brand-${filterBrand}` : null,
+      filterStatus && filterStatus !== 'all' ? `status-${filterStatus}` : null,
       searchTerm ? `search-${searchTerm.replace(/\s+/g, '-')}` : null,
     ].filter(Boolean).join('_') || 'products_current_filters'
     exportProductsToExcel(all, `${fname}.xlsx`)
@@ -260,6 +263,7 @@ const AdminProducts = () => {
       if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
       if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
       if (filterBrand && filterBrand !== "all") params.brand = filterBrand
+      if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
       
       const { data } = await axios.get(`${config.API_URL}/api/products/admin/count`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -283,6 +287,7 @@ const AdminProducts = () => {
       if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
       if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
       if (filterBrand && filterBrand !== "all") params.brand = filterBrand
+      if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
       Object.assign(params, overrides)
       // We may need to loop if more than 1000
       let all = []
@@ -321,6 +326,7 @@ const AdminProducts = () => {
       if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
       if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
       if (filterBrand && filterBrand !== "all") params.brand = filterBrand
+      if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
 
       const { data, headers } = await axios.get(`${config.API_URL}/api/products/admin`, {
         headers: {
@@ -577,7 +583,7 @@ const AdminProducts = () => {
   // Add useEffect to refetch products when filters change
   useEffect(() => {
     fetchProducts();
-  }, [searchTerm, filterCategory, filterSubcategory, filterBrand]);
+  }, [searchTerm, filterCategory, filterSubcategory, filterBrand, filterStatus]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -618,8 +624,8 @@ const AdminProducts = () => {
               <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Filter & Search Products</h3>
                 
-                {/* Filter Controls and Search */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                {/* <!-- Filter Controls and Search --> */}
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
                     <select
@@ -670,6 +676,19 @@ const AdminProducts = () => {
                   </div>
 
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Products</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -687,13 +706,14 @@ const AdminProducts = () => {
                 {/* Action Buttons */}
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-4">
-                    {(searchTerm || filterCategory !== "all" || filterSubcategory !== "all" || filterBrand !== "all") && (
+                    {(searchTerm || filterCategory !== "all" || filterSubcategory !== "all" || filterBrand !== "all" || filterStatus !== "all") && (
                       <button
                         onClick={() => {
                           setSearchTerm("")
                           setFilterCategory("all")
                           setFilterSubcategory("all")
                           setFilterBrand("all")
+                          setFilterStatus("all")
                         }}
                         className="text-sm text-gray-600 hover:text-gray-800 underline"
                       >
