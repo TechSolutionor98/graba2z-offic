@@ -13,6 +13,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   const [categories, setCategories] = useState([])
   const [brands, setBrands] = useState([])
   const [subCategories, setSubCategories] = useState([])
+  const [subCategories2, setSubCategories2] = useState([])
+  const [subCategories3, setSubCategories3] = useState([])
+  const [subCategories4, setSubCategories4] = useState([])
   const [parentCategories, setParentCategories] = useState([])
   const [taxes, setTaxes] = useState([])
   const [loading, setLoading] = useState(false)
@@ -25,6 +28,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     parentCategory: "",
     category: "",
     subCategory: "",
+    subCategory2: "",
+    subCategory3: "",
+    subCategory4: "",
     description: "",
     shortDescription: "",
     buyingPrice: "",
@@ -139,6 +145,21 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         if (parentId) {
           await fetchSubCategories(String(parentId))
         }
+        
+        // Preload subcategories for levels 2, 3, 4 if they exist
+        if (product.category) {
+          const categoryId = typeof product.category === "object" ? product.category._id : product.category
+          await fetchSubCategories2(String(categoryId))
+        }
+        if (product.subCategory2) {
+          const sub2Id = typeof product.subCategory2 === "object" ? product.subCategory2._id : product.subCategory2
+          await fetchSubCategories3(String(sub2Id))
+        }
+        if (product.subCategory3) {
+          const sub3Id = typeof product.subCategory3 === "object" ? product.subCategory3._id : product.subCategory3
+          await fetchSubCategories4(String(sub3Id))
+        }
+
         setFormData({
           name: product.name || "",
           sku: product.sku || "",
@@ -156,6 +177,30 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
                   typeof product.subCategory === "object" && product.subCategory
                     ? product.subCategory._id
                     : product.subCategory,
+                )
+              : "",
+          subCategory2:
+            (typeof product.subCategory2 === "object" && product.subCategory2 ? product.subCategory2._id : product.subCategory2)
+              ? String(
+                  typeof product.subCategory2 === "object" && product.subCategory2
+                    ? product.subCategory2._id
+                    : product.subCategory2,
+                )
+              : "",
+          subCategory3:
+            (typeof product.subCategory3 === "object" && product.subCategory3 ? product.subCategory3._id : product.subCategory3)
+              ? String(
+                  typeof product.subCategory3 === "object" && product.subCategory3
+                    ? product.subCategory3._id
+                    : product.subCategory3,
+                )
+              : "",
+          subCategory4:
+            (typeof product.subCategory4 === "object" && product.subCategory4 ? product.subCategory4._id : product.subCategory4)
+              ? String(
+                  typeof product.subCategory4 === "object" && product.subCategory4
+                    ? product.subCategory4._id
+                    : product.subCategory4,
                 )
               : "",
           description: product.description || "",
@@ -205,15 +250,51 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     }
   }
 
-  // Fetch subcategories when parentCategory changes
+  // Fetch subcategories when parentCategory changes (Level 1)
   useEffect(() => {
     if (formData.parentCategory) {
       fetchSubCategories(formData.parentCategory)
     } else {
       setSubCategories([])
-      setFormData((prev) => ({ ...prev, category: "", subCategory: "" }))
+      setSubCategories2([])
+      setSubCategories3([])
+      setSubCategories4([])
+      setFormData((prev) => ({ ...prev, category: "", subCategory: "", subCategory2: "", subCategory3: "", subCategory4: "" }))
     }
   }, [formData.parentCategory])
+
+  // Fetch level 2 subcategories when category (level 1) changes
+  useEffect(() => {
+    if (formData.category) {
+      fetchSubCategories2(formData.category)
+    } else {
+      setSubCategories2([])
+      setSubCategories3([])
+      setSubCategories4([])
+      setFormData((prev) => ({ ...prev, subCategory2: "", subCategory3: "", subCategory4: "" }))
+    }
+  }, [formData.category])
+
+  // Fetch level 3 subcategories when subCategory2 changes
+  useEffect(() => {
+    if (formData.subCategory2) {
+      fetchSubCategories3(formData.subCategory2)
+    } else {
+      setSubCategories3([])
+      setSubCategories4([])
+      setFormData((prev) => ({ ...prev, subCategory3: "", subCategory4: "" }))
+    }
+  }, [formData.subCategory2])
+
+  // Fetch level 4 subcategories when subCategory3 changes
+  useEffect(() => {
+    if (formData.subCategory3) {
+      fetchSubCategories4(formData.subCategory3)
+    } else {
+      setSubCategories4([])
+      setFormData((prev) => ({ ...prev, subCategory4: "" }))
+    }
+  }, [formData.subCategory3])
 
   const fetchSubCategories = async (parentCategoryId) => {
     try {
@@ -223,10 +304,57 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           Authorization: `Bearer ${token}`,
         },
       })
-      setSubCategories(data)
+      // Filter to only show Level 1 subcategories
+      const level1Subs = data.filter(sub => !sub.level || sub.level === 1)
+      setSubCategories(level1Subs)
     } catch (error) {
       setSubCategories([])
       console.error("Failed to load subcategories:", error)
+    }
+  }
+
+  const fetchSubCategories2 = async (parentSubCategoryId) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      const { data } = await axios.get(`${config.API_URL}/api/subcategories/children/${parentSubCategoryId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      setSubCategories2(data)
+    } catch (error) {
+      setSubCategories2([])
+      console.error("Failed to load subcategories level 2:", error)
+    }
+  }
+
+  const fetchSubCategories3 = async (parentSubCategoryId) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      const { data } = await axios.get(`${config.API_URL}/api/subcategories/children/${parentSubCategoryId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      setSubCategories3(data)
+    } catch (error) {
+      setSubCategories3([])
+      console.error("Failed to load subcategories level 3:", error)
+    }
+  }
+
+  const fetchSubCategories4 = async (parentSubCategoryId) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      const { data } = await axios.get(`${config.API_URL}/api/subcategories/children/${parentSubCategoryId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      setSubCategories4(data)
+    } catch (error) {
+      setSubCategories4([])
+      console.error("Failed to load subcategories level 4:", error)
     }
   }
 
@@ -422,6 +550,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         parentCategory: formData.parentCategory,
         category: formData.category,
         subCategory: formData.category || null,
+        subCategory2: formData.subCategory2 || null,
+        subCategory3: formData.subCategory3 || null,
+        subCategory4: formData.subCategory4 || null,
         buyingPrice: Number.parseFloat(formData.buyingPrice) || 0,
         price: finalBasePrice, // Save as-is (tax-inclusive; no re-add)
         offerPrice: finalOfferPrice, // Save as-is (tax-inclusive; no re-add)
@@ -550,10 +681,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
             </select>
           </div>
 
-          {/* Subcategory Dropdown */}
+          {/* Subcategory Dropdown (Level 1) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Subcategory <span className="text-red-500">*</span>
+              Subcategory (Level 1) <span className="text-red-500">*</span>
             </label>
             <select
               name="category"
@@ -567,6 +698,75 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
                 {formData.parentCategory ? "Select a Subcategory" : "Select a main category first"}
               </option>
               {subCategories.map((subCategory) => (
+                <option key={subCategory._id} value={subCategory._id}>
+                  {subCategory.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Subcategory Level 2 Dropdown (Optional) - Always show but disabled until Level 1 selected */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Subcategory Level 2 <span className="text-gray-500 text-xs">(Optional)</span>
+            </label>
+            <select
+              name="subCategory2"
+              value={formData.subCategory2}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={!formData.category || subCategories2.length === 0}
+            >
+              <option value="">
+                {!formData.category ? "Select Level 1 first" : subCategories2.length === 0 ? "No subcategories available" : "Select Subcategory Level 2"}
+              </option>
+              {subCategories2.map((subCategory) => (
+                <option key={subCategory._id} value={subCategory._id}>
+                  {subCategory.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Subcategory Level 3 Dropdown (Optional) - Always show but disabled until Level 2 selected */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Subcategory Level 3 <span className="text-gray-500 text-xs">(Optional)</span>
+            </label>
+            <select
+              name="subCategory3"
+              value={formData.subCategory3}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={!formData.subCategory2 || subCategories3.length === 0}
+            >
+              <option value="">
+                {!formData.subCategory2 ? "Select Level 2 first" : subCategories3.length === 0 ? "No subcategories available" : "Select Subcategory Level 3"}
+              </option>
+              {subCategories3.map((subCategory) => (
+                <option key={subCategory._id} value={subCategory._id}>
+                  {subCategory.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Subcategory Level 4 Dropdown (Optional) - Always show but disabled until Level 3 selected */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Subcategory Level 4 <span className="text-gray-500 text-xs">(Optional)</span>
+            </label>
+            <select
+              name="subCategory4"
+              value={formData.subCategory4}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={!formData.subCategory3 || subCategories4.length === 0}
+            >
+              <option value="">
+                {!formData.subCategory3 ? "Select Level 3 first" : subCategories4.length === 0 ? "No subcategories available" : "Select Subcategory Level 4"}
+              </option>
+              {subCategories4.map((subCategory) => (
                 <option key={subCategory._id} value={subCategory._id}>
                   {subCategory.name}
                 </option>

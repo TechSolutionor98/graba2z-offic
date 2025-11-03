@@ -8,24 +8,29 @@ import { Edit, Trash2, Plus, Search, Filter } from "lucide-react"
 import axios from "axios"
 
 import config from "../../config/config"
-const AdminSubCategories = () => {
+
+const AdminSubCategories4 = () => {
   const [subCategories, setSubCategories] = useState([])
   const [categories, setCategories] = useState([])
+  const [parentSubCategories, setParentSubCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [parentFilter, setParentFilter] = useState("all")
   const { showToast } = useToast()
 
   useEffect(() => {
     fetchSubCategories()
     fetchCategories()
+    fetchParentSubCategories()
   }, [])
 
   const fetchSubCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`${config.API_URL}/api/subcategories/admin`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories`, {
         headers: { Authorization: `Bearer ${token}` },
+        params: { level: 4 }
       })
       setSubCategories(response.data)
     } catch (error) {
@@ -33,6 +38,31 @@ const AdminSubCategories = () => {
       showToast("Error fetching subcategories", "error")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      const response = await axios.get(`${config.API_URL}/api/categories`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setCategories(response.data)
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+    }
+  }
+
+  const fetchParentSubCategories = async () => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      const response = await axios.get(`${config.API_URL}/api/subcategories`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { level: 3 }
+      })
+      setParentSubCategories(response.data)
+    } catch (error) {
+      console.error("Error fetching parent subcategories:", error)
     }
   }
 
@@ -58,7 +88,6 @@ const AdminSubCategories = () => {
       )
 
       if (response.status === 200) {
-        // Update the subcategory in the local state
         setSubCategories(subCategories.map(sc => 
           sc._id === subCategoryId ? { ...sc, isActive: newStatus } : sc
         ))
@@ -72,18 +101,6 @@ const AdminSubCategories = () => {
     }
   }
 
-  const fetchCategories = async () => {
-    try {
-      const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`${config.API_URL}/api/categories`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      setCategories(response.data)
-    } catch (error) {
-      console.error("Error fetching categories:", error)
-    }
-  }
-
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this subcategory?")) {
       try {
@@ -91,7 +108,7 @@ const AdminSubCategories = () => {
         await axios.delete(`${config.API_URL}/api/subcategories/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-        showToast("SubCategory moved to trash successfully", "success")
+        showToast("SubCategory deleted successfully", "success")
         fetchSubCategories()
       } catch (error) {
         console.error("Error deleting subcategory:", error)
@@ -102,10 +119,11 @@ const AdminSubCategories = () => {
 
   const filteredSubCategories = subCategories.filter((subCategory) => {
     const matchesSearch = subCategory.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === "all" || subCategory.category._id === categoryFilter
-    // Only show Level 1 subcategories (level === 1 or undefined for backward compatibility)
-    const matchesLevel = !subCategory.level || subCategory.level === 1
-    return matchesSearch && matchesCategory && matchesLevel
+    const matchesCategory = categoryFilter === "all" || subCategory.category?._id === categoryFilter
+    const matchesParent = parentFilter === "all" || subCategory.parentSubCategory?._id === parentFilter
+    // Only show Level 4 subcategories
+    const matchesLevel = subCategory.level === 4
+    return matchesSearch && matchesCategory && matchesParent && matchesLevel
   })
 
   if (loading) {
@@ -129,15 +147,15 @@ const AdminSubCategories = () => {
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Sub Categories</h1>
-              <p className="text-gray-600 mt-2">Manage your product sub categories</p>
+              <h1 className="text-3xl font-bold text-gray-900">Sub Categories Level 4</h1>
+              <p className="text-gray-600 mt-2">Manage your fourth level subcategories</p>
             </div>
             <Link
-              to="/admin/add-subcategory"
+              to="/admin/subcategories-4/add"
               className="bg-lime-500 hover:bg-lime-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors duration-200"
             >
               <Plus size={20} />
-              <span>Add New Sub Category</span>
+              <span>Add New Sub Category 4</span>
             </Link>
           </div>
 
@@ -170,6 +188,18 @@ const AdminSubCategories = () => {
                     </option>
                   ))}
                 </select>
+                <select
+                  value={parentFilter}
+                  onChange={(e) => setParentFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Parent SubCategories</option>
+                  {parentSubCategories.map((parent) => (
+                    <option key={parent._id} value={parent._id}>
+                      {parent.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -183,16 +213,16 @@ const AdminSubCategories = () => {
                       Sub Category
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Parent Category
+                      Parent SubCategory
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Description
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Sort Order
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
@@ -203,7 +233,7 @@ const AdminSubCategories = () => {
                   {filteredSubCategories.length === 0 ? (
                     <tr>
                       <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                        {searchTerm || categoryFilter !== "all"
+                        {searchTerm || categoryFilter !== "all" || parentFilter !== "all"
                           ? "No subcategories found matching your criteria"
                           : "No subcategories found"}
                       </td>
@@ -227,6 +257,9 @@ const AdminSubCategories = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{subCategory.parentSubCategory?.name || "None"}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{subCategory.category?.name || "Unknown"}</div>
                         </td>
                         <td className="px-6 py-4">
@@ -243,9 +276,6 @@ const AdminSubCategories = () => {
                             {subCategory.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {subCategory.sortOrder || 0}
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
                             <button
@@ -260,7 +290,7 @@ const AdminSubCategories = () => {
                               {subCategory.isActive ? 'Active' : 'Inactive'}
                             </button>
                             <Link
-                              to={`/admin/subcategories/edit/${subCategory._id}`}
+                              to={`/admin/subcategories-4/edit/${subCategory._id}`}
                               className="text-blue-600 hover:text-blue-900 p-2 rounded-md hover:bg-blue-50"
                             >
                               <Edit size={16} />
@@ -285,7 +315,7 @@ const AdminSubCategories = () => {
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white p-4 rounded-lg border border-gray-200">
               <div className="text-2xl font-bold text-gray-900">{subCategories.length}</div>
-              <div className="text-sm text-gray-600">Total Sub Categories</div>
+              <div className="text-sm text-gray-600">Total Sub Categories Level 4</div>
             </div>
             <div className="bg-white p-4 rounded-lg border border-gray-200">
               <div className="text-2xl font-bold text-green-600">
@@ -294,8 +324,8 @@ const AdminSubCategories = () => {
               <div className="text-sm text-gray-600">Active Sub Categories</div>
             </div>
             <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="text-2xl font-bold text-blue-600">{categories.length}</div>
-              <div className="text-sm text-gray-600">Parent Categories</div>
+              <div className="text-2xl font-bold text-blue-600">{parentSubCategories.length}</div>
+              <div className="text-sm text-gray-600">Parent SubCategories (Level 3)</div>
             </div>
           </div>
         </div>
@@ -304,4 +334,4 @@ const AdminSubCategories = () => {
   )
 }
 
-export default AdminSubCategories
+export default AdminSubCategories4

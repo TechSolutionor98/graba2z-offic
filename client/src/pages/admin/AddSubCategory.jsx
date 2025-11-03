@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import ImageUpload from "../../components/ImageUpload"
@@ -12,9 +12,25 @@ import axios from "axios"
 import config from "../../config/config"
 const AddSubCategory = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState([])
+  const [subCategories1, setSubCategories1] = useState([]) // For Level 3 & 4
+  const [subCategories2, setSubCategories2] = useState([]) // For Level 4
+  const [parentSubCategories, setParentSubCategories] = useState([])
+  
+  // Detect level from URL
+  const getLevel = () => {
+    if (location.pathname.includes("subcategories-4")) return 4
+    if (location.pathname.includes("subcategories-3")) return 3
+    if (location.pathname.includes("subcategories-2")) return 2
+    return 1
+  }
+
+  const level = getLevel()
+  const parentLevel = level - 1
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -24,6 +40,10 @@ const AddSubCategory = () => {
     redirectUrl: "",
     image: "",
     category: "",
+    subCategory1: "", // For Level 3 & 4
+    subCategory2: "", // For Level 4
+    parentSubCategory: "",
+    level: level,
     isActive: true,
     sortOrder: 0,
   })
@@ -31,6 +51,40 @@ const AddSubCategory = () => {
   useEffect(() => {
     fetchCategories()
   }, [])
+
+  // Fetch Level 1 subcategories when category is selected (for Level 3 & 4)
+  useEffect(() => {
+    if ((level === 3 || level === 4) && formData.category) {
+      fetchSubCategories1(formData.category)
+    } else {
+      setSubCategories1([])
+    }
+  }, [level, formData.category])
+
+  // Fetch Level 2 subcategories when Level 1 is selected (for Level 4)
+  useEffect(() => {
+    if (level === 4 && formData.subCategory1) {
+      fetchSubCategories2(formData.subCategory1)
+    } else {
+      setSubCategories2([])
+    }
+  }, [level, formData.subCategory1])
+
+  // Fetch parent subcategories based on level and selections
+  useEffect(() => {
+    if (level === 2 && formData.category) {
+      // Level 2: Parent is Level 1 subcategory of selected category
+      fetchParentSubCategories(formData.category)
+    } else if (level === 3 && formData.subCategory1) {
+      // Level 3: Parent is Level 2 subcategory of selected Level 1
+      fetchParentSubCategoriesForLevel3(formData.subCategory1)
+    } else if (level === 4 && formData.subCategory2) {
+      // Level 4: Parent is Level 3 subcategory of selected Level 2
+      fetchParentSubCategoriesForLevel4(formData.subCategory2)
+    } else if (level > 1) {
+      setParentSubCategories([])
+    }
+  }, [level, formData.category, formData.subCategory1, formData.subCategory2])
 
   const fetchCategories = async () => {
     try {
@@ -45,12 +99,119 @@ const AddSubCategory = () => {
     }
   }
 
+  const fetchSubCategories1 = async (categoryId) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      const response = await axios.get(`${config.API_URL}/api/subcategories/category/${categoryId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      // Filter to only show Level 1 subcategories (or those without level for backward compatibility)
+      const level1Subs = response.data.filter(sub => !sub.level || sub.level === 1)
+      setSubCategories1(level1Subs)
+    } catch (error) {
+      console.error("Error fetching level 1 subcategories:", error)
+      showToast("Error fetching level 1 subcategories", "error")
+      setSubCategories1([])
+    }
+  }
+
+  const fetchSubCategories2 = async (subCategory1Id) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      const response = await axios.get(`${config.API_URL}/api/subcategories/children/${subCategory1Id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setSubCategories2(response.data)
+    } catch (error) {
+      console.error("Error fetching level 2 subcategories:", error)
+      showToast("Error fetching level 2 subcategories", "error")
+      setSubCategories2([])
+    }
+  }
+
+  const fetchParentSubCategories = async (categoryId) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      // For level 2, fetch subcategories of the selected category (level 1)
+      const response = await axios.get(`${config.API_URL}/api/subcategories/category/${categoryId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      // Filter to only show Level 1 subcategories
+      const level1Subs = response.data.filter(sub => !sub.level || sub.level === 1)
+      setParentSubCategories(level1Subs)
+    } catch (error) {
+      console.error("Error fetching parent subcategories:", error)
+      showToast("Error fetching parent subcategories", "error")
+      setParentSubCategories([])
+    }
+  }
+
+  const fetchParentSubCategoriesForLevel3 = async (subCategory1Id) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      // For level 3, fetch children of level 1 subcategory (level 2 subcategories)
+      const response = await axios.get(`${config.API_URL}/api/subcategories/children/${subCategory1Id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setParentSubCategories(response.data)
+    } catch (error) {
+      console.error("Error fetching level 2 subcategories:", error)
+      showToast("Error fetching level 2 subcategories", "error")
+      setParentSubCategories([])
+    }
+  }
+
+  const fetchParentSubCategoriesForLevel4 = async (subCategory2Id) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      // For level 4, fetch children of level 2 subcategory (level 3 subcategories)
+      const response = await axios.get(`${config.API_URL}/api/subcategories/children/${subCategory2Id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setParentSubCategories(response.data)
+    } catch (error) {
+      console.error("Error fetching level 3 subcategories:", error)
+      showToast("Error fetching level 3 subcategories", "error")
+      setParentSubCategories([])
+    }
+  }
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }))
+    
+    // If category changes, clear all dependent fields
+    if (name === "category") {
+      setFormData((prev) => ({
+        ...prev,
+        category: value,
+        subCategory1: "",
+        subCategory2: "",
+        parentSubCategory: "",
+      }))
+    } 
+    // If subCategory1 changes (Level 3 & 4), clear dependent fields
+    else if (name === "subCategory1") {
+      setFormData((prev) => ({
+        ...prev,
+        subCategory1: value,
+        subCategory2: "",
+        parentSubCategory: "",
+      }))
+    }
+    // If subCategory2 changes (Level 4), clear parent
+    else if (name === "subCategory2") {
+      setFormData((prev) => ({
+        ...prev,
+        subCategory2: value,
+        parentSubCategory: "",
+      }))
+    }
+    else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }))
+    }
   }
 
   const handleImageUpload = (imageUrl) => {
@@ -73,7 +234,15 @@ const AddSubCategory = () => {
 
     try {
       const token = localStorage.getItem("adminToken")
-      await axios.post(`${config.API_URL}/api/subcategories`, formData, {
+      
+      // Prepare submission data
+      const submitData = {
+        ...formData,
+        level: level,
+        parentSubCategory: level > 1 ? formData.parentSubCategory : undefined
+      }
+
+      await axios.post(`${config.API_URL}/api/subcategories`, submitData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -81,13 +250,25 @@ const AddSubCategory = () => {
       })
 
       showToast("Sub Category added successfully!", "success")
-      navigate("/admin/subcategories")
+      
+      // Navigate to appropriate list page
+      if (level === 4) navigate("/admin/subcategories-4")
+      else if (level === 3) navigate("/admin/subcategories-3")
+      else if (level === 2) navigate("/admin/subcategories-2")
+      else navigate("/admin/subcategories")
     } catch (error) {
       console.error("Error adding subcategory:", error)
       showToast(error.response?.data?.message || "Failed to add subcategory", "error")
     } finally {
       setLoading(false)
     }
+  }
+
+  const getBackPath = () => {
+    if (level === 4) return "/admin/subcategories-4"
+    if (level === 3) return "/admin/subcategories-3"
+    if (level === 2) return "/admin/subcategories-2"
+    return "/admin/subcategories"
   }
 
   return (
@@ -99,16 +280,16 @@ const AddSubCategory = () => {
           <div className="mb-8">
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
               <button
-                onClick={() => navigate("/admin/subcategories")}
+                onClick={() => navigate(getBackPath())}
                 className="hover:text-blue-600 flex items-center gap-1"
               >
                 <ArrowLeft size={16} />
-                Sub Categories
+                Sub Categories {level > 1 ? `Level ${level}` : ''}
               </button>
               <span>/</span>
-              <span className="text-gray-900">Add Sub Category</span>
+              <span className="text-gray-900">Add Sub Category {level > 1 ? level : ''}</span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Add New Sub Category</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Add New Sub Category {level > 1 ? `Level ${level}` : ''}</h1>
           </div>
 
           {/* Form */}
@@ -148,6 +329,81 @@ const AddSubCategory = () => {
                     ))}
                   </select>
                 </div>
+
+                {/* Level 1 SubCategory Selection for Level 3 & 4 */}
+                {(level === 3 || level === 4) && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Level 1 Sub Category <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="subCategory1"
+                      value={formData.subCategory1}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                      disabled={!formData.category}
+                    >
+                      <option value="">Select Level 1 Sub Category</option>
+                      {subCategories1.map((sub) => (
+                        <option key={sub._id} value={sub._id}>
+                          {sub.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Level 2 SubCategory Selection for Level 4 */}
+                {level === 4 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Level 2 Sub Category <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="subCategory2"
+                      value={formData.subCategory2}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                      disabled={!formData.subCategory1}
+                    >
+                      <option value="">Select Level 2 Sub Category</option>
+                      {subCategories2.map((sub) => (
+                        <option key={sub._id} value={sub._id}>
+                          {sub.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {level > 1 && (
+                  <div className={level === 4 ? "col-span-2" : ""}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Parent Sub Category (Level {parentLevel}) <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="parentSubCategory"
+                      value={formData.parentSubCategory}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                      disabled={
+                        (level === 2 && !formData.category) ||
+                        (level === 3 && !formData.subCategory1) ||
+                        (level === 4 && !formData.subCategory2)
+                      }
+                    >
+                      <option value="">Select Parent Sub Category</option>
+                      {parentSubCategories.map((parent) => (
+                        <option key={parent._id} value={parent._id}>
+                          {parent.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -272,7 +528,7 @@ const AddSubCategory = () => {
               <div className="flex justify-end gap-4 pt-6">
                 <button
                   type="button"
-                  onClick={() => navigate("/admin/subcategories")}
+                  onClick={() => navigate(getBackPath())}
                   className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
@@ -282,7 +538,7 @@ const AddSubCategory = () => {
                   disabled={loading}
                   className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {loading ? "Adding..." : "Add Sub Category"}
+                  {loading ? "Adding..." : `Add Sub Category ${level > 1 ? level : ''}`}
                 </button>
               </div>
             </form>

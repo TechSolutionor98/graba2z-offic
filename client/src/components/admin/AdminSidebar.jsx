@@ -645,6 +645,9 @@ const AdminSidebar = () => {
     orders: false,
     blogs: false,
     subcategories: false,
+    subcategories2: false,
+    subcategories3: false,
+    subcategories4: false,
     coupons: false,
     reviews: false, // Add reviews dropdown
     stockAdjustment: false, // Added stockAdjustment dropdown state
@@ -677,7 +680,13 @@ const AdminSidebar = () => {
       path.includes("/admin/sizes") ||
       path.includes("/admin/add-size") ||
       path.includes("/admin/subcategories") ||
-      path.includes("/admin/add-subcategory")
+      path.includes("/admin/add-subcategory") ||
+      path.includes("/admin/subcategories-2") ||
+      path.includes("/admin/add-subcategory-2") ||
+      path.includes("/admin/subcategories-3") ||
+      path.includes("/admin/add-subcategory-3") ||
+      path.includes("/admin/subcategories-4") ||
+      path.includes("/admin/add-subcategory-4")
     ) {
       newOpenDropdowns.productSystem = true
     }
@@ -763,6 +772,15 @@ const AdminSidebar = () => {
     if (path.includes("/admin/subcategories") || path.includes("/admin/add-subcategory")) {
       newOpenDropdowns.subcategories = true
     }
+    if (path.includes("/admin/subcategories-2") || path.includes("/admin/add-subcategory-2")) {
+      newOpenDropdowns.subcategories2 = true
+    }
+    if (path.includes("/admin/subcategories-3") || path.includes("/admin/add-subcategory-3")) {
+      newOpenDropdowns.subcategories3 = true
+    }
+    if (path.includes("/admin/subcategories-4") || path.includes("/admin/add-subcategory-4")) {
+      newOpenDropdowns.subcategories4 = true
+    }
 
     setOpenDropdowns(newOpenDropdowns)
   }, [location.pathname])
@@ -826,6 +844,36 @@ const AdminSidebar = () => {
           items: [
             { title: "List Sub Categories", path: "/admin/subcategories" },
             { title: "Add Sub Category", path: "/admin/subcategories/add" },
+          ],
+        },
+        {
+          title: "Sub Categories 2",
+          icon: Tag,
+          dropdown: "subcategories2",
+          section: "subcategories2",
+          items: [
+            { title: "List Sub Categories 2", path: "/admin/subcategories-2" },
+            { title: "Add Sub Category 2", path: "/admin/subcategories-2/add" },
+          ],
+        },
+        {
+          title: "Sub Categories 3",
+          icon: Tag,
+          dropdown: "subcategories3",
+          section: "subcategories3",
+          items: [
+            { title: "List Sub Categories 3", path: "/admin/subcategories-3" },
+            { title: "Add Sub Category 3", path: "/admin/subcategories-3/add" },
+          ],
+        },
+        {
+          title: "Sub Categories 4",
+          icon: Tag,
+          dropdown: "subcategories4",
+          section: "subcategories4",
+          items: [
+            { title: "List Sub Categories 4", path: "/admin/subcategories-4" },
+            { title: "Add Sub Category 4", path: "/admin/subcategories-4/add" },
           ],
         },
         {

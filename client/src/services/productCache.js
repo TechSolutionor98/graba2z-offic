@@ -597,13 +597,16 @@ class ProductCacheService {
       const minimalProducts = products.map((product) => ({
         _id: product._id,
         name: product.name,
-  sku: product.sku, // include SKU for client-side search
+        sku: product.sku, // include SKU for client-side search
         price: product.price,
         basePrice: product.basePrice,
         offerPrice: product.offerPrice,
         brand: product.brand,
         category: product.category,
         parentCategory: product.parentCategory,
+        subCategory2: product.subCategory2,
+        subCategory3: product.subCategory3,
+        subCategory4: product.subCategory4,
         countInStock: product.countInStock,
         stockStatus: product.stockStatus,
         discount: product.discount,
@@ -802,10 +805,17 @@ class ProductCacheService {
       return []
     }
 
+    console.log('ProductCache.filterProducts called with:', {
+      totalProducts: products.length,
+      filters: filters
+    })
+
     let filteredProducts = [...products]
 
-    // Filter by category
+    // Filter by category (subcategory level 1)
     if (filters.category && filters.category !== "all") {
+      console.log('Filtering by category (level 1):', filters.category)
+      const beforeCount = filteredProducts.length
       filteredProducts = filteredProducts.filter((product) => {
         if (!product.category) return false
 
@@ -813,10 +823,71 @@ class ProductCacheService {
 
         return categoryId === filters.category
       })
+      console.log(`Category filter: ${beforeCount} -> ${filteredProducts.length} products`)
+    }
+
+    // Filter by subcategory level 2
+    if (filters.subcategory2) {
+      console.log('Filtering by subcategory2:', filters.subcategory2)
+      const beforeCount = filteredProducts.length
+      filteredProducts = filteredProducts.filter((product) => {
+        if (!product.subCategory2) {
+          console.log('Product missing subCategory2:', product.name, product._id)
+          return false
+        }
+
+        const subCategory2Id = typeof product.subCategory2 === "string" ? product.subCategory2 : product.subCategory2._id
+        const subCategory2Slug = typeof product.subCategory2 === "string" ? null : product.subCategory2.slug
+        const subCategory2Name = typeof product.subCategory2 === "string" ? null : product.subCategory2.name
+
+        // Match by ID, slug, or name
+        const matches = subCategory2Id === filters.subcategory2 || 
+                       subCategory2Slug === filters.subcategory2 ||
+                       (subCategory2Name && subCategory2Name.toLowerCase().replace(/\s+/g, '-') === filters.subcategory2)
+        
+        if (matches) {
+          console.log('Product matches subCategory2:', product.name, {
+            productSubCat2: subCategory2Id,
+            filterValue: filters.subcategory2
+          })
+        }
+        return matches
+      })
+      console.log(`SubCategory2 filter: ${beforeCount} -> ${filteredProducts.length} products`)
+    }
+
+    // Filter by subcategory level 3
+    if (filters.subcategory3) {
+      console.log('Filtering by subcategory3:', filters.subcategory3)
+      const beforeCount = filteredProducts.length
+      filteredProducts = filteredProducts.filter((product) => {
+        if (!product.subCategory3) return false
+
+        const subCategory3Id = typeof product.subCategory3 === "string" ? product.subCategory3 : product.subCategory3._id
+
+        return subCategory3Id === filters.subcategory3
+      })
+      console.log(`SubCategory3 filter: ${beforeCount} -> ${filteredProducts.length} products`)
+    }
+
+    // Filter by subcategory level 4
+    if (filters.subcategory4) {
+      console.log('Filtering by subcategory4:', filters.subcategory4)
+      const beforeCount = filteredProducts.length
+      filteredProducts = filteredProducts.filter((product) => {
+        if (!product.subCategory4) return false
+
+        const subCategory4Id = typeof product.subCategory4 === "string" ? product.subCategory4 : product.subCategory4._id
+
+        return subCategory4Id === filters.subcategory4
+      })
+      console.log(`SubCategory4 filter: ${beforeCount} -> ${filteredProducts.length} products`)
     }
 
     // Filter by parent_category
     if (filters.parent_category && filters.parent_category !== "all") {
+      console.log('Filtering by parent_category:', filters.parent_category)
+      const beforeCount = filteredProducts.length
       filteredProducts = filteredProducts.filter((product) => {
         if (!product.parentCategory) return false
 
@@ -825,6 +896,7 @@ class ProductCacheService {
 
         return parentCategoryId === filters.parent_category
       })
+      console.log(`Parent category filter: ${beforeCount} -> ${filteredProducts.length} products`)
     }
 
     // Filter by brand

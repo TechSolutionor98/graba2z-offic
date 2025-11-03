@@ -3,23 +3,16 @@ import { AuthProvider } from "./context/AuthContext"
 import { CartProvider } from "./context/CartContext"
 import { WishlistProvider } from "./context/WishlistContext"
 import { ToastProvider } from "./context/ToastContext"
- 
+
 // Import components
 import Layout from "./components/Layout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import AdminRoute from "./components/AdminRoute"
 import ScrollToTop from "./components/ScrollToTop"
-import CacheStatus from "./components/CacheStatus"
 import CreateOrder from "./pages/admin/CreateOrder"
-
-
-
-
-
 
 import { Helmet } from "react-helmet-async"
 import { useLocation } from "react-router-dom"
-
 
 // Import admin components
 import AdminHeader from "./components/admin/AdminHeader"
@@ -47,20 +40,19 @@ import DisclaimerPolicy from "./pages/DisclaimerPolicy"
 import TermAndCondition from "./pages/TermAndCondition"
 import RefundAndReturn from "./pages/RefundAndReturn"
 import CookiesAndPolicy from "./pages/CookiesAndPolicy"
-import ReqBulkPurchase from "./pages/ReqBulkPurchase";
+import ReqBulkPurchase from "./pages/ReqBulkPurchase"
 import ContactUs from "./pages/ContactUs"
-import NotFound from "./pages/NotFound";
-import GuestOrder from "./pages/GuestOrder";
+import NotFound from "./pages/NotFound"
+import GuestOrder from "./pages/GuestOrder"
 import Guest from "./pages/Guest"
 import PaymentSuccess from "./pages/PaymentSuccess"
 import PaymentCancel from "./pages/PaymentCancel"
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import BackToSchoolGaming from "./pages/BackToSchoolGaming";
-import BackToSchoolProfessional from "./pages/BackToSchoolProfessional";
-import VoucherTerms from "./pages/VoucherTerms";
-import DeliveryTerms from "./pages/DeliveryTerms";
-
+import ForgotPassword from "./pages/ForgotPassword"
+import ResetPassword from "./pages/ResetPassword"
+import BackToSchoolGaming from "./pages/BackToSchoolGaming"
+import BackToSchoolProfessional from "./pages/BackToSchoolProfessional"
+import VoucherTerms from "./pages/VoucherTerms"
+import DeliveryTerms from "./pages/DeliveryTerms"
 
 // Import admin pages
 import AdminLogin from "./pages/admin/AdminLogin"
@@ -83,14 +75,17 @@ import AdminSettings from "./pages/admin/AdminSettings"
 import AdminBlogs from "./pages/admin/AdminBlogs"
 import AdminRequestCallbacks from "./pages/admin/AdminRequestCallbacks"
 import AdminSubCategories from "./pages/admin/AdminSubCategories"
-import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
-import AdminNewsletter from "./pages/admin/AdminNewsletter";
+import AdminSubCategories2 from "./pages/admin/AdminSubCategories2"
+import AdminSubCategories3 from "./pages/admin/AdminSubCategories3"
+import AdminSubCategories4 from "./pages/admin/AdminSubCategories4"
+import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates"
+import AdminNewsletter from "./pages/admin/AdminNewsletter"
 
 // Add review management imports
-import AdminReviews from "./pages/admin/AdminReviews";
-import AdminReviewsPending from "./pages/admin/AdminReviewsPending";
-import AdminReviewsApproved from "./pages/admin/AdminReviewsApproved";
-import AdminReviewsRejected from "./pages/admin/AdminReviewsRejected";
+import AdminReviews from "./pages/admin/AdminReviews"
+import AdminReviewsPending from "./pages/admin/AdminReviewsPending"
+import AdminReviewsApproved from "./pages/admin/AdminReviewsApproved"
+import AdminReviewsRejected from "./pages/admin/AdminReviewsRejected"
 
 // Add other admin pages as needed
 import AddProduct from "./pages/admin/AddProduct"
@@ -112,8 +107,8 @@ import BlogCategories from "./pages/admin/BlogCategories"
 import BlogTopics from "./pages/admin/BlogTopics"
 import BlogRating from "./pages/admin/BlogRating"
 import AddBulkProducts from "./pages/admin/AddBulkProducts"
-import EditCategory from "./pages/admin/EditCategory";
-import EditSubCategory from "./pages/admin/EditSubCategory";
+import EditCategory from "./pages/admin/EditCategory"
+import EditSubCategory from "./pages/admin/EditSubCategory"
 
 // Order status pages
 import ReceivedOrders from "./pages/admin/ReceivedOrders"
@@ -126,7 +121,6 @@ import Rejected from "./pages/admin/Rejected"
 import OnlineOrders from "./pages/admin/OnlineOrders"
 import TrashCategories from "./pages/admin/TrashCategories"
 
-
 import NewOrders from "./pages/admin/NewOrders"
 import ConfirmedOrders from "./pages/admin/ConfirmedOrders"
 import ProcessingOrders from "./pages/admin/ProcessingOrders"
@@ -134,22 +128,9 @@ import OnHoldOrders from "./pages/admin/OnHoldOrders"
 import CancelledOrders from "./pages/admin/CancelledOrders"
 import DeletedOrders from "./pages/admin/DeletedOrders"
 
-
-
-
-
-
-
-
 // Stock Adjustment page imports
 import PriceAdjustment from "./pages/admin/PriceAdjustment"
 import PriceAdjustmentReports from "./pages/admin/PriceAdjustmentReports"
-
-
-
-
-
-
 
 function DefaultCanonical() {
   const location = useLocation()
@@ -165,9 +146,6 @@ function DefaultCanonical() {
     </Helmet>
   )
 }
-
-
-
 
 function RouteCanonical() {
   const location = useLocation()
@@ -190,9 +168,8 @@ function App() {
         <CartProvider>
           <WishlistProvider>
             <Router>
-                <DefaultCanonical />
+              <DefaultCanonical />
               <ScrollToTop />
-                
               <div className="App">
                 <Routes>
                   {/* Admin Routes */}
@@ -219,13 +196,13 @@ function App() {
                               <Route path="orders/on-hold" element={<OnHold />} />
                               <Route path="orders/rejected" element={<Rejected />} />
                               <Route path="orders/online" element={<OnlineOrders />} />
-                              
+
                               {/* Review Management Routes */}
                               <Route path="reviews" element={<AdminReviews />} />
                               <Route path="reviews/pending" element={<AdminReviewsPending />} />
                               <Route path="reviews/approved" element={<AdminReviewsApproved />} />
                               <Route path="reviews/rejected" element={<AdminReviewsRejected />} />
-                              
+
                               <Route path="users" element={<AdminUsers />} />
                               <Route path="categories" element={<AdminCategories />} />
                               <Route path="categories/add" element={<AddCategory />} />
@@ -234,6 +211,15 @@ function App() {
                               <Route path="subcategories" element={<AdminSubCategories />} />
                               <Route path="subcategories/add" element={<AddSubCategory />} />
                               <Route path="subcategories/edit/:id" element={<EditSubCategory />} />
+                              <Route path="subcategories-2" element={<AdminSubCategories2 />} />
+                              <Route path="subcategories-2/add" element={<AddSubCategory />} />
+                              <Route path="subcategories-2/edit/:id" element={<EditSubCategory />} />
+                              <Route path="subcategories-3" element={<AdminSubCategories3 />} />
+                              <Route path="subcategories-3/add" element={<AddSubCategory />} />
+                              <Route path="subcategories-3/edit/:id" element={<EditSubCategory />} />
+                              <Route path="subcategories-4" element={<AdminSubCategories4 />} />
+                              <Route path="subcategories-4/add" element={<AddSubCategory />} />
+                              <Route path="subcategories-4/edit/:id" element={<EditSubCategory />} />
                               <Route path="brands" element={<AdminBrands />} />
                               <Route path="brands/add" element={<AddBrand />} />
                               <Route path="edit-brand/:id" element={<AddBrand />} />
@@ -267,26 +253,12 @@ function App() {
                               <Route path="email-templates" element={<AdminEmailTemplates />} />
                               <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
                               <Route path="*" element={<NotFound />} />
-                            
-                            
-                            
 
-
-
-
-                          {/* Stock Adjustment routes */}
+                              {/* Stock Adjustment routes */}
                               <Route path="stock-adjustment/price-adjustment" element={<PriceAdjustment />} />
                               <Route path="stock-adjustment/reports" element={<PriceAdjustmentReports />} />
 
-
-
-                            
-                            
-
-
-
-
-         {/* New Order Status Routes */}
+                              {/* New Order Status Routes */}
                               <Route path="orders/new" element={<NewOrders />} />
                               <Route path="orders/confirmed" element={<ConfirmedOrders />} />
                               <Route path="orders/processing" element={<ProcessingOrders />} />
@@ -294,19 +266,7 @@ function App() {
                               <Route path="orders/cancelled" element={<CancelledOrders />} />
                               <Route path="orders/deleted" element={<DeletedOrders />} />
 
-
-
-
-
-
-
                               <Route path="orders/create" element={<CreateOrder />} />
-
-
-
-                            
-                            
-                            
                             </Routes>
                           </div>
                         </div>
@@ -315,20 +275,37 @@ function App() {
                   />
 
                   {/* Public Routes */}
-                  <Route path="*" element={
-                    <>
-                      <RouteCanonical />
-                      <Layout />
-                    </>
-                  }>
+                  <Route
+                    path="*"
+                    element={
+                      <>
+                        <RouteCanonical />
+                        <Layout />
+                      </>
+                    }
+                  >
                     <Route index element={<Home />} />
                     <Route path="shop" element={<Shop />} />
                     <Route path="shop/:parentCategory" element={<Shop />} />
                     <Route path="shop/:parentCategory/:subcategory" element={<Shop />} />
+                    <Route path="shop/:parentCategory/:subcategory/:subcategory2" element={<Shop />} />
+                    <Route path="shop/:parentCategory/:subcategory/:subcategory2/:subcategory3" element={<Shop />} />
+                    <Route
+                      path="shop/:parentCategory/:subcategory/:subcategory2/:subcategory3/:subcategory4"
+                      element={<Shop />}
+                    />
                     <Route path="product-category" element={<Shop />} />
                     <Route path="product-category/:parentCategory" element={<Shop />} />
                     <Route path="product-category/:parentCategory/:subcategory" element={<Shop />} />
-                    <Route path="product-brand/:brand" element={<Shop />} />
+                    <Route path="product-category/:parentCategory/:subcategory/:subcategory2" element={<Shop />} />
+                    <Route
+                      path="product-category/:parentCategory/:subcategory/:subcategory2/:subcategory3"
+                      element={<Shop />}
+                    />
+                    <Route
+                      path="product-category/:parentCategory/:subcategory/:subcategory2/:subcategory3/:subcategory4"
+                      element={<Shop />}
+                    />
                     <Route path="product/:slug" element={<ProductDetails />} />
                     <Route path="cart" element={<Cart />} />
                     <Route path="login" element={<Login />} />
@@ -356,7 +333,7 @@ function App() {
                     <Route path="backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
                     <Route path="voucher-terms" element={<VoucherTerms />} />
                     <Route path="delivery-terms" element={<DeliveryTerms />} />
-                    
+
                     {/* Protected Routes */}
                     <Route
                       path="checkout"
@@ -393,7 +370,6 @@ function App() {
                   </Route>
                 </Routes>
               </div>
-              
             </Router>
           </WishlistProvider>
         </CartProvider>
@@ -403,4 +379,3 @@ function App() {
 }
 
 export default App
-
