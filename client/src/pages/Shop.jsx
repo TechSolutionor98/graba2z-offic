@@ -497,6 +497,15 @@ const Shop = () => {
           createSlug(cat.name) === urlParams.parentCategory,
       )
       setSelectedCategory(foundCategory ? foundCategory._id : "all")
+
+      setSelectedSubCategories([])
+      setSelectedSubCategory2(null)
+      setSelectedSubCategory3(null)
+      setSelectedSubCategory4(null)
+      setCurrentSubCategoryName(null)
+      setCurrentSubCategory2Name(null)
+      setCurrentSubCategory3Name(null)
+      setCurrentSubCategory4Name(null)
     }
   }, [location.pathname, location.search, categories])
 
@@ -861,7 +870,14 @@ const Shop = () => {
     customMetaTitle ||
     (seoContent
       ? generateSEOTitle(subcategoryObj?.name || categoryObj?.name || "", seoContent)
-      : (subcategoryObj ? `${subcategoryObj.name} — Shop` : (categoryObj ? `${categoryObj.name} — Shop` : (searchQuery?.trim() ? `Search: ${searchQuery.trim()} — Shop` : "Shop — Grabatoz"))))
+      : subcategoryObj
+        ? `${subcategoryObj.name} — Shop`
+        : categoryObj
+          ? `${categoryObj.name} — Shop`
+          : searchQuery?.trim()
+            ? `Search: ${searchQuery.trim()} — Shop`
+            : "Shop — Grabatoz")
+
   const seoDescription =
     customMetaDescription ||
     (seoContent
@@ -1049,7 +1065,6 @@ const Shop = () => {
       </div>
     </div>
   )
-
 }
 
 export default Shop
