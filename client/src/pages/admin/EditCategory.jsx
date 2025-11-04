@@ -176,7 +176,7 @@ const EditCategory = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Meta Title
                   <span className="ml-2 text-xs text-gray-500">
-                    ({formData.metaTitle.length}/60 characters)
+                    ({formData.metaTitle.length}/100 characters)
                   </span>
                 </label>
                 <input
@@ -184,7 +184,7 @@ const EditCategory = () => {
                   name="metaTitle"
                   value={formData.metaTitle}
                   onChange={handleChange}
-                  maxLength={60}
+                  maxLength={100}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter custom meta title (optional)"
                 />
@@ -197,14 +197,14 @@ const EditCategory = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Meta Description
                   <span className="ml-2 text-xs text-gray-500">
-                    ({formData.metaDescription.length}/160 characters)
+                    ({formData.metaDescription.length}/300 characters)
                   </span>
                 </label>
                 <textarea
                   name="metaDescription"
                   value={formData.metaDescription}
                   onChange={handleChange}
-                  maxLength={160}
+                  maxLength={300}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter custom meta description (optional)"

@@ -444,14 +444,14 @@ const AddSubCategory = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Meta Title
-                  <span className="text-gray-500 text-xs ml-2">(50-60 characters recommended)</span>
+                  <span className="text-gray-500 text-xs ml-2">(Up to 100 characters)</span>
                 </label>
                 <input
                   type="text"
                   name="metaTitle"
                   value={formData.metaTitle}
                   onChange={handleChange}
-                  maxLength={60}
+                  maxLength={100}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., Best Laser Printers in UAE | Grabatoz"
                 />
@@ -460,7 +460,7 @@ const AddSubCategory = () => {
                     SEO title that appears in search engine results
                   </p>
                   <span className="text-xs text-gray-400">
-                    {formData.metaTitle.length}/60
+                    {formData.metaTitle.length}/100
                   </span>
                 </div>
               </div>
@@ -469,14 +469,14 @@ const AddSubCategory = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Meta Description
-                  <span className="text-gray-500 text-xs ml-2">(150-160 characters recommended)</span>
+                  <span className="text-gray-500 text-xs ml-2">(Up to 300 characters)</span>
                 </label>
                 <textarea
                   name="metaDescription"
                   value={formData.metaDescription}
                   onChange={handleChange}
                   rows={3}
-                  maxLength={160}
+                  maxLength={300}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., Discover high-quality laser printers for home and office. Fast printing, energy efficient. Free UAE delivery."
                 />
@@ -485,7 +485,7 @@ const AddSubCategory = () => {
                     Description that appears below the title in search results
                   </p>
                   <span className="text-xs text-gray-400">
-                    {formData.metaDescription.length}/160
+                    {formData.metaDescription.length}/300
                   </span>
                 </div>
               </div>
