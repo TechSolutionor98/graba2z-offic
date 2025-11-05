@@ -9,6 +9,7 @@ import Layout from "./components/Layout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import AdminRoute from "./components/AdminRoute"
 import ScrollToTop from "./components/ScrollToTop"
+import RedirectHandler from "./components/RedirectHandler"
 import CreateOrder from "./pages/admin/CreateOrder"
 
 import { Helmet } from "react-helmet-async"
@@ -109,6 +110,7 @@ import BlogRating from "./pages/admin/BlogRating"
 import AddBulkProducts from "./pages/admin/AddBulkProducts"
 import EditCategory from "./pages/admin/EditCategory"
 import EditSubCategory from "./pages/admin/EditSubCategory"
+import AdminSEOSettings from "./pages/admin/AdminSEOSettings"
 
 // Order status pages
 import ReceivedOrders from "./pages/admin/ReceivedOrders"
@@ -170,6 +172,7 @@ function App() {
             <Router>
               <DefaultCanonical />
               <ScrollToTop />
+              <RedirectHandler />
               <div className="App">
                 <Routes>
                   {/* Admin Routes */}
@@ -253,6 +256,9 @@ function App() {
                               <Route path="email-templates" element={<AdminEmailTemplates />} />
                               <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
                               <Route path="*" element={<NotFound />} />
+
+                              {/* SEO Settings Routes */}
+                              <Route path="seo-settings/redirects" element={<AdminSEOSettings />} />
 
                               {/* Stock Adjustment routes */}
                               <Route path="stock-adjustment/price-adjustment" element={<PriceAdjustment />} />
