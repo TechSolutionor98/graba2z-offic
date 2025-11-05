@@ -360,7 +360,7 @@ const Shop = () => {
         if (stockFilters.onSale) stockStatusFilters.push("onSale")
 
         const filters = {
-          parent_category: selectedCategory !== "all" ? selectedCategory : null,
+          parent_category: selectedSubCategories.length === 0 && selectedCategory !== "all" ? selectedCategory : null,
           category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
           subcategory2: selectedSubCategory2,
           subcategory3: selectedSubCategory3,
@@ -416,7 +416,7 @@ const Shop = () => {
         if (stockFilters.onSale) stockStatusFilters.push("onSale")
 
         const filters = {
-          parent_category: selectedCategory !== "all" ? selectedCategory : null,
+          parent_category: selectedSubCategories.length === 0 && selectedCategory !== "all" ? selectedCategory : null,
           category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
           subcategory2: selectedSubCategory2,
           subcategory3: selectedSubCategory3,
@@ -485,7 +485,18 @@ const Shop = () => {
     return () => {
       clearTimeout(fetchTimeout.current)
     }
-  }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, sortBy])
+  }, [
+    selectedCategory,
+    selectedBrands,
+    searchQuery,
+    priceRange,
+    selectedSubCategories,
+    selectedSubCategory2,
+    selectedSubCategory3,
+    selectedSubCategory4,
+    stockFilters,
+    sortBy,
+  ])
 
   useEffect(() => {
     const urlParams = parseShopURL(location.pathname, location.search)
@@ -521,6 +532,7 @@ const Shop = () => {
   useEffect(() => {
     const urlParams = parseShopURL(location.pathname, location.search)
     console.log("Parsed URL params:", urlParams)
+    console.log("Current selectedSubCategory2 state:", selectedSubCategory2)
 
     const fetchAndSetSubcategoryIds = async () => {
       try {
@@ -534,7 +546,19 @@ const Shop = () => {
               sub.slug === urlParams.subcategory ||
               createSlug(sub.name) === urlParams.subcategory,
           )
-          setCurrentSubCategoryName(foundSub ? foundSub.name : urlParams.subcategory)
+          if (foundSub) {
+            setCurrentSubCategoryName(foundSub.name)
+            // Only set selectedSubCategories if there's no deeper subcategory level
+            if (!urlParams.subcategory2) {
+              setSelectedSubCategories([foundSub._id])
+            }
+          } else {
+            setSelectedSubCategories([])
+            setCurrentSubCategoryName(urlParams.subcategory)
+          }
+        } else {
+          setSelectedSubCategories([])
+          setCurrentSubCategoryName(null)
         }
 
         if (urlParams.subcategory2) {
@@ -544,8 +568,12 @@ const Shop = () => {
               sub.slug === urlParams.subcategory2 ||
               createSlug(sub.name) === urlParams.subcategory2,
           )
+          console.log("Found subcategory2:", found2)
+          console.log("Setting selectedSubCategory2 to:", found2 ? found2._id : urlParams.subcategory2)
           setSelectedSubCategory2(found2 ? found2._id : urlParams.subcategory2)
           setCurrentSubCategory2Name(found2 ? found2.name : urlParams.subcategory2)
+          // Clear level 1 subcategory when level 2 is active
+          setSelectedSubCategories([])
         } else {
           setSelectedSubCategory2(null)
           setCurrentSubCategory2Name(null)
@@ -560,6 +588,9 @@ const Shop = () => {
           )
           setSelectedSubCategory3(found3 ? found3._id : urlParams.subcategory3)
           setCurrentSubCategory3Name(found3 ? found3.name : urlParams.subcategory3)
+          // Clear level 1 and 2 when level 3 is active
+          setSelectedSubCategories([])
+          setSelectedSubCategory2(null)
         } else {
           setSelectedSubCategory3(null)
           setCurrentSubCategory3Name(null)
@@ -574,6 +605,10 @@ const Shop = () => {
           )
           setSelectedSubCategory4(found4 ? found4._id : urlParams.subcategory4)
           setCurrentSubCategory4Name(found4 ? found4.name : urlParams.subcategory4)
+          // Clear level 1, 2, and 3 when level 4 is active
+          setSelectedSubCategories([])
+          setSelectedSubCategory2(null)
+          setSelectedSubCategory3(null)
         } else {
           setSelectedSubCategory4(null)
           setCurrentSubCategory4Name(null)
