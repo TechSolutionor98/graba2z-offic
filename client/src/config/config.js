@@ -1,7 +1,7 @@
 const config = {
     // API Configuration - Handle both development and production
-    API_URL:  'http://localhost:5000', // Make sure to include http:// or https://
-   //  API_URL: import.meta.env.VITE_API_URL || 'https://api.grabatoz.ae',
+   // API_URL:  'http://localhost:5000', // Make sure to include http:// or https://
+     API_URL: import.meta.env.VITE_API_URL || 'https://api.grabatoz.ae',
    
      
  
