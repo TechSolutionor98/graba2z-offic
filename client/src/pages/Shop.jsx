@@ -235,6 +235,10 @@ const Shop = () => {
   const [currentSubCategory2Name, setCurrentSubCategory2Name] = useState(null)
   const [currentSubCategory3Name, setCurrentSubCategory3Name] = useState(null)
   const [currentSubCategory4Name, setCurrentSubCategory4Name] = useState(null)
+  // Add state for full subcategory objects with SEO data
+  const [subCategory2Data, setSubCategory2Data] = useState(null)
+  const [subCategory3Data, setSubCategory3Data] = useState(null)
+  const [subCategory4Data, setSubCategory4Data] = useState(null)
   const [stockFilters, setStockFilters] = useState({ inStock: false, outOfStock: false, onSale: false })
   const [minPrice, setMinPrice] = useState(0)
 
@@ -571,11 +575,13 @@ const Shop = () => {
           console.log("Found subcategory2:", found2)
           console.log("Setting selectedSubCategory2 to:", found2 ? found2._id : urlParams.subcategory2)
           setSelectedSubCategory2(found2 ? found2._id : urlParams.subcategory2)
+          setSubCategory2Data(found2 || null) // Store full data object
           setCurrentSubCategory2Name(found2 ? found2.name : urlParams.subcategory2)
           // Clear level 1 subcategory when level 2 is active
           setSelectedSubCategories([])
         } else {
           setSelectedSubCategory2(null)
+          setSubCategory2Data(null)
           setCurrentSubCategory2Name(null)
         }
 
@@ -587,12 +593,14 @@ const Shop = () => {
               createSlug(sub.name) === urlParams.subcategory3,
           )
           setSelectedSubCategory3(found3 ? found3._id : urlParams.subcategory3)
+          setSubCategory3Data(found3 || null) // Store full data object
           setCurrentSubCategory3Name(found3 ? found3.name : urlParams.subcategory3)
           // Clear level 1 and 2 when level 3 is active
           setSelectedSubCategories([])
           setSelectedSubCategory2(null)
         } else {
           setSelectedSubCategory3(null)
+          setSubCategory3Data(null)
           setCurrentSubCategory3Name(null)
         }
 
@@ -604,6 +612,7 @@ const Shop = () => {
               createSlug(sub.name) === urlParams.subcategory4,
           )
           setSelectedSubCategory4(found4 ? found4._id : urlParams.subcategory4)
+          setSubCategory4Data(found4 || null) // Store full data object
           setCurrentSubCategory4Name(found4 ? found4.name : urlParams.subcategory4)
           // Clear level 1, 2, and 3 when level 4 is active
           setSelectedSubCategories([])
@@ -611,6 +620,7 @@ const Shop = () => {
           setSelectedSubCategory3(null)
         } else {
           setSelectedSubCategory4(null)
+          setSubCategory4Data(null)
           setCurrentSubCategory4Name(null)
         }
       } catch (error) {
@@ -896,17 +906,20 @@ const Shop = () => {
   const subcategoryObj =
     selectedSubCategories.length > 0 ? subCategories.find((s) => s._id === selectedSubCategories[0]) : null
 
-  const seoContent = subcategoryObj?.seoContent || categoryObj?.seoContent || ""
+  // Determine which subcategory level to use for SEO (deepest level takes priority)
+  const activeSubcategoryForSEO = subCategory4Data || subCategory3Data || subCategory2Data || subcategoryObj
 
-  const customMetaTitle = subcategoryObj?.metaTitle || categoryObj?.metaTitle || ""
-  const customMetaDescription = subcategoryObj?.metaDescription || categoryObj?.metaDescription || ""
+  const seoContent = activeSubcategoryForSEO?.seoContent || categoryObj?.seoContent || ""
+
+  const customMetaTitle = activeSubcategoryForSEO?.metaTitle || categoryObj?.metaTitle || ""
+  const customMetaDescription = activeSubcategoryForSEO?.metaDescription || categoryObj?.metaDescription || ""
 
   const seoTitle =
     customMetaTitle ||
     (seoContent
-      ? generateSEOTitle(subcategoryObj?.name || categoryObj?.name || "", seoContent)
-      : subcategoryObj
-        ? `${subcategoryObj.name} — Shop`
+      ? generateSEOTitle(activeSubcategoryForSEO?.name || categoryObj?.name || "", seoContent)
+      : activeSubcategoryForSEO
+        ? `${activeSubcategoryForSEO.name} — Shop`
         : categoryObj
           ? `${categoryObj.name} — Shop`
           : searchQuery?.trim()
@@ -917,8 +930,8 @@ const Shop = () => {
     customMetaDescription ||
     (seoContent
       ? createMetaDescription(seoContent, 160)
-      : subcategoryObj
-        ? `Browse ${subcategoryObj.name} products at great prices.`
+      : activeSubcategoryForSEO
+        ? `Browse ${activeSubcategoryForSEO.name} products at great prices.`
         : categoryObj
           ? `Explore top ${categoryObj.name} products.`
           : "Explore our catalog and find your next purchase at Grabatoz.")
@@ -1097,6 +1110,33 @@ const Shop = () => {
             )}
           </div>
         </div>
+
+        {/* SEO Content Display - Full Width After Products */}
+        {seoContent && !searchQuery.trim() && products.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mt-8">
+            <div 
+              className="prose prose-lg max-w-none text-gray-700 
+                [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:text-gray-900
+                [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:text-gray-800
+                [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-gray-800
+                [&_h4]:text-lg [&_h4]:font-semibold [&_h4]:mb-2 [&_h4]:mt-3 [&_h4]:text-gray-700
+                [&_p]:mb-4 [&_p]:leading-relaxed [&_p]:text-gray-700
+                [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:mb-4 [&_ul]:space-y-2
+                [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:mb-4 [&_ol]:space-y-2
+                [&_li]:text-gray-700 [&_li]:leading-relaxed
+                [&_strong]:font-bold [&_strong]:text-gray-900
+                [&_em]:italic
+                [&_a]:text-blue-600 [&_a]:underline [&_a]:hover:text-blue-800
+                [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4
+                [&_code]:bg-gray-100 [&_code]:px-2 [&_code]:py-1 [&_code]:rounded [&_code]:text-sm [&_code]:font-mono
+                [&_pre]:bg-gray-100 [&_pre]:p-4 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:mb-4
+                [&_table]:w-full [&_table]:border-collapse [&_table]:mb-4
+                [&_th]:border [&_th]:border-gray-300 [&_th]:px-4 [&_th]:py-2 [&_th]:bg-gray-100 [&_th]:font-semibold
+                [&_td]:border [&_td]:border-gray-300 [&_td]:px-4 [&_td]:py-2"
+              dangerouslySetInnerHTML={{ __html: seoContent }}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
