@@ -65,6 +65,37 @@ const Navbar = () => {
   const subCategory3TimeoutRef = useRef(null)
   // Tiny in-memory cache to speed up repeated candidate lookups during typing
   const liveSearchCacheRef = useRef(new Map())
+  // Alignment for the first subcategory panel under a main category
+  const [level1Align, setLevel1Align] = useState('left') // 'left' => left-0, 'right' => right-0
+
+  // Direction states (simple midpoint rule: items left of screen center open right, else open left)
+  const [level2Dir, setLevel2Dir] = useState('right')
+  const [level3Dir, setLevel3Dir] = useState('right')
+  const [level4Dir, setLevel4Dir] = useState('right')
+  const [moreLevel1Dir, setMoreLevel1Dir] = useState('right')
+  const [moreLevel2Dir, setMoreLevel2Dir] = useState('right')
+  const [moreLevel3Dir, setMoreLevel3Dir] = useState('right')
+  const [moreLevel4Dir, setMoreLevel4Dir] = useState('right')
+
+  // Decide direction based on available space rather than midpoint
+  const MIN_PANEL_WIDTH = 260 // px (matches min-w[240] + padding/margins)
+  const computeRightDir = (rect) => {
+    if (!rect) return 'right'
+    const rightSpace = window.innerWidth - rect.right
+    const leftSpace = rect.left
+    if (rightSpace >= MIN_PANEL_WIDTH) return 'right'
+    if (leftSpace >= MIN_PANEL_WIDTH) return 'left'
+    return rightSpace >= leftSpace ? 'right' : 'left'
+  }
+  const computeLeftDir = (rect) => {
+    if (!rect) return 'left'
+    const leftSpace = rect.left
+    const rightSpace = window.innerWidth - rect.right
+    if (leftSpace >= MIN_PANEL_WIDTH) return 'left'
+    if (rightSpace >= MIN_PANEL_WIDTH) return 'right'
+    return leftSpace >= rightSpace ? 'left' : 'right'
+  }
+
 
   // Fetch categories and subcategories from API
   const fetchCategories = async () => {
@@ -117,11 +148,15 @@ const Navbar = () => {
   }
 
   // Handle subcategory dropdown hover within "More" dropdown
-  const handleMoreCategoryEnter = (categoryId) => {
+  const handleMoreCategoryEnter = (categoryId, e) => {
     if (moreCategoryTimeoutRef.current) {
       clearTimeout(moreCategoryTimeoutRef.current)
     }
     setHoveredMoreCategory(categoryId)
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      setMoreLevel1Dir(computeLeftDir(rect))
+    }
   }
 
   const handleMoreCategoryLeave = () => {
@@ -618,7 +653,7 @@ const Navbar = () => {
                           <div
                             key={parentCategory._id}
                             className="relative"
-                            onMouseEnter={() => handleMoreCategoryEnter(parentCategory._id)}
+                            onMouseEnter={(e) => handleMoreCategoryEnter(parentCategory._id, e)}
                             onMouseLeave={handleMoreCategoryLeave}
                           >
                             <Link
@@ -633,7 +668,7 @@ const Navbar = () => {
                             </Link>
                             {/* Dropdown for subcategories */}
                             {hoveredMoreCategory === parentCategory._id && categorySubCategories.length > 0 && (
-                              <div className="absolute right-full top-0 mr-2 bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[60] border border-gray-100">
+                              <div id="more-dropdown-level1" className={`absolute top-0 ${moreLevel1Dir === 'left' ? 'right-full mr-2' : 'left-full ml-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[60] border border-gray-100`}>
                                 <div className="px-3 py-2 border-b border-gray-100">
                                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Subcategories</p>
                                 </div>
@@ -643,11 +678,13 @@ const Navbar = () => {
                                     <div
                                       key={subCategory._id}
                                       className="relative group"
-                                      onMouseEnter={() => {
+                                      onMouseEnter={(e) => {
                                         if (subCategory1TimeoutRef.current) {
                                           clearTimeout(subCategory1TimeoutRef.current)
                                         }
                                         setHoveredSubCategory1(subCategory._id)
+                                        const rect = e.currentTarget.getBoundingClientRect()
+                                        setMoreLevel2Dir(computeLeftDir(rect))
                                       }}
                                       onMouseLeave={() => {
                                         subCategory1TimeoutRef.current = setTimeout(() => {
@@ -680,7 +717,8 @@ const Navbar = () => {
                                       {/* Level 2 subcategories */}
                                       {hoveredSubCategory1 === subCategory._id && level2Subs.length > 0 && (
                                         <div 
-                                          className="absolute right-full top-0 mr-2 bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[70] border border-gray-100"
+                                          id="more-dropdown-level2"
+                                          className={`absolute top-0 ${moreLevel2Dir === 'left' ? 'right-full mr-2' : 'left-full ml-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[70] border border-gray-100`}
                                           onMouseEnter={() => {
                                             if (subCategory1TimeoutRef.current) {
                                               clearTimeout(subCategory1TimeoutRef.current)
@@ -703,11 +741,13 @@ const Navbar = () => {
                                               <div
                                                 key={subCategory2._id}
                                                 className="relative group"
-                                                onMouseEnter={() => {
+                                                onMouseEnter={(e) => {
                                                   if (subCategory2TimeoutRef.current) {
                                                     clearTimeout(subCategory2TimeoutRef.current)
                                                   }
                                                   setHoveredSubCategory2(subCategory2._id)
+                                                  const rect = e.currentTarget.getBoundingClientRect()
+                                                  setMoreLevel3Dir(computeLeftDir(rect))
                                                 }}
                                                 onMouseLeave={() => {
                                                   subCategory2TimeoutRef.current = setTimeout(() => {
@@ -740,7 +780,8 @@ const Navbar = () => {
                                                 {/* Level 3 subcategories */}
                                                 {hoveredSubCategory2 === subCategory2._id && level3Subs.length > 0 && (
                                                   <div 
-                                                    className="absolute right-full top-0 mr-2 bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[80] border border-gray-100"
+                                                    id="more-dropdown-level3"
+                                                    className={`absolute top-0 ${moreLevel3Dir === 'left' ? 'right-full mr-2' : 'left-full ml-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[80] border border-gray-100`}
                                                     onMouseEnter={() => {
                                                       if (subCategory2TimeoutRef.current) {
                                                         clearTimeout(subCategory2TimeoutRef.current)
@@ -762,11 +803,13 @@ const Navbar = () => {
                                                         <div
                                                           key={subCategory3._id}
                                                           className="relative group"
-                                                          onMouseEnter={() => {
+                                                          onMouseEnter={(e) => {
                                                             if (subCategory3TimeoutRef.current) {
                                                               clearTimeout(subCategory3TimeoutRef.current)
                                                             }
                                                             setHoveredSubCategory3(subCategory3._id)
+                                                            const rect = e.currentTarget.getBoundingClientRect()
+                                                            setMoreLevel4Dir(computeLeftDir(rect))
                                                           }}
                                                           onMouseLeave={() => {
                                                             subCategory3TimeoutRef.current = setTimeout(() => {
@@ -799,7 +842,8 @@ const Navbar = () => {
                                                           {/* Level 4 subcategories */}
                                                           {hoveredSubCategory3 === subCategory3._id && level4Subs.length > 0 && (
                                                             <div 
-                                                              className="absolute right-full top-0 mr-2 bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[90] border border-gray-100"
+                                                              id="more-dropdown-level4"
+                                                              className={`absolute top-0 ${moreLevel4Dir === 'left' ? 'right-full mr-2' : 'left-full ml-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[90] border border-gray-100`}
                                                               onMouseEnter={() => {
                                                                 if (subCategory3TimeoutRef.current) {
                                                                   clearTimeout(subCategory3TimeoutRef.current)
@@ -871,11 +915,16 @@ const Navbar = () => {
                   <div
                     key={parentCategory._id}
                     className="relative"
-                    onMouseEnter={() => {
+                    onMouseEnter={(e) => {
                       if (categoryTimeoutRef.current) {
                         clearTimeout(categoryTimeoutRef.current)
                       }
                       setHoveredCategory(parentCategory._id)
+                      // Decide whether the level-1 panel should align left or right based on available space
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      const rightSpaceFromLeft = window.innerWidth - rect.left
+                      const PANEL = 280 // px
+                      setLevel1Align(rightSpaceFromLeft >= PANEL ? 'left' : 'right')
                     }}
                     onMouseLeave={() => {
                       categoryTimeoutRef.current = setTimeout(() => {
@@ -895,7 +944,7 @@ const Navbar = () => {
                     {/* Dropdown for Level 1 subcategories */}
                     {hoveredCategory === parentCategory._id && categorySubCategories.length > 0 && (
                       <div 
-                        className="absolute top-full left-0 mt-2 bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[60] border border-gray-100"
+                        className={`absolute top-full ${level1Align === 'left' ? 'left-0' : 'right-0'} mt-2 bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[60] border border-gray-100`}
                         onMouseEnter={() => {
                           if (categoryTimeoutRef.current) {
                             clearTimeout(categoryTimeoutRef.current)
@@ -919,11 +968,13 @@ const Navbar = () => {
                             <div
                               key={subCategory._id}
                               className="relative group"
-                              onMouseEnter={() => {
+                              onMouseEnter={(e) => {
                                 if (subCategory1TimeoutRef.current) {
                                   clearTimeout(subCategory1TimeoutRef.current)
                                 }
                                 setHoveredSubCategory1(subCategory._id)
+                                const rect = e.currentTarget.getBoundingClientRect()
+                                setLevel2Dir(computeRightDir(rect))
                               }}
                               onMouseLeave={() => {
                                 subCategory1TimeoutRef.current = setTimeout(() => {
@@ -952,7 +1003,8 @@ const Navbar = () => {
                               {/* Dropdown for Level 2 subcategories */}
                               {hoveredSubCategory1 === subCategory._id && level2Subs.length > 0 && (
                                 <div 
-                                  className="absolute left-full top-0 ml-2 bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[70] border border-gray-100"
+                                  id="dropdown-level2"
+                                  className={`absolute top-0 ${level2Dir === 'right' ? 'left-full ml-2' : 'right-full mr-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[70] border border-gray-100`}
                                   onMouseEnter={() => {
                                     if (subCategory1TimeoutRef.current) {
                                       clearTimeout(subCategory1TimeoutRef.current)
@@ -975,11 +1027,13 @@ const Navbar = () => {
                                       <div
                                         key={subCategory2._id}
                                         className="relative group"
-                                        onMouseEnter={() => {
+                                        onMouseEnter={(e) => {
                                           if (subCategory2TimeoutRef.current) {
                                             clearTimeout(subCategory2TimeoutRef.current)
                                           }
                                           setHoveredSubCategory2(subCategory2._id)
+                                          const rect = e.currentTarget.getBoundingClientRect()
+                                          setLevel3Dir(computeRightDir(rect))
                                         }}
                                         onMouseLeave={() => {
                                           subCategory2TimeoutRef.current = setTimeout(() => {
@@ -1011,7 +1065,8 @@ const Navbar = () => {
                                         {/* Dropdown for Level 3 subcategories */}
                                         {hoveredSubCategory2 === subCategory2._id && level3Subs.length > 0 && (
                                           <div 
-                                            className="absolute left-full top-0 ml-2 bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[80] border border-gray-100"
+                                            id="dropdown-level3"
+                                            className={`absolute top-0 ${level3Dir === 'right' ? 'left-full ml-2' : 'right-full mr-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[80] border border-gray-100`}
                                             onMouseEnter={() => {
                                               if (subCategory2TimeoutRef.current) {
                                                 clearTimeout(subCategory2TimeoutRef.current)
@@ -1033,11 +1088,13 @@ const Navbar = () => {
                                                 <div
                                                   key={subCategory3._id}
                                                   className="relative group"
-                                                  onMouseEnter={() => {
+                                                  onMouseEnter={(e) => {
                                                     if (subCategory3TimeoutRef.current) {
                                                       clearTimeout(subCategory3TimeoutRef.current)
                                                     }
                                                     setHoveredSubCategory3(subCategory3._id)
+                                                    const rect = e.currentTarget.getBoundingClientRect()
+                                                    setLevel4Dir(computeRightDir(rect))
                                                   }}
                                                   onMouseLeave={() => {
                                                     subCategory3TimeoutRef.current = setTimeout(() => {
@@ -1069,7 +1126,8 @@ const Navbar = () => {
                                                   {/* Dropdown for Level 4 subcategories */}
                                                   {hoveredSubCategory3 === subCategory3._id && level4Subs.length > 0 && (
                                                     <div 
-                                                      className="absolute left-full top-0 ml-2 bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[90] border border-gray-100"
+                                                      id="dropdown-level4"
+                                                      className={`absolute top-0 ${level4Dir === 'right' ? 'left-full ml-2' : 'right-full mr-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[90] border border-gray-100`}
                                                       onMouseEnter={() => {
                                                         if (subCategory3TimeoutRef.current) {
                                                           clearTimeout(subCategory3TimeoutRef.current)
