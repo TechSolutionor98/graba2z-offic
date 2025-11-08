@@ -857,13 +857,14 @@ const AddBulkProducts = () => {
               {saveResult.failed > 0 && saveResult.results && (
                 <div className="mt-3">
                   <h4 className="font-medium text-red-600 mb-2">Failed Products:</h4>
-                  <div className="max-h-32 overflow-y-auto">
+                  <div className="max-h-64 overflow-y-auto bg-red-50 p-3 rounded">
                     {saveResult.results
-                      .filter((r) => r.status === "error")
-                      .slice(0, 5)
+                      .filter((r) => r.status === "failed")
                       .map((r, i) => (
-                        <div key={i} className="text-sm text-red-600">
-                          {r.product?.name || `Product ${i + 1}`}: {r.message}
+                        <div key={i} className="text-sm text-red-700 mb-2 pb-2 border-b border-red-200 last:border-0">
+                          <strong>#{i + 1}:</strong> {r.product?.name || `Product ${r.index + 1}`}
+                          <br />
+                          <span className="text-red-600">Error: {r.reason}</span>
                         </div>
                       ))}
                   </div>
