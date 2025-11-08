@@ -674,7 +674,7 @@ const getEmailTemplate = (type, data) => {
             <div class="content">
               <div class="order-number">Order #${data.orderNumber || data._id?.toString().slice(-6) || "N/A"}</div>
               <div class="greeting">Hi ${customerName}, Thank you for your purchase.</div>
-              <div class="processing-text">We are processing your order.</div>
+              <div class="processing-text">Your order has been placed.</div>
               <!-- ORDER_CONFIRMATION_MINIMAL: product list + buttons removed per request -->
               <div class="info-section">
                 <div class="info-title">Payment Method</div>
@@ -755,7 +755,7 @@ const getEmailTemplate = (type, data) => {
     case "orderStatusUpdate":
       // Status icon/label and theming
       const statusSteps = [
-        { key: "Processing", label: "Processing", icon: "⚙️" },
+        { key: "Order Placed", label: "Order Placed", icon: "🛒" },
         { key: "On Hold", label: "On Hold", icon: "⏸️" },
         { key: "Confirmed", label: "Confirmed", icon: "✅" },
         { key: "Shipped", label: "Shipped", icon: "📦" },
@@ -767,7 +767,8 @@ const getEmailTemplate = (type, data) => {
       const getCurrentStep = (status) => {
         if (!status) return statusSteps[0]
         const normalized = status.trim().toLowerCase()
-        if (["processing", "in process"].includes(normalized)) return statusSteps.find(s=>s.key==="Processing")
+        // Map legacy initial statuses to Order Placed for customer-facing display
+        if (["processing", "in process", "new", "new order", "order placed"].includes(normalized)) return statusSteps.find(s=>s.key==="Order Placed")
         if (["on hold", "on-hold", "hold"].includes(normalized)) return statusSteps.find(s=>s.key==="On Hold")
         if (["confirmed", "confirm"].includes(normalized)) return statusSteps.find(s=>s.key==="Confirmed")
         if (["shipped", "dispatched", "dispatch"].includes(normalized)) return statusSteps.find(s=>s.key==="Shipped")
@@ -775,13 +776,14 @@ const getEmailTemplate = (type, data) => {
         if (["out for delivery", "out of delivery", "out-of-delivery"].includes(normalized)) return statusSteps.find(s=>s.key==="Out for Delivery")
         if (["delivered"].includes(normalized)) return statusSteps.find(s=>s.key==="Delivered")
         if (["cancelled", "canceled"].includes(normalized)) return statusSteps.find(s=>s.key==="Cancelled")
-        return statusSteps.find(s=>s.key==="Processing")
+        return statusSteps.find(s=>s.key==="Order Placed")
       }
       const currentStep = getCurrentStep(data.status)
 
       // Theme colors per status (background, text, icon background)
       const getTheme = (status) => {
         const n = (status || "").toString().trim().toLowerCase()
+        if (["order placed", "new order", "new", "processing", "in process"].includes(n)) return { bg: "#E3F2FD", text: "#1565C0", iconBg: "#1E88E5" }
         if (["confirmed", "confirm"].includes(n)) return { bg: "#E8F5E9", text: "#2E7D32", iconBg: "#43A047" }
         if (["shipped", "dispatched", "dispatch"].includes(n)) return { bg: "#E3F2FD", text: "#1565C0", iconBg: "#1E88E5" }
         if (["on the way", "on-the-way"].includes(n)) return { bg: "#E3F2FD", text: "#1565C0", iconBg: "#1E88E5" }
@@ -1338,14 +1340,24 @@ export const sendOrderStatusUpdateEmail = async (order) => {
     console.log('[sendOrderStatusUpdateEmail] Minimal marker present:', sanitizedHtml.includes('STATUS_TEMPLATE_MINIMAL'))
 
     const statusMessages = {
-      processing: "Order is Being Processed",
+      processing: "Order Placed",
+      "in process": "Order Placed",
+      placed: "Order Placed",
+      "order placed": "Order Placed",
+      "new order": "Order Placed",
       confirmed: "Order Confirmed",
       shipped: "Order Shipped",
       delivered: "Order Delivered",
       cancelled: "Order Cancelled",
+      hold: "Order On Hold",
+      "on hold": "Order On Hold",
+      dispatched: "Order Shipped",
+      "on the way": "Order On The Way",
+      "out for delivery": "Order Out for Delivery",
     }
 
-    const subject = `${statusMessages[order.status] || "Order Update"} #${orderNumber} - Graba2z`
+    const normalizedStatus = (order.status || '').toString().trim().toLowerCase()
+    const subject = `${statusMessages[normalizedStatus] || "Order Update"} #${orderNumber} - Graba2z`
   await sendEmail(customerEmail, subject, sanitizedHtml, "order")
     return { success: true }
   } catch (error) {
