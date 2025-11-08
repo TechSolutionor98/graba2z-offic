@@ -38,7 +38,7 @@ const OnHold = () => {
       const token = localStorage.getItem("adminToken") || localStorage.getItem("token")
       
       await axios.put(
-        `${config.API_URL}/api/orders/${orderId}`,
+        `${config.API_URL}/api/admin/orders/${orderId}/status`,
         { status: newStatus },
         {
           headers: {
@@ -65,8 +65,8 @@ const OnHold = () => {
       const token = localStorage.getItem("adminToken") || localStorage.getItem("token")
       
       await axios.put(
-        `${config.API_URL}/api/orders/${orderId}/pay`,
-        { isPaid },
+        `${config.API_URL}/api/admin/orders/${orderId}`,
+        { isPaid, ...(isPaid && { paidAt: new Date().toISOString() }), ...(!isPaid && { paidAt: null }) },
         {
           headers: {
             Authorization: `Bearer ${token}`,

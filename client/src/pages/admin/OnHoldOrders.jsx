@@ -400,6 +400,12 @@ const orderStatusOptions = [
       const token =
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
+      if (!orderId || !status) {
+        throw new Error("Order ID and status are required")
+      }
+
+      console.log("Updating order status:", { orderId, status }) // Debug log
+
       const updateData = { status }
 
       // If status is "Delivered", automatically set payment as paid
@@ -408,12 +414,17 @@ const orderStatusOptions = [
         updateData.paidAt = new Date().toISOString()
       }
 
-      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/status`, updateData, {
+      const url = `${config.API_URL}/api/admin/orders/${orderId}/status`
+      console.log("API URL:", url) // Debug log
+
+      const response = await axios.put(url, updateData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })
+
+      console.log("Status update response:", response.data) // Debug log
 
       const updatedOrder = { ...orders.find((order) => order._id === orderId), ...updateData }
       setOrders(orders.map((order) => (order._id === orderId ? updatedOrder : order)))
@@ -426,7 +437,8 @@ const orderStatusOptions = [
       setError(null)
       setProcessingAction(false)
     } catch (error) {
-      console.error("Error updating status:", error)
+      console.error("Error updating order status:", error)
+      console.error("Error response:", error.response) // More detailed error logging
       setError("Failed to update order status: " + (error.response?.data?.message || error.message))
       setProcessingAction(false)
     }
@@ -742,39 +754,28 @@ const orderStatusOptions = [
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left">
+              <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
                       checked={selectAll}
                       onChange={handleSelectAll}
                       className="h-4 w-4 text-lime-500 focus:ring-lime-500 border-gray-300 rounded"
                     />
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Order ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Payment
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  </th><th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
-                  </th>
-                </tr>
-              </thead>
+                  </th></tr></thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredOrders.map((order) => (
                   <tr
