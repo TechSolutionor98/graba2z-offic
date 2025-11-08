@@ -758,6 +758,7 @@ const getEmailTemplate = (type, data) => {
         { key: "Order Placed", label: "Order Placed", icon: "🛒" },
         { key: "On Hold", label: "On Hold", icon: "⏸️" },
         { key: "Confirmed", label: "Confirmed", icon: "✅" },
+        { key: "Ready for Shipment", label: "Ready for Shipment", icon: "📦" },
         { key: "Shipped", label: "Shipped", icon: "📦" },
         { key: "On the Way", label: "On the Way", icon: "🚚" },
         { key: "Out for Delivery", label: "Out for Delivery", icon: "🚚" },
@@ -771,6 +772,7 @@ const getEmailTemplate = (type, data) => {
         if (["processing", "in process", "new", "new order", "order placed"].includes(normalized)) return statusSteps.find(s=>s.key==="Order Placed")
         if (["on hold", "on-hold", "hold"].includes(normalized)) return statusSteps.find(s=>s.key==="On Hold")
         if (["confirmed", "confirm"].includes(normalized)) return statusSteps.find(s=>s.key==="Confirmed")
+        if (["ready for shipment", "ready for shipping", "ready to ship", "rts"].includes(normalized)) return statusSteps.find(s=>s.key==="Ready for Shipment")
         if (["shipped", "dispatched", "dispatch"].includes(normalized)) return statusSteps.find(s=>s.key==="Shipped")
         if (["on the way", "on-the-way"].includes(normalized)) return statusSteps.find(s=>s.key==="On the Way")
         if (["out for delivery", "out of delivery", "out-of-delivery"].includes(normalized)) return statusSteps.find(s=>s.key==="Out for Delivery")
@@ -785,6 +787,7 @@ const getEmailTemplate = (type, data) => {
         const n = (status || "").toString().trim().toLowerCase()
         if (["order placed", "new order", "new", "processing", "in process"].includes(n)) return { bg: "#E3F2FD", text: "#1565C0", iconBg: "#1E88E5" }
         if (["confirmed", "confirm"].includes(n)) return { bg: "#E8F5E9", text: "#2E7D32", iconBg: "#43A047" }
+        if (["ready for shipment", "ready for shipping", "ready to ship", "rts"].includes(n)) return { bg: "#FFF3E0", text: "#EF6C00", iconBg: "#FB8C00" }
         if (["shipped", "dispatched", "dispatch"].includes(n)) return { bg: "#E3F2FD", text: "#1565C0", iconBg: "#1E88E5" }
         if (["on the way", "on-the-way"].includes(n)) return { bg: "#E3F2FD", text: "#1565C0", iconBg: "#1E88E5" }
         if (["out for delivery", "out of delivery", "out-of-delivery"].includes(n)) return { bg: "#FFF8E1", text: "#F57F17", iconBg: "#F9A825" }
@@ -1346,6 +1349,10 @@ export const sendOrderStatusUpdateEmail = async (order) => {
       "order placed": "Order Placed",
       "new order": "Order Placed",
       confirmed: "Order Confirmed",
+      "ready for shipment": "Order Ready for Shipment",
+      "ready for shipping": "Order Ready for Shipment",
+      "ready to ship": "Order Ready for Shipment",
+      rts: "Order Ready for Shipment",
       shipped: "Order Shipped",
       delivered: "Order Delivered",
       cancelled: "Order Cancelled",
