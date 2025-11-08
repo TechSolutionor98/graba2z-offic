@@ -756,6 +756,7 @@ const getEmailTemplate = (type, data) => {
       // Status icon/label and theming
       const statusSteps = [
         { key: "Order Placed", label: "Order Placed", icon: "🛒" },
+        { key: "Order Processing", label: "Order Processing", icon: "🔄" },
         { key: "On Hold", label: "On Hold", icon: "⏸️" },
         { key: "Confirmed", label: "Confirmed", icon: "✅" },
         { key: "Ready for Shipment", label: "Ready for Shipment", icon: "📦" },
@@ -769,7 +770,8 @@ const getEmailTemplate = (type, data) => {
         if (!status) return statusSteps[0]
         const normalized = status.trim().toLowerCase()
         // Map legacy initial statuses to Order Placed for customer-facing display
-        if (["processing", "in process", "new", "new order", "order placed"].includes(normalized)) return statusSteps.find(s=>s.key==="Order Placed")
+        if (["new", "new order", "order placed"].includes(normalized)) return statusSteps.find(s=>s.key==="Order Placed")
+        if (["processing", "in process", "order processing"].includes(normalized)) return statusSteps.find(s=>s.key==="Order Processing")
         if (["on hold", "on-hold", "hold"].includes(normalized)) return statusSteps.find(s=>s.key==="On Hold")
         if (["confirmed", "confirm"].includes(normalized)) return statusSteps.find(s=>s.key==="Confirmed")
         if (["ready for shipment", "ready for shipping", "ready to ship", "rts"].includes(normalized)) return statusSteps.find(s=>s.key==="Ready for Shipment")
@@ -785,7 +787,8 @@ const getEmailTemplate = (type, data) => {
       // Theme colors per status (background, text, icon background)
       const getTheme = (status) => {
         const n = (status || "").toString().trim().toLowerCase()
-        if (["order placed", "new order", "new", "processing", "in process"].includes(n)) return { bg: "#E3F2FD", text: "#1565C0", iconBg: "#1E88E5" }
+        if (["order placed", "new order", "new"].includes(n)) return { bg: "#E3F2FD", text: "#1565C0", iconBg: "#1E88E5" }
+        if (["processing", "in process", "order processing"].includes(n)) return { bg: "#E3F2FD", text: "#1565C0", iconBg: "#1E88E5" }
         if (["confirmed", "confirm"].includes(n)) return { bg: "#E8F5E9", text: "#2E7D32", iconBg: "#43A047" }
         if (["ready for shipment", "ready for shipping", "ready to ship", "rts"].includes(n)) return { bg: "#FFF3E0", text: "#EF6C00", iconBg: "#FB8C00" }
         if (["shipped", "dispatched", "dispatch"].includes(n)) return { bg: "#E3F2FD", text: "#1565C0", iconBg: "#1E88E5" }
@@ -1343,7 +1346,7 @@ export const sendOrderStatusUpdateEmail = async (order) => {
     console.log('[sendOrderStatusUpdateEmail] Minimal marker present:', sanitizedHtml.includes('STATUS_TEMPLATE_MINIMAL'))
 
     const statusMessages = {
-      processing: "Order Placed",
+      processing: "Order Processing",
       "in process": "Order Placed",
       placed: "Order Placed",
       "order placed": "Order Placed",
