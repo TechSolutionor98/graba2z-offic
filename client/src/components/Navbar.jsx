@@ -516,7 +516,7 @@ const Navbar = () => {
                       {searchResults.map((product) => (
                         <Link
                           key={product._id}
-                          to={`/product/${product.slug || product._id}`}
+                          to={`/product/${encodeURIComponent(product.slug || product._id)}`}
                           className="flex items-start gap-4 px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
                           onClick={() => setShowSearchDropdown(false)}
                         >
@@ -1295,7 +1295,7 @@ const Navbar = () => {
                     {searchResults.map((product) => (
                       <Link
                         key={product._id}
-                        to={`/product/${product.slug || product._id}`}
+                        to={`/product/${encodeURIComponent(product.slug || product._id)}`}
                         className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
                         onClick={() => {
                           setShowSearchDropdown(false)

@@ -1538,7 +1538,7 @@ const MobileProductCard = ({ product }) => {
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
       <div className="relative mb-2 flex h-[170px] justify-center items-center">
-        <Link to={`/product/${product.slug || product._id}`}>
+  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
           <img
             src={product.image || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
@@ -1567,7 +1567,7 @@ const MobileProductCard = ({ product }) => {
         )}
       </div>
       
-      <Link to={`/product/${product.slug || product._id}`}>
+  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
         <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px] mb-1">{product.name}</h3>
       </Link>
       
@@ -1662,7 +1662,7 @@ const DynamicBrandProductCard = ({ product }) => {
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
       <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
-        <Link to={`/product/${product.slug || product._id}`} className="w-full h-full flex items-center justify-center">
+  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="w-full h-full flex items-center justify-center">
           <img
             src={product.image || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
@@ -1692,7 +1692,7 @@ const DynamicBrandProductCard = ({ product }) => {
         </div>
       </div>
       
-      <Link to={`/product/${product.slug || product._id}`}>
+  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
         <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">{product.name}</h3>
       </Link>
       {product.category && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
@@ -1785,7 +1785,7 @@ const AccessoriesProductCard = ({ product }) => {
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
       <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
-        <Link to={`/product/${product.slug || product._id}`} className="w-full h-full flex items-center justify-center">
+  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="w-full h-full flex items-center justify-center">
           <img
             src={product.image || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
@@ -1814,7 +1814,7 @@ const AccessoriesProductCard = ({ product }) => {
           )}
         </div>
       </div>
-      <Link to={`/product/${product.slug || product._id}`}>
+  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
         <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">{product.name}</h3>
       </Link>
       {product.category && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}

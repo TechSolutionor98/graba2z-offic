@@ -134,7 +134,7 @@ const BackToSchoolGaming = () => {
                       <div key={product._id} className="flex-shrink-0">
                         <div className="border p-2  flex flex-col justify-between bg-white" style={{ width: "190px" }}>
                           <div className="relative mb-2 flex h-[] justify-center items-center">
-                            <Link to={`/product/${product.slug || product._id}`}>
+                            <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
                               <img
                                 src={product.image || "/placeholder.svg?height=120&width=120"}
                                 alt={product.name}
@@ -150,7 +150,7 @@ const BackToSchoolGaming = () => {
                               <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs inline-block">{product.discount}% Off</div>
                             )}
                           </div>
-                          <Link to={`/product/${product.slug || product._id}`}>
+                          <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
                             <h3 className="text-xs font-sm text-gray-900 line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
                           </Link>
                           {product.category && <div className="text-xs text-yellow-600">Category: {product.category?.name || product.category}</div>}
@@ -179,7 +179,7 @@ const BackToSchoolGaming = () => {
                             <span className="text-xs text-gray-500 ml-1">({product.numReviews || 0})</span>
                           </div>
                           <Link
-                            to={`/product/${product.slug || product._id}`}
+                            to={`/product/${encodeURIComponent(product.slug || product._id)}`}
                             className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

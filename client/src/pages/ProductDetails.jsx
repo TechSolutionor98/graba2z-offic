@@ -235,10 +235,10 @@ const ProductDetails = () => {
   }
 
   useEffect(() => {
-    console.log("slug from useParams:", slug)
-    if (slug) {
-      fetchProduct()
-    }
+    if (!slug) return
+    const decoded = decodeURIComponent(slug)
+    console.log("ProductDetails param slug:", slug, "decoded:", decoded)
+    fetchProduct(decoded)
   }, [slug])
 
   useEffect(() => {
@@ -249,10 +249,38 @@ const ProductDetails = () => {
     }
   }, [product])
 
-  const fetchProduct = async () => {
+  const fetchProduct = async (rawSlug) => {
     try {
-      console.log("Fetching product for slug:", slug)
-      const data = await productsAPI.getBySlug(slug)
+      const attemptSlug = (rawSlug || slug || '').trim()
+      console.log("Fetching product for slug:", attemptSlug)
+      let data
+      try {
+        data = await productsAPI.getBySlug(attemptSlug)
+      } catch (e) {
+        // If slug contains unsafe chars or lookup failed, try a sanitized variant
+        console.warn("Primary slug fetch failed, trying fallback sanitization", e.message)
+        const fallback = attemptSlug
+          .toLowerCase()
+          .replace(/[^a-z0-9\-]+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '')
+        if (fallback && fallback !== attemptSlug) {
+          try {
+            data = await productsAPI.getBySlug(fallback)
+          } catch (e2) {
+            console.warn("Fallback slug also failed", e2.message)
+          }
+        }
+      }
+      // If still no data and looks like an ObjectId, attempt by ID
+      if (!data && attemptSlug.match(/^[0-9a-fA-F]{24}$/)) {
+        try {
+          data = await productsAPI.getById(attemptSlug)
+        } catch (e3) {
+          console.warn("ID fetch attempt failed", e3.message)
+        }
+      }
+      if (!data) throw new Error("Product not found via slug or ID attempts")
       console.log("API response for product:", data)
       setProduct(data)
       setError(null)
@@ -266,8 +294,8 @@ const ProductDetails = () => {
         }
       }
     } catch (error) {
-      console.error("Error fetching product:", error)
-      setError("Failed to load product details. Please try again later.")
+      console.error("Error fetching product after fallbacks:", error)
+      setError("Failed to load product details. Please check the URL or try again later.")
     } finally {
       setLoading(false)
     }
@@ -1741,7 +1769,7 @@ const ProductDetails = () => {
         .slice(0, 160)) ||
     `${product.name} available at Grabatoz.`
 
-  const pdCanonicalPath = `/product/${product.slug || product._id}`
+  const pdCanonicalPath = `/product/${encodeURIComponent(product.slug || product._id)}`
 
   const productImages =
     product.galleryImages && product.galleryImages.length > 0
@@ -2640,7 +2668,7 @@ const ProductDetails = () => {
                     key={relatedProduct._id}
                     className="bg-white rounded-lg shadow-sm p-4 border hover:shadow-md transition-shadow"
                   >
-                    <Link to={`/product/${relatedProduct.slug || relatedProduct._id}`}>
+                    <Link to={`/product/${encodeURIComponent(relatedProduct.slug || relatedProduct._id)}`}>
                       <img
                         src={relatedProduct.image || "/placeholder.svg?height=128&width=128"}
                         alt={relatedProduct.name}

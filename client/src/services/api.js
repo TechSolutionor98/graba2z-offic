@@ -118,7 +118,7 @@ export const productsAPI = {
 
   search: (query) => apiRequest(`/api/products/search?q=${encodeURIComponent(query)}`),
 
-  getBySlug: (slug) => apiRequest(`/api/products/slug/${slug}`),
+  getBySlug: (slug) => apiRequest(`/api/products/slug/${encodeURIComponent(slug)}`),
   getBySku: (sku) => apiRequest(`/api/products?search=${encodeURIComponent(sku)}`),
   getBySkus: (skus) =>
     apiRequest(`/api/products/by-skus`, {
