@@ -14,6 +14,7 @@ const run = async () => {
   const catIds = new Set(cats.map(c => String(c._id)))
   const subMap = new Map(subs.map(s => [String(s._id), s]))
 
+  
   const issues = { missingCategory: [], missingParent: [], selfParent: [], cycles: [] }
 
   // Referential checks
