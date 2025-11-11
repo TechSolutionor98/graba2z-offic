@@ -43,8 +43,8 @@ const Navbar = () => {
   const mobileSearchInputRef = useRef(null)
   const mobileSearchDropdownRef = useRef(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [categories, setCategories] = useState([])
-  const [subCategories, setSubCategories] = useState([])
+  const [categories, setCategories] = useState([]) // now contains nested tree nodes: { _id, name, slug, children: [] }
+  const [flatSubCategories, setFlatSubCategories] = useState([]) // keep for backward compatibility / other components
   const [hoveredCategory, setHoveredCategory] = useState(null)
   const [hoveredSubCategory1, setHoveredSubCategory1] = useState(null) // For Level 2
   const [hoveredSubCategory2, setHoveredSubCategory2] = useState(null) // For Level 3
@@ -98,34 +98,48 @@ const Navbar = () => {
 
 
   // Fetch categories and subcategories from API
-  const fetchCategories = async () => {
+  const fetchCategoryTree = async () => {
     try {
-      const { data } = await axios.get(`${config.API_URL}/api/categories`)
-      setCategories(Array.isArray(data) ? data.filter((cat) => cat.isActive !== false) : [])
+      const [treeResp, subsResp] = await Promise.all([
+        axios.get(`${config.API_URL}/api/categories/tree`),
+        axios.get(`${config.API_URL}/api/subcategories`), // still used for any legacy logic (e.g., other pages)
+      ])
+      const treeData = Array.isArray(treeResp.data) ? treeResp.data : []
+      setCategories(treeData)
+      setFlatSubCategories(Array.isArray(subsResp.data) ? subsResp.data : [])
     } catch (error) {
-      console.error("Error fetching categories:", error)
+      console.error("Error fetching category tree:", error)
     }
   }
 
-  const fetchSubCategories = async () => {
-    try {
-      const { data } = await axios.get(`${config.API_URL}/api/subcategories`)
-      setSubCategories(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error("Error fetching subcategories:", error)
-    }
-  }
-
+  // Helpers now use tree structure
   const getSubCategoriesForCategory = (categoryId) => {
-    return subCategories.filter((sub) => sub.category?._id === categoryId && (!sub.level || sub.level === 1))
+    const cat = categories.find((c) => c._id === categoryId)
+    if (!cat || !Array.isArray(cat.children)) return []
+    // Level 1 nodes: nodes with level === 1 OR no level property (import fallback)
+    return cat.children.filter((n) => !n.level || n.level === 1)
   }
 
-  // Get child subcategories for a parent subcategory
-  const getChildSubCategories = (parentSubCategoryId) => {
-    return subCategories.filter((sub) => {
-      const parentId = typeof sub.parentSubCategory === 'object' ? sub.parentSubCategory?._id : sub.parentSubCategory
-      return parentId === parentSubCategoryId
-    })
+  const getChildSubCategories = (parentNodeId) => {
+    // We need a lookup: flatten categories children recursively once (memoized by ref) OR derive by search each time for simplicity.
+    // Simplicity approach: depth-first search for node id and return its children.
+    const stack = []
+    for (const c of categories) {
+      if (Array.isArray(c.children)) stack.push(...c.children)
+    }
+    const visited = new Set()
+    while (stack.length) {
+      const node = stack.pop()
+      if (!node || visited.has(node._id)) continue
+      visited.add(node._id)
+      if (node._id === parentNodeId) {
+        return Array.isArray(node.children) ? node.children : []
+      }
+      if (Array.isArray(node.children) && node.children.length) {
+        stack.push(...node.children)
+      }
+    }
+    return []
   }
 
   const toggleMobileCategory = (categoryId) => {
@@ -322,8 +336,7 @@ const Navbar = () => {
   }, [])
 
   useEffect(() => {
-    fetchCategories()
-    fetchSubCategories()
+    fetchCategoryTree()
   }, [])
 
   // Responsive categories count based on screen size
@@ -658,13 +671,16 @@ const Navbar = () => {
                           >
                             <Link
                               to={generateShopURL({ parentCategory: parentCategory.name })}
-                              className="block px-4 py-2 text-black font-medium whitespace-nowrap text-sm hover:bg-gray-100"
+                              className="flex items-center justify-between px-4 py-2 text-black font-medium whitespace-nowrap text-sm hover:bg-gray-100"
                               onClick={() => {
                                 setIsMoreDropdownOpen(false)
                                 setHoveredMoreCategory(null)
                               }}
                             >
-                              {parentCategory.name}
+                              <span className="mr-2">{parentCategory.name}</span>
+                              {categorySubCategories.length > 0 && (
+                                <ChevronRight size={16} className="text-gray-400" />
+                              )}
                             </Link>
                             {/* Dropdown for subcategories */}
                             {hoveredMoreCategory === parentCategory._id && categorySubCategories.length > 0 && (
@@ -677,7 +693,7 @@ const Navbar = () => {
                                   return (
                                     <div
                                       key={subCategory._id}
-                                      className="relative group"
+                                      className="group"
                                       onMouseEnter={(e) => {
                                         if (subCategory1TimeoutRef.current) {
                                           clearTimeout(subCategory1TimeoutRef.current)
@@ -740,7 +756,7 @@ const Navbar = () => {
                                             return (
                                               <div
                                                 key={subCategory2._id}
-                                                className="relative group"
+                                                className="group"
                                                 onMouseEnter={(e) => {
                                                   if (subCategory2TimeoutRef.current) {
                                                     clearTimeout(subCategory2TimeoutRef.current)
@@ -802,7 +818,7 @@ const Navbar = () => {
                                                       return (
                                                         <div
                                                           key={subCategory3._id}
-                                                          className="relative group"
+                                                          className="group"
                                                           onMouseEnter={(e) => {
                                                             if (subCategory3TimeoutRef.current) {
                                                               clearTimeout(subCategory3TimeoutRef.current)
@@ -895,7 +911,7 @@ const Navbar = () => {
                                     </div>
                                   )
                                 })}
-```
+
                               </div>
                             )}
                           </div>
@@ -967,7 +983,7 @@ const Navbar = () => {
                           return (
                             <div
                               key={subCategory._id}
-                              className="relative group"
+                              className="group"
                               onMouseEnter={(e) => {
                                 if (subCategory1TimeoutRef.current) {
                                   clearTimeout(subCategory1TimeoutRef.current)
@@ -1026,7 +1042,7 @@ const Navbar = () => {
                                     return (
                                       <div
                                         key={subCategory2._id}
-                                        className="relative group"
+                                        className="group"
                                         onMouseEnter={(e) => {
                                           if (subCategory2TimeoutRef.current) {
                                             clearTimeout(subCategory2TimeoutRef.current)
@@ -1087,7 +1103,7 @@ const Navbar = () => {
                                               return (
                                                 <div
                                                   key={subCategory3._id}
-                                                  className="relative group"
+                                                  className="group"
                                                   onMouseEnter={(e) => {
                                                     if (subCategory3TimeoutRef.current) {
                                                       clearTimeout(subCategory3TimeoutRef.current)

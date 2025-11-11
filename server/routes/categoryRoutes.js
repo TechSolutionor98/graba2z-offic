@@ -1,6 +1,7 @@
 import express from "express"
 import asyncHandler from "express-async-handler"
 import Category from "../models/categoryModel.js"
+import SubCategory from "../models/subCategoryModel.js"
 import { protect, admin } from "../middleware/authMiddleware.js"
 
 const router = express.Router()
@@ -26,6 +27,74 @@ router.get(
   asyncHandler(async (req, res) => {
     const categories = await Category.find({ isActive: true, isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 })
     res.json(categories)
+  }),
+)
+
+// @desc    Fetch categories with nested subcategories up to 4 levels
+// @route   GET /api/categories/tree
+// @access  Public
+router.get(
+  "/tree",
+  asyncHandler(async (req, res) => {
+    // Load active, non-deleted categories and subcategories
+    const [cats, subs] = await Promise.all([
+      Category.find({ isActive: true, isDeleted: { $ne: true } })
+        .select("_id name slug sortOrder")
+        .sort({ sortOrder: 1, name: 1 })
+        .lean(),
+      SubCategory.find({ isActive: true, isDeleted: { $ne: true } })
+        .select("_id name slug category parentSubCategory level sortOrder")
+        .sort({ sortOrder: 1, name: 1 })
+        .lean(),
+    ])
+
+    // Prepare category nodes
+    const catMap = new Map()
+    for (const c of cats) {
+      catMap.set(String(c._id), { _id: c._id, name: c.name, slug: c.slug, children: [] })
+    }
+
+    // Prepare subcategory nodes
+    const subMap = new Map()
+    for (const s of subs) {
+      const level = s.level || 1
+      subMap.set(String(s._id), {
+        _id: s._id,
+        name: s.name,
+        slug: s.slug,
+        level,
+        category: s.category ? String(s.category) : null,
+        parentSubCategory: s.parentSubCategory ? String(s.parentSubCategory) : null,
+        children: [],
+      })
+    }
+
+    // Link subcategories to parents
+    for (const node of subMap.values()) {
+      const parentSubId = node.parentSubCategory
+      if (parentSubId && subMap.has(parentSubId)) {
+        subMap.get(parentSubId).children.push(node)
+      } else {
+        // Treat as level 1 (or missing parent) -> attach to category root
+        const catId = node.category
+        if (catId && catMap.has(catId)) {
+          catMap.get(catId).children.push(node)
+        }
+      }
+    }
+
+    // Sort children arrays by name for stability
+    const sortChildren = (arr) => {
+      arr.sort((a, b) => a.name.localeCompare(b.name))
+      arr.forEach((n) => {
+        if (Array.isArray(n.children) && n.children.length > 0) sortChildren(n.children)
+      })
+    }
+    for (const cat of catMap.values()) {
+      if (Array.isArray(cat.children)) sortChildren(cat.children)
+    }
+
+    res.json(Array.from(catMap.values()))
   }),
 )
 

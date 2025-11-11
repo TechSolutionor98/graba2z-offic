@@ -690,13 +690,17 @@ const AddBulkProducts = () => {
   }
 
   const handleExport = () => {
+    // Provide headers for 4-level categories. Only fill first two for sample.
     const sampleData = [
       {
         name: "Sample Product",
         slug: "sample-product",
         sku: "SP001",
-        parent_category: "Electronics",
-        category: "Smartphones",
+        parent_category: "Electronics", // Level 0 (Main Category)
+        category_level_1: "Smartphones", // Level 1 subcategory
+        category_level_2: "Android", // Level 2 (optional)
+        category_level_3: "Mid Range", // Level 3 (optional)
+        category_level_4: "2025 Models", // Level 4 (optional)
         brand: "Sample Brand",
         buyingPrice: 80,
         price: 100,
@@ -768,17 +772,14 @@ const AddBulkProducts = () => {
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
           <h3 className="font-semibold text-yellow-800 mb-2">CSV Format Guidelines:</h3>
           <ul className="text-sm text-yellow-700 space-y-1">
-            <li>• Use CSV format with column headers: name, parent_category, category, brand, price, etc.</li>
-            <li>
-              • <strong>parent_category</strong>: Main category (shown in navbar, e.g., "Electronics")
-            </li>
-            <li>
-              • <strong>category</strong>: Subcategory (shown in dropdown, e.g., "Smartphones")
-            </li>
-            <li>• Categories and Brands will be created automatically if they don't exist</li>
-            <li>• Required fields: name, parent_category, price</li>
-            <li>• Stock Status options: "Available Product", "Out of Stock", "PreOrder"</li>
-            <li>• Boolean fields (showStockOut, canPurchase, refundable): use "true" or "false"</li>
+            <li>• Use CSV headers: name, slug(optional), sku(optional), parent_category, category_level_1, category_level_2, category_level_3, category_level_4, brand, price, offerPrice(optional), tax(optional), stockStatus(optional), showStockOut, canPurchase, refundable, maxPurchaseQty, lowStockWarning, unit, weight, tags, description, discount(optional), specifications(optional), details(optional), shortDescription(optional), barcode(optional)</li>
+            <li>• <strong>parent_category</strong>: Main category (Level 0) shown in navbar (e.g., "Electronics")</li>
+            <li>• <strong>category_level_1</strong>: First subcategory level (e.g., "Smartphones")</li>
+            <li>• <strong>category_level_2/3/4</strong>: Optional deeper levels (will be auto-created & linked)</li>
+            <li>• Any missing categories/brands/tax/unit will be created automatically</li>
+            <li>• Required fields: name, parent_category, price (category_level_1 recommended)</li>
+            <li>• Stock Status: "Available Product" | "Out of Stock" | "PreOrder" (defaults to Available Product)</li>
+            <li>• Boolean fields: use "true" or "false"</li>
           </ul>
         </div>
 
@@ -881,8 +882,11 @@ const AddBulkProducts = () => {
               <thead>
                 <tr className="border-b">
                   <th className="px-2 py-1 text-left">Name</th>
-                  <th className="px-2 py-1 text-left">Parent Category</th>
-                  <th className="px-2 py-1 text-left">Sub Category</th>
+                  <th className="px-2 py-1 text-left">Parent Cat</th>
+                  <th className="px-2 py-1 text-left">Level 1</th>
+                  <th className="px-2 py-1 text-left">Level 2</th>
+                  <th className="px-2 py-1 text-left">Level 3</th>
+                  <th className="px-2 py-1 text-left">Level 4</th>
                   <th className="px-2 py-1 text-left">Brand</th>
                   <th className="px-2 py-1 text-left">Price</th>
                   <th className="px-2 py-1 text-left">Stock Status</th>
@@ -892,8 +896,11 @@ const AddBulkProducts = () => {
                 {previewProducts.slice(0, 20).map((product, i) => (
                   <tr key={i} className="border-b">
                     <td className="px-2 py-1">{product.name || "N/A"}</td>
-                    <td className="px-2 py-1">{product.parentCategory?.name || product.parentCategory || "N/A"}</td>
-                    <td className="px-2 py-1">{product.category?.name || product.category || "N/A"}</td>
+                    <td className="px-2 py-1">{product.parentCategory?.name || product.parentCategory || "-"}</td>
+                    <td className="px-2 py-1">{product.category?.name || product.category || "-"}</td>
+                    <td className="px-2 py-1">{product.subCategory2?.name || product.subCategory2 || "-"}</td>
+                    <td className="px-2 py-1">{product.subCategory3?.name || product.subCategory3 || "-"}</td>
+                    <td className="px-2 py-1">{product.subCategory4?.name || product.subCategory4 || "-"}</td>
                     <td className="px-2 py-1">{product.brand?.name || product.brand || "N/A"}</td>
                     <td className="px-2 py-1">{product.price || 0}</td>
                     <td className="px-2 py-1">{product.stockStatus || "Available Product"}</td>
