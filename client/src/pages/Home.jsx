@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import axios from "axios"
 import productCache from "../services/productCache"
-import { createSlug, generateShopURL } from "../utils/urlUtils"
+import { generateShopURL } from "../utils/urlUtils"
 
 import BigSaleSection from "../components/BigSaleSection"
 import {
@@ -80,6 +80,19 @@ const Home = () => {
     }
     return "Desktop"
   })
+  const brandUrls = useMemo(
+    () => ({
+      HP: generateShopURL({ brand: "HP" }),
+      Dell: generateShopURL({ brand: "Dell" }),
+      ASUS: generateShopURL({ brand: "ASUS" }),
+      Acer: generateShopURL({ brand: "Acer" }),
+      MSI: generateShopURL({ brand: "MSI" }),
+      Lenovo: generateShopURL({ brand: "Lenovo" }),
+      Apple: generateShopURL({ brand: "Apple" }),
+      Samsung: generateShopURL({ brand: "Samsung" }),
+    }),
+    [],
+  )
 
   // Notification popup state
   const [showNotifPopup, setShowNotifPopup] = useState(false)
@@ -682,7 +695,7 @@ const Home = () => {
   }
 
   const handleBrandClick = (brandName) => {
-    navigate(`/product-brand/${createSlug(brandName)}`)
+    navigate(generateShopURL({ brand: brandName }))
   }
 
   const nextSlide = () => {
@@ -985,7 +998,7 @@ const Home = () => {
 
       {/* Mobile Banner (now clickable linking to HP brand page) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <Link to="/product-brand/hp" aria-label="Browse HP products">
+  <Link to={brandUrls.HP} aria-label="Browse HP products">
           <img
             src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939738/hp_ntmpcm.png"
             alt="HP Products Banner Mobile"
@@ -997,7 +1010,7 @@ const Home = () => {
       {/* Desktop Banner - Two separate images side by side */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
         <div className="w-1/2">
-          <Link to="/product-brand/hp">
+          <Link to={brandUrls.HP}>
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/hp_half_side_1_iqvlks.png"
               alt="HP Products Banner"
@@ -1006,7 +1019,7 @@ const Home = () => {
           </Link>
         </div>
         <div className="w-1/2">
-          <Link to="/product-brand/dell">
+          <Link to={brandUrls.Dell}>
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/dell_half_side_6_igop3u.png"
               alt="Dell Products Banner"
@@ -1114,7 +1127,7 @@ const Home = () => {
 
       {/* Mobile Banner Asus */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <Link to="/product-brand/asus" aria-label="Browse ASUS products">
+  <Link to={brandUrls.ASUS} aria-label="Browse ASUS products">
           <img
             src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
             alt="ASUS Products Banner Mobile"
@@ -1126,7 +1139,7 @@ const Home = () => {
       {/* Desktop Banner - Two separate images side by side */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
         <div className="w-1/2">
-          <Link to="/product-brand/acer">
+          <Link to={brandUrls.Acer}>
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acer_half_side_jkun9a.png"
               alt="HP Products Banner"
@@ -1135,7 +1148,7 @@ const Home = () => {
           </Link>
         </div>
         <div className="w-1/2">
-          <Link to="/product-brand/asus">
+          <Link to={brandUrls.ASUS}>
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/asus_half_side_aikrmo.png"
               alt="Dell Products Banner"
@@ -1245,7 +1258,7 @@ const Home = () => {
 
       {/* Mobile Banner MSI */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <Link to="/product-brand/msi" aria-label="Browse MSI products">
+  <Link to={brandUrls.MSI} aria-label="Browse MSI products">
           <img
             src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
             alt="MSI Products Banner Mobile"
@@ -1257,7 +1270,7 @@ const Home = () => {
       {/* Desktop Banner - Two separate images side by side */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
         <div className="w-1/2">
-          <Link to="/product-brand/msi">
+          <Link to={brandUrls.MSI}>
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/msi_half_side_1_k4dmhz.png"
               alt="HP Products Banner"
@@ -1266,7 +1279,7 @@ const Home = () => {
           </Link>
         </div>
         <div className="w-1/2">
-          <Link to="/product-brand/lenovo">
+          <Link to={brandUrls.Lenovo}>
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/lenovo_half_side_daug2k.png"
               alt="Dell Products Banner"
@@ -1331,7 +1344,7 @@ const Home = () => {
 
       {/* Mobile Banner Apple */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-        <Link to="/product-brand/apple" aria-label="Browse Apple products">
+  <Link to={brandUrls.Apple} aria-label="Browse Apple products">
           <img
             src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757769951/apple_half_side_n1cxhc.png"
             alt="Apple Products Banner Mobile"
@@ -1343,7 +1356,7 @@ const Home = () => {
       {/* Desktop Banner - Two separate images side by side */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
         <div className="w-1/2">
-          <Link to="/product-brand/apple">
+          <Link to={brandUrls.Apple}>
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757769951/apple_half_side_n1cxhc.png"
               alt="HP Products Banner"
@@ -1352,7 +1365,7 @@ const Home = () => {
           </Link>
         </div>
         <div className="w-1/2">
-          <Link to="/product-brand/samsung">
+          <Link to={brandUrls.Samsung}>
             <img
               src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/samsung_half_side_gtslyc.png"
               alt="Dell Products Banner"

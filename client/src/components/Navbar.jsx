@@ -24,6 +24,7 @@ import {
   ChevronDown,
   ChevronRight,
   Truck,
+  ChevronLeft,
 } from "lucide-react"
 import axios from "axios"
 
@@ -54,10 +55,7 @@ const Navbar = () => {
   const profileRef = useRef(null)
   const profileButtonRef = useRef(null)
   const [visibleCategoriesCount, setVisibleCategoriesCount] = useState(8)
-  const [isMoreDropdownOpen, setIsMoreDropdownOpen] = useState(false)
-  const moreDropdownTimeoutRef = useRef(null)
-  const [hoveredMoreCategory, setHoveredMoreCategory] = useState(null)
-  const moreCategoryTimeoutRef = useRef(null)
+  const [categoryOffset, setCategoryOffset] = useState(0)
   // Timeout refs for delayed hover states
   const categoryTimeoutRef = useRef(null)
   const subCategory1TimeoutRef = useRef(null)
@@ -65,17 +63,15 @@ const Navbar = () => {
   const subCategory3TimeoutRef = useRef(null)
   // Tiny in-memory cache to speed up repeated candidate lookups during typing
   const liveSearchCacheRef = useRef(new Map())
-  // Alignment for the first subcategory panel under a main category
-  const [level1Align, setLevel1Align] = useState('left') // 'left' => left-0, 'right' => right-0
-
   // Direction states (simple midpoint rule: items left of screen center open right, else open left)
   const [level2Dir, setLevel2Dir] = useState('right')
   const [level3Dir, setLevel3Dir] = useState('right')
   const [level4Dir, setLevel4Dir] = useState('right')
-  const [moreLevel1Dir, setMoreLevel1Dir] = useState('right')
-  const [moreLevel2Dir, setMoreLevel2Dir] = useState('right')
-  const [moreLevel3Dir, setMoreLevel3Dir] = useState('right')
-  const [moreLevel4Dir, setMoreLevel4Dir] = useState('right')
+  // Mega menu viewport-centered positioning
+  const [megaTop, setMegaTop] = useState(0)
+  const menuBarRef = useRef(null)
+  const megaContentRef = useRef(null)
+  const [megaScrollState, setMegaScrollState] = useState({ canScrollLeft: false, canScrollRight: false })
 
   // Decide direction based on available space rather than midpoint
   const MIN_PANEL_WIDTH = 260 // px (matches min-w[240] + padding/margins)
@@ -94,6 +90,35 @@ const Navbar = () => {
     if (leftSpace >= MIN_PANEL_WIDTH) return 'left'
     if (rightSpace >= MIN_PANEL_WIDTH) return 'right'
     return leftSpace >= rightSpace ? 'left' : 'right'
+  }
+
+  const getPanelStyle = (rect, direction, width = 280) => {
+    if (!rect) return {}
+    const top = rect.bottom + 6
+    const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1920
+    const desiredLeft = rect.left + rect.width / 2 - width / 2
+    const clampedLeft = Math.max(12, Math.min(desiredLeft, viewportWidth - width - 12))
+    return { top, left: clampedLeft }
+  }
+
+  const updateMegaScrollState = () => {
+    const el = megaContentRef.current
+    if (!el) {
+      setMegaScrollState({ canScrollLeft: false, canScrollRight: false })
+      return
+    }
+    const { scrollLeft, clientWidth, scrollWidth } = el
+    setMegaScrollState({
+      canScrollLeft: scrollLeft > 8,
+      canScrollRight: scrollLeft + clientWidth < scrollWidth - 8,
+    })
+  }
+
+  const handleMegaScroll = (direction) => {
+    const el = megaContentRef.current
+    if (!el) return
+    const offset = direction === "left" ? -320 : 320
+    el.scrollBy({ left: offset, behavior: "smooth" })
   }
 
 
@@ -144,39 +169,6 @@ const Navbar = () => {
 
   const toggleMobileCategory = (categoryId) => {
     setExpandedMobileCategory(expandedMobileCategory === categoryId ? null : categoryId)
-  }
-
-  // Handle "More" dropdown hover with delay to prevent flickering
-  const handleMoreDropdownEnter = () => {
-    if (moreDropdownTimeoutRef.current) {
-      clearTimeout(moreDropdownTimeoutRef.current)
-    }
-    setIsMoreDropdownOpen(true)
-  }
-
-  const handleMoreDropdownLeave = () => {
-    moreDropdownTimeoutRef.current = setTimeout(() => {
-      setIsMoreDropdownOpen(false)
-      setHoveredMoreCategory(null) // Also close any open subcategory dropdown
-    }, 150) // Small delay to allow cursor movement to dropdown
-  }
-
-  // Handle subcategory dropdown hover within "More" dropdown
-  const handleMoreCategoryEnter = (categoryId, e) => {
-    if (moreCategoryTimeoutRef.current) {
-      clearTimeout(moreCategoryTimeoutRef.current)
-    }
-    setHoveredMoreCategory(categoryId)
-    if (e && e.currentTarget) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      setMoreLevel1Dir(computeLeftDir(rect))
-    }
-  }
-
-  const handleMoreCategoryLeave = () => {
-    moreCategoryTimeoutRef.current = setTimeout(() => {
-      setHoveredMoreCategory(null)
-    }, 150) // Small delay to allow cursor movement to subcategory dropdown
   }
 
   // Function to check if search query matches a product's SKU (or name) exactly
@@ -339,6 +331,23 @@ const Navbar = () => {
     fetchCategoryTree()
   }, [])
 
+  useEffect(() => {
+    if (!hoveredCategory) {
+      setMegaScrollState({ canScrollLeft: false, canScrollRight: false })
+      return
+    }
+
+    const handleResize = () => updateMegaScrollState()
+    const rafId = requestAnimationFrame(updateMegaScrollState)
+
+    window.addEventListener("resize", handleResize)
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      window.removeEventListener("resize", handleResize)
+    }
+  }, [hoveredCategory])
+
   // Responsive categories count based on screen size
   useEffect(() => {
     const updateVisibleCategories = () => {
@@ -348,7 +357,7 @@ const Navbar = () => {
         setVisibleCategoriesCount(10)
       } else if (width >= 1280) {
         // xl screens
-        setVisibleCategoriesCount(8)
+        setVisibleCategoriesCount(10)
       } else if (width >= 1024) {
         // lg screens
         setVisibleCategoriesCount(6)
@@ -364,6 +373,11 @@ const Navbar = () => {
     window.addEventListener("resize", updateVisibleCategories)
     return () => window.removeEventListener("resize", updateVisibleCategories)
   }, [])
+
+  useEffect(() => {
+    const maxOffset = Math.max(0, categories.length - visibleCategoriesCount)
+    setCategoryOffset((prev) => Math.min(prev, maxOffset))
+  }, [categories, visibleCategoriesCount])
 
   // Close profile dropdown on outside click (desktop only)
   useEffect(() => {
@@ -384,15 +398,13 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleProfileClick)
   }, [isProfileOpen])
 
-  // Cleanup timeouts on unmount
+  // Cleanup hover timeouts on unmount
   useEffect(() => {
     return () => {
-      if (moreDropdownTimeoutRef.current) {
-        clearTimeout(moreDropdownTimeoutRef.current)
-      }
-      if (moreCategoryTimeoutRef.current) {
-        clearTimeout(moreCategoryTimeoutRef.current)
-      }
+      if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current)
+      if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
+      if (subCategory2TimeoutRef.current) clearTimeout(subCategory2TimeoutRef.current)
+      if (subCategory3TimeoutRef.current) clearTimeout(subCategory3TimeoutRef.current)
     }
   }, [])
 
@@ -446,6 +458,26 @@ const Navbar = () => {
   }
   const handleMobileSearchClose = () => {
     setIsMobileSearchOpen(false)
+  }
+
+  const visibleCategoryList = categories.slice(
+    categoryOffset,
+    categoryOffset + visibleCategoriesCount,
+  )
+  const canScrollPrev = categoryOffset > 0
+  const canScrollNext = categoryOffset + visibleCategoriesCount < categories.length
+
+  const scrollPrev = () => {
+    if (!canScrollPrev) return
+    setCategoryOffset((prev) => Math.max(prev - 1, 0))
+    setHoveredCategory(null)
+  }
+
+  const scrollNext = () => {
+    if (!canScrollNext) return
+    const maxOffset = Math.max(0, categories.length - visibleCategoriesCount)
+    setCategoryOffset((prev) => Math.min(prev + 1, maxOffset))
+    setHoveredCategory(null)
   }
 
   return (
@@ -645,325 +677,40 @@ const Navbar = () => {
         </div>
 
         {/* Navigation Menu - Dynamic Categories with Dropdowns */}
-        <div className="bg-lime-500 mt-4 flex relative">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex items-center space-x-16 h-12">
-              {/* Category Overflow Dropdown for md+ screens */}
-              {categories.length > visibleCategoriesCount && (
-                <div
-                  className="relative hidden md:block"
-                  onMouseEnter={handleMoreDropdownEnter}
-                  onMouseLeave={handleMoreDropdownLeave}
-                >
-                  <button className="text-white font-medium whitespace-nowrap text-sm flex items-center">
-                    More <ChevronDown size={18} className="ml-1" />
-                  </button>
-                  {isMoreDropdownOpen && (
-                    <div className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md py-2 min-w-48 z-50 border">
-                      {categories.slice(visibleCategoriesCount).map((parentCategory) => {
-                        const categorySubCategories = getSubCategoriesForCategory(parentCategory._id)
-                        return (
-                          <div
-                            key={parentCategory._id}
-                            className="relative"
-                            onMouseEnter={(e) => handleMoreCategoryEnter(parentCategory._id, e)}
-                            onMouseLeave={handleMoreCategoryLeave}
-                          >
-                            <Link
-                              to={generateShopURL({ parentCategory: parentCategory.name })}
-                              className="flex items-center justify-between px-4 py-2 text-black font-medium whitespace-nowrap text-sm hover:bg-gray-100"
-                              onClick={() => {
-                                setIsMoreDropdownOpen(false)
-                                setHoveredMoreCategory(null)
-                              }}
-                            >
-                              <span className="mr-2">{parentCategory.name}</span>
-                              {categorySubCategories.length > 0 && (
-                                <ChevronRight size={16} className="text-gray-400" />
-                              )}
-                            </Link>
-                            {/* Dropdown for subcategories */}
-                            {hoveredMoreCategory === parentCategory._id && categorySubCategories.length > 0 && (
-                              <div id="more-dropdown-level1" className={`absolute top-0 ${moreLevel1Dir === 'left' ? 'right-full mr-2' : 'left-full ml-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[60] border border-gray-100`}>
-                                <div className="px-3 py-2 border-b border-gray-100">
-                                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Subcategories</p>
-                                </div>
-                                {categorySubCategories.map((subCategory, index) => {
-                                  const level2Subs = getChildSubCategories(subCategory._id)
-                                  return (
-                                    <div
-                                      key={subCategory._id}
-                                      className="group"
-                                      onMouseEnter={(e) => {
-                                        if (subCategory1TimeoutRef.current) {
-                                          clearTimeout(subCategory1TimeoutRef.current)
-                                        }
-                                        setHoveredSubCategory1(subCategory._id)
-                                        const rect = e.currentTarget.getBoundingClientRect()
-                                        setMoreLevel2Dir(computeLeftDir(rect))
-                                      }}
-                                      onMouseLeave={() => {
-                                        subCategory1TimeoutRef.current = setTimeout(() => {
-                                          setHoveredSubCategory1(null)
-                                          setHoveredSubCategory2(null)
-                                          setHoveredSubCategory3(null)
-                                        }, 1000)
-                                      }}
-                                    >
-                                      <Link
-                                        to={generateShopURL({
-                                          parentCategory: parentCategory.name,
-                                          subcategory: subCategory.name,
-                                        })}
-                                        className={`flex items-center justify-between px-4 py-3 text-gray-800 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-600 transition-all duration-200 text-sm ${index !== 0 ? 'border-t border-gray-50' : ''}`}
-                                        onClick={() => {
-                                          setIsMoreDropdownOpen(false)
-                                          setHoveredMoreCategory(null)
-                                          setHoveredSubCategory1(null)
-                                          setHoveredSubCategory2(null)
-                                          setHoveredSubCategory3(null)
-                                        }}
-                                      >
-                                        <span className="font-medium flex-1">{subCategory.name}</span>
-                                        {level2Subs.length > 0 && (
-                                          <ChevronRight size={18} className="ml-2 text-gray-400 group-hover:text-red-600 group-hover:translate-x-0.5 transition-all" />
-                                        )}
-                                      </Link>
-
-                                      {/* Level 2 subcategories */}
-                                      {hoveredSubCategory1 === subCategory._id && level2Subs.length > 0 && (
-                                        <div 
-                                          id="more-dropdown-level2"
-                                          className={`absolute top-0 ${moreLevel2Dir === 'left' ? 'right-full mr-2' : 'left-full ml-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[70] border border-gray-100`}
-                                          onMouseEnter={() => {
-                                            if (subCategory1TimeoutRef.current) {
-                                              clearTimeout(subCategory1TimeoutRef.current)
-                                            }
-                                          }}
-                                          onMouseLeave={() => {
-                                            subCategory1TimeoutRef.current = setTimeout(() => {
-                                              setHoveredSubCategory1(null)
-                                              setHoveredSubCategory2(null)
-                                              setHoveredSubCategory3(null)
-                                            }, 1000)
-                                          }}
-                                        >
-                                          <div className="px-3 py-2 border-b border-gray-100">
-                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Level 2</p>
-                                          </div>
-                                          {level2Subs.map((subCategory2, index2) => {
-                                            const level3Subs = getChildSubCategories(subCategory2._id)
-                                            return (
-                                              <div
-                                                key={subCategory2._id}
-                                                className="group"
-                                                onMouseEnter={(e) => {
-                                                  if (subCategory2TimeoutRef.current) {
-                                                    clearTimeout(subCategory2TimeoutRef.current)
-                                                  }
-                                                  setHoveredSubCategory2(subCategory2._id)
-                                                  const rect = e.currentTarget.getBoundingClientRect()
-                                                  setMoreLevel3Dir(computeLeftDir(rect))
-                                                }}
-                                                onMouseLeave={() => {
-                                                  subCategory2TimeoutRef.current = setTimeout(() => {
-                                                    setHoveredSubCategory2(null)
-                                                    setHoveredSubCategory3(null)
-                                                  }, 1000)
-                                                }}
-                                              >
-                                                <Link
-                                                  to={generateShopURL({ 
-                                                    parentCategory: parentCategory.name, 
-                                                    subcategory: subCategory.name,
-                                                    subcategory2: subCategory2.name 
-                                                  })}
-                                                  className={`flex items-center justify-between px-4 py-3 text-gray-800 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-600 transition-all duration-200 text-sm ${index2 !== 0 ? 'border-t border-gray-50' : ''}`}
-                                                  onClick={() => {
-                                                    setIsMoreDropdownOpen(false)
-                                                    setHoveredMoreCategory(null)
-                                                    setHoveredSubCategory1(null)
-                                                    setHoveredSubCategory2(null)
-                                                    setHoveredSubCategory3(null)
-                                                  }}
-                                                >
-                                                  <span className="font-medium flex-1">{subCategory2.name}</span>
-                                                  {level3Subs.length > 0 && (
-                                                    <ChevronRight size={18} className="ml-2 text-gray-400 group-hover:text-red-600 group-hover:translate-x-0.5 transition-all" />
-                                                  )}
-                                                </Link>
-
-                                                {/* Level 3 subcategories */}
-                                                {hoveredSubCategory2 === subCategory2._id && level3Subs.length > 0 && (
-                                                  <div 
-                                                    id="more-dropdown-level3"
-                                                    className={`absolute top-0 ${moreLevel3Dir === 'left' ? 'right-full mr-2' : 'left-full ml-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[80] border border-gray-100`}
-                                                    onMouseEnter={() => {
-                                                      if (subCategory2TimeoutRef.current) {
-                                                        clearTimeout(subCategory2TimeoutRef.current)
-                                                      }
-                                                    }}
-                                                    onMouseLeave={() => {
-                                                      subCategory2TimeoutRef.current = setTimeout(() => {
-                                                        setHoveredSubCategory2(null)
-                                                        setHoveredSubCategory3(null)
-                                                      }, 1000)
-                                                    }}
-                                                  >
-                                                    <div className="px-3 py-2 border-b border-gray-100">
-                                                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Level 3</p>
-                                                    </div>
-                                                    {level3Subs.map((subCategory3, index3) => {
-                                                      const level4Subs = getChildSubCategories(subCategory3._id)
-                                                      return (
-                                                        <div
-                                                          key={subCategory3._id}
-                                                          className="group"
-                                                          onMouseEnter={(e) => {
-                                                            if (subCategory3TimeoutRef.current) {
-                                                              clearTimeout(subCategory3TimeoutRef.current)
-                                                            }
-                                                            setHoveredSubCategory3(subCategory3._id)
-                                                            const rect = e.currentTarget.getBoundingClientRect()
-                                                            setMoreLevel4Dir(computeLeftDir(rect))
-                                                          }}
-                                                          onMouseLeave={() => {
-                                                            subCategory3TimeoutRef.current = setTimeout(() => {
-                                                              setHoveredSubCategory3(null)
-                                                            }, 1000)
-                                                          }}
-                                                        >
-                                                          <Link
-                                                            to={generateShopURL({ 
-                                                              parentCategory: parentCategory.name, 
-                                                              subcategory: subCategory.name,
-                                                              subcategory2: subCategory2.name,
-                                                              subcategory3: subCategory3.name
-                                                            })}
-                                                            className={`flex items-center justify-between px-4 py-3 text-gray-800 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-600 transition-all duration-200 text-sm ${index3 !== 0 ? 'border-t border-gray-50' : ''}`}
-                                                            onClick={() => {
-                                                              setIsMoreDropdownOpen(false)
-                                                              setHoveredMoreCategory(null)
-                                                              setHoveredSubCategory1(null)
-                                                              setHoveredSubCategory2(null)
-                                                              setHoveredSubCategory3(null)
-                                                            }}
-                                                          >
-                                                            <span className="font-medium flex-1">{subCategory3.name}</span>
-                                                            {level4Subs.length > 0 && (
-                                                              <ChevronRight size={18} className="ml-2 text-gray-400 group-hover:text-red-600 group-hover:translate-x-0.5 transition-all" />
-                                                            )}
-                                                          </Link>
-
-                                                          {/* Level 4 subcategories */}
-                                                          {hoveredSubCategory3 === subCategory3._id && level4Subs.length > 0 && (
-                                                            <div 
-                                                              id="more-dropdown-level4"
-                                                              className={`absolute top-0 ${moreLevel4Dir === 'left' ? 'right-full mr-2' : 'left-full ml-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[90] border border-gray-100`}
-                                                              onMouseEnter={() => {
-                                                                if (subCategory3TimeoutRef.current) {
-                                                                  clearTimeout(subCategory3TimeoutRef.current)
-                                                                }
-                                                              }}
-                                                              onMouseLeave={() => {
-                                                                subCategory3TimeoutRef.current = setTimeout(() => {
-                                                                  setHoveredSubCategory3(null)
-                                                                }, 1000)
-                                                              }}
-                                                            >
-                                                              <div className="px-3 py-2 border-b border-gray-100">
-                                                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Level 4</p>
-                                                              </div>
-                                                              {level4Subs.map((subCategory4, index4) => (
-                                                                <Link
-                                                                  key={subCategory4._id}
-                                                                  to={generateShopURL({ 
-                                                                    parentCategory: parentCategory.name, 
-                                                                    subcategory: subCategory.name,
-                                                                    subcategory2: subCategory2.name,
-                                                                    subcategory3: subCategory3.name,
-                                                                    subcategory4: subCategory4.name
-                                                                  })}
-                                                                  className={`block px-4 py-3 text-gray-800 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-600 transition-all duration-200 text-sm font-medium ${index4 !== 0 ? 'border-t border-gray-50' : ''}`}
-                                                                  onClick={() => {
-                                                                    setIsMoreDropdownOpen(false)
-                                                                    setHoveredMoreCategory(null)
-                                                                    setHoveredSubCategory1(null)
-                                                                    setHoveredSubCategory2(null)
-                                                                    setHoveredSubCategory3(null)
-                                                                  }}
-                                                                >
-                                                                  {subCategory4.name}
-                                                                </Link>
-                                                              ))}
-                                                            </div>
-                                                          )}
-                                                        </div>
-                                                      )
-                                                    })}
-                                                  </div>
-                                                )}
-                                              </div>
-                                            )
-                                          })}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )
-                                })}
-
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* Show responsive number of categories (all on mobile) */}
-              {(categories.length > visibleCategoriesCount
-                ? categories.slice(0, visibleCategoriesCount)
-                : categories
-              ).map((parentCategory) => {
-                const categorySubCategories = getSubCategoriesForCategory(parentCategory._id)
-                return (
-                  <div
-                    key={parentCategory._id}
-                    className="relative"
-                    onMouseEnter={(e) => {
-                      if (categoryTimeoutRef.current) {
-                        clearTimeout(categoryTimeoutRef.current)
-                      }
-                      setHoveredCategory(parentCategory._id)
-                      // Decide whether the level-1 panel should align left or right based on available space
-                      const rect = e.currentTarget.getBoundingClientRect()
-                      const rightSpaceFromLeft = window.innerWidth - rect.left
-                      const PANEL = 280 // px
-                      setLevel1Align(rightSpaceFromLeft >= PANEL ? 'left' : 'right')
-                    }}
-                    onMouseLeave={() => {
-                      categoryTimeoutRef.current = setTimeout(() => {
-                        setHoveredCategory(null)
-                        setHoveredSubCategory1(null)
-                        setHoveredSubCategory2(null)
-                        setHoveredSubCategory3(null)
-                      }, 1000)
-                    }}
-                  >
-                    <Link
-                      to={generateShopURL({ parentCategory: parentCategory.name })}
-                      className="text-white  font-medium whitespace-nowrap text-sm"
-                    >
-                      {parentCategory.name}
-                    </Link>
-                    {/* Dropdown for Level 1 subcategories */}
-                    {hoveredCategory === parentCategory._id && categorySubCategories.length > 0 && (
-                      <div 
-                        className={`absolute top-full ${level1Align === 'left' ? 'left-0' : 'right-0'} mt-2 bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[60] border border-gray-100`}
-                        onMouseEnter={() => {
+        <div className="bg-lime-500 mt-4 flex relative" ref={menuBarRef}>
+          <div className="w-full">
+            <div className="grid grid-cols-[auto,1fr,auto] items-center h-12 px-4 md:px-12 gap-3">
+              <button
+                type="button"
+                onClick={scrollPrev}
+                className="hidden md:inline-flex items-center justify-center w-9 h-9 rounded-full border border-white/30 text-white hover:bg-white/10 transition disabled:opacity-40 disabled:hover:bg-transparent"
+                disabled={!canScrollPrev}
+                aria-label="Previous categories"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <div className="flex-1 overflow-hidden min-w-0">
+                <div className="flex items-center gap-6 justify-center">
+                  {visibleCategoryList.map((parentCategory) => {
+                    const categorySubCategories = getSubCategoriesForCategory(parentCategory._id)
+                    const isActiveCategory = hoveredCategory === parentCategory._id
+                    return (
+                      <div
+                        key={parentCategory._id}
+                        className="relative flex items-center h-full"
+                        onMouseEnter={(e) => {
                           if (categoryTimeoutRef.current) {
                             clearTimeout(categoryTimeoutRef.current)
+                          }
+                          setHoveredCategory(parentCategory._id)
+                          const rect = e.currentTarget.getBoundingClientRect()
+                          // Centered mega menu: anchor to the categories bar bottom (viewport coords)
+                          if (menuBarRef.current) {
+                            const barRect = menuBarRef.current.getBoundingClientRect()
+                            // Add a small vertical offset so it doesn't overlap the green bar
+                            setMegaTop(barRect.bottom + 8) // no scrollY for fixed positioning
+                          } else {
+                            setMegaTop(rect.bottom + 8)
                           }
                         }}
                         onMouseLeave={() => {
@@ -975,230 +722,305 @@ const Navbar = () => {
                           }, 1000)
                         }}
                       >
-                        <div className="px-3 py-2 border-b border-gray-100">
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Subcategories</p>
-                        </div>
-                        {categorySubCategories.map((subCategory, index) => {
-                          const level2Subs = getChildSubCategories(subCategory._id)
-                          return (
-                            <div
-                              key={subCategory._id}
-                              className="group"
-                              onMouseEnter={(e) => {
-                                if (subCategory1TimeoutRef.current) {
-                                  clearTimeout(subCategory1TimeoutRef.current)
-                                }
-                                setHoveredSubCategory1(subCategory._id)
-                                const rect = e.currentTarget.getBoundingClientRect()
-                                setLevel2Dir(computeRightDir(rect))
-                              }}
-                              onMouseLeave={() => {
-                                subCategory1TimeoutRef.current = setTimeout(() => {
-                                  setHoveredSubCategory1(null)
-                                  setHoveredSubCategory2(null)
-                                  setHoveredSubCategory3(null)
-                                }, 1000)
-                              }}
-                            >
-                              <Link
-                                to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
-                                className={`flex items-center justify-between px-4 py-3 text-gray-800 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-600 transition-all duration-200 text-sm ${index !== 0 ? 'border-t border-gray-50' : ''}`}
-                                onClick={() => {
-                                  setHoveredCategory(null)
-                                  setHoveredSubCategory1(null)
-                                  setHoveredSubCategory2(null)
-                                  setHoveredSubCategory3(null)
-                                }}
-                              >
-                                <span className="font-medium flex-1">{subCategory.name}</span>
-                                {level2Subs.length > 0 && (
-                                  <ChevronRight size={18} className="ml-2 text-gray-400 group-hover:text-red-600 group-hover:translate-x-0.5 transition-all" />
-                                )}
-                              </Link>
-
-                              {/* Dropdown for Level 2 subcategories */}
-                              {hoveredSubCategory1 === subCategory._id && level2Subs.length > 0 && (
-                                <div 
-                                  id="dropdown-level2"
-                                  className={`absolute top-0 ${level2Dir === 'right' ? 'left-full ml-2' : 'right-full mr-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[70] border border-gray-100`}
-                                  onMouseEnter={() => {
-                                    if (subCategory1TimeoutRef.current) {
-                                      clearTimeout(subCategory1TimeoutRef.current)
-                                    }
-                                  }}
-                                  onMouseLeave={() => {
-                                    subCategory1TimeoutRef.current = setTimeout(() => {
-                                      setHoveredSubCategory1(null)
-                                      setHoveredSubCategory2(null)
-                                      setHoveredSubCategory3(null)
-                                    }, 1000)
-                                  }}
+                        <Link
+                          to={generateShopURL({ parentCategory: parentCategory.name })}
+                          className={`text-white font-medium whitespace-nowrap text-sm px-2 pt-2 pb-3 ${
+                            isActiveCategory ? "font-semibold" : ""
+                          }`}
+                        >
+                          {parentCategory.name}
+                        </Link>
+                        {isActiveCategory && (
+                          <span className="pointer-events-none absolute bottom-0 left-2 right-2 h-1.5 rounded-full bg-white shadow-sm" />
+                        )}
+                        {/* Mega menu panel: show all level-1 columns with their level-2 items at once */}
+                        {hoveredCategory === parentCategory._id && categorySubCategories.length > 0 && (
+                          <div
+                            className="fixed left-1/2 -translate-x-1/2 bg-white shadow-2xl rounded-lg p-5 z-[60] border border-gray-100 w-[1320px] max-w-[98vw] overflow-y-auto"
+                            role="menu"
+                            aria-label={`${parentCategory.name} menu`}
+                            style={{ top: megaTop, height: "75vh" }}
+                            onMouseEnter={() => {
+                              if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current)
+                            }}
+                            onMouseLeave={() => {
+                              categoryTimeoutRef.current = setTimeout(() => {
+                                setHoveredCategory(null)
+                              }, 300)
+                            }}
+                          >
+                            <div className="relative">
+                              {megaScrollState.canScrollLeft && (
+                                <button
+                                  type="button"
+                                  className="absolute left-0 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-full shadow-md w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-100"
+                                  onClick={() => handleMegaScroll("left")}
+                                  aria-label="Scroll menu left"
                                 >
-                                  <div className="px-3 py-2 border-b border-gray-100">
-                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Level 2</p>
-                                  </div>
-                                  {level2Subs.map((subCategory2, index2) => {
-                                    const level3Subs = getChildSubCategories(subCategory2._id)
-                                    return (
-                                      <div
-                                        key={subCategory2._id}
-                                        className="group"
-                                        onMouseEnter={(e) => {
-                                          if (subCategory2TimeoutRef.current) {
-                                            clearTimeout(subCategory2TimeoutRef.current)
-                                          }
-                                          setHoveredSubCategory2(subCategory2._id)
-                                          const rect = e.currentTarget.getBoundingClientRect()
-                                          setLevel3Dir(computeRightDir(rect))
-                                        }}
-                                        onMouseLeave={() => {
-                                          subCategory2TimeoutRef.current = setTimeout(() => {
-                                            setHoveredSubCategory2(null)
-                                            setHoveredSubCategory3(null)
-                                          }, 1000)
-                                        }}
+                                  <ChevronLeft size={16} />
+                                </button>
+                              )}
+                              <div
+                                ref={megaContentRef}
+                                className="flex flex-nowrap items-start gap-4 overflow-x-auto hide-scrollbar px-6 py-2"
+                                onScroll={updateMegaScrollState}
+                              >
+                                {categorySubCategories.map((subCategory) => {
+                                  const level2Subs = getChildSubCategories(subCategory._id)
+                                  return (
+                                    <div key={subCategory._id} className="w-[150px] flex-shrink-0 flex flex-col gap-3">
+                                      <Link
+                                        to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
+                                        className="block text-red-600 font-semibold hover:text-red-600 whitespace-nowrap"
+                                        onClick={() => setHoveredCategory(null)}
                                       >
-                                        <Link
-                                          to={generateShopURL({ 
-                                            parentCategory: parentCategory.name, 
-                                            subcategory: subCategory.name,
-                                            subcategory2: subCategory2.name 
-                                          })}
-                                          className={`flex items-center justify-between px-4 py-3 text-gray-800 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-600 transition-all duration-200 text-sm ${index2 !== 0 ? 'border-t border-gray-50' : ''}`}
-                                          onClick={() => {
-                                            setHoveredCategory(null)
-                                            setHoveredSubCategory1(null)
-                                            setHoveredSubCategory2(null)
-                                            setHoveredSubCategory3(null)
-                                          }}
-                                        >
-                                          <span className="font-medium flex-1">{subCategory2.name}</span>
-                                          {level3Subs.length > 0 && (
-                                            <ChevronRight size={18} className="ml-2 text-gray-400 group-hover:text-red-600 group-hover:translate-x-0.5 transition-all" />
-                                          )}
-                                        </Link>
-
-                                        {/* Dropdown for Level 3 subcategories */}
-                                        {hoveredSubCategory2 === subCategory2._id && level3Subs.length > 0 && (
-                                          <div 
-                                            id="dropdown-level3"
-                                            className={`absolute top-0 ${level3Dir === 'right' ? 'left-full ml-2' : 'right-full mr-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[80] border border-gray-100`}
-                                            onMouseEnter={() => {
-                                              if (subCategory2TimeoutRef.current) {
-                                                clearTimeout(subCategory2TimeoutRef.current)
+                                        {subCategory.name}
+                                      </Link>
+                                      <ul className="flex flex-col gap-1 px-1 pb-1 bg-transparent border-none text-left">
+                                        {(level2Subs || []).slice(0, 8).map((sub2) => {
+                                          const level3Subs = getChildSubCategories(sub2._id)
+                                          const hasLevel3 = Array.isArray(level3Subs) && level3Subs.length > 0
+                                          return (
+                                            <li
+                                              key={sub2._id}
+                                              className="bg-transparent border-none p-0 m-0"
+                                              onMouseEnter={(e) => {
+                                                if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
+                                                if (!hasLevel3) {
+                                                  setHoveredSubCategory1(null)
+                                                  setHoveredSubCategory2(null)
+                                                  setHoveredSubCategory3(null)
+                                                  return
+                                                }
+                                                const rect = e.currentTarget.getBoundingClientRect()
+                                                const direction = computeRightDir(rect)
+                                                setLevel2Dir(direction)
+                                                setHoveredSubCategory1({
+                                                  rootCategoryId: parentCategory._id,
+                                                  parentCategoryName: parentCategory.name,
+                                                  level1Name: subCategory.name,
+                                                  current: { id: sub2._id, name: sub2.name },
+                                                  rect,
+                                                  direction,
+                                                  items: level3Subs,
+                                                })
+                                                setHoveredSubCategory2(null)
+                                                setHoveredSubCategory3(null)
+                                              }}
+                                              onMouseLeave={() => {
+                                                subCategory1TimeoutRef.current = setTimeout(() => {
+                                                  setHoveredSubCategory1(null)
+                                                  setHoveredSubCategory2(null)
+                                                  setHoveredSubCategory3(null)
+                                                }, 200)
+                                              }}
+                                            >
+                                              <Link
+                                                to={generateShopURL({
+                                                  parentCategory: parentCategory.name,
+                                                  subcategory: subCategory.name,
+                                                  subcategory2: sub2.name,
+                                                })}
+                                                className="block w-full text-sm text-gray-700 hover:text-red-600 hover:underline whitespace-normal break-words leading-snug"
+                                                onClick={() => setHoveredCategory(null)}
+                                              >
+                                                <span className="flex items-start gap-2">
+                                                  <span className="flex-1 break-words leading-snug text-left">{sub2.name}</span>
+                                                  {hasLevel3 && (
+                                                    <ChevronRight
+                                                      size={14}
+                                                      className={`mt-0.5 flex-shrink-0 text-gray-400 transition-transform duration-150 ${
+                                                        hoveredSubCategory1 && hoveredSubCategory1.current?.id === sub2._id
+                                                          ? "rotate-90"
+                                                          : ""
+                                                      }`}
+                                                    />
+                                                  )}
+                                                </span>
+                                              </Link>
+                                            </li>
+                                          )
+                                        })}
+                                        {level2Subs.length > 8 && (
+                                          <li className="bg-transparent border-none p-0 m-0">
+                                            <Link
+                                              to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
+                                              className="text-sm text-red-600 font-medium"
+                                              onClick={() => setHoveredCategory(null)}
+                                            >
+                                              View all
+                                            </Link>
+                                          </li>
+                                        )}
+                                      </ul>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                              {megaScrollState.canScrollRight && (
+                                <button
+                                  type="button"
+                                  className="absolute right-0 top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-full shadow-md w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-100"
+                                  onClick={() => handleMegaScroll("right")}
+                                  aria-label="Scroll menu right"
+                                >
+                                  <ChevronRight size={16} />
+                                </button>
+                              )}
+                              {hoveredSubCategory1 &&
+                                hoveredSubCategory1.rootCategoryId === parentCategory._id &&
+                                Array.isArray(hoveredSubCategory1.items) &&
+                                hoveredSubCategory1.items.length > 0 && (
+                                  <div
+                                    className="fixed z-[65] bg-white shadow-2xl border border-gray-100 rounded-lg p-4 min-w-[260px] max-w-[320px] max-h-[360px] overflow-y-auto"
+                                    style={getPanelStyle(hoveredSubCategory1.rect, hoveredSubCategory1.direction, 300)}
+                                    onMouseEnter={() => {
+                                      if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
+                                    }}
+                                    onMouseLeave={() => {
+                                      subCategory1TimeoutRef.current = setTimeout(() => {
+                                        setHoveredSubCategory1(null)
+                                        setHoveredSubCategory2(null)
+                                        setHoveredSubCategory3(null)
+                                      }, 200)
+                                    }}
+                                  >
+                                    <div className="text-sm font-semibold text-red-600 mb-2">
+                                      {hoveredSubCategory1.current?.name || "Subcategories"}
+                                    </div>
+                                    <ul className="space-y-1">
+                                      {hoveredSubCategory1.items.map((sub3) => {
+                                        const level4Subs = getChildSubCategories(sub3._id)
+                                        const hasLevel4 = Array.isArray(level4Subs) && level4Subs.length > 0
+                                        return (
+                                          <li
+                                            key={sub3._id}
+                                            className="relative"
+                                            onMouseEnter={(e) => {
+                                              if (subCategory2TimeoutRef.current) clearTimeout(subCategory2TimeoutRef.current)
+                                              if (!hasLevel4) {
+                                                setHoveredSubCategory2(null)
+                                                setHoveredSubCategory3(null)
+                                                return
                                               }
+                                              const rect = e.currentTarget.getBoundingClientRect()
+                                              const dir = hoveredSubCategory1.direction === "right" ? computeRightDir(rect) : computeLeftDir(rect)
+                                              setLevel3Dir(dir)
+                                              setHoveredSubCategory2({
+                                                rootCategoryId: hoveredSubCategory1.rootCategoryId,
+                                                parentInfo: hoveredSubCategory1,
+                                                subCategory: { id: sub3._id, name: sub3.name },
+                                                items: level4Subs,
+                                                rect,
+                                                direction: dir,
+                                              })
+                                              setHoveredSubCategory3(null)
                                             }}
                                             onMouseLeave={() => {
                                               subCategory2TimeoutRef.current = setTimeout(() => {
                                                 setHoveredSubCategory2(null)
                                                 setHoveredSubCategory3(null)
-                                              }, 1000)
+                                              }, 200)
                                             }}
                                           >
-                                            <div className="px-3 py-2 border-b border-gray-100">
-                                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Level 3</p>
-                                            </div>
-                                            {level3Subs.map((subCategory3, index3) => {
-                                              const level4Subs = getChildSubCategories(subCategory3._id)
-                                              return (
-                                                <div
-                                                  key={subCategory3._id}
-                                                  className="group"
-                                                  onMouseEnter={(e) => {
-                                                    if (subCategory3TimeoutRef.current) {
-                                                      clearTimeout(subCategory3TimeoutRef.current)
-                                                    }
-                                                    setHoveredSubCategory3(subCategory3._id)
-                                                    const rect = e.currentTarget.getBoundingClientRect()
-                                                    setLevel4Dir(computeRightDir(rect))
-                                                  }}
-                                                  onMouseLeave={() => {
-                                                    subCategory3TimeoutRef.current = setTimeout(() => {
-                                                      setHoveredSubCategory3(null)
-                                                    }, 1000)
-                                                  }}
-                                                >
-                                                  <Link
-                                                    to={generateShopURL({ 
-                                                      parentCategory: parentCategory.name, 
-                                                      subcategory: subCategory.name,
-                                                      subcategory2: subCategory2.name,
-                                                      subcategory3: subCategory3.name
-                                                    })}
-                                                    className={`flex items-center justify-between px-4 py-3 text-gray-800 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-600 transition-all duration-200 text-sm ${index3 !== 0 ? 'border-t border-gray-50' : ''}`}
-                                                    onClick={() => {
-                                                      setHoveredCategory(null)
-                                                      setHoveredSubCategory1(null)
-                                                      setHoveredSubCategory2(null)
-                                                      setHoveredSubCategory3(null)
-                                                    }}
-                                                  >
-                                                    <span className="font-medium flex-1">{subCategory3.name}</span>
-                                                    {level4Subs.length > 0 && (
-                                                      <ChevronRight size={18} className="ml-2 text-gray-400 group-hover:text-red-600 group-hover:translate-x-0.5 transition-all" />
-                                                    )}
-                                                  </Link>
-
-                                                  {/* Dropdown for Level 4 subcategories */}
-                                                  {hoveredSubCategory3 === subCategory3._id && level4Subs.length > 0 && (
-                                                    <div 
-                                                      id="dropdown-level4"
-                                                      className={`absolute top-0 ${level4Dir === 'right' ? 'left-full ml-2' : 'right-full mr-2'} bg-white shadow-xl rounded-lg py-2 min-w-[240px] max-w-[280px] z-[90] border border-gray-100`}
-                                                      onMouseEnter={() => {
-                                                        if (subCategory3TimeoutRef.current) {
-                                                          clearTimeout(subCategory3TimeoutRef.current)
-                                                        }
-                                                      }}
-                                                      onMouseLeave={() => {
-                                                        subCategory3TimeoutRef.current = setTimeout(() => {
-                                                          setHoveredSubCategory3(null)
-                                                        }, 1000)
-                                                      }}
-                                                    >
-                                                      <div className="px-3 py-2 border-b border-gray-100">
-                                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Level 4</p>
-                                                      </div>
-                                                      {level4Subs.map((subCategory4, index4) => (
-                                                        <Link
-                                                          key={subCategory4._id}
-                                                          to={generateShopURL({ 
-                                                            parentCategory: parentCategory.name, 
-                                                            subcategory: subCategory.name,
-                                                            subcategory2: subCategory2.name,
-                                                            subcategory3: subCategory3.name,
-                                                            subcategory4: subCategory4.name
-                                                          })}
-                                                          className={`block px-4 py-3 text-gray-800 hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 hover:text-red-600 transition-all duration-200 text-sm font-medium ${index4 !== 0 ? 'border-t border-gray-50' : ''}`}
-                                                          onClick={() => {
-                                                            setHoveredCategory(null)
-                                                            setHoveredSubCategory1(null)
-                                                            setHoveredSubCategory2(null)
-                                                            setHoveredSubCategory3(null)
-                                                          }}
-                                                        >
-                                                          {subCategory4.name}
-                                                        </Link>
-                                                      ))}
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              )
+                                            <Link
+                                              to={generateShopURL({
+                                                parentCategory: hoveredSubCategory1.parentCategoryName,
+                                                subcategory: hoveredSubCategory1.level1Name,
+                                                subcategory2: hoveredSubCategory1.current?.name,
+                                                subcategory3: sub3.name,
+                                              })}
+                                              className="flex items-start gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50"
+                                              onClick={() => setHoveredCategory(null)}
+                                            >
+                                              <span className="flex-1 break-words leading-snug text-left">{sub3.name}</span>
+                                              {hasLevel4 && (
+                                                hoveredSubCategory2 && hoveredSubCategory2.subCategory?.id === sub3._id ? (
+                                                  hoveredSubCategory2.direction === "right" ? (
+                                                    <ChevronRight size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transform rotate-90 transition-transform" />
+                                                  ) : (
+                                                    <ChevronLeft size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transform -rotate-90 transition-transform" />
+                                                  )
+                                                ) : hoveredSubCategory1.direction === "right" ? (
+                                                  <ChevronRight size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transition-transform" />
+                                                ) : (
+                                                  <ChevronLeft size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transition-transform" />
+                                                )
+                                              )}
+                                            </Link>
+                                          </li>
+                                        )
+                                      })}
+                                    </ul>
+                                  </div>
+                                )}
+                              {hoveredSubCategory2 &&
+                                hoveredSubCategory1 &&
+                                hoveredSubCategory2.rootCategoryId === parentCategory._id &&
+                                Array.isArray(hoveredSubCategory2.items) &&
+                                hoveredSubCategory2.items.length > 0 && (
+                                  <div
+                                    className="fixed z-[66] bg-white shadow-2xl border border-gray-100 rounded-lg p-4 min-w-[240px] max-w-[300px] max-h-[320px] overflow-y-auto"
+                                    style={getPanelStyle(hoveredSubCategory2.rect, hoveredSubCategory2.direction, 260)}
+                                    onMouseEnter={() => {
+                                      if (subCategory2TimeoutRef.current) clearTimeout(subCategory2TimeoutRef.current)
+                                    }}
+                                    onMouseLeave={() => {
+                                      subCategory2TimeoutRef.current = setTimeout(() => {
+                                        setHoveredSubCategory2(null)
+                                        setHoveredSubCategory3(null)
+                                      }, 200)
+                                    }}
+                                  >
+                                    <div className="text-sm font-semibold text-red-600 mb-2">
+                                      {hoveredSubCategory2.subCategory?.name || "More"}
+                                    </div>
+                                    <ul className="space-y-1">
+                                      {hoveredSubCategory2.items.map((sub4) => (
+                                        <li key={sub4._id} className="relative">
+                                          <Link
+                                            to={generateShopURL({
+                                              parentCategory: hoveredSubCategory1.parentCategoryName,
+                                              subcategory: hoveredSubCategory1.level1Name,
+                                              subcategory2: hoveredSubCategory1.current?.name,
+                                              subcategory3: hoveredSubCategory2.subCategory?.name,
+                                              subcategory4: sub4.name,
                                             })}
-                                          </div>
-                                        )}
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-                              )}
+                                            className="block rounded px-2 py-1 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50 whitespace-normal break-words"
+                                            onMouseEnter={() => {
+                                              if (subCategory3TimeoutRef.current) clearTimeout(subCategory3TimeoutRef.current)
+                                            }}
+                                            onMouseLeave={() => {
+                                              subCategory3TimeoutRef.current = setTimeout(() => {
+                                                setHoveredSubCategory3(null)
+                                              }, 200)
+                                            }}
+                                            onClick={() => setHoveredCategory(null)}
+                                          >
+                                            {sub4.name}
+                                          </Link>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                             </div>
-                          )
-                        })}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )
-              })}
+                    )
+                  })}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={scrollNext}
+                className="hidden md:inline-flex items-center justify-center w-9 h-9 rounded-full border border-white/30 text-white hover:bg-white/10 transition disabled:opacity-40 disabled:hover:bg-transparent"
+                disabled={!canScrollNext}
+                aria-label="Next categories"
+              >
+                <ChevronRight size={18} />
+              </button>
             </div>
           </div>
         </div>
@@ -1430,13 +1252,13 @@ const Navbar = () => {
                     return (
                       <div key={parentCategory._id}>
                         {/* Parent Category Item */}
-            <div className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg">
                           <Link
                             to={generateShopURL({ parentCategory: parentCategory.name })}
                             className="flex items-center flex-1"
                             onClick={closeMobileMenu}
                           >
-              <strong>{parentCategory.name}</strong>
+                            <strong>{parentCategory.name}</strong>
                           </Link>
 
                           {/* Toggle button for subcategories */}
@@ -1446,7 +1268,7 @@ const Navbar = () => {
                               aria-label={isExpanded ? "Collapse subcategories" : "Expand subcategories"}
                               aria-expanded={isExpanded}
                               className="ml-2 inline-flex items-center justify-center w-9 h-9 rounded-full bg-lime-500 text-white shadow-sm hover:bg-lime-600 active:scale-95 transition"
-                           >
+                            >
                               {isExpanded ? (
                                 <ChevronDown size={20} className="text-white" />
                               ) : (
@@ -1460,18 +1282,15 @@ const Navbar = () => {
 
                         {/* Subcategories - Only show when expanded */}
                         {isExpanded && categorySubCategories.length > 0 && (
-          <div className="ml-4 space-y-1 pb-2">
+                          <div className="ml-4 space-y-1 pb-2">
                             {categorySubCategories.map((subCategory) => (
                               <Link
                                 key={subCategory._id}
-                                to={generateShopURL({
-                                  parentCategory: parentCategory.name,
-                                  subcategory: subCategory.name,
-                                })}
+                                to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
                                 className="block py-2 px-2 text-red-600 hover:bg-gray-50 rounded-lg text-sm"
                                 onClick={closeMobileMenu}
                               >
-            <strong>{subCategory.name}</strong>
+                                <strong>{subCategory.name}</strong>
                               </Link>
                             ))}
                           </div>
