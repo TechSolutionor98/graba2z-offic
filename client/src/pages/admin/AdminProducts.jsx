@@ -4,8 +4,9 @@ import { useState, useEffect, useMemo } from "react"
 import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import ProductForm from "../../components/admin/ProductForm"
+import MoveProductsModal from "../../components/admin/MoveProductsModal"
 import { useToast } from "../../context/ToastContext"
-import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight } from "lucide-react"
 
 import config from "../../config/config"
 import { exportProductsToExcel } from "../../utils/exportToExcel"
@@ -35,6 +36,7 @@ const AdminProducts = () => {
   const [subcategories, setSubcategories] = useState([])
   const [filteredSubcategories, setFilteredSubcategories] = useState([])
   const [categoryProductCount, setCategoryProductCount] = useState(0)
+  const [showMoveModal, setShowMoveModal] = useState(false)
 
   // Derived counters
   const totalSelected = useMemo(() => {
@@ -467,6 +469,69 @@ const AdminProducts = () => {
     }
   }
 
+  const handleBulkMove = async (categoryData) => {
+    try {
+      const token = getAdminToken()
+
+      if (!token) {
+        showToast("Authentication required. Please login again.", "error")
+        return
+      }
+
+      // Get product IDs to move
+      let productIds
+      if (selectAllMode) {
+        // If all products are selected, fetch all IDs with current filters
+        const params = {}
+        if (searchTerm.trim() !== "") params.search = searchTerm.trim()
+        if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
+        if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
+        if (filterBrand && filterBrand !== "all") params.brand = filterBrand
+        if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
+
+        const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { ...params, limit: 10000, page: 1 }
+        })
+        
+        productIds = data.products.map(p => p._id)
+      } else {
+        productIds = Array.from(selectedIds)
+      }
+
+      if (productIds.length === 0) {
+        showToast("No products selected", "error")
+        return
+      }
+
+      // Make bulk move request
+      await axios.put(
+        `${config.API_URL}/api/products/bulk-move`,
+        {
+          productIds,
+          ...categoryData
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      showToast(`Successfully moved ${productIds.length} product(s)`, "success")
+      
+      // Clear selection and refresh products
+      setSelectAllMode(false)
+      setSelectedIds(new Set())
+      setAllProductIds([])
+      await fetchProducts()
+    } catch (error) {
+      console.error("Failed to move products:", error)
+      showToast(error.response?.data?.message || "Failed to move products", "error")
+    }
+  }
+
   const handleFormSubmit = async (productData) => {
     try {
       console.log("🚀 Starting product submission...")
@@ -765,16 +830,30 @@ const AdminProducts = () => {
                           {selectAllMode ? `${totalSelected} products selected` : `${totalSelected} product${totalSelected > 1 ? 's' : ''} selected`}
                         </div>
                         <button
+                          onClick={() => setShowMoveModal(true)}
+                          className="inline-flex items-center gap-1 px-4 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"
+                        >
+                          <MoveRight size={14} /> Move
+                        </button>
+                        <button
                           onClick={() => handleExport('selected')}
                           className="inline-flex items-center gap-1 px-4 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
                         >
-                          <Download size={14} /> Selected Products
+                          <Download size={14} /> Export
                         </button>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
+
+              {/* Move Products Modal */}
+              <MoveProductsModal
+                isOpen={showMoveModal}
+                onClose={() => setShowMoveModal(false)}
+                selectedCount={totalSelected}
+                onMove={handleBulkMove}
+              />
 
               {loading ? (
                 <div className="flex justify-center items-center h-64">

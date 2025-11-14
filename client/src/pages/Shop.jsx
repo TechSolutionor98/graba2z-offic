@@ -577,7 +577,7 @@ const Shop = () => {
           setSelectedSubCategory2(found2 ? found2._id : urlParams.subcategory2)
           setSubCategory2Data(found2 || null) // Store full data object
           setCurrentSubCategory2Name(found2 ? found2.name : urlParams.subcategory2)
-          // Clear level 1 subcategory when level 2 is active
+          // Only clear level 1 subcategory when level 2 is active
           setSelectedSubCategories([])
         } else {
           setSelectedSubCategory2(null)
@@ -595,9 +595,8 @@ const Shop = () => {
           setSelectedSubCategory3(found3 ? found3._id : urlParams.subcategory3)
           setSubCategory3Data(found3 || null) // Store full data object
           setCurrentSubCategory3Name(found3 ? found3.name : urlParams.subcategory3)
-          // Clear level 1 and 2 when level 3 is active
+          // Clear level 1 only, keep level 2 for proper filtering
           setSelectedSubCategories([])
-          setSelectedSubCategory2(null)
         } else {
           setSelectedSubCategory3(null)
           setSubCategory3Data(null)
@@ -614,10 +613,8 @@ const Shop = () => {
           setSelectedSubCategory4(found4 ? found4._id : urlParams.subcategory4)
           setSubCategory4Data(found4 || null) // Store full data object
           setCurrentSubCategory4Name(found4 ? found4.name : urlParams.subcategory4)
-          // Clear level 1, 2, and 3 when level 4 is active
+          // Clear level 1 only, keep levels 2 and 3 for proper filtering
           setSelectedSubCategories([])
-          setSelectedSubCategory2(null)
-          setSelectedSubCategory3(null)
         } else {
           setSelectedSubCategory4(null)
           setSubCategory4Data(null)
