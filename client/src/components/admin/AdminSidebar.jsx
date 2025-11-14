@@ -83,6 +83,7 @@ const AdminSidebar = () => {
       path.includes("/admin/add-size") ||
       path.includes("/admin/subcategories") ||
       path.includes("/admin/add-subcategory") ||
+      path.includes("/admin/subcategories/trash") ||
       path.includes("/admin/subcategories-2") ||
       path.includes("/admin/add-subcategory-2") ||
       path.includes("/admin/subcategories-3") ||
@@ -176,7 +177,7 @@ const AdminSidebar = () => {
     if (path.includes("/admin/sizes") || path.includes("/admin/add-size")) {
       newOpenDropdowns.sizes = true
     }
-    if (path.includes("/admin/subcategories") || path.includes("/admin/add-subcategory")) {
+    if (path.includes("/admin/subcategories") || path.includes("/admin/add-subcategory") || path.includes("/admin/subcategories/trash")) {
       newOpenDropdowns.subcategories = true
     }
     if (path.includes("/admin/subcategories-2") || path.includes("/admin/add-subcategory-2")) {
@@ -251,6 +252,7 @@ const AdminSidebar = () => {
           items: [
             { title: "List Sub Categories", path: "/admin/subcategories" },
             { title: "Add Sub Category", path: "/admin/subcategories/add" },
+            { title: "Trash Sub Categories", path: "/admin/subcategories/trash" },
           ],
         },
         {

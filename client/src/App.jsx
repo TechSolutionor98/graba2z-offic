@@ -122,6 +122,7 @@ import OnHold from "./pages/admin/OnHold"
 import Rejected from "./pages/admin/Rejected"
 import OnlineOrders from "./pages/admin/OnlineOrders"
 import TrashCategories from "./pages/admin/TrashCategories"
+import TrashSubCategories from "./pages/admin/TrashSubCategories"
 
 import NewOrders from "./pages/admin/NewOrders"
 import ConfirmedOrders from "./pages/admin/ConfirmedOrders"
@@ -214,6 +215,7 @@ function App() {
                               <Route path="subcategories" element={<AdminSubCategories />} />
                               <Route path="subcategories/add" element={<AddSubCategory />} />
                               <Route path="subcategories/edit/:id" element={<EditSubCategory />} />
+                              <Route path="subcategories/trash" element={<TrashSubCategories />} />
                               <Route path="subcategories-2" element={<AdminSubCategories2 />} />
                               <Route path="subcategories-2/add" element={<AddSubCategory />} />
                               <Route path="subcategories-2/edit/:id" element={<EditSubCategory />} />
