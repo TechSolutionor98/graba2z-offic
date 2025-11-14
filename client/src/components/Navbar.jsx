@@ -73,6 +73,7 @@ const Navbar = () => {
   const menuBarRef = useRef(null)
   const megaContentRef = useRef(null)
   const [megaScrollState, setMegaScrollState] = useState({ canScrollLeft: false, canScrollRight: false })
+  const MEGA_LABEL_LIMIT_CLASS = "whitespace-normal break-words max-w-[18ch]"
 
   // Decide direction based on available space rather than midpoint
   const MIN_PANEL_WIDTH = 260 // px (matches min-w[240] + padding/margins)
@@ -790,13 +791,13 @@ const Navbar = () => {
                                   const level2Subs = getChildSubCategories(subCategory._id)
                                   return (
                                     <div key={subCategory._id} className="w-[150px] flex-shrink-0 flex flex-col gap-3">
-                                      <Link
-                                        to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
-                                        className="block text-red-600 font-semibold hover:text-red-600 whitespace-nowrap"
-                                        onClick={() => setHoveredCategory(null)}
-                                      >
-                                        {subCategory.name}
-                                      </Link>
+                                        <Link
+                                          to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
+                                          className={`block text-red-600 font-semibold hover:text-red-600 ${MEGA_LABEL_LIMIT_CLASS}`}
+                                          onClick={() => setHoveredCategory(null)}
+                                        >
+                                          {subCategory.name}
+                                        </Link>
                                       <ul className="flex flex-col gap-1 px-1 pb-1 bg-transparent border-none text-left">
                                         {(level2Subs || []).slice(0, 8).map((sub2) => {
                                           const level3Subs = getChildSubCategories(sub2._id)
@@ -842,7 +843,7 @@ const Navbar = () => {
                                                   subcategory: subCategory.name,
                                                   subcategory2: sub2.name,
                                                 })}
-                                                className="block w-full text-sm text-gray-700 hover:text-red-600 hover:underline whitespace-normal break-words leading-snug"
+                                                className={`block w-full text-sm text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
                                                 onClick={() => setHoveredCategory(null)}
                                               >
                                                 <span className="flex items-start gap-2">
@@ -951,7 +952,7 @@ const Navbar = () => {
                                                 subcategory2: hoveredSubCategory1.current?.name,
                                                 subcategory3: sub3.name,
                                               })}
-                                              className="flex items-start gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50"
+                                              className={`flex items-start gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50 ${MEGA_LABEL_LIMIT_CLASS}`}
                                               onClick={() => setHoveredCategory(null)}
                                             >
                                               <span className="flex-1 break-words leading-snug text-left">{sub3.name}</span>
@@ -1007,7 +1008,7 @@ const Navbar = () => {
                                               subcategory3: hoveredSubCategory2.subCategory?.name,
                                               subcategory4: sub4.name,
                                             })}
-                                            className="block rounded px-2 py-1 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50 whitespace-normal break-words"
+                                            className={`block rounded px-2 py-1 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50 whitespace-normal break-words ${MEGA_LABEL_LIMIT_CLASS}`}
                                             onMouseEnter={() => {
                                               if (subCategory3TimeoutRef.current) clearTimeout(subCategory3TimeoutRef.current)
                                             }}
