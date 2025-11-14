@@ -236,9 +236,14 @@ const ProductDetails = () => {
 
   useEffect(() => {
     if (!slug) return
-    const decoded = decodeURIComponent(slug)
-    console.log("ProductDetails param slug:", slug, "decoded:", decoded)
-    fetchProduct(decoded)
+    let normalizedSlug = slug
+    try {
+      normalizedSlug = decodeURIComponent(slug)
+    } catch (decodeError) {
+      console.warn("Slug already decoded or invalid encoding", slug, decodeError.message)
+    }
+    console.log("ProductDetails param slug:", slug, "using:", normalizedSlug)
+    fetchProduct(normalizedSlug)
   }, [slug])
 
   useEffect(() => {
