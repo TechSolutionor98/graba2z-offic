@@ -59,6 +59,7 @@ const Navbar = () => {
   const [categoryOffset, setCategoryOffset] = useState(0)
   // Timeout refs for delayed hover states
   const categoryTimeoutRef = useRef(null)
+  const categoryOpenTimeoutRef = useRef(null)
   const subCategory1TimeoutRef = useRef(null)
   const subCategory2TimeoutRef = useRef(null)
   const subCategory3TimeoutRef = useRef(null)
@@ -74,6 +75,7 @@ const Navbar = () => {
   const megaContentRef = useRef(null)
   const [megaScrollState, setMegaScrollState] = useState({ canScrollLeft: false, canScrollRight: false })
   const MEGA_LABEL_LIMIT_CLASS = "whitespace-normal break-words max-w-[18ch]"
+  const CATEGORY_OPEN_DELAY = 220
 
   // Decide direction based on available space rather than midpoint
   const MIN_PANEL_WIDTH = 260 // px (matches min-w[240] + padding/margins)
@@ -424,6 +426,7 @@ const Navbar = () => {
   useEffect(() => {
     return () => {
       if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current)
+      if (categoryOpenTimeoutRef.current) clearTimeout(categoryOpenTimeoutRef.current)
       if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
       if (subCategory2TimeoutRef.current) clearTimeout(subCategory2TimeoutRef.current)
       if (subCategory3TimeoutRef.current) clearTimeout(subCategory3TimeoutRef.current)
@@ -724,18 +727,27 @@ const Navbar = () => {
                           if (categoryTimeoutRef.current) {
                             clearTimeout(categoryTimeoutRef.current)
                           }
-                          setHoveredCategory(parentCategory._id)
-                          const rect = e.currentTarget.getBoundingClientRect()
-                          // Centered mega menu: anchor to the categories bar bottom (viewport coords)
-                          if (menuBarRef.current) {
-                            const barRect = menuBarRef.current.getBoundingClientRect()
-                            // Add a small vertical offset so it doesn't overlap the green bar
-                            setMegaTop(barRect.bottom + 8) // no scrollY for fixed positioning
-                          } else {
-                            setMegaTop(rect.bottom + 8)
+                          if (categoryOpenTimeoutRef.current) {
+                            clearTimeout(categoryOpenTimeoutRef.current)
                           }
+                          const target = e.currentTarget
+                          categoryOpenTimeoutRef.current = setTimeout(() => {
+                            setHoveredCategory(parentCategory._id)
+                            const rect = target.getBoundingClientRect()
+                            if (menuBarRef.current) {
+                              const barRect = menuBarRef.current.getBoundingClientRect()
+                              setMegaTop(barRect.bottom + 8)
+                            } else {
+                              setMegaTop(rect.bottom + 8)
+                            }
+                            categoryOpenTimeoutRef.current = null
+                          }, CATEGORY_OPEN_DELAY)
                         }}
                         onMouseLeave={() => {
+                          if (categoryOpenTimeoutRef.current) {
+                            clearTimeout(categoryOpenTimeoutRef.current)
+                            categoryOpenTimeoutRef.current = null
+                          }
                           categoryTimeoutRef.current = setTimeout(() => {
                             setHoveredCategory(null)
                             setHoveredSubCategory1(null)
