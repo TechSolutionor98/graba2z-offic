@@ -51,6 +51,7 @@ const Navbar = () => {
   const [hoveredSubCategory2, setHoveredSubCategory2] = useState(null) // For Level 3
   const [hoveredSubCategory3, setHoveredSubCategory3] = useState(null) // For Level 4
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null)
+  const [expandedMobileSubCategory, setExpandedMobileSubCategory] = useState(null)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const profileRef = useRef(null)
   const profileButtonRef = useRef(null)
@@ -168,7 +169,27 @@ const Navbar = () => {
   }
 
   const toggleMobileCategory = (categoryId) => {
-    setExpandedMobileCategory(expandedMobileCategory === categoryId ? null : categoryId)
+    setExpandedMobileCategory((prev) => (prev === categoryId ? null : categoryId))
+    setExpandedMobileSubCategory(null)
+  }
+
+  const mobileSubCategoryButtonTouchedRef = useRef(false)
+
+  const handleMobileSubCategoryToggle = (subCategoryId) => {
+    setExpandedMobileSubCategory((prev) => (prev === subCategoryId ? null : subCategoryId))
+  }
+
+  const handleMobileSubCategoryTouch = (subCategoryId) => {
+    mobileSubCategoryButtonTouchedRef.current = true
+    handleMobileSubCategoryToggle(subCategoryId)
+  }
+
+  const handleMobileSubCategoryClick = (subCategoryId) => {
+    if (mobileSubCategoryButtonTouchedRef.current) {
+      mobileSubCategoryButtonTouchedRef.current = false
+      return
+    }
+    handleMobileSubCategoryToggle(subCategoryId)
   }
 
   // Function to check if search query matches a product's SKU (or name) exactly
@@ -1283,16 +1304,62 @@ const Navbar = () => {
                         {/* Subcategories - Only show when expanded */}
                         {isExpanded && categorySubCategories.length > 0 && (
                           <div className="ml-4 space-y-1 pb-2">
-                            {categorySubCategories.map((subCategory) => (
-                              <Link
-                                key={subCategory._id}
-                                to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
-                                className="block py-2 px-2 text-red-600 hover:bg-gray-50 rounded-lg text-sm"
-                                onClick={closeMobileMenu}
-                              >
-                                <strong>{subCategory.name}</strong>
-                              </Link>
-                            ))}
+                            {categorySubCategories.map((subCategory) => {
+                              const nestedChildren = getChildSubCategories(subCategory._id)
+                              const hasNested = nestedChildren && nestedChildren.length > 0
+
+                              const isSubExpanded = expandedMobileSubCategory === subCategory._id
+                              return (
+                                <div key={subCategory._id} className="space-y-1">
+                                  <div
+                                    className="flex items-center justify-between py-2 px-2 text-red-600 hover:bg-gray-50 rounded-lg text-sm"
+                                  >
+                                    <Link
+                                      to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
+                                      className="flex-1"
+                                      onClick={closeMobileMenu}
+                                    >
+                                      <strong>{subCategory.name}</strong>
+                                    </Link>
+                                    {hasNested && (
+                                      <button
+                                        type="button"
+                                        onTouchStart={() => handleMobileSubCategoryTouch(subCategory._id)}
+                                        onClick={() => handleMobileSubCategoryClick(subCategory._id)}
+                                        className="ml-2 inline-flex items-center justify-center w-7 h-7 rounded-full bg-white text-gray-400 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-lime-500"
+                                        aria-expanded={isSubExpanded}
+                                        aria-controls={`mobile-subcat-${subCategory._id}`}
+                                      >
+                                        {isSubExpanded ? (
+                                          <ChevronDown size={16} />
+                                        ) : (
+                                          <ChevronRight size={16} />
+                                        )}
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {hasNested && isSubExpanded && (
+                                    <div id={`mobile-subcat-${subCategory._id}`} className="ml-4 space-y-1 pb-2">
+                                      {nestedChildren.map((nested) => (
+                                        <Link
+                                          key={nested._id}
+                                          to={generateShopURL({
+                                            parentCategory: parentCategory.name,
+                                            subcategory: subCategory.name,
+                                            subcategory2: nested.name,
+                                          })}
+                                          className="block py-2 px-2 text-gray-700 hover:bg-gray-50 rounded-lg text-xs"
+                                          onClick={closeMobileMenu}
+                                        >
+                                          {nested.name}
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })}
                           </div>
                         )}
                       </div>

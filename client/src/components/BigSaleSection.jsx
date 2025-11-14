@@ -177,8 +177,9 @@ const BigSaleSection = ({ products = [] }) => {
         <div
           className="w-full h-full bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: "url(https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753795953/slider_2_pkaann.png)",
-            height: "100%",
+          //  backgroundImage: "url(https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753795953/slider_2_pkaann.png)",
+            backgroundImage: "url(discount.png)",
+          height: "100%",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",

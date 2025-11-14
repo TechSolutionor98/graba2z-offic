@@ -927,7 +927,7 @@ const Home = () => {
           <div className="w-1/3 lg:w-1/3">
             <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
               <img
-                src="Untitled-1.png"
+                src="top 2.png"
                 alt="Lenovo Banner"
                 className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
               />
@@ -936,7 +936,7 @@ const Home = () => {
           <div className="w-1/3 lg:w-1/3">
             <Link to="/product-category/laptops?brand=Acer" aria-label="Browse Acer products">
               <img
-                src="acer 2.png"
+                src="top 1.png"
                 alt="Acer Banner"
                 className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
               />
@@ -945,7 +945,7 @@ const Home = () => {
           <div className="w-1/3 lg:w-1/3 hidden lg:block">
             <Link to="/product-category/laptops?brand=Asus" aria-label="Browse Asus products">
               <img
-                src="asus-2.png"
+                src="top 3.png"
                 alt="Asus Banner"
                 className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
               />
@@ -1012,8 +1012,9 @@ const Home = () => {
         <div className="w-1/2">
           <Link to={brandUrls.HP}>
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/hp_half_side_1_iqvlks.png"
-              alt="HP Products Banner"
+             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/hp_half_side_1_iqvlks.png"
+             src="hp.png"
+             alt="HP Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
           </Link>
@@ -1021,8 +1022,9 @@ const Home = () => {
         <div className="w-1/2">
           <Link to={brandUrls.Dell}>
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/dell_half_side_6_igop3u.png"
-              alt="Dell Products Banner"
+             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/dell_half_side_6_igop3u.png"
+             src="dell1.png"
+             alt="Dell Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
           </Link>
@@ -1088,8 +1090,11 @@ const Home = () => {
           <img
             src={
               window.innerWidth < 768
-                ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939734/accessories_back_to_school_gun4tj.png"
-                : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acessories_1_ceg4gu.png"
+             ? "acessories (1).png"
+             :"acessories (1).png"
+             
+              //  ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939734/accessories_back_to_school_gun4tj.png"
+               // : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acessories_1_ceg4gu.png"
             }
             alt="Accessories Promotion Banner"
             className="w-full h-full cover rounded-lg"
@@ -1141,8 +1146,9 @@ const Home = () => {
         <div className="w-1/2">
           <Link to={brandUrls.Acer}>
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acer_half_side_jkun9a.png"
-              alt="HP Products Banner"
+             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acer_half_side_jkun9a.png"
+             src="acer01.png"
+             alt="HP Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
           </Link>
@@ -1150,8 +1156,9 @@ const Home = () => {
         <div className="w-1/2">
           <Link to={brandUrls.ASUS}>
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/asus_half_side_aikrmo.png"
-              alt="Dell Products Banner"
+             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/asus_half_side_aikrmo.png"
+             src="asus01.png"
+             alt="Dell Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
           </Link>
@@ -1272,8 +1279,9 @@ const Home = () => {
         <div className="w-1/2">
           <Link to={brandUrls.MSI}>
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/msi_half_side_1_k4dmhz.png"
-              alt="HP Products Banner"
+             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/msi_half_side_1_k4dmhz.png"
+             src="msi01.png"
+             alt="HP Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
           </Link>
@@ -1281,8 +1289,9 @@ const Home = () => {
         <div className="w-1/2">
           <Link to={brandUrls.Lenovo}>
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/lenovo_half_side_daug2k.png"
-              alt="Dell Products Banner"
+             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/lenovo_half_side_daug2k.png"
+             src="lenovo01.png"
+             alt="Dell Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
           </Link>
@@ -1358,8 +1367,9 @@ const Home = () => {
         <div className="w-1/2">
           <Link to={brandUrls.Apple}>
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757769951/apple_half_side_n1cxhc.png"
-              alt="HP Products Banner"
+             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757769951/apple_half_side_n1cxhc.png"
+             src="apple (1).png"
+             alt="HP Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
           </Link>
@@ -1367,8 +1377,9 @@ const Home = () => {
         <div className="w-1/2">
           <Link to={brandUrls.Samsung}>
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/samsung_half_side_gtslyc.png"
-              alt="Dell Products Banner"
+             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/samsung_half_side_gtslyc.png"
+             src="samsung01.png" 
+             alt="Dell Products Banner"
               className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             />
           </Link>
