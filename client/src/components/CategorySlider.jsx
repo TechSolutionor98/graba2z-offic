@@ -243,7 +243,7 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
                     )}
                   </div>
 
-                  <span className="text-xs md:text-sm font-bold text-gray-700 text-center -mt-2 lg:-mt-4 truncate">
+                  <span className="text-xs md:text-sm font-bold text-gray-700 text-center mt-0.5 md:mt-0.5 lg:mt-0.5 truncate">
                     {(() => {
                       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
                       const name = category.name;
