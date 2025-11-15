@@ -509,8 +509,8 @@ const Navbar = () => {
     <>
       {/* Desktop Navbar - Hidden on Mobile */}
       <header className="hidden md:block bg-white shadow-sm sticky top-0 pt-4 z-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+        <div className="mx-auto w-full max-w-[1920px]  space-y-4">
+          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
             {/* Logo - Exact Grabatoz Style */}
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-48 h-  flex items-center justify-center">
@@ -699,10 +699,9 @@ const Navbar = () => {
               </Link>
             </div>
           </div>
-        </div>
 
-        {/* Navigation Menu - Dynamic Categories with Dropdowns */}
-        <div className="bg-lime-500 mt-4 flex relative" ref={menuBarRef}>
+          {/* Navigation Menu - Dynamic Categories with Dropdowns */}
+          <div className="bg-lime-500 mt-4 -px-4 flex relative" ref={menuBarRef}>
           <div className="w-full">
             <div className="grid grid-cols-[auto,1fr,auto] items-center h-12 px-4 md:px-12 gap-3">
               <button
@@ -1058,7 +1057,10 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-      </header>
+      </div>
+
+      
+    </header>
 
       {/* Mobile Navbar - Shown only on Mobile */}
       <header className="md:hidden bg-white shadow-sm sticky top-0 z-50">

@@ -927,7 +927,7 @@ const Home = () => {
           <div className="w-1/3 lg:w-1/3">
             <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
               <img
-                src="top 2.png"
+                src="laptop00.png"
                 alt="Lenovo Banner"
                 className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
               />
@@ -936,7 +936,7 @@ const Home = () => {
           <div className="w-1/3 lg:w-1/3">
             <Link to="/product-category/laptops?brand=Acer" aria-label="Browse Acer products">
               <img
-                src="top 1.png"
+                src="electronoc resixe.png"
                 alt="Acer Banner"
                 className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
               />
@@ -945,7 +945,7 @@ const Home = () => {
           <div className="w-1/3 lg:w-1/3 hidden lg:block">
             <Link to="/product-category/laptops?brand=Asus" aria-label="Browse Asus products">
               <img
-                src="top 3.png"
+                src="camera (2).png"
                 alt="Asus Banner"
                 className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
               />
@@ -975,9 +975,9 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <div className=" flex items-center justify-center mt-2 mx-2">
+      {/* <div className=" flex items-center justify-center mt-2 mx-2">
         <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757761484/tamara_tabby_kooxbn.webp" alt="" className="w-full  sm:mx-4 h-auto rounded-lg" />
-      </div>
+      </div> */}
 
       {/* Big Sale Section - Handles both mobile and desktop views */}
       <BigSaleSection products={featuredProducts} />
