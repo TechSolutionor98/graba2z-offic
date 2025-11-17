@@ -46,6 +46,55 @@ const GuestOrder = () => {
     fetchOrder();
   }, [location]);
 
+  // Initialize Google Customer Reviews opt-in module for guest orders
+  useEffect(() => {
+    if (!order || !successMessage) return
+
+    // Load Google API platform script if not already loaded
+    if (!window.gapi) {
+      const script = document.createElement("script")
+      script.src = "https://apis.google.com/js/platform.js?onload=renderOptIn"
+      script.async = true
+      script.defer = true
+      document.body.appendChild(script)
+    }
+
+    // Calculate estimated delivery date (7-14 days from now by default)
+    const estimatedDeliveryDate = order.estimatedDelivery 
+      ? new Date(order.estimatedDelivery).toISOString().split('T')[0]
+      : new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 10 days from now
+
+    // Extract GTINs from order items if available
+    const products = order.orderItems
+      .filter(item => item.product?.gtin || item.product?.barcode)
+      .map(item => ({ gtin: item.product?.gtin || item.product?.barcode }))
+
+    // Define the render function for GCR opt-in
+    window.renderOptIn = function() {
+      if (window.gapi && window.gapi.load) {
+        window.gapi.load('surveyoptin', function() {
+          window.gapi.surveyoptin.render({
+            // REQUIRED FIELDS
+            "merchant_id": 5615926184,
+            "order_id": order._id,
+            "email": order.shippingAddress?.email || "",
+            "delivery_country": "AE", // UAE country code
+            "estimated_delivery_date": estimatedDeliveryDate,
+
+            // OPTIONAL FIELDS
+            "products": products.length > 0 ? products : undefined,
+            "opt_in_style": "BOTTOM_RIGHT_DIALOG"
+          })
+        })
+      }
+    }
+
+    // Call renderOptIn if gapi is already loaded
+    if (window.gapi && window.gapi.load) {
+      window.renderOptIn()
+    }
+  }, [order, successMessage]);
+
   const getStatusIcon = (status) => {
     switch (status) {
       case "Processing":

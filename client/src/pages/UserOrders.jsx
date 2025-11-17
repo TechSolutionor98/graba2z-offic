@@ -25,6 +25,9 @@ const UserOrders = () => {
     if (success === "true" && orderId) {
       setSuccessMessage(`Order #${orderId.slice(-6)} has been placed successfully!`)
 
+      // Initialize Google Customer Reviews opt-in module
+      initializeGCROptIn(orderId)
+
       // Clear success message after 5 seconds
       const timer = setTimeout(() => {
         setSuccessMessage("")
@@ -33,6 +36,60 @@ const UserOrders = () => {
       return () => clearTimeout(timer)
     }
   }, [location])
+
+  // Initialize Google Customer Reviews opt-in module
+  const initializeGCROptIn = async (orderId) => {
+    try {
+      // Fetch order details
+      const token = localStorage.getItem("token")
+      const { data: order } = await axios.get(`${config.API_URL}/api/orders/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      // Load Google API platform script if not already loaded
+      if (!window.gapi) {
+        const script = document.createElement("script")
+        script.src = "https://apis.google.com/js/platform.js?onload=renderOptIn"
+        script.async = true
+        script.defer = true
+        document.body.appendChild(script)
+      }
+
+      // Calculate estimated delivery date
+      const estimatedDeliveryDate = order.estimatedDelivery 
+        ? new Date(order.estimatedDelivery).toISOString().split('T')[0]
+        : new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+      // Extract GTINs from order items if available
+      const products = order.orderItems
+        .filter(item => item.product?.gtin || item.product?.barcode)
+        .map(item => ({ gtin: item.product?.gtin || item.product?.barcode }))
+
+      // Define the render function for GCR opt-in
+      window.renderOptIn = function() {
+        if (window.gapi && window.gapi.load) {
+          window.gapi.load('surveyoptin', function() {
+            window.gapi.surveyoptin.render({
+              "merchant_id": 5615926184,
+              "order_id": order._id,
+              "email": order.shippingAddress?.email || user?.email || "",
+              "delivery_country": "AE",
+              "estimated_delivery_date": estimatedDeliveryDate,
+              "products": products.length > 0 ? products : undefined,
+              "opt_in_style": "BOTTOM_RIGHT_DIALOG"
+            })
+          })
+        }
+      }
+
+      // Call renderOptIn if gapi is already loaded
+      if (window.gapi && window.gapi.load) {
+        window.renderOptIn()
+      }
+    } catch (error) {
+      console.error("Error initializing GCR opt-in:", error)
+    }
+  }
 
   useEffect(() => {
     if (!isAuthenticated) {

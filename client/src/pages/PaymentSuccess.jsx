@@ -1,11 +1,14 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
+import axios from "axios"
+import config from "../config/config"
 
 const PaymentSuccess = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [orderData, setOrderData] = useState(null)
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search)
@@ -44,8 +47,72 @@ const PaymentSuccess = () => {
 
       // Clear cart after successful purchase tracking
       localStorage.removeItem("cart")
+
+      // Fetch order details for Google Customer Reviews
+      fetchOrderDetails(orderId)
     }
   }, [location])
+
+  const fetchOrderDetails = async (orderId) => {
+    try {
+      const token = localStorage.getItem("token") || localStorage.getItem("adminToken")
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+      
+      const { data } = await axios.get(`${config.API_URL}/api/orders/${orderId}`, { headers })
+      setOrderData(data)
+    } catch (error) {
+      console.error("Error fetching order details:", error)
+    }
+  }
+
+  // Initialize Google Customer Reviews opt-in module
+  useEffect(() => {
+    if (!orderData) return
+
+    // Load Google API platform script if not already loaded
+    if (!window.gapi) {
+      const script = document.createElement("script")
+      script.src = "https://apis.google.com/js/platform.js?onload=renderOptIn"
+      script.async = true
+      script.defer = true
+      document.body.appendChild(script)
+    }
+
+    // Calculate estimated delivery date (7-14 days from now by default)
+    const estimatedDeliveryDate = orderData.estimatedDelivery 
+      ? new Date(orderData.estimatedDelivery).toISOString().split('T')[0]
+      : new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 10 days from now
+
+    // Extract GTINs from order items if available
+    const products = orderData.orderItems
+      .filter(item => item.product?.gtin || item.product?.barcode)
+      .map(item => ({ gtin: item.product?.gtin || item.product?.barcode }))
+
+    // Define the render function for GCR opt-in
+    window.renderOptIn = function() {
+      if (window.gapi && window.gapi.load) {
+        window.gapi.load('surveyoptin', function() {
+          window.gapi.surveyoptin.render({
+            // REQUIRED FIELDS
+            "merchant_id": 5615926184,
+            "order_id": orderData._id,
+            "email": orderData.shippingAddress?.email || orderData.user?.email || "",
+            "delivery_country": "AE", // UAE country code
+            "estimated_delivery_date": estimatedDeliveryDate,
+
+            // OPTIONAL FIELDS
+            "products": products.length > 0 ? products : undefined,
+            "opt_in_style": "BOTTOM_RIGHT_DIALOG"
+          })
+        })
+      }
+    }
+
+    // Call renderOptIn if gapi is already loaded
+    if (window.gapi && window.gapi.load) {
+      window.renderOptIn()
+    }
+  }, [orderData])
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
