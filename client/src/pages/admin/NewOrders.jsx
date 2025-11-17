@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 
 import config from "../../config/config"
+import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 
 // Invoice Component for Printing - Using forwardRef
 const InvoiceComponent = forwardRef(({ order }, ref) => {
@@ -30,6 +31,9 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString()
   }
+
+  const { subtotal, shipping, tax, total, manualDiscount, couponDiscount, couponCode } =
+    getInvoiceBreakdown(order)
 
   const currentDate = new Date().toLocaleDateString()
   const orderDate = new Date(order.createdAt).toLocaleDateString()
@@ -84,7 +88,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
 
           <div className="w-1/2 text-end p-5   rounded-xl backdrop-blur-sm max-w-xs ml-auto">
-            <h2 className="text-2xl font-bold mb-1">TAX INVOICE</h2>
+            <h2 className="text-2xl font-bold mb-1">VAT INVOICE</h2>
             <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
             <div className="text-sm">📅 Date: {orderDate}</div>
           </div>
@@ -193,25 +197,31 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Subtotal:</span>
-              <span className="text-gray-900">{formatPrice(order.itemsPrice || 0)}</span>
+              <span className="text-gray-900">{formatPrice(subtotal)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Shipping:</span>
-              <span className="text-gray-900">{formatPrice(order.shippingPrice || 0)}</span>
+              <span className="text-gray-900">{formatPrice(shipping)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Tax:</span>
-              <span className="text-gray-900">{formatPrice(order.taxPrice || 0)}</span>
+              <span className="text-gray-600">VAT:</span>
+              <span className="text-gray-900">{formatPrice(tax)}</span>
             </div>
-            {order.discountAmount > 0 && (
+            {manualDiscount > 0 && (
               <div className="flex justify-between">
                 <span className="text-gray-600">Discount:</span>
-                <span className="text-green-600">-{formatPrice(order.discountAmount)}</span>
+                <span className="text-green-600">-{formatPrice(manualDiscount)}</span>
+              </div>
+            )}
+            {couponDiscount > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Coupon{couponCode ? ` (${couponCode})` : ""}:</span>
+                <span className="text-green-600">-{formatPrice(couponDiscount)}</span>
               </div>
             )}
             <div className="border-t-2 border-lime-300 pt-2 flex justify-between">
               <span className="text-lg font-bold text-lime-800">Total:</span>
-              <span className="text-lg font-bold text-lime-600">{formatPrice(order.totalPrice || 0)}</span>
+              <span className="text-lg font-bold text-lime-600">{formatPrice(total)}</span>
             </div>
           </div>
         </div>
@@ -1043,7 +1053,7 @@ const orderStatusOptions = [
                       <span className="text-gray-900">{formatPrice(selectedOrder.shippingPrice || 0)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Tax:</span>
+                      <span className="text-gray-600">VAT:</span>
                       <span className="text-gray-900">{formatPrice(selectedOrder.taxPrice || 0)}</span>
                     </div>
                     {selectedOrder.discountAmount > 0 && (

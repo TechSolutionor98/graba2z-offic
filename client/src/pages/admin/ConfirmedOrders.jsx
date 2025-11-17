@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 
 import config from "../../config/config"
+import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 
 // Invoice Component for Printing - Using forwardRef
 const InvoiceComponent = forwardRef(({ order }, ref) => {
@@ -30,6 +31,9 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString()
   }
+
+  const { subtotal, shipping, tax, total, manualDiscount, couponDiscount, couponCode } =
+    getInvoiceBreakdown(order)
 
   const currentDate = new Date().toLocaleDateString()
   const orderDate = new Date(order.createdAt).toLocaleDateString()
@@ -84,7 +88,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
 
           <div className="w-1/2 text-end p-5   rounded-xl backdrop-blur-sm max-w-xs ml-auto">
-            <h2 className="text-2xl font-bold mb-1">TAX INVOICE</h2>
+            <h2 className="text-2xl font-bold mb-1">VAT INVOICE</h2>
             <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
             <div className="text-sm">📅 Date: {orderDate}</div>
           </div>
@@ -188,30 +192,44 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         </div>
 
         {/* Total Amount */}
-        <div className="bg-lime-50 border-2 border-lime-200 rounded-lg p-4">
-          <h4 className="text-lg font-bold text-lime-800 mb-2 uppercase">💰 Total Amount</h4>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Subtotal:</span>
-              <span className="text-gray-900">{formatPrice(order.itemsPrice || 0)}</span>
+        <div className="bg-white border-2 border-lime-200 rounded-lg p-3">
+          <div className="space-y-1">
+            <div className="flex justify-between text-gray-700">
+              <span>💰 Sub-Total:</span>
+              <span className="font-medium">{formatPrice(subtotal)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Shipping:</span>
-              <span className="text-gray-900">{formatPrice(order.shippingPrice || 0)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Tax:</span>
-              <span className="text-gray-900">{formatPrice(order.taxPrice || 0)}</span>
-            </div>
-            {order.discountAmount > 0 && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Discount:</span>
-                <span className="text-green-600">-{formatPrice(order.discountAmount)}</span>
+
+            {manualDiscount > 0 && (
+              <div className="flex justify-between text-gray-700">
+                <span>🎉 Discount:</span>
+                <span className="font-medium text-gray-700">-{formatPrice(manualDiscount)}</span>
               </div>
             )}
-            <div className="border-t-2 border-lime-300 pt-2 flex justify-between">
-              <span className="text-lg font-bold text-lime-800">Total:</span>
-              <span className="text-lg font-bold text-lime-600">{formatPrice(order.totalPrice || 0)}</span>
+
+            {couponDiscount > 0 && (
+              <div className="flex justify-between text-gray-700">
+                <span>🎁 Coupon{couponCode ? ` (${couponCode})` : ""}:</span>
+                <span className="font-medium text-gray-700">-{formatPrice(couponDiscount)}</span>
+              </div>
+            )}
+
+            {tax > 0 && (
+              <div className="flex justify-between text-gray-700">
+                <span>✔️ VAT:</span>
+                <span className="font-medium">{formatPrice(tax)}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between text-gray-700">
+              <span>🚚 Shipping Charge:</span>
+              <span className="font-medium">{formatPrice(shipping)}</span>
+            </div>
+
+            <div className="border-t-2 border-lime-500">
+              <div className="flex justify-between text-xl font-bold text-lime-800 bg-lime-100 p-2 rounded-lg">
+                <span> TOTAL AMOUNT:</span>
+                <span>{formatPrice(total)}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -267,6 +285,8 @@ const ConfirmedOrders = () => {
   const formatDate = (date) => {
     return new Date(date).toLocaleString()
   }
+
+  const selectedTotals = getInvoiceBreakdown(selectedOrder || {})
 
   // Print handler
   const handlePrint = useReactToPrint({
@@ -1005,27 +1025,31 @@ const ConfirmedOrders = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subtotal:</span>
-                      <span className="text-gray-900">{formatPrice(selectedOrder.itemsPrice || 0)}</span>
+                      <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Shipping:</span>
-                      <span className="text-gray-900">{formatPrice(selectedOrder.shippingPrice || 0)}</span>
+                      <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Tax:</span>
-                      <span className="text-gray-900">{formatPrice(selectedOrder.taxPrice || 0)}</span>
+                      <span className="text-gray-600">VAT:</span>
+                      <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
                     </div>
-                    {selectedOrder.discountAmount > 0 && (
+                    {selectedTotals.manualDiscount > 0 && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Discount:</span>
-                        <span className="text-green-600">-{formatPrice(selectedOrder.discountAmount)}</span>
+                        <span className="text-green-600">-{formatPrice(selectedTotals.manualDiscount)}</span>
+                      </div>
+                    )}
+                    {selectedTotals.couponDiscount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Coupon{selectedTotals.couponCode ? ` (${selectedTotals.couponCode})` : ""}:</span>
+                        <span className="text-green-600">-{formatPrice(selectedTotals.couponDiscount)}</span>
                       </div>
                     )}
                     <div className="border-t pt-2 flex justify-between">
                       <span className="text-lg font-semibold text-gray-900">Total:</span>
-                      <span className="text-lg font-bold text-lime-600">
-                        {formatPrice(selectedOrder.totalPrice || 0)}
-                      </span>
+                      <span className="text-lg font-bold text-lime-600">{formatPrice(selectedTotals.total)}</span>
                     </div>
                   </div>
                 </div>
