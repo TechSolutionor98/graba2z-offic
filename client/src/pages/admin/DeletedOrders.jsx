@@ -1020,16 +1020,25 @@ import {
 
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
+import { resolveOrderItemBasePrice, computeBaseSubtotal } from "../../utils/orderPricing"
 
 // Invoice Component for Printing - Using forwardRef
 const InvoiceComponent = forwardRef(({ order }, ref) => {
   const formatPrice = (price) => {
-    return `AED ${price?.toLocaleString() || 0}`
+    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString()
   }
+
+  const resolvedItems = Array.isArray(order?.orderItems)
+    ? order.orderItems
+    : Array.isArray(order?.items)
+    ? order.items
+    : []
+
+  const baseSubtotal = computeBaseSubtotal(resolvedItems)
 
   const { subtotal, shipping, tax, total, manualDiscount, couponDiscount, couponCode } =
     getInvoiceBreakdown(order)
@@ -1175,16 +1184,41 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                 </tr>
               </thead>
               <tbody>
-                {order.orderItems?.map((item, index) => (
-                  <tr key={index} className="hover:bg-lime-50">
-                    <td className="border border-lime-300 px-3 py-2 text-sm">{item.name}</td>
-                    <td className="border border-lime-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
-                    <td className="border border-lime-300 px-3 py-2 text-right text-sm">{formatPrice(item.price)}</td>
-                    <td className="border border-lime-300 px-3 py-2 text-right text-sm font-semibold">
-                      {formatPrice(item.price * item.quantity)}
-                    </td>
-                  </tr>
-                ))}
+                {resolvedItems.map((item, index) => {
+                  const basePrice = resolveOrderItemBasePrice(item)
+                  const itemPrice = Number(item.price) || basePrice
+                  const quantity = Number(item.quantity) || 0
+                  const showDiscount = basePrice > itemPrice
+                  const lineTotal = itemPrice * quantity
+                  const baseTotal = basePrice * quantity
+                  const itemName = item.name || item.productName || "Unnamed Product"
+
+                  return (
+                    <tr key={index} className="hover:bg-lime-50">
+                      <td className="border border-lime-300 px-3 py-2 text-sm">
+                        <div className="font-medium text-gray-900">{itemName}</div>
+                        {showDiscount && (
+                          <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
+                        )}
+                      </td>
+                      <td className="border border-lime-300 px-3 py-2 text-center text-sm">{quantity}</td>
+                      <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                        {showDiscount && (
+                          <span className="block text-xs text-gray-400 line-through">{formatPrice(basePrice)}</span>
+                        )}
+                        <span className="font-semibold text-gray-900">{formatPrice(itemPrice)}</span>
+                      </td>
+                      <td className="border border-lime-300 px-3 py-2 text-right text-sm font-semibold">
+                        {showDiscount && (
+                          <span className="block text-xs text-gray-400 font-normal line-through">
+                            {formatPrice(baseTotal)}
+                          </span>
+                        )}
+                        <span>{formatPrice(lineTotal)}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -1193,6 +1227,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         {/* Total Amount */}
         <div className="bg-white border-2 border-lime-200 rounded-lg p-3">
           <div className="space-y-1">
+            {baseSubtotal > 0 && (
+              <div className="flex justify-between text-gray-500">
+                <span>Base Price:</span>
+                <span className="line-through">{formatPrice(baseSubtotal)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-gray-700">
               <span>💰 Sub-Total:</span>
               <span className="font-medium">{formatPrice(subtotal)}</span>
@@ -1278,14 +1318,21 @@ const DeletedOrders = () => {
   const paymentStatusOptions = ["Paid", "Unpaid"]
 
   const formatPrice = (price) => {
-    return `AED ${price?.toLocaleString() || 0}`
+    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
 
   const formatDate = (date) => {
     return new Date(date).toLocaleString()
   }
 
+  const resolvedSelectedItems = Array.isArray(selectedOrder?.orderItems)
+    ? selectedOrder.orderItems
+    : Array.isArray(selectedOrder?.items)
+    ? selectedOrder.items
+    : []
+
   const selectedTotals = getInvoiceBreakdown(selectedOrder || {})
+  const selectedBaseSubtotal = computeBaseSubtotal(resolvedSelectedItems)
 
   // Print handler
   const handlePrint = useReactToPrint({
@@ -1985,26 +2032,53 @@ const DeletedOrders = () => {
                 <div className="bg-white border rounded-lg p-6 mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
                   <div className="space-y-4">
-                    {selectedOrder.orderItems?.map((item, index) => (
-                      <div
-                        key={item._id || index}
-                        className="flex items-center justify-between py-3 border-b last:border-b-0"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="w-15 h-15 bg-gray-200 rounded-md flex items-center justify-center">
-                            <Package size={24} className="text-gray-400" />
+                    {resolvedSelectedItems.length > 0 ? (
+                      resolvedSelectedItems.map((item, index) => {
+                        const basePrice = resolveOrderItemBasePrice(item)
+                        const itemPrice = Number(item.price) || basePrice
+                        const quantity = Number(item.quantity) || 0
+                        const showDiscount = basePrice > itemPrice
+                        const lineTotal = itemPrice * quantity
+                        const baseTotal = basePrice * quantity
+                        const itemName = item.name || item.productName || "Unnamed Product"
+
+                        return (
+                          <div
+                            key={item._id || index}
+                            className="flex items-center justify-between py-3 border-b last:border-b-0"
+                          >
+                            <div className="flex items-center space-x-4">
+                              <div className="w-15 h-15 bg-gray-200 rounded-md flex items-center justify-center">
+                                <Package size={24} className="text-gray-400" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-900">{itemName}</h4>
+                                <p className="text-sm text-gray-500">Qty: {quantity}</p>
+                                {showDiscount && (
+                                  <p className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              {showDiscount && (
+                                <p className="text-xs text-gray-400 line-through">{formatPrice(basePrice)}</p>
+                              )}
+                              <p className="font-semibold text-gray-900">{formatPrice(itemPrice)}</p>
+                              <p className="text-sm text-gray-500">
+                                {showDiscount && (
+                                  <span className="block text-xs text-gray-400 line-through">
+                                    {formatPrice(baseTotal)}
+                                  </span>
+                                )}
+                                <span>Total: {formatPrice(lineTotal)}</span>
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-medium text-gray-900">{item.name}</h4>
-                            <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-gray-900">{formatPrice(item.price)}</p>
-                          <p className="text-sm text-gray-500">Total: {formatPrice(item.price * item.quantity)}</p>
-                        </div>
-                      </div>
-                    )) || <p className="text-gray-500 text-center py-4">No items found</p>}
+                        )
+                      })
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">No items found</p>
+                    )}
                   </div>
                 </div>
 
@@ -2012,6 +2086,12 @@ const DeletedOrders = () => {
                 <div className="bg-gray-50 border rounded-lg p-6 mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Amount</h3>
                   <div className="space-y-2">
+                    {selectedBaseSubtotal > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Base Price:</span>
+                        <span className="text-gray-500 line-through">{formatPrice(selectedBaseSubtotal)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subtotal:</span>
                       <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
