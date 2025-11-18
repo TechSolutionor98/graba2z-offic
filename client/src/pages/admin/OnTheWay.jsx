@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
-import { Search, Eye, RefreshCw, MapPin, CheckCircle } from "lucide-react"
+import { Search, Eye, RefreshCw, MapPin, CheckCircle, Package } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
-
 import config from "../../config/config"
+import { resolveOrderItemBasePrice, computeBaseSubtotal } from "../../utils/orderPricing"
 const OnTheWay = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -17,8 +17,11 @@ const OnTheWay = () => {
   const { showToast } = useToast()
 
   const formatPrice = (price) => {
-    return `Rs ${price.toLocaleString()}`
+    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
+
+  const selectedOrderItems = Array.isArray(selectedOrder?.orderItems) ? selectedOrder.orderItems : []
+  const selectedBaseSubtotal = computeBaseSubtotal(selectedOrderItems)
 
   useEffect(() => {
     fetchOrders()
@@ -267,6 +270,88 @@ const OnTheWay = () => {
                       <CheckCircle size={18} className="mr-2" />
                       Mark as Delivered
                     </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white border rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
+                <div className="space-y-4">
+                  {selectedOrderItems.length > 0 ? (
+                    selectedOrderItems.map((item, index) => {
+                      const basePrice = resolveOrderItemBasePrice(item)
+                      const salePrice = Number(item.price) || basePrice
+                      const showDiscount = basePrice > salePrice
+                      const lineTotal = salePrice * (item.quantity || 0)
+                      const baseTotal = basePrice * (item.quantity || 0)
+
+                      return (
+                        <div
+                          key={item._id || index}
+                          className="flex items-center justify-between py-3 border-b last:border-b-0"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-14 h-14 bg-gray-100 rounded-md flex items-center justify-center">
+                              {item.image ? (
+                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <Package size={20} className="text-gray-400" />
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gray-900">{item.name}</h4>
+                              <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {showDiscount && (
+                              <p className="text-xs text-gray-400 line-through">{formatPrice(basePrice)}</p>
+                            )}
+                            <p className="font-semibold text-gray-900">{formatPrice(salePrice)}</p>
+                            {showDiscount && (
+                              <p className="text-xs text-gray-400 line-through">{formatPrice(baseTotal)}</p>
+                            )}
+                            <p className="text-sm text-gray-500">Total: {formatPrice(lineTotal)}</p>
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No items found</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-gray-50 border rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Amount</h3>
+                <div className="space-y-2">
+                  {selectedBaseSubtotal > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Base Price:</span>
+                      <span className="text-gray-400 line-through">{formatPrice(selectedBaseSubtotal)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="text-gray-900">{formatPrice(selectedOrder?.itemsPrice || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Shipping:</span>
+                    <span className="text-gray-900">{formatPrice(selectedOrder?.shippingPrice || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">VAT:</span>
+                    <span className="text-gray-900">{formatPrice(selectedOrder?.taxPrice || 0)}</span>
+                  </div>
+                  {selectedOrder?.discountAmount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Discount:</span>
+                      <span className="text-green-600">-{formatPrice(selectedOrder.discountAmount)}</span>
+                    </div>
+                  )}
+                  <div className="border-t pt-2 flex justify-between">
+                    <span className="text-lg font-semibold text-gray-900">Total:</span>
+                    <span className="text-lg font-bold text-blue-600">{formatPrice(selectedOrder?.totalPrice || 0)}</span>
                   </div>
                 </div>
               </div>

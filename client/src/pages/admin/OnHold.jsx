@@ -7,6 +7,7 @@ import { Search, Eye, RefreshCw, Pause, Play, ChevronDown, X, Package, CreditCar
 import { useToast } from "../../context/ToastContext"
 
 import config from "../../config/config"
+import { resolveOrderItemBasePrice, computeBaseSubtotal } from "../../utils/orderPricing"
 const OnHold = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -87,8 +88,11 @@ const OnHold = () => {
   }
 
   const formatPrice = (price) => {
-    return `Rs ${price.toLocaleString()}`
+    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
+
+  const selectedOrderItems = Array.isArray(selectedOrder?.orderItems) ? selectedOrder.orderItems : []
+  const selectedBaseSubtotal = computeBaseSubtotal(selectedOrderItems)
 
   useEffect(() => {
     fetchOrders()
@@ -456,41 +460,61 @@ const OnHold = () => {
               <div className="bg-white border rounded-lg p-4 mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
                 <div className="space-y-4">
-                  {selectedOrder.orderItems?.map((item, index) => (
-                    <div
-                      key={item._id || index}
-                      className="flex items-center justify-between py-3 border-b last:border-b-0"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center">
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-14 h-14 object-contain" />
-                          ) : (
-                            <Package size={24} className="text-gray-400" />
-                          )}
+                  {selectedOrderItems.length > 0 ? (
+                    selectedOrderItems.map((item, index) => {
+                      const basePrice = resolveOrderItemBasePrice(item)
+                      const salePrice = Number(item.price) || basePrice
+                      const showDiscount = basePrice > salePrice
+                      const lineTotal = salePrice * (item.quantity || 0)
+                      const baseTotal = basePrice * (item.quantity || 0)
+
+                      return (
+                        <div
+                          key={item._id || index}
+                          className="flex items-center justify-between py-3 border-b last:border-b-0"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center">
+                              {item.image ? (
+                                <img src={item.image} alt={item.name} className="w-14 h-14 object-contain" />
+                              ) : (
+                                <Package size={24} className="text-gray-400" />
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gray-900">{item.name}</h4>
+                              <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {showDiscount && (
+                              <p className="text-xs text-gray-400 line-through">{formatPrice(basePrice)}</p>
+                            )}
+                            <p className="font-semibold text-gray-900">{formatPrice(salePrice)}</p>
+                            {showDiscount && (
+                              <p className="text-xs text-gray-400 line-through">{formatPrice(baseTotal)}</p>
+                            )}
+                            <p className="text-sm text-gray-500">Total: {formatPrice(lineTotal)}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-medium text-gray-900">{item.name}</h4>
-                          <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium text-gray-900">
-                          AED {(item.price * item.quantity).toFixed(2)}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          AED {item.price.toFixed(2)} each
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      )
+                    })
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No items found</p>
+                  )}
                 </div>
 
                 {/* Total */}
-                <div className="mt-4 pt-4 border-t">
+                <div className="mt-4 pt-4 border-t space-y-1">
+                  {selectedBaseSubtotal > 0 && (
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>Base Price:</span>
+                      <span className="line-through">{formatPrice(selectedBaseSubtotal)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total Amount:</span>
-                    <span>AED {selectedOrder.totalPrice.toFixed(2)}</span>
+                    <span>{formatPrice(selectedOrder?.totalPrice || 0)}</span>
                   </div>
                 </div>
 
