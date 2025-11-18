@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, forwardRef } from "react"
 import axios from "axios"
 import { useReactToPrint } from "react-to-print"
+import AdminSidebar from "../../components/admin/AdminSidebar"
 import {
   Search,
   Eye,
@@ -20,7 +21,7 @@ import {
 
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
-import { resolveOrderItemBasePrice, computeBaseSubtotal } from "../../utils/orderPricing"
+import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 
 const InvoiceComponent = forwardRef(({ order }, ref) => {
   const formatPrice = (price) => {
@@ -34,8 +35,17 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   const resolvedItems = Array.isArray(order?.orderItems) ? order.orderItems : []
   const baseSubtotal = computeBaseSubtotal(resolvedItems)
 
-  const { subtotal, shipping, tax, total, manualDiscount, couponDiscount, couponCode } =
-    getInvoiceBreakdown(order)
+  const {
+    subtotal,
+    shipping,
+    tax,
+    total,
+    couponCode,
+    couponDiscount,
+    displaySubtotal,
+    displayTotal,
+  } = getInvoiceBreakdown(order)
+  const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
 
   const currentDate = new Date().toLocaleDateString()
   const orderDate = new Date(order.createdAt).toLocaleDateString()
@@ -141,6 +151,14 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
         </div>
 
+        {/* Seller Comments */}
+        {order.sellerComments && (
+          <div className="mb-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-3">
+            <h4 className="text-sm font-bold text-blue-700 uppercase mb-2">💬 Seller Comments</h4>
+            <p className="text-gray-700 whitespace-pre-wrap">{order.sellerComments}</p>
+          </div>
+        )}
+
         {/* Products Table */}
         <div className="mb-2">
           <table className="w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
@@ -203,7 +221,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         {/* Totals */}
         <div className="bg-white border-2 border-lime-200 rounded-lg p-3">
           <div className="space-y-1">
-            {baseSubtotal > 0 && baseSubtotal !== subtotal && (
+            {baseSubtotal > 0 && (
               <div className="flex justify-between text-gray-500">
                 <span>Base Price:</span>
                 <span className="line-through">{formatPrice(baseSubtotal)}</span>
@@ -211,20 +229,22 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
             )}
             <div className="flex justify-between text-gray-700">
               <span>💰 Sub-Total:</span>
-              <span className="font-medium">{formatPrice(subtotal)}</span>
+              <span className="font-medium">{formatPrice(displaySubtotal)}</span>
             </div>
 
-            {manualDiscount > 0 && (
+            {derivedDiscount > 0 && (
               <div className="flex justify-between text-gray-700">
-                <span>🎉 Discount:</span>
-                <span className="font-medium text-gray-700">-{formatPrice(manualDiscount)}</span>
+                <span>Offer Discount:</span>
+                <span className="font-medium text-green-700">-{formatPrice(derivedDiscount)}</span>
               </div>
             )}
 
             {couponDiscount > 0 && (
               <div className="flex justify-between text-gray-700">
-                <span>🎁 Coupon{couponCode ? ` (${couponCode})` : ""}:</span>
-                <span className="font-medium text-gray-700">-{formatPrice(couponDiscount)}</span>
+                <span>
+                  Coupon{couponCode ? ` (${couponCode})` : ""}:
+                </span>
+                <span className="font-medium text-green-700">-{formatPrice(couponDiscount)}</span>
               </div>
             )}
 
@@ -243,7 +263,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
             <div className="border-t-2 border-lime-500">
               <div className="flex justify-between text-xl font-bold text-lime-800 bg-lime-100 p-2 rounded-lg">
                 <span> TOTAL AMOUNT:</span>
-                <span>{formatPrice(total)}</span>
+                <span>{formatPrice(displayTotal)}</span>
               </div>
             </div>
           </div>
@@ -327,6 +347,7 @@ const OnHoldOrders = () => {
   const [orderNotes, setOrderNotes] = useState("")
   const [trackingId, setTrackingId] = useState("")
   const [estimatedDelivery, setEstimatedDelivery] = useState("")
+  const [sellerComments, setSellerComments] = useState("")
 
   // Print ref
   const printComponentRef = useRef(null)
@@ -356,6 +377,13 @@ const orderStatusOptions = [
 
   const selectedOrderItems = Array.isArray(selectedOrder?.orderItems) ? selectedOrder.orderItems : []
   const selectedBaseSubtotal = computeBaseSubtotal(selectedOrderItems)
+  const selectedTotals = getInvoiceBreakdown(selectedOrder || {})
+  const selectedBaseDiscount = deriveBaseDiscount(selectedBaseSubtotal, selectedTotals.subtotal)
+  
+  // Calculate total discount (manual or coupon)
+  const totalDiscountAmount = selectedTotals.couponDiscount + selectedTotals.manualDiscount
+  const couponCodeLabel = selectedTotals.couponCode || selectedOrder?.couponCode || ""
+  const showCouponDetail = totalDiscountAmount > 0
 
   // Print handler
   const handlePrint = useReactToPrint({
@@ -421,6 +449,7 @@ const orderStatusOptions = [
     setOrderNotes(order.notes || "")
     setTrackingId(order.trackingId || "")
     setEstimatedDelivery(order.estimatedDelivery ? new Date(order.estimatedDelivery).toISOString().split("T")[0] : "")
+    setSellerComments(order.sellerComments || "")
   }
 
   const handleCloseModal = () => {
@@ -428,6 +457,7 @@ const orderStatusOptions = [
     setOrderNotes("")
     setTrackingId("")
     setEstimatedDelivery("")
+    setSellerComments("")
   }
 
   const handleUpdateStatus = async (orderId, status) => {
@@ -536,6 +566,7 @@ const orderStatusOptions = [
       const updateData = {
         notes: orderNotes,
         trackingId: trackingId,
+        sellerComments: sellerComments,
         ...(estimatedDelivery && { estimatedDelivery: new Date(estimatedDelivery).toISOString() }),
       }
 
@@ -551,6 +582,7 @@ const orderStatusOptions = [
         ...selectedOrder,
         notes: orderNotes,
         trackingId: trackingId,
+        sellerComments: sellerComments,
         estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : null,
       }
 
@@ -697,8 +729,11 @@ const orderStatusOptions = [
   }, [selectedOrders])
 
   return (
-    <div className="p-8 ml-64 ">
-      <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-gray-100">
+      <AdminSidebar />
+
+      <div className="p-8 ml-64">
+        <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">On Hold Orders</h1>
           <p className="text-gray-600 mt-1">Orders currently on hold</p>
@@ -1152,27 +1187,33 @@ const orderStatusOptions = [
                   )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal:</span>
-                    <span className="text-gray-900">{formatPrice(selectedOrder.itemsPrice || 0)}</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping:</span>
-                    <span className="text-gray-900">{formatPrice(selectedOrder.shippingPrice || 0)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">VAT:</span>
-                    <span className="text-gray-900">{formatPrice(selectedOrder.taxPrice || 0)}</span>
-                  </div>
-                  {selectedOrder.discountAmount > 0 && (
+                    {selectedBaseDiscount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Offer Discount:</span>
+                        <span className="text-green-600">-{formatPrice(selectedBaseDiscount)}</span>
+                      </div>
+                    )}
+                    {showCouponDetail && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{couponCodeLabel ? `Coupon (${couponCodeLabel})` : "Coupon Discount"}:</span>
+                        <span className="text-green-600">-{formatPrice(totalDiscountAmount)}</span>
+                      </div>
+                    )}
+                  {selectedTotals.tax > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Discount:</span>
-                      <span className="text-green-600">-{formatPrice(selectedOrder.discountAmount)}</span>
+                      <span className="text-gray-600">VAT:</span>
+                      <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
                     </div>
                   )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Shipping:</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
+                  </div>
                   <div className="border-t pt-2 flex justify-between">
                     <span className="text-lg font-semibold text-gray-900">Total:</span>
-                    <span className="text-lg font-bold text-lime-600">
-                      {formatPrice(selectedOrder.totalPrice || 0)}
-                    </span>
+                    <span className="text-lg font-bold text-lime-600">{formatPrice(selectedTotals.total)}</span>
                   </div>
                 </div>
               </div>
@@ -1311,6 +1352,22 @@ const orderStatusOptions = [
                   </div>
                 </div>
 
+                {showCouponDetail && (
+                  <div className="mt-4 bg-lime-50 border border-lime-200 p-4 rounded-lg space-y-2">
+                    <p className="text-sm font-medium text-lime-700">{couponCodeLabel ? "Coupon Details" : "Discount Details"}</p>
+                    {couponCodeLabel && (
+                      <div className="flex justify-between text-sm text-gray-700">
+                        <span>Code:</span>
+                        <span className="font-semibold text-gray-900">{couponCodeLabel}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm text-gray-700">
+                      <span>Discount Amount:</span>
+                      <span className="font-semibold text-green-600">-{formatPrice(totalDiscountAmount)}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Customer Notes</label>
                   <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md min-h-[48px]">
@@ -1318,6 +1375,17 @@ const orderStatusOptions = [
                       {selectedOrder.customerNotes || selectedOrder.notes || "N/A"}
                     </p>
                   </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Seller Comments</label>
+                  <textarea
+                    value={sellerComments}
+                    onChange={(e) => setSellerComments(e.target.value)}
+                    placeholder="Add seller comments here..."
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                  />
                 </div>
 
                 <div className="mt-4">
@@ -1361,12 +1429,13 @@ const orderStatusOptions = [
         </div>
       )}
 
-      {/* Hidden Invoice Component for Printing */}
-      {selectedOrder && (
-        <div style={{ display: "none" }}>
-          <InvoiceComponent order={selectedOrder} ref={printComponentRef} />
-        </div>
-      )}
+        {/* Hidden Invoice Component for Printing */}
+        {selectedOrder && (
+          <div style={{ display: "none" }}>
+            <InvoiceComponent order={selectedOrder} ref={printComponentRef} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

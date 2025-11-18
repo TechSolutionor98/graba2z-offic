@@ -1520,19 +1520,23 @@ import {
 
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
+import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 
 // Invoice Component for Printing - Using forwardRef
 const InvoiceComponent = forwardRef(({ order }, ref) => {
   const formatPrice = (price) => {
-    return `AED ${price?.toLocaleString() || 0}`
+    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString()
   }
 
-  const { subtotal, shipping, tax, total, manualDiscount, couponDiscount, couponCode } =
-    getInvoiceBreakdown(order)
+  const resolvedItems = Array.isArray(order?.orderItems) ? order.orderItems : []
+  const baseSubtotal = computeBaseSubtotal(resolvedItems)
+
+  const { subtotal, shipping, tax, total, couponCode, couponDiscount } = getInvoiceBreakdown(order)
+  const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
 
   const currentDate = new Date().toLocaleDateString()
   const orderDate = new Date(order.createdAt).toLocaleDateString()
@@ -1544,63 +1548,57 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         <div className="absolute inset-0" />
         {/* Top row: two columns with logos */}
         <div className="relative z-10 flex justify-between items-start w-full">
-          {/* Left Logo */}
-          <div className="flex-shrink-0">
-            <img
-              src="/BLACK.png"
-              alt="Right Logo"
-              className="w-50 h-20 object-contain"
-              onError={(e) => {
-                e.target.style.display = "none"
-                e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
-              }}
-            />
-            <p className="ml-7"> TRN: 100349772200003</p>
-          </div>
+          <div className="mb-4">
+            <h4 className="text-lg font-bold text-lime-800 mb-2 uppercase">🛍️ Order Items</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-lime-300">
+                <thead>
+                  <tr className="bg-lime-100">
+                    <th className="border border-lime-300 px-3 py-2 text-left text-sm font-bold">Product</th>
+                    <th className="border border-lime-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
+                    <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Price</th>
+                    <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resolvedItems.map((item, index) => {
+                    const basePrice = resolveOrderItemBasePrice(item)
+                    const salePrice = Number(item.price) || basePrice
+                    const quantity = Number(item.quantity) || 0
+                    const showDiscount = basePrice > salePrice
+                    const lineTotal = salePrice * quantity
+                    const baseTotal = basePrice * quantity
 
-          {/* Right Logo */}
-          <div className="flex-shrink-0">
-            <img
-              src="/admin-logo.svg"
-              alt="Left Logo"
-              className="w-40 h-20 object-contain"
-              onError={(e) => {
-                e.target.style.display = "none"
-                e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
-              }}
-            />
-            A Brand By Crown Excel
-          </div>
-        </div>
-
-        <div className="flex justify-between items-start gap-6 ml-2">
-          <div className="w-1/2 p-5 ">
-            <h2 className="text-2xl font-bold mb-1">CONTACT DETAILS</h2>
-            <p className="text-black text-sm italic mb-2">
-              <strong>We Are Here For You</strong>
-            </p>
-            <div className="text-sm text-black space-y-1">
-              <p>✉️ Email: orders@grabatoz.com</p>
-              <p>🌐 Website: www.grabatoz.com</p>
-              <p>📞 Phone: +971 50 860 4360</p>
+                    return (
+                      <tr key={index} className="hover:bg-lime-50">
+                        <td className="border border-lime-300 px-3 py-2 text-sm">
+                          <div className="font-medium text-gray-900">{item.name}</div>
+                          {showDiscount && (
+                            <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
+                          )}
+                        </td>
+                        <td className="border border-lime-300 px-3 py-2 text-center text-sm">{quantity}</td>
+                        <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                          {showDiscount && (
+                            <span className="block text-xs text-gray-400 line-through">{formatPrice(basePrice)}</span>
+                          )}
+                          <span className="font-semibold text-gray-900">{formatPrice(salePrice)}</span>
+                        </td>
+                        <td className="border border-lime-300 px-3 py-2 text-right text-sm font-semibold">
+                          {showDiscount && (
+                            <span className="block text-xs text-gray-400 font-normal line-through">
+                              {formatPrice(baseTotal)}
+                            </span>
+                          )}
+                          <span>{formatPrice(lineTotal)}</span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
-
-          <div className="w-1/2 text-end p-5   rounded-xl backdrop-blur-sm max-w-xs ml-auto">
-            <h2 className="text-2xl font-bold mb-1">TAX INVOICE</h2>
-            <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
-            <div className="text-sm">📅 Date: {orderDate}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Order Summary Section */}
-      <div className="bg-white  border-l-4 pl-2 border-lime-500">
-        <h3 className="text-2xl font-bold text-lime-800 mb-2 uppercase tracking-wide">📋 Order Summary</h3>
-
-        {/* Addresses */}
-        <div className="grid grid-cols-2 md:grid-cols-2 gap-6 mb-2">
-          {/* Shipping Address */}
           <div className="bg-white border-2 border-lime-200 rounded-lg px-3 py-1 relative">
             <div className="absolute top-0 left-0 right-0  bg-gradient-to-r from-lime-400 to-lime-600"></div>
             <h4 className="text-lg font-bold text-lime-800 flex items-center">🚚 Shipping Address</h4>
@@ -1673,28 +1671,36 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         {/* Totals */}
         <div className="bg-white border-2 border-lime-200 rounded-lg p-3">
           <div className="space-y-1">
+            {baseSubtotal > 0 && (
+              <div className="flex justify-between text-gray-500">
+                <span>Base Price:</span>
+                <span className="line-through">{formatPrice(baseSubtotal)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-gray-700">
               <span>💰 Sub-Total:</span>
               <span className="font-medium">{formatPrice(subtotal)}</span>
             </div>
 
-            {manualDiscount > 0 && (
+            {derivedDiscount > 0 && (
               <div className="flex justify-between text-gray-700">
-                <span>🎉 Discount:</span>
-                <span className="font-medium text-gray-700">-{formatPrice(manualDiscount)}</span>
+                <span>Offer Discount:</span>
+                <span className="font-medium text-green-700">-{formatPrice(derivedDiscount)}</span>
               </div>
             )}
 
             {couponDiscount > 0 && (
               <div className="flex justify-between text-gray-700">
-                <span>🎁 Coupon{couponCode ? ` (${couponCode})` : ""}:</span>
-                <span className="font-medium text-gray-700">-{formatPrice(couponDiscount)}</span>
+                <span>
+                  Coupon{couponCode ? ` (${couponCode})` : ""}:
+                </span>
+                <span className="font-medium text-green-700">-{formatPrice(couponDiscount)}</span>
               </div>
             )}
 
             {tax > 0 && (
               <div className="flex justify-between text-gray-700">
-                <span>✔️ Tax (VAT):</span>
+                <span>✔️ VAT:</span>
                 <span className="font-medium">{formatPrice(tax)}</span>
               </div>
             )}
@@ -1807,6 +1813,9 @@ const OnlineOrders = () => {
   }
 
   const selectedTotals = getInvoiceBreakdown(selectedOrder || {})
+  const selectedOrderItems = Array.isArray(selectedOrder?.orderItems) ? selectedOrder.orderItems : []
+  const selectedBaseSubtotal = computeBaseSubtotal(selectedOrderItems)
+  const selectedBaseDiscount = deriveBaseDiscount(selectedBaseSubtotal, selectedTotals.subtotal)
 
   // Print handler
   const handlePrint = useReactToPrint({
@@ -2575,30 +2584,40 @@ const OnlineOrders = () => {
               <div className="bg-gray-50 border rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Amount</h3>
                 <div className="space-y-2">
+                  {selectedBaseSubtotal > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Base Price:</span>
+                      <span className="text-gray-400 line-through">{formatPrice(selectedBaseSubtotal)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
                   </div>
+                    {selectedBaseDiscount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Offer Discount:</span>
+                        <span className="text-green-600">-{formatPrice(selectedBaseDiscount)}</span>
+                      </div>
+                    )}
+                    {selectedTotals.couponDiscount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          {selectedTotals.couponCode ? `Coupon (${selectedTotals.couponCode})` : "Coupon Discount"}:
+                        </span>
+                        <span className="text-green-600">-{formatPrice(selectedTotals.couponDiscount)}</span>
+                      </div>
+                    )}
+                  {selectedTotals.tax > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tax:</span>
+                      <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping:</span>
                     <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tax:</span>
-                    <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
-                  </div>
-                  {selectedTotals.manualDiscount > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Discount:</span>
-                      <span className="text-green-600">-{formatPrice(selectedTotals.manualDiscount)}</span>
-                    </div>
-                  )}
-                  {selectedTotals.couponDiscount > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Coupon{selectedTotals.couponCode ? ` (${selectedTotals.couponCode})` : ""}:</span>
-                      <span className="text-green-600">-{formatPrice(selectedTotals.couponDiscount)}</span>
-                    </div>
-                  )}
                   <div className="border-t pt-2 flex justify-between">
                     <span className="text-lg font-semibold text-gray-900">Total:</span>
                     <span className="text-lg font-bold text-lime-600">{formatPrice(selectedTotals.total)}</span>

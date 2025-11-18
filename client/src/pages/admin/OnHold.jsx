@@ -1,13 +1,284 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, forwardRef } from "react"
 import axios from "axios"
+import { useReactToPrint } from "react-to-print"
 import AdminSidebar from "../../components/admin/AdminSidebar"
-import { Search, Eye, RefreshCw, Pause, Play, ChevronDown, X, Package, CreditCard, MapPin, Clock } from "lucide-react"
+import { Search, Eye, RefreshCw, Pause, Play, ChevronDown, X, Package, CreditCard, MapPin, Clock, User, Printer, Mail, Save } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 
 import config from "../../config/config"
-import { resolveOrderItemBasePrice, computeBaseSubtotal } from "../../utils/orderPricing"
+import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
+import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
+
+// Invoice Component for Printing - Using forwardRef
+const InvoiceComponent = forwardRef(({ order }, ref) => {
+  const formatPrice = (price) => {
+    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+  }
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString()
+  }
+
+  const resolvedItems = Array.isArray(order?.orderItems) ? order.orderItems : []
+  const baseSubtotal = computeBaseSubtotal(resolvedItems)
+
+  const {
+    subtotal,
+    shipping,
+    tax,
+    total,
+    couponCode,
+    couponDiscount,
+    displaySubtotal,
+    displayTotal,
+  } = getInvoiceBreakdown(order)
+  const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
+
+  const currentDate = new Date().toLocaleDateString()
+  const orderDate = new Date(order.createdAt).toLocaleDateString()
+
+  return (
+    <div ref={ref} className="bg-white pl-8 pr-8 pb-8 max-w-4xl mx-auto font-sans">
+      {/* Header */}
+      <div className=" text-black rounded-t-lg relative overflow-hidden">
+        <div className="absolute inset-0" />
+        {/* Top row: two columns with logos */}
+        <div className="relative z-10 flex justify-between items-start w-full">
+          {/* Left Logo */}
+          <div className="flex-shrink-0">
+            <img
+              src="/BLACK.png"
+              alt="Right Logo"
+              className="w-50 h-20 object-contain"
+              onError={(e) => {
+                e.target.style.display = "none"
+                e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
+              }}
+            />
+            <p className="ml-7"> TRN: 100349772200003</p>
+          </div>
+
+          {/* Right Logo */}
+          <div className="flex-shrink-0">
+            <img
+              src="/admin-logo.svg"
+              alt="Left Logo"
+              className="w-40 h-20 object-contain"
+              onError={(e) => {
+                e.target.style.display = "none"
+                e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
+              }}
+            />
+            A Brand By Crown Excel
+          </div>
+        </div>
+
+        <div className="flex justify-between items-start gap-6 ml-2">
+          <div className="w-1/2 p-5 ">
+            <h2 className="text-2xl font-bold mb-1">CONTACT DETAILS</h2>
+            <p className="text-black text-sm italic mb-2">
+              <strong>We Are Here For You</strong>
+            </p>
+            <div className="text-sm text-black space-y-1">
+              <p>✉️ Email: orders@grabatoz.com</p>
+              <p>🌐 Website: www.grabatoz.com</p>
+              <p>📞 Phone: +971 50 860 4360</p>
+            </div>
+          </div>
+
+          <div className="w-1/2 text-end p-5   rounded-xl backdrop-blur-sm max-w-xs ml-auto">
+            <h2 className="text-2xl font-bold mb-1">VAT INVOICE</h2>
+            <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
+            <div className="text-sm">📅 Date: {orderDate}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Order Summary Section */}
+      <div className="bg-white  border-l-4 pl-2 border-lime-500">
+        <h3 className="text-2xl font-bold text-lime-800 mb-2 uppercase tracking-wide">📋 Order Summary</h3>
+
+        {/* Addresses */}
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-6 mb-2">
+          {/* Shipping Address */}
+          <div className="bg-white border-2 border-lime-200 rounded-lg px-3 py-1 relative">
+            <div className="absolute -top-3 left-3 bg-white px-2">
+              <h4 className="text-sm font-bold text-lime-700 uppercase">📦 Shipping Address</h4>
+            </div>
+            <div className="pt-2 space-y-1 text-sm">
+              <p>
+                <strong>Name:</strong> {order.shippingAddress?.name || "N/A"}
+              </p>
+              <p>
+                <strong>Email:</strong> {order.shippingAddress?.email || "N/A"}
+              </p>
+              <p>
+                <strong>Phone:</strong> {order.shippingAddress?.phone || "N/A"}
+              </p>
+              <p>
+                <strong>Address:</strong> {order.shippingAddress?.address || "N/A"}
+              </p>
+              <p>
+                <strong>City:</strong> {order.shippingAddress?.city || "N/A"}
+              </p>
+              <p>
+                <strong>State:</strong> {order.shippingAddress?.state || "N/A"}
+              </p>
+              <p>
+                <strong>Zip Code:</strong> {order.shippingAddress?.zipCode || "N/A"}
+              </p>
+            </div>
+          </div>
+
+          {/* Billing Address */}
+          <div className="bg-white border-2 border-lime-200 rounded-lg px-3 py-1 relative">
+            <div className="absolute -top-3 left-3 bg-white px-2">
+              <h4 className="text-sm font-bold text-lime-700 uppercase">💳 Billing Address</h4>
+            </div>
+            <div className="pt-2 space-y-1 text-sm">
+              <p>
+                <strong>Name:</strong> {order.billingAddress?.name || order.shippingAddress?.name || "N/A"}
+              </p>
+              <p>
+                <strong>Email:</strong> {order.billingAddress?.email || order.shippingAddress?.email || "N/A"}
+              </p>
+              <p>
+                <strong>Phone:</strong> {order.billingAddress?.phone || order.shippingAddress?.phone || "N/A"}
+              </p>
+              <p>
+                <strong>Address:</strong> {order.billingAddress?.address || order.shippingAddress?.address || "N/A"}
+              </p>
+              <p>
+                <strong>City:</strong> {order.billingAddress?.city || order.shippingAddress?.city || "N/A"}
+              </p>
+              <p>
+                <strong>State:</strong> {order.billingAddress?.state || order.shippingAddress?.state || "N/A"}
+              </p>
+              <p>
+                <strong>Zip Code:</strong> {order.billingAddress?.zipCode || order.shippingAddress?.zipCode || "N/A"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Seller Comments */}
+        {order.sellerComments && (
+          <div className="mb-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-3">
+            <h4 className="text-sm font-bold text-blue-700 uppercase mb-2">💬 Seller Comments</h4>
+            <p className="text-gray-700 whitespace-pre-wrap">{order.sellerComments}</p>
+          </div>
+        )}
+
+        {/* Order Items */}
+        <div className="mb-4">
+          <h4 className="text-lg font-bold text-lime-800 mb-2 uppercase">🛍️ Order Items</h4>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-lime-300">
+              <thead>
+                <tr className="bg-lime-100">
+                  <th className="border border-lime-300 px-3 py-2 text-left text-sm font-bold">Product</th>
+                  <th className="border border-lime-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
+                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Price</th>
+                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resolvedItems.map((item, index) => {
+                  const basePrice = resolveOrderItemBasePrice(item)
+                  const itemPrice = Number(item.price) || basePrice
+                  const showDiscount = basePrice > itemPrice
+                  const lineTotal = itemPrice * (item.quantity || 0)
+                  const baseTotal = basePrice * (item.quantity || 0)
+
+                  return (
+                    <tr key={index} className="hover:bg-lime-50">
+                      <td className="border border-lime-300 px-3 py-2 text-sm">
+                        <div className="font-medium text-gray-900">{item.name}</div>
+                        {showDiscount && (
+                          <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
+                        )}
+                      </td>
+                      <td className="border border-lime-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
+                      <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                        {showDiscount && (
+                          <span className="block text-xs text-gray-400 line-through">{formatPrice(basePrice)}</span>
+                        )}
+                        <span className="font-semibold text-gray-900">{formatPrice(itemPrice)}</span>
+                      </td>
+                      <td className="border border-lime-300 px-3 py-2 text-right text-sm font-semibold">
+                        {showDiscount && (
+                          <span className="block text-xs text-gray-400 font-normal line-through">
+                            {formatPrice(baseTotal)}
+                          </span>
+                        )}
+                        <span>{formatPrice(lineTotal)}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Total Amount */}
+        <div className="bg-white border-2 border-lime-200 rounded-lg p-3">
+          <div className="space-y-1">
+            {baseSubtotal > 0 && (
+              <div className="flex justify-between text-gray-500">
+                <span>Base Price:</span>
+                <span className="line-through">{formatPrice(baseSubtotal)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-gray-700">
+              <span>💰 Sub-Total:</span>
+              <span className="font-medium">{formatPrice(displaySubtotal)}</span>
+            </div>
+
+            {derivedDiscount > 0 && (
+              <div className="flex justify-between text-gray-700">
+                <span>Offer Discount:</span>
+                <span className="font-medium text-green-700">-{formatPrice(derivedDiscount)}</span>
+              </div>
+            )}
+
+            {couponDiscount > 0 && (
+              <div className="flex justify-between text-gray-700">
+                <span>
+                  Coupon{couponCode ? ` (${couponCode})` : ""}:
+                </span>
+                <span className="font-medium text-green-700">-{formatPrice(couponDiscount)}</span>
+              </div>
+            )}
+
+            {tax > 0 && (
+              <div className="flex justify-between text-gray-700">
+                <span>✔️ VAT:</span>
+                <span className="font-medium">{formatPrice(tax)}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between text-gray-700">
+              <span>🚚 Shipping Charge:</span>
+              <span className="font-medium">{formatPrice(shipping)}</span>
+            </div>
+
+            <div className="border-t-2 border-lime-500">
+              <div className="flex justify-between text-xl font-bold text-lime-800 bg-lime-100 p-2 rounded-lg">
+                <span> TOTAL AMOUNT:</span>
+                <span>{formatPrice(displayTotal)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+})
+
+InvoiceComponent.displayName = "InvoiceComponent"
 const OnHold = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -17,7 +288,14 @@ const OnHold = () => {
   const [processingAction, setProcessingAction] = useState(false)
   const [showStatusDropdown, setShowStatusDropdown] = useState({})
   const [showPaymentDropdown, setShowPaymentDropdown] = useState({})
+  const [orderNotes, setOrderNotes] = useState("")
+  const [trackingId, setTrackingId] = useState("")
+  const [estimatedDelivery, setEstimatedDelivery] = useState("")
+  const [sellerComments, setSellerComments] = useState("")
   const { showToast } = useToast()
+
+  // Print ref
+  const printComponentRef = useRef(null)
 
   const orderStatusOptions = [
     "New",
@@ -91,8 +369,43 @@ const OnHold = () => {
     return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
 
+  const formatDate = (date) => {
+    return new Date(date).toLocaleString()
+  }
+
   const selectedOrderItems = Array.isArray(selectedOrder?.orderItems) ? selectedOrder.orderItems : []
   const selectedBaseSubtotal = computeBaseSubtotal(selectedOrderItems)
+  const selectedTotals = getInvoiceBreakdown(selectedOrder || {})
+  const selectedBaseDiscount = deriveBaseDiscount(selectedBaseSubtotal, selectedTotals.subtotal)
+  
+  // Calculate total discount (manual or coupon)
+  const totalDiscountAmount = selectedTotals.couponDiscount + selectedTotals.manualDiscount
+  const couponCodeLabel = selectedTotals.couponCode || selectedOrder?.couponCode || ""
+  const showCouponDetail = totalDiscountAmount > 0
+
+  // Print handler
+  const handlePrint = useReactToPrint({
+    contentRef: printComponentRef,
+    documentTitle: `Invoice-${selectedOrder?._id.slice(-6)}`,
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 0.5in;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        * {
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    `,
+  })
 
   useEffect(() => {
     fetchOrders()
@@ -157,10 +470,85 @@ const OnHold = () => {
 
   const handleViewOrder = (order) => {
     setSelectedOrder(order)
+    setOrderNotes(order.notes || "")
+    setTrackingId(order.trackingId || "")
+    setEstimatedDelivery(order.estimatedDelivery ? new Date(order.estimatedDelivery).toISOString().split("T")[0] : "")
+    setSellerComments(order.sellerComments || "")
   }
 
   const handleCloseModal = () => {
     setSelectedOrder(null)
+    setOrderNotes("")
+    setTrackingId("")
+    setEstimatedDelivery("")
+    setSellerComments("")
+  }
+
+  const handleSaveOrderDetails = async () => {
+    try {
+      setProcessingAction(true)
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      const updateData = {
+        notes: orderNotes,
+        trackingId: trackingId,
+        sellerComments: sellerComments,
+        ...(estimatedDelivery && { estimatedDelivery: new Date(estimatedDelivery).toISOString() }),
+      }
+
+      await axios.put(`${config.API_URL}/api/admin/orders/${selectedOrder._id}`, updateData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      // Update local state
+      const updatedOrder = {
+        ...selectedOrder,
+        notes: orderNotes,
+        trackingId: trackingId,
+        estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : null,
+        sellerComments: sellerComments,
+      }
+
+      setSelectedOrder(updatedOrder)
+      setOrders(orders.map((order) => (order._id === selectedOrder._id ? updatedOrder : order)))
+
+      setProcessingAction(false)
+      showToast("Order details updated successfully!", "success")
+    } catch (error) {
+      console.error("Error updating order details:", error)
+      showToast("Failed to update order details", "error")
+      setProcessingAction(false)
+    }
+  }
+
+  const handleSendNotification = async (orderId) => {
+    try {
+      setProcessingAction(true)
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      await axios.post(
+        `${config.API_URL}/api/admin/orders/${orderId}/notify`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      )
+
+      showToast("Notification email sent successfully!", "success")
+      setProcessingAction(false)
+    } catch (error) {
+      console.error("Error sending notification:", error)
+      showToast("Failed to send notification", "error")
+      setProcessingAction(false)
+    }
   }
 
   const filteredOrders = orders.filter(
@@ -439,20 +827,25 @@ const OnHold = () => {
               </div>
 
               {/* Update Payment Status Section */}
-              <div className="bg-white border rounded-lg p-4 mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Status</h3>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h4 className="text-md font-medium text-gray-900 mb-3">Update Payment Status</h4>
                 <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => handleUpdatePayment(selectedOrder._id, !selectedOrder.isPaid)}
-                    className={`px-4 py-2 border rounded-md font-medium ${
-                      selectedOrder.isPaid 
-                        ? 'border-green-300 text-green-700 bg-green-50 hover:bg-green-100' 
-                        : 'border-red-300 text-red-700 bg-red-50 hover:bg-red-100'
-                    }`}
+                  <select
+                    value={selectedOrder.isPaid ? "Paid" : "Unpaid"}
+                    onChange={(e) => handleUpdatePayment(selectedOrder._id, e.target.value === "Paid")}
+                    className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     disabled={processingAction}
                   >
-                    {selectedOrder.isPaid ? 'Paid' : 'Unpaid'}
-                  </button>
+                    <option value="Unpaid">Unpaid</option>
+                    <option value="Paid">Paid</option>
+                  </select>
+                  <span
+                    className={`px-3 py-1 text-sm font-medium rounded-full ${
+                      selectedOrder.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {selectedOrder.isPaid ? "Paid" : "Unpaid"}
+                  </span>
                 </div>
               </div>
 
@@ -503,41 +896,275 @@ const OnHold = () => {
                     <p className="text-gray-500 text-center py-4">No items found</p>
                   )}
                 </div>
+              </div>
 
-                {/* Total */}
-                <div className="mt-4 pt-4 border-t space-y-1">
+              {/* Total Amount */}
+              <div className="bg-gray-50 border rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Amount</h3>
+                <div className="space-y-2">
                   {selectedBaseSubtotal > 0 && (
-                    <div className="flex justify-between text-sm text-gray-500">
-                      <span>Base Price:</span>
-                      <span className="line-through">{formatPrice(selectedBaseSubtotal)}</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Base Price:</span>
+                      <span className="text-gray-400 line-through">{formatPrice(selectedBaseSubtotal)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-lg font-semibold">
-                    <span>Total Amount:</span>
-                    <span>{formatPrice(selectedOrder?.totalPrice || 0)}</span>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Shipping:</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">VAT:</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
+                  </div>
+                  {selectedBaseDiscount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Offer Discount:</span>
+                      <span className="text-green-600">-{formatPrice(selectedBaseDiscount)}</span>
+                    </div>
+                  )}
+                  {showCouponDetail && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{couponCodeLabel ? `Coupon (${couponCodeLabel})` : "Coupon Discount"}:</span>
+                      <span className="text-green-600">-{formatPrice(totalDiscountAmount)}</span>
+                    </div>
+                  )}
+                  <div className="border-t pt-2 flex justify-between">
+                    <span className="text-lg font-semibold text-gray-900">Total:</span>
+                    <span className="text-lg font-bold text-lime-600">
+                      {formatPrice(selectedTotals.total)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Addresses */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Shipping Address */}
+                <div className="bg-white border rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping / Pickup Address</h3>
+                  <div className="space-y-2">
+                    {selectedOrder.shippingAddress ? (
+                      <>
+                        <p>
+                          <span className="font-medium">Name:</span> {selectedOrder.shippingAddress.name || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Email:</span> {selectedOrder.shippingAddress.email || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Phone:</span> {selectedOrder.shippingAddress.phone || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Address:</span>{" "}
+                          {selectedOrder.shippingAddress.address || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">City:</span> {selectedOrder.shippingAddress.city || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">State:</span> {selectedOrder.shippingAddress.state || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Zip Code:</span>{" "}
+                          {selectedOrder.shippingAddress.zipCode || "N/A"}
+                        </p>
+                      </>
+                    ) : selectedOrder.pickupDetails ? (
+                      <>
+                        <p>
+                          <span className="font-medium">Store Name:</span>{" "}
+                          {selectedOrder.pickupDetails.location || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Store Address:</span>{" "}
+                          {selectedOrder.pickupDetails.storeAddress || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Store Phone:</span>{" "}
+                          {selectedOrder.pickupDetails.storePhone || "N/A"}
+                        </p>
+                      </>
+                    ) : (
+                      <p>N/A</p>
+                    )}
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex justify-end space-x-4 pt-4 border-t">
+                {/* Billing Address */}
+                <div className="bg-white border rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Billing Address</h3>
+                  <div className="space-y-2">
+                    <p>
+                      <span className="font-medium">Name:</span>{" "}
+                      {selectedOrder.billingAddress?.name || selectedOrder.shippingAddress?.name || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Email:</span>{" "}
+                      {selectedOrder.billingAddress?.email || selectedOrder.shippingAddress?.email || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Phone:</span>{" "}
+                      {selectedOrder.billingAddress?.phone || selectedOrder.shippingAddress?.phone || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Address:</span>{" "}
+                      {selectedOrder.billingAddress?.address || selectedOrder.shippingAddress?.address || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">City:</span>{" "}
+                      {selectedOrder.billingAddress?.city || selectedOrder.shippingAddress?.city || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">State:</span>{" "}
+                      {selectedOrder.billingAddress?.state || selectedOrder.shippingAddress?.state || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Zip Code:</span>{" "}
+                      {selectedOrder.billingAddress?.zipCode || selectedOrder.shippingAddress?.zipCode || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Information with Editable Fields */}
+              <div className="bg-white border rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="mb-2">
+                        <span className="font-medium">Payment Status:</span>
+                        <span
+                          className={`ml-2 px-2 py-1 text-xs rounded-full ${selectedOrder.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                        >
+                          {selectedOrder.isPaid ? "Paid" : "Unpaid"}
+                        </span>
+                      </p>
+                      {selectedOrder.paidAt && (
+                        <p>
+                          <span className="font-medium">Paid At:</span> {formatDate(selectedOrder.paidAt)}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tracking ID</label>
+                      <input
+                        type="text"
+                        value={trackingId}
+                        onChange={(e) => setTrackingId(e.target.value)}
+                        placeholder="Enter tracking ID"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Delivery</label>
+                      <input
+                        type="date"
+                        value={estimatedDelivery}
+                        onChange={(e) => setEstimatedDelivery(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {showCouponDetail && (
+                  <div className="mt-4 bg-lime-50 border border-lime-200 p-4 rounded-lg space-y-2">
+                    <p className="text-sm font-medium text-lime-700">{couponCodeLabel ? "Coupon Details" : "Discount Details"}</p>
+                    {couponCodeLabel && (
+                      <div className="flex justify-between text-sm text-gray-700">
+                        <span>Code:</span>
+                        <span className="font-semibold text-gray-900">{couponCodeLabel}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm text-gray-700">
+                      <span>Discount Amount:</span>
+                      <span className="font-semibold text-green-600">-{formatPrice(totalDiscountAmount)}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer Notes</label>
+                  <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md min-h-[48px]">
+                    <p className="text-gray-700 whitespace-pre-wrap">
+                      {selectedOrder.customerNotes || selectedOrder.notes || "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Seller Comments</label>
+                  <textarea
+                    value={sellerComments}
+                    onChange={(e) => setSellerComments(e.target.value)}
+                    placeholder="Add seller comments here..."
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="mt-4">
                   <button
-                    onClick={handleCloseModal}
-                    className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => handleResumeOrder(selectedOrder._id)}
-                    className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+                    onClick={handleSaveOrderDetails}
                     disabled={processingAction}
+                    className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
                   >
-                    <Play size={20} />
-                    Process Order
+                    <Save size={16} />
+                    <span>{processingAction ? "Saving..." : "Save Details"}</span>
                   </button>
                 </div>
               </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={handleCloseModal}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-6 rounded-md transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
+                >
+                  <Printer size={18} className="mr-2" />
+                  Print Receipt
+                </button>
+                <button
+                  onClick={() => handleSendNotification(selectedOrder._id)}
+                  className="bg-lime-600 hover:bg-lime-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
+                  disabled={processingAction}
+                >
+                  <Mail size={18} className="mr-2" />
+                  Send Notification
+                </button>
+                <button
+                  onClick={() => handleResumeOrder(selectedOrder._id)}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
+                  disabled={processingAction}
+                >
+                  <Play size={18} className="mr-2" />
+                  Process Order
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Hidden Invoice Component for Printing */}
+      {selectedOrder && (
+        <div style={{ display: "none" }}>
+          <InvoiceComponent order={selectedOrder} ref={printComponentRef} />
         </div>
       )}
     </div>

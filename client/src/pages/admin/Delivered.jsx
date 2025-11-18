@@ -9,7 +9,7 @@ import { useToast } from "../../context/ToastContext"
 
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
-import { resolveOrderItemBasePrice, computeBaseSubtotal } from "../../utils/orderPricing"
+import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 
 // Invoice Component for Printing - Using forwardRef
 const InvoiceComponent = forwardRef(({ order }, ref) => {
@@ -24,8 +24,8 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   const resolvedItems = Array.isArray(order?.orderItems) ? order.orderItems : []
   const baseSubtotal = computeBaseSubtotal(resolvedItems)
 
-  const { subtotal, shipping, tax, total, manualDiscount, couponDiscount, couponCode } =
-    getInvoiceBreakdown(order)
+  const { subtotal, shipping, tax, total, couponCode, couponDiscount } = getInvoiceBreakdown(order)
+  const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
 
   const currentDate = new Date().toLocaleDateString()
   const orderDate = new Date(order.createdAt).toLocaleDateString()
@@ -154,6 +154,14 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
         </div>
 
+        {/* Seller Comments */}
+        {order.sellerComments && (
+          <div className="mb-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-3">
+            <h4 className="text-sm font-bold text-blue-700 uppercase mb-2">💬 Seller Comments</h4>
+            <p className="text-gray-700 whitespace-pre-wrap">{order.sellerComments}</p>
+          </div>
+        )}
+
         {/* Order Items */}
         <div className="mb-4">
           <h4 className="text-lg font-bold text-lime-800 mb-2 uppercase">🛍️ Order Items</h4>
@@ -228,15 +236,17 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               <span className="text-gray-600">VAT:</span>
               <span className="text-gray-900">{formatPrice(tax)}</span>
             </div>
-            {manualDiscount > 0 && (
+            {derivedDiscount > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Discount:</span>
-                <span className="text-green-600">-{formatPrice(manualDiscount)}</span>
+                <span className="text-gray-600">Offer Discount:</span>
+                <span className="text-green-600">-{formatPrice(derivedDiscount)}</span>
               </div>
             )}
             {couponDiscount > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Coupon{couponCode ? ` (${couponCode})` : ""}:</span>
+                <span className="text-gray-600">
+                  Coupon{couponCode ? ` (${couponCode})` : ""}:
+                </span>
                 <span className="text-green-600">-{formatPrice(couponDiscount)}</span>
               </div>
             )}
@@ -264,6 +274,7 @@ const Delivered = () => {
   const [orderNotes, setOrderNotes] = useState("")
   const [trackingId, setTrackingId] = useState("")
   const [estimatedDelivery, setEstimatedDelivery] = useState("")
+  const [sellerComments, setSellerComments] = useState("")
   
   // Print ref
   const printComponentRef = useRef(null)
@@ -297,6 +308,13 @@ const Delivered = () => {
 
   const selectedOrderItems = Array.isArray(selectedOrder?.orderItems) ? selectedOrder.orderItems : []
   const selectedBaseSubtotal = computeBaseSubtotal(selectedOrderItems)
+  const selectedTotals = getInvoiceBreakdown(selectedOrder || {})
+  const selectedBaseDiscount = deriveBaseDiscount(selectedBaseSubtotal, selectedTotals.subtotal)
+  
+  // Calculate total discount (manual or coupon)
+  const totalDiscountAmount = selectedTotals.couponDiscount + selectedTotals.manualDiscount
+  const couponCodeLabel = selectedTotals.couponCode || selectedOrder?.couponCode || ""
+  const showCouponDetail = totalDiscountAmount > 0
 
   // Print handler
   const handlePrint = useReactToPrint({
@@ -400,6 +418,7 @@ const Delivered = () => {
     setOrderNotes(order.notes || "")
     setTrackingId(order.trackingId || "")
     setEstimatedDelivery(order.estimatedDelivery ? new Date(order.estimatedDelivery).toISOString().split("T")[0] : "")
+    setSellerComments(order.sellerComments || "")
   }
 
   const handleCloseModal = () => {
@@ -407,6 +426,7 @@ const Delivered = () => {
     setOrderNotes("")
     setTrackingId("")
     setEstimatedDelivery("")
+    setSellerComments("")
   }
 
   const handleUpdateStatus = async (orderId, status) => {
@@ -500,6 +520,7 @@ const Delivered = () => {
       const updateData = {
         notes: orderNotes,
         trackingId: trackingId,
+        sellerComments: sellerComments,
         ...(estimatedDelivery && { estimatedDelivery: new Date(estimatedDelivery).toISOString() }),
       }
 
@@ -514,6 +535,7 @@ const Delivered = () => {
         ...selectedOrder,
         notes: orderNotes,
         trackingId: trackingId,
+        sellerComments: sellerComments,
         estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : null,
       }
 
@@ -988,26 +1010,34 @@ const Delivered = () => {
                   )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal:</span>
-                    <span className="text-gray-900">{formatPrice(selectedOrder.itemsPrice || 0)}</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping Charges:</span>
-                    <span className="text-gray-900">{formatPrice(selectedOrder.shippingPrice || 0)}</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Tax (VAT):</span>
-                    <span className="text-gray-900">{formatPrice(selectedOrder.taxPrice || 0)}</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
                   </div>
-                  {selectedOrder.discountAmount > 0 && (
+                  {selectedBaseDiscount > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Discount:</span>
-                      <span className="text-green-600">-{formatPrice(selectedOrder.discountAmount)}</span>
+                      <span className="text-gray-600">Offer Discount:</span>
+                      <span className="text-green-600">-{formatPrice(selectedBaseDiscount)}</span>
+                    </div>
+                  )}
+                  {selectedTotals.couponDiscount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">
+                        Coupon{selectedTotals.couponCode ? ` (${selectedTotals.couponCode})` : ""}:
+                      </span>
+                      <span className="text-green-600">-{formatPrice(selectedTotals.couponDiscount)}</span>
                     </div>
                   )}
                   <div className="border-t pt-2 flex justify-between">
                     <span className="text-lg font-semibold text-gray-900">Total Amount:</span>
                     <span className="text-lg font-bold text-green-600">
-                      {formatPrice(selectedOrder.totalPrice || 0)}
+                      {formatPrice(selectedTotals.total)}
                     </span>
                   </div>
                 </div>
@@ -1154,6 +1184,22 @@ const Delivered = () => {
                   </div>
                 </div>
 
+                {showCouponDetail && (
+                  <div className="mt-4 bg-lime-50 border border-lime-200 p-4 rounded-lg space-y-2">
+                    <p className="text-sm font-medium text-lime-700">{couponCodeLabel ? "Coupon Details" : "Discount Details"}</p>
+                    {couponCodeLabel && (
+                      <div className="flex justify-between text-sm text-gray-700">
+                        <span>Code:</span>
+                        <span className="font-semibold text-gray-900">{couponCodeLabel}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm text-gray-700">
+                      <span>Discount Amount:</span>
+                      <span className="font-semibold text-green-600">-{formatPrice(totalDiscountAmount)}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Customer Notes</label>
                   <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md min-h-[48px]">
@@ -1161,6 +1207,17 @@ const Delivered = () => {
                       {selectedOrder.customerNotes || selectedOrder.notes || "N/A"}
                     </p>
                   </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Seller Comments</label>
+                  <textarea
+                    value={sellerComments}
+                    onChange={(e) => setSellerComments(e.target.value)}
+                    placeholder="Add seller comments here..."
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                  />
                 </div>
 
                 <div className="mt-4">

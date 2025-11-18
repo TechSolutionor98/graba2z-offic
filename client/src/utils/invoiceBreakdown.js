@@ -14,6 +14,10 @@ export function getInvoiceBreakdown(order = {}) {
   const derivedVat = total > 0 ? Number((total * vatRate).toFixed(2)) : 0
   const vat = tax > 0 ? tax : derivedVat
 
+  const hasCoupon = couponDiscount > 0
+  const displaySubtotal = hasCoupon ? subtotal : total
+  const displayTotal = hasCoupon ? total : displaySubtotal
+
   return {
     subtotal,
     shipping,
@@ -22,5 +26,8 @@ export function getInvoiceBreakdown(order = {}) {
     manualDiscount,
     couponDiscount,
     couponCode,
+    hasCoupon,
+    displaySubtotal,
+    displayTotal,
   }
 }

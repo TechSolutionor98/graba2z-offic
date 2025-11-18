@@ -1,12 +1,310 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, forwardRef } from "react"
 import axios from "axios"
+import { useReactToPrint } from "react-to-print"
 import AdminSidebar from "../../components/admin/AdminSidebar"
-import { Search, Eye, RefreshCw, MapPin, CheckCircle, Package } from "lucide-react"
+import { Search, Eye, RefreshCw, MapPin, CheckCircle, Package, X, Truck, CreditCard, ChevronDown, Mail, Printer, Save } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 import config from "../../config/config"
-import { resolveOrderItemBasePrice, computeBaseSubtotal } from "../../utils/orderPricing"
+import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
+import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
+
+// Invoice Component for Printing - Using forwardRef
+const InvoiceComponent = forwardRef(({ order }, ref) => {
+  const formatPrice = (price) => {
+    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+  }
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString()
+  }
+
+  const resolvedItems = Array.isArray(order?.orderItems) ? order.orderItems : []
+  const baseSubtotal = computeBaseSubtotal(resolvedItems)
+
+  const { subtotal, shipping, tax, total, couponCode, couponDiscount } = getInvoiceBreakdown(order)
+  const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
+
+  const currentDate = new Date().toLocaleDateString()
+  const orderDate = new Date(order.createdAt).toLocaleDateString()
+
+  return (
+    <div ref={ref} className="bg-white pl-8 pr-8 pb-8 max-w-4xl mx-auto font-sans">
+      {/* Header */}
+      <div className=" text-black rounded-t-lg relative overflow-hidden">
+        <div className="absolute inset-0" />
+        {/* Top row: two columns with logos */}
+        <div className="relative z-10 flex justify-between items-start w-full">
+          {/* Left Logo */}
+          <div className="flex-shrink-0">
+            <img
+              src="/BLACK.png"
+              alt="Right Logo"
+              className="w-50 h-20 object-contain"
+              onError={(e) => {
+                e.target.style.display = "none"
+                e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
+              }}
+            />
+            <p className="ml-7"> TRN: 100349772200003</p>
+          </div>
+
+          {/* Right Logo */}
+          <div className="flex-shrink-0">
+            <img
+              src="/admin-logo.svg"
+              alt="Left Logo"
+              className="w-40 h-20 object-contain"
+              onError={(e) => {
+                e.target.style.display = "none"
+                e.target.nextSibling && (e.target.nextSibling.style.display = "flex")
+              }}
+            />
+            A Brand By Crown Excel
+          </div>
+        </div>
+
+        <div className="flex justify-between items-start gap-6 ml-2">
+          <div className="w-1/2 p-5 ">
+            <h2 className="text-2xl font-bold mb-1">CONTACT DETAILS</h2>
+            <p className="text-black text-sm italic mb-2">
+              <strong>We Are Here For You</strong>
+            </p>
+            <div className="text-sm text-black space-y-1">
+              <p>✉️ Email: orders@grabatoz.com</p>
+              <p>🌐 Website: www.grabatoz.com</p>
+              <p>📞 Phone: +971 50 860 4360</p>
+            </div>
+          </div>
+
+          <div className="w-1/2 text-end p-5   rounded-xl backdrop-blur-sm max-w-xs ml-auto">
+            <h2 className="text-2xl font-bold mb-1">VAT INVOICE</h2>
+            <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
+            <div className="text-sm">📅 Date: {orderDate}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Order Summary Section */}
+      <div className="bg-white  border-l-4 pl-2 border-purple-500">
+        <h3 className="text-2xl font-bold text-purple-800 mb-2 uppercase tracking-wide">📋 Order Summary</h3>
+
+        {/* Addresses */}
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-6 mb-2">
+          {/* Shipping Address */}
+          <div className="bg-white border-2 border-purple-200 rounded-lg px-3 py-1 relative">
+            <div className="absolute top-0 left-0 right-0  bg-gradient-to-r from-purple-400 to-purple-600"></div>
+            <h4 className="text-lg font-bold text-purple-800 flex items-center">🚚 Shipping Address</h4>
+            <div className=" text-sm">
+              <p className="font-semibold text-gray-900 text-base">{order.shippingAddress?.name || "N/A"}</p>
+              <p className="text-gray-700">{order.shippingAddress?.address || "N/A"}</p>
+              <p className="text-gray-700">
+                {order.shippingAddress?.city || "N/A"}, {order.shippingAddress?.state || "N/A"}{" "}
+                {order.shippingAddress?.zipCode || "N/A"}
+              </p>
+              <p className="text-gray-700">📞 {order.shippingAddress?.phone || "N/A"}</p>
+              <p className="text-gray-700">✉️ {order.shippingAddress?.email || "N/A"}</p>
+            </div>
+          </div>
+
+          {/* Billing Address */}
+          <div className="bg-white border-2 border-purple-200 rounded-lg px-3 py-1 relative">
+            <div className="absolute top-0 left-0 right-0  bg-gradient-to-r from-purple-400 to-purple-600"></div>
+            <h4 className="text-lg font-bold text-purple-800 flex items-center">💳 Billing Address</h4>
+            <div className="text-sm">
+              <p className="font-semibold text-gray-900 text-base">
+                {order.billingAddress?.name || order.shippingAddress?.name || "N/A"}
+              </p>
+              <p className="text-gray-700">
+                {order.billingAddress?.address || order.shippingAddress?.address || "N/A"}
+              </p>
+              <p className="text-gray-700">
+                {order.billingAddress?.city || order.shippingAddress?.city || "N/A"},{" "}
+                {order.billingAddress?.state || order.shippingAddress?.state || "N/A"}{" "}
+                {order.billingAddress?.zipCode || order.shippingAddress?.zipCode || "N/A"}
+              </p>
+              <p className="text-gray-700">📞 {order.billingAddress?.phone || order.shippingAddress?.phone || "N/A"}</p>
+              <p className="text-gray-700">✉️ {order.billingAddress?.email || order.shippingAddress?.email || "N/A"}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Seller Comments */}
+        {order.sellerComments && (
+          <div className="mb-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-3">
+            <h4 className="text-sm font-bold text-blue-700 uppercase mb-2">💬 Seller Comments</h4>
+            <p className="text-gray-700 whitespace-pre-wrap">{order.sellerComments}</p>
+          </div>
+        )}
+
+        {/* Products Table */}
+        <div className="mb-2">
+          <table className="w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
+            <thead>
+              <tr className="bg-gradient-to-r from-lime-500 to-lime-600 text-white">
+                <th className="text-left p-4 font-bold"> Product</th>
+                <th className="text-left p-4 font-bold"> SKU</th>
+                <th className="text-center p-4 font-bold"> Quantity</th>
+                <th className="text-right p-4 font-bold">Price</th>
+                <th className="text-right p-4 font-bold"> Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {resolvedItems.length > 0 ? (
+                resolvedItems.map((item, index) => {
+                  const basePrice = resolveOrderItemBasePrice(item)
+                  const salePrice = Number(item.price) || basePrice
+                  const showDiscount = basePrice > salePrice
+                  const lineTotal = salePrice * (item.quantity || 0)
+                  const baseTotal = basePrice * (item.quantity || 0)
+
+                  return (
+                    <tr key={item._id || index} className={`border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
+                      <td className="p-4 font-medium text-gray-900">
+                        {item.name}
+                        {showDiscount && (
+                          <span className="block text-xs text-gray-500">Base: {formatPrice(basePrice)}</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-gray-600 whitespace-nowrap">{item.product?.sku || item.sku || "-"}</td>
+                      <td className="p-4 text-center font-semibold text-lime-600">{item.quantity}</td>
+                      <td className="p-4 text-right font-medium">
+                        {showDiscount && (
+                          <span className="block text-xs text-gray-400 line-through">{formatPrice(basePrice)}</span>
+                        )}
+                        <span className="text-gray-900 font-semibold">{formatPrice(salePrice)}</span>
+                      </td>
+                      <td className="p-4 text-right font-bold text-lime-600">
+                        {showDiscount && (
+                          <span className="block text-xs text-gray-400 font-normal line-through">
+                            {formatPrice(baseTotal)}
+                          </span>
+                        )}
+                        <span>{formatPrice(lineTotal)}</span>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan="5" className="p-8 text-center text-gray-500">
+                    No items found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Totals */}
+        <div className="bg-white border-2 border-lime-200 rounded-lg p-3">
+          <div className="space-y-1">
+            {baseSubtotal > 0 && baseSubtotal !== subtotal && (
+              <div className="flex justify-between text-gray-500">
+                <span>Base Price:</span>
+                <span className="line-through">{formatPrice(baseSubtotal)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-gray-700">
+              <span>💰 Sub-Total:</span>
+              <span className="font-medium">{formatPrice(subtotal)}</span>
+            </div>
+
+            {derivedDiscount > 0 && (
+              <div className="flex justify-between text-gray-700">
+                <span>Offer Discount:</span>
+                <span className="font-medium text-green-700">-{formatPrice(derivedDiscount)}</span>
+              </div>
+            )}
+
+            {couponDiscount > 0 && (
+              <div className="flex justify-between text-gray-700">
+                <span>
+                  Coupon{couponCode ? ` (${couponCode})` : ""}:
+                </span>
+                <span className="font-medium text-green-700">-{formatPrice(couponDiscount)}</span>
+              </div>
+            )}
+
+            {tax > 0 && (
+              <div className="flex justify-between text-gray-700">
+                <span>✔️ VAT:</span>
+                <span className="font-medium">{formatPrice(tax)}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between text-gray-700">
+              <span>🚚 Shipping Charge:</span>
+              <span className="font-medium">{formatPrice(shipping)}</span>
+            </div>
+
+            <div className="border-t-2 border-lime-500">
+              <div className="flex justify-between text-xl font-bold text-lime-800 bg-lime-100 p-2 rounded-lg">
+                <span> TOTAL AMOUNT:</span>
+                <span>{formatPrice(total)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between gap-6 mt-2 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
+          {/* Section 1 */}
+          <div className="space-y-4 w-1/3">
+            <div>
+              <p className="font-semibold text-gray-800 mb-2">💳 Payment Status:</p>
+              <span
+                className={`px-4 py-2 rounded-full text-sm font-bold ${
+                  order.isPaid ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+                }`}
+              >
+                {order.isPaid ? "✅ Paid" : "❌ Unpaid"}
+              </span>
+            </div>
+          </div>
+
+          {/* Section 2 */}
+          <div className="space-y-4 w-1/3">
+            <div>
+              <p className="font-semibold text-gray-800">💰 Payment Method:</p>
+              <p className="text-gray-700">{order.paymentMethod || "Card"}</p>
+            </div>
+          </div>
+
+          {/* Section 3 */}
+          <div className="space-y-4 w-1/3">
+            {order.trackingId && (
+              <div>
+                <p className="font-semibold text-gray-800">📦 Tracking ID:</p>
+                <code className="bg-gray-100 px-3 py-1 rounded text-sm font-mono">{order.trackingId}</code>
+              </div>
+            )}
+
+            {order.paidAt && (
+              <div>
+                <p className="font-semibold text-gray-800">✅ Paid At:</p>
+                <p className="text-gray-700">{new Date(order.paidAt).toLocaleString()}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Notes */}
+        {(order.customerNotes || order.notes) && (
+          <div className="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+            <h4 className="font-semibold text-blue-800 mb-2">📝 Special Notes:</h4>
+            <p className="text-blue-700 italic">{order.customerNotes || order.notes}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="text-xs text-end mt-2 opacity-80">🖨️ Printed: {currentDate}</div>
+    </div>
+  )
+})
+
+InvoiceComponent.displayName = "InvoiceComponent"
+
 const OnTheWay = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -14,20 +312,96 @@ const OnTheWay = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [processingAction, setProcessingAction] = useState(false)
+  const [showStatusDropdown, setShowStatusDropdown] = useState({})
+  const [showPaymentDropdown, setShowPaymentDropdown] = useState({})
+  const [selectedOrders, setSelectedOrders] = useState([])
+  const [selectAll, setSelectAll] = useState(false)
+  const [bulkStatus, setBulkStatus] = useState("")
+  const [showBulkActions, setShowBulkActions] = useState(false)
+  const [orderNotes, setOrderNotes] = useState("")
+  const [trackingId, setTrackingId] = useState("")
+  const [estimatedDelivery, setEstimatedDelivery] = useState("")
+  const [sellerComments, setSellerComments] = useState("")
   const { showToast } = useToast()
+
+  const orderStatusOptions = [
+    "New",
+    "Processing",
+    "Confirmed",
+    "Ready For Shipment",
+    "Shipped",
+    "On the Way",
+    "Out for Delivery",
+    "Delivered",
+    "On Hold",
+    "Cancelled",
+    "Deleted",
+  ]
+
+  // Print ref
+  const printComponentRef = useRef(null)
+
+  // Print handler
+  const handlePrint = useReactToPrint({
+    contentRef: printComponentRef,
+    documentTitle: `Invoice-${selectedOrder?._id.slice(-6)}`,
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 0.5in;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        * {
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    `,
+  })
 
   const formatPrice = (price) => {
     return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
 
+  const formatDate = (date) => {
+    return new Date(date).toLocaleString()
+  }
+
   const selectedOrderItems = Array.isArray(selectedOrder?.orderItems) ? selectedOrder.orderItems : []
   const selectedBaseSubtotal = computeBaseSubtotal(selectedOrderItems)
+  const selectedTotals = getInvoiceBreakdown(selectedOrder || {})
+  const selectedBaseDiscount = deriveBaseDiscount(selectedBaseSubtotal, selectedTotals.subtotal)
+  
+  // Calculate total discount (manual or coupon)
+  const totalDiscountAmount = selectedTotals.couponDiscount + selectedTotals.manualDiscount
+  const couponCodeLabel = selectedTotals.couponCode || selectedOrder?.couponCode || ""
+  const showCouponDetail = totalDiscountAmount > 0
 
   useEffect(() => {
     fetchOrders()
     const interval = setInterval(fetchOrders, 30000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowStatusDropdown({})
+      setShowPaymentDropdown({})
+    }
+
+    document.addEventListener("click", handleClickOutside)
+    return () => document.removeEventListener("click", handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    setShowBulkActions(selectedOrders.length > 0)
+  }, [selectedOrders])
 
   const fetchOrders = async () => {
     try {
@@ -59,15 +433,138 @@ const OnTheWay = () => {
     }
   }
 
-  const handleMarkAsDelivered = async (orderId) => {
+  const handleUpdateStatus = async (orderId, status) => {
     try {
       setProcessingAction(true)
       const token =
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
-      await axios.put(
-        `${config.API_URL}/api/admin/orders/${orderId}/status`,
-        { status: "Delivered" },
+      const updateData = { status }
+
+      if (status === "Delivered") {
+        updateData.isPaid = true
+        updateData.paidAt = new Date().toISOString()
+      }
+
+      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/status`, updateData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      const updatedOrder = { ...orders.find((order) => order._id === orderId), ...updateData }
+      setOrders(orders.map((order) => (order._id === orderId ? updatedOrder : order)))
+
+      if (selectedOrder && selectedOrder._id === orderId) {
+        setSelectedOrder({ ...selectedOrder, ...updateData })
+      }
+
+      setShowStatusDropdown({})
+      setError(null)
+      setProcessingAction(false)
+      showToast("Order status updated successfully!", "success")
+    } catch (error) {
+      console.error("Error updating status:", error)
+      setError("Failed to update order status: " + (error.response?.data?.message || error.message))
+      setProcessingAction(false)
+      showToast("Failed to update order status", "error")
+    }
+  }
+
+  const handleUpdatePaymentStatus = async (orderId, isPaid) => {
+    try {
+      setProcessingAction(true)
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      const updateData = {
+        isPaid: isPaid,
+        ...(isPaid && { paidAt: new Date().toISOString() }),
+        ...(!isPaid && { paidAt: null }),
+      }
+
+      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}`, updateData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      const updatedOrderData = {
+        ...updateData,
+        paidAt: isPaid ? new Date() : null,
+      }
+
+      setOrders(orders.map((order) => (order._id === orderId ? { ...order, ...updatedOrderData } : order)))
+
+      if (selectedOrder && selectedOrder._id === orderId) {
+        setSelectedOrder({ ...selectedOrder, ...updatedOrderData })
+      }
+
+      setShowPaymentDropdown({})
+      setError(null)
+      setProcessingAction(false)
+      showToast("Payment status updated successfully!", "success")
+    } catch (error) {
+      console.error("Error updating payment status:", error)
+      setError("Failed to update payment status: " + (error.response?.data?.message || error.message))
+      setProcessingAction(false)
+      showToast("Failed to update payment status", "error")
+    }
+  }
+
+  const handleSaveOrderDetails = async () => {
+    try {
+      setProcessingAction(true)
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      const updateData = {
+        notes: orderNotes,
+        trackingId: trackingId,
+        sellerComments: sellerComments,
+        ...(estimatedDelivery && { estimatedDelivery: new Date(estimatedDelivery).toISOString() }),
+      }
+
+      await axios.put(`${config.API_URL}/api/admin/orders/${selectedOrder._id}`, updateData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      const updatedOrder = {
+        ...selectedOrder,
+        notes: orderNotes,
+        trackingId: trackingId,
+        sellerComments: sellerComments,
+        estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : null,
+      }
+
+      setSelectedOrder(updatedOrder)
+      setOrders(orders.map((order) => (order._id === selectedOrder._id ? updatedOrder : order)))
+
+      setError(null)
+      setProcessingAction(false)
+      showToast("Order details updated successfully!", "success")
+    } catch (error) {
+      console.error("Error updating order details:", error)
+      setError("Failed to update order details: " + (error.response?.data?.message || error.message))
+      setProcessingAction(false)
+      showToast("Failed to update order details", "error")
+    }
+  }
+
+  const handleSendNotification = async (orderId) => {
+    try {
+      setProcessingAction(true)
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      await axios.post(
+        `${config.API_URL}/api/admin/orders/${orderId}/notify`,
+        {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -76,22 +573,108 @@ const OnTheWay = () => {
         },
       )
 
-      setOrders(orders.filter((order) => order._id !== orderId))
-      showToast("Order marked as delivered!", "success")
+      showToast("Notification email sent successfully!", "success")
       setProcessingAction(false)
     } catch (error) {
-      console.error("Error updating status:", error)
-      showToast("Failed to update order status", "error")
+      console.error("Error sending notification:", error)
+      setError("Failed to send notification: " + (error.response?.data?.message || error.message))
       setProcessingAction(false)
+      showToast("Failed to send notification", "error")
     }
+  }
+
+  const handleSelectOrder = (orderId) => {
+    setSelectedOrders((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    )
+  }
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedOrders([])
+    } else {
+      setSelectedOrders(filteredOrders.map((order) => order._id))
+    }
+    setSelectAll(!selectAll)
+  }
+
+  const handleBulkStatusUpdate = async () => {
+    if (!bulkStatus || selectedOrders.length === 0) {
+      showToast("Please select orders and a status", "error")
+      return
+    }
+
+    try {
+      setProcessingAction(true)
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      await Promise.all(
+        selectedOrders.map((orderId) =>
+          axios.put(
+            `${config.API_URL}/api/admin/orders/${orderId}/status`,
+            { status: bulkStatus },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            },
+          ),
+        ),
+      )
+
+      setOrders(orders.map((order) => (selectedOrders.includes(order._id) ? { ...order, status: bulkStatus } : order)))
+
+      setSelectedOrders([])
+      setSelectAll(false)
+      setBulkStatus("")
+      setShowBulkActions(false)
+      setProcessingAction(false)
+
+      showToast(`Successfully updated ${selectedOrders.length} orders to ${bulkStatus}`, "success")
+    } catch (error) {
+      console.error("Error updating bulk status:", error)
+      setError("Failed to update orders: " + (error.response?.data?.message || error.message))
+      setProcessingAction(false)
+      showToast("Failed to update orders", "error")
+    }
+  }
+
+  const handleMarkAsDelivered = async (orderId) => {
+    await handleUpdateStatus(orderId, "Delivered")
   }
 
   const handleViewOrder = (order) => {
     setSelectedOrder(order)
+    setOrderNotes(order.notes || "")
+    setTrackingId(order.trackingId || "")
+    setEstimatedDelivery(order.estimatedDelivery ? new Date(order.estimatedDelivery).toISOString().split("T")[0] : "")
+    setSellerComments(order.sellerComments || "")
+  }
+
+  const toggleStatusDropdown = (orderId) => {
+    setShowStatusDropdown((prev) => ({
+      ...prev,
+      [orderId]: !prev[orderId],
+    }))
+    setShowPaymentDropdown({})
+  }
+
+  const togglePaymentDropdown = (orderId) => {
+    setShowPaymentDropdown((prev) => ({
+      ...prev,
+      [orderId]: !prev[orderId],
+    }))
+    setShowStatusDropdown({})
   }
 
   const handleCloseModal = () => {
     setSelectedOrder(null)
+    setOrderNotes("")
+    setTrackingId("")
+    setEstimatedDelivery("")
+    setSellerComments("")
   }
 
   const filteredOrders = orders.filter(
@@ -121,7 +704,58 @@ const OnTheWay = () => {
           </button>
         </div>
 
-        {error && <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-md">{error}</div>}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-md flex items-center justify-between">
+            <span>{error}</span>
+            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+              <X size={18} />
+            </button>
+          </div>
+        )}
+
+        {showBulkActions && (
+          <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-500">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-medium text-gray-700">
+                  {selectedOrders.length} order{selectedOrders.length !== 1 ? "s" : ""} selected
+                </span>
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700">Change status to:</label>
+                  <select
+                    value={bulkStatus}
+                    onChange={(e) => setBulkStatus(e.target.value)}
+                    className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">Select Status</option>
+                    {orderStatusOptions.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleBulkStatusUpdate}
+                    disabled={!bulkStatus || processingAction}
+                    className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white px-4 py-1 rounded-md text-sm font-medium transition-colors"
+                  >
+                    {processingAction ? "Updating..." : "Update"}
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedOrders([])
+                  setSelectAll(false)
+                  setBulkStatus("")
+                }}
+                className="text-gray-500 hover:text-gray-700 text-sm"
+              >
+                Clear Selection
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mb-6 flex justify-between items-center">
           <div className="relative">
@@ -149,6 +783,14 @@ const OnTheWay = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
+                    <th className="px-6 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectAll}
+                        onChange={handleSelectAll}
+                        className="h-4 w-4 text-purple-500 focus:ring-purple-500 border-gray-300 rounded"
+                      />
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Order ID
                     </th>
@@ -156,13 +798,13 @@ const OnTheWay = () => {
                       Customer
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Shipped Date
+                      Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Items
+                      Payment
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Total
@@ -174,25 +816,124 @@ const OnTheWay = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredOrders.map((order) => (
-                    <tr key={order._id} className="hover:bg-gray-50">
+                    <tr
+                      key={order._id}
+                      className={`hover:bg-gray-50 ${selectedOrders.includes(order._id) ? "bg-purple-50" : ""}`}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-blue-600">#{order._id.slice(-6)}</div>
+                        <input
+                          type="checkbox"
+                          checked={selectedOrders.includes(order._id)}
+                          onChange={() => handleSelectOrder(order._id)}
+                          className="h-4 w-4 text-purple-500 focus:ring-purple-500 border-gray-300 rounded"
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{order.shippingAddress.name}</div>
-                        <div className="text-sm text-gray-500">{order.shippingAddress.email}</div>
+                        <div className="text-sm font-medium text-purple-600">#{order._id.slice(-6)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{new Date(order.updatedAt).toLocaleDateString()}</div>
-                        <div className="text-sm text-gray-500">{new Date(order.updatedAt).toLocaleTimeString()}</div>
+                        {order.deliveryType === "pickup" ? (
+                          <>
+                            <div className="text-sm text-gray-900">{order.pickupDetails?.location || "N/A"}</div>
+                            <div className="text-sm text-gray-500">{order.pickupDetails?.phone || "N/A"}</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-sm text-gray-900">{order.shippingAddress?.name || "N/A"}</div>
+                            <div className="text-sm text-gray-500">{order.shippingAddress?.email || "N/A"}</div>
+                          </>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                          {order.status}
-                        </span>
+                        <div className="text-sm text-gray-900">{new Date(order.createdAt).toLocaleDateString()}</div>
+                        <div className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{order.orderItems.length} items</div>
+                      <td className="px-6 py-4 whitespace-nowrap relative">
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleStatusDropdown(order._id)
+                            }}
+                            className={`px-3 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity
+                            ${
+                              order.status === "Processing"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : order.status === "Confirmed"
+                                  ? "bg-lime-100 text-lime-800"
+                                  : order.status === "Shipped" || order.status === "On the Way"
+                                    ? "bg-purple-100 text-purple-800"
+                                    : order.status === "Out for Delivery"
+                                      ? "bg-indigo-100 text-indigo-800"
+                                      : order.status === "Delivered"
+                                        ? "bg-green-100 text-green-800"
+                                        : order.status === "Cancelled"
+                                          ? "bg-red-100 text-red-800"
+                                          : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {order.status || "New"}
+                            <ChevronDown size={12} className="ml-1" />
+                          </button>
+
+                          {showStatusDropdown[order._id] && (
+                            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                              {orderStatusOptions.map((status) => (
+                                <button
+                                  key={status}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleUpdateStatus(order._id, status)
+                                  }}
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                  disabled={processingAction}
+                                >
+                                  {status}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap relative">
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              togglePaymentDropdown(order._id)
+                            }}
+                            className={`px-3 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full cursor-pointer hover:opacity-80 transition-colors
+                            ${order.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                          >
+                            {order.isPaid ? "Paid" : "Unpaid"}
+                            <ChevronDown size={12} className="ml-1" />
+                          </button>
+
+                          {showPaymentDropdown[order._id] && (
+                            <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleUpdatePaymentStatus(order._id, true)
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                disabled={processingAction}
+                              >
+                                Paid
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleUpdatePaymentStatus(order._id, false)
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                disabled={processingAction}
+                              >
+                                Unpaid
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatPrice(order.totalPrice)}
@@ -204,6 +945,14 @@ const OnTheWay = () => {
                           title="View Details"
                         >
                           <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleSendNotification(order._id)}
+                          className="text-purple-600 hover:text-purple-900 mr-3"
+                          disabled={processingAction}
+                          title="Send Notification"
+                        >
+                          <Mail size={18} />
                         </button>
                         <button
                           onClick={() => handleMarkAsDelivered(order._id)}
@@ -231,50 +980,91 @@ const OnTheWay = () => {
         )}
       </div>
 
-      {/* Order Details Modal */}
+      {/* Comprehensive Order Details Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <div className="p-6 border-b">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Order #{selectedOrder._id.slice(-6)}</h2>
-                <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-500 text-2xl">
-                  &times;
-                </button>
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+              <div>
+                <div className="flex items-center space-x-2 text-sm text-gray-500 mb-1">
+                  <span>Dashboard</span>
+                  <span>/</span>
+                  <span>On the Way Orders</span>
+                  <span>/</span>
+                  <span className="text-blue-600">View</span>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Order ID: {selectedOrder._id.slice(-6)}</h2>
               </div>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100"
+              >
+                <X size={24} />
+              </button>
             </div>
 
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Customer Information</h3>
-                  <p className="text-gray-600">
-                    <span className="font-medium">Name:</span> {selectedOrder.shippingAddress.name}
-                  </p>
-                  <p className="text-gray-600">
-                    <span className="font-medium">Email:</span> {selectedOrder.shippingAddress.email}
-                  </p>
-                  <p className="text-gray-600">
-                    <span className="font-medium">Phone:</span> {selectedOrder.shippingAddress.phone}
-                  </p>
+              {/* Order Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Truck className="text-blue-600" size={20} />
+                    <div>
+                      <p className="text-sm text-gray-600">Status</p>
+                      <p className="font-semibold text-blue-900">{selectedOrder.status || "On the Way"}</p>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Delivery Actions</h3>
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => handleMarkAsDelivered(selectedOrder._id)}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md flex items-center justify-center"
-                      disabled={processingAction}
-                    >
-                      <CheckCircle size={18} className="mr-2" />
-                      Mark as Delivered
-                    </button>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <CreditCard className="text-green-600" size={20} />
+                    <div>
+                      <p className="text-sm text-gray-600">Payment Type</p>
+                      <p className="font-semibold text-green-900">
+                        {selectedOrder.isPaid ? "Paid" : selectedOrder.paymentMethod || "Cash on Delivery"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="text-purple-600" size={20} />
+                    <div>
+                      <p className="text-sm text-gray-600">Order Type</p>
+                      <p className="font-semibold text-purple-900">Delivery</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Package className="text-gray-600" size={20} />
+                    <div>
+                      <p className="text-sm text-gray-600">Created At</p>
+                      <p className="font-semibold text-gray-900 text-sm">{formatDate(selectedOrder.createdAt)}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
+              {/* Quick Action Section */}
               <div className="bg-white border rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                <button
+                  onClick={() => handleMarkAsDelivered(selectedOrder._id)}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-md flex items-center"
+                  disabled={processingAction}
+                >
+                  <CheckCircle size={18} className="mr-2" />
+                  Mark as Delivered
+                </button>
+              </div>
+
+              {/* Order Items */}
+              <div className="bg-white border rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
                 <div className="space-y-4">
                   {selectedOrderItems.length > 0 ? (
@@ -291,12 +1081,8 @@ const OnTheWay = () => {
                           className="flex items-center justify-between py-3 border-b last:border-b-0"
                         >
                           <div className="flex items-center space-x-4">
-                            <div className="w-14 h-14 bg-gray-100 rounded-md flex items-center justify-center">
-                              {item.image ? (
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <Package size={20} className="text-gray-400" />
-                              )}
+                            <div className="w-15 h-15 bg-gray-200 rounded-md flex items-center justify-center">
+                              <Package size={24} className="text-gray-400" />
                             </div>
                             <div>
                               <h4 className="font-medium text-gray-900">{item.name}</h4>
@@ -322,50 +1108,229 @@ const OnTheWay = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 border rounded-lg p-4 mb-6">
+              {/* Total Amount */}
+              <div className="bg-gray-50 border rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Amount</h3>
                 <div className="space-y-2">
                   {selectedBaseSubtotal > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Base Price:</span>
+                      <span className="text-gray-500">Base Price:</span>
                       <span className="text-gray-400 line-through">{formatPrice(selectedBaseSubtotal)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal:</span>
-                    <span className="text-gray-900">{formatPrice(selectedOrder?.itemsPrice || 0)}</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping:</span>
-                    <span className="text-gray-900">{formatPrice(selectedOrder?.shippingPrice || 0)}</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">VAT:</span>
-                    <span className="text-gray-900">{formatPrice(selectedOrder?.taxPrice || 0)}</span>
+                    <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
                   </div>
-                  {selectedOrder?.discountAmount > 0 && (
+                  {selectedBaseDiscount > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Discount:</span>
-                      <span className="text-green-600">-{formatPrice(selectedOrder.discountAmount)}</span>
+                      <span className="text-gray-600">Offer Discount:</span>
+                      <span className="text-green-600">-{formatPrice(selectedBaseDiscount)}</span>
+                    </div>
+                  )}
+                  {showCouponDetail && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{couponCodeLabel ? `Coupon (${couponCodeLabel})` : "Coupon Discount"}:</span>
+                      <span className="text-green-600">-{formatPrice(totalDiscountAmount)}</span>
                     </div>
                   )}
                   <div className="border-t pt-2 flex justify-between">
                     <span className="text-lg font-semibold text-gray-900">Total:</span>
-                    <span className="text-lg font-bold text-blue-600">{formatPrice(selectedOrder?.totalPrice || 0)}</span>
+                    <span className="text-lg font-bold text-blue-600">{formatPrice(selectedTotals.total)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              {/* Addresses */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Shipping Address */}
+                <div className="bg-white border rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h3>
+                  <div className="space-y-2">
+                    <p>
+                      <span className="font-medium">Name:</span> {selectedOrder.shippingAddress?.name || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Email:</span> {selectedOrder.shippingAddress?.email || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Phone:</span> {selectedOrder.shippingAddress?.phone || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Address:</span> {selectedOrder.shippingAddress?.address || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">City:</span> {selectedOrder.shippingAddress?.city || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">State:</span> {selectedOrder.shippingAddress?.state || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Zip Code:</span> {selectedOrder.shippingAddress?.zipCode || "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Billing Address */}
+                <div className="bg-white border rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Billing Address</h3>
+                  <div className="space-y-2">
+                    <p>
+                      <span className="font-medium">Name:</span>{" "}
+                      {selectedOrder.billingAddress?.name || selectedOrder.shippingAddress?.name || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Email:</span>{" "}
+                      {selectedOrder.billingAddress?.email || selectedOrder.shippingAddress?.email || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Phone:</span>{" "}
+                      {selectedOrder.billingAddress?.phone || selectedOrder.shippingAddress?.phone || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Address:</span>{" "}
+                      {selectedOrder.billingAddress?.address || selectedOrder.shippingAddress?.address || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">City:</span>{" "}
+                      {selectedOrder.billingAddress?.city || selectedOrder.shippingAddress?.city || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">State:</span>{" "}
+                      {selectedOrder.billingAddress?.state || selectedOrder.shippingAddress?.state || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Zip Code:</span>{" "}
+                      {selectedOrder.billingAddress?.zipCode || selectedOrder.shippingAddress?.zipCode || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              <div className="bg-white border rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h3>
+                <div className="space-y-4">
+                  <div>
+                    <p className="mb-2">
+                      <span className="font-medium">Payment Status:</span>
+                      <span
+                        className={`ml-2 px-2 py-1 text-xs rounded-full ${selectedOrder.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                      >
+                        {selectedOrder.isPaid ? "Paid" : "Unpaid"}
+                      </span>
+                    </p>
+                    {selectedOrder.paidAt && (
+                      <p>
+                        <span className="font-medium">Paid At:</span> {formatDate(selectedOrder.paidAt)}
+                      </p>
+                    )}
+                  </div>
+
+                  {selectedOrder.trackingId && (
+                    <div>
+                      <span className="font-medium">Tracking ID:</span> {selectedOrder.trackingId}
+                    </div>
+                  )}
+
+                  {selectedOrder.estimatedDelivery && (
+                    <div>
+                      <span className="font-medium">Estimated Delivery:</span>{" "}
+                      {formatDate(selectedOrder.estimatedDelivery)}
+                    </div>
+                  )}
+
+                  {showCouponDetail && (
+                    <div className="mt-4 bg-lime-50 border border-lime-200 p-4 rounded-lg space-y-2">
+                      <p className="text-sm font-medium text-lime-700">
+                        {couponCodeLabel ? "Coupon Details" : "Discount Details"}
+                      </p>
+                      {couponCodeLabel && (
+                        <div className="flex justify-between text-sm text-gray-700">
+                          <span>Code:</span>
+                          <span className="font-semibold text-gray-900">{couponCodeLabel}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm text-gray-700">
+                        <span>Discount Amount:</span>
+                        <span className="font-semibold text-green-600">-{formatPrice(totalDiscountAmount)}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedOrder.customerNotes || selectedOrder.notes ? (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Customer Notes</label>
+                      <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md min-h-[48px]">
+                        <p className="text-gray-700 whitespace-pre-wrap">
+                          {selectedOrder.customerNotes || selectedOrder.notes}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Seller Comments</label>
+                    <textarea
+                      value={sellerComments}
+                      onChange={(e) => setSellerComments(e.target.value)}
+                      placeholder="Add seller comments here..."
+                      rows="3"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-4">
                 <button
                   onClick={handleCloseModal}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-6 rounded-md transition-colors"
                 >
                   Close
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
+                >
+                  <Printer size={18} className="mr-2" />
+                  Print Receipt
+                </button>
+                <button
+                  onClick={() => handleSendNotification(selectedOrder._id)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
+                  disabled={processingAction}
+                >
+                  <Mail size={18} className="mr-2" />
+                  Send Notification
+                </button>
+                <button
+                  onClick={() => handleMarkAsDelivered(selectedOrder._id)}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
+                  disabled={processingAction}
+                >
+                  <CheckCircle size={18} className="mr-2" />
+                  Mark as Delivered
                 </button>
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Hidden Invoice Component for Printing */}
+      {selectedOrder && (
+        <div style={{ display: "none" }}>
+          <InvoiceComponent order={selectedOrder} ref={printComponentRef} />
         </div>
       )}
     </div>

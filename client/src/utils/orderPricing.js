@@ -30,3 +30,10 @@ export const computeBaseSubtotal = (items = []) => {
     return sum + resolveOrderItemBasePrice(item) * quantity
   }, 0)
 }
+
+export const deriveBaseDiscount = (baseSubtotal, offerSubtotal) => {
+  const resolvedBaseSubtotal = Number(baseSubtotal) || 0
+  const resolvedOfferSubtotal = Number(offerSubtotal) || 0
+  const discount = resolvedBaseSubtotal - resolvedOfferSubtotal
+  return discount > 0 ? discount : 0
+}
