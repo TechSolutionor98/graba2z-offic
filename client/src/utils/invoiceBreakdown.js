@@ -7,8 +7,8 @@ export function getInvoiceBreakdown(order = {}) {
   const fallbackDiscount = Math.max(0, subtotal + shipping + tax - total)
   const resolvedDiscount = rawDiscount > 0 ? rawDiscount : fallbackDiscount
   const couponCode = (order.couponCode || "").trim()
-  const couponDiscount = couponCode ? resolvedDiscount : 0
-  const manualDiscount = couponCode ? 0 : resolvedDiscount
+  const couponDiscount = resolvedDiscount
+  const manualDiscount = 0
 
   const vatRate = 0.05
   const derivedVat = total > 0 ? Number((total * vatRate).toFixed(2)) : 0

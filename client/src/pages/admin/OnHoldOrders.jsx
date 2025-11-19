@@ -229,7 +229,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
             )}
             <div className="flex justify-between text-gray-700">
               <span>💰 Sub-Total:</span>
-              <span className="font-medium">{formatPrice(displaySubtotal)}</span>
+              <span className="font-medium">{formatPrice(subtotal)}</span>
             </div>
 
             {derivedDiscount > 0 && (
@@ -239,12 +239,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               </div>
             )}
 
-            {couponDiscount > 0 && (
+            {(couponDiscount > 0 || (order.couponCode && order.discountAmount > 0)) && (
               <div className="flex justify-between text-gray-700">
                 <span>
-                  Coupon{couponCode ? ` (${couponCode})` : ""}:
+                  Coupon:{(couponCode || order.couponCode) ? ` (${couponCode || order.couponCode})` : ""}
                 </span>
-                <span className="font-medium text-green-700">-{formatPrice(couponDiscount)}</span>
+                <span className="font-medium text-green-700">-{formatPrice(couponDiscount || order.discountAmount || 0)}</span>
               </div>
             )}
 
@@ -290,6 +290,13 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               <p className="font-semibold text-gray-800">💰 Payment Method:</p>
               <p className="text-gray-700">{order.paymentMethod || "Card"}</p>
             </div>
+            {(couponDiscount > 0 || (order.couponCode && order.couponDiscount)) && (
+              <div className="mt-3">
+                <p className="font-semibold text-gray-800">🎟️ Coupon:</p>
+                <p className="text-gray-700 font-bold">{couponCode || order.couponCode || "Discount Coupon"}</p>
+                <p className="text-green-700 font-bold">-{formatPrice(couponDiscount || order.couponDiscount || 0)}</p>
+              </div>
+            )}
           </div>
 
           {/* Section 3 */}
@@ -1196,9 +1203,16 @@ const orderStatusOptions = [
                       </div>
                     )}
                     {showCouponDetail && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">{couponCodeLabel ? `Coupon (${couponCodeLabel})` : "Coupon Discount"}:</span>
-                        <span className="text-green-600">-{formatPrice(totalDiscountAmount)}</span>
+                      <div className="bg-green-50 border border-green-200 rounded-md p-3 -mx-1">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="text-sm font-medium text-green-800">Coupon Applied</span>
+                            {couponCodeLabel && (
+                              <div className="text-xs text-green-600 mt-0.5">Code: <span className="font-semibold">{couponCodeLabel}</span></div>
+                            )}
+                          </div>
+                          <span className="text-lg font-bold text-green-700">-{formatPrice(totalDiscountAmount)}</span>
+                        </div>
                       </div>
                     )}
                   {selectedTotals.tax > 0 && (
