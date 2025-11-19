@@ -204,7 +204,7 @@ const AdminSubCategories2 = () => {
                   onChange={(e) => setParentFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">All Parent SubCategories</option>
+                  <option value="all"> Level-1 SubCategories</option>
                   {filteredParentSubCategories.map((parent) => (
                     <option key={parent._id} value={parent._id}>
                       {parent.name}
