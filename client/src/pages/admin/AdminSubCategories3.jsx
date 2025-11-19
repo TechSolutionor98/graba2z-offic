@@ -12,17 +12,20 @@ import config from "../../config/config"
 const AdminSubCategories3 = () => {
   const [subCategories, setSubCategories] = useState([])
   const [categories, setCategories] = useState([])
-  const [parentSubCategories, setParentSubCategories] = useState([])
+  const [level1SubCategories, setLevel1SubCategories] = useState([]) // Level 1 subcategories
+  const [level2SubCategories, setLevel2SubCategories] = useState([]) // Level 2 subcategories
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [parentFilter, setParentFilter] = useState("all")
+  const [level1Filter, setLevel1Filter] = useState("all")
+  const [level2Filter, setLevel2Filter] = useState("all")
   const { showToast } = useToast()
 
   useEffect(() => {
     fetchSubCategories()
     fetchCategories()
-    fetchParentSubCategories()
+    fetchLevel1SubCategories()
+    fetchLevel2SubCategories()
   }, [])
 
   const fetchSubCategories = async () => {
@@ -53,16 +56,29 @@ const AdminSubCategories3 = () => {
     }
   }
 
-  const fetchParentSubCategories = async () => {
+  const fetchLevel1SubCategories = async () => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      const response = await axios.get(`${config.API_URL}/api/subcategories`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { level: 1 }
+      })
+      setLevel1SubCategories(response.data)
+    } catch (error) {
+      console.error("Error fetching level 1 subcategories:", error)
+    }
+  }
+
+  const fetchLevel2SubCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
       const response = await axios.get(`${config.API_URL}/api/subcategories`, {
         headers: { Authorization: `Bearer ${token}` },
         params: { level: 2 }
       })
-      setParentSubCategories(response.data)
+      setLevel2SubCategories(response.data)
     } catch (error) {
-      console.error("Error fetching parent subcategories:", error)
+      console.error("Error fetching level 2 subcategories:", error)
     }
   }
 
@@ -117,13 +133,30 @@ const AdminSubCategories3 = () => {
     }
   }
 
+  // Filter Level 1 subcategories based on selected category
+  const filteredLevel1SubCategories = categoryFilter === "all" 
+    ? level1SubCategories 
+    : level1SubCategories.filter(sub => sub.category?._id === categoryFilter)
+
+  // Filter Level 2 subcategories based on selected Level 1 subcategory
+  const filteredLevel2SubCategories = level1Filter === "all" 
+    ? (categoryFilter === "all" ? level2SubCategories : level2SubCategories.filter(sub => sub.category?._id === categoryFilter))
+    : level2SubCategories.filter(sub => sub.parentSubCategory?._id === level1Filter)
+
   const filteredSubCategories = subCategories.filter((subCategory) => {
     const matchesSearch = subCategory.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = categoryFilter === "all" || subCategory.category?._id === categoryFilter
-    const matchesParent = parentFilter === "all" || subCategory.parentSubCategory?._id === parentFilter
+    const matchesLevel1 = level1Filter === "all" || (
+      // Check if the parent of parent matches level1Filter
+      level2SubCategories.find(l2 => 
+        l2._id === subCategory.parentSubCategory?._id && 
+        l2.parentSubCategory?._id === level1Filter
+      )
+    )
+    const matchesLevel2 = level2Filter === "all" || subCategory.parentSubCategory?._id === level2Filter
     // Only show Level 3 subcategories
     const matchesLevel = subCategory.level === 3
-    return matchesSearch && matchesCategory && matchesParent && matchesLevel
+    return matchesSearch && matchesCategory && matchesLevel1 && matchesLevel2 && matchesLevel
   })
 
   if (loading) {
@@ -178,7 +211,11 @@ const AdminSubCategories3 = () => {
                 <Filter size={20} className="text-gray-400" />
                 <select
                   value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  onChange={(e) => {
+                    setCategoryFilter(e.target.value)
+                    setLevel1Filter("all") // Reset level 1 filter
+                    setLevel2Filter("all") // Reset level 2 filter
+                  }}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Categories</option>
@@ -189,14 +226,29 @@ const AdminSubCategories3 = () => {
                   ))}
                 </select>
                 <select
-                  value={parentFilter}
-                  onChange={(e) => setParentFilter(e.target.value)}
+                  value={level1Filter}
+                  onChange={(e) => {
+                    setLevel1Filter(e.target.value)
+                    setLevel2Filter("all") // Reset level 2 filter when level 1 changes
+                  }}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">All Parent SubCategories</option>
-                  {parentSubCategories.map((parent) => (
-                    <option key={parent._id} value={parent._id}>
-                      {parent.name}
+                  <option value="all">All Level 1 SubCategories</option>
+                  {filteredLevel1SubCategories.map((sub) => (
+                    <option key={sub._id} value={sub._id}>
+                      {sub.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={level2Filter}
+                  onChange={(e) => setLevel2Filter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Level 2 SubCategories</option>
+                  {filteredLevel2SubCategories.map((sub) => (
+                    <option key={sub._id} value={sub._id}>
+                      {sub.name}
                     </option>
                   ))}
                 </select>
@@ -210,10 +262,13 @@ const AdminSubCategories3 = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Sub Category
+                      Level 3 Sub Category 
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Parent SubCategory
+                      Level 2 SubCategory 
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Level 1 SubCategory
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Category
@@ -232,8 +287,8 @@ const AdminSubCategories3 = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredSubCategories.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                        {searchTerm || categoryFilter !== "all" || parentFilter !== "all"
+                      <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                        {searchTerm || categoryFilter !== "all" || level1Filter !== "all" || level2Filter !== "all"
                           ? "No subcategories found matching your criteria"
                           : "No subcategories found"}
                       </td>
@@ -258,6 +313,11 @@ const AdminSubCategories3 = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{subCategory.parentSubCategory?.name || "None"}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {level2SubCategories.find(l2 => l2._id === subCategory.parentSubCategory?._id)?.parentSubCategory?.name || "None"}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{subCategory.category?.name || "Unknown"}</div>
@@ -324,7 +384,7 @@ const AdminSubCategories3 = () => {
               <div className="text-sm text-gray-600">Active Sub Categories</div>
             </div>
             <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="text-2xl font-bold text-blue-600">{parentSubCategories.length}</div>
+              <div className="text-2xl font-bold text-blue-600">{level2SubCategories.length}</div>
               <div className="text-sm text-gray-600">Parent SubCategories (Level 2)</div>
             </div>
           </div>

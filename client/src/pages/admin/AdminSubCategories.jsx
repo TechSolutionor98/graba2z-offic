@@ -102,7 +102,7 @@ const AdminSubCategories = () => {
 
   const filteredSubCategories = subCategories.filter((subCategory) => {
     const matchesSearch = subCategory.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === "all" || subCategory.category._id === categoryFilter
+    const matchesCategory = categoryFilter === "all" || (subCategory.category && subCategory.category._id === categoryFilter)
     // Only show Level 1 subcategories (level === 1 or undefined for backward compatibility)
     const matchesLevel = !subCategory.level || subCategory.level === 1
     return matchesSearch && matchesCategory && matchesLevel
@@ -183,7 +183,7 @@ const AdminSubCategories = () => {
                       Sub Category
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Parent Category
+                      Category
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Description

@@ -117,6 +117,14 @@ const AdminSubCategories2 = () => {
     }
   }
 
+  // Filter parent subcategories (Level 1) based on selected parent category
+  const filteredParentSubCategories = categoryFilter === "all" 
+    ? parentSubCategories 
+    : parentSubCategories.filter(parent => {
+        // parent.category is the main category (e.g., IT & Accessories, Laptops)
+        return parent.category?._id === categoryFilter
+      })
+
   const filteredSubCategories = subCategories.filter((subCategory) => {
     const matchesSearch = subCategory.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = categoryFilter === "all" || subCategory.category?._id === categoryFilter
@@ -178,7 +186,10 @@ const AdminSubCategories2 = () => {
                 <Filter size={20} className="text-gray-400" />
                 <select
                   value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  onChange={(e) => {
+                    setCategoryFilter(e.target.value)
+                    setParentFilter("all") // Reset parent filter when category changes
+                  }}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Categories</option>
@@ -194,7 +205,7 @@ const AdminSubCategories2 = () => {
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Parent SubCategories</option>
-                  {parentSubCategories.map((parent) => (
+                  {filteredParentSubCategories.map((parent) => (
                     <option key={parent._id} value={parent._id}>
                       {parent.name}
                     </option>
@@ -210,10 +221,10 @@ const AdminSubCategories2 = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Sub Category
+                      Level 2 SubCategory
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Parent SubCategory
+                      SubCategory
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Category
