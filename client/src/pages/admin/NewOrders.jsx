@@ -272,52 +272,33 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
         </div>
 
-        <div className="flex justify-between gap-6 mt-2 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
-          {/* Section 1 */}
-          <div className="space-y-4 w-1/3">
-            <div>
-              <p className="font-semibold text-gray-800 mb-2">💳 Payment Status:</p>
-              <span
-                className={`px-4 py-2 rounded-full text-sm font-bold ${
-                  order.isPaid ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
-                }`}
-              >
-                {order.isPaid ? "✅ Paid" : "❌ Unpaid"}
-              </span>
+        <div className="flex items-center gap-4 mt-2 bg-yellow-50 p-2 rounded-lg border-2 border-yellow-200 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-gray-800">💳 Payment Status:</span>
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-bold ${
+                order.isPaid ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
+              }`}
+            >
+              {order.isPaid ? "✅ Paid" : "❌ Unpaid"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-gray-800">💰 Payment Method:</span>
+            <span className="text-gray-700">{order.paymentMethod || "Card"}</span>
+          </div>
+          {order.trackingId && (
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-800">📦 Tracking ID:</span>
+              <code className="bg-gray-100 px-2 py-0.5 rounded text-xs font-mono">{order.trackingId}</code>
             </div>
-          </div>
-
-          {/* Section 2 */}
-          <div className="space-y-4 w-1/3">
-            <div>
-              <p className="font-semibold text-gray-800">💰 Payment Method:</p>
-              <p className="text-gray-700">{order.paymentMethod || "Card"}</p>
+          )}
+          {order.paidAt && (
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-800">✅ Paid At:</span>
+              <span className="text-gray-700 text-xs">{new Date(order.paidAt).toLocaleString()}</span>
             </div>
-            {(couponDiscount > 0 || (order.couponCode && order.couponDiscount)) && (
-              <div className="mt-3">
-                <p className="font-semibold text-gray-800">🎟️ Coupon:</p>
-                <p className="text-gray-700 font-bold">{couponCode || order.couponCode || "Discount Coupon"}</p>
-                <p className="text-green-700 font-bold">-{formatPrice(couponDiscount || order.couponDiscount || 0)}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Section 3 */}
-          <div className="space-y-4 w-1/3">
-            {order.trackingId && (
-              <div>
-                <p className="font-semibold text-gray-800">📦 Tracking ID:</p>
-                <code className="bg-gray-100 px-3 py-1 rounded text-sm font-mono">{order.trackingId}</code>
-              </div>
-            )}
-
-            {order.paidAt && (
-              <div>
-                <p className="font-semibold text-gray-800">✅ Paid At:</p>
-                <p className="text-gray-700">{new Date(order.paidAt).toLocaleString()}</p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Notes */}
