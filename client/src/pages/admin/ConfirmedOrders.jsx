@@ -236,52 +236,51 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         </div>
 
         {/* Total Amount */}
-        <div className="bg-white border-2 border-lime-200 rounded-lg p-3">
-          <div className="space-y-1">
+        <div className="bg-gray-50 border rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Amount</h3>
+          <div className="space-y-2">
             {baseSubtotal > 0 && (
-              <div className="flex justify-between text-gray-500">
-                <span>Base Price:</span>
-                <span className="line-through">{formatPrice(baseSubtotal)}</span>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Base Price:</span>
+                <span className="text-gray-400 line-through">{formatPrice(baseSubtotal)}</span>
               </div>
             )}
-            <div className="flex justify-between text-gray-700">
-              <span>💰 Sub-Total:</span>
-              <span className="font-medium">{formatPrice(subtotal)}</span>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Subtotal:</span>
+              <span className="text-gray-900">{formatPrice(subtotal)}</span>
             </div>
-
+            <div className="flex justify-between">
+              <span className="text-gray-600">Shipping:</span>
+              <span className="text-gray-900">{formatPrice(shipping)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">VAT:</span>
+              <span className="text-gray-900">{formatPrice(tax)}</span>
+            </div>
             {derivedDiscount > 0 && (
-              <div className="flex justify-between text-gray-700">
-                <span>Offer Discount:</span>
-                <span className="font-medium text-green-700">-{formatPrice(derivedDiscount)}</span>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Offer Discount:</span>
+                <span className="text-green-600">-{formatPrice(derivedDiscount)}</span>
               </div>
             )}
 
             {(couponDiscount > 0 || (order.couponCode && order.discountAmount > 0)) && (
-              <div className="flex justify-between text-gray-700">
-                <span>
-                  Coupon Applied:{(couponCode || order.couponCode) ? ` (${couponCode || order.couponCode})` : ""}
-                </span>
-                <span className="font-medium text-green-700">-{formatPrice(couponDiscount || order.discountAmount || 0)}</span>
+              <div className="bg-green-50 border border-green-200 rounded-md p-3 -mx-1">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-sm font-medium text-green-800">Coupon Applied</span>
+                    {(couponCode || order.couponCode) && (
+                      <div className="text-xs text-green-600 mt-0.5">Code: <span className="font-semibold">{couponCode || order.couponCode}</span></div>
+                    )}
+                  </div>
+                  <span className="text-lg font-bold text-green-700">-{formatPrice(couponDiscount || order.discountAmount || 0)}</span>
+                </div>
               </div>
             )}
 
-            {tax > 0 && (
-              <div className="flex justify-between text-gray-700">
-                <span>✔️ VAT:</span>
-                <span className="font-medium">{formatPrice(tax)}</span>
-              </div>
-            )}
-
-            <div className="flex justify-between text-gray-700">
-              <span>🚚 Shipping Charge:</span>
-              <span className="font-medium">{formatPrice(shipping)}</span>
-            </div>
-
-            <div className="border-t-2 border-lime-500">
-              <div className="flex justify-between text-xl font-bold text-lime-800 bg-lime-100 p-2 rounded-lg">
-                <span> TOTAL AMOUNT:</span>
-                <span>{formatPrice(displayTotal)}</span>
-              </div>
+            <div className="border-t pt-2 flex justify-between">
+              <span className="text-lg font-semibold text-gray-900">Total:</span>
+              <span className="text-lg font-bold text-lime-600">{formatPrice(total)}</span>
             </div>
           </div>
         </div>

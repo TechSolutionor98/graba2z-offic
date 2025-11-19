@@ -109,43 +109,43 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
         )}
 
-        <div className="mb-2">
-          <table className="w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
-            <thead>
-              <tr className="bg-gradient-to-r from-lime-500 to-lime-600 text-white">
-                <th className="text-left p-4 font-bold"> Product</th>
-                <th className="text-left p-4 font-bold"> SKU</th>
-                <th className="text-center p-4 font-bold"> Quantity</th>
-                <th className="text-right p-4 font-bold">Price</th>
-                <th className="text-right p-4 font-bold"> Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resolvedItems.length > 0 ? (
-                resolvedItems.map((item, index) => {
+        {/* Order Items */}
+        <div className="mb-4">
+          <h4 className="text-lg font-bold text-lime-800 mb-2 uppercase">🛍️ Order Items</h4>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-lime-300">
+              <thead>
+                <tr className="bg-lime-100">
+                  <th className="border border-lime-300 px-3 py-2 text-left text-sm font-bold">Product</th>
+                  <th className="border border-lime-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
+                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Price</th>
+                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resolvedItems.map((item, index) => {
                   const basePrice = resolveOrderItemBasePrice(item)
-                  const salePrice = Number(item.price) || basePrice
-                  const showDiscount = basePrice > salePrice
-                  const lineTotal = salePrice * (item.quantity || 0)
+                  const itemPrice = Number(item.price) || basePrice
+                  const showDiscount = basePrice > itemPrice
+                  const lineTotal = itemPrice * (item.quantity || 0)
                   const baseTotal = basePrice * (item.quantity || 0)
 
                   return (
-                    <tr key={item._id || index} className={`border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
-                      <td className="p-4 font-medium text-gray-900">
-                        {item.name}
+                    <tr key={index} className="hover:bg-lime-50">
+                      <td className="border border-lime-300 px-3 py-2 text-sm">
+                        <div className="font-medium text-gray-900">{item.name}</div>
                         {showDiscount && (
-                          <span className="block text-xs text-gray-500">Base: {formatPrice(basePrice)}</span>
+                          <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
                         )}
                       </td>
-                      <td className="p-4 text-gray-600 whitespace-nowrap">{item.product?.sku || item.sku || "-"}</td>
-                      <td className="p-4 text-center font-semibold text-lime-600">{item.quantity}</td>
-                      <td className="p-4 text-right font-medium">
+                      <td className="border border-lime-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
+                      <td className="border border-lime-300 px-3 py-2 text-right text-sm">
                         {showDiscount && (
                           <span className="block text-xs text-gray-400 line-through">{formatPrice(basePrice)}</span>
                         )}
-                        <span className="text-gray-900 font-semibold">{formatPrice(salePrice)}</span>
+                        <span className="font-semibold text-gray-900">{formatPrice(itemPrice)}</span>
                       </td>
-                      <td className="p-4 text-right font-bold text-lime-600">
+                      <td className="border border-lime-300 px-3 py-2 text-right text-sm font-semibold">
                         {showDiscount && (
                           <span className="block text-xs text-gray-400 font-normal line-through">
                             {formatPrice(baseTotal)}
@@ -155,65 +155,58 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                       </td>
                     </tr>
                   )
-                })
-              ) : (
-                <tr>
-                  <td colSpan="5" className="p-8 text-center text-gray-500">
-                    No items found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* Totals */}
-        <div className="bg-white border-2 border-lime-200 rounded-lg p-3">
-          <div className="space-y-1">
-            {baseSubtotal > 0 && baseSubtotal !== subtotal && (
-              <div className="flex justify-between text-gray-500">
-                <span>Base Price:</span>
-                <span className="line-through">{formatPrice(baseSubtotal)}</span>
+        {/* Total Amount */}
+        <div className="bg-gray-50 border rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Amount</h3>
+          <div className="space-y-2">
+            {baseSubtotal > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Base Price:</span>
+                <span className="text-gray-400 line-through">{formatPrice(baseSubtotal)}</span>
               </div>
             )}
-            <div className="flex justify-between text-gray-700">
-              <span>💰 Sub-Total:</span>
-              <span className="font-medium">{formatPrice(subtotal)}</span>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Subtotal:</span>
+              <span className="text-gray-900">{formatPrice(subtotal)}</span>
             </div>
-
+            <div className="flex justify-between">
+              <span className="text-gray-600">Shipping:</span>
+              <span className="text-gray-900">{formatPrice(shipping)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">VAT:</span>
+              <span className="text-gray-900">{formatPrice(tax)}</span>
+            </div>
             {derivedDiscount > 0 && (
-              <div className="flex justify-between text-gray-700">
-                <span>Offer Discount:</span>
-                <span className="font-medium text-green-700">-{formatPrice(derivedDiscount)}</span>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Offer Discount:</span>
+                <span className="text-green-600">-{formatPrice(derivedDiscount)}</span>
               </div>
             )}
 
             {(couponDiscount > 0 || (order.couponCode && order.discountAmount > 0)) && (
-              <div className="flex justify-between text-gray-700">
-                <span>
-                  Coupon Applied:{(couponCode || order.couponCode) ? ` (${couponCode || order.couponCode})` : ""}
-                </span>
-                <span className="font-medium text-green-700">-{formatPrice(couponDiscount || order.discountAmount || 0)}</span>
+              <div className="bg-green-50 border border-green-200 rounded-md p-3 -mx-1">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-sm font-medium text-green-800">Coupon Applied</span>
+                    {(couponCode || order.couponCode) && (
+                      <div className="text-xs text-green-600 mt-0.5">Code: <span className="font-semibold">{couponCode || order.couponCode}</span></div>
+                    )}
+                  </div>
+                  <span className="text-lg font-bold text-green-700">-{formatPrice(couponDiscount || order.discountAmount || 0)}</span>
+                </div>
               </div>
             )}
 
-            {tax > 0 && (
-              <div className="flex justify-between text-gray-700">
-                <span>✔️ VAT:</span>
-                <span className="font-medium">{formatPrice(tax)}</span>
-              </div>
-            )}
-
-            <div className="flex justify-between text-gray-700">
-              <span>🚚 Shipping Charge:</span>
-              <span className="font-medium">{formatPrice(shipping)}</span>
-            </div>
-
-            <div className="border-t-2 border-lime-500">
-              <div className="flex justify-between text-xl font-bold text-lime-800 bg-lime-100 p-2 rounded-lg">
-                <span> TOTAL AMOUNT:</span>
-                <span>{formatPrice(total)}</span>
-              </div>
+            <div className="border-t pt-2 flex justify-between">
+              <span className="text-lg font-semibold text-gray-900">Total:</span>
+              <span className="text-lg font-bold text-lime-600">{formatPrice(total)}</span>
             </div>
           </div>
         </div>
