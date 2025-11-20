@@ -26,8 +26,38 @@ const Footer = ({ className = "" }) => {
   const [categories, setCategories] = useState([])
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
-
   const [subCategories, setSubCategories] = useState([])
+  const [columnCount, setColumnCount] = useState(5)
+
+  // Update column count based on screen width and zoom level
+  useEffect(() => {
+    const updateColumnCount = () => {
+      const width = window.innerWidth
+      
+      if (width >= 1536) {
+        // 2xl screens - adjust based on viewport width (increases when zooming out)
+        if (width >= 2200) {
+          // 75% zoom or less
+          setColumnCount(6)
+        } else if (width >= 1920) {
+          // 80% zoom
+          setColumnCount(5)
+        } else if (width >= 1700) {
+          // 90% zoom
+          setColumnCount(5)
+        } else {
+          // 100% zoom
+          setColumnCount(5)
+        }
+      } else {
+        setColumnCount(5)
+      }
+    }
+
+    updateColumnCount()
+    window.addEventListener("resize", updateColumnCount)
+    return () => window.removeEventListener("resize", updateColumnCount)
+  }, [])
 
   const fetchCategories = async () => {
     try {
@@ -86,27 +116,27 @@ const Footer = ({ className = "" }) => {
   return (
     <>
       {/* Desktop Footer - Hidden on mobile */}
-      <footer className={`hidden md:block bg-[#1F1F39] text-white pt-8 pb-9 ${className}`}>
-        <div className="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+      <footer className={`hidden md:block text-white  ${className}`}>
+        <div className="max-w-[1920px] bg-[#1F1F39] pt-8 pb-9  mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className={`grid ${columnCount === 6 ? 'grid-cols-6' : 'grid-cols-5'} gap-4 lg:gap-6 xl:gap-8`}>
             {/* Column 1 - Newsletter Subscription */}
-            <div className="md:col-span-4">
+            <div className="col-span-1 flex flex-col">
               {/* Logo and Heading */}
-              <h3 className="text-2xl font-bold mb-4">
-                <img src="/logo.png" alt="Logo" className="w-32" />
+              <h3 className="text-lg lg:text-xl xl:text-2xl font-bold mb-3 lg:mb-4">
+                <img src="/logo.png" alt="Logo" className="w-24 lg:w-28 xl:w-32" />
               </h3>
               {/* Text */}
-              <p className="text-white mb-4">Subscribe to our newsletter</p>
+              <p className="text-xs lg:text-sm text-white mb-3 lg:mb-4">Subscribe to our newsletter</p>
 
               {/* Form */}
-              <form className="mb-4 p-1 bg-white rounded-full  w-[280px]" onSubmit={handleNewsletterSubmit}>
-                <div className="flex w-[270px]">
+              <form className="mb-3 lg:mb-4 p-1 bg-white rounded-full w-full max-w-[280px]" onSubmit={handleNewsletterSubmit}>
+                <div className="flex w-full">
                   {/* Search Input Div */}
                   <div className="flex-grow">
                     <input
                       type="email"
-                      placeholder="Enter your email address"
-                      className="w-full pl-4 py-3 bg-white placeholder-gray-400 rounded-full border-white  text-black focus:outline-none focus:ring-0 focus:border-white"
+                      placeholder="Your email"
+                      className="w-full pl-2 lg:pl-3 py-1.5 lg:py-2 xl:py-3 text-xs lg:text-sm bg-white placeholder-gray-400 rounded-full border-white text-black focus:outline-none focus:ring-0 focus:border-white"
                       value={newsletterEmail}
                       onChange={handleNewsletterInput}
                       required
@@ -115,7 +145,7 @@ const Footer = ({ className = "" }) => {
 
                   {/* Button Div */}
                   <div>
-                    <button type="submit" className="h-full bg-lime-500 text-white rounded-full px-5">
+                    <button type="submit" className="h-full bg-lime-500 text-white rounded-full px-2 lg:px-3 xl:px-5 text-xs lg:text-sm whitespace-nowrap">
                       Subscribe
                     </button>
                   </div>
@@ -129,43 +159,43 @@ const Footer = ({ className = "" }) => {
               )}
 
               {/* Social Icons */}
-              <div className="flex space-x-4 pl-4">
+              <div className="flex flex-wrap gap-2 lg:gap-3 pl-0 lg:pl-2">
                 <a href="https://www.facebook.com/grabatozae/" target="_blank" className="text-white hover:text-lime-400">
-                  <Facebook size={20} />
+                  <Facebook className="w-4 h-4 lg:w-5 lg:h-5" />
                 </a>
                 <a href="https://x.com/GrabAtoz" target="_blank" className="text-white hover:text-lime-400 transition-colors duration-200 ease-in-out" aria-label="X (Twitter)">
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" role="img">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 lg:w-5 lg:h-5 fill-current" role="img">
                     <path d="M18.25 2h3.5l-7.66 8.73L24 22h-6.87l-5.02-6.58L6.3 22H2.8l8.2-9.34L0 2h7.04l4.54 6.02L18.25 2z" />
                   </svg>
                 </a>
                 <a href="https://www.instagram.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
-                  <Instagram size={20} />
+                  <Instagram className="w-4 h-4 lg:w-5 lg:h-5" />
                 </a>
                 <a href="https://www.linkedin.com/company/grabatozae" target="_blank" className="text-white hover:text-lime-400">
-                  <Linkedin size={20} />
+                  <Linkedin className="w-4 h-4 lg:w-5 lg:h-5" />
                 </a>
                 <a href="https://www.pinterest.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
-                  <FontAwesomeIcon icon={faPinterest} style={{width: '20px', height: '20px'}} />
+                  <FontAwesomeIcon icon={faPinterest} className="w-4 h-4 lg:w-5 lg:h-5" />
                 </a>
                 <a href="https://www.tiktok.com/@grabatoz" target="_blank" className="text-white hover:text-lime-400">
-                  <FontAwesomeIcon icon={faTiktok} style={{width: '20px', height: '20px'}} />
+                  <FontAwesomeIcon icon={faTiktok} className="w-4 h-4 lg:w-5 lg:h-5" />
                 </a>
                 <a href="https://www.youtube.com/@grabAtoZ" target="_blank" className="text-white hover:text-lime-400">
-                  <FontAwesomeIcon icon={faYoutube} style={{width: '20px', height: '20px'}} />
+                  <FontAwesomeIcon icon={faYoutube} className="w-4 h-4 lg:w-5 lg:h-5" />
                 </a>
 
                   
               </div>
 
-                <div className="flex  pt-7 px-3 space-x-2">
-              <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757938965/google_pj1cxc.webp" alt="Google Play" className="rounded-lg h-12" />
+                <div className="flex pt-4 lg:pt-6 xl:pt-7 px-0 lg:px-2 space-x-2">
+              <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757938965/google_pj1cxc.webp" alt="Google Play" className="rounded-lg h-8 lg:h-10 xl:h-12" />
             </div>
             </div>
 
             {/* Column 2 - Top Categories */}
-            <div className="md:col-span-2">
-              <h3 className="text-2xl font-semibold mb-4">Top Categories</h3>
-              <ul className="space-y-2 text-white text-sm">
+            <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
+              <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Top Categories</h3>
+              <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                 {categories.slice(0, 6).map((category) => (
                   <li key={category._id}>
                     <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
@@ -187,9 +217,9 @@ const Footer = ({ className = "" }) => {
             </div>
 
             {/* Column 3 - More Categories */}
-            <div className="md:col-span-2">
-              <h3 className="text-2xl font-semibold mb-4">More Categories</h3>
-              <ul className="space-y-2 text-white text-sm">
+            <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
+              <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">More Categories</h3>
+              <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                 {categories.slice(6, 10).map((category) => (
                   <li key={category._id}>
                     <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
@@ -211,9 +241,9 @@ const Footer = ({ className = "" }) => {
             </div>
 
             {/* Column 4 - Support */}
-            <div className="md:col-span-2">
-              <h3 className="text-2xl font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2 text-white text-sm">
+            <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
+              <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Legal</h3>
+              <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                 <li>
                   <Link to="/refund-return" className="hover:text-lime-400">
                     Refund and Return
@@ -259,9 +289,9 @@ const Footer = ({ className = "" }) => {
             </div>
 
             {/* Column 5 - Legal */}
-            <div className="md:col-span-2">
-              <h3 className="text-2xl font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-white text-sm">
+            <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
+              <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Support</h3>
+              <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                 <li>
                   <Link to="/about" className="hover:text-lime-400">
                     About Us
@@ -310,21 +340,21 @@ const Footer = ({ className = "" }) => {
 
       {/* Desktop Bottom Footer */}
       <section className="hidden md:block">
-        <div className="flex flex-row justify-between items-center space-x-4 p-2">
+        <div className="max-w-[1920px] mx-auto flex flex-row justify-between items-center gap-3 lg:gap-6 xl:gap-8 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2 lg:py-3">
           {/* 1st Column: Text */}
-          <div className="w-1/3">
-            <b> 2025 Grabatoz Powered By Crown Excel</b>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] lg:text-xs xl:text-sm font-bold whitespace-nowrap"> 2025 Grabatoz Powered By Crown Excel</p>
           </div>
 
           {/* 2nd Column: Image */}
-          <div className="w-1/3">
-            <img src="/1.svg" alt="Payment Methods" className="rounded-lg w-full h-auto" />
+          <div className="flex-1 flex justify-center min-w-0">
+            <img src="/1.svg" alt="Payment Methods" className="rounded-lg h-6 lg:h-8 xl:h-10 w-auto object-contain" />
           </div>
 
           {/* 3rd Column: App Store Images */}
-          <div className="w-1/3 justify-end flex items-center">
-            <div className="flex space-x-3">
-              <h3 className="font-bold px-3">Developed By <span className="text-lime-500"><a href="https://techsolutionor.com" target="_blank" rel="noopener noreferrer">Tech Solutionor</a></span></h3>
+          <div className="flex-1 flex justify-end items-center min-w-0">
+            <div className="flex items-center">
+              <p className="text-[10px] lg:text-xs xl:text-sm font-bold whitespace-nowrap">Developed By <span className="text-lime-500"><a href="https://techsolutionor.com" target="_blank" rel="noopener noreferrer">Tech Solutionor</a></span></p>
             </div>
           </div>
         </div>

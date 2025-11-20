@@ -12,18 +12,38 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
   const [dragOffset, setDragOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Update visible count based on screen size
+  // Update visible count based on screen size and zoom level
   useEffect(() => {
     const updateVisible = () => {
-      if (window.innerWidth >= 1280) {
-        setVisibleCount(10); // extra large screens
-      } else if (window.innerWidth >= 1024) {
-        setVisibleCount(8); // large screens
-      } else if (window.innerWidth >= 768) {
-        setVisibleCount(6); // tablet
-      } else if (window.innerWidth >= 640) {
-        setVisibleCount(5); // tablet landscape
-      } else if (window.innerWidth >= 480) {
+      const width = window.innerWidth;
+      
+      if (width >= 1536) {
+        // 2xl screens - adjust based on viewport width (increases when zooming out)
+        if (width >= 2300) {
+          // 67% zoom or less
+          setVisibleCount(10);
+        } else if (width >= 2050) {
+          // 75% zoom
+          setVisibleCount(9);
+        } else if (width >= 1920) {
+          // 80% zoom
+          setVisibleCount(9);
+        } else if (width >= 1700) {
+          // 90% zoom
+          setVisibleCount(8);
+        } else {
+          // 100% zoom
+          setVisibleCount(7);
+        }
+      } else if (width >= 1280) {
+        setVisibleCount(7); // xl screens
+      } else if (width >= 1024) {
+        setVisibleCount(6); // large screens
+      } else if (width >= 768) {
+        setVisibleCount(5); // tablet
+      } else if (width >= 640) {
+        setVisibleCount(4); // tablet landscape
+      } else if (width >= 480) {
         setVisibleCount(4); // small tablets/large phones
       } else {
         setVisibleCount(3); // mobile
@@ -172,7 +192,7 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
   };
 
   return (
-    <section className=" mb-5  bg-white">
+    <section className=" mb-5  bg-white pt-4">
       <div className="max-w-8xl lg:px-3">
         <div className="flex items-center justify-between">
           <button
@@ -195,17 +215,18 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
             style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
           >
             <div
-              className="flex items-center lg:gap-10 xl:gap-[65px] transition-transform duration-300 ease-in-out"
+              className="flex items-center justify-evenly transition-transform duration-300 ease-in-out"
               style={sliderStyle}
             >
               {visibleCategories.map((category) => (
                 <button
                   key={category._id}
                   onClick={() => onCategoryClick(category.name)}
-                  className="flex flex-col items-center group flex-shrink-0 px-1"
+                  className="flex flex-col items-center group flex-shrink-0"
                   style={{
                     width: `${100 / visibleCount}%`,
-                    maxWidth: "120px",
+                    maxWidth: "160px",
+                    minWidth: "80px",
                   }}
                 >
                   {/* <div className="flex items-center justify-center  lg:w-[160px] ">
@@ -224,7 +245,7 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
                   </div> */}
 
                   <div
-                    className="flex items-center justify-center lg:w-[160px]"
+                    className="flex items-center justify-center w-full"
                     style={{ willChange: 'transform', transform: 'translateZ(0)' }}
                   >
                     {category.image ? (
@@ -234,16 +255,16 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
                         width="176"
                         height="176"
                         loading="eager"
-                        className="w-18 h-18 md:w-25 md:h-25 lg:w-32 lg:h-32 xl:w-44 xl:h-44 object-contain"
+                        className="w-16 h-16 md:w-20 md:h-20 lg:w-28 lg:h-28 xl:w-32 xl:h-32 2xl:w-36 2xl:h-36 object-contain"
                       />
                     ) : (
-                      <div className="w-22 h-22 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full border-2 border-gray-200 flex items-center justify-center bg-gray-100">
+                      <div className="w-16 h-16 md:w-20 md:h-20 lg:w-28 lg:h-28 xl:w-32 xl:h-32 2xl:w-36 2xl:h-36 rounded-full border-2 border-gray-200 flex items-center justify-center bg-gray-100">
                         <span className="text-lg md:text-2xl">📦</span>
                       </div>
                     )}
                   </div>
 
-                  <span className="text-xs md:text-sm font-bold text-gray-700 text-center mt-0.5 md:mt-0.5 lg:mt-0.5 truncate">
+                  <span className="text-xs md:text-sm font-bold text-gray-700 text-center mt-0.5 md:mt-0.5 lg:mt-0.5 truncate w-full px-1">
                     {(() => {
                       const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
                       const name = category.name;
