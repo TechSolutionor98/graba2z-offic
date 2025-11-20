@@ -1466,48 +1466,48 @@ const Home = () => {
 
       {/* Core Service Section - Responsive: Desktop(4 in row), Mobile(2x2 grid) */}
       <section className="py-8 md:py-10 bg-white mt-2">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-xl md:text-2xl font-bold text-center text-gray-900 mb-8 md:mb-12">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <h2 className="text-lg lg:text-xl xl:text-2xl font-bold text-center text-gray-900 mb-6 lg:mb-8 xl:mb-12">
             Core Service Aspects
           </h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-6 xl:gap-8 2xl:gap-10">
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 md:w-16 md:h-16 rounded-lg flex items-center justify-center mb-3 md:mb-4">
-                <CreditCard className="w-8 h-8 md:w-12 md:h-12 text-lime-500" />
+              <div className="w-10 h-10 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-lg flex items-center justify-center mb-2 lg:mb-3 xl:mb-4">
+                <CreditCard className="w-6 h-6 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-lime-500" />
               </div>
-              <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-2">Secure Payment Method</h3>
-              <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
+              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2">Secure Payment Method</h3>
+              <p className="text-[10px] lg:text-xs xl:text-sm text-gray-600 leading-relaxed">
                 Available Different secure Payment Methods
               </p>
             </div>
 
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 md:w-16 md:h-16 rounded-lg flex items-center justify-center mb-3 md:mb-4">
-                <Truck className="w-8 h-8 md:w-12 md:h-12 text-lime-500" />
+              <div className="w-10 h-10 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-lg flex items-center justify-center mb-2 lg:mb-3 xl:mb-4">
+                <Truck className="w-6 h-6 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-lime-500" />
               </div>
-              <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-2">Extreme Fast Delivery</h3>
-              <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
+              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2">Extreme Fast Delivery</h3>
+              <p className="text-[10px] lg:text-xs xl:text-sm text-gray-600 leading-relaxed">
                 Fast and convenient From door to door delivery
               </p>
             </div>
 
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 md:w-16 md:h-16 rounded-lg flex items-center justify-center mb-3 md:mb-4">
-                <Heart className="w-8 h-8 md:w-12 md:h-12 text-lime-500" />
+              <div className="w-10 h-10 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-lg flex items-center justify-center mb-2 lg:mb-3 xl:mb-4">
+                <Heart className="w-6 h-6 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-lime-500" />
               </div>
-              <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-2">Quality & Savings</h3>
-              <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
+              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2">Quality & Savings</h3>
+              <p className="text-[10px] lg:text-xs xl:text-sm text-gray-600 leading-relaxed">
                 Comprehensive quality control and affordable price
               </p>
             </div>
 
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 md:w-16 md:h-16 rounded-lg flex items-center justify-center mb-3 md:mb-4">
-                <Headphones className="w-8 h-8 md:w-12 md:h-12 text-lime-500" />
+              <div className="w-10 h-10 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-lg flex items-center justify-center mb-2 lg:mb-3 xl:mb-4">
+                <Headphones className="w-6 h-6 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-lime-500" />
               </div>
-              <h3 className="text-sm md:text-lg font-semibold text-gray-900 mb-2">Professional Support</h3>
-              <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
+              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2">Professional Support</h3>
+              <p className="text-[10px] lg:text-xs xl:text-sm text-gray-600 leading-relaxed">
                 Efficient customer support from passionate team
               </p>
             </div>

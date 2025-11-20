@@ -372,13 +372,25 @@ const Navbar = () => {
     }
   }, [hoveredCategory])
 
-  // Responsive categories count based on screen size
+  // Responsive categories count based on screen size and zoom level
   useEffect(() => {
     const updateVisibleCategories = () => {
       const width = window.innerWidth
       if (width >= 1536) {
-        // 2xl screens
-        setVisibleCategoriesCount(10)
+        // 2xl screens - adjust based on viewport width (increases when zooming out)
+        if (width >= 2050) {
+          // 75% zoom or less
+          setVisibleCategoriesCount(13)
+        } else if (width >= 1920) {
+          // 80% zoom
+          setVisibleCategoriesCount(13)
+        } else if (width >= 1700) {
+          // 90% zoom
+          setVisibleCategoriesCount(11)
+        } else {
+          // 100% zoom
+          setVisibleCategoriesCount(12)
+        }
       } else if (width >= 1280) {
         // xl screens
         setVisibleCategoriesCount(10)
@@ -714,14 +726,14 @@ const Navbar = () => {
                 <ChevronLeft size={18} />
               </button>
               <div className="flex-1 overflow-hidden min-w-0">
-                <div className="flex items-center gap-6 justify-center">
+                <div className="flex items-center justify-evenly px-2">
                   {visibleCategoryList.map((parentCategory) => {
                     const categorySubCategories = getSubCategoriesForCategory(parentCategory._id)
                     const isActiveCategory = hoveredCategory === parentCategory._id
                     return (
                       <div
                         key={parentCategory._id}
-                        className="relative flex items-center h-full"
+                        className="relative flex items-center h-full flex-1"
                         onMouseEnter={(e) => {
                           if (categoryTimeoutRef.current) {
                             clearTimeout(categoryTimeoutRef.current)
@@ -757,14 +769,14 @@ const Navbar = () => {
                       >
                         <Link
                           to={generateShopURL({ parentCategory: parentCategory.name })}
-                          className={`text-white font-medium whitespace-nowrap text-sm px-2 pt-2 pb-3 ${
+                          className={`text-white font-medium whitespace-nowrap text-sm px-1 pt-2 pb-3 text-center w-full ${
                             isActiveCategory ? "font-semibold" : ""
                           }`}
                         >
                           {parentCategory.name}
                         </Link>
                         {isActiveCategory && (
-                          <span className="pointer-events-none absolute bottom-0 left-2 right-2 h-1.5 rounded-full bg-white shadow-sm" />
+                          <span className="pointer-events-none absolute bottom-0 left-1 right-1 h-1.5 rounded-full bg-white shadow-sm" />
                         )}
                         {/* Mega menu panel: show all level-1 columns with their level-2 items at once */}
                         {hoveredCategory === parentCategory._id && categorySubCategories.length > 0 && (
