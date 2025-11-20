@@ -586,9 +586,20 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
 
 
   return (
+    
     <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="flex justify-end space-x-4 pt-6 border-t">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-6 py-2 text-gray-600 border bg-red-500 border-gray-300 rounded-md hover:bg-gray-50"
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          </div>
       <h2 className="text-xl font-bold mb-6">{product ? "Edit Product" : "Add New Product"}</h2>
-
+  
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4" >

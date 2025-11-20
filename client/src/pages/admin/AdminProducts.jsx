@@ -5,6 +5,7 @@ import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import ProductForm from "../../components/admin/ProductForm"
 import MoveProductsModal from "../../components/admin/MoveProductsModal"
+import ConfirmDialog from "../../components/admin/ConfirmDialog"
 import { useToast } from "../../context/ToastContext"
 import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight, Copy } from "lucide-react"
 
@@ -37,6 +38,8 @@ const AdminProducts = () => {
   const [filteredSubcategories, setFilteredSubcategories] = useState([])
   const [categoryProductCount, setCategoryProductCount] = useState(0)
   const [showMoveModal, setShowMoveModal] = useState(false)
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false)
+  const [productToDuplicate, setProductToDuplicate] = useState(null)
 
   // Derived counters
   const totalSelected = useMemo(() => {
@@ -434,50 +437,55 @@ const AdminProducts = () => {
     }
   }
 
-  const handleDuplicate = async (productId) => {
-    if (window.confirm("Are you sure you want to duplicate this product? The duplicate will be created with incremented SKU/barcode and inactive status.")) {
-      try {
-        const token = getAdminToken()
+  const handleDuplicate = (productId) => {
+    setProductToDuplicate(productId)
+    setShowDuplicateDialog(true)
+  }
 
-        if (!token) {
-          setError("Authentication required. Please login again.")
-          return
-        }
+  const confirmDuplicate = async () => {
+    if (!productToDuplicate) return
 
-        const { data } = await axios.post(
-          `${config.API_URL}/api/products/${productId}/duplicate`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
+    try {
+      const token = getAdminToken()
 
-        // Refresh the product list to show the duplicated product
-        await fetchProducts()
-        
-        showToast("Product duplicated successfully", "success")
-        
-        // Highlight the new product
-        if (data._id) {
-          setJustEditedId(data._id)
-          setTimeout(() => {
-            const el = document.getElementById(`product-row-${data._id}`)
-            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
-          }, 250)
-          const t = setTimeout(() => setJustEditedId(null), 3500)
-          setHighlightTimer(t)
+      if (!token) {
+        setError("Authentication required. Please login again.")
+        return
+      }
+
+      const { data } = await axios.post(
+        `${config.API_URL}/api/products/${productToDuplicate}/duplicate`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      } catch (error) {
-        console.error("Failed to duplicate product:", error)
-        if (error.response?.status === 401) {
-          setError("Authentication failed. Please login again.")
-          window.location.href = "/grabiansadmin/login"
-        } else {
-          setError(`Failed to duplicate product: ${error.response?.data?.message || error.message}`)
-          showToast(error.response?.data?.message || "Failed to duplicate product", "error")
-        }
+      )
+
+      // Refresh the product list to show the duplicated product
+      await fetchProducts()
+      
+      showToast("Product duplicated successfully", "success")
+      
+      // Highlight the new product
+      if (data._id) {
+        setJustEditedId(data._id)
+        setTimeout(() => {
+          const el = document.getElementById(`product-row-${data._id}`)
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
+        }, 250)
+        const t = setTimeout(() => setJustEditedId(null), 3500)
+        setHighlightTimer(t)
+      }
+    } catch (error) {
+      console.error("Failed to duplicate product:", error)
+      if (error.response?.status === 401) {
+        setError("Authentication failed. Please login again.")
+        window.location.href = "/grabiansadmin/login"
+      } else {
+        setError(`Failed to duplicate product: ${error.response?.data?.message || error.message}`)
+        showToast(error.response?.data?.message || "Failed to duplicate product", "error")
       }
     }
   }
@@ -699,10 +707,25 @@ const AdminProducts = () => {
   }, [searchTerm, filterCategory, filterSubcategory, filterBrand, filterStatus]);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100">
       <AdminSidebar />
 
-      <div className="ml-64 min-h-screen">
+      {/* Duplicate Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDuplicateDialog}
+        onClose={() => {
+          setShowDuplicateDialog(false)
+          setProductToDuplicate(null)
+        }}
+        onConfirm={confirmDuplicate}
+        title="Duplicate Product"
+        message={"Are you sure you want to duplicate this product?\n\nThe duplicate will be created with:\n• Incremented SKU and Barcode\n• Modified slug with -duplicate suffix\n• Inactive status (for safety)\n• Name with (Copy) suffix"}
+        confirmText="Yes, Duplicate"
+        cancelText="Cancel"
+        type="success"
+      />
+
+      <div className="flex-1 ml-64">
         <div className="p-8">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Products</h1>
