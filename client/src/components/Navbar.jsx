@@ -377,19 +377,16 @@ const Navbar = () => {
     const updateVisibleCategories = () => {
       const width = window.innerWidth
       if (width >= 1536) {
-        // 2xl screens - adjust based on viewport width (increases when zooming out)
-        if (width >= 2050) {
-          // 75% zoom or less
-          setVisibleCategoriesCount(13)
-        } else if (width >= 1920) {
-          // 80% zoom
+        // 2xl screens - Shifted: 90% zoom → 100%, 80% zoom → 90%, 75% zoom → 80%
+        if (width >= 1920) {
+          // 80% zoom view (was 75% zoom)
           setVisibleCategoriesCount(13)
         } else if (width >= 1700) {
-          // 90% zoom
-          setVisibleCategoriesCount(11)
-        } else {
-          // 100% zoom
+          // 90% zoom view (was 80% zoom)
           setVisibleCategoriesCount(12)
+        } else {
+          // 100% zoom view (was 90% zoom) - 11 categories
+          setVisibleCategoriesCount(11)
         }
       } else if (width >= 1280) {
         // xl screens
@@ -521,17 +518,17 @@ const Navbar = () => {
     <>
       {/* Desktop Navbar - Hidden on Mobile */}
       <header className="hidden md:block bg-white shadow-sm sticky top-0 pt-4 z-50">
-        <div className="mx-auto w-full max-w-[1920px]  space-y-4">
-          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
+        <div className="mx-auto w-full max-w-[1920px] space-y-4">
+          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 h-14 xl:h-18 2xl:h-20">
             {/* Logo - Exact Grabatoz Style */}
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-48 h-  flex items-center justify-center">
+              <div className="w-40 xl:w-44 2xl:w-48 h-auto flex items-center justify-center">
                 <img src="/new-logo.webp" alt="Logo" className="w-full h-full" />
               </div>
             </Link>
 
             {/* Search Bar - Exact Grabatoz Style */}
-            <div className="flex-1 max-w-3xl justify-center items-center" style={{ paddingLeft: "140px" }}>
+            <div className="flex-1 max-w-2xl xl:max-w-3xl justify-center items-center px-6 xl:px-20 2xl:px-28">
               <form onSubmit={handleSearch} className="relative">
                 <div className="">
                   <div className="flex items-center gap-2 m-1">
@@ -540,8 +537,7 @@ const Navbar = () => {
                       placeholder="Search"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-4 pr-4 py-3 border border-gray-300 focus:outline-none focus:border-lime-500"
-                      style={{ width: "80%" }}
+                      className="pl-3 xl:pl-4 pr-3 xl:pr-4 py-2 xl:py-2.5 2xl:py-3 border border-gray-300 focus:outline-none focus:border-lime-500 w-[75%] xl:w-[78%] 2xl:w-[80%] text-sm xl:text-base"
                       ref={searchInputRef}
                       onFocus={() => {
                         if (searchResults.length > 0) setShowSearchDropdown(true)
@@ -572,8 +568,8 @@ const Navbar = () => {
                         </svg>
                       </span>
                     )}
-                    <button type="submit" className="px-4 py-4 bg-lime-500 text-white hover:bg-green-600">
-                      <Search size={18} />
+                    <button type="submit" className="px-3 xl:px-3.5 2xl:px-4 py-3 xl:py-3.5 2xl:py-4 bg-lime-500 text-white hover:bg-green-600">
+                      <Search className="w-4 h-4 xl:w-[18px] xl:h-[18px] 2xl:w-5 2xl:h-5" />
                     </button>
                   </div>
                   {/* Autocomplete Dropdown */}
@@ -614,10 +610,10 @@ const Navbar = () => {
             </div>
 
             {/* Right Side Icons - Exact Grabatoz Style */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 xl:space-x-3 2xl:space-x-4">
               {/* Wishlist */}
-              <Link to="/wishlist" className="relative p-3 border border-black" aria-label="Wishlist">
-                <Heart size={20} className="text-gray-600" />
+              <Link to="/wishlist" className="relative p-2 xl:p-2.5 2xl:p-3 border border-black" aria-label="Wishlist">
+                <Heart className="w-[18px] h-[18px] xl:w-[19px] xl:h-[19px] 2xl:w-5 2xl:h-5 text-gray-600" />
                 {wishlist.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                     {wishlist.length}
@@ -629,10 +625,10 @@ const Navbar = () => {
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="p-3 border border-black"
+                  className="p-2 xl:p-2.5 2xl:p-3 border border-black"
                   ref={profileButtonRef}
                 >
-                  <User size={20} className="text-gray-600" />
+                  <User className="w-[18px] h-[18px] xl:w-[19px] xl:h-[19px] 2xl:w-5 2xl:h-5 text-gray-600" />
                 </button>
 
                 {isProfileOpen && (
@@ -701,8 +697,8 @@ const Navbar = () => {
               </div>
 
               {/* Cart */}
-              <Link to="/cart" className="relative p-3">
-                <ShoppingCart size={30} className="text-gray-600" />
+              <Link to="/cart" className="relative p-2 xl:p-2.5 2xl:p-3">
+                <ShoppingCart className="w-6 h-6 xl:w-7 xl:h-7 2xl:w-[30px] 2xl:h-[30px] text-gray-600" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                     {cartCount}
@@ -713,17 +709,17 @@ const Navbar = () => {
           </div>
 
           {/* Navigation Menu - Dynamic Categories with Dropdowns */}
-          <div className="bg-lime-500 mt-4 -px-4 flex relative" ref={menuBarRef}>
+          <div className="bg-lime-500 mt-3 xl:mt-3.5 2xl:mt-4 flex relative" ref={menuBarRef}>
           <div className="w-full">
-            <div className="grid grid-cols-[auto,1fr,auto] items-center h-12 px-4 md:px-12 gap-3">
+            <div className="grid grid-cols-[auto,1fr,auto] items-center h-10 xl:h-11 2xl:h-12 px-4 xl:px-8 2xl:px-12 gap-2 xl:gap-2.5 2xl:gap-3">
               <button
                 type="button"
                 onClick={scrollPrev}
-                className="hidden md:inline-flex items-center justify-center w-9 h-9 rounded-full border border-white/30 text-white hover:bg-white/10 transition disabled:opacity-40 disabled:hover:bg-transparent"
+                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full border border-white/30 text-white hover:bg-white/10 transition disabled:opacity-40 disabled:hover:bg-transparent"
                 disabled={!canScrollPrev}
                 aria-label="Previous categories"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft className="w-4 h-4 xl:w-[17px] xl:h-[17px] 2xl:w-[18px] 2xl:h-[18px]" />
               </button>
               <div className="flex-1 overflow-hidden min-w-0">
                 <div className="flex items-center justify-evenly px-2">
@@ -769,7 +765,7 @@ const Navbar = () => {
                       >
                         <Link
                           to={generateShopURL({ parentCategory: parentCategory.name })}
-                          className={`text-white font-medium whitespace-nowrap text-sm px-1 pt-2 pb-3 text-center w-full ${
+                          className={`text-white font-medium whitespace-nowrap text-xs xl:text-[13px] 2xl:text-sm px-0.5 xl:px-0.75 2xl:px-1 pt-1.5 xl:pt-1.75 2xl:pt-2 pb-2 xl:pb-2.5 2xl:pb-3 text-center w-full ${
                             isActiveCategory ? "font-semibold" : ""
                           }`}
                         >
@@ -1060,11 +1056,11 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={scrollNext}
-                className="hidden md:inline-flex items-center justify-center w-9 h-9 rounded-full border border-white/30 text-white hover:bg-white/10 transition disabled:opacity-40 disabled:hover:bg-transparent"
+                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full border border-white/30 text-white hover:bg-white/10 transition disabled:opacity-40 disabled:hover:bg-transparent"
                 disabled={!canScrollNext}
                 aria-label="Next categories"
               >
-                <ChevronRight size={18} />
+                <ChevronRight className="w-4 h-4 xl:w-[17px] xl:h-[17px] 2xl:w-[18px] 2xl:h-[18px]" />
               </button>
             </div>
           </div>

@@ -45,7 +45,7 @@ const BannerSlider = ({ banners }) => {
 
   return (
     <section
-      className="relative w-full h-[170px] sm:h-[250px] md:h-[350px] lg:h-[350px] cover"
+      className="relative w-full h-[170px] sm:h-[250px] md:h-[300px] lg:h-[310px] cover"
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
