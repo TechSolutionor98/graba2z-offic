@@ -6,7 +6,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import ProductForm from "../../components/admin/ProductForm"
 import MoveProductsModal from "../../components/admin/MoveProductsModal"
 import { useToast } from "../../context/ToastContext"
-import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight, Copy } from "lucide-react"
 
 import config from "../../config/config"
 import { exportProductsToExcel } from "../../utils/exportToExcel"
@@ -429,6 +429,54 @@ const AdminProducts = () => {
         } else {
           setError("Failed to delete product. Please try again.")
           showToast("Failed to delete product", "error")
+        }
+      }
+    }
+  }
+
+  const handleDuplicate = async (productId) => {
+    if (window.confirm("Are you sure you want to duplicate this product? The duplicate will be created with incremented SKU/barcode and inactive status.")) {
+      try {
+        const token = getAdminToken()
+
+        if (!token) {
+          setError("Authentication required. Please login again.")
+          return
+        }
+
+        const { data } = await axios.post(
+          `${config.API_URL}/api/products/${productId}/duplicate`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+
+        // Refresh the product list to show the duplicated product
+        await fetchProducts()
+        
+        showToast("Product duplicated successfully", "success")
+        
+        // Highlight the new product
+        if (data._id) {
+          setJustEditedId(data._id)
+          setTimeout(() => {
+            const el = document.getElementById(`product-row-${data._id}`)
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
+          }, 250)
+          const t = setTimeout(() => setJustEditedId(null), 3500)
+          setHighlightTimer(t)
+        }
+      } catch (error) {
+        console.error("Failed to duplicate product:", error)
+        if (error.response?.status === 401) {
+          setError("Authentication failed. Please login again.")
+          window.location.href = "/grabiansadmin/login"
+        } else {
+          setError(`Failed to duplicate product: ${error.response?.data?.message || error.message}`)
+          showToast(error.response?.data?.message || "Failed to duplicate product", "error")
         }
       }
     }
@@ -925,6 +973,12 @@ const AdminProducts = () => {
                           </th>
                           <th
                             scope="col"
+                            className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Duplicate
+                          </th>
+                          <th
+                            scope="col"
                             className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Actions
@@ -1023,6 +1077,16 @@ const AdminProducts = () => {
                                     )}
                                   </div>
                                 </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                  <button
+                                    onClick={() => handleDuplicate(product._id)}
+                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
+                                    title="Duplicate this product"
+                                  >
+                                    <Copy size={14} />
+                                    Duplicate
+                                  </button>
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                   <div className="flex items-center justify-end space-x-2">
                                     <button
@@ -1032,16 +1096,17 @@ const AdminProducts = () => {
                                     >
                                       <Download size={18} />
                                     </button>
-                                 
                                     <button
                                       onClick={() => handleEdit(product)}
                                       className="text-blue-600 hover:text-blue-900"
+                                      title="Edit this product"
                                     >
                                       <Edit size={18} />
                                     </button>
                                     <button
                                       onClick={() => handleDelete(product._id)}
                                       className="text-red-600 hover:text-red-900"
+                                      title="Delete this product"
                                     >
                                       <Trash2 size={18} />
                                     </button>
@@ -1052,7 +1117,7 @@ const AdminProducts = () => {
                           })
                         ) : (
                           <tr>
-                            <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
+                            <td colSpan="10" className="px-6 py-4 text-center text-gray-500">
                               No products found
                             </td>
                           </tr>
