@@ -8,9 +8,10 @@ const PromotionalPage = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [timeLeft, setTimeLeft] = useState({
-    hours: 12,
-    minutes: 45,
-    seconds: 31
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
   })
 
   const scrollContainerRef = useRef(null)
@@ -23,26 +24,27 @@ const PromotionalPage = () => {
     }
   }
 
-  // Countdown timer effect
+  // Countdown timer effect - counts down to December 1st, 2025
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        let { hours, minutes, seconds } = prev
+    const calculateTimeLeft = () => {
+      const targetDate = new Date('2025-12-01T00:00:00').getTime()
+      const now = new Date().getTime()
+      const difference = targetDate - now
 
-        if (seconds > 0) {
-          seconds--
-        } else if (minutes > 0) {
-          minutes--
-          seconds = 59
-        } else if (hours > 0) {
-          hours--
-          minutes = 59
-          seconds = 59
-        }
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000)
 
-        return { hours, minutes, seconds }
-      })
-    }, 1000)
+        setTimeLeft({ days, hours, minutes, seconds })
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+      }
+    }
+
+    calculateTimeLeft()
+    const timer = setInterval(calculateTimeLeft, 1000)
 
     return () => clearInterval(timer)
   }, [])
@@ -142,23 +144,24 @@ const PromotionalPage = () => {
 
         <div className="container mx-auto px-4 relative z-10 text-center">
           <h2 className="text-4xl md:text-6xl font-black text-gray-900 mb-4 uppercase tracking-tight">
-            Flash Sale Ends In
+            UP TO 50% OFF Running!
           </h2>
 
           <div className="flex justify-center items-center gap-4 md:gap-8 my-12">
             {[
+              { val: timeLeft.days, label: "Days" },
               { val: timeLeft.hours, label: "Hours" },
               { val: timeLeft.minutes, label: "Minutes" },
               { val: timeLeft.seconds, label: "Seconds" }
             ].map((item, idx) => (
               <div key={idx} className="flex flex-col items-center">
-                <div className="bg-white border border-lime-200 rounded-2xl p-4 md:p-8 min-w-[100px] md:min-w-[160px] shadow-2xl relative overflow-hidden transform hover:scale-110 transition-transform duration-300">
+                <div className="bg-white border border-lime-200 rounded-2xl p-4 md:p-8 min-w-[80px] md:min-w-[120px] shadow-2xl relative overflow-hidden transform hover:scale-110 transition-transform duration-300">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-600 to-emerald-600"></div>
-                  <span className="text-5xl md:text-7xl font-mono font-bold text-gray-900">
+                  <span className="text-4xl md:text-6xl font-mono font-bold text-gray-900">
                     {String(item.val).padStart(2, '0')}
                   </span>
                 </div>
-                <span className="text-gray-800 mt-4 font-bold uppercase tracking-widest text-sm">{item.label}</span>
+                <span className="text-gray-800 mt-4 font-bold uppercase tracking-widest text-xs md:text-sm">{item.label}</span>
               </div>
             ))}
           </div>
