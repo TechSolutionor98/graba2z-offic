@@ -166,7 +166,7 @@ const PromotionalPage = () => {
             ))}
           </div>
 
-          <Link to="/shop" className="inline-block bg-lime-500 text-white px-12 py-4 rounded-full font-bold text-xl hover:bg-gray-800 transition-all shadow-lg hover:shadow-gray-900/30 hover:scale-105 transform">
+          <Link to="/" className="inline-block bg-lime-500 text-white px-12 py-4 rounded-full font-bold text-xl hover:bg-gray-800 transition-all shadow-lg hover:shadow-gray-900/30 hover:scale-105 transform">
             Grab The Deals
           </Link>
         </div>
