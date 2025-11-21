@@ -174,7 +174,7 @@ const BigSaleSection = ({ products = [] }) => {
 
   // Only show on desktop (md and above)
   return (
-    <section className="relative my-6 hidden md:block overflow-hidden" style={{ minHeight: "420px" }}>
+    <section className="relative my-6 hidden md:block overflow-hidden" style={{ minHeight: "400px" }}>
       <div className="absolute inset-0 ">
         <div
           className="w-full h-full bg-cover bg-center bg-no-repeat"
