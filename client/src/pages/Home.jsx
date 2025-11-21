@@ -958,7 +958,7 @@ const Home = () => {
           <div>
             <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
               <img
-                src="Untitled-1.png"
+                src="laptop00.png"
                 alt="Lenovo Banner"
                 className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer"
               />
@@ -967,7 +967,7 @@ const Home = () => {
           <div>
             <Link to="/product-category/laptops?brand=MSI" aria-label="Browse Acer products">
               <img
-                src="Untitled-123.png"
+                src="camera (2).png"
                 alt="Acer Banner"
                 className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer"
               />
@@ -1000,8 +1000,9 @@ const Home = () => {
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
   <Link to={brandUrls.HP} aria-label="Browse HP products">
           <img
-            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939738/hp_ntmpcm.png"
-            alt="HP Products Banner Mobile"
+          //  src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939738/hp_ntmpcm.png"
+           src="11.png" 
+          alt="HP Products Banner Mobile"
             className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
           />
         </Link>
@@ -1090,7 +1091,7 @@ const Home = () => {
           <img
             src={
               window.innerWidth < 768
-             ? "acessories (1).png"
+             ? "12.png"
              :"acessories (1).png"
              
               //  ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939734/accessories_back_to_school_gun4tj.png"
@@ -1134,7 +1135,8 @@ const Home = () => {
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
   <Link to={brandUrls.ASUS} aria-label="Browse ASUS products">
           <img
-            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
+            //src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
+            src="laptop00.png"
             alt="ASUS Products Banner Mobile"
             className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
           />
@@ -1267,7 +1269,8 @@ const Home = () => {
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
   <Link to={brandUrls.MSI} aria-label="Browse MSI products">
           <img
-            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
+            //src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
+            src="14.png"
             alt="MSI Products Banner Mobile"
             className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
           />
@@ -1355,8 +1358,9 @@ const Home = () => {
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
   <Link to={brandUrls.Apple} aria-label="Browse Apple products">
           <img
-            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757769951/apple_half_side_n1cxhc.png"
-            alt="Apple Products Banner Mobile"
+          //  src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757769951/apple_half_side_n1cxhc.png"
+          src="15.png"
+          alt="Apple Products Banner Mobile"
             className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
           />
         </Link>
