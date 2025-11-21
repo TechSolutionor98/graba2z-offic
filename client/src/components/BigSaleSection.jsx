@@ -45,10 +45,10 @@ const ProductCard = ({ product, isMobile = false }) => {
 
   return (
     <div
-      className="border p-2 h-[400px] flex flex-col justify-between bg-white"
+      className="border p-2 h-[360px] flex flex-col justify-between bg-white"
       style={isMobile ? {} : { width: "210px" }}
     >
-      <div className="relative mb-2 flex h-[180px] justify-center items-cente">
+      <div className="relative mb-2 flex h-[150px] justify-center items-cente">
   <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
           <img
             src={product.image || "/placeholder.svg?height=120&width=120"}
@@ -65,28 +65,28 @@ const ProductCard = ({ product, isMobile = false }) => {
           }}
           aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
+          <Heart size={11} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
         </button>
       </div>
       <div className="mb-1 flex items-center gap-2 ">
-        <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}>
+        <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px]  inline-block mr-1`}>
           {stockStatus}
         </div>
         {discount && (
-          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs  inline-block">{discount}</div>
+          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px]  inline-block">{discount}</div>
         )}
       </div>
   <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
-        <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
+        <h3 className="text-[11px] font-sm text-gray-900  line-clamp-3 hover:text-blue-600 h-[45px]">{product.name}</h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
-      <div className="text-xs text-green-600">Inclusive VAT</div>
+      {product.category && <div className="text-[10px] text-yellow-600 ">Category: {categoryName}</div>}
+      <div className="text-[10px] text-green-600">Inclusive VAT</div>
       <div className="flex items-center gap-2">
-        <div className="text-red-600 font-bold text-sm">
+        <div className="text-red-600 font-bold text-xs">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
         {showOldPrice && (
-          <div className="text-gray-400 line-through text-xs font-medium">
+          <div className="text-gray-400 line-through text-[10px] font-medium">
             {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
           </div>
         )}
@@ -97,11 +97,11 @@ const ProductCard = ({ product, isMobile = false }) => {
         {[...Array(5)].map((_, i) => (
           <Star
             key={i}
-            size={16}
+            size={14}
             className={`${i < Math.round(Number(product.rating) || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
           />
         ))}
-        <span className="text-xs text-gray-500 ml-1">({Number(product.numReviews) || 0})</span>
+        <span className="text-[10px] text-gray-500 ml-1">({Number(product.numReviews) || 0})</span>
       </div>
 
       <button
@@ -109,16 +109,16 @@ const ProductCard = ({ product, isMobile = false }) => {
           e.preventDefault()
           e.stopPropagation()
           // Immediate visual feedback
-          e.target.style.transform = "scale(0.95)"
+          e.target.style.transform = "scale(1)"
           setTimeout(() => {
             if (e.target) e.target.style.transform = "scale(1)"
           }, 100)
           addToCart(product)
         }}
-        className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
+        className="mt-2 w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-[10px] font-medium py-1.5 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
         disabled={stockStatus === "Out of Stock"}
       >
-        <ShoppingBag size={12} />
+        <ShoppingBag size={11} />
         Add to Cart
       </button>
     </div>
@@ -138,21 +138,23 @@ const getStatusColor = (status) => {
 const BigSaleSection = ({ products = [] }) => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
+  const [is2XLScreen, setIs2XLScreen] = useState(false)
   const containerRef = useRef(null)
 
   useEffect(() => {
-    const checkIfMobile = () => {
+    const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768)
+      setIs2XLScreen(window.innerWidth >= 1536) // 2xl breakpoint
     }
 
     // Set initial value
-    checkIfMobile()
+    checkScreenSize()
 
     // Add event listener
-    window.addEventListener("resize", checkIfMobile)
+    window.addEventListener("resize", checkScreenSize)
 
     // Clean up
-    return () => window.removeEventListener("resize", checkIfMobile)
+    return () => window.removeEventListener("resize", checkScreenSize)
   }, [])
 
   const nextSlide = () => {
@@ -177,9 +179,9 @@ const BigSaleSection = ({ products = [] }) => {
         <div
           className="w-full h-full bg-cover bg-center bg-no-repeat"
           style={{
-          //  backgroundImage: "url(https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753795953/slider_2_pkaann.png)",
-            backgroundImage: "url(discount.png)",
-          height: "100%",
+            // Use different background images: resize.png for large screens (lg/xl), discount.png for 2xl screens
+            backgroundImage: is2XLScreen ? "url(discount2.png)" : "url(discount.png)",
+            height: "100%",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
