@@ -50,7 +50,7 @@ import PaymentSuccess from "./pages/PaymentSuccess"
 import PaymentCancel from "./pages/PaymentCancel"
 import ForgotPassword from "./pages/ForgotPassword"
 import ResetPassword from "./pages/ResetPassword"
-import BackToSchoolGaming from "./pages/BackToSchoolGaming"
+import PromotionalPage from "./pages/PromotionalPage"
 import BackToSchoolProfessional from "./pages/BackToSchoolProfessional"
 import VoucherTerms from "./pages/VoucherTerms"
 import DeliveryTerms from "./pages/DeliveryTerms"
@@ -337,7 +337,7 @@ function App() {
                     <Route path="payment/cancel" element={<PaymentCancel />} />
                     <Route path="forgot-password" element={<ForgotPassword />} />
                     <Route path="reset-password" element={<ResetPassword />} />
-                    <Route path="backtoschool-acer-gaming" element={<BackToSchoolGaming />} />
+                    <Route path="green-friday-promotional" element={<PromotionalPage />} />
                     <Route path="backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
                     <Route path="voucher-terms" element={<VoucherTerms />} />
                     <Route path="delivery-terms" element={<DeliveryTerms />} />
