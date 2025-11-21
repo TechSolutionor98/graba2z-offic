@@ -69,13 +69,14 @@ const Navbar = () => {
   const [level2Dir, setLevel2Dir] = useState('right')
   const [level3Dir, setLevel3Dir] = useState('right')
   const [level4Dir, setLevel4Dir] = useState('right')
-  // Mega menu viewport-centered positioning
-  const [megaTop, setMegaTop] = useState(0)
-  const menuBarRef = useRef(null)
+  const [activeCategoryRect, setActiveCategoryRect] = useState(null)
   const megaContentRef = useRef(null)
   const [megaScrollState, setMegaScrollState] = useState({ canScrollLeft: false, canScrollRight: false })
-  const MEGA_LABEL_LIMIT_CLASS = "whitespace-normal break-words max-w-[18ch]"
+  const MEGA_LABEL_LIMIT_CLASS = "whitespace-normal break-words //max-w-[23ch]"
   const CATEGORY_OPEN_DELAY = 220
+  const CATEGORY_DROPDOWN_MARGIN = 16
+  const CATEGORY_DROPDOWN_GAP = 6
+  const MAX_CATEGORY_DROPDOWN_WIDTH = 1320
 
   // Decide direction based on available space rather than midpoint
   const MIN_PANEL_WIDTH = 260 // px (matches min-w[240] + padding/margins)
@@ -96,13 +97,57 @@ const Navbar = () => {
     return leftSpace >= rightSpace ? 'left' : 'right'
   }
 
-  const getPanelStyle = (rect, direction, width = 280) => {
+  const getPanelStyle = (rect, direction, width = 280, estimatedHeight = 300) => {
     if (!rect) return {}
-    const top = rect.bottom + 6
     const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1920
-    const desiredLeft = rect.left + rect.width / 2 - width / 2
-    const clampedLeft = Math.max(12, Math.min(desiredLeft, viewportWidth - width - 12))
-    return { top, left: clampedLeft }
+    const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 1080
+    
+    // Vertical positioning - align to the top of the parent item
+    const style = {
+      top: rect.top
+    }
+    
+    // Horizontal positioning - position inline, right next to the arrow
+    const spaceRight = viewportWidth - rect.right
+    if (direction === 'right' || spaceRight >= width) {
+      // Open to the right, inline with the arrow
+      style.left = rect.right + 4 // Small 4px gap for visual separation
+    } else {
+      // Open to the left if no space on right
+      style.right = viewportWidth - rect.left + 4
+    }
+    
+    return style
+  }
+
+  const getCategoryDropdownStyle = (rect) => {
+    if (!rect) return {}
+    const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1920
+    const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 1080
+    const availableWidth = Math.max(viewportWidth - CATEGORY_DROPDOWN_MARGIN * 2, 0)
+    const dropdownWidth = Math.min(MAX_CATEGORY_DROPDOWN_WIDTH, availableWidth)
+    const centeredLeft = Math.round((viewportWidth - dropdownWidth) / 2)
+    const clampedLeft = Math.min(
+      Math.max(centeredLeft, CATEGORY_DROPDOWN_MARGIN),
+      viewportWidth - dropdownWidth - CATEGORY_DROPDOWN_MARGIN,
+    )
+    const topCandidate = rect.bottom + CATEGORY_DROPDOWN_GAP
+    const maxTop = Math.max(CATEGORY_DROPDOWN_MARGIN, viewportHeight - 40)
+    const dropdownTop = Math.min(Math.max(topCandidate, CATEGORY_DROPDOWN_MARGIN), maxTop)
+    return {
+      left: `${clampedLeft}px`,
+      top: `${dropdownTop}px`,
+      width: `${dropdownWidth}px`,
+      height: "78vh",
+    }
+  }
+
+  const resetMegaMenu = () => {
+    setHoveredCategory(null)
+    setHoveredSubCategory1(null)
+    setHoveredSubCategory2(null)
+    setHoveredSubCategory3(null)
+    setActiveCategoryRect(null)
   }
 
   const updateMegaScrollState = () => {
@@ -504,14 +549,14 @@ const Navbar = () => {
   const scrollPrev = () => {
     if (!canScrollPrev) return
     setCategoryOffset((prev) => Math.max(prev - 1, 0))
-    setHoveredCategory(null)
+    resetMegaMenu()
   }
 
   const scrollNext = () => {
     if (!canScrollNext) return
     const maxOffset = Math.max(0, categories.length - visibleCategoriesCount)
     setCategoryOffset((prev) => Math.min(prev + 1, maxOffset))
-    setHoveredCategory(null)
+    resetMegaMenu()
   }
 
   return (
@@ -709,7 +754,7 @@ const Navbar = () => {
           </div>
 
           {/* Navigation Menu - Dynamic Categories with Dropdowns */}
-          <div className="bg-lime-500 mt-3 xl:mt-3.5 2xl:mt-4 flex relative" ref={menuBarRef}>
+          <div className="bg-lime-500 mt-3 xl:mt-3.5 2xl:mt-4 flex relative">
           <div className="w-full">
             <div className="grid grid-cols-[auto,1fr,auto] items-center h-10 xl:h-11 2xl:h-12 px-4 xl:px-8 2xl:px-12 gap-2 xl:gap-2.5 2xl:gap-3">
               <button
@@ -741,12 +786,13 @@ const Navbar = () => {
                           categoryOpenTimeoutRef.current = setTimeout(() => {
                             setHoveredCategory(parentCategory._id)
                             const rect = target.getBoundingClientRect()
-                            if (menuBarRef.current) {
-                              const barRect = menuBarRef.current.getBoundingClientRect()
-                              setMegaTop(barRect.bottom + 8)
-                            } else {
-                              setMegaTop(rect.bottom + 8)
-                            }
+                            setActiveCategoryRect({
+                              top: rect.top,
+                              bottom: rect.bottom,
+                              left: rect.left,
+                              right: rect.right,
+                              width: rect.width,
+                            })
                             categoryOpenTimeoutRef.current = null
                           }, CATEGORY_OPEN_DELAY)
                         }}
@@ -756,10 +802,7 @@ const Navbar = () => {
                             categoryOpenTimeoutRef.current = null
                           }
                           categoryTimeoutRef.current = setTimeout(() => {
-                            setHoveredCategory(null)
-                            setHoveredSubCategory1(null)
-                            setHoveredSubCategory2(null)
-                            setHoveredSubCategory3(null)
+                            resetMegaMenu()
                           }, 1000)
                         }}
                       >
@@ -777,16 +820,16 @@ const Navbar = () => {
                         {/* Mega menu panel: show all level-1 columns with their level-2 items at once */}
                         {hoveredCategory === parentCategory._id && categorySubCategories.length > 0 && (
                           <div
-                            className="fixed left-1/2 -translate-x-1/2 bg-white shadow-2xl rounded-lg p-5 z-[60] border border-gray-100 w-[1320px] max-w-[98vw] overflow-y-auto"
+                            className="fixed bg-white shadow-2xl rounded-lg p-5 z-[60] border border-gray-100 overflow-y-auto max-w-[98vw]"
                             role="menu"
                             aria-label={`${parentCategory.name} menu`}
-                            style={{ top: megaTop, height: "75vh" }}
+                            style={getCategoryDropdownStyle(activeCategoryRect)}
                             onMouseEnter={() => {
                               if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current)
                             }}
                             onMouseLeave={() => {
                               categoryTimeoutRef.current = setTimeout(() => {
-                                setHoveredCategory(null)
+                                resetMegaMenu()
                               }, 300)
                             }}
                           >
@@ -813,7 +856,7 @@ const Navbar = () => {
                                         <Link
                                           to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
                                           className={`block text-red-600 font-semibold hover:text-red-600 ${MEGA_LABEL_LIMIT_CLASS}`}
-                                          onClick={() => setHoveredCategory(null)}
+                                          onClick={() => resetMegaMenu()}
                                         >
                                           {subCategory.name}
                                         </Link>
@@ -825,36 +868,6 @@ const Navbar = () => {
                                             <li
                                               key={sub2._id}
                                               className="bg-transparent border-none p-0 m-0"
-                                              onMouseEnter={(e) => {
-                                                if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
-                                                if (!hasLevel3) {
-                                                  setHoveredSubCategory1(null)
-                                                  setHoveredSubCategory2(null)
-                                                  setHoveredSubCategory3(null)
-                                                  return
-                                                }
-                                                const rect = e.currentTarget.getBoundingClientRect()
-                                                const direction = computeRightDir(rect)
-                                                setLevel2Dir(direction)
-                                                setHoveredSubCategory1({
-                                                  rootCategoryId: parentCategory._id,
-                                                  parentCategoryName: parentCategory.name,
-                                                  level1Name: subCategory.name,
-                                                  current: { id: sub2._id, name: sub2.name },
-                                                  rect,
-                                                  direction,
-                                                  items: level3Subs,
-                                                })
-                                                setHoveredSubCategory2(null)
-                                                setHoveredSubCategory3(null)
-                                              }}
-                                              onMouseLeave={() => {
-                                                subCategory1TimeoutRef.current = setTimeout(() => {
-                                                  setHoveredSubCategory1(null)
-                                                  setHoveredSubCategory2(null)
-                                                  setHoveredSubCategory3(null)
-                                                }, 200)
-                                              }}
                                             >
                                               <Link
                                                 to={generateShopURL({
@@ -863,19 +876,48 @@ const Navbar = () => {
                                                   subcategory2: sub2.name,
                                                 })}
                                                 className={`block w-full text-sm text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
-                                                onClick={() => setHoveredCategory(null)}
+                                                onClick={() => resetMegaMenu()}
                                               >
                                                 <span className="flex items-start gap-2">
                                                   <span className="flex-1 break-words leading-snug text-left">{sub2.name}</span>
                                                   {hasLevel3 && (
-                                                    <ChevronRight
-                                                      size={14}
-                                                      className={`mt-0.5 flex-shrink-0 text-gray-400 transition-transform duration-150 ${
-                                                        hoveredSubCategory1 && hoveredSubCategory1.current?.id === sub2._id
-                                                          ? "rotate-90"
-                                                          : ""
-                                                      }`}
-                                                    />
+                                                    <span
+                                                      onMouseEnter={(e) => {
+                                                        e.stopPropagation()
+                                                        if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
+                                                        const rect = e.currentTarget.closest('li').getBoundingClientRect()
+                                                        const direction = computeRightDir(rect)
+                                                        setLevel2Dir(direction)
+                                                        setHoveredSubCategory1({
+                                                          rootCategoryId: parentCategory._id,
+                                                          parentCategoryName: parentCategory.name,
+                                                          level1Name: subCategory.name,
+                                                          current: { id: sub2._id, name: sub2.name },
+                                                          rect,
+                                                          direction,
+                                                          items: level3Subs,
+                                                        })
+                                                        setHoveredSubCategory2(null)
+                                                        setHoveredSubCategory3(null)
+                                                      }}
+                                                      onMouseLeave={() => {
+                                                        subCategory1TimeoutRef.current = setTimeout(() => {
+                                                          setHoveredSubCategory1(null)
+                                                          setHoveredSubCategory2(null)
+                                                          setHoveredSubCategory3(null)
+                                                        }, 200)
+                                                      }}
+                                                      className="cursor-pointer"
+                                                    >
+                                                      <ChevronRight
+                                                        size={14}
+                                                        className={`mt-0.5 flex-shrink-0 text-gray-400 transition-transform duration-150 ${
+                                                          hoveredSubCategory1 && hoveredSubCategory1.current?.id === sub2._id
+                                                            ? "rotate-90"
+                                                            : ""
+                                                        }`}
+                                                      />
+                                                    </span>
                                                   )}
                                                 </span>
                                               </Link>
@@ -887,7 +929,7 @@ const Navbar = () => {
                                             <Link
                                               to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
                                               className="text-sm text-red-600 font-medium"
-                                              onClick={() => setHoveredCategory(null)}
+                                              onClick={() => resetMegaMenu()}
                                             >
                                               View all
                                             </Link>
@@ -913,8 +955,8 @@ const Navbar = () => {
                                 Array.isArray(hoveredSubCategory1.items) &&
                                 hoveredSubCategory1.items.length > 0 && (
                                   <div
-                                    className="fixed z-[65] bg-white shadow-2xl border border-gray-100 rounded-lg p-4 min-w-[260px] max-w-[320px] max-h-[360px] overflow-y-auto"
-                                    style={getPanelStyle(hoveredSubCategory1.rect, hoveredSubCategory1.direction, 300)}
+                                    className="fixed z-[65] bg-white shadow-lg border border-gray-200 rounded p-3 w-[280px] max-h-[500px] overflow-y-auto"
+                                    style={getPanelStyle(hoveredSubCategory1.rect, hoveredSubCategory1.direction, 280, 400)}
                                     onMouseEnter={() => {
                                       if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
                                     }}
@@ -926,10 +968,10 @@ const Navbar = () => {
                                       }, 200)
                                     }}
                                   >
-                                    <div className="text-sm font-semibold text-red-600 mb-2">
+                                    <div className="text-sm font-semibold text-red-600 mb-3">
                                       {hoveredSubCategory1.current?.name || "Subcategories"}
                                     </div>
-                                    <ul className="space-y-1">
+                                    <ul className="space-y-0.5">
                                       {hoveredSubCategory1.items.map((sub3) => {
                                         const level4Subs = getChildSubCategories(sub3._id)
                                         const hasLevel4 = Array.isArray(level4Subs) && level4Subs.length > 0
@@ -937,32 +979,6 @@ const Navbar = () => {
                                           <li
                                             key={sub3._id}
                                             className="relative"
-                                            onMouseEnter={(e) => {
-                                              if (subCategory2TimeoutRef.current) clearTimeout(subCategory2TimeoutRef.current)
-                                              if (!hasLevel4) {
-                                                setHoveredSubCategory2(null)
-                                                setHoveredSubCategory3(null)
-                                                return
-                                              }
-                                              const rect = e.currentTarget.getBoundingClientRect()
-                                              const dir = hoveredSubCategory1.direction === "right" ? computeRightDir(rect) : computeLeftDir(rect)
-                                              setLevel3Dir(dir)
-                                              setHoveredSubCategory2({
-                                                rootCategoryId: hoveredSubCategory1.rootCategoryId,
-                                                parentInfo: hoveredSubCategory1,
-                                                subCategory: { id: sub3._id, name: sub3.name },
-                                                items: level4Subs,
-                                                rect,
-                                                direction: dir,
-                                              })
-                                              setHoveredSubCategory3(null)
-                                            }}
-                                            onMouseLeave={() => {
-                                              subCategory2TimeoutRef.current = setTimeout(() => {
-                                                setHoveredSubCategory2(null)
-                                                setHoveredSubCategory3(null)
-                                              }, 200)
-                                            }}
                                           >
                                             <Link
                                               to={generateShopURL({
@@ -972,21 +988,47 @@ const Navbar = () => {
                                                 subcategory3: sub3.name,
                                               })}
                                               className={`flex items-start gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50 ${MEGA_LABEL_LIMIT_CLASS}`}
-                                              onClick={() => setHoveredCategory(null)}
+                                              onClick={() => resetMegaMenu()}
                                             >
                                               <span className="flex-1 break-words leading-snug text-left">{sub3.name}</span>
                                               {hasLevel4 && (
-                                                hoveredSubCategory2 && hoveredSubCategory2.subCategory?.id === sub3._id ? (
-                                                  hoveredSubCategory2.direction === "right" ? (
-                                                    <ChevronRight size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transform rotate-90 transition-transform" />
+                                                <span
+                                                  onMouseEnter={(e) => {
+                                                    e.stopPropagation()
+                                                    if (subCategory2TimeoutRef.current) clearTimeout(subCategory2TimeoutRef.current)
+                                                    const rect = e.currentTarget.closest('li').getBoundingClientRect()
+                                                    const dir = hoveredSubCategory1.direction === "right" ? computeRightDir(rect) : computeLeftDir(rect)
+                                                    setLevel3Dir(dir)
+                                                    setHoveredSubCategory2({
+                                                      rootCategoryId: hoveredSubCategory1.rootCategoryId,
+                                                      parentInfo: hoveredSubCategory1,
+                                                      subCategory: { id: sub3._id, name: sub3.name },
+                                                      items: level4Subs,
+                                                      rect,
+                                                      direction: dir,
+                                                    })
+                                                    setHoveredSubCategory3(null)
+                                                  }}
+                                                  onMouseLeave={() => {
+                                                    subCategory2TimeoutRef.current = setTimeout(() => {
+                                                      setHoveredSubCategory2(null)
+                                                      setHoveredSubCategory3(null)
+                                                    }, 200)
+                                                  }}
+                                                  className="cursor-pointer"
+                                                >
+                                                  {hoveredSubCategory2 && hoveredSubCategory2.subCategory?.id === sub3._id ? (
+                                                    hoveredSubCategory2.direction === "right" ? (
+                                                      <ChevronRight size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transform rotate-90 transition-transform" />
+                                                    ) : (
+                                                      <ChevronLeft size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transform -rotate-90 transition-transform" />
+                                                    )
+                                                  ) : hoveredSubCategory1.direction === "right" ? (
+                                                    <ChevronRight size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transition-transform" />
                                                   ) : (
-                                                    <ChevronLeft size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transform -rotate-90 transition-transform" />
-                                                  )
-                                                ) : hoveredSubCategory1.direction === "right" ? (
-                                                  <ChevronRight size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transition-transform" />
-                                                ) : (
-                                                  <ChevronLeft size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transition-transform" />
-                                                )
+                                                    <ChevronLeft size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transition-transform" />
+                                                  )}
+                                                </span>
                                               )}
                                             </Link>
                                           </li>
@@ -1001,10 +1043,12 @@ const Navbar = () => {
                                 Array.isArray(hoveredSubCategory2.items) &&
                                 hoveredSubCategory2.items.length > 0 && (
                                   <div
-                                    className="fixed z-[66] bg-white shadow-2xl border border-gray-100 rounded-lg p-4 min-w-[240px] max-w-[300px] max-h-[320px] overflow-y-auto"
-                                    style={getPanelStyle(hoveredSubCategory2.rect, hoveredSubCategory2.direction, 260)}
+                                    className="fixed z-[66] bg-white shadow-lg border border-gray-200 rounded p-3 ml-3 w-[260px] max-h-[380px] overflow-y-auto"
+                                    style={getPanelStyle(hoveredSubCategory2.rect, hoveredSubCategory2.direction, 260, 350)}
                                     onMouseEnter={() => {
                                       if (subCategory2TimeoutRef.current) clearTimeout(subCategory2TimeoutRef.current)
+                                      if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
+                                      if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current)
                                     }}
                                     onMouseLeave={() => {
                                       subCategory2TimeoutRef.current = setTimeout(() => {
@@ -1013,10 +1057,10 @@ const Navbar = () => {
                                       }, 200)
                                     }}
                                   >
-                                    <div className="text-sm font-semibold text-red-600 mb-2">
+                                    <div className="text-sm font-semibold text-red-600 mb-3">
                                       {hoveredSubCategory2.subCategory?.name || "More"}
                                     </div>
-                                    <ul className="space-y-1">
+                                    <ul className="space-y-0.5">
                                       {hoveredSubCategory2.items.map((sub4) => (
                                         <li key={sub4._id} className="relative">
                                           <Link
@@ -1036,7 +1080,7 @@ const Navbar = () => {
                                                 setHoveredSubCategory3(null)
                                               }, 200)
                                             }}
-                                            onClick={() => setHoveredCategory(null)}
+                                              onClick={() => resetMegaMenu()}
                                           >
                                             {sub4.name}
                                           </Link>
