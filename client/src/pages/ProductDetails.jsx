@@ -6,6 +6,9 @@ import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import { useWishlist } from "../context/WishlistContext"
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
+import '../styles/phoneInput.css'
 import {
   Star,
   Minus,
@@ -25,6 +28,7 @@ import {
   Award,
   Mail,
   Percent,
+  CheckCircle,
 } from "lucide-react"
 import { productsAPI } from "../services/api.js"
 import { trackProductView } from "../utils/gtmTracking"
@@ -139,9 +143,20 @@ const ProductDetails = () => {
   }, [isMobile, showRatingDropdown])
 
   const [showCallbackModal, setShowCallbackModal] = useState(false)
-  const [callbackForm, setCallbackForm] = useState({ name: user?.name || "", email: user?.email || "", phone: "" })
+  const [callbackForm, setCallbackForm] = useState({ 
+    name: user?.name || "", 
+    email: user?.email || "", 
+    phone: "",
+    customerNote: ""
+  })
   const [callbackLoading, setCallbackLoading] = useState(false)
   const [callbackSuccess, setCallbackSuccess] = useState(false)
+  const [emailChanged, setEmailChanged] = useState(false)
+  const [verificationCode, setVerificationCode] = useState("")
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [verificationVerified, setVerificationVerified] = useState(false)
+  const [verificationLoading, setVerificationLoading] = useState(false)
+  const [phoneValue, setPhoneValue] = useState("")
 
   const [relatedLoading, setRelatedLoading] = useState(true)
   const [showCouponsModal, setShowCouponsModal] = useState(false)
@@ -1635,19 +1650,47 @@ const ProductDetails = () => {
 
   const handleCallbackSubmit = async (e) => {
     e.preventDefault()
+    
+    // Check if email verification is needed and completed
+    if (emailChanged && !verificationVerified) {
+      showToast("Please verify your email address", "error")
+      return
+    }
+    
     setCallbackLoading(true)
 
     try {
-      await axios.post(`${config.API_URL}/api/callback-requests`, {
-        ...callbackForm,
+      // Get product link
+      const productLink = `${window.location.origin}/product/${product.slug || product._id}`
+      
+      // Extract country code from phone number (e.g., "+971501234567" -> "+971")
+      const countryCode = phoneValue ? phoneValue.split(/\d/)[0] : ""
+      
+      await axios.post(`${config.API_URL}/api/request-callback`, {
+        name: callbackForm.name,
+        email: callbackForm.email,
+        phone: phoneValue,
+        countryCode: countryCode,
+        customerNote: callbackForm.customerNote,
         productId: product._id,
         productName: product.name,
+        productLink: productLink,
       })
       setCallbackSuccess(true)
       setTimeout(() => {
         setShowCallbackModal(false)
         setCallbackSuccess(false)
-        setCallbackForm({ name: user?.name || "", email: user?.email || "", phone: "" })
+        setCallbackForm({ 
+          name: user?.name || "", 
+          email: user?.email || "", 
+          phone: "",
+          customerNote: ""
+        })
+        setPhoneValue("")
+        setEmailChanged(false)
+        setVerificationCode("")
+        setVerificationSent(false)
+        setVerificationVerified(false)
       }, 2000)
     } catch (error) {
       console.error("Error submitting callback request:", error)
@@ -1659,10 +1702,79 @@ const ProductDetails = () => {
 
   const handleCallbackChange = (e) => {
     const { name, value } = e.target
+    
+    // Check if email is being changed
+    if (name === 'email') {
+      // Get the logged-in user's email (if logged in)
+      const loggedInEmail = user?.email || ""
+      
+      // If user is logged in
+      if (loggedInEmail !== "") {
+        // Compare entered email with logged-in user's email ONLY
+        if (value.trim().toLowerCase() === loggedInEmail.trim().toLowerCase()) {
+          // Email matches logged-in email - no verification needed
+          setEmailChanged(false)
+          setVerificationVerified(true)
+          setVerificationSent(false)
+          setVerificationCode("")
+        } else {
+          // Email is different from logged-in email - verification required
+          setEmailChanged(true)
+          setVerificationVerified(false)
+          setVerificationSent(false)
+          setVerificationCode("")
+        }
+      } else {
+        // User is NOT logged in - verification required for any email
+        if (value.trim() !== "") {
+          setEmailChanged(true)
+          setVerificationVerified(false)
+          setVerificationSent(false)
+          setVerificationCode("")
+        } else {
+          setEmailChanged(false)
+          setVerificationVerified(false)
+        }
+      }
+    }
+    
     setCallbackForm((prev) => ({
       ...prev,
       [name]: value,
     }))
+  }
+  
+  const handleSendVerificationCode = async () => {
+    setVerificationLoading(true)
+    try {
+      await axios.post(`${config.API_URL}/api/request-callback/send-verification`, {
+        email: callbackForm.email
+      })
+      setVerificationSent(true)
+      showToast("Verification code sent to your email", "success")
+    } catch (error) {
+      console.error("Error sending verification code:", error)
+      showToast("Failed to send verification code", "error")
+    } finally {
+      setVerificationLoading(false)
+    }
+  }
+  
+  const handleVerifyCode = async () => {
+    setVerificationLoading(true)
+    try {
+      await axios.post(`${config.API_URL}/api/request-callback/verify-code`, {
+        email: callbackForm.email,
+        code: verificationCode
+      })
+      setVerificationVerified(true)
+      showToast("Email verified successfully", "success")
+    } catch (error) {
+      console.error("Error verifying code:", error)
+      showToast(error.response?.data?.message || "Invalid verification code", "error")
+    } finally {
+      setVerificationLoading(false)
+    }
   }
 
   const handleOpenCouponsModal = async () => {
@@ -2828,85 +2940,166 @@ const ProductDetails = () => {
       </div> */}
 
       {showCallbackModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-4 w-full max-w-sm sm:max-w-sm md:max-w-sm lg:max-w-md shadow-lg relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg relative max-h-[90vh] overflow-y-auto">
             <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-              onClick={() => setShowCallbackModal(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+              onClick={() => {
+                setShowCallbackModal(false)
+                setEmailChanged(false)
+                setVerificationCode("")
+                setVerificationSent(false)
+                setVerificationVerified(false)
+              }}
             >
               <X size={24} />
             </button>
-            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
-              <div className="flex-1 w-full">
-                <h2 className="text-xl  text-center font-bold mb-4">Request a Callback</h2>
-                {callbackSuccess ? (
-                  <div className="text-green-600 font-medium text-center">Request submitted successfully!</div>
-                ) : (
-                  <form onSubmit={handleCallbackSubmit} className="space-y-5">
-                    {/* Name Field */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 ml-9">Name</label>
-                      <div className="flex items-center gap-3">
-                        <div className="text-lime-600">
-                          <User size={26} />
-                        </div>
-                        <input
-                          type="text"
-                          name="name"
-                          value={callbackForm.name}
-                          onChange={handleCallbackChange}
-                          className="flex-1 py-2 px-3 border border-gray-300 rounded-md"
-                          required
-                        />
+            <div className="flex flex-col gap-4">
+              <h2 className="text-xl text-center font-bold mb-2">Request a Callback</h2>
+              {callbackSuccess ? (
+                <div className="text-green-600 font-medium text-center py-8 flex flex-col items-center gap-2">
+                  <CheckCircle size={48} className="text-green-500" />
+                  <p>Request submitted successfully!</p>
+                  <p className="text-sm text-gray-600">We will contact you soon.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleCallbackSubmit} className="space-y-4">
+                  {/* Full Name Field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <div className="flex items-center gap-3">
+                      <div className="text-lime-600">
+                        <User size={24} />
                       </div>
+                      <input
+                        type="text"
+                        name="name"
+                        value={callbackForm.name}
+                        onChange={handleCallbackChange}
+                        className="flex-1 py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500"
+                        placeholder="Enter your full name"
+                        required
+                      />
                     </div>
+                  </div>
 
-                    {/* Email Field */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 ml-9">Email</label>
-                      <div className="flex items-center gap-3">
-                        <div className="text-lime-600">
-                          <Mail size={26} />
-                        </div>
+                  {/* Email Field with Verification */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <div className="flex items-center gap-3">
+                      <div className="text-lime-600">
+                        <Mail size={24} />
+                      </div>
+                      <div className="flex-1">
                         <input
                           type="email"
                           name="email"
                           value={callbackForm.email}
                           onChange={handleCallbackChange}
-                          className="flex-1 py-2 px-3 border border-gray-300 rounded-md"
+                          className="w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500"
+                          placeholder="Enter your email"
                           required
                         />
                       </div>
+                      {verificationVerified && (
+                        <CheckCircle size={24} className="text-green-500" />
+                      )}
                     </div>
-
-                    {/* Phone Field */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 ml-9">Phone Number</label>
-                      <div className="flex items-center gap-3">
-                        <div className="text-lime-600">
-                          <Phone size={26} />
-                        </div>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={callbackForm.phone}
-                          onChange={handleCallbackChange}
-                          className="flex-1 py-2 px-3 border border-gray-300 rounded-md"
-                          required
-                        />
+                    
+                    {/* Email Verification Section */}
+                    {emailChanged && !verificationVerified && (
+                      <div className="mt-3 ml-9 space-y-3">
+                        {!verificationSent ? (
+                          <button
+                            type="button"
+                            onClick={handleSendVerificationCode}
+                            disabled={verificationLoading}
+                            className="text-sm bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50"
+                          >
+                            {verificationLoading ? "Sending..." : "Send Verification Code"}
+                          </button>
+                        ) : (
+                          <div className="space-y-2">
+                            <p className="text-sm text-gray-600">Enter the verification code sent to your email:</p>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={verificationCode}
+                                onChange={(e) => setVerificationCode(e.target.value)}
+                                className="flex-1 py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500"
+                                placeholder="Enter 6-digit code"
+                                maxLength={6}
+                              />
+                              <button
+                                type="button"
+                                onClick={handleVerifyCode}
+                                disabled={verificationLoading || verificationCode.length !== 6}
+                                className="bg-lime-500 text-white px-4 py-2 rounded-md hover:bg-lime-600 disabled:opacity-50"
+                              >
+                                {verificationLoading ? "..." : "Verify"}
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleSendVerificationCode}
+                              disabled={verificationLoading}
+                              className="text-sm text-blue-500 hover:underline"
+                            >
+                              Resend Code
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    )}
+                  </div>
 
-                    <button
-                      type="submit"
-                      className="w-full bg-lime-500 text-white py-2 rounded-md font-medium"
-                      disabled={callbackLoading}
-                    >
-                      {callbackLoading ? "Submitting..." : "Submit Request"}
-                    </button>
-                  </form>
-                )}
-              </div>
+                  {/* Phone Number with Country Code */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                    <div className="flex items-center gap-3">
+                      <div className="text-lime-600">
+                        <Phone size={24} />
+                      </div>
+                      <PhoneInput
+                        international
+                        defaultCountry="AE"
+                        value={phoneValue}
+                        onChange={setPhoneValue}
+                        className="flex-1"
+                        placeholder="Enter phone number"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Customer Note */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Customer Note (Optional)</label>
+                    <textarea
+                      name="customerNote"
+                      value={callbackForm.customerNote}
+                      onChange={handleCallbackChange}
+                      rows={4}
+                      className="w-full py-2 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500"
+                      placeholder="Any specific requirements or questions..."
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full bg-lime-500 text-white py-3 rounded-md font-medium hover:bg-lime-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={callbackLoading || (emailChanged && !verificationVerified)}
+                  >
+                    {callbackLoading ? "Submitting..." : "Submit Request"}
+                  </button>
+                  
+                  {emailChanged && !verificationVerified && (
+                    <p className="text-sm text-red-500 text-center">
+                      Please verify your email before submitting
+                    </p>
+                  )}
+                </form>
+              )}
             </div>
           </div>
         </div>
