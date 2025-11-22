@@ -1,16 +1,25 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
+import SafeDeleteModal from "../../components/admin/SafeDeleteModal"
+import MoveProductsModal from "../../components/admin/MoveProductsModal"
 import { Edit, Trash2, Plus } from "lucide-react"
+import axios from "axios"
 import config from "../../config/config"
 
 const AdminCategories = () => {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState(null)
+  const [showMoveModal, setShowMoveModal] = useState(false)
+  const [productsToMove, setProductsToMove] = useState([])
+  const [deletionPending, setDeletionPending] = useState(null)
   const { showToast } = useToast()
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchCategories()
@@ -52,48 +61,106 @@ const AdminCategories = () => {
   }
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this category?")) {
-      try {
-        const token =
-          localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+    const category = categories.find(c => c._id === id)
+    if (category) {
+      setCategoryToDelete(category)
+      setDeleteModalOpen(true)
+    }
+  }
 
-        if (!token) {
-          showToast("No authentication token found. Please login again.", "error")
-          return
-        }
+  const handleDeleteConfirm = async (categoryId, shouldMoveProducts) => {
+    try {
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
-        // Fix: Use the full API URL with config.API_URL
-        const response = await fetch(`${config.API_URL}/api/categories/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
-
-        if (response.ok) {
-          showToast("Category moved to trash successfully", "success")
-          fetchCategories()
-        } else if (response.status === 401) {
-          showToast("Authentication failed. Please login again.", "error")
-        } else if (response.status === 405) {
-          showToast("Delete operation not supported for this category", "error")
-        } else {
-          // Fix: Handle cases where response might not be JSON
-          let errorMessage = "Error deleting category"
-          try {
-            const errorData = await response.json()
-            errorMessage = errorData.message || errorMessage
-          } catch (jsonError) {
-            // If response is not JSON, use default error message
-            console.warn("Response is not JSON:", jsonError)
-          }
-          showToast(errorMessage, "error")
-        }
-      } catch (error) {
-        console.error("Error deleting category:", error)
-        showToast("Error deleting category", "error")
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
       }
+
+      if (shouldMoveProducts) {
+        // Store category ID for later and show move modal
+        setDeletionPending(categoryId)
+        
+        // Fetch all products that need to be moved
+        const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { 
+            parentCategory: categoryId,
+            limit: 1000 // Get all products
+          }
+        })
+        
+        setProductsToMove(data.products || [])
+        setDeleteModalOpen(false)
+        setShowMoveModal(true)
+      } else {
+        // Proceed with cascading deletion
+        const response = await axios.delete(
+          `${config.API_URL}/api/categories/${categoryId}/cascade`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { moveProducts: "false" }
+          }
+        )
+
+        if (response.status === 200) {
+          showToast("Category and all related data deleted successfully", "success")
+          setDeleteModalOpen(false)
+          setCategoryToDelete(null)
+          fetchCategories()
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting category:", error)
+      if (error.response?.status === 401) {
+        showToast("Authentication failed. Please login again.", "error")
+      } else {
+        showToast(error.response?.data?.message || "Error deleting category", "error")
+      }
+    }
+  }
+
+  const handleProductsMove = async (moveData) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
+      }
+
+      // Move all products to the new category/subcategory
+      const productIds = productsToMove.map(p => p._id)
+      
+      await axios.put(
+        `${config.API_URL}/api/products/bulk-move`,
+        {
+          productIds,
+          ...moveData
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+
+      // Now delete the category with cascading (no products to worry about)
+      await axios.delete(
+        `${config.API_URL}/api/categories/${deletionPending}/cascade`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { moveProducts: "false" }
+        }
+      )
+
+      showToast("Products moved and category deleted successfully", "success")
+      setShowMoveModal(false)
+      setDeletionPending(null)
+      setProductsToMove([])
+      fetchCategories()
+    } catch (error) {
+      console.error("Error moving products:", error)
+      showToast(error.response?.data?.message || "Error moving products", "error")
     }
   }
 
@@ -138,6 +205,31 @@ const AdminCategories = () => {
   return (
     <div className="flex min-h-screen bg-gray-100">
       <AdminSidebar />
+      
+      {/* Safe Delete Modal */}
+      <SafeDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false)
+          setCategoryToDelete(null)
+        }}
+        onConfirm={handleDeleteConfirm}
+        item={categoryToDelete}
+        type="category"
+      />
+
+      {/* Move Products Modal */}
+      <MoveProductsModal
+        isOpen={showMoveModal}
+        onClose={() => {
+          setShowMoveModal(false)
+          setDeletionPending(null)
+          setProductsToMove([])
+        }}
+        selectedCount={productsToMove.length}
+        onMove={handleProductsMove}
+      />
+      
       <div className="flex-1 ml-64">
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">

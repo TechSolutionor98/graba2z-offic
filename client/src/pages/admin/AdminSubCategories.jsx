@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
+import SafeDeleteModal from "../../components/admin/SafeDeleteModal"
+import MoveProductsModal from "../../components/admin/MoveProductsModal"
 import { Edit, Trash2, Plus, Search, Filter } from "lucide-react"
 import axios from "axios"
 
@@ -14,6 +16,11 @@ const AdminSubCategories = () => {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [subcategoryToDelete, setSubcategoryToDelete] = useState(null)
+  const [showMoveModal, setShowMoveModal] = useState(false)
+  const [productsToMove, setProductsToMove] = useState([])
+  const [deletionPending, setDeletionPending] = useState(null)
   const { showToast } = useToast()
 
   useEffect(() => {
@@ -85,18 +92,105 @@ const AdminSubCategories = () => {
   }
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this subcategory?")) {
-      try {
-        const token = localStorage.getItem("adminToken")
-        await axios.delete(`${config.API_URL}/api/subcategories/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        showToast("SubCategory moved to trash successfully", "success")
-        fetchSubCategories()
-      } catch (error) {
-        console.error("Error deleting subcategory:", error)
-        showToast("Error deleting subcategory", "error")
+    const subcategory = subCategories.find(s => s._id === id)
+    if (subcategory) {
+      setSubcategoryToDelete(subcategory)
+      setDeleteModalOpen(true)
+    }
+  }
+
+  const handleDeleteConfirm = async (subcategoryId, shouldMoveProducts) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
       }
+
+      if (shouldMoveProducts) {
+        // Store subcategory ID for later and show move modal
+        setDeletionPending(subcategoryId)
+        
+        // Fetch all products that need to be moved
+        const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { 
+            category: subcategoryId,
+            limit: 1000
+          }
+        })
+        
+        setProductsToMove(data.products || [])
+        setDeleteModalOpen(false)
+        setShowMoveModal(true)
+      } else {
+        // Proceed with cascading deletion
+        const response = await axios.delete(
+          `${config.API_URL}/api/subcategories/${subcategoryId}/cascade`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { moveProducts: "false" }
+          }
+        )
+
+        if (response.status === 200) {
+          showToast("Subcategory and all related data deleted successfully", "success")
+          setDeleteModalOpen(false)
+          setSubcategoryToDelete(null)
+          fetchSubCategories()
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting subcategory:", error)
+      if (error.response?.status === 401) {
+        showToast("Authentication failed. Please login again.", "error")
+      } else {
+        showToast(error.response?.data?.message || "Error deleting subcategory", "error")
+      }
+    }
+  }
+
+  const handleProductsMove = async (moveData) => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      
+      if (!token) {
+        showToast("No authentication token found. Please login again.", "error")
+        return
+      }
+
+      // Move all products to the new category/subcategory
+      const productIds = productsToMove.map(p => p._id)
+      
+      await axios.put(
+        `${config.API_URL}/api/products/bulk-move`,
+        {
+          productIds,
+          ...moveData
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+
+      // Now delete the subcategory with cascading (no products to worry about)
+      await axios.delete(
+        `${config.API_URL}/api/subcategories/${deletionPending}/cascade`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { moveProducts: "false" }
+        }
+      )
+
+      showToast("Products moved and subcategory deleted successfully", "success")
+      setShowMoveModal(false)
+      setDeletionPending(null)
+      setProductsToMove([])
+      fetchSubCategories()
+    } catch (error) {
+      console.error("Error moving products:", error)
+      showToast(error.response?.data?.message || "Error moving products", "error")
     }
   }
 
@@ -125,6 +219,31 @@ const AdminSubCategories = () => {
   return (
     <div className="flex min-h-screen bg-gray-100">
       <AdminSidebar />
+      
+      {/* Safe Delete Modal */}
+      <SafeDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false)
+          setSubcategoryToDelete(null)
+        }}
+        onConfirm={handleDeleteConfirm}
+        item={subcategoryToDelete}
+        type="subcategory"
+      />
+
+      {/* Move Products Modal */}
+      <MoveProductsModal
+        isOpen={showMoveModal}
+        onClose={() => {
+          setShowMoveModal(false)
+          setDeletionPending(null)
+          setProductsToMove([])
+        }}
+        selectedCount={productsToMove.length}
+        onMove={handleProductsMove}
+      />
+      
       <div className="flex-1 ml-64">
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
