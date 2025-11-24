@@ -2025,6 +2025,7 @@ const STORES = [
     mapEmbedUrl:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3608.7234567890123!2d55.28877!3d25.2603139!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f43ba6913e913%3A0x904de2fef7d413ec!2sCROWN%20EXCEL%20(Experience%20Center)!5e0!3m2!1sen!2sae!4v1640995200000!5m2!1sen!2sae",
     coordinates: { lat: 25.2603093, lng: 55.2912192 },
+    visible: true,
   },
   {
     storeId: "2",
@@ -2036,6 +2037,7 @@ const STORES = [
     mapEmbedUrl:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3608.7234567890123!2d55.28877!3d25.2603139!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f43ba6913e913%3A0x904de2fef7d413ec!2sCrown%20Excel%20Head%20Office!5e0!3m2!1sen!2sae!4v1640995200001!5m2!1sen!2sae",
     coordinates: { lat: 25.2603093, lng: 55.2912192 },
+    visible: false,
   },
   {
     storeId: "3",
@@ -2047,6 +2049,7 @@ const STORES = [
     mapEmbedUrl:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3608.7456789012345!2d55.2889495!3d25.2601883!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f43326d8e4cc9%3A0x4d452917e7a19b6!2sCROWN%20EXCEL%20(branch%202)!5e0!3m2!1sen!2sae!4v1640995200002!5m2!1sen!2sae",
     coordinates: { lat: 25.2601835, lng: 55.2915244 },
+    visible: true,
   },
   {
     storeId: "4",
@@ -2058,6 +2061,7 @@ const STORES = [
     mapEmbedUrl:
       "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3608.8901234567890!2d55.2880084!3d25.2589614!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f43591325fc3b%3A0x62b01661f2a6cdb7!2sGrabAtoZ!5e0!3m2!1sen!2sae!4v1640995200003!5m2!1sen!2sae",
     coordinates: { lat: 25.2589566, lng: 55.2905833 },
+    visible: false,
   },
 ]
 
@@ -3350,7 +3354,7 @@ const Checkout = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                           {/* Store Selection */}
                           <div className="space-y-4">
-                            {STORES.map((store) => (
+                            {STORES.filter(store => store.visible !== false).map((store) => (
                               <div
                                 key={store.storeId}
                                 className={`border rounded-lg p-4 cursor-pointer transition-all ${
