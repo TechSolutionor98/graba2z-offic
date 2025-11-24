@@ -690,37 +690,162 @@ const AddBulkProducts = () => {
   }
 
   const handleExport = () => {
-    // Provide headers for 4-level categories. Only fill first two for sample.
+    // Comprehensive sample data with multiple examples
     const sampleData = [
       {
-        name: "Sample Product",
-        slug: "sample-product",
-        sku: "SP001",
-        parent_category: "Electronics", // Level 0 (Main Category)
-        category_level_1: "Smartphones", // Level 1 subcategory
-        category_level_2: "Android", // Level 2 (optional)
-        category_level_3: "Mid Range", // Level 3 (optional)
-        category_level_4: "2025 Models", // Level 4 (optional)
-        brand: "Sample Brand",
-        buyingPrice: 80,
-        price: 100,
-        offerPrice: 90,
+        name: "Samsung Galaxy S24 Ultra 256GB",
+        slug: "samsung-galaxy-s24-ultra-256gb",
+        sku: "SAMS24U256",
+        barcode: "8801643767891",
+        parent_category: "Electronics",
+        category_level_1: "Smartphones",
+        category_level_2: "Android",
+        category_level_3: "Flagship",
+        category_level_4: "",
+        brand: "Samsung",
+        buyingPrice: 3500,
+        price: 4500,
+        offerPrice: 4200,
+        discount: 7,
         tax: "VAT 5%",
         stockStatus: "Available Product",
+        countInStock: 50,
+        showStockOut: "true",
+        canPurchase: "true",
+        refundable: "true",
+        maxPurchaseQty: 5,
+        lowStockWarning: 10,
+        unit: "piece",
+        weight: 0.234,
+        tags: "smartphone,samsung,5g,flagship",
+        description: "The Samsung Galaxy S24 Ultra features a stunning 6.8-inch display, powerful Snapdragon processor, advanced AI camera system with 200MP main sensor, and S Pen support. Perfect for productivity and creativity.",
+        shortDescription: "Flagship smartphone with 200MP camera and S Pen",
+        specifications: "Display: 6.8 inch AMOLED, RAM: 12GB, Storage: 256GB, Camera: 200MP",
+        details: "Includes: Phone, USB-C Cable, SIM Ejector Tool, Quick Start Guide",
+      },
+      {
+        name: "Apple MacBook Air M2 13-inch 8GB 256GB",
+        slug: "apple-macbook-air-m2-13-8gb-256gb",
+        sku: "MBA13M28256",
+        barcode: "194253081920",
+        parent_category: "Electronics",
+        category_level_1: "Laptops",
+        category_level_2: "Apple MacBook",
+        category_level_3: "MacBook Air",
+        category_level_4: "M2 Series",
+        brand: "Apple",
+        buyingPrice: 4000,
+        price: 5200,
+        offerPrice: 4999,
+        discount: 4,
+        tax: "VAT 5%",
+        stockStatus: "Available Product",
+        countInStock: 25,
+        showStockOut: "true",
+        canPurchase: "true",
+        refundable: "true",
+        maxPurchaseQty: 3,
+        lowStockWarning: 5,
+        unit: "piece",
+        weight: 1.24,
+        tags: "laptop,apple,macbook,m2,portable",
+        description: "The new MacBook Air with M2 chip delivers incredible performance in a thin and light design. Features a stunning Liquid Retina display, all-day battery life, and silent fanless operation.",
+        shortDescription: "Ultra-portable laptop with M2 chip and all-day battery",
+        specifications: "Display: 13.6 inch Liquid Retina, Chip: Apple M2, RAM: 8GB, Storage: 256GB SSD",
+        details: "Includes: MacBook Air, USB-C Power Adapter, USB-C to MagSafe Cable",
+      },
+      {
+        name: "Sony WH-1000XM5 Wireless Headphones",
+        slug: "sony-wh-1000xm5-wireless-headphones",
+        sku: "SONYWH1000XM5",
+        barcode: "4548736134437",
+        parent_category: "Electronics",
+        category_level_1: "Audio",
+        category_level_2: "Headphones",
+        category_level_3: "Over-Ear",
+        category_level_4: "Noise Cancelling",
+        brand: "Sony",
+        buyingPrice: 800,
+        price: 1299,
+        offerPrice: 1199,
+        discount: 8,
+        tax: "VAT 5%",
+        stockStatus: "Available Product",
+        countInStock: 100,
         showStockOut: "true",
         canPurchase: "true",
         refundable: "true",
         maxPurchaseQty: 10,
+        lowStockWarning: 20,
+        unit: "piece",
+        weight: 0.25,
+        tags: "headphones,sony,wireless,noise-cancelling,bluetooth",
+        description: "Industry-leading noise cancellation with two processors controlling 8 microphones. Up to 30-hour battery life with quick charging. Premium sound quality with LDAC and DSEE Extreme.",
+        shortDescription: "Premium wireless headphones with industry-leading noise cancellation",
+        specifications: "Battery: 30 hours, Connectivity: Bluetooth 5.2, Driver: 30mm, Weight: 250g",
+        details: "Includes: Headphones, Carrying Case, USB-C Cable, Audio Cable, Adapter",
+      },
+      {
+        name: "LG 55-inch OLED C3 4K Smart TV",
+        slug: "lg-55-oled-c3-4k-smart-tv",
+        sku: "LG55OLEDC3",
+        barcode: "8806098681471",
+        parent_category: "Electronics",
+        category_level_1: "TVs",
+        category_level_2: "OLED TVs",
+        category_level_3: "55 inch",
+        category_level_4: "",
+        brand: "LG",
+        buyingPrice: 4500,
+        price: 6500,
+        offerPrice: 5999,
+        discount: 8,
+        tax: "VAT 5%",
+        stockStatus: "Available Product",
+        countInStock: 15,
+        showStockOut: "true",
+        canPurchase: "true",
+        refundable: "false",
+        maxPurchaseQty: 2,
         lowStockWarning: 5,
         unit: "piece",
-        weight: 0.5,
-        tags: "electronics,smartphone,mobile",
-        description: "Sample product description with detailed features",
-        discount: 10,
-        specifications: "Display: 6.1 inch, RAM: 8GB, Storage: 128GB",
-        details: "Additional product details",
-        shortDescription: "Brief product description",
-        barcode: "1234567890123",
+        weight: 18.9,
+        tags: "tv,oled,4k,smart-tv,lg,gaming",
+        description: "Experience perfect blacks and infinite contrast with self-lit OLED pixels. Features α9 Gen6 AI Processor, Dolby Vision IQ, and support for NVIDIA G-SYNC and AMD FreeSync Premium for gaming.",
+        shortDescription: "55-inch OLED 4K Smart TV with AI processor and gaming features",
+        specifications: "Display: 55 inch OLED 4K, HDR: Dolby Vision IQ/HDR10/HLG, Refresh Rate: 120Hz, Smart OS: webOS",
+        details: "Includes: TV, Remote Control, Power Cable, Stand, Wall Mount Compatible",
+      },
+      {
+        name: "PlayStation 5 Console (Disc Edition)",
+        slug: "playstation-5-console-disc-edition",
+        sku: "PS5DISC",
+        barcode: "0711719395003",
+        parent_category: "Electronics",
+        category_level_1: "Gaming",
+        category_level_2: "Consoles",
+        category_level_3: "PlayStation",
+        category_level_4: "",
+        brand: "Sony",
+        buyingPrice: 1800,
+        price: 2299,
+        offerPrice: "",
+        discount: 0,
+        tax: "VAT 5%",
+        stockStatus: "PreOrder",
+        countInStock: 0,
+        showStockOut: "true",
+        canPurchase: "true",
+        refundable: "true",
+        maxPurchaseQty: 1,
+        lowStockWarning: 5,
+        unit: "piece",
+        weight: 4.5,
+        tags: "gaming,playstation,ps5,console,sony",
+        description: "Experience lightning-fast loading with an ultra-high speed SSD, deeper immersion with support for haptic feedback, adaptive triggers, and 3D Audio. Play thousands of PS4 and PS5 games.",
+        shortDescription: "Next-gen gaming console with ultra-high speed SSD",
+        specifications: "CPU: AMD Zen 2, GPU: AMD RDNA 2, RAM: 16GB GDDR6, Storage: 825GB SSD, Resolution: Up to 8K",
+        details: "Includes: PS5 Console, DualSense Controller, HDMI Cable, Power Cable, USB Cable, Stand",
       },
     ]
 
@@ -730,7 +855,7 @@ const AddBulkProducts = () => {
     const link = document.createElement("a")
     const url = URL.createObjectURL(blob)
     link.setAttribute("href", url)
-    link.setAttribute("download", "products_sample.csv")
+    link.setAttribute("download", "products_sample_template.csv")
     link.style.visibility = "hidden"
     document.body.appendChild(link)
     link.click()
@@ -810,10 +935,31 @@ const AddBulkProducts = () => {
           <div className="mb-4">
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
               <h3 className="font-semibold mb-2">Import Summary:</h3>
-              <div className="flex gap-6 mb-2">
-                <span>Total Rows: {previewProducts.length + invalidRows.length}</span>
-                <span className="text-green-600">✓ Valid: {previewProducts.length}</span>
-                <span className="text-red-600">✗ Invalid: {invalidRows.length}</span>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
+                <div className="bg-white p-2 rounded shadow-sm text-center">
+                  <div className="text-lg font-bold text-blue-600">{previewProducts.length + invalidRows.length}</div>
+                  <div className="text-xs text-gray-600">Total Rows</div>
+                </div>
+                <div className="bg-white p-2 rounded shadow-sm text-center">
+                  <div className="text-lg font-bold text-green-600">{previewProducts.length}</div>
+                  <div className="text-xs text-gray-600">Valid</div>
+                </div>
+                <div className="bg-white p-2 rounded shadow-sm text-center">
+                  <div className="text-lg font-bold text-emerald-600">
+                    {previewProducts.filter(p => !p.willUpdate).length}
+                  </div>
+                  <div className="text-xs text-gray-600">Will Create</div>
+                </div>
+                <div className="bg-white p-2 rounded shadow-sm text-center">
+                  <div className="text-lg font-bold text-amber-600">
+                    {previewProducts.filter(p => p.willUpdate).length}
+                  </div>
+                  <div className="text-xs text-gray-600">Will Update</div>
+                </div>
+                <div className="bg-white p-2 rounded shadow-sm text-center">
+                  <div className="text-lg font-bold text-red-600">{invalidRows.length}</div>
+                  <div className="text-xs text-gray-600">Invalid</div>
+                </div>
               </div>
 
               {invalidRows.length > 0 && (
@@ -849,11 +995,34 @@ const AddBulkProducts = () => {
           <div className="mb-4">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <h3 className="font-semibold text-green-800 mb-2">Save Results:</h3>
-              <div className="flex gap-6 mb-2">
-                <span>Total: {saveResult.total}</span>
-                <span className="text-green-600">✓ Success: {saveResult.success}</span>
-                <span className="text-red-600">✗ Failed: {saveResult.failed}</span>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                <div className="bg-white p-3 rounded shadow-sm text-center">
+                  <div className="text-2xl font-bold text-blue-600">{saveResult.total}</div>
+                  <div className="text-xs text-gray-600">Total</div>
+                </div>
+                <div className="bg-white p-3 rounded shadow-sm text-center">
+                  <div className="text-2xl font-bold text-green-600">{saveResult.success}</div>
+                  <div className="text-xs text-gray-600">Success</div>
+                </div>
+                <div className="bg-white p-3 rounded shadow-sm text-center">
+                  <div className="text-2xl font-bold text-emerald-600">{saveResult.created || 0}</div>
+                  <div className="text-xs text-gray-600">Created</div>
+                </div>
+                <div className="bg-white p-3 rounded shadow-sm text-center">
+                  <div className="text-2xl font-bold text-amber-600">{saveResult.updated || 0}</div>
+                  <div className="text-xs text-gray-600">Updated</div>
+                </div>
+                <div className="bg-white p-3 rounded shadow-sm text-center">
+                  <div className="text-2xl font-bold text-red-600">{saveResult.failed}</div>
+                  <div className="text-xs text-gray-600">Failed</div>
+                </div>
               </div>
+
+              {saveResult.message && (
+                <div className="mb-3 p-3 bg-green-100 rounded">
+                  <p className="text-green-800 font-medium">✅ {saveResult.message}</p>
+                </div>
+              )}
 
               {saveResult.failed > 0 && saveResult.results && (
                 <div className="mt-3">
@@ -871,17 +1040,41 @@ const AddBulkProducts = () => {
                   </div>
                 </div>
               )}
+
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => {
+                    setSaveResult(null)
+                    setPreviewProducts([])
+                    setFileName("")
+                    setError("")
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm"
+                >
+                  🔄 Upload Another File
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {previewProducts.length > 0 && (
           <div className="overflow-x-auto bg-white rounded shadow p-4">
-            <h3 className="font-semibold mb-3">Preview Products ({previewProducts.length})</h3>
+            <h3 className="font-semibold mb-3">
+              Preview Products ({previewProducts.length})
+              <span className="ml-3 text-sm text-emerald-600">
+                ✨ {previewProducts.filter(p => !p.willUpdate).length} New
+              </span>
+              <span className="ml-2 text-sm text-amber-600">
+                🔄 {previewProducts.filter(p => p.willUpdate).length} Updates
+              </span>
+            </h3>
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b">
+                  <th className="px-2 py-1 text-left">Action</th>
                   <th className="px-2 py-1 text-left">Name</th>
+                  <th className="px-2 py-1 text-left">SKU</th>
                   <th className="px-2 py-1 text-left">Parent Cat</th>
                   <th className="px-2 py-1 text-left">Level 1</th>
                   <th className="px-2 py-1 text-left">Level 2</th>
@@ -894,8 +1087,20 @@ const AddBulkProducts = () => {
               </thead>
               <tbody>
                 {previewProducts.slice(0, 20).map((product, i) => (
-                  <tr key={i} className="border-b">
+                  <tr key={i} className="border-b hover:bg-gray-50">
+                    <td className="px-2 py-1">
+                      {product.willUpdate ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                          UPDATE
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                          NEW
+                        </span>
+                      )}
+                    </td>
                     <td className="px-2 py-1">{product.name || "N/A"}</td>
+                    <td className="px-2 py-1 text-gray-600">{product.sku || "-"}</td>
                     <td className="px-2 py-1">{product.parentCategory?.name || product.parentCategory || "-"}</td>
                     <td className="px-2 py-1">{product.category?.name || product.category || "-"}</td>
                     <td className="px-2 py-1">{product.subCategory2?.name || product.subCategory2 || "-"}</td>

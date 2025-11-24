@@ -1,32 +1,47 @@
 // Lightweight Excel export using SheetJS (xlsx)
 import * as XLSX from 'xlsx';
 
-// Map product object to a flat row for Excel
+// Map product object to a flat row for Excel matching bulk upload template format
 function mapProductToRow(p) {
   const brandName = p.brand?.name || p.brand?.toString?.() || '';
-  const categoryName = p.category?.name || p.category?.toString?.() || '';
   const parentCategoryName = p.parentCategory?.name || p.parentCategory?.toString?.() || '';
-  const subCategoryName = p.subCategory?.name || p.subCategory?.toString?.() || '';
+  
+  // Handle 4-level category structure
+  const categoryLevel1 = p.category?.name || p.category?.toString?.() || '';
+  const categoryLevel2 = p.subCategory?.name || p.subCategory?.toString?.() || '';
+  const categoryLevel3 = p.categoryLevel3?.name || p.categoryLevel3?.toString?.() || '';
+  const categoryLevel4 = p.categoryLevel4?.name || p.categoryLevel4?.toString?.() || '';
+  
   return {
-    Name: p.name || '',
-    Slug: p.slug || '',
-    SKU: p.sku || '',
-    Barcode: p.barcode || '',
-    Brand: brandName,
-    Category: categoryName,
-    ParentCategory: parentCategoryName,
-    SubCategory: subCategoryName,
-    Price: p.price ?? '',
-    OfferPrice: p.offerPrice ?? '',
-    Discount: p.discount ?? '',
-    CountInStock: p.countInStock ?? '',
-    StockStatus: p.stockStatus || '',
-    Featured: p.featured ? 'Yes' : 'No',
-    Active: p.isActive ? 'Yes' : 'No',
-    Rating: p.rating ?? '',
-    NumReviews: p.numReviews ?? '',
-    Tags: Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags || ''),
-    CreatedAt: p.createdAt ? new Date(p.createdAt).toISOString() : '',
+    name: p.name || '',
+    slug: p.slug || '',
+    sku: p.sku || '',
+    barcode: p.barcode || '',
+    parent_category: parentCategoryName,
+    category_level_1: categoryLevel1,
+    category_level_2: categoryLevel2,
+    category_level_3: categoryLevel3,
+    category_level_4: categoryLevel4,
+    brand: brandName,
+    buyingPrice: p.buyingPrice ?? '',
+    price: p.price ?? '',
+    offerPrice: p.offerPrice ?? '',
+    discount: p.discount ?? '',
+    tax: p.tax || '',
+    stockStatus: p.stockStatus || '',
+    countInStock: p.countInStock ?? '',
+    showStockOut: p.showStockOut ? 'true' : 'false',
+    canPurchase: p.canPurchase !== false ? 'true' : 'false',
+    refundable: p.refundable !== false ? 'true' : 'false',
+    maxPurchaseQty: p.maxPurchaseQty ?? '',
+    lowStockWarning: p.lowStockWarning ?? '',
+    unit: p.unit || '',
+    weight: p.weight ?? '',
+    tags: Array.isArray(p.tags) ? p.tags.join(',') : (p.tags || ''),
+    description: p.description || '',
+    shortDescription: p.shortDescription || '',
+    specifications: p.specifications || '',
+    details: p.details || '',
   };
 }
 
