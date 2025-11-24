@@ -229,7 +229,7 @@ const AdminSidebar = () => {
           section: "products",
           items: [
             { title: "List Products", path: "/admin/products" },
-            { title: "Add Product", path: "/admin/products/add" },
+            //{ title: "Add Product", path: "/admin/products/add" },
             { title: "Add Bulk Products", path: "/admin/products/bulk-add" },
           ],
         },
