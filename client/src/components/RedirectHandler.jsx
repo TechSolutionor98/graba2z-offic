@@ -24,7 +24,7 @@ const RedirectHandler = () => {
           params: { path: currentPath }
         })
 
-        if (response.data && response.data.redirectTo) {
+        if (response.data && response.data.found && response.data.redirectTo) {
           const { redirectTo, redirectType } = response.data
           console.log('✅ Redirect found! Redirecting to:', redirectTo)
           

@@ -82,6 +82,20 @@ const AdminSEOSettings = () => {
       return
     }
 
+    // Normalize URLs: remove trailing slashes (except for root)
+    let normalizedFrom = formData.redirectFrom.trim()
+    if (normalizedFrom.length > 1 && normalizedFrom.endsWith('/')) {
+      normalizedFrom = normalizedFrom.slice(0, -1)
+    }
+
+    let normalizedTo = formData.redirectTo.trim()
+    // Only normalize internal URLs (not external)
+    if (!normalizedTo.startsWith('http://') && !normalizedTo.startsWith('https://')) {
+      if (normalizedTo.length > 1 && normalizedTo.endsWith('/')) {
+        normalizedTo = normalizedTo.slice(0, -1)
+      }
+    }
+
     try {
       const token = localStorage.getItem("adminToken")
       const axiosConfig = {
@@ -91,18 +105,24 @@ const AdminSEOSettings = () => {
         },
       }
 
+      const normalizedData = {
+        ...formData,
+        redirectFrom: normalizedFrom,
+        redirectTo: normalizedTo
+      }
+
       if (editingRedirect) {
         // Update existing redirect
         const response = await axios.put(
           `${config.API_URL}/api/redirects/${editingRedirect._id}`,
-          formData,
+          normalizedData,
           axiosConfig,
         )
         setRedirects(redirects.map((r) => (r._id === response.data._id ? response.data : r)))
         showToast("Redirect updated successfully", "success")
       } else {
         // Create new redirect
-        const response = await axios.post(`${config.API_URL}/api/redirects`, formData, axiosConfig)
+        const response = await axios.post(`${config.API_URL}/api/redirects`, normalizedData, axiosConfig)
         setRedirects([response.data, ...redirects])
         showToast("Redirect added successfully", "success")
       }
@@ -336,7 +356,7 @@ const AdminSEOSettings = () => {
                 placeholder="/old-product-url"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
               />
-              <p className="text-xs text-gray-500 mt-1">The URL path to redirect from (must start with /)</p>
+              <p className="text-xs text-gray-500 mt-1">The URL path to redirect from (must start with /). Trailing slashes will be automatically removed.</p>
             </div>
 
             {/* Redirect To */}
@@ -347,10 +367,10 @@ const AdminSEOSettings = () => {
                 name="redirectTo"
                 value={formData.redirectTo}
                 onChange={handleInputChange}
-                placeholder="/new-product-url"
+                placeholder="/new-product-url or https://example.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
               />
-              <p className="text-xs text-gray-500 mt-1">The destination URL (can be internal path or external URL)</p>
+              <p className="text-xs text-gray-500 mt-1">The destination URL (internal path or external URL). Trailing slashes will be automatically removed for internal URLs.</p>
             </div>
 
             {/* Redirect Type */}
