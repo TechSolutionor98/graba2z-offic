@@ -958,7 +958,7 @@ const Home = () => {
           <div>
             <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
               <img
-                src="laptop00.png"
+                src="electronoc resixe.png"
                 alt="Lenovo Banner"
                 className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer"
               />
@@ -1136,7 +1136,7 @@ const Home = () => {
   <Link to={brandUrls.ASUS} aria-label="Browse ASUS products">
           <img
             //src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
-            src="laptop00.png"
+            src="laptop (2).png"
             alt="ASUS Products Banner Mobile"
             className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
           />
@@ -1228,7 +1228,7 @@ const Home = () => {
           <img
             src={
               window.innerWidth < 768
-                ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939743/networking_1_tyt4gl.png"
+                ? "13.png"
                 : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png"
             }
             alt="Networking Banner"
