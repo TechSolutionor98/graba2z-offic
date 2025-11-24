@@ -925,7 +925,7 @@ const Home = () => {
         {/* Desktop & Tablet - Grid Layout */}
         <div className="hidden md:flex justify-between gap-4">
           <div className="w-1/3 lg:w-1/3">
-            <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
+            <Link to="product-category/laptops" aria-label="Browse Lenovo products">
               <img
                 src="laptop00.png"
                 alt="Lenovo Banner"
@@ -934,7 +934,7 @@ const Home = () => {
             </Link>
           </div>
           <div className="w-1/3 lg:w-1/3">
-            <Link to="/product-category/laptops?brand=Acer" aria-label="Browse Acer products">
+            <Link to="/product-category/electronics" aria-label="Browse Acer products">
               <img
                 src="electronoc resixe.png"
                 alt="Acer Banner"
@@ -942,8 +942,8 @@ const Home = () => {
               />
             </Link>
           </div>
-          <div className="w-1/3 lg:w-1/3 hidden lg:block">
-            <Link to="/product-category/laptops?brand=Asus" aria-label="Browse Asus products">
+          <div className="w-1/3 lg:w-1/3">
+            <Link to="/product-category/camera" aria-label="Browse Asus products">
               <img
                 src="camera (2).png"
                 alt="Asus Banner"
@@ -956,7 +956,7 @@ const Home = () => {
         {/* Mobile - Simple Grid */}
         <div className="md:hidden grid grid-cols-2 gap-3">
           <div>
-            <Link to="/product-category/laptops?brand=Lenovo" aria-label="Browse Lenovo products">
+            <Link to="/product-category/electronics" aria-label="Browse Lenovo products">
               <img
                 src="electronoc resixe.png"
                 alt="Lenovo Banner"
@@ -965,7 +965,7 @@ const Home = () => {
             </Link>
           </div>
           <div>
-            <Link to="/product-category/laptops?brand=MSI" aria-label="Browse Acer products">
+            <Link to="/product-category/camera" aria-label="Browse Acer products">
               <img
                 src="camera (2).png"
                 alt="Acer Banner"

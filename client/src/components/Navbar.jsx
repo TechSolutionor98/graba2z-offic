@@ -124,21 +124,36 @@ const Navbar = () => {
     if (!rect) return {}
     const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1920
     const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 1080
-    const availableWidth = Math.max(viewportWidth - CATEGORY_DROPDOWN_MARGIN * 2, 0)
-    const dropdownWidth = Math.min(MAX_CATEGORY_DROPDOWN_WIDTH, availableWidth)
-    const centeredLeft = Math.round((viewportWidth - dropdownWidth) / 2)
-    const clampedLeft = Math.min(
-      Math.max(centeredLeft, CATEGORY_DROPDOWN_MARGIN),
-      viewportWidth - dropdownWidth - CATEGORY_DROPDOWN_MARGIN,
-    )
-    const topCandidate = rect.bottom + CATEGORY_DROPDOWN_GAP
-    const maxTop = Math.max(CATEGORY_DROPDOWN_MARGIN, viewportHeight - 40)
-    const dropdownTop = Math.min(Math.max(topCandidate, CATEGORY_DROPDOWN_MARGIN), maxTop)
+    
+    // Calculate padding based on screen size (matching the slider container)
+    let horizontalPadding = 16 // Default: px-4 (4 * 4 = 16px on each side)
+    if (viewportWidth >= 1536) {
+      horizontalPadding = 48 // 2xl:px-12 (12 * 4 = 48px)
+    } else if (viewportWidth >= 1280) {
+      horizontalPadding = 32 // xl:px-8 (8 * 4 = 32px)
+    }
+    
+    // The navbar container has max-w-[1920px] and is centered
+    const maxContainerWidth = 1920
+    const containerWidth = Math.min(viewportWidth, maxContainerWidth)
+    
+    // Calculate centering offset when viewport is wider than max container
+    const containerOffset = viewportWidth > maxContainerWidth 
+      ? (viewportWidth - maxContainerWidth) / 2 
+      : 0
+    
+    // Match the slider container width exactly (container width minus padding)
+    const dropdownWidth = containerWidth - (horizontalPadding * 2)
+    const dropdownLeft = containerOffset + horizontalPadding
+    
+    // Use rect.bottom to position below the category bar, ensuring no overlap
+    const dropdownTop = rect.bottom + 2
+    
     return {
-      left: `${clampedLeft}px`,
+      left: `${dropdownLeft}px`,
       top: `${dropdownTop}px`,
       width: `${dropdownWidth}px`,
-      height: "78vh",
+      height: "400px",
     }
   }
 
@@ -421,9 +436,20 @@ const Navbar = () => {
   useEffect(() => {
     const updateVisibleCategories = () => {
       const width = window.innerWidth
+      const dpr = window.devicePixelRatio || 1
+      
       if (width >= 1536) {
-        // 2xl screens - Shifted: 90% zoom → 100%, 80% zoom → 90%, 75% zoom → 80%
-        if (width >= 1920) {
+        // 2xl screens - adjust for zoom in (110%, 125%, 150%)
+        if (dpr >= 1.4) {
+          // 150% zoom or higher → 7 categories
+          setVisibleCategoriesCount(7)
+        } else if (dpr >= 1.2) {
+          // 125% zoom → 8 categories
+          setVisibleCategoriesCount(8)
+        } else if (dpr >= 1.05) {
+          // 110% zoom → 9 categories
+          setVisibleCategoriesCount(9)
+        } else if (width >= 1920) {
           // 80% zoom view (was 75% zoom)
           setVisibleCategoriesCount(13)
         } else if (width >= 1700) {
@@ -434,14 +460,26 @@ const Navbar = () => {
           setVisibleCategoriesCount(11)
         }
       } else if (width >= 1280) {
-        // xl screens
-        setVisibleCategoriesCount(10)
+        // xl screens - adjust for zoom in
+        if (dpr >= 1.4) {
+          setVisibleCategoriesCount(6)
+        } else if (dpr >= 1.2) {
+          setVisibleCategoriesCount(7)
+        } else if (dpr >= 1.05) {
+          setVisibleCategoriesCount(8)
+        } else {
+          setVisibleCategoriesCount(10)
+        }
       } else if (width >= 1024) {
         // lg screens
-        setVisibleCategoriesCount(6)
+        if (dpr >= 1.2) {
+          setVisibleCategoriesCount(10)
+        } else {
+          setVisibleCategoriesCount(10)
+        }
       } else if (width >= 768) {
         // md screens
-        setVisibleCategoriesCount(4)
+        setVisibleCategoriesCount(7)
       } else {
         setVisibleCategoriesCount(8) // mobile - show all in mobile menu
       }
@@ -449,7 +487,11 @@ const Navbar = () => {
 
     updateVisibleCategories()
     window.addEventListener("resize", updateVisibleCategories)
-    return () => window.removeEventListener("resize", updateVisibleCategories)
+    const interval = setInterval(updateVisibleCategories, 500)
+    return () => {
+      window.removeEventListener("resize", updateVisibleCategories)
+      clearInterval(interval)
+    }
   }, [])
 
   useEffect(() => {
@@ -760,7 +802,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={scrollPrev}
-                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full border border-white/30 text-white hover:bg-white/10 transition disabled:opacity-40 disabled:hover:bg-transparent"
+                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full bg-white text-lime-500 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 disabled={!canScrollPrev}
                 aria-label="Previous categories"
               >
@@ -820,7 +862,7 @@ const Navbar = () => {
                         {/* Mega menu panel: show all level-1 columns with their level-2 items at once */}
                         {hoveredCategory === parentCategory._id && categorySubCategories.length > 0 && (
                           <div
-                            className="fixed bg-white shadow-2xl rounded-lg p-5 z-[60] border border-gray-100 overflow-y-auto max-w-[98vw]"
+                            className="fixed bg-white mt-1 shadow-2xl rounded-lg p-5 z-[60] border border-gray-100 overflow-y-auto max-w-[98vw]"
                             role="menu"
                             aria-label={`${parentCategory.name} menu`}
                             style={getCategoryDropdownStyle(activeCategoryRect)}
@@ -1100,7 +1142,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={scrollNext}
-                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full border border-white/30 text-white hover:bg-white/10 transition disabled:opacity-40 disabled:hover:bg-transparent"
+                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full bg-white text-lime-500 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 disabled={!canScrollNext}
                 aria-label="Next categories"
               >

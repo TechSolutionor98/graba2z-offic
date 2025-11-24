@@ -44,10 +44,7 @@ const ProductCard = ({ product, isMobile = false }) => {
     : "text-xs font-medium text-black mb-2 line-clamp-2 hover:text-blue-400"
 
   return (
-    <div
-      className="border p-2 h-[360px] flex flex-col justify-between bg-white"
-      style={isMobile ? {} : { width: "210px" }}
-    >
+    <div className="border p-2 h-[360px] flex flex-col justify-between bg-white w-full box-border">
       <div className="relative mb-2 flex h-[150px] justify-center items-cente">
   <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
           <img
@@ -139,7 +136,11 @@ const BigSaleSection = ({ products = [] }) => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
   const [is2XLScreen, setIs2XLScreen] = useState(false)
+  const [isZoomed125, setIsZoomed125] = useState(false)
+  const [cardsToDisplay, setCardsToDisplay] = useState(4)
+  const [isZoomedOut, setIsZoomedOut] = useState(false)
   const containerRef = useRef(null)
+  const [itemWidth, setItemWidth] = useState(0)
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -155,6 +156,52 @@ const BigSaleSection = ({ products = [] }) => {
 
     // Clean up
     return () => window.removeEventListener("resize", checkScreenSize)
+  }, [])
+
+  // Compute item pixel width from container - responsive to zoom levels
+  useEffect(() => {
+    const computeWidth = () => {
+      if (!containerRef.current) return
+      const container = containerRef.current
+      const containerWidth = container.clientWidth
+      
+      // Detect zoom level
+      const zoom = window.devicePixelRatio || 1
+      let cardsToShow = 4 // Default at 100% zoom
+      let isZoomed = false
+      let isZoomOut = false
+      
+      // Always show 4 cards at all zoom levels
+      cardsToShow = 4
+      
+      if (zoom >= 1.2) {
+        // 125%, 150%+ zoom: show 4 cards
+        isZoomed = true
+      } else if (zoom <= 0.9) {
+        // 90%, 80%, 75% zoom out: show 4 cards
+        isZoomOut = true
+      }
+      
+      setIsZoomed125(isZoomed)
+      setIsZoomedOut(isZoomOut)
+      setCardsToDisplay(cardsToShow)
+      
+      // Account for mx-3 (12px left + 12px right = 24px total)
+      const availableWidth = containerWidth - 24
+      
+      // Calculate gaps between cards
+      const gapTotal = (cardsToShow - 1) * 4 // gap-1 = 4px
+      const computed = Math.floor((availableWidth - gapTotal) / cardsToShow)
+      setItemWidth(computed > 0 ? computed : 0)
+    }
+
+    computeWidth()
+    window.addEventListener('resize', computeWidth)
+    const timer = setInterval(computeWidth, 500)
+    return () => {
+      window.removeEventListener('resize', computeWidth)
+      clearInterval(timer)
+    }
   }, [])
 
   const nextSlide = () => {
@@ -175,12 +222,21 @@ const BigSaleSection = ({ products = [] }) => {
   // Only show on desktop (md and above)
   return (
     <section className="relative my-6 hidden md:block overflow-hidden" style={{ minHeight: "400px" }}>
-      <div className="absolute inset-0 ">
+      <div className="absolute inset-0">
         <div
           className="w-full h-full bg-cover bg-center bg-no-repeat"
           style={{
-            // Use different background images: resize.png for large screens (lg/xl), discount.png for 2xl screens
-            backgroundImage: is2XLScreen ? "url(discount2.png)" : "url(discount.png)",
+            // Different images for different zoom levels and screen sizes
+            backgroundImage: 
+              isZoomedOut
+                ? "url(discount.png)" // 90%, 80%, 75% zoom out
+                : cardsToDisplay === 2 
+                  ? "url(resize00.png)" // 150%+ zoom - 2 cards
+                  : cardsToDisplay === 3 
+                    ? "url(discount22.png)" // 125% zoom - 3 cards
+                    : is2XLScreen 
+                      ? "url(discount2.png)" // 2xl screens at 100%
+                      : "url(discount.png)", // Normal 100% zoom
             height: "100%",
             backgroundSize: "cover",
             backgroundPosition: "center",
@@ -196,10 +252,22 @@ const BigSaleSection = ({ products = [] }) => {
         ></div>
       </div>
 
-      <div className="relative max-w-8xl px-5">
-        <div className="flex justify-end ">
-          {/* <div className="w-2/3 relative" ref={containerRef}> */}
-          <div className="w-full 2xl:max-w-[1170px] max-w-[900px] relative" ref={containerRef}>
+      <div className="relative w-full px-5">
+        <div className="flex items-center gap-4">
+          {/* Logo Section - 30% */}
+          <div className="w-[30%] flex items-center justify-center py-8">
+            <div className="w-full h-full flex items-center justify-center">
+              {/* Logo will be placed here */}
+              <img 
+                src="mega-sale-logo.png" 
+                alt="" 
+                className="w-full h-auto object-contain max-h-[400px]"
+              />
+            </div>
+          </div>
+
+          {/* Cards Section - 70% */}
+          <div className="w-[70%] relative" ref={containerRef}>
             <button
               onClick={prevSlide}
               disabled={currentSlide === 0}
@@ -211,7 +279,7 @@ const BigSaleSection = ({ products = [] }) => {
 
             <button
               onClick={nextSlide}
-              disabled={currentSlide >= products.length - 4}
+              disabled={currentSlide >= products.length - cardsToDisplay}
               className="absolute right-0 top-1/2 transform -translate-y-1/2 -translate-x-2 z-20 bg-white hover:bg-gray-100 rounded-full p-3 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all border-2 border-gray-200"
               style={{ marginRight: "-20px" }}
             >
@@ -220,11 +288,15 @@ const BigSaleSection = ({ products = [] }) => {
 
             <div className="overflow-hidden my-5 mx-3">
               <div
-                className="flex transition-transform duration-300 ease-in-out  xl:gap-11 2xl:gap-0"
-                style={{ transform: `translateX(-${currentSlide * 25}%)` }}
+                className="flex transition-transform duration-300 ease-in-out gap-1"
+                style={{ transform: `translateX(-${currentSlide * (itemWidth + 4)}px)` }}
               >
                 {products.map((product) => (
-                  <div key={product._id} className="w-full md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/5  flex-shrink-0">
+                  <div
+                    key={product._id}
+                    className="flex-shrink-0 box-border"
+                    style={itemWidth ? { flex: `0 0 ${itemWidth}px`, maxWidth: `${itemWidth}px` } : { flex: '0 0 25%', maxWidth: '25%' }}
+                  >
                     <ProductCard product={product} />
                   </div>
                 ))}
