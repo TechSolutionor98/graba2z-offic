@@ -897,7 +897,7 @@ const Navbar = () => {
                                     <div key={subCategory._id} className="w-[150px] flex-shrink-0 flex flex-col gap-3">
                                         <Link
                                           to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
-                                          className={`block text-red-600 font-semibold hover:text-red-600 ${MEGA_LABEL_LIMIT_CLASS}`}
+                                          className={`block text-red-600 text-xs font-semibold hover:text-red-600 ${MEGA_LABEL_LIMIT_CLASS}`}
                                           onClick={() => resetMegaMenu()}
                                         >
                                           {subCategory.name}
@@ -917,7 +917,7 @@ const Navbar = () => {
                                                   subcategory: subCategory.name,
                                                   subcategory2: sub2.name,
                                                 })}
-                                                className={`block w-full text-sm text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
+                                                className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
                                                 onClick={() => resetMegaMenu()}
                                               >
                                                 <span className="flex items-start gap-2">
@@ -970,7 +970,7 @@ const Navbar = () => {
                                           <li className="bg-transparent border-none p-0 m-0">
                                             <Link
                                               to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
-                                              className="text-sm text-red-600 font-medium"
+                                              className="text-xs text-red-600 font-medium"
                                               onClick={() => resetMegaMenu()}
                                             >
                                               View all
@@ -1010,7 +1010,7 @@ const Navbar = () => {
                                       }, 200)
                                     }}
                                   >
-                                    <div className="text-sm font-semibold text-red-600 mb-3">
+                                    <div className="text-xs font-semibold text-red-600 mb-3">
                                       {hoveredSubCategory1.current?.name || "Subcategories"}
                                     </div>
                                     <ul className="space-y-0.5">
@@ -1029,7 +1029,7 @@ const Navbar = () => {
                                                 subcategory2: hoveredSubCategory1.current?.name,
                                                 subcategory3: sub3.name,
                                               })}
-                                              className={`flex items-start gap-2 rounded px-2 py-1 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50 ${MEGA_LABEL_LIMIT_CLASS}`}
+                                              className={`flex items-start gap-2 rounded px-2 py-1 text-xs text-gray-700 hover:text-red-600 hover:bg-gray-50 ${MEGA_LABEL_LIMIT_CLASS}`}
                                               onClick={() => resetMegaMenu()}
                                             >
                                               <span className="flex-1 break-words leading-snug text-left">{sub3.name}</span>
@@ -1099,7 +1099,7 @@ const Navbar = () => {
                                       }, 200)
                                     }}
                                   >
-                                    <div className="text-sm font-semibold text-red-600 mb-3">
+                                    <div className="text-xs font-semibold text-red-600 mb-3">
                                       {hoveredSubCategory2.subCategory?.name || "More"}
                                     </div>
                                     <ul className="space-y-0.5">
@@ -1113,7 +1113,7 @@ const Navbar = () => {
                                               subcategory3: hoveredSubCategory2.subCategory?.name,
                                               subcategory4: sub4.name,
                                             })}
-                                            className={`block rounded px-2 py-1 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50 whitespace-normal break-words ${MEGA_LABEL_LIMIT_CLASS}`}
+                                            className={`block rounded px-2 py-1 text-xs text-gray-700 hover:text-red-600 hover:bg-gray-50 whitespace-normal break-words ${MEGA_LABEL_LIMIT_CLASS}`}
                                             onMouseEnter={() => {
                                               if (subCategory3TimeoutRef.current) clearTimeout(subCategory3TimeoutRef.current)
                                             }}
