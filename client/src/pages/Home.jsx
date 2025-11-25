@@ -1052,9 +1052,12 @@ const Home = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 h-full">
               {hpProducts.length > 0 ? (
                 <>
-                  {hpProducts.slice(0, 3).map((product) => (
+                  {hpProducts.slice(0, 2).map((product) => (
                     <DynamicBrandProductCard key={product._id} product={product} />
                   ))}
+                  <div className="hidden md:block">
+                    {hpProducts[2] && <DynamicBrandProductCard product={hpProducts[2]} />}
+                  </div>
                 </>
               ) : (
                 <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No HP products available</div>
@@ -1076,15 +1079,18 @@ const Home = () => {
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {dellProducts.length > 0 ? (
                 <>
-                  {dellProducts.slice(0, 3).map((product) => (
+                  {dellProducts.slice(0, 2).map((product) => (
                     <DynamicBrandProductCard key={product._id} product={product} />
                   ))}
+                  <div className="hidden md:block">
+                    {dellProducts[2] && <DynamicBrandProductCard product={dellProducts[2]} />}
+                  </div>
                 </>
               ) : (
-                <div className="col-span-3 text-center py-8 text-gray-500">No Dell products available</div>
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No Dell products available</div>
               )}
             </div>
           </div>
@@ -1122,8 +1128,13 @@ const Home = () => {
 
         {accessoriesProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-            {accessoriesProducts.slice(0, 6).map((product) => (
+            {accessoriesProducts.slice(0, 2).map((product) => (
               <AccessoriesProductCard key={product._id} product={product} />
+            ))}
+            {accessoriesProducts.slice(2, 6).map((product) => (
+              <div key={product._id} className="hidden md:block">
+                <AccessoriesProductCard product={product} />
+              </div>
             ))}
           </div>
         ) : (
@@ -1186,15 +1197,18 @@ const Home = () => {
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {acerProducts.length > 0 ? (
                 <>
-                  {acerProducts.slice(0, 3).map((product) => (
+                  {acerProducts.slice(0, 2).map((product) => (
                     <DynamicBrandProductCard key={product._id} product={product} />
                   ))}
+                  <div className="hidden md:block">
+                    {acerProducts[2] && <DynamicBrandProductCard product={acerProducts[2]} />}
+                  </div>
                 </>
               ) : (
-                <div className="col-span-3 text-center py-8 text-gray-500">No Acer products available</div>
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No Acer products available</div>
               )}
             </div>
           </div>
@@ -1216,9 +1230,12 @@ const Home = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {asusProducts.length > 0 ? (
                 <>
-                  {asusProducts.slice(0, 3).map((product) => (
+                  {asusProducts.slice(0, 2).map((product) => (
                     <DynamicBrandProductCard key={product._id} product={product} />
                   ))}
+                  <div className="hidden md:block">
+                    {asusProducts[2] && <DynamicBrandProductCard product={asusProducts[2]} />}
+                  </div>
                 </>
               ) : (
                 <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">
@@ -1261,8 +1278,13 @@ const Home = () => {
 
         {networkingProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-            {networkingProducts.slice(0, 6).map((product) => (
+            {networkingProducts.slice(0, 2).map((product) => (
               <AccessoriesProductCard key={product._id} product={product} />
+            ))}
+            {networkingProducts.slice(2, 6).map((product) => (
+              <div key={product._id} className="hidden md:block">
+                <AccessoriesProductCard product={product} />
+              </div>
             ))}
           </div>
         ) : (
@@ -1328,9 +1350,12 @@ const Home = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {msiProducts.length > 0 ? (
                 <>
-                  {msiProducts.slice(0, 3).map((product) => (
+                  {msiProducts.slice(0, 2).map((product) => (
                     <DynamicBrandProductCard key={product._id} product={product} />
                   ))}
+                  <div className="hidden md:block">
+                    {msiProducts[2] && <DynamicBrandProductCard product={msiProducts[2]} />}
+                  </div>
                 </>
               ) : (
                 <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No MSI products available</div>
@@ -1352,15 +1377,18 @@ const Home = () => {
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {lenovoProducts.length > 0 ? (
                 <>
-                  {lenovoProducts.slice(0, 3).map((product) => (
+                  {lenovoProducts.slice(0, 2).map((product) => (
                     <DynamicBrandProductCard key={product._id} product={product} />
                   ))}
+                  <div className="hidden md:block">
+                    {lenovoProducts[2] && <DynamicBrandProductCard product={lenovoProducts[2]} />}
+                  </div>
                 </>
               ) : (
-                <div className="col-span-3 text-center py-8 text-gray-500">No Lenovo products available</div>
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No Lenovo products available</div>
               )}
             </div>
           </div>
@@ -1423,9 +1451,12 @@ const Home = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {appleProducts.length > 0 ? (
                 <>
-                  {appleProducts.slice(0, 3).map((product) => (
+                  {appleProducts.slice(0, 2).map((product) => (
                     <DynamicBrandProductCard key={product._id} product={product} />
                   ))}
+                  <div className="hidden md:block">
+                    {appleProducts[2] && <DynamicBrandProductCard product={appleProducts[2]} />}
+                  </div>
                 </>
               ) : (
                 <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">
@@ -1449,15 +1480,18 @@ const Home = () => {
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {samsungProducts.length > 0 ? (
                 <>
-                  {samsungProducts.slice(0, 3).map((product) => (
+                  {samsungProducts.slice(0, 2).map((product) => (
                     <DynamicBrandProductCard key={product._id} product={product} />
                   ))}
+                  <div className="hidden md:block">
+                    {samsungProducts[2] && <DynamicBrandProductCard product={samsungProducts[2]} />}
+                  </div>
                 </>
               ) : (
-                <div className="col-span-3 text-center py-8 text-gray-500">No Samsung products available</div>
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No Samsung products available</div>
               )}
             </div>
           </div>
