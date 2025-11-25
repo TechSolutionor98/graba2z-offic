@@ -8,11 +8,12 @@ function mapProductToRow(p) {
   
   // Handle 4-level category structure
   const categoryLevel1 = p.category?.name || p.category?.toString?.() || '';
-  const categoryLevel2 = p.subCategory?.name || p.subCategory?.toString?.() || '';
-  const categoryLevel3 = p.categoryLevel3?.name || p.categoryLevel3?.toString?.() || '';
-  const categoryLevel4 = p.categoryLevel4?.name || p.categoryLevel4?.toString?.() || '';
+  const categoryLevel2 = p.subCategory2?.name || p.subCategory2?.toString?.() || '';
+  const categoryLevel3 = p.subCategory3?.name || p.subCategory3?.toString?.() || '';
+  const categoryLevel4 = p.subCategory4?.name || p.subCategory4?.toString?.() || '';
   
   return {
+    _id: p._id || '', // MongoDB ObjectId for tracking updates
     name: p.name || '',
     slug: p.slug || '',
     sku: p.sku || '',

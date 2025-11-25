@@ -7,7 +7,7 @@ import ProductForm from "../../components/admin/ProductForm"
 import MoveProductsModal from "../../components/admin/MoveProductsModal"
 import ConfirmDialog from "../../components/admin/ConfirmDialog"
 import { useToast } from "../../context/ToastContext"
-import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight, Copy } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight, Copy, Upload } from "lucide-react"
 
 import config from "../../config/config"
 import { exportProductsToExcel } from "../../utils/exportToExcel"
@@ -40,6 +40,10 @@ const AdminProducts = () => {
   const [showMoveModal, setShowMoveModal] = useState(false)
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false)
   const [productToDuplicate, setProductToDuplicate] = useState(null)
+  const [showImportDialog, setShowImportDialog] = useState(false)
+  const [importFile, setImportFile] = useState(null)
+  const [importing, setImporting] = useState(false)
+  const [importResults, setImportResults] = useState(null)
 
   // Derived counters
   const totalSelected = useMemo(() => {
@@ -588,6 +592,81 @@ const AdminProducts = () => {
     }
   }
 
+  const handleImportFile = async () => {
+    if (!importFile) {
+      showToast("Please select a file to import", "error")
+      return
+    }
+
+    setImporting(true)
+    setImportResults(null)
+
+    try {
+      const token = getAdminToken()
+      if (!token) {
+        showToast("Authentication required. Please login again.", "error")
+        setImporting(false)
+        return
+      }
+
+      const formData = new FormData()
+      formData.append("file", importFile)
+
+      const { data } = await axios.post(
+        `${config.API_URL}/api/products/bulk-import-with-id`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      )
+
+      setImportResults(data)
+      showToast(data.message, "success")
+      
+      // Refresh products
+      await fetchProducts()
+    } catch (error) {
+      console.error("Import failed:", error)
+      const errorMessage = error.response?.data?.message || error.message || "Failed to import products"
+      showToast(errorMessage, "error")
+      
+      // If there are detailed errors, show them in results
+      if (error.response?.data) {
+        setImportResults(error.response.data)
+      }
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Validate file type
+      const validTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+      ]
+      
+      if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        showToast("Please upload a valid Excel file (.xlsx or .xls)", "error")
+        return
+      }
+      
+      setImportFile(file)
+      setImportResults(null)
+    }
+  }
+
+  const closeImportDialog = () => {
+    setShowImportDialog(false)
+    setImportFile(null)
+    setImportResults(null)
+  }
+
   const handleFormSubmit = async (productData) => {
     try {
       console.log("🚀 Starting product submission...")
@@ -725,17 +804,159 @@ const AdminProducts = () => {
         type="success"
       />
 
+      {/* Import Dialog */}
+      {/* {showImportDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-4">Import Products from Excel</h2>
+            
+            <div className="mb-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <h3 className="font-semibold text-blue-900 mb-2">How it works:</h3>
+                <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                  <li><strong>Export products</strong> to get Excel file with ObjectIds (_id column)</li>
+                  <li><strong>Edit in Excel:</strong> Modify product details, categories, etc.</li>
+                  <li><strong>Import back:</strong> Products with matching ObjectIds will be <strong>updated</strong></li>
+                  <li><strong>New products:</strong> Rows without ObjectId will be <strong>created as new</strong></li>
+                  <li><strong>Duplicate detection:</strong> Same ObjectId twice in file = error</li>
+                  <li><strong>Category matching:</strong> By ObjectId first, then by name, or creates new</li>
+                </ul>
+              </div>
+
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="import-file-input"
+                />
+                <label
+                  htmlFor="import-file-input"
+                  className="cursor-pointer inline-flex flex-col items-center"
+                >
+                  <Upload size={48} className="text-gray-400 mb-2" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Click to select Excel file
+                  </span>
+                  <span className="text-xs text-gray-500 mt-1">
+                    Supports .xlsx and .xls files
+                  </span>
+                </label>
+                
+                {importFile && (
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                    <p className="text-sm text-green-800">
+                      Selected: <strong>{importFile.name}</strong>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {importResults && (
+              <div className="mb-6">
+                <h3 className="font-semibold mb-3">Import Results:</h3>
+                
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="bg-green-50 border border-green-200 rounded p-3 text-center">
+                    <div className="text-2xl font-bold text-green-700">{importResults.created || 0}</div>
+                    <div className="text-xs text-green-600">Created</div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded p-3 text-center">
+                    <div className="text-2xl font-bold text-blue-700">{importResults.updated || 0}</div>
+                    <div className="text-xs text-blue-600">Updated</div>
+                  </div>
+                  <div className="bg-red-50 border border-red-200 rounded p-3 text-center">
+                    <div className="text-2xl font-bold text-red-700">{importResults.failed || 0}</div>
+                    <div className="text-xs text-red-600">Failed</div>
+                  </div>
+                </div>
+
+                {importResults.errors && importResults.errors.length > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded p-4 max-h-60 overflow-y-auto">
+                    <h4 className="font-semibold text-red-900 mb-2">Errors:</h4>
+                    <ul className="text-sm text-red-800 space-y-2">
+                      {importResults.errors.map((err, idx) => (
+                        <li key={idx} className="border-b border-red-200 pb-2">
+                          <strong>Row {err.row}:</strong> {err.productName && `"${err.productName}" - `}{err.error}
+                          {err.objectId && <span className="text-xs ml-2">(ID: {err.objectId})</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {importResults.results && importResults.results.length > 0 && (
+                  <div className="bg-gray-50 border border-gray-200 rounded p-4 max-h-60 overflow-y-auto mt-3">
+                    <h4 className="font-semibold text-gray-900 mb-2">Success Details:</h4>
+                    <ul className="text-sm text-gray-800 space-y-1">
+                      {importResults.results.slice(0, 20).map((result, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                            result.action === 'created' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {result.action}
+                          </span>
+                          <span>{result.productName}</span>
+                          {result.sku && <span className="text-gray-500">({result.sku})</span>}
+                        </li>
+                      ))}
+                      {importResults.results.length > 20 && (
+                        <li className="text-gray-500 italic">
+                          ... and {importResults.results.length - 20} more
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeImportDialog}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                disabled={importing}
+              >
+                Close
+              </button>
+              <button
+                onClick={handleImportFile}
+                disabled={!importFile || importing}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed inline-flex items-center gap-2"
+              >
+                {importing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={16} />
+                    Import
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )} */}
+
       <div className="flex-1 ml-64">
         <div className="p-8">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-            <button
-              onClick={handleAddNew}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              <Plus size={16} />
-              Add Product
-            </button>
+            <div className="flex gap-3">
+             
+              <button
+                onClick={handleAddNew}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                <Plus size={16} />
+                Add Product
+              </button>
+            </div>
           </div>
 
           {error && (

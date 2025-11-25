@@ -605,7 +605,9 @@
 import config from "../../config/config"
 import { useState } from "react"
 import Papa from "papaparse"
-import AdminSidebar from "../../components/admin/AdminSidebar" // Add this import
+import * as XLSX from "xlsx"
+import AdminSidebar from "../../components/admin/AdminSidebar"
+import { exportProductsToExcel } from "../../utils/exportToExcel"
 
 const AddBulkProducts = () => {
   const [previewProducts, setPreviewProducts] = useState([])
@@ -614,6 +616,8 @@ const AddBulkProducts = () => {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [saveResult, setSaveResult] = useState(null)
+  const [fileType, setFileType] = useState("")
+  const [importResults, setImportResults] = useState(null)
 
   // Helper to get admin token
   const getAdminToken = () => localStorage.getItem("adminToken")
@@ -625,15 +629,61 @@ const AddBulkProducts = () => {
     setPreviewProducts([])
     setInvalidRows([])
     setSaveResult(null)
+    setImportResults(null)
 
     if (!file) return
 
-    // Check if file is CSV
-    if (!file.name.toLowerCase().endsWith(".csv")) {
-      setError("Please upload a CSV file")
+    const fileName = file.name.toLowerCase()
+    const isExcel = fileName.endsWith(".xlsx") || fileName.endsWith(".xls")
+    const isCSV = fileName.endsWith(".csv")
+
+    // Check if file is CSV or Excel
+    if (!isCSV && !isExcel) {
+      setError("Please upload a CSV or Excel file (.csv, .xlsx, .xls)")
       return
     }
 
+    setFileType(isExcel ? "excel" : "csv")
+    setLoading(true)
+
+    // Handle Excel files with ObjectId support
+    if (isExcel) {
+      try {
+        const token = getAdminToken()
+        const formData = new FormData()
+        formData.append("file", file)
+
+        const res = await fetch(`${config.API_URL}/api/products/bulk-import-with-id`, {
+          method: "POST",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: formData,
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          // If there are duplicate ObjectId errors, show them
+          if (data.errors && data.errors.length > 0) {
+            setImportResults(data)
+            setError(data.message || "Import failed")
+          } else {
+            throw new Error(data.message || "Import failed")
+          }
+        } else {
+          setImportResults(data)
+          setError("")
+        }
+      } catch (err) {
+        console.error("Excel import error:", err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    // Handle CSV files (existing logic)
     setLoading(true)
 
     try {
@@ -687,6 +737,45 @@ const AddBulkProducts = () => {
       setError(err.message)
       setLoading(false)
     }
+  }
+
+  const handleExportExcel = () => {
+    // Export Excel template with ObjectId column
+    const sampleData = [
+      {
+        _id: '', // Leave empty for new products, or paste existing product ObjectId to update
+        name: "Samsung Galaxy S24 Ultra 256GB",
+        slug: "samsung-galaxy-s24-ultra-256gb",
+        sku: "SAMS24U256",
+        barcode: "8801643767891",
+        parent_category: "Electronics",
+        category_level_1: "Smartphones",
+        category_level_2: "Android",
+        category_level_3: "Flagship",
+        category_level_4: "",
+        brand: "Samsung",
+        buyingPrice: 3500,
+        price: 4500,
+        offerPrice: 4200,
+        discount: 7,
+        tax: "VAT 5%",
+        stockStatus: "Available Product",
+        countInStock: 50,
+        showStockOut: "true",
+        canPurchase: "true",
+        refundable: "true",
+        maxPurchaseQty: 5,
+        lowStockWarning: 10,
+        unit: "piece",
+        weight: 0.234,
+        tags: "smartphone,samsung,5g,flagship",
+        description: "The Samsung Galaxy S24 Ultra features a stunning 6.8-inch display",
+        shortDescription: "Flagship smartphone with 200MP camera and S Pen",
+        specifications: "Display: 6.8 inch AMOLED, RAM: 12GB, Storage: 256GB, Camera: 200MP",
+        details: "Includes: Phone, USB-C Cable, SIM Ejector Tool, Quick Start Guide",
+      },
+    ]
+    exportProductsToExcel(sampleData, "products_excel_template.xlsx")
   }
 
   const handleExport = () => {
@@ -894,6 +983,32 @@ const AddBulkProducts = () => {
       <div className="ml-64 p-8">
         <h1 className="text-2xl font-bold mb-6">Add Bulk Products</h1>
 
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-blue-900 mb-2">📊 Import Options:</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded p-3 border border-blue-200">
+              <h4 className="font-semibold text-blue-800 mb-2">Excel Import (Recommended)</h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>✓ Supports product updates via ObjectId (_id column)</li>
+                <li>✓ Category matching by ID or name</li>
+                <li>✓ Automatic category creation</li>
+                <li>✓ Duplicate detection</li>
+                <li>✓ Leave _id empty for new products</li>
+                <li>✓ Paste _id from exported file to update</li>
+              </ul>
+            </div>
+            <div className="bg-white rounded p-3 border border-blue-200">
+              <h4 className="font-semibold text-blue-800 mb-2">CSV Import (Legacy)</h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>✓ Simple text format</li>
+                <li>✓ Preview before import</li>
+                <li>✓ Creates new products only</li>
+                <li>✓ No update support</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
           <h3 className="font-semibold text-yellow-800 mb-2">CSV Format Guidelines:</h3>
           <ul className="text-sm text-yellow-700 space-y-1">
@@ -909,12 +1024,19 @@ const AddBulkProducts = () => {
         </div>
 
         <div className="flex gap-4 mb-6">
-          <label className="bg-lime-500 hover:bg-lime-600 text-white px-6 py-2 rounded cursor-pointer">
-            Import CSV File
+          <label className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded cursor-pointer inline-flex items-center gap-2">
+            📊 Import Excel File (with Update Support)
+            <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
+          </label>
+          <label className="bg-lime-500 hover:bg-lime-600 text-white px-6 py-2 rounded cursor-pointer inline-flex items-center gap-2">
+            📄 Import CSV File (Create Only)
             <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
           </label>
+          <button onClick={handleExportExcel} className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded">
+            Download Excel Template
+          </button>
           <button onClick={handleExport} className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded">
-            Download Sample CSV
+            Download CSV Sample
           </button>
           {fileName && <span className="text-gray-600 ml-2 flex items-center">📄 {fileName}</span>}
         </div>
@@ -930,6 +1052,95 @@ const AddBulkProducts = () => {
             <p className="text-blue-700">Processing...</p>
           </div>
         )}
+
+        {/* Excel Import Results */}
+        {importResults && fileType === "excel" && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+            <h3 className="text-xl font-semibold mb-4">Import Results</h3>
+            
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold text-green-700">{importResults.created || 0}</div>
+                <div className="text-sm text-green-600 mt-1">Products Created</div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold text-blue-700">{importResults.updated || 0}</div>
+                <div className="text-sm text-blue-600 mt-1">Products Updated</div>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold text-red-700">{importResults.failed || 0}</div>
+                <div className="text-sm text-red-600 mt-1">Failed</div>
+              </div>
+            </div>
+
+            {importResults.errors && importResults.errors.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <h4 className="font-semibold text-red-900 mb-3">Errors ({importResults.errors.length}):</h4>
+                <div className="max-h-96 overflow-y-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-red-100">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-red-800">Row</th>
+                        <th className="px-3 py-2 text-left text-red-800">Product</th>
+                        <th className="px-3 py-2 text-left text-red-800">Error</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importResults.errors.map((err, idx) => (
+                        <tr key={idx} className="border-b border-red-200">
+                          <td className="px-3 py-2 text-red-700 font-semibold">{err.row}</td>
+                          <td className="px-3 py-2 text-red-700">{err.productName || 'N/A'}</td>
+                          <td className="px-3 py-2 text-red-600">
+                            {err.error}
+                            {err.objectId && <span className="text-xs ml-2 text-red-500">(ID: {err.objectId})</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {importResults.results && importResults.results.length > 0 && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3">Success Details ({importResults.results.length}):</h4>
+                <div className="max-h-96 overflow-y-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-gray-700">Row</th>
+                        <th className="px-3 py-2 text-left text-gray-700">Action</th>
+                        <th className="px-3 py-2 text-left text-gray-700">Product</th>
+                        <th className="px-3 py-2 text-left text-gray-700">SKU</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {importResults.results.map((result, idx) => (
+                        <tr key={idx} className="border-b border-gray-200">
+                          <td className="px-3 py-2 text-gray-600">{result.row}</td>
+                          <td className="px-3 py-2">
+                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                              result.action === 'created' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {result.action}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-gray-700">{result.productName}</td>
+                          <td className="px-3 py-2 text-gray-500">{result.sku || 'N/A'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CSV Preview Results */}
 
         {(previewProducts.length > 0 || invalidRows.length > 0) && (
           <div className="mb-4">
