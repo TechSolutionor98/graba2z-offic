@@ -21,6 +21,9 @@ const AdminProducts = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
   const [filterSubcategory, setFilterSubcategory] = useState("all")
+  const [filterSubcategory2, setFilterSubcategory2] = useState("all")
+  const [filterSubcategory3, setFilterSubcategory3] = useState("all")
+  const [filterSubcategory4, setFilterSubcategory4] = useState("all")
   const [filterBrand, setFilterBrand] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all") // New filter for active/inactive
   const [page, setPage] = useState(1)
@@ -36,6 +39,9 @@ const AdminProducts = () => {
   const [brands, setBrands] = useState([])
   const [subcategories, setSubcategories] = useState([])
   const [filteredSubcategories, setFilteredSubcategories] = useState([])
+  const [filteredSubcategories2, setFilteredSubcategories2] = useState([])
+  const [filteredSubcategories3, setFilteredSubcategories3] = useState([])
+  const [filteredSubcategories4, setFilteredSubcategories4] = useState([])
   const [categoryProductCount, setCategoryProductCount] = useState(0)
   const [showMoveModal, setShowMoveModal] = useState(false)
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false)
@@ -62,6 +68,15 @@ const AdminProducts = () => {
       }
       if (filterSubcategory && filterSubcategory !== "all") {
         params.category = filterSubcategory
+      }
+      if (filterSubcategory2 && filterSubcategory2 !== "all") {
+        params.subCategory2 = filterSubcategory2
+      }
+      if (filterSubcategory3 && filterSubcategory3 !== "all") {
+        params.subCategory3 = filterSubcategory3
+      }
+      if (filterSubcategory4 && filterSubcategory4 !== "all") {
+        params.subCategory4 = filterSubcategory4
       }
       
       const { data } = await axios.get(`${config.API_URL}/api/products/admin/count`, {
@@ -104,7 +119,7 @@ const AdminProducts = () => {
   useEffect(() => {
     fetchProducts()
     fetchCategories()
-  }, [page, searchTerm, filterCategory, filterSubcategory, filterBrand, filterStatus])
+  }, [page, searchTerm, filterCategory, filterSubcategory, filterSubcategory2, filterSubcategory3, filterSubcategory4, filterBrand, filterStatus])
 
   useEffect(() => {
     fetchBrands()
@@ -123,23 +138,93 @@ const AdminProducts = () => {
     }
   }, [])
 
-  // Filter subcategories based on selected category
+  // Cascading filter for all subcategory levels
   useEffect(() => {
+    // Level 1: Filter based on parent category
     if (filterCategory === "all") {
-      setFilteredSubcategories(subcategories)
+      setFilteredSubcategories(subcategories.filter(sub => sub.level === 1))
     } else {
-      setFilteredSubcategories(subcategories.filter(sub => sub.category && sub.category._id === filterCategory))
+      setFilteredSubcategories(subcategories.filter(sub => 
+        sub.level === 1 && sub.category && sub.category._id === filterCategory
+      ))
     }
-    // Reset subcategory filter when category changes
+    // Reset all lower levels when parent category changes
     setFilterSubcategory("all")
-    // Fetch new count when category changes
+    setFilterSubcategory2("all")
+    setFilterSubcategory3("all")
+    setFilterSubcategory4("all")
+    setFilteredSubcategories2([])
+    setFilteredSubcategories3([])
+    setFilteredSubcategories4([])
     fetchFilteredCount()
   }, [filterCategory, subcategories])
 
-  // Update count when subcategory changes
+  // Level 2: Filter based on level 1 selection
+  useEffect(() => {
+    if (filterSubcategory === "all" || !filterSubcategory) {
+      setFilteredSubcategories2([])
+    } else {
+      setFilteredSubcategories2(subcategories.filter(sub => {
+        if (sub.level !== 2 || !sub.parentSubCategory) return false
+        const parentId = typeof sub.parentSubCategory === 'object' ? sub.parentSubCategory._id : sub.parentSubCategory
+        return parentId === filterSubcategory
+      }))
+    }
+    // Reset lower levels when level 1 changes
+    setFilterSubcategory2("all")
+    setFilterSubcategory3("all")
+    setFilterSubcategory4("all")
+    setFilteredSubcategories3([])
+    setFilteredSubcategories4([])
+    fetchFilteredCount()
+  }, [filterSubcategory, subcategories])
+
+  // Level 3: Filter based on level 1 OR level 2 selection
+  useEffect(() => {
+    if (filterSubcategory === "all" || !filterSubcategory) {
+      setFilteredSubcategories3([])
+    } else {
+      // If Level 2 is selected, filter by Level 2 parent; otherwise filter by Level 1 parent
+      const parentId = (filterSubcategory2 !== "all" && filterSubcategory2) ? filterSubcategory2 : filterSubcategory
+      setFilteredSubcategories3(subcategories.filter(sub => {
+        if (sub.level !== 3 || !sub.parentSubCategory) return false
+        const subParentId = typeof sub.parentSubCategory === 'object' ? sub.parentSubCategory._id : sub.parentSubCategory
+        return subParentId === parentId
+      }))
+    }
+    // Reset lower level when level 2 changes
+    setFilterSubcategory3("all")
+    setFilterSubcategory4("all")
+    setFilteredSubcategories4([])
+    fetchFilteredCount()
+  }, [filterSubcategory, filterSubcategory2, subcategories])
+
+  // Level 4: Filter based on level 2 OR level 3 selection
+  useEffect(() => {
+    if (filterSubcategory === "all" || !filterSubcategory) {
+      setFilteredSubcategories4([])
+    } else {
+      // If Level 3 is selected, filter by Level 3 parent; else if Level 2, filter by Level 2 parent; else filter by Level 1
+      let parentId = filterSubcategory
+      if (filterSubcategory3 !== "all" && filterSubcategory3) {
+        parentId = filterSubcategory3
+      } else if (filterSubcategory2 !== "all" && filterSubcategory2) {
+        parentId = filterSubcategory2
+      }
+      setFilteredSubcategories4(subcategories.filter(sub => {
+        if (sub.level !== 4 || !sub.parentSubCategory) return false
+        const subParentId = typeof sub.parentSubCategory === 'object' ? sub.parentSubCategory._id : sub.parentSubCategory
+        return subParentId === parentId
+      }))
+    }
+    setFilterSubcategory4("all")
+    fetchFilteredCount()
+  }, [filterSubcategory, filterSubcategory2, filterSubcategory3, subcategories])
+
+  // Update count when any subcategory level changes
   useEffect(() => {
     fetchFilteredCount()
-  }, [filterSubcategory])
+  }, [filterSubcategory4])
 
   // Selection helpers
   const toggleSelectOne = (id) => {
@@ -218,7 +303,7 @@ const AdminProducts = () => {
   }
 
   // Export helpers
-  const handleExport = (scope = "selected") => {
+  const handleExport = async (scope = "selected") => {
     const filenameBase = [
       "products",
       scope,
@@ -232,8 +317,21 @@ const AdminProducts = () => {
         // Export all products with current filters (same as filtered results)
         handleExportByCurrentFilters()
       } else {
-        // Export only selected products on current page
-        exportProductsToExcel(products.filter(p => selectedIds.has(p._id)), `${filenameBase}.xlsx`)
+        // Export selected products by fetching them by IDs
+        if (selectedIds.size === 0) {
+          showToast('No products selected to export', 'warning')
+          return
+        }
+        
+        showToast(`Fetching ${selectedIds.size} selected products...`, 'info')
+        try {
+          const selectedProducts = await fetchProductsByIds(Array.from(selectedIds))
+          exportProductsToExcel(selectedProducts, `${filenameBase}.xlsx`)
+          showToast(`Exported ${selectedProducts.length} products successfully`, 'success')
+        } catch (error) {
+          console.error('Export error:', error)
+          showToast('Failed to export selected products', 'error')
+        }
       }
     } else if (scope === "page") {
       exportProductsToExcel(products, `${filenameBase}.xlsx`)
@@ -247,6 +345,9 @@ const AdminProducts = () => {
     const overrides = {}
     if (filterCategory && filterCategory !== 'all') overrides.parentCategory = filterCategory
     if (filterSubcategory && filterSubcategory !== 'all') overrides.category = filterSubcategory
+    if (filterSubcategory2 && filterSubcategory2 !== 'all') overrides.subCategory2 = filterSubcategory2
+    if (filterSubcategory3 && filterSubcategory3 !== 'all') overrides.subCategory3 = filterSubcategory3
+    if (filterSubcategory4 && filterSubcategory4 !== 'all') overrides.subCategory4 = filterSubcategory4
     if (filterBrand && filterBrand !== 'all') overrides.brand = filterBrand
     if (filterStatus && filterStatus !== 'all') overrides.isActive = filterStatus === 'active'
     if (searchTerm.trim()) overrides.search = searchTerm.trim()
@@ -255,7 +356,10 @@ const AdminProducts = () => {
     const fname = [
       'products_filtered',
       filterCategory && filterCategory !== 'all' ? `cat-${filterCategory}` : null,
-      filterSubcategory && filterSubcategory !== 'all' ? `sub-${filterSubcategory}` : null,
+      filterSubcategory && filterSubcategory !== 'all' ? `sub1-${filterSubcategory}` : null,
+      filterSubcategory2 && filterSubcategory2 !== 'all' ? `sub2-${filterSubcategory2}` : null,
+      filterSubcategory3 && filterSubcategory3 !== 'all' ? `sub3-${filterSubcategory3}` : null,
+      filterSubcategory4 && filterSubcategory4 !== 'all' ? `sub4-${filterSubcategory4}` : null,
       filterBrand && filterBrand !== 'all' ? `brand-${filterBrand}` : null,
       filterStatus && filterStatus !== 'all' ? `status-${filterStatus}` : null,
       searchTerm ? `search-${searchTerm.replace(/\s+/g, '-')}` : null,
@@ -271,6 +375,9 @@ const AdminProducts = () => {
       if (searchTerm.trim() !== "") params.search = searchTerm.trim()
       if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
       if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
+      if (filterSubcategory2 && filterSubcategory2 !== "all") params.subCategory2 = filterSubcategory2
+      if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
+      if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
       if (filterBrand && filterBrand !== "all") params.brand = filterBrand
       if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
       
@@ -295,6 +402,9 @@ const AdminProducts = () => {
       if (searchTerm.trim() !== "") params.search = searchTerm.trim()
       if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
       if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
+      if (filterSubcategory2 && filterSubcategory2 !== "all") params.subCategory2 = filterSubcategory2
+      if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
+      if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
       if (filterBrand && filterBrand !== "all") params.brand = filterBrand
       if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
       Object.assign(params, overrides)
@@ -319,6 +429,36 @@ const AdminProducts = () => {
     }
   }
 
+  // Fetch specific products by their IDs for export
+  const fetchProductsByIds = async (ids) => {
+    const token = getAdminToken()
+    if (!token || !ids || ids.length === 0) return []
+    
+    try {
+      // Fetch products in batches to avoid URL length limits
+      const batchSize = 50
+      let allProducts = []
+      
+      for (let i = 0; i < ids.length; i += batchSize) {
+        const batchIds = ids.slice(i, i + batchSize)
+        const { data } = await axios.post(
+          `${config.API_URL}/api/products/by-ids`,
+          { ids: batchIds },
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        )
+        allProducts = allProducts.concat(data.products || [])
+      }
+      
+      return allProducts
+    } catch (e) {
+      console.error('Fetch products by IDs error', e)
+      showToast('Failed to fetch selected products', 'error')
+      return []
+    }
+  }
+
   const fetchProducts = async () => {
     try {
       setLoading(true)
@@ -334,6 +474,9 @@ const AdminProducts = () => {
       if (searchTerm.trim() !== "") params.search = searchTerm.trim()
       if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
       if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
+      if (filterSubcategory2 && filterSubcategory2 !== "all") params.subCategory2 = filterSubcategory2
+      if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
+      if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
       if (filterBrand && filterBrand !== "all") params.brand = filterBrand
       if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
 
@@ -982,13 +1125,14 @@ const AdminProducts = () => {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Filter & Search Products</h3>
                 
                 {/* <!-- Filter Controls and Search --> */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-4">
+                  {/* Parent Category Filter */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
                     <select
                       value={filterCategory}
                       onChange={(e) => setFilterCategory(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     >
                       <option value="all">All Categories</option>
                       {categories.map((category) => (
@@ -999,15 +1143,16 @@ const AdminProducts = () => {
                     </select>
                   </div>
 
+                  {/* Level 1 Subcategory Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Level 1</label>
                     <select
                       value={filterSubcategory}
                       onChange={(e) => setFilterSubcategory(e.target.value)}
                       disabled={filterCategory === "all"}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
                     >
-                      <option value="all">{filterCategory === "all" ? "Select Category First" : "All Subcategories"}</option>
+                      <option value="all">{filterCategory === "all" ? "Select Parent First" : "All Level 1"}</option>
                       {filteredSubcategories.map((subcategory) => (
                         <option key={subcategory._id} value={subcategory._id}>
                           {subcategory.name}
@@ -1016,12 +1161,67 @@ const AdminProducts = () => {
                     </select>
                   </div>
 
+                  {/* Level 2 Subcategory Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Level 2</label>
+                    <select
+                      value={filterSubcategory2}
+                      onChange={(e) => setFilterSubcategory2(e.target.value)}
+                      disabled={filterSubcategory === "all" || filteredSubcategories2.length === 0}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                    >
+                      <option value="all">{filterSubcategory === "all" ? "Select Level 1 First" : filteredSubcategories2.length === 0 ? "No Level 2" : "All Level 2"}</option>
+                      {filteredSubcategories2.map((subcategory) => (
+                        <option key={subcategory._id} value={subcategory._id}>
+                          {subcategory.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Level 3 Subcategory Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Level 3</label>
+                    <select
+                      value={filterSubcategory3}
+                      onChange={(e) => setFilterSubcategory3(e.target.value)}
+                      disabled={filterSubcategory === "all" || filteredSubcategories3.length === 0}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                    >
+                      <option value="all">{filterSubcategory === "all" ? "Select Level 1 First" : filteredSubcategories3.length === 0 ? "No Level 3" : "All Level 3"}</option>
+                      {filteredSubcategories3.map((subcategory) => (
+                        <option key={subcategory._id} value={subcategory._id}>
+                          {subcategory.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Level 4 Subcategory Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Level 4</label>
+                    <select
+                      value={filterSubcategory4}
+                      onChange={(e) => setFilterSubcategory4(e.target.value)}
+                      disabled={filterSubcategory === "all" || filteredSubcategories4.length === 0}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                    >
+                      <option value="all">{filterSubcategory === "all" ? "Select Level 1 First" : filteredSubcategories4.length === 0 ? "No Level 4" : "All Level 4"}</option>
+                      {filteredSubcategories4.map((subcategory) => (
+                        <option key={subcategory._id} value={subcategory._id}>
+                          {subcategory.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Brand Filter */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
                     <select
                       value={filterBrand}
                       onChange={(e) => setFilterBrand(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     >
                       <option value="all">All Brands</option>
                       {brands.map((brand) => (
@@ -1031,7 +1231,10 @@ const AdminProducts = () => {
                       ))}
                     </select>
                   </div>
+                </div>
 
+                {/* Second Row: Status and Search */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <select
@@ -1063,12 +1266,15 @@ const AdminProducts = () => {
                 {/* Action Buttons */}
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-4">
-                    {(searchTerm || filterCategory !== "all" || filterSubcategory !== "all" || filterBrand !== "all" || filterStatus !== "all") && (
+                    {(searchTerm || filterCategory !== "all" || filterSubcategory !== "all" || filterSubcategory2 !== "all" || filterSubcategory3 !== "all" || filterSubcategory4 !== "all" || filterBrand !== "all" || filterStatus !== "all") && (
                       <button
                         onClick={() => {
                           setSearchTerm("")
                           setFilterCategory("all")
                           setFilterSubcategory("all")
+                          setFilterSubcategory2("all")
+                          setFilterSubcategory3("all")
+                          setFilterSubcategory4("all")
                           setFilterBrand("all")
                           setFilterStatus("all")
                         }}
@@ -1201,6 +1407,24 @@ const AdminProducts = () => {
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
+                            Level 2
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Level 3
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Level 4
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
                             Price
                           </th>
                           <th
@@ -1283,6 +1507,21 @@ const AdminProducts = () => {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-50 text-blue-800">
                                     {getParentCategoryName(product)}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-50 text-purple-800">
+                                    {product.subCategory2?.name || '-'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-50 text-indigo-800">
+                                    {product.subCategory3?.name || '-'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-50 text-pink-800">
+                                    {product.subCategory4?.name || '-'}
                                   </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">

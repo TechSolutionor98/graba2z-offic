@@ -364,7 +364,7 @@ const Shop = () => {
         if (stockFilters.onSale) stockStatusFilters.push("onSale")
 
         const filters = {
-          parent_category: selectedSubCategories.length === 0 && selectedCategory !== "all" ? selectedCategory : null,
+          parent_category: selectedCategory !== "all" ? selectedCategory : null,
           category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
           subcategory2: selectedSubCategory2,
           subcategory3: selectedSubCategory3,
@@ -376,9 +376,7 @@ const Shop = () => {
           sortBy: sortBy,
         }
 
-        console.log("Applying filters in loadAndFilterProducts:", filters)
         filteredProducts = productCache.filterProducts(allProducts, filters)
-        console.log("Filtered products count:", filteredProducts.length)
       }
 
       if (filteredProducts.length > 0) {
@@ -420,7 +418,7 @@ const Shop = () => {
         if (stockFilters.onSale) stockStatusFilters.push("onSale")
 
         const filters = {
-          parent_category: selectedSubCategories.length === 0 && selectedCategory !== "all" ? selectedCategory : null,
+          parent_category: selectedCategory !== "all" ? selectedCategory : null,
           category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
           subcategory2: selectedSubCategory2,
           subcategory3: selectedSubCategory3,
@@ -544,18 +542,14 @@ const Shop = () => {
         console.log("All subcategories fetched:", allSubs.length)
 
         if (urlParams.subcategory) {
-          const foundSub = allSubs.find(
-            (sub) =>
-              sub._id === urlParams.subcategory ||
-              sub.slug === urlParams.subcategory ||
-              createSlug(sub.name) === urlParams.subcategory,
-          )
+          // Match by exact slug first, then ID, then name
+          const foundSub = allSubs.find((sub) => sub.slug === urlParams.subcategory) ||
+                          allSubs.find((sub) => sub._id === urlParams.subcategory) ||
+                          allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory)
           if (foundSub) {
             setCurrentSubCategoryName(foundSub.name)
-            // Only set selectedSubCategories if there's no deeper subcategory level
-            if (!urlParams.subcategory2) {
-              setSelectedSubCategories([foundSub._id])
-            }
+            // Always set Level 1 subcategory for hierarchical filtering
+            setSelectedSubCategories([foundSub._id])
           } else {
             setSelectedSubCategories([])
             setCurrentSubCategoryName(urlParams.subcategory)
@@ -566,19 +560,16 @@ const Shop = () => {
         }
 
         if (urlParams.subcategory2) {
-          const found2 = allSubs.find(
-            (sub) =>
-              sub._id === urlParams.subcategory2 ||
-              sub.slug === urlParams.subcategory2 ||
-              createSlug(sub.name) === urlParams.subcategory2,
-          )
+          // Match by exact slug first, then ID, then name
+          const found2 = allSubs.find((sub) => sub.slug === urlParams.subcategory2) ||
+                         allSubs.find((sub) => sub._id === urlParams.subcategory2) ||
+                         allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory2)
           console.log("Found subcategory2:", found2)
           console.log("Setting selectedSubCategory2 to:", found2 ? found2._id : urlParams.subcategory2)
           setSelectedSubCategory2(found2 ? found2._id : urlParams.subcategory2)
           setSubCategory2Data(found2 || null) // Store full data object
           setCurrentSubCategory2Name(found2 ? found2.name : urlParams.subcategory2)
-          // Only clear level 1 subcategory when level 2 is active
-          setSelectedSubCategories([])
+          // Keep Level 1 for hierarchical filtering (already set above)
         } else {
           setSelectedSubCategory2(null)
           setSubCategory2Data(null)
@@ -586,17 +577,14 @@ const Shop = () => {
         }
 
         if (urlParams.subcategory3) {
-          const found3 = allSubs.find(
-            (sub) =>
-              sub._id === urlParams.subcategory3 ||
-              sub.slug === urlParams.subcategory3 ||
-              createSlug(sub.name) === urlParams.subcategory3,
-          )
+          // Match by exact slug first, then ID, then name
+          const found3 = allSubs.find((sub) => sub.slug === urlParams.subcategory3) ||
+                         allSubs.find((sub) => sub._id === urlParams.subcategory3) ||
+                         allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory3)
           setSelectedSubCategory3(found3 ? found3._id : urlParams.subcategory3)
           setSubCategory3Data(found3 || null) // Store full data object
           setCurrentSubCategory3Name(found3 ? found3.name : urlParams.subcategory3)
-          // Clear level 1 only, keep level 2 for proper filtering
-          setSelectedSubCategories([])
+          // Keep Level 1 for hierarchical filtering (already set above)
         } else {
           setSelectedSubCategory3(null)
           setSubCategory3Data(null)
@@ -604,17 +592,14 @@ const Shop = () => {
         }
 
         if (urlParams.subcategory4) {
-          const found4 = allSubs.find(
-            (sub) =>
-              sub._id === urlParams.subcategory4 ||
-              sub.slug === urlParams.subcategory4 ||
-              createSlug(sub.name) === urlParams.subcategory4,
-          )
+          // Match by exact slug first, then ID, then name
+          const found4 = allSubs.find((sub) => sub.slug === urlParams.subcategory4) ||
+                         allSubs.find((sub) => sub._id === urlParams.subcategory4) ||
+                         allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory4)
           setSelectedSubCategory4(found4 ? found4._id : urlParams.subcategory4)
           setSubCategory4Data(found4 || null) // Store full data object
           setCurrentSubCategory4Name(found4 ? found4.name : urlParams.subcategory4)
-          // Clear level 1 only, keep levels 2 and 3 for proper filtering
-          setSelectedSubCategories([])
+          // Keep Level 1 for hierarchical filtering (already set above)
         } else {
           setSelectedSubCategory4(null)
           setSubCategory4Data(null)

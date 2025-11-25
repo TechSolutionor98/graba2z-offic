@@ -1947,23 +1947,82 @@ const ProductDetails = () => {
       <SEO title={pdTitle} description={pdDescription} canonicalPath={pdCanonicalPath} image={product.image} />
       <div className="max-w-8xl mx-auto px-4 py-6">
         {/* Breadcrumb */}
-        <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
-          <Link to="/" className="hover:text-green-600">
+        <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6 overflow-x-auto">
+          <Link to="/" className="hover:text-green-600 whitespace-nowrap">
             Home
           </Link>
           <span>/</span>
-          <Link to="/shop" className="hover:text-green-600">
+          <Link to="/shop" className="hover:text-green-600 whitespace-nowrap">
             Shop
           </Link>
+          
+          {/* Parent Category */}
+          {product.parentCategory && (
+            <>
+              <span>/</span>
+              <Link
+                to={`/shop?parentCategory=${product.parentCategory._id}`}
+                className="hover:text-green-600 whitespace-nowrap"
+              >
+                {product.parentCategory.name}
+              </Link>
+            </>
+          )}
+          
+          {/* Subcategory Level 1 */}
+          {product.category && (
+            <>
+              <span>/</span>
+              <Link
+                to={`/shop?category=${product.category._id}`}
+                className="hover:text-green-600 whitespace-nowrap"
+              >
+                {product.category.name}
+              </Link>
+            </>
+          )}
+          
+          {/* Subcategory Level 2 */}
+          {product.subCategory2 && (
+            <>
+              <span>/</span>
+              <Link
+                to={`/shop?subcategory=${product.subCategory2._id}`}
+                className="hover:text-green-600 whitespace-nowrap"
+              >
+                {product.subCategory2.name}
+              </Link>
+            </>
+          )}
+          
+          {/* Subcategory Level 3 */}
+          {product.subCategory3 && (
+            <>
+              <span>/</span>
+              <Link
+                to={`/shop?subcategory=${product.subCategory3._id}`}
+                className="hover:text-green-600 whitespace-nowrap"
+              >
+                {product.subCategory3.name}
+              </Link>
+            </>
+          )}
+          
+          {/* Subcategory Level 4 */}
+          {product.subCategory4 && (
+            <>
+              <span>/</span>
+              <Link
+                to={`/shop?subcategory=${product.subCategory4._id}`}
+                className="hover:text-green-600 whitespace-nowrap"
+              >
+                {product.subCategory4.name}
+              </Link>
+            </>
+          )}
+          
           <span>/</span>
-          <Link
-            to={`/shop?category=${product.category?.name || product.category || ""}`}
-            className="hover:text-green-600"
-          >
-            {product.category?.name || product.category || "N/A"}
-          </Link>
-          <span>/</span>
-          <span className="text-black block truncate max-w-[120px] sm:max-w-none">{product.name}</span>
+          <span className="text-black block truncate max-w-[120px] sm:max-w-none whitespace-nowrap">{product.name}</span>
         </nav>
 
         {/* Product Images and Info Grid */}
