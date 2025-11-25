@@ -1034,9 +1034,9 @@ const Home = () => {
 
       {/* HP and Dell Section - Mobile shows only HP */}
       <section className="py-8 mx-3">
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-6">
           {/* HP Products */}
-          <div className="w-full lg:w-1/2">
+          <div className="w-full md:w-1/2">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg md:text-xl font-bold text-gray-900">HP Products</h2>
@@ -1049,19 +1049,21 @@ const Home = () => {
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 h-full">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 h-full">
               {hpProducts.length > 0 ? (
-                hpProducts
-                  .slice(0, window.innerWidth < 1024 ? 2 : 3)
-                  .map((product) => <DynamicBrandProductCard key={product._id} product={product} />)
+                <>
+                  {hpProducts.slice(0, 3).map((product) => (
+                    <DynamicBrandProductCard key={product._id} product={product} />
+                  ))}
+                </>
               ) : (
-                <div className="col-span-2  lg:col-span-3 text-center py-8 text-gray-500">No HP products available</div>
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No HP products available</div>
               )}
             </div>
           </div>
 
           {/* Dell Products - Hidden on Mobile */}
-          <div className="w-full lg:w-1/2 hidden lg:block">
+          <div className="w-full md:w-1/2 hidden md:block">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-gray-900">Dell Products</h2>
@@ -1076,7 +1078,11 @@ const Home = () => {
             </div>
             <div className="grid grid-cols-3 gap-3">
               {dellProducts.length > 0 ? (
-                dellProducts.map((product) => <DynamicBrandProductCard key={product._id} product={product} />)
+                <>
+                  {dellProducts.slice(0, 3).map((product) => (
+                    <DynamicBrandProductCard key={product._id} product={product} />
+                  ))}
+                </>
               ) : (
                 <div className="col-span-3 text-center py-8 text-gray-500">No Dell products available</div>
               )}
@@ -1089,16 +1095,14 @@ const Home = () => {
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
         <Link to="/product-category/accessories-components">
           <img
-            src={
-              window.innerWidth < 768
-             ? "12.png"
-             :"acessories (1).png"
-             
-              //  ? "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939734/accessories_back_to_school_gun4tj.png"
-               // : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acessories_1_ceg4gu.png"
-            }
-            alt="Accessories Promotion Banner"
-            className="w-full h-full cover rounded-lg"
+            src="12.png"
+            alt="Accessories Promotion Banner Mobile"
+            className="w-full h-full cover rounded-lg lg:hidden"
+          />
+          <img
+            src="acessories (1).png"
+            alt="Accessories Promotion Banner Desktop"
+            className="w-full h-full cover rounded-lg hidden lg:block"
           />
         </Link>
       </div>
@@ -1117,12 +1121,10 @@ const Home = () => {
         </div>
 
         {accessoriesProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 ">
-            {accessoriesProducts
-              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 6)
-              .map((product) => (
-                <AccessoriesProductCard key={product._id} product={product} />
-              ))}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+            {accessoriesProducts.slice(0, 6).map((product) => (
+              <AccessoriesProductCard key={product._id} product={product} />
+            ))}
           </div>
         ) : (
           <div className="text-center py-12 text-gray-500">
@@ -1169,9 +1171,9 @@ const Home = () => {
 
       {/* Acer and ASUS Section - Mobile shows only ASUS */}
       <section className="py-8 mx-3">
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-6">
           {/* Acer Products - Hidden on Mobile */}
-          <div className="w-full lg:w-1/2 hidden lg:block">
+          <div className="w-full md:w-1/2 hidden md:block">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-gray-900">Shop Acer</h2>
@@ -1186,7 +1188,11 @@ const Home = () => {
             </div>
             <div className="grid grid-cols-3 gap-3">
               {acerProducts.length > 0 ? (
-                acerProducts.map((product) => <DynamicBrandProductCard key={product._id} product={product} />)
+                <>
+                  {acerProducts.slice(0, 3).map((product) => (
+                    <DynamicBrandProductCard key={product._id} product={product} />
+                  ))}
+                </>
               ) : (
                 <div className="col-span-3 text-center py-8 text-gray-500">No Acer products available</div>
               )}
@@ -1194,7 +1200,7 @@ const Home = () => {
           </div>
 
           {/* ASUS Products */}
-          <div className="w-full lg:w-1/2">
+          <div className="w-full md:w-1/2">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg md:text-xl font-bold text-gray-900">Shop Asus</h2>
@@ -1207,13 +1213,15 @@ const Home = () => {
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {asusProducts.length > 0 ? (
-                asusProducts
-                  .slice(0, window.innerWidth < 1024 ? 2 : 3)
-                  .map((product) => <DynamicBrandProductCard key={product._id} product={product} />)
+                <>
+                  {asusProducts.slice(0, 3).map((product) => (
+                    <DynamicBrandProductCard key={product._id} product={product} />
+                  ))}
+                </>
               ) : (
-                <div className="col-span-2 lg:col-span-3 text-center py-8 text-gray-500">
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">
                   No ASUS products available
                 </div>
               )}
@@ -1226,13 +1234,14 @@ const Home = () => {
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
         <Link to="/product-category/networking">
           <img
-            src={
-              window.innerWidth < 768
-                ? "13.png"
-                : "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png"
-            }
-            alt="Networking Banner"
-            className="w-full h-full cover rounded-lg"
+            src="13.png"
+            alt="Networking Banner Mobile"
+            className="w-full h-full cover rounded-lg lg:hidden"
+          />
+          <img
+            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png"
+            alt="Networking Banner Desktop"
+            className="w-full h-full cover rounded-lg hidden lg:block"
           />
         </Link>
       </div>
@@ -1251,12 +1260,10 @@ const Home = () => {
         </div>
 
         {networkingProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            {networkingProducts
-              .slice(0, window.innerWidth < 768 ? 2 : window.innerWidth < 1024 ? 3 : 6)
-              .map((product) => (
-                <AccessoriesProductCard key={product._id} product={product} />
-              ))}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+            {networkingProducts.slice(0, 6).map((product) => (
+              <AccessoriesProductCard key={product._id} product={product} />
+            ))}
           </div>
         ) : (
           <div className="text-center py-12 text-gray-500">
@@ -1303,9 +1310,9 @@ const Home = () => {
 
       {/* MSI and Lenovo Products Section - Mobile shows only MSI */}
       <section className="py-8 mx-3">
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-6">
           {/* MSI Products */}
-          <div className="w-full lg:w-1/2">
+          <div className="w-full md:w-1/2">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg md:text-xl font-bold text-gray-900">Shop MSI</h2>
@@ -1318,19 +1325,21 @@ const Home = () => {
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {msiProducts.length > 0 ? (
-                msiProducts
-                  .slice(0, window.innerWidth < 1024 ? 2 : 3)
-                  .map((product) => <DynamicBrandProductCard key={product._id} product={product} />)
+                <>
+                  {msiProducts.slice(0, 3).map((product) => (
+                    <DynamicBrandProductCard key={product._id} product={product} />
+                  ))}
+                </>
               ) : (
-                <div className="col-span-2 lg:col-span-3 text-center py-8 text-gray-500">No MSI products available</div>
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No MSI products available</div>
               )}
             </div>
           </div>
 
           {/* Lenovo Products - Hidden on Mobile */}
-          <div className="w-full lg:w-1/2 hidden lg:block">
+          <div className="w-full md:w-1/2 hidden md:block">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-gray-900">Shop Lenovo</h2>
@@ -1345,7 +1354,11 @@ const Home = () => {
             </div>
             <div className="grid grid-cols-3 gap-3">
               {lenovoProducts.length > 0 ? (
-                lenovoProducts.map((product) => <DynamicBrandProductCard key={product._id} product={product} />)
+                <>
+                  {lenovoProducts.slice(0, 3).map((product) => (
+                    <DynamicBrandProductCard key={product._id} product={product} />
+                  ))}
+                </>
               ) : (
                 <div className="col-span-3 text-center py-8 text-gray-500">No Lenovo products available</div>
               )}
@@ -1392,9 +1405,9 @@ const Home = () => {
 
       {/* Apple and Samsung Products Section - Mobile shows only Apple */}
       <section className="py-8 mx-3">
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-6">
           {/* Apple Products */}
-          <div className="w-full lg:w-1/2">
+          <div className="w-full md:w-1/2">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg md:text-xl font-bold text-gray-900">Shop Apple</h2>
@@ -1407,13 +1420,15 @@ const Home = () => {
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {appleProducts.length > 0 ? (
-                appleProducts
-                  .slice(0, window.innerWidth < 1024 ? 2 : 3)
-                  .map((product) => <DynamicBrandProductCard key={product._id} product={product} />)
+                <>
+                  {appleProducts.slice(0, 3).map((product) => (
+                    <DynamicBrandProductCard key={product._id} product={product} />
+                  ))}
+                </>
               ) : (
-                <div className="col-span-2 lg:col-span-3 text-center py-8 text-gray-500">
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">
                   No Apple products available
                 </div>
               )}
@@ -1421,7 +1436,7 @@ const Home = () => {
           </div>
 
           {/* Samsung Products - Hidden on Mobile */}
-          <div className="w-full lg:w-1/2 hidden lg:block">
+          <div className="w-full md:w-1/2 hidden md:block">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-gray-900">Shop Samsung</h2>
@@ -1436,7 +1451,11 @@ const Home = () => {
             </div>
             <div className="grid grid-cols-3 gap-3">
               {samsungProducts.length > 0 ? (
-                samsungProducts.map((product) => <DynamicBrandProductCard key={product._id} product={product} />)
+                <>
+                  {samsungProducts.slice(0, 3).map((product) => (
+                    <DynamicBrandProductCard key={product._id} product={product} />
+                  ))}
+                </>
               ) : (
                 <div className="col-span-3 text-center py-8 text-gray-500">No Samsung products available</div>
               )}
@@ -1586,8 +1605,8 @@ const MobileProductCard = ({ product }) => {
         </button>
       </div>
       
-      <div className="mb-1 flex items-center gap-2">
-        <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs inline-block mr-1`}>
+      <div className="mb-1 flex flex-wrap items-center gap-2">
+        <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs inline-block`}>
           {stockStatus}
         </div>
         {discount && (
@@ -1602,7 +1621,7 @@ const MobileProductCard = ({ product }) => {
       {product.category && <div className="text-xs text-yellow-600 mb-1">Category: {categoryName}</div>}
       <div className="text-xs text-green-600 mb-1">Inclusive VAT</div>
       
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0 mb-1">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
@@ -1619,7 +1638,7 @@ const MobileProductCard = ({ product }) => {
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              size={20}
+              size={17}
               className={`${i < Math.round(Number(product.rating) || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
             />
           ))}
@@ -1710,7 +1729,7 @@ const DynamicBrandProductCard = ({ product }) => {
           <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
         </button>
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
-        <div className="absolute inset-x-0 -bottom-2 px-2 flex items-center gap-2 z-10">
+        <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
           <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus}</div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
@@ -1725,7 +1744,7 @@ const DynamicBrandProductCard = ({ product }) => {
       </Link>
       {product.category && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
       <div className="text-xs text-green-600">Inclusive VAT</div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
@@ -1742,7 +1761,7 @@ const DynamicBrandProductCard = ({ product }) => {
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              size={20}
+              size={16}
               className={`${i < Math.round(Number(product.rating) || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
             />
           ))}
@@ -1833,7 +1852,7 @@ const AccessoriesProductCard = ({ product }) => {
           <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
         </button>
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
-        <div className="absolute inset-x-0 -bottom-2 px-2 flex items-center gap-2 z-10">
+        <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
           <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus}</div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
@@ -1847,7 +1866,7 @@ const AccessoriesProductCard = ({ product }) => {
       </Link>
       {product.category && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
       <div className="text-xs text-green-600">Inclusive VAT</div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>
@@ -1864,7 +1883,7 @@ const AccessoriesProductCard = ({ product }) => {
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              size={20}
+              size={16}
               className={`${i < Math.round(Number(product.rating) || 0) ? "text-yellow-400 fill-current" : "text-gray-300"}`}
             />
           ))}

@@ -137,6 +137,7 @@ const BigSaleSection = ({ products = [] }) => {
   const [isMobile, setIsMobile] = useState(false)
   const [is2XLScreen, setIs2XLScreen] = useState(false)
   const [isZoomed125, setIsZoomed125] = useState(false)
+  const [isZoomed125Plus, setIsZoomed125Plus] = useState(false)
   const [cardsToDisplay, setCardsToDisplay] = useState(4)
   const [isZoomedOut, setIsZoomedOut] = useState(false)
   const containerRef = useRef(null)
@@ -169,20 +170,23 @@ const BigSaleSection = ({ products = [] }) => {
       const zoom = window.devicePixelRatio || 1
       let cardsToShow = 4 // Default at 100% zoom
       let isZoomed = false
+      let isZoom125Plus = false
       let isZoomOut = false
       
       // Always show 4 cards at all zoom levels
       cardsToShow = 4
       
       if (zoom >= 1.2) {
-        // 125%, 150%+ zoom: show 4 cards
+        // 125%, 150%+ zoom: show 4 cards and show logo
         isZoomed = true
+        isZoom125Plus = true
       } else if (zoom <= 0.9) {
         // 90%, 80%, 75% zoom out: show 4 cards
         isZoomOut = true
       }
       
       setIsZoomed125(isZoomed)
+      setIsZoomed125Plus(isZoom125Plus)
       setIsZoomedOut(isZoomOut)
       setCardsToDisplay(cardsToShow)
       
@@ -222,47 +226,52 @@ const BigSaleSection = ({ products = [] }) => {
   // Only show on desktop (md and above)
   return (
     <section className="relative my-6 hidden md:block overflow-hidden" style={{ minHeight: "400px" }}>
-      <div className="absolute inset-0">
-        <div
-          className="w-full h-full bg-cover bg-center bg-no-repeat"
-          style={{
-            // Different images for different zoom levels and screen sizes
-            backgroundImage: 
-              isZoomedOut
-                ? "url(discount.png)" // 90%, 80%, 75% zoom out
-                : cardsToDisplay === 2 
-                  ? "url(resize00.png)" // 150%+ zoom - 2 cards
-                  : cardsToDisplay === 3 
-                    ? "url(discount22.png)" // 125% zoom - 3 cards
-                    : is2XLScreen 
-                      ? "url(discount2.png)" // 2xl screens at 100%
-                      : "url(discount.png)", // Normal 100% zoom
-            height: "100%",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            minHeight: "420px",
-            "@media (min-width: 1024px)": {
-              minHeight: "480px",
-            },
-            "@media (min-width: 1280px)": {
-              minHeight: "520px",
-            },
-          }}
-        ></div>
-      </div>
+      {/* Background image - hidden at 125%+ zoom */}
+      {!isZoomed125Plus && (
+        <div className="absolute inset-0">
+          <div
+            className="w-full h-full bg-cover bg-center bg-no-repeat"
+            style={{
+              // Different images for different zoom levels and screen sizes
+              backgroundImage: 
+                isZoomedOut
+                  ? "url(discount.png)" // 90%, 80%, 75% zoom out
+                  : cardsToDisplay === 2 
+                    ? "url(resize00.png)" // 150%+ zoom - 2 cards
+                    : cardsToDisplay === 3 
+                      ? "url()" // 125% zoom - 3 cards
+                      : is2XLScreen 
+                        ? "url(discount2.png)" // 2xl screens at 100%
+                        : "url(discount.png)", // Normal 100% zoom
+              height: "100%",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              minHeight: "420px",
+              "@media (min-width: 1024px)": {
+                minHeight: "480px",
+              },
+              "@media (min-width: 1280px)": {
+                minHeight: "520px",
+              },
+            }}
+          ></div>
+        </div>
+      )}
 
-      <div className="relative w-full px-5">
+      <div className={`relative w-full px-5 ${isZoomed125Plus ? 'bg-[#53a132]' : ''}`}>
         <div className="flex items-center gap-4">
           {/* Logo Section - 30% */}
           <div className="w-[30%] flex items-center justify-center py-8">
             <div className="w-full h-full flex items-center justify-center">
-              {/* Logo will be placed here */}
-              <img 
-                src="mega-sale-logo.png" 
-                alt="" 
-                className="w-full h-auto object-contain max-h-[400px]"
-              />
+              {/* Logo - shown at 125%+ zoom, hidden before that */}
+              {isZoomed125Plus && (
+                <img 
+                  src="discountshado.png" 
+                  alt="" 
+                  className="w-full h-auto object-contain max-h-[400px]"
+                />
+              )}
             </div>
           </div>
 
