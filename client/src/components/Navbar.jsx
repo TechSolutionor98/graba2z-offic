@@ -441,45 +441,45 @@ const Navbar = () => {
       if (width >= 1536) {
         // 2xl screens - adjust for zoom in (110%, 125%, 150%)
         if (dpr >= 1.4) {
-          // 150% zoom or higher → 7 categories
-          setVisibleCategoriesCount(7)
+          // 150% zoom or higher → 8 categories
+          setVisibleCategoriesCount(8)
         } else if (dpr >= 1.2) {
           // 125% zoom → 8 categories
           setVisibleCategoriesCount(8)
         } else if (dpr >= 1.05) {
-          // 110% zoom → 9 categories
-          setVisibleCategoriesCount(9)
+          // 110% zoom → 10 categories
+          setVisibleCategoriesCount(10)
         } else if (width >= 1920) {
           // 80% zoom view (was 75% zoom)
-          setVisibleCategoriesCount(13)
+          setVisibleCategoriesCount(14)
         } else if (width >= 1700) {
           // 90% zoom view (was 80% zoom)
-          setVisibleCategoriesCount(12)
+          setVisibleCategoriesCount(13)
         } else {
-          // 100% zoom view (was 90% zoom) - 11 categories
-          setVisibleCategoriesCount(11)
+          // 100% zoom view (was 90% zoom) - 12 categories
+          setVisibleCategoriesCount(12)
         }
       } else if (width >= 1280) {
         // xl screens - adjust for zoom in
         if (dpr >= 1.4) {
-          setVisibleCategoriesCount(6)
+          setVisibleCategoriesCount(8)
         } else if (dpr >= 1.2) {
-          setVisibleCategoriesCount(7)
+          setVisibleCategoriesCount(8)
         } else if (dpr >= 1.05) {
           setVisibleCategoriesCount(8)
         } else {
-          setVisibleCategoriesCount(10)
+          setVisibleCategoriesCount(11)
         }
       } else if (width >= 1024) {
         // lg screens
         if (dpr >= 1.2) {
           setVisibleCategoriesCount(10)
         } else {
-          setVisibleCategoriesCount(10)
+          setVisibleCategoriesCount(11)
         }
       } else if (width >= 768) {
         // md screens
-        setVisibleCategoriesCount(7)
+        setVisibleCategoriesCount(8)
       } else {
         setVisibleCategoriesCount(8) // mobile - show all in mobile menu
       }
