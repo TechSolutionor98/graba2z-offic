@@ -26,6 +26,7 @@ import {
   Star,
   TrendingUp,
   Cog,
+  ShoppingBag,
 } from "lucide-react"
 
 const AdminSidebar = () => {
@@ -409,6 +410,11 @@ const AdminSidebar = () => {
       title: "Request Callbacks",
       icon: Phone,
       path: "/admin/request-callbacks",
+    },
+    {
+      title: "Bulk Purchase",
+      icon: ShoppingBag,
+      path: "/admin/bulk-purchase",
     },
     {
       title: "Blogs",
