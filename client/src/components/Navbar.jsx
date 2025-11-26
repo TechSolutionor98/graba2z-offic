@@ -52,6 +52,8 @@ const Navbar = () => {
   const [hoveredSubCategory3, setHoveredSubCategory3] = useState(null) // For Level 4
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null)
   const [expandedMobileSubCategory, setExpandedMobileSubCategory] = useState(null)
+  const [expandedMobileSubCategory2, setExpandedMobileSubCategory2] = useState(null)
+  const [expandedMobileSubCategory3, setExpandedMobileSubCategory3] = useState(null)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const profileRef = useRef(null)
   const profileButtonRef = useRef(null)
@@ -1405,7 +1407,7 @@ const Navbar = () => {
                                         type="button"
                                         onTouchStart={() => handleMobileSubCategoryTouch(subCategory._id)}
                                         onClick={() => handleMobileSubCategoryClick(subCategory._id)}
-                                        className="ml-2 inline-flex items-center justify-center w-7 h-7 rounded-full bg-white text-gray-400 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-lime-500"
+                                        className="ml-2 inline-flex items-center justify-center w-7 h-7 rounded-full bg-lime-500 text-white hover:bg-lime-600 focus:outline-none focus:ring-2 focus:ring-lime-500"
                                         aria-expanded={isSubExpanded}
                                         aria-controls={`mobile-subcat-${subCategory._id}`}
                                       >
@@ -1420,20 +1422,107 @@ const Navbar = () => {
 
                                   {hasNested && isSubExpanded && (
                                     <div id={`mobile-subcat-${subCategory._id}`} className="ml-4 space-y-1 pb-2">
-                                      {nestedChildren.map((nested) => (
-                                        <Link
-                                          key={nested._id}
-                                          to={generateShopURL({
-                                            parentCategory: parentCategory.name,
-                                            subcategory: subCategory.name,
-                                            subcategory2: nested.name,
-                                          })}
-                                          className="block py-2 px-2 text-gray-700 hover:bg-gray-50 rounded-lg text-xs"
-                                          onClick={closeMobileMenu}
-                                        >
-                                          {nested.name}
-                                        </Link>
-                                      ))}
+                                      {nestedChildren.map((nested) => {
+                                        const level3Children = getChildSubCategories(nested._id)
+                                        const hasLevel3 = level3Children && level3Children.length > 0
+                                        const isLevel2Expanded = expandedMobileSubCategory2 === nested._id
+
+                                        return (
+                                          <div key={nested._id} className="space-y-1">
+                                            <div className="flex items-center justify-between py-2 px-2 text-gray-700 hover:bg-gray-50 rounded-lg text-xs">
+                                              <Link
+                                                to={generateShopURL({
+                                                  parentCategory: parentCategory.name,
+                                                  subcategory: subCategory.name,
+                                                  subcategory2: nested.name,
+                                                })}
+                                                className="flex-1"
+                                                onClick={closeMobileMenu}
+                                              >
+                                                {nested.name}
+                                              </Link>
+                                              {hasLevel3 && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setExpandedMobileSubCategory2(isLevel2Expanded ? null : nested._id)}
+                                                  className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-lime-500 text-white hover:bg-lime-600"
+                                                  aria-expanded={isLevel2Expanded}
+                                                >
+                                                  {isLevel2Expanded ? (
+                                                    <ChevronDown size={14} />
+                                                  ) : (
+                                                    <ChevronRight size={14} />
+                                                  )}
+                                                </button>
+                                              )}
+                                            </div>
+
+                                            {hasLevel3 && isLevel2Expanded && (
+                                              <div className="ml-4 space-y-1 pb-2">
+                                                {level3Children.map((level3) => {
+                                                  const level4Children = getChildSubCategories(level3._id)
+                                                  const hasLevel4 = level4Children && level4Children.length > 0
+                                                  const isLevel3Expanded = expandedMobileSubCategory3 === level3._id
+
+                                                  return (
+                                                    <div key={level3._id} className="space-y-1">
+                                                      <div className="flex items-center justify-between py-2 px-2 text-gray-600 hover:bg-gray-50 rounded-lg text-xs">
+                                                        <Link
+                                                          to={generateShopURL({
+                                                            parentCategory: parentCategory.name,
+                                                            subcategory: subCategory.name,
+                                                            subcategory2: nested.name,
+                                                            subcategory3: level3.name,
+                                                          })}
+                                                          className="flex-1"
+                                                          onClick={closeMobileMenu}
+                                                        >
+                                                          {level3.name}
+                                                        </Link>
+                                                        {hasLevel4 && (
+                                                          <button
+                                                            type="button"
+                                                            onClick={() => setExpandedMobileSubCategory3(isLevel3Expanded ? null : level3._id)}
+                                                            className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-lime-500 text-white hover:bg-lime-600"
+                                                            aria-expanded={isLevel3Expanded}
+                                                          >
+                                                            {isLevel3Expanded ? (
+                                                              <ChevronDown size={12} />
+                                                            ) : (
+                                                              <ChevronRight size={12} />
+                                                            )}
+                                                          </button>
+                                                        )}
+                                                      </div>
+
+                                                      {hasLevel4 && isLevel3Expanded && (
+                                                        <div className="ml-4 space-y-1 pb-2">
+                                                          {level4Children.map((level4) => (
+                                                            <Link
+                                                              key={level4._id}
+                                                              to={generateShopURL({
+                                                                parentCategory: parentCategory.name,
+                                                                subcategory: subCategory.name,
+                                                                subcategory2: nested.name,
+                                                                subcategory3: level3.name,
+                                                                subcategory4: level4.name,
+                                                              })}
+                                                              className="block py-2 px-2 text-gray-600 hover:bg-gray-50 rounded-lg text-xs"
+                                                              onClick={closeMobileMenu}
+                                                            >
+                                                              {level4.name}
+                                                            </Link>
+                                                          ))}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  )
+                                                })}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )
+                                      })}
                                     </div>
                                   )}
                                 </div>
