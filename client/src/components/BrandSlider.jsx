@@ -293,7 +293,7 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
-  const duplicatedBrands = [...brands, ...brands]; // for infinite scroll
+  const duplicatedBrands = [...brands, ...brands, ...brands]; // triple for seamless infinite scroll
 
   // Update visible count + isMobile
   useEffect(() => {
@@ -329,14 +329,50 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
           // Scroll to next brand smoothly
           container.scrollBy({ left: scrollAmount, behavior: "smooth" });
         }
-      } else {
-        // Desktop: brand index logic
-        setBrandIndex((prev) => (prev + 1) % brands.length);
+      } else if (sliderRef.current) {
+        // Desktop: also use scroll for seamless loop
+        const container = sliderRef.current;
+        const scrollAmount = 180 + 8;
+        const singleSetWidth = brands.length * scrollAmount;
+
+        // If we've scrolled past the first set, reset to beginning of second set
+        if (container.scrollLeft >= singleSetWidth * 1.5) {
+          container.scrollLeft = singleSetWidth / 2;
+        } else {
+          container.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        }
       }
     }, 3000);
 
     return () => clearInterval(interval);
   }, [brands.length, isMobile]);
+
+  // Handle infinite scroll wrap on mouse drag end
+  const handleScrollWrap = () => {
+    if (!sliderRef.current || isMobile) return;
+    
+    const container = sliderRef.current;
+    const scrollAmount = 180 + 8;
+    const singleSetWidth = brands.length * scrollAmount;
+    
+    // If scrolled too far right, wrap to middle set
+    if (container.scrollLeft >= singleSetWidth * 2) {
+      container.scrollLeft = singleSetWidth;
+    }
+    // If scrolled too far left, wrap to middle set
+    else if (container.scrollLeft <= 0) {
+      container.scrollLeft = singleSetWidth;
+    }
+  };
+
+  // Initialize desktop scroll position to middle set
+  useEffect(() => {
+    if (!isMobile && sliderRef.current && brands.length > 0) {
+      const scrollAmount = 180 + 8;
+      const singleSetWidth = brands.length * scrollAmount;
+      sliderRef.current.scrollLeft = singleSetWidth; // Start at middle set
+    }
+  }, [isMobile, brands.length]);
 
   // Get visible brands for desktop
   const getVisibleBrands = () => {
@@ -353,8 +389,14 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
     startX.current = e.pageX - sliderRef.current.offsetLeft;
     scrollLeft.current = sliderRef.current.scrollLeft;
   };
-  const handleMouseLeave = () => (isDragging.current = false);
-  const handleMouseUp = () => (isDragging.current = false);
+  const handleMouseLeave = () => {
+    isDragging.current = false;
+    handleScrollWrap();
+  };
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    handleScrollWrap();
+  };
   const handleMouseMove = (e) => {
     if (!isDragging.current) return;
     e.preventDefault();
@@ -380,6 +422,7 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
 
   const handleTouchEnd = () => {
     isDragging.current = false;
+    if (isMobile) handleScrollWrap();
   };
 
   return (
@@ -392,7 +435,7 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
         </div>
         <div className="relative mx-3 md:mx-5">
           <div
-            className="flex overflow-x-hidden no-scrollbar space-x-2"
+            className="flex overflow-x-scroll space-x-2 hide-scrollbar"
             ref={sliderRef}
             onMouseDown={handleMouseDown}
             onMouseLeave={handleMouseLeave}
@@ -402,7 +445,7 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {(isMobile ? duplicatedBrands : getVisibleBrands()).map((brand, index) => (
+            {duplicatedBrands.map((brand, index) => (
               <div
                 key={`${brand._id}-${index}`}
                 className="flex-shrink-0"
