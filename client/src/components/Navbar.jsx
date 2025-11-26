@@ -447,9 +447,14 @@ const Navbar = () => {
       }
 
       // Desktop: adjust based on zoom level
-      // At 175% zoom (devicePixelRatio ~1.75), show 8 categories
-      if (zoom >= 1.75) {
+      // Shifted logic:
+      // 110% layout (8 items) -> 100%
+      // 100% layout (9 items) -> 90%
+      // 90% layout (10 items) -> 80%
+      if (zoom >= 1.0) {
         setVisibleCategoriesCount(8)
+      } else if (zoom >= 0.9) {
+        setVisibleCategoriesCount(9)
       } else {
         setVisibleCategoriesCount(10)
       }
@@ -576,7 +581,7 @@ const Navbar = () => {
       {/* Desktop Navbar - Hidden on Mobile */}
       <header className="hidden md:block bg-white shadow-sm sticky top-0 pt-4 z-50 w-full">
         <div className="w-full">
-          <div className="w-full max-w-[1440px] mx-auto space-y-4">
+          <div className="w-full max-w-[1700px] mx-auto space-y-4">
             <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 h-14 xl:h-18 2xl:h-20">
               {/* Logo - Exact Grabatoz Style */}
               <Link to="/" className="flex items-center space-x-2">
@@ -926,8 +931,8 @@ const Navbar = () => {
                                                           <ChevronRight
                                                             size={14}
                                                             className={`mt-0.5 flex-shrink-0 text-gray-400 transition-transform duration-150 ${hoveredSubCategory1 && hoveredSubCategory1.current?.id === sub2._id
-                                                                ? "rotate-90"
-                                                                : ""
+                                                              ? "rotate-90"
+                                                              : ""
                                                               }`}
                                                           />
                                                         </span>

@@ -30,7 +30,7 @@ function Layout() {
 
       {/* Main Content Area - Grows to fill space */}
       <main className="flex-1 w-full">
-        <div className="w-full max-w-[1440px] mx-auto">
+        <div className="w-full max-w-[1700px] mx-auto">
           <Outlet />
         </div>
       </main>
