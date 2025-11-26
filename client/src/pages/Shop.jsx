@@ -84,9 +84,8 @@ const SortDropdown = ({ value, onChange }) => {
               <button
                 type="button"
                 onClick={() => handleSelect(opt.value)}
-                className={`w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 ${
-                  opt.value === value ? "font-semibold" : ""
-                }`}
+                className={`w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 ${opt.value === value ? "font-semibold" : ""
+                  }`}
               >
                 {opt.label}
               </button>
@@ -544,8 +543,8 @@ const Shop = () => {
         if (urlParams.subcategory) {
           // Match by exact slug first, then ID, then name
           const foundSub = allSubs.find((sub) => sub.slug === urlParams.subcategory) ||
-                          allSubs.find((sub) => sub._id === urlParams.subcategory) ||
-                          allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory)
+            allSubs.find((sub) => sub._id === urlParams.subcategory) ||
+            allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory)
           if (foundSub) {
             setCurrentSubCategoryName(foundSub.name)
             // Always set Level 1 subcategory for hierarchical filtering
@@ -562,8 +561,8 @@ const Shop = () => {
         if (urlParams.subcategory2) {
           // Match by exact slug first, then ID, then name
           const found2 = allSubs.find((sub) => sub.slug === urlParams.subcategory2) ||
-                         allSubs.find((sub) => sub._id === urlParams.subcategory2) ||
-                         allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory2)
+            allSubs.find((sub) => sub._id === urlParams.subcategory2) ||
+            allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory2)
           console.log("Found subcategory2:", found2)
           console.log("Setting selectedSubCategory2 to:", found2 ? found2._id : urlParams.subcategory2)
           setSelectedSubCategory2(found2 ? found2._id : urlParams.subcategory2)
@@ -579,8 +578,8 @@ const Shop = () => {
         if (urlParams.subcategory3) {
           // Match by exact slug first, then ID, then name
           const found3 = allSubs.find((sub) => sub.slug === urlParams.subcategory3) ||
-                         allSubs.find((sub) => sub._id === urlParams.subcategory3) ||
-                         allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory3)
+            allSubs.find((sub) => sub._id === urlParams.subcategory3) ||
+            allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory3)
           setSelectedSubCategory3(found3 ? found3._id : urlParams.subcategory3)
           setSubCategory3Data(found3 || null) // Store full data object
           setCurrentSubCategory3Name(found3 ? found3.name : urlParams.subcategory3)
@@ -594,8 +593,8 @@ const Shop = () => {
         if (urlParams.subcategory4) {
           // Match by exact slug first, then ID, then name
           const found4 = allSubs.find((sub) => sub.slug === urlParams.subcategory4) ||
-                         allSubs.find((sub) => sub._id === urlParams.subcategory4) ||
-                         allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory4)
+            allSubs.find((sub) => sub._id === urlParams.subcategory4) ||
+            allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory4)
           setSelectedSubCategory4(found4 ? found4._id : urlParams.subcategory4)
           setSubCategory4Data(found4 || null) // Store full data object
           setCurrentSubCategory4Name(found4 ? found4.name : urlParams.subcategory4)
@@ -931,13 +930,13 @@ const Shop = () => {
   const showBreadcrumb = selectedSubCategory2 || selectedSubCategory3 || selectedSubCategory4
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <SEO title={seoTitle} description={seoDescription} canonicalPath={buildCanonicalPath()} />
       <ProductSchema products={products} type="list" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-1/4 hidden md:block">
-            <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
               {showBreadcrumb && (
                 <div className="bg-lime-50 border border-lime-200 rounded-lg p-4 mb-4">
                   <p className="text-sm font-semibold text-lime-900">Current Path:</p>
@@ -985,9 +984,8 @@ const Shop = () => {
                           className="absolute opacity-0 w-0 h-0"
                         />
                         <div
-                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                            selectedCategory === "all" ? "border-lime-600 bg-lime-600" : "border-gray-300"
-                          }`}
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === "all" ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                            }`}
                         >
                           {selectedCategory === "all" && <div className="w-2 h-2 rounded-full bg-white"></div>}
                         </div>
@@ -1010,9 +1008,8 @@ const Shop = () => {
                             className="absolute opacity-0 w-0 h-0"
                           />
                           <div
-                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
-                              selectedCategory === category._id ? "border-lime-600 bg-lime-600" : "border-gray-300"
-                            }`}
+                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === category._id ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                              }`}
                           >
                             {selectedCategory === category._id && <div className="w-2 h-2 rounded-full bg-white"></div>}
                           </div>
@@ -1096,7 +1093,7 @@ const Shop = () => {
         {/* SEO Content Display - Full Width After Products */}
         {seoContent && !searchQuery.trim() && products.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mt-8">
-            <div 
+            <div
               className="prose prose-lg max-w-none text-gray-700 
                 [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:text-gray-900
                 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-3 [&_h2]:mt-6 [&_h2]:text-gray-800
