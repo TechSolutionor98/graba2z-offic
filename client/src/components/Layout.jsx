@@ -27,17 +27,17 @@ function Layout() {
     <div className="flex flex-col min-h-screen">
       {/* Navbar - Fixed height */}
       <Navbar />
-      
+
       {/* Main Content Area - Grows to fill space */}
       <main className="flex-1 w-full">
-        <div className="w-full max-w-[1920px] mx-auto">
+        <div className="w-full max-w-[1440px] mx-auto">
           <Outlet />
         </div>
       </main>
-      
+
       {/* Footer - At bottom */}
       <Footer />
-      
+
       {/* WhatsApp Button */}
       <WhatsAppButton />
     </div>

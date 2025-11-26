@@ -33,7 +33,7 @@ const Footer = ({ className = "" }) => {
   useEffect(() => {
     const updateColumnCount = () => {
       const width = window.innerWidth
-      
+
       if (width >= 1536) {
         // 2xl screens - adjust based on viewport width (increases when zooming out)
         if (width >= 2200) {
@@ -117,222 +117,224 @@ const Footer = ({ className = "" }) => {
     <>
       {/* Desktop Footer - Hidden on mobile */}
       <footer className={`hidden md:block text-white  ${className}`}>
-        <div className="max-w-[1920px] bg-[#1F1F39] pt-8 pb-9  mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className={`grid ${columnCount === 6 ? 'grid-cols-6' : 'grid-cols-5'} gap-4 lg:gap-6 xl:gap-8`}>
-            {/* Column 1 - Newsletter Subscription */}
-            <div className="col-span-1 flex flex-col">
-              {/* Logo and Heading */}
-              <h3 className="text-lg lg:text-xl xl:text-2xl font-bold mb-3 lg:mb-4">
-                <img src="/logo.png" alt="Logo" className="w-24 lg:w-28 xl:w-32" />
-              </h3>
-              {/* Text */}
-              <p className="text-xs lg:text-sm text-white mb-3 lg:mb-4">Subscribe to our newsletter</p>
+        <div className="w-full bg-[#1F1F39]">
+          <div className="max-w-[1440px] mx-auto pt-8 pb-9 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+            <div className={`grid ${columnCount === 6 ? 'grid-cols-6' : 'grid-cols-5'} gap-4 lg:gap-6 xl:gap-8`}>
+              {/* Column 1 - Newsletter Subscription */}
+              <div className="col-span-1 flex flex-col">
+                {/* Logo and Heading */}
+                <h3 className="text-lg lg:text-xl xl:text-2xl font-bold mb-3 lg:mb-4">
+                  <img src="/logo.png" alt="Logo" className="w-24 lg:w-28 xl:w-32" />
+                </h3>
+                {/* Text */}
+                <p className="text-xs lg:text-sm text-white mb-3 lg:mb-4">Subscribe to our newsletter</p>
 
-              {/* Form */}
-              <form className="mb-3 lg:mb-4 p-1 bg-white rounded-full w-full max-w-[280px]" onSubmit={handleNewsletterSubmit}>
-                <div className="flex w-full">
-                  {/* Search Input Div */}
-                  <div className="flex-grow">
-                    <input
-                      type="email"
-                      placeholder="Your email"
-                      className="w-full pl-2 lg:pl-3 py-1.5 lg:py-2 xl:py-3 text-xs lg:text-sm bg-white placeholder-gray-400 rounded-full border-white text-black focus:outline-none focus:ring-0 focus:border-white"
-                      value={newsletterEmail}
-                      onChange={handleNewsletterInput}
-                      required
-                    />
-                  </div>
+                {/* Form */}
+                <form className="mb-3 lg:mb-4 p-1 bg-white rounded-full w-full max-w-[280px]" onSubmit={handleNewsletterSubmit}>
+                  <div className="flex w-full">
+                    {/* Search Input Div */}
+                    <div className="flex-grow">
+                      <input
+                        type="email"
+                        placeholder="Your email"
+                        className="w-full pl-2 lg:pl-3 py-1.5 lg:py-2 xl:py-3 text-xs lg:text-sm bg-white placeholder-gray-400 rounded-full border-white text-black focus:outline-none focus:ring-0 focus:border-white"
+                        value={newsletterEmail}
+                        onChange={handleNewsletterInput}
+                        required
+                      />
+                    </div>
 
-                  {/* Button Div */}
-                  <div>
-                    <button type="submit" className="h-full bg-lime-500 text-white rounded-full px-2 lg:px-3 xl:px-5 text-xs lg:text-sm whitespace-nowrap">
-                      Subscribe
-                    </button>
+                    {/* Button Div */}
+                    <div>
+                      <button type="submit" className="h-full bg-lime-500 text-white rounded-full px-2 lg:px-3 xl:px-5 text-xs lg:text-sm whitespace-nowrap">
+                        Subscribe
+                      </button>
+                    </div>
                   </div>
+                </form>
+                {showNewsletterModal && (
+                  <NewsletterModal
+                    email={newsletterEmail}
+                    onClose={() => setShowNewsletterModal(false)}
+                  />
+                )}
+
+                {/* Social Icons */}
+                <div className="flex flex-wrap gap-2 lg:gap-3 pl-0 lg:pl-2">
+                  <a href="https://www.facebook.com/grabatozae/" target="_blank" className="text-white hover:text-lime-400">
+                    <Facebook className="w-4 h-4 lg:w-5 lg:h-5" />
+                  </a>
+                  <a href="https://x.com/GrabAtoz" target="_blank" className="text-white hover:text-lime-400 transition-colors duration-200 ease-in-out" aria-label="X (Twitter)">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 lg:w-5 lg:h-5 fill-current" role="img">
+                      <path d="M18.25 2h3.5l-7.66 8.73L24 22h-6.87l-5.02-6.58L6.3 22H2.8l8.2-9.34L0 2h7.04l4.54 6.02L18.25 2z" />
+                    </svg>
+                  </a>
+                  <a href="https://www.instagram.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
+                    <Instagram className="w-4 h-4 lg:w-5 lg:h-5" />
+                  </a>
+                  <a href="https://www.linkedin.com/company/grabatozae" target="_blank" className="text-white hover:text-lime-400">
+                    <Linkedin className="w-4 h-4 lg:w-5 lg:h-5" />
+                  </a>
+                  <a href="https://www.pinterest.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
+                    <FontAwesomeIcon icon={faPinterest} className="w-4 h-4 lg:w-5 lg:h-5" />
+                  </a>
+                  <a href="https://www.tiktok.com/@grabatoz" target="_blank" className="text-white hover:text-lime-400">
+                    <FontAwesomeIcon icon={faTiktok} className="w-4 h-4 lg:w-5 lg:h-5" />
+                  </a>
+                  <a href="https://www.youtube.com/@grabAtoZ" target="_blank" className="text-white hover:text-lime-400">
+                    <FontAwesomeIcon icon={faYoutube} className="w-4 h-4 lg:w-5 lg:h-5" />
+                  </a>
+
+
                 </div>
-              </form>
-              {showNewsletterModal && (
-                <NewsletterModal
-                  email={newsletterEmail}
-                  onClose={() => setShowNewsletterModal(false)}
-                />
-              )}
-
-              {/* Social Icons */}
-              <div className="flex flex-wrap gap-2 lg:gap-3 pl-0 lg:pl-2">
-                <a href="https://www.facebook.com/grabatozae/" target="_blank" className="text-white hover:text-lime-400">
-                  <Facebook className="w-4 h-4 lg:w-5 lg:h-5" />
-                </a>
-                <a href="https://x.com/GrabAtoz" target="_blank" className="text-white hover:text-lime-400 transition-colors duration-200 ease-in-out" aria-label="X (Twitter)">
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 lg:w-5 lg:h-5 fill-current" role="img">
-                    <path d="M18.25 2h3.5l-7.66 8.73L24 22h-6.87l-5.02-6.58L6.3 22H2.8l8.2-9.34L0 2h7.04l4.54 6.02L18.25 2z" />
-                  </svg>
-                </a>
-                <a href="https://www.instagram.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
-                  <Instagram className="w-4 h-4 lg:w-5 lg:h-5" />
-                </a>
-                <a href="https://www.linkedin.com/company/grabatozae" target="_blank" className="text-white hover:text-lime-400">
-                  <Linkedin className="w-4 h-4 lg:w-5 lg:h-5" />
-                </a>
-                <a href="https://www.pinterest.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
-                  <FontAwesomeIcon icon={faPinterest} className="w-4 h-4 lg:w-5 lg:h-5" />
-                </a>
-                <a href="https://www.tiktok.com/@grabatoz" target="_blank" className="text-white hover:text-lime-400">
-                  <FontAwesomeIcon icon={faTiktok} className="w-4 h-4 lg:w-5 lg:h-5" />
-                </a>
-                <a href="https://www.youtube.com/@grabAtoZ" target="_blank" className="text-white hover:text-lime-400">
-                  <FontAwesomeIcon icon={faYoutube} className="w-4 h-4 lg:w-5 lg:h-5" />
-                </a>
-
-                  
-              </div>
 
                 <div className="flex pt-4 lg:pt-6 xl:pt-7 px-0 lg:px-2 space-x-2">
-              <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757938965/google_pj1cxc.webp" alt="Google Play" className="rounded-lg h-8 lg:h-10 xl:h-12" />
-            </div>
-            </div>
+                  <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757938965/google_pj1cxc.webp" alt="Google Play" className="rounded-lg h-8 lg:h-10 xl:h-12" />
+                </div>
+              </div>
 
-            {/* Column 2 - Top Categories */}
-            <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-              <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Top Categories</h3>
-              <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
-                {categories.slice(0, 6).map((category) => (
-                  <li key={category._id}>
-                    <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
-                      {category.name}
+              {/* Column 2 - Top Categories */}
+              <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Top Categories</h3>
+                <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
+                  {categories.slice(0, 6).map((category) => (
+                    <li key={category._id}>
+                      <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
+                        {category.name}
+                      </Link>
+                    </li>
+                  ))}
+                  {subCategories.slice(0, 2).map((subCategory) => (
+                    <li key={`sub-${subCategory._id}`}>
+                      <Link to={generateShopURL({
+                        parentCategory: subCategory.category?.name || '',
+                        subCategory: subCategory.name
+                      })} className="hover:text-lime-400">
+                        {subCategory.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Column 3 - More Categories */}
+              <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">More Categories</h3>
+                <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
+                  {categories.slice(6, 10).map((category) => (
+                    <li key={category._id}>
+                      <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
+                        {category.name}
+                      </Link>
+                    </li>
+                  ))}
+                  {subCategories.slice(4, 8).map((subCategory) => (
+                    <li key={`sub-${subCategory._id}`}>
+                      <Link to={generateShopURL({
+                        parentCategory: subCategory.category?.name || '',
+                        subCategory: subCategory.name
+                      })} className="hover:text-lime-400">
+                        {subCategory.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Column 4 - Support */}
+              <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Legal</h3>
+                <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
+                  <li>
+                    <Link to="/refund-return" className="hover:text-lime-400">
+                      Refund and Return
                     </Link>
                   </li>
-                ))}
-                {subCategories.slice(0, 2).map((subCategory) => (
-                  <li key={`sub-${subCategory._id}`}>
-                    <Link to={generateShopURL({ 
-                      parentCategory: subCategory.category?.name || '', 
-                      subCategory: subCategory.name 
-                    })} className="hover:text-lime-400">
-                      {subCategory.name}
+                  <li>
+                    <Link to="/cookies-policy" className="hover:text-lime-400">
+                      Cookies Policy
                     </Link>
                   </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Column 3 - More Categories */}
-            <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-              <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">More Categories</h3>
-              <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
-                {categories.slice(6, 10).map((category) => (
-                  <li key={category._id}>
-                    <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
-                      {category.name}
+                  <li>
+                    <Link to="/terms-conditions" className="hover:text-lime-400">
+                      Terms & Conditions
                     </Link>
                   </li>
-                ))}
-                {subCategories.slice(4, 8).map((subCategory) => (
-                  <li key={`sub-${subCategory._id}`}>
-                    <Link to={generateShopURL({ 
-                      parentCategory: subCategory.category?.name || '', 
-                      subCategory: subCategory.name 
-                    })} className="hover:text-lime-400">
-                      {subCategory.name}
+                  <li>
+                    <Link to="/privacy-policy" className="hover:text-lime-400">
+                      Privacy Policy
                     </Link>
                   </li>
-                ))}
-              </ul>
-            </div>
+                  <li>
+                    <Link to="/disclaimer-policy" className="hover:text-lime-400">
+                      Disclaimer Policy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/track-order" className="hover:text-lime-400">
+                      Track Order
+                    </Link>
+                  </li>
 
-            {/* Column 4 - Support */}
-            <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-              <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Legal</h3>
-              <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
-                <li>
-                  <Link to="/refund-return" className="hover:text-lime-400">
-                    Refund and Return
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/cookies-policy" className="hover:text-lime-400">
-                    Cookies Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/terms-conditions" className="hover:text-lime-400">
-                    Terms & Conditions
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/privacy-policy" className="hover:text-lime-400">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/disclaimer-policy" className="hover:text-lime-400">
-                    Disclaimer Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/track-order" className="hover:text-lime-400">
-                    Track Order
-                  </Link>
-                </li>
+                  <li>
+                    <Link to="/voucher-terms" className="hover:text-lime-400">
+                      Voucher Terms
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/delivery-terms" className="hover:text-lime-400">
+                      Delivery Terms
+                    </Link>
+                  </li>
+                </ul>
+              </div>
 
-                <li>
-                  <Link to="/voucher-terms" className="hover:text-lime-400">
-                    Voucher Terms 
-                  </Link>
-                </li>
-             <li>
-                  <Link to="/delivery-terms" className="hover:text-lime-400">
-                    Delivery Terms 
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 5 - Legal */}
-            <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-              <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Support</h3>
-              <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
-                <li>
-                  <Link to="/about" className="hover:text-lime-400">
-                    About Us
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/contact" className="hover:text-lime-400">
-                    Contact Us
-                  </Link>
-                </li>
-                <li>
-                  <a href="https://blog.grabatoz.ae/"  rel="noopener noreferrer" className="hover:text-lime-400">
-  Blog
-</a>
-                </li>
-                <li>
-                  <Link to="/shop" className="hover:text-lime-400">
-                    Shop
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/login" className="hover:text-lime-400">
-                    Login
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/register" className="hover:text-lime-400">
-                    Register
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/wishlist" className="hover:text-lime-400">
-                    Wishlist
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/cart" className="hover:text-lime-400 font-semibold">
-                    Cart
-                  </Link>
-                </li>
-              </ul>
+              {/* Column 5 - Legal */}
+              <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Support</h3>
+                <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
+                  <li>
+                    <Link to="/about" className="hover:text-lime-400">
+                      About Us
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/contact" className="hover:text-lime-400">
+                      Contact Us
+                    </Link>
+                  </li>
+                  <li>
+                    <a href="https://blog.grabatoz.ae/" rel="noopener noreferrer" className="hover:text-lime-400">
+                      Blog
+                    </a>
+                  </li>
+                  <li>
+                    <Link to="/shop" className="hover:text-lime-400">
+                      Shop
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/login" className="hover:text-lime-400">
+                      Login
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/register" className="hover:text-lime-400">
+                      Register
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/wishlist" className="hover:text-lime-400">
+                      Wishlist
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/cart" className="hover:text-lime-400 font-semibold">
+                      Cart
+                    </Link>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -340,7 +342,7 @@ const Footer = ({ className = "" }) => {
 
       {/* Desktop Bottom Footer */}
       <section className="hidden md:block">
-        <div className="max-w-[1920px] mx-auto flex flex-row justify-between items-center gap-3 lg:gap-6 xl:gap-8 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2 lg:py-3">
+        <div className="max-w-[1440px] mx-auto flex flex-row justify-between items-center gap-3 lg:gap-6 xl:gap-8 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2 lg:py-3">
           {/* 1st Column: Text */}
           <div className="flex-1 min-w-0">
             <p className="text-[10px] lg:text-xs xl:text-sm font-bold whitespace-nowrap"> 2025 Grabatoz Powered By Crown Excel</p>
@@ -409,9 +411,9 @@ const Footer = ({ className = "" }) => {
                   </Link>
                 </li>
                 <li>
-                   <a href="https://blog.grabatoz.ae/" rel="noopener noreferrer" className="text-gray-700 hover:text-orange-500">
-    Blog
-  </a>
+                  <a href="https://blog.grabatoz.ae/" rel="noopener noreferrer" className="text-gray-700 hover:text-orange-500">
+                    Blog
+                  </a>
                 </li>
                 <li>
                   <Link to="/shop" className="text-gray-700 hover:text-orange-500">
@@ -539,26 +541,26 @@ const Footer = ({ className = "" }) => {
                     className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-100"
                     aria-label="Pinterest"
                   >
-                    <FontAwesomeIcon icon={faPinterest} style={{width: '20px', height: '20px', color: '#E60023'}} />
+                    <FontAwesomeIcon icon={faPinterest} style={{ width: '20px', height: '20px', color: '#E60023' }} />
                   </a>
                   <a
                     href="https://www.tiktok.com/@grabatoz"
                     className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-100"
                     aria-label="TikTok"
                   >
-                    <FontAwesomeIcon icon={faTiktok} style={{width: '20px', height: '20px', color: '#000'}} />
+                    <FontAwesomeIcon icon={faTiktok} style={{ width: '20px', height: '20px', color: '#000' }} />
                   </a>
                   <a
                     href="https://www.youtube.com/@grabAtoZ"
                     className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-white hover:bg-gray-100"
                     aria-label="YouTube"
                   >
-                    <FontAwesomeIcon icon={faYoutube} style={{width: '20px', height: '20px', color: '#FF0000'}} />
+                    <FontAwesomeIcon icon={faYoutube} style={{ width: '20px', height: '20px', color: '#FF0000' }} />
                   </a>
                 </div>
 
 
-            
+
               </div>
             </div>
           )}
