@@ -432,16 +432,24 @@ const Navbar = () => {
     }
   }, [hoveredCategory])
 
-  // Fixed 10 categories visible - font size will adjust instead of count
+  // Adjust visible categories based on zoom level
   useEffect(() => {
     const updateVisibleCategories = () => {
       const width = window.innerWidth
+      const zoom = window.devicePixelRatio || 1
 
-      // Always show 10 categories on desktop/tablet, 8 on mobile
-      if (width >= 768) {
-        setVisibleCategoriesCount(10)
+      // Mobile: always show 8
+      if (width < 768) {
+        setVisibleCategoriesCount(8)
+        return
+      }
+
+      // Desktop: adjust based on zoom level
+      // At 175% zoom (devicePixelRatio ~1.75), show 8 categories
+      if (zoom >= 1.75) {
+        setVisibleCategoriesCount(8)
       } else {
-        setVisibleCategoriesCount(8) // mobile - show 8 in mobile menu
+        setVisibleCategoriesCount(10)
       }
     }
 
