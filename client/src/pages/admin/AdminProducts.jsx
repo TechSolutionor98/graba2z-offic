@@ -1395,13 +1395,13 @@ const AdminProducts = () => {
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
-                            Category
+                            Parent Category
                           </th>
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
-                            Parent Category
+                            Level 1
                           </th>
                           <th
                             scope="col"
@@ -1500,13 +1500,13 @@ const AdminProducts = () => {
                                   <div className="text-sm text-gray-900">{product.brand?.name || 'N/A'}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    {product.category?.name || 'N/A'}
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-50 text-blue-800">
+                                    {getParentCategoryName(product)}
                                   </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-50 text-blue-800">
-                                    {getParentCategoryName(product)}
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    {product.category?.name || 'N/A'}
                                   </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
