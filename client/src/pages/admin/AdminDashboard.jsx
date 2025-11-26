@@ -68,58 +68,46 @@ const AdminDashboard = () => {
       <AdminSidebar />
     
 
-      <div className="ml-64 pt-16 p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        </div>
-
+      <div className="ml-64 p-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="bg-blue-100 p-3 rounded-full">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-blue-100 p-3 rounded-full mb-4">
                 <ShoppingBag className="h-6 w-6 text-blue-600" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">Total Orders</h3>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalOrders}</p>
-              </div>
+              <h3 className="text-sm font-medium text-gray-500">Total Orders</h3>
+              <p className="text-2xl font-semibold text-gray-900">{stats.totalOrders}</p>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="bg-green-100 p-3 rounded-full">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-green-100 p-3 rounded-full mb-4">
                 <DollarSign className="h-6 w-6 text-green-600" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">Total Revenue</h3>
-                <p className="text-2xl font-semibold text-gray-900">{formatPrice(stats.totalRevenue)}</p>
-              </div>
+              <h3 className="text-sm font-medium text-gray-500">Total Revenue</h3>
+              <p className="text-2xl font-semibold text-gray-900">{formatPrice(stats.totalRevenue)}</p>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="bg-purple-100 p-3 rounded-full">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-purple-100 p-3 rounded-full mb-4">
                 <TrendingUp className="h-6 w-6 text-purple-600" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">Total Products</h3>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalProducts}</p>
-              </div>
+              <h3 className="text-sm font-medium text-gray-500">Total Products</h3>
+              <p className="text-2xl font-semibold text-gray-900">{stats.totalProducts}</p>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center">
-              <div className="bg-yellow-100 p-3 rounded-full">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-yellow-100 p-3 rounded-full mb-4">
                 <Users className="h-6 w-6 text-yellow-600" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">Total Users</h3>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalUsers}</p>
-              </div>
+              <h3 className="text-sm font-medium text-gray-500">Total Users</h3>
+              <p className="text-2xl font-semibold text-gray-900">{stats.totalUsers}</p>
             </div>
           </div>
         </div>

@@ -58,7 +58,12 @@ const AdminOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const { data } = await axios.get(`${config.API_URL}/api/admin/orders`)
+      const token = localStorage.getItem('adminToken')
+      const { data } = await axios.get(`${config.API_URL}/api/admin/orders`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       setOrders(data)
       setLoading(false)
     } catch (error) {
@@ -78,7 +83,12 @@ const AdminOrders = () => {
   const handleUpdateStatus = async (orderId, status) => {
     try {
       setProcessingAction(true)
-      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/status`, { status })
+      const token = localStorage.getItem('adminToken')
+      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/status`, { status }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
 
       setOrders(orders.map((order) => (order._id === orderId ? { ...order, status } : order)))
 
@@ -97,7 +107,12 @@ const AdminOrders = () => {
   const handleUpdatePaymentStatus = async (orderId, isPaid) => {
     try {
       setProcessingAction(true)
-      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/payment`, { isPaid })
+      const token = localStorage.getItem('adminToken')
+      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/payment`, { isPaid }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
 
       setOrders(orders.map((order) => (order._id === orderId ? { ...order, isPaid } : order)))
 
@@ -116,7 +131,12 @@ const AdminOrders = () => {
   const handleUpdateTracking = async (orderId, trackingId) => {
     try {
       setProcessingAction(true)
-      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/tracking`, { trackingId })
+      const token = localStorage.getItem('adminToken')
+      await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/tracking`, { trackingId }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
 
       setOrders(orders.map((order) => (order._id === orderId ? { ...order, trackingId } : order)))
 
@@ -134,7 +154,12 @@ const AdminOrders = () => {
   const handleSendNotification = async (orderId) => {
     try {
       setProcessingAction(true)
-      await axios.post(`${config.API_URL}/api/admin/orders/${orderId}/notify`)
+      const token = localStorage.getItem('adminToken')
+      await axios.post(`${config.API_URL}/api/admin/orders/${orderId}/notify`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
       setProcessingAction(false)
       alert("Notification email sent successfully!")
     } catch (error) {

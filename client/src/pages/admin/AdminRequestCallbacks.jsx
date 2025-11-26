@@ -404,7 +404,7 @@ const AdminRequestCallbacks = () => {
         ) : error ? (
           <div className="text-red-600">{error}</div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm p-6 overflow-x-auto">
+          <div className="bg-white rounded-lg shadow-sm p-6">
             {requests.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No callback requests yet.
