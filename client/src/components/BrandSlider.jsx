@@ -425,6 +425,23 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
     if (isMobile) handleScrollWrap();
   };
 
+  // Arrow navigation
+  const handlePrevClick = () => {
+    if (sliderRef.current) {
+      const scrollAmount = 180 + 8; // width + margin
+      sliderRef.current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+      setTimeout(handleScrollWrap, 300);
+    }
+  };
+
+  const handleNextClick = () => {
+    if (sliderRef.current) {
+      const scrollAmount = 180 + 8;
+      sliderRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      setTimeout(handleScrollWrap, 300);
+    }
+  };
+
   return (
     <section className="bg-white py-8">
       <div className="max-w-8xl mx-auto">
@@ -434,6 +451,28 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
           </h2>
         </div>
         <div className="relative mx-3 md:mx-5">
+          {/* Left Arrow */}
+          <button
+            onClick={handlePrevClick}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 md:p-3 transition-all duration-200 hover:scale-110"
+            aria-label="Previous brands"
+          >
+            <svg className="w-5 h-5 md:w-6 md:h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Right Arrow */}
+          <button
+            onClick={handleNextClick}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 md:p-3 transition-all duration-200 hover:scale-110"
+            aria-label="Next brands"
+          >
+            <svg className="w-5 h-5 md:w-6 md:h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
           <div
             className="flex overflow-x-scroll space-x-2 hide-scrollbar"
             ref={sliderRef}
