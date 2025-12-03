@@ -308,7 +308,7 @@ const TrackOrder = () => {
             <div className="bg-white rounded-lg shadow-md p-6 min-w-0 w-full">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Order Items</h2>
               <div className="space-y-4">
-                {orderData.orderItems.map((item, index) => {
+                {orderData.orderItems.filter(item => !item.isProtection).map((item, index) => {
                   console.log('Order item:', item);
                   const price = Number(item.price) || 0;
                   const qty = Number(item.quantity) || 0;
@@ -336,6 +336,35 @@ const TrackOrder = () => {
                   );
                 })}
               </div>
+
+              {orderData.orderItems.some(item => item.isProtection) && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Buyer Protection Plans
+                  </h3>
+                  <div className="space-y-3">
+                    {orderData.orderItems.filter(item => item.isProtection).map((item, index) => {
+                      const price = Number(item.price) || 0;
+                      return (
+                        <div key={index} className="flex items-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                          <svg className="w-8 h-8 mr-3 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900">{item.name}</h4>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-gray-900">{formatPrice(price)}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-6 pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-center">

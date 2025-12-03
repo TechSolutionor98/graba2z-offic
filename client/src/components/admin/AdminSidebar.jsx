@@ -417,6 +417,11 @@ const AdminSidebar = () => {
       path: "/admin/bulk-purchase",
     },
     {
+      title: "Buyer Protection",
+      icon: Shield,
+      path: "/admin/buyer-protection",
+    },
+    {
       title: "Blogs",
       icon: BookOpen,
       dropdown: "blogs",

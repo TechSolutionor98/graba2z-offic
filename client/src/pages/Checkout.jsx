@@ -2132,6 +2132,7 @@ const Checkout = () => {
     setCoupon,
     couponDiscount,
     setCouponDiscount,
+    removeFromCart,
   } = useCart()
   const { user } = useAuth()
   const location = useLocation()
@@ -2289,12 +2290,22 @@ const Checkout = () => {
 
   const cartTotals = calculateCartTotals()
 
+  // Filter out protection items from cart display
+  const protectionItems = cartItems.filter(item => item.isProtection)
+  const regularCartItems = cartItems.filter(item => !item.isProtection)
+
+  // Calculate protection items total
+  const protectionTotal = protectionItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+
   // Coupon logic
   const handleApplyCoupon = async () => {
     setCouponLoading(true)
     setCouponError("")
     try {
-      const cartApiItems = cartItems.map((item) => ({ product: item._id, qty: item.quantity }))
+      // Filter out protection items for coupon validation (only validate actual products)
+      const cartApiItems = cartItems
+        .filter((item) => !item.isProtection)
+        .map((item) => ({ product: item._id, qty: item.quantity }))
       const { data } = await axios.post(`${config.API_URL}/api/coupons/validate`, {
         code: couponInput,
         cartItems: cartApiItems,
@@ -2572,13 +2583,37 @@ const Checkout = () => {
 
       // Prepare order data
       const orderData = {
-        orderItems: cartItems.map((item) => ({
-          product: item._id,
-          name: item.name,
-          image: item.image,
-          price: item.price,
-          quantity: item.quantity,
-        })),
+        orderItems: cartItems.map((item) => {
+          const orderItem = {
+            name: item.name,
+            image: item.image,
+            price: item.price,
+            quantity: item.quantity,
+          }
+          
+          // Add color variation data if present
+          if (item.selectedColorData) {
+            orderItem.selectedColorIndex = item.selectedColorIndex
+            orderItem.selectedColorData = {
+              color: item.selectedColorData.color,
+              image: item.selectedColorData.image,
+              price: item.selectedColorData.price,
+              offerPrice: item.selectedColorData.offerPrice,
+              sku: item.selectedColorData.sku,
+            }
+          }
+          
+          // Handle buyer protection items separately
+          if (item.isProtection) {
+            orderItem.isProtection = true
+            orderItem.protectionFor = item.protectionFor
+            orderItem.protectionData = item.protectionData?._id
+          } else {
+            orderItem.product = item._id
+          }
+          
+          return orderItem
+        }),
         itemsPrice: cartTotal,
         shippingPrice: deliveryCharge,
         totalPrice: finalTotal,
@@ -2823,13 +2858,37 @@ const Checkout = () => {
       }
 
       const orderData = {
-        orderItems: cartItems.map((item) => ({
-          product: item._id,
-          name: item.name,
-          image: item.image,
-          price: item.price,
-          quantity: item.quantity,
-        })),
+        orderItems: cartItems.map((item) => {
+          const orderItem = {
+            name: item.name,
+            image: item.image,
+            price: item.price,
+            quantity: item.quantity,
+          }
+          
+          // Add color variation data if present
+          if (item.selectedColorData) {
+            orderItem.selectedColorIndex = item.selectedColorIndex
+            orderItem.selectedColorData = {
+              color: item.selectedColorData.color,
+              image: item.selectedColorData.image,
+              price: item.selectedColorData.price,
+              offerPrice: item.selectedColorData.offerPrice,
+              sku: item.selectedColorData.sku,
+            }
+          }
+          
+          // Handle buyer protection items separately
+          if (item.isProtection) {
+            orderItem.isProtection = true
+            orderItem.protectionFor = item.protectionFor
+            orderItem.protectionData = item.protectionData?._id
+          } else {
+            orderItem.product = item._id
+          }
+          
+          return orderItem
+        }),
         itemsPrice: cartTotal,
         shippingPrice: deliveryCharge, // Include delivery charge
         totalPrice: finalTotal, // Include delivery charge
@@ -3043,7 +3102,7 @@ const Checkout = () => {
             ...prev,
             phone: prev.phone || parsed.phone || "",
           }))
-        } catch {}
+        } catch { }
       }
     }
   }, [user])
@@ -3139,9 +3198,9 @@ const Checkout = () => {
     )
   }
 
-  // Determine which items to show
-  const itemsToShow = showAllItems ? cartItems : cartItems.slice(0, 2)
-  const remainingItemsCount = cartItems.length - 2
+  // Determine which items to show (exclude protections)
+  const itemsToShow = showAllItems ? regularCartItems : regularCartItems.slice(0, 2)
+  const remainingItemsCount = regularCartItems.length - 2
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -3357,11 +3416,10 @@ const Checkout = () => {
                             {STORES.filter(store => store.visible !== false).map((store) => (
                               <div
                                 key={store.storeId}
-                                className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                                  pickupDetails.storeId === store.storeId
+                                className={`border rounded-lg p-4 cursor-pointer transition-all ${pickupDetails.storeId === store.storeId
                                     ? "border-lime-500 bg-lime-50"
                                     : "border-gray-200 hover:border-gray-300"
-                                }`}
+                                  }`}
                               >
                                 <label className="flex items-start gap-3 cursor-pointer">
                                   <input
@@ -3501,11 +3559,10 @@ const Checkout = () => {
                     {PAYMENT_METHODS.map((method) => (
                       <div
                         key={method.id}
-                        className={` rounded-lg p-4 cursor-pointer transition-all relative ${
-                          selectedPaymentMethod === method.id
+                        className={` rounded-lg p-4 cursor-pointer transition-all relative ${selectedPaymentMethod === method.id
                             ? "border-lime-500 bg-lime-50"
                             : "border-gray-200 hover:border-gray-300 bg-white"
-                        }`}
+                          }`}
                         onClick={() => handlePaymentMethodSelect(method.id)}
                       >
                         {/* Radio button positioned at top-left corner */}
@@ -3526,9 +3583,8 @@ const Checkout = () => {
                                 key={idx}
                                 src={icon.src || "/placeholder.svg"}
                                 alt={method.name}
-                                className={`w-60 h-48 md:w-60 md:h-36 object-contain rounded-lg transition-all ${
-                                  selectedPaymentMethod === method.id ? " border-lime-500" : " border-gray-200"
-                                }`}
+                                className={`w-60 h-48 md:w-60 md:h-36 object-contain rounded-lg transition-all ${selectedPaymentMethod === method.id ? " border-lime-500" : " border-gray-200"
+                                  }`}
                               />
                             ))}
                           </div>
@@ -3594,8 +3650,8 @@ const Checkout = () => {
                     <button
                       onClick={
                         selectedPaymentMethod === "card" ||
-                        selectedPaymentMethod === "tamara" ||
-                        selectedPaymentMethod === "tabby"
+                          selectedPaymentMethod === "tamara" ||
+                          selectedPaymentMethod === "tabby"
                           ? createOrderThenPay
                           : handleSubmit
                       }
@@ -3647,6 +3703,11 @@ const Checkout = () => {
                       </div>
                       <div className="ml-3">
                         <h3 className="text-sm font-medium text-black truncate max-w-32">{item.name}</h3>
+                        {item.selectedColorData && (
+                          <p className="text-xs text-purple-600 font-medium">
+                            Color: {item.selectedColorData.color}
+                          </p>
+                        )}
                         <p className="text-xs text-black">Qty: {item.quantity}</p>
                       </div>
                     </div>
@@ -3713,6 +3774,39 @@ const Checkout = () => {
                   <span className="text-gray-600">Shipping</span>
                   <span className="text-black">{deliveryCharge === 0 ? "Free" : formatPrice(deliveryCharge)}</span>
                 </div>
+
+                {/* Protection Plans Section */}
+                {protectionItems.length > 0 && (
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Protection Plans</h3>
+                    <div className="space-y-2">
+                      {protectionItems.map((item) => (
+                        <div key={item._id} className="flex items-start justify-between bg-blue-50 p-3 rounded-lg border border-blue-200">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Shield size={16} className="text-blue-600" />
+                              <p className="text-sm font-medium text-gray-900">{item.protectionData?.name || item.name}</p>
+                            </div>
+                            <p className="text-xs text-gray-600 ml-6">
+                              {item.protectionData?.duration} - For: {item.name.split(' for ')[1] || 'Product'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-semibold text-red-600">{formatPrice(item.price)}</span>
+                            <button
+                              onClick={() => removeFromCart(item._id)}
+                              className="text-red-500 hover:text-red-700 p-1"
+                              title="Remove protection"
+                              type="button"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">VAT Included</span>

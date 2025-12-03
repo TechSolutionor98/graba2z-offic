@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, forwardRef } from "react"
 import axios from "axios"
 import { useReactToPrint } from "react-to-print"
 import AdminSidebar from "../../components/admin/AdminSidebar"
-import { Search, Eye, RefreshCw, Pause, Play, ChevronDown, X, Package, CreditCard, MapPin, Clock, User, Printer, Mail, Save } from "lucide-react"
+import { Search, Eye, RefreshCw, Pause, Play, ChevronDown, X, Package, CreditCard, MapPin, Clock, User, Printer, Mail, Save, Shield } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 
 import config from "../../config/config"
@@ -22,7 +22,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   }
 
   const resolvedItems = Array.isArray(order?.orderItems) ? order.orderItems : []
-  const baseSubtotal = computeBaseSubtotal(resolvedItems)
+  
+  // Separate protection items from regular items
+  const protectionItems = resolvedItems.filter(item => item.isProtection || (item.name && item.name.includes('for ')))
+  const regularItems = resolvedItems.filter(item => !item.isProtection && !(item.name && item.name.includes('for ')))
+  
+  const baseSubtotal = computeBaseSubtotal(regularItems)
 
   const {
     subtotal,
@@ -185,7 +190,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                 </tr>
               </thead>
               <tbody>
-                {resolvedItems.map((item, index) => {
+                {regularItems.map((item, index) => {
                   const basePrice = resolveOrderItemBasePrice(item)
                   const itemPrice = Number(item.price) || basePrice
                   const showDiscount = basePrice > itemPrice
@@ -196,6 +201,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                     <tr key={index} className="hover:bg-lime-50">
                       <td className="border border-lime-300 px-3 py-2 text-sm">
                         <div className="font-medium text-gray-900">{item.name}</div>
+                        {item.selectedColorData && (
+                          <div className="text-xs text-purple-600 font-medium mt-1 flex items-center">
+                            <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
+                            Color: {item.selectedColorData.color}
+                          </div>
+                        )}
                         {showDiscount && (
                           <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
                         )}
@@ -221,6 +232,25 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               </tbody>
             </table>
           </div>
+          
+          {protectionItems.length > 0 && (
+            <div className="mt-3">
+              <h5 className="text-md font-bold text-blue-700 mb-2 flex items-center">
+                <span className="mr-1">🛡️</span> Buyer Protection Plans
+              </h5>
+              <div className="bg-blue-50 border border-blue-300 rounded p-2">
+                {protectionItems.map((item, index) => {
+                  const itemPrice = Number(item.price) || 0
+                  return (
+                    <div key={index} className="flex justify-between py-1 text-sm">
+                      <span className="font-medium text-gray-900">{item.name}</span>
+                      <span className="font-semibold text-gray-900">{formatPrice(itemPrice)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Total Amount */}
@@ -915,6 +945,12 @@ const OnHold = () => {
                             </div>
                             <div>
                               <h4 className="font-medium text-gray-900">{item.name}</h4>
+                              {item.selectedColorData && (
+                                <p className="text-xs text-purple-600 font-medium mt-1 flex items-center">
+                                  <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
+                                  Color: {item.selectedColorData.color}
+                                </p>
+                              )}
                               <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                             </div>
                           </div>

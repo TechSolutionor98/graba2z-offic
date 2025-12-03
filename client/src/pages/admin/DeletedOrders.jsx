@@ -1016,6 +1016,7 @@ import {
   User,
   Printer,
   Save,
+  Shield,
 } from "lucide-react"
 
 import config from "../../config/config"
@@ -1037,8 +1038,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
     : Array.isArray(order?.items)
     ? order.items
     : []
-
-  const baseSubtotal = computeBaseSubtotal(resolvedItems)
+  
+  // Separate protection items from regular items
+  const protectionItems = resolvedItems.filter(item => item.isProtection || (item.name && item.name.includes('for ')))
+  const regularItems = resolvedItems.filter(item => !item.isProtection && !(item.name && item.name.includes('for ')))
+  
+  const baseSubtotal = computeBaseSubtotal(regularItems)
 
   const { subtotal, shipping, tax, total, couponCode, couponDiscount } = getInvoiceBreakdown(order)
   const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
@@ -1184,7 +1189,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                 </tr>
               </thead>
               <tbody>
-                {resolvedItems.map((item, index) => {
+                {resolvedItems.filter(item => !item.isProtection).map((item, index) => {
                   const basePrice = resolveOrderItemBasePrice(item)
                   const itemPrice = Number(item.price) || basePrice
                   const quantity = Number(item.quantity) || 0
@@ -1222,6 +1227,26 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               </tbody>
             </table>
           </div>
+          
+          {resolvedItems.some(item => item.isProtection) && (
+            <div className="mt-3">
+              <h5 className="text-md font-bold text-blue-700 mb-2 flex items-center">
+                <span className="mr-1">🛡️</span> Buyer Protection Plans
+              </h5>
+              <div className="bg-blue-50 border border-blue-300 rounded p-2">
+                {resolvedItems.filter(item => item.isProtection).map((item, index) => {
+                  const itemPrice = Number(item.price) || 0
+                  const itemName = item.name || item.productName || "Unnamed Protection"
+                  return (
+                    <div key={index} className="flex justify-between py-1 text-sm">
+                      <span className="font-medium text-gray-900">{itemName}</span>
+                      <span className="font-semibold text-gray-900">{formatPrice(itemPrice)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Total Amount */}
@@ -2084,8 +2109,8 @@ const DeletedOrders = () => {
                 <div className="bg-white border rounded-lg p-6 mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
                   <div className="space-y-4">
-                    {resolvedSelectedItems.length > 0 ? (
-                      resolvedSelectedItems.map((item, index) => {
+                    {resolvedSelectedItems.filter(item => !item.isProtection).length > 0 ? (
+                      resolvedSelectedItems.filter(item => !item.isProtection).map((item, index) => {
                         const basePrice = resolveOrderItemBasePrice(item)
                         const itemPrice = Number(item.price) || basePrice
                         const quantity = Number(item.quantity) || 0
@@ -2132,6 +2157,35 @@ const DeletedOrders = () => {
                       <p className="text-gray-500 text-center py-4">No items found</p>
                     )}
                   </div>
+                  
+                  {resolvedSelectedItems.some(item => item.isProtection) && (
+                    <div className="mt-6 pt-4 border-t">
+                      <h4 className="text-md font-semibold text-gray-900 mb-3 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        Buyer Protection Plans
+                      </h4>
+                      <div className="space-y-3">
+                        {resolvedSelectedItems.filter(item => item.isProtection).map((item, index) => {
+                          const price = Number(item.price) || 0
+                          return (
+                            <div key={item._id || index} className="flex items-center justify-between py-2 px-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="flex items-center space-x-3">
+                                <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                                <div>
+                                  <h5 className="font-medium text-gray-900">{item.name || item.productName || "Unnamed Protection"}</h5>
+                                </div>
+                              </div>
+                              <p className="font-semibold text-gray-900">{formatPrice(price)}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Total Amount */}

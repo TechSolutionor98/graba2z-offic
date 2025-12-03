@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, forwardRef } from "react"
 import axios from "axios"
 import { useReactToPrint } from "react-to-print"
 import AdminSidebar from "../../components/admin/AdminSidebar"
-import { Search, Eye, RefreshCw, MapPin, CheckCircle, Package, X, Truck, CreditCard, ChevronDown, Mail, Printer, Save } from "lucide-react"
+import { Search, Eye, RefreshCw, MapPin, CheckCircle, Package, X, Truck, CreditCard, ChevronDown, Mail, Printer, Save, Shield } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
@@ -21,7 +21,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   }
 
   const resolvedItems = Array.isArray(order?.orderItems) ? order.orderItems : []
-  const baseSubtotal = computeBaseSubtotal(resolvedItems)
+  
+  // Separate protection items from regular items
+  const protectionItems = resolvedItems.filter(item => item.isProtection || (item.name && item.name.includes('for ')))
+  const regularItems = resolvedItems.filter(item => !item.isProtection && !(item.name && item.name.includes('for ')))
+  
+  const baseSubtotal = computeBaseSubtotal(regularItems)
 
   const { subtotal, shipping, tax, total, couponCode, couponDiscount } = getInvoiceBreakdown(order)
   const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
@@ -175,7 +180,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                 </tr>
               </thead>
               <tbody>
-                {resolvedItems.map((item, index) => {
+                {regularItems.map((item, index) => {
                   const basePrice = resolveOrderItemBasePrice(item)
                   const itemPrice = Number(item.price) || basePrice
                   const showDiscount = basePrice > itemPrice
@@ -186,6 +191,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                     <tr key={index} className="hover:bg-lime-50">
                       <td className="border border-lime-300 px-3 py-2 text-sm">
                         <div className="font-medium text-gray-900">{item.name}</div>
+                        {item.selectedColorData && (
+                          <div className="text-xs text-purple-600 font-medium mt-1 flex items-center">
+                            <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
+                            Color: {item.selectedColorData.color}
+                          </div>
+                        )}
                         {showDiscount && (
                           <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
                         )}
@@ -212,6 +223,46 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
             </table>
           </div>
         </div>
+
+        {/* Protection Plans Section */}
+        {protectionItems.length > 0 && (
+          <div className="mb-4">
+            <h4 className="text-lg font-bold text-blue-800 mb-2 uppercase">🛡️ Protection Plans</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-blue-300">
+                <thead>
+                  <tr className="bg-blue-100">
+                    <th className="border border-blue-300 px-3 py-2 text-left text-sm font-bold">Protection</th>
+                    <th className="border border-blue-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
+                    <th className="border border-blue-300 px-3 py-2 text-right text-sm font-bold">Price</th>
+                    <th className="border border-blue-300 px-3 py-2 text-right text-sm font-bold">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {protectionItems.map((item, index) => {
+                    const itemPrice = Number(item.price) || 0
+                    const lineTotal = itemPrice * (item.quantity || 0)
+
+                    return (
+                      <tr key={index} className="hover:bg-blue-50">
+                        <td className="border border-blue-300 px-3 py-2 text-sm">
+                          <div className="font-medium text-gray-900">{item.name}</div>
+                        </td>
+                        <td className="border border-blue-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
+                        <td className="border border-blue-300 px-3 py-2 text-right text-sm font-semibold text-gray-900">
+                          {formatPrice(itemPrice)}
+                        </td>
+                        <td className="border border-blue-300 px-3 py-2 text-right text-sm font-semibold">
+                          {formatPrice(lineTotal)}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Total Amount */}
         <div className="bg-gray-50 border rounded-lg p-6">
@@ -1071,7 +1122,7 @@ const OnTheWay = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
                 <div className="space-y-4">
                   {selectedOrderItems.length > 0 ? (
-                    selectedOrderItems.map((item, index) => {
+                    selectedOrderItems.filter(item => !item.isProtection && !(item.name && item.name.includes('for '))).map((item, index) => {
                       const basePrice = resolveOrderItemBasePrice(item)
                       const salePrice = Number(item.price) || basePrice
                       const showDiscount = basePrice > salePrice
@@ -1089,6 +1140,12 @@ const OnTheWay = () => {
                             </div>
                             <div>
                               <h4 className="font-medium text-gray-900">{item.name}</h4>
+                              {item.selectedColorData && (
+                                <p className="text-xs text-purple-600 font-medium mt-1 flex items-center">
+                                  <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
+                                  Color: {item.selectedColorData.color}
+                                </p>
+                              )}
                               <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                             </div>
                           </div>
@@ -1110,6 +1167,43 @@ const OnTheWay = () => {
                   )}
                 </div>
               </div>
+
+              {/* Protection Plans Section */}
+              {selectedOrderItems.some(item => item.isProtection || (item.name && item.name.includes('for '))) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                  <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                    <Shield size={20} className="text-blue-600" />
+                    Protection Plans
+                  </h3>
+                  <div className="space-y-4">
+                    {selectedOrderItems.filter(item => item.isProtection || (item.name && item.name.includes('for '))).map((item, index) => {
+                      const itemPrice = Number(item.price) || 0
+                      const lineTotal = itemPrice * (item.quantity || 0)
+
+                      return (
+                        <div
+                          key={item._id || index}
+                          className="flex items-center justify-between py-3 border-b last:border-b-0 border-blue-200"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-15 h-15 bg-blue-200 rounded-md flex items-center justify-center">
+                              <Shield size={24} className="text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gray-900">{item.name}</h4>
+                              <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-900">{formatPrice(itemPrice)}</p>
+                            <p className="text-sm text-gray-500">Total: {formatPrice(lineTotal)}</p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Total Amount */}
               <div className="bg-gray-50 border rounded-lg p-6 mb-6">

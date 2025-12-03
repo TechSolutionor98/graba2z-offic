@@ -33,7 +33,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   }
 
   const resolvedItems = Array.isArray(order?.orderItems) ? order.orderItems : []
-  const baseSubtotal = computeBaseSubtotal(resolvedItems)
+  
+  // Separate protection items from regular items
+  const protectionItems = resolvedItems.filter(item => item.isProtection || (item.name && item.name.includes('for ')))
+  const regularItems = resolvedItems.filter(item => !item.isProtection && !(item.name && item.name.includes('for ')))
+  
+  const baseSubtotal = computeBaseSubtotal(regularItems)
 
   const {
     subtotal,
@@ -196,7 +201,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                 </tr>
               </thead>
               <tbody>
-                {resolvedItems.map((item, index) => {
+                {regularItems.map((item, index) => {
                   const basePrice = resolveOrderItemBasePrice(item)
                   const itemPrice = Number(item.price) || basePrice
                   const showDiscount = basePrice > itemPrice
@@ -207,6 +212,12 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                     <tr key={index} className="hover:bg-lime-50">
                       <td className="border border-lime-300 px-3 py-2 text-sm">
                         <div className="font-medium text-gray-900">{item.name}</div>
+                        {item.selectedColorData && (
+                          <div className="text-xs text-purple-600 font-medium mt-1 flex items-center">
+                            <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
+                            Color: {item.selectedColorData.color}
+                          </div>
+                        )}
                         {showDiscount && (
                           <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
                         )}
@@ -232,6 +243,25 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               </tbody>
             </table>
           </div>
+          
+          {protectionItems.length > 0 && (
+            <div className="mt-3">
+              <h5 className="text-md font-bold text-blue-700 mb-2 flex items-center">
+                <span className="mr-1">🛡️</span> Buyer Protection Plans
+              </h5>
+              <div className="bg-blue-50 border border-blue-300 rounded p-2">
+                {protectionItems.map((item, index) => {
+                  const itemPrice = Number(item.price) || 0
+                  return (
+                    <div key={index} className="flex justify-between py-1 text-sm">
+                      <span className="font-medium text-gray-900">{item.name}</span>
+                      <span className="font-semibold text-gray-900">{formatPrice(itemPrice)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Total Amount */}
@@ -1137,8 +1167,8 @@ const orderStatusOptions = [
               <div className="bg-white border rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
                 <div className="space-y-4">
-                  {selectedOrderItems.length > 0 ? (
-                    selectedOrderItems.map((item, index) => {
+                  {selectedOrderItems.filter(item => !item.isProtection).length > 0 ? (
+                    selectedOrderItems.filter(item => !item.isProtection).map((item, index) => {
                       const basePrice = resolveOrderItemBasePrice(item)
                       const salePrice = Number(item.price) || basePrice
                       const showDiscount = basePrice > salePrice
@@ -1156,6 +1186,12 @@ const orderStatusOptions = [
                             </div>
                             <div>
                               <h4 className="font-medium text-gray-900">{item.name}</h4>
+                              {item.selectedColorData && (
+                                <p className="text-xs text-purple-600 font-medium mt-1 flex items-center">
+                                  <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
+                                  Color: {item.selectedColorData.color}
+                                </p>
+                              )}
                               <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                             </div>
                           </div>
@@ -1176,6 +1212,35 @@ const orderStatusOptions = [
                     <p className="text-gray-500 text-center py-4">No items found</p>
                   )}
                 </div>
+                
+                {selectedOrderItems.some(item => item.isProtection) && (
+                  <div className="mt-6 pt-4 border-t">
+                    <h4 className="text-md font-semibold text-gray-900 mb-3 flex items-center">
+                      <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      Buyer Protection Plans
+                    </h4>
+                    <div className="space-y-3">
+                      {selectedOrderItems.filter(item => item.isProtection).map((item, index) => {
+                        const price = Number(item.price) || 0
+                        return (
+                          <div key={item._id || index} className="flex items-center justify-between py-2 px-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <svg className="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                              </svg>
+                              <div>
+                                <h5 className="font-medium text-gray-900">{item.name}</h5>
+                              </div>
+                            </div>
+                            <p className="font-semibold text-gray-900">{formatPrice(price)}</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Total Amount */}

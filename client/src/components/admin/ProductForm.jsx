@@ -7,6 +7,8 @@ import axios from "axios"
 import ImageUpload from "../ImageUpload"
 import TipTapEditor from "../TipTapEditor"
 import { Plus, X } from "lucide-react"
+import ProductVariationModal from "./ProductVariationModal"
+import ColorVariationForm from "./ColorVariationForm"
 
 import config from "../../config/config"
 const ProductForm = ({ product, onSubmit, onCancel }) => {
@@ -52,6 +54,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     showStockOut: true,
     refundable: true,
     featured: false,
+    hideFromShop: false,
     stockStatus: "Available Product",
   })
 
@@ -62,6 +65,14 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   const [originalOfferPrice, setOriginalOfferPrice] = useState("")
   const [isCalculating, setIsCalculating] = useState(false)
   const [editingField, setEditingField] = useState(null) // 'offer' | 'discount' | null
+  
+  // Product Variations
+  const [showVariationModal, setShowVariationModal] = useState(false)
+  const [selectedVariations, setSelectedVariations] = useState([])
+  const [reverseVariationText, setReverseVariationText] = useState("")
+  
+  // Color Variations
+  const [colorVariations, setColorVariations] = useState([])
 
   const units = [
     { value: "piece", label: "Piece" },
@@ -140,6 +151,28 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
 
       setBasePrice(product.price ? String(product.price) : "")
       setOriginalOfferPrice(product.offerPrice ? String(product.offerPrice) : "")
+      
+      // Initialize variations if they exist - handle both old and new structure
+      if (product.variations && product.variations.length > 0) {
+        const formattedVariations = product.variations.map(v => {
+          // New structure: { product: {...}, variationText: "..." }
+          if (v.product) {
+            return {
+              ...v.product,
+              variationText: v.variationText || ""
+            }
+          }
+          // Old structure: direct product reference
+          return v
+        })
+        setSelectedVariations(formattedVariations)
+        setReverseVariationText(product.reverseVariationText || "")
+      }
+      
+      // Set color variations if they exist
+      if (product.colorVariations && product.colorVariations.length > 0) {
+        setColorVariations(product.colorVariations)
+      }
 
       const preload = async () => {
         if (parentId) {
@@ -227,6 +260,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           showStockOut: product.showStockOut !== undefined ? product.showStockOut : true,
           refundable: product.refundable !== undefined ? product.refundable : true,
           featured: product.featured || false,
+          hideFromShop: product.hideFromShop || false,
           stockStatus: product.stockStatus || "Available Product",
         })
       }
@@ -566,6 +600,18 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         galleryImages: formData.galleryImages.filter((img) => img !== ""),
         specifications: formData.specifications.filter((spec) => spec.key && spec.value),
         stockStatus: formData.stockStatus,
+        isActive: formData.isActive,
+        canPurchase: formData.canPurchase,
+        showStockOut: formData.showStockOut,
+        refundable: formData.refundable,
+        featured: formData.featured,
+        hideFromShop: formData.hideFromShop,
+        variations: selectedVariations.map(v => ({ 
+          product: v._id, 
+          variationText: v.variationText || "" 
+        })), // Add variation IDs with text
+        reverseVariationText: reverseVariationText || "", // Text for current product on variation pages
+        colorVariations: colorVariations, // Add color variations array
       }
       await onSubmit(productData)
     } catch (error) {
@@ -1231,6 +1277,128 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
             />
             <label className="text-sm text-gray-700">Featured</label>
           </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              name="hideFromShop"
+              checked={formData.hideFromShop}
+              onChange={handleInputChange}
+              className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+            />
+            <label className="text-sm text-gray-700 flex items-center gap-1">
+              Hide from Shop
+              <span className="text-xs text-gray-500">(accessible via variations & direct link only)</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Product Variations Section */}
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Product Variations</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Add different variations of this product (e.g., different colors, sizes, or models)
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowVariationModal(true)}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+            >
+              <Plus size={18} className="mr-2" />
+              Add Variation
+            </button>
+          </div>
+
+          {selectedVariations.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {selectedVariations.map((variation) => (
+                <div
+                  key={variation._id}
+                  className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedVariations(prev => prev.filter(v => v._id !== variation._id))}
+                    className="absolute top-2 right-2 p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
+                    title="Remove Variation"
+                  >
+                    <X size={16} />
+                  </button>
+
+                  <div className="flex items-start space-x-3">
+                    <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                      <img
+                        src={variation.image || "/placeholder.svg"}
+                        alt={variation.name}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
+                        {variation.name}
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-1">
+                        SKU: {variation.sku || "N/A"}
+                      </p>
+                      <div className="mt-2">
+                        <span className="text-sm font-bold text-gray-900">
+                          {variation.offerPrice > 0 
+                            ? `${Number(variation.offerPrice || 0).toFixed(2)} AED`
+                            : `${Number(variation.price || 0).toFixed(2)} AED`
+                          }
+                        </span>
+                      </div>
+                      {variation.variationText && (
+                        <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                          <p className="text-xs text-blue-700 font-medium">
+                            {variation.variationText}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-300">
+              <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <Plus size={24} className="text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No variations added yet</h3>
+              <p className="text-gray-500 mb-6">
+                Add product variations to help customers find the exact product they need
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowVariationModal(true)}
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+              >
+                <Plus size={18} className="mr-2" />
+                Add First Variation
+              </button>
+            </div>
+          )}
+
+          {selectedVariations.length > 0 && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800">
+                <strong>{selectedVariations.length}</strong> variation
+                {selectedVariations.length !== 1 ? "s" : ""} added
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Color Variations Section */}
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200">
+          <ColorVariationForm
+            colorVariations={colorVariations}
+            onChange={setColorVariations}
+          />
         </div>
 
         {/* Form Actions */}
@@ -1252,6 +1420,19 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           </button>
         </div>
       </form>
+
+      {/* Product Variation Modal */}
+      <ProductVariationModal
+        isOpen={showVariationModal}
+        onClose={() => setShowVariationModal(false)}
+        onSelectProducts={(products, reverseText) => {
+          setSelectedVariations(products)
+          setReverseVariationText(reverseText || "")
+        }}
+        selectedVariations={selectedVariations}
+        currentProductId={product?._id}
+        currentProductName={formData.name}
+      />
     </div>
   )
 }

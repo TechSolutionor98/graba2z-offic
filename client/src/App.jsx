@@ -76,6 +76,7 @@ import AdminSettings from "./pages/admin/AdminSettings"
 import AdminBlogs from "./pages/admin/AdminBlogs"
 import AdminRequestCallbacks from "./pages/admin/AdminRequestCallbacks"
 import AdminBulkPurchase from "./pages/admin/AdminBulkPurchase"
+import BuyerProtectionAdmin from "./pages/admin/BuyerProtectionAdmin"
 import AdminSubCategories from "./pages/admin/AdminSubCategories"
 import AdminSubCategories2 from "./pages/admin/AdminSubCategories2"
 import AdminSubCategories3 from "./pages/admin/AdminSubCategories3"
@@ -257,6 +258,7 @@ function App() {
                               <Route path="blogs/rating" element={<BlogRating />} />
                               <Route path="request-callbacks" element={<AdminRequestCallbacks />} />
                               <Route path="bulk-purchase" element={<AdminBulkPurchase />} />
+                              <Route path="buyer-protection" element={<BuyerProtectionAdmin />} />
                               <Route path="email-templates" element={<AdminEmailTemplates />} />
                               <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
                               <Route path="*" element={<NotFound />} />

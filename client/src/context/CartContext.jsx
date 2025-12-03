@@ -589,10 +589,10 @@ export const CartProvider = ({ children }) => {
         const existingItemIndex = prevItems.findIndex((item) => {
           // For bundle items, match both product ID and bundle ID
           if (bundleId && item.bundleId) {
-            return item._id === product._id && item.bundleId === bundleId
+            return item._id === product._id && item.bundleId === bundleId && item.selectedColorIndex === product.selectedColorIndex
           }
-          // For regular items, just match product ID (no bundle)
-          return item._id === product._id && !item.bundleId
+          // For regular items, match product ID, no bundle, and same color (if any)
+          return item._id === product._id && !item.bundleId && item.selectedColorIndex === product.selectedColorIndex
         })
 
         if (existingItemIndex > -1) {
@@ -613,12 +613,14 @@ export const CartProvider = ({ children }) => {
           const cartItem = {
             ...product,
             quantity,
-            cartId: `${product._id}_${bundleId || "regular"}_${Date.now()}`,
+            cartId: `${product._id}_${bundleId || "regular"}_${product.selectedColorIndex ?? "nocolor"}_${Date.now()}`,
             bundleId: bundleId || null,
             isBundleItem: product.isBundleItem || false,
             bundleDiscount: product.bundleDiscount || false,
             originalPrice: product.originalPrice || product.price,
             price: finalUnitPrice, // Ensure price reflects the final unit price used in totals
+            selectedColorIndex: product.selectedColorIndex ?? null,
+            selectedColorData: product.selectedColorData || null,
           }
 
           return [...prevItems, cartItem]

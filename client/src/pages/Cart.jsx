@@ -2,7 +2,7 @@
 
 import { Link } from "react-router-dom"
 import { useCart } from "../context/CartContext"
-import { Trash2, Minus, Plus, ShoppingBag, Package, X, Percent, Gift } from "lucide-react"
+import { Trash2, Minus, Plus, ShoppingBag, Package, X, Percent, Gift, Shield } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import axios from "axios"
 
@@ -47,12 +47,20 @@ const Cart = () => {
 
   const { grouped, standaloneItems } = getGroupedCartItems()
 
+  // Filter out protection items from cart display
+  const protectionItems = cartItems.filter(item => item.isProtection)
+  const regularCartItems = cartItems.filter(item => !item.isProtection)
+  
+  // Filter protection items from standalone items
+  const filteredStandaloneItems = standaloneItems.filter(item => !item.isProtection)
+
   // Add debugging for grouped items
   useEffect(() => {
     console.log('Cart component - grouped items:', grouped)
     console.log('Cart component - standalone items:', standaloneItems)
     console.log('Cart component - bundle groups keys:', Object.keys(grouped))
-  }, [grouped, standaloneItems])
+    console.log('Cart component - protection items:', protectionItems)
+  }, [grouped, standaloneItems, protectionItems])
 
   useEffect(() => {
     // Fetch delivery options
@@ -126,7 +134,10 @@ const Cart = () => {
     setCouponLoading(true)
     setCouponError("")
     try {
-      const cartApiItems = cartItems.map(item => ({ product: item._id, qty: item.quantity }))
+      // Filter out protection items for coupon validation (only validate actual products)
+      const cartApiItems = cartItems
+        .filter(item => !item.isProtection)
+        .map(item => ({ product: item._id, qty: item.quantity }))
       const { data } = await axios.post(`${config.API_URL}/api/coupons/validate`, {
         code: couponInput,
         cartItems: cartApiItems,
@@ -247,13 +258,13 @@ const Cart = () => {
     }
   }
 
-  // FIXED: Calculate cart totals properly
+  // FIXED: Calculate cart totals properly (excluding protection items)
   const calculateCartTotals = useMemo(() => {
     let totalBasePrice = 0
     let totalCurrentPrice = 0
     let totalSavings = 0
     
-    cartItems.forEach(item => {
+    regularCartItems.forEach(item => {
       const pricingDetails = getItemPricingDetails(item)
       totalBasePrice += pricingDetails.basePrice * item.quantity
       totalCurrentPrice += pricingDetails.currentPrice * item.quantity
@@ -265,7 +276,7 @@ const Cart = () => {
       totalCurrentPrice,
       totalSavings
     }
-  }, [cartItems])
+  }, [regularCartItems])
 
   // FIXED: Calculate bundle totals properly
   const calculateBundleTotals = (bundleItems) => {
@@ -288,7 +299,11 @@ const Cart = () => {
   }
 
   const cartTotals = calculateCartTotals
-  const totalWithDeliveryTaxCoupon = cartTotals.totalCurrentPrice + deliveryCharge + taxAmount - couponDiscount
+  
+  // Calculate protection items total
+  const protectionTotal = protectionItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  
+  const totalWithDeliveryTaxCoupon = cartTotals.totalCurrentPrice + protectionTotal + deliveryCharge + taxAmount - couponDiscount
 
   // Render individual item component
   const renderItem = (item, isInBundle = false, bundleId = null) => {
@@ -308,6 +323,12 @@ const Cart = () => {
                 {item.name.length > 30 ? item.name.slice(0, 25) + "..." : item.name}
               </h3>
               <p className="mt-1 text-sm text-gray-500">{item.brand?.name || 'N/A'}</p>
+              {item.selectedColorData && (
+                <p className="mt-1 text-xs text-purple-600 font-medium flex items-center">
+                  <span className="inline-block w-3 h-3 rounded-full mr-1" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
+                  Color: {item.selectedColorData.color}
+                </p>
+              )}
               {isInBundle && (
                 <p className="mt-1 text-xs text-lime-600 font-medium">
                   {item.bundleDiscount ? "Bundle Item (25% OFF)" : "Bundle Item"}
@@ -397,6 +418,13 @@ const Cart = () => {
                   {item.name.length > 60 ? item.name.slice(0, 60) + "..." : item.name}
                 </h3>
                 <p className="text-sm text-gray-500 mb-1">{item.brand?.name || 'N/A'}</p>
+                {item.selectedColorData && (
+                  <p className="text-sm text-purple-600 font-medium mb-1 flex items-center">
+                    <span className="inline-block w-4 h-4 rounded-full mr-2 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
+                    Color: {item.selectedColorData.color}
+                    {item.selectedColorData.sku && <span className="ml-2 text-xs text-gray-500">({item.selectedColorData.sku})</span>}
+                  </p>
+                )}
                 {isInBundle && (
                   <p className="text-xs text-lime-600 font-medium mb-2">
                     {item.bundleDiscount ? "Bundle Item (25% OFF)" : "Bundle Item"}
@@ -543,8 +571,8 @@ const Cart = () => {
               )
             })}
 
-            {/* Render Standalone Items */}
-            {standaloneItems.length > 0 && (
+            {/* Render Standalone Items (excluding protections) */}
+            {filteredStandaloneItems.length > 0 && (
               <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                 {Object.keys(grouped).length > 0 && (
                   <div className="bg-gray-50 px-6 py-3 border-b">
@@ -552,7 +580,7 @@ const Cart = () => {
                   </div>
                 )}
                 <ul className="divide-y divide-gray-200">
-                  {standaloneItems.map((item) => renderItem(item, false, null))}
+                  {filteredStandaloneItems.map((item) => renderItem(item, false, null))}
                 </ul>
               </div>
             )}
@@ -624,6 +652,38 @@ const Cart = () => {
                   <span className="text-gray-600">Shipping</span>
                   <span className="text-gray-900">{deliveryCharge === 0 ? 'Free' : formatPrice(deliveryCharge)}</span>
                 </div>
+
+                {/* Protection Plans Section */}
+                {protectionItems.length > 0 && (
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Protection Plans</h3>
+                    <div className="space-y-2">
+                      {protectionItems.map((item) => (
+                        <div key={item._id} className="flex items-start justify-between bg-blue-50 p-3 rounded-lg border border-blue-200">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Shield size={16} className="text-blue-600" />
+                              <p className="text-sm font-medium text-gray-900">{item.protectionData?.name || item.name}</p>
+                            </div>
+                            <p className="text-xs text-gray-600 ml-6">
+                              {item.protectionData?.duration} - For: {item.name.split(' for ')[1] || 'Product'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-semibold text-red-600">{formatPrice(item.price)}</span>
+                            <button
+                              onClick={() => removeFromCart(item._id)}
+                              className="text-red-500 hover:text-red-700 p-1"
+                              title="Remove protection"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* VAT included note */}
                 <div className="flex justify-between">

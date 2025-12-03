@@ -1537,22 +1537,29 @@ const AdminProducts = () => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="flex flex-col space-y-1">
-                                    <span
-                                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                                        }`}
-                                    >
-                                      {product.isActive ? (
-                                        <>
-                                          <Eye className="h-3 w-3 mr-1" />
-                                          Active
-                                        </>
-                                      ) : (
-                                        <>
-                                          <EyeOff className="h-3 w-3 mr-1" />
-                                          Inactive
-                                        </>
-                                      )}
-                                    </span>
+                                    {product.hideFromShop ? (
+                                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
+                                        <EyeOff className="h-3 w-3 mr-1" />
+                                        Hide
+                                      </span>
+                                    ) : (
+                                      <span
+                                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                                          }`}
+                                      >
+                                        {product.isActive ? (
+                                          <>
+                                            <Eye className="h-3 w-3 mr-1" />
+                                            Active
+                                          </>
+                                        ) : (
+                                          <>
+                                            <EyeOff className="h-3 w-3 mr-1" />
+                                            Inactive
+                                          </>
+                                        )}
+                                      </span>
+                                    )}
                                     {product.featured && (
                                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                         Featured

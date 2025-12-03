@@ -41,6 +41,7 @@ import TabbyModal from "../components/payments/TabbyModal"
 import TamaraModal from "../components/payments/TamaraModal"
 import SEO from "../components/SEO"
 import TipTapRenderer from "../components/TipTapRenderer"
+import BuyerProtectionSection from "../components/BuyerProtectionSection"
 
 const WHATSAPP_NUMBER = "971508604360" // Replace with your WhatsApp number
 
@@ -57,6 +58,7 @@ const ProductDetails = () => {
   const [error, setError] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [selectedColorIndex, setSelectedColorIndex] = useState(null)
   const [activeTab, setActiveTab] = useState("description")
   const [showImageModal, setShowImageModal] = useState(false)
   const [modalImageIndex, setModalImageIndex] = useState(0)
@@ -82,6 +84,9 @@ const ProductDetails = () => {
 
   const [showTabbyModal, setShowTabbyModal] = useState(false)
   const [showTamaraModal, setShowTamaraModal] = useState(false)
+  
+  // Buyer Protection state
+  const [selectedProtections, setSelectedProtections] = useState([])
 
   // Keyboard navigation
   useEffect(() => {
@@ -189,12 +194,48 @@ const ProductDetails = () => {
     return formatPrice(discountedPrice)
   }
 
+  // Get current color variation
+  const getCurrentColor = () => {
+    if (selectedColorIndex !== null && product?.colorVariations && product.colorVariations.length > 0) {
+      return product.colorVariations[selectedColorIndex]
+    }
+    return null
+  }
+
+  // Get current images based on selected color
+  const getCurrentImages = () => {
+    const currentColor = getCurrentColor()
+    if (currentColor && currentColor.image) {
+      const images = [currentColor.image]
+      if (currentColor.galleryImages && currentColor.galleryImages.length > 0) {
+        images.push(...currentColor.galleryImages.filter(img => img))
+      }
+      return images
+    }
+    // Fallback to product images
+    if (product?.galleryImages && product.galleryImages.length > 0) {
+      return [product.image, ...product.galleryImages.filter(img => img)]
+    }
+    return [product?.image].filter(img => img)
+  }
+
   const getEffectivePrice = () => {
+    const currentColor = getCurrentColor()
+    if (currentColor) {
+      const basePrice = Number(currentColor.price) || 0
+      const offerPrice = Number(currentColor.offerPrice) || 0
+      // If offer price exists and is less than base price, use offer price
+      if (offerPrice > 0 && basePrice > 0 && offerPrice < basePrice) {
+        return offerPrice
+      }
+      // Otherwise use base price if it exists, else use offer price
+      return basePrice > 0 ? basePrice : (offerPrice > 0 ? offerPrice : 0)
+    }
     const basePrice = Number(product?.price) || 0
     const offerPrice = Number(product?.offerPrice) || 0
     const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
     if (hasValidOffer) return offerPrice
-    return basePrice > 0 ? basePrice : offerPrice
+    return basePrice > 0 ? basePrice : (offerPrice > 0 ? offerPrice : 0)
   }
   const formatPerMonth = (n) =>
     `AED ${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo`
@@ -551,12 +592,57 @@ const ProductDetails = () => {
   }
 
   const handleAddToCart = () => {
-    if (product.stockStatus === "Out of Stock") {
+    // Check stock status based on selected color or main product
+    const currentColor = getCurrentColor()
+    if (currentColor && currentColor.countInStock <= 0) {
+      showToast("Selected color is out of stock", "error")
+      return
+    }
+    if (!currentColor && product.stockStatus === "Out of Stock") {
       showToast("Product is out of stock", "error")
       return
     }
-    addToCart(product, quantity)
-    showToast("Product added to cart!", "success")
+    
+    // Prepare product with color variation data
+    const productToAdd = {
+      ...product,
+      selectedColorIndex,
+      selectedColorData: currentColor ? {
+        color: currentColor.color,
+        image: currentColor.image,
+        price: currentColor.price,
+        offerPrice: currentColor.offerPrice,
+        sku: currentColor.sku,
+      } : null,
+      // Override price with color-specific price if color is selected
+      price: currentColor ? (currentColor.offerPrice > 0 ? currentColor.offerPrice : currentColor.price) : (product.offerPrice > 0 ? product.offerPrice : product.price),
+      // Override image with color-specific image if available
+      image: currentColor?.image || product.image,
+    }
+    
+    // Add main product to cart
+    addToCart(productToAdd, quantity)
+    
+    // Add selected protections to cart as separate items linked to the product
+    if (selectedProtections.length > 0) {
+      selectedProtections.forEach((protection) => {
+        const protectionItem = {
+          _id: `protection_${protection._id}_${product._id}_${Date.now()}`,
+          name: `${protection.name} for ${product.name}`,
+          price: protection.calculatedPrice || protection.price,
+          image: product.image, // Use product image as reference
+          isProtection: true,
+          protectionFor: product._id,
+          protectionData: protection,
+          countInStock: 999, // Protection plans don't have stock limits
+          quantity: 1, // Always 1 per product
+        }
+        addToCart(protectionItem, 1)
+      })
+      showToast(`Product and ${selectedProtections.length} protection plan(s) added to cart!`, "success")
+    } else {
+      showToast("Product added to cart!", "success")
+    }
   }
 
   const handleBuyNow = () => {
@@ -1888,10 +1974,7 @@ const ProductDetails = () => {
 
   const pdCanonicalPath = `/product/${encodeURIComponent(product.slug || product._id)}`
 
-  const productImages =
-    product.galleryImages && product.galleryImages.length > 0
-      ? [product.image, ...product.galleryImages.filter((img) => img)]
-      : [product.image]
+  const productImages = getCurrentImages()
 
   // Helper function to get stock badge
   const getStockBadge = () => {
@@ -2061,6 +2144,10 @@ const ProductDetails = () => {
                 )}
               </div>
 
+
+                    {/* Buyer Protection Plans - Right Side */}
+          
+
               {/* Thumbnail Images */}
               {productImages.length > 1 && (
                 <div className="relative w-full">
@@ -2124,7 +2211,33 @@ const ProductDetails = () => {
                 </div>
               )}
             </div>
+
+
+
+<div className="lg:col-span-3 mt-8 border border-black rounded">
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
+                <Shield className="text-blue-600" size={24} />
+                Protect Your Purchase
+              </h3>
+              <BuyerProtectionSection
+                productId={product._id}
+                productPrice={product.salePrice || product.price}
+                onSelectProtection={setSelectedProtections}
+                selectedProtections={selectedProtections}
+              />
+            </div>
           </div>
+
+
+
+
+
+
+
+
+          </div>
+          
 
           {/* Product Info - Middle */}
           <div className="lg:col-span-5">
@@ -2220,18 +2333,21 @@ const ProductDetails = () => {
               {/* Price */}
               <div className="mb-6">
                 {(() => {
-                  const basePrice = Number(product.price) || 0
-                  const offerPrice = Number(product.offerPrice) || 0
-                  const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
-
-                  let priceToShow = 0
-                  if (hasValidOffer) {
-                    priceToShow = offerPrice
-                  } else if (basePrice > 0) {
-                    priceToShow = basePrice
-                  } else if (offerPrice > 0) {
-                    priceToShow = offerPrice
+                  const currentColor = getCurrentColor()
+                  let basePrice = 0
+                  let offerPrice = 0
+                  
+                  if (currentColor) {
+                    basePrice = Number(currentColor.price) || 0
+                    offerPrice = Number(currentColor.offerPrice) || 0
+                  } else {
+                    basePrice = Number(product.price) || 0
+                    offerPrice = Number(product.offerPrice) || 0
                   }
+                  
+                  const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
+                  const priceToShow = getEffectivePrice()
+                  const discount = hasValidOffer ? Math.round(((basePrice - offerPrice) / basePrice) * 100) : 0
 
                   return (
                     <>
@@ -2245,11 +2361,8 @@ const ProductDetails = () => {
                       {hasValidOffer && (
                         <div className="text-lg text-emerald-800 font-medium">
                           You Save {formatPrice(basePrice - priceToShow)}
-                          {product.discount > 0 && ` (${product.discount}%)`}
+                          {discount > 0 && ` (${discount}%)`}
                         </div>
-                      )}
-                      {product.discount > 0 && !hasValidOffer && (
-                        <div className="text-sm text-green-600 font-medium">You Save {product.discount}%</div>
                       )}
                     </>
                   )
@@ -2273,7 +2386,141 @@ const ProductDetails = () => {
                 </div>
               </div>
 
-              {/* Key Features */}
+          
+
+              {/* Color Variations */}
+              {product.colorVariations && product.colorVariations.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-bold text-gray-900 mb-3 flex items-center">
+                    <span className="text-purple-600 mr-2">🎨</span>
+                    Color: {selectedColorIndex !== null && product.colorVariations[selectedColorIndex]?.color ? product.colorVariations[selectedColorIndex].color : "Select Color"}
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {product.colorVariations
+                      .filter(colorVar => colorVar.color)
+                      .map((colorVar, index) => {
+                        const isSelected = index === selectedColorIndex
+                        const colorPrice = colorVar.offerPrice > 0 ? colorVar.offerPrice : colorVar.price
+                        
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              // Toggle: if already selected, deselect to show original product
+                              setSelectedColorIndex(isSelected ? null : index)
+                              setSelectedImage(0)
+                            }}
+                            className={`relative border-2 rounded-lg p-3 transition-all duration-200 hover:shadow-lg ${
+                              isSelected 
+                                ? 'border-purple-500 bg-purple-50' 
+                                : 'border-gray-200 hover:border-purple-300'
+                            }`}
+                          >
+                            {/* Product Image */}
+                            <div className="aspect-square mb-2 bg-white rounded-md overflow-hidden">
+                              <img
+                                src={colorVar.image || "/placeholder.svg"}
+                                alt={colorVar.color}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            
+                            {/* Color Name */}
+                            <p className={`text-xs font-semibold text-center mb-1 ${
+                              isSelected ? 'text-purple-700' : 'text-gray-700'
+                            }`}>
+                              {colorVar.color}
+                            </p>
+                            
+                            {/* Price */}
+                            <p className="text-sm font-bold text-center text-gray-900">
+                              {formatPrice(colorPrice)}
+                            </p>
+                            
+                            {/* Current Selection Indicator */}
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 bg-purple-500 text-white rounded-full p-1">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            )}
+                            
+                            {/* Stock Badge */}
+                            {colorVar.countInStock <= 0 && (
+                              <div className="absolute bottom-2 left-2 right-2 bg-red-500 text-white text-xs py-1 px-2 rounded text-center">
+                                Out of Stock
+                              </div>
+                            )}
+                          </button>
+                        )
+                      })}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-3">
+                    Select a color to view its image and price
+                  </p>
+                </div>
+              )}
+
+              {/* Product Variations */}
+              {product.variations && product.variations.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-bold text-gray-900 mb-3 flex items-center">
+                    <span className="text-blue-600 mr-2">🔄</span>
+                    Available Variations
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {/* Show current product as a variation (highlighted) */}
+                    {product.reverseVariationText && (
+                      <div
+                        className="px-6 py-3 bg-lime-500 text-white rounded-lg font-semibold text-sm shadow-lg border-2 border-blue-700 cursor-default relative"
+                      >
+                        {product.reverseVariationText}
+                        <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
+                          Current
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Show other variations as clickable links */}
+                    {product.variations
+                      .filter(variation => {
+                        // Filter to show only variations with text and valid product reference
+                        const varText = variation.variationText || ""
+                        const varProduct = variation.product
+                        
+                        // Must have variation text and a product reference
+                        if (!varText || !varProduct) return false
+                        
+                        // Show all variations regardless of hideFromShop status
+                        return true
+                      })
+                      .map((variation, index) => {
+                        const varProduct = variation.product
+                        const varId = typeof varProduct === 'object' ? varProduct._id : varProduct
+                        const varSlug = typeof varProduct === 'object' ? varProduct.slug : null
+                        const varText = variation.variationText || ""
+                        
+                        return (
+                          <Link
+                            key={varId || index}
+                            to={`/product/${encodeURIComponent(varSlug || varId)}`}
+                            className="px-6 py-3 bg-lime-500 text-white rounded-lg font-semibold text-sm hover:bg-lime-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                          >
+                            {varText}
+                          </Link>
+                        )
+                      })}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-3">
+                    Click on any variation to view its details
+                  </p>
+                </div>
+              )}
+
+
+                  {/* Key Features */}
               {product.shortDescription && (
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3">Key Features:</h3>
@@ -2287,52 +2534,52 @@ const ProductDetails = () => {
               {/* Tabby/Tamara info rows (triggers) */}
               <div className="space-y-3 mb-4">
                 {/* Tamara row */}
-                 <button
-                      type="button"
-                      onClick={() => setShowTamaraModal(true)}
-                      className="ml-2 font-medium text-gray-900 hover:text-black"
-                    >
-                <div className="border rounded-xl p-3 bg-white">
-                  
-                  <div className="text-sm text-gray-700">
-                    Or split in 4 payments of{" "}
-                    <span className="font-semibold text-gray-900">{formatPerMonth(getEffectivePrice() / 4)}</span>
-                     - No 
-                    late fees,
-                    
-                     Sharia compliant! <br /> More options
-                 
-                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold text-gray-900 bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 align-middle">
+                <button
+                  type="button"
+                  onClick={() => setShowTamaraModal(true)}
+                  className="w-full text-left hover:opacity-90 transition-opacity"
+                >
+                  <div className="border rounded-xl p-4 bg-gradient-to-r from-pink-50 to-purple-50 flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10  rounded-lg flex items-center justify-center shadow-sm">
+                      <span className="text-4xl">💳</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-800 leading-relaxed">
+                        Pay in 4 simple, interest free payments of{" "}
+                        <span className="font-bold text-gray-900">{formatPerMonth(getEffectivePrice() / 4)}</span>
+                        <br />
+                        <span className="text-blue-600 underline font-medium">Learn more</span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 shadow-sm">
                       tamara
                     </span>
                   </div>
-                </div>
-                   </button>
-
-
-
+                </button>
 
                 {/* Tabby row */}
-                     <button
-                      type="button"
-                      onClick={() => setShowTabbyModal(true)}
-                      className="font-medium text-gray-900 hover:text-black"
-                    >
-                <div className="border rounded-xl p-3 bg-white">
-                  <div className="text-sm text-gray-700 flex items-center gap-2 flex-wrap">
-                    <span>
-                      As low as{" "}
-                      <span className="font-semibold text-gray-900">{formatPerMonth(getEffectivePrice() / 12)}</span> or
-                      4 interest-free payments.
-                    </span>
-               
-                      Learn more
-                    
-                    <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-md text-[12px] font-extrabold text-white bg-emerald-600">
+                <button
+                  type="button"
+                  onClick={() => setShowTabbyModal(true)}
+                  className="w-full text-left hover:opacity-90 transition-opacity"
+                >
+                  <div className="border rounded-xl p-4 bg-gradient-to-r from-emerald-50 to-teal-50 flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center shadow-sm">
+                      <span className="text-4xl">💰</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-800 leading-relaxed">
+                        As low as{" "}
+                        <span className="font-bold text-gray-900">{formatPerMonth(getEffectivePrice() / 12)}</span> or
+                        4 interest-free payments.
+                        <br />
+                        <span className="text-blue-600 underline font-medium">Learn more</span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-extrabold text-white bg-emerald-600 shadow-sm">
                       tabby
                     </span>
                   </div>
-                </div>
                 </button>
               </div>
 
@@ -2479,7 +2726,10 @@ const ProductDetails = () => {
 
               {/* Delivery Info */}
               <div className="space-y-4">
-                <div className="flex items-start space-x-3">
+                <div 
+                  className="flex items-start space-x-3 cursor-pointer  border-2 border-yellow-400 hover:bg-lime-100 p-2 rounded-lg transition-colors"
+                  onClick={() => navigate('/delivery-terms')}
+                >
                   <Truck className="text-green-600 mt-1" size={60} />
                   <div>
                     <h4 className="font-bold text-gray-900 text-sm">Express Delivery</h4>
@@ -2489,7 +2739,10 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-3">
+                <div 
+                  className="flex items-start space-x-3 cursor-pointer border-2 border-yellow-400 hover:bg-lime-100 p-2 rounded-lg transition-colors"
+                  onClick={() => navigate('/refund-return')}
+                >
                   <RotateCcw className="text-green-600 mt-1" size={60} />
                   <div>
                     <h4 className="font-bold text-gray-900 text-sm">Delivery & Returns Policy</h4>
@@ -2500,7 +2753,10 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-3">
+                <div 
+                  className="flex items-start space-x-3 cursor-pointer border-2 border-yellow-400 hover:bg-lime-100 p-2 rounded-lg transition-colors"
+                  onClick={() => navigate('/terms-conditions')}
+                >
                   <Award className="text-green-600 mt-1" size={33} />
                   <div>
                     <h4 className="font-bold text-gray-900 text-sm">Warranty Information</h4>
@@ -2539,8 +2795,11 @@ const ProductDetails = () => {
                     />
                   </div>
                 </div>
+
+                
               </div>
             </div>
+            
           </div>
         </div>
 
