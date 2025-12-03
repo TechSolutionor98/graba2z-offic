@@ -29,8 +29,11 @@ import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
 import BrandSlider from "../components/BrandSlider"
 import SEO from "../components/SEO"
+import DynamicSection from "../components/DynamicSection"
+
 
 import config from "../config/config"
+
 
 const API_BASE_URL = `${config.API_URL}`
 
@@ -74,6 +77,8 @@ const Home = () => {
   const sliderRef = useRef(null)
   const [scrollX, setScrollX] = useState(0)
   const [isAutoScrolling, setIsAutoScrolling] = useState(true)
+  const [settings, setSettings] = useState(null)
+  const [homeSections, setHomeSections] = useState([])
   const [deviceType, setDeviceType] = useState(() => {
     if (typeof window !== "undefined") {
       return window.innerWidth < 768 ? "Mobile" : "Desktop"
@@ -139,27 +144,53 @@ const Home = () => {
     document.head.appendChild(style)
   }
 
+  // Helper function to render dynamic section by position
+  const renderDynamicSection = (position) => {
+    const section = homeSections.find(s => s.isActive && s.order === position)
+    if (section) {
+      return <DynamicSection key={section._id} section={section} />
+    }
+    return null
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Get products from cache or API
         const products = await productCache.getProducts()
 
-        const [categoriesResponse, brandsResponse, bannersResponse, upgradeFeaturesResponse] = await Promise.all([
+        const [categoriesResponse, brandsResponse, bannersResponse, upgradeFeaturesResponse, settingsResponse, sectionsResponse] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/categories`),
           axios.get(`${API_BASE_URL}/api/brands`),
           axios.get(`${API_BASE_URL}/api/banners?active=true`),
           axios.get(`${API_BASE_URL}/api/upgrade-features?active=true`).catch(() => ({ data: [] })),
+          axios.get(`${API_BASE_URL}/api/settings`).catch(() => ({ 
+            data: { 
+              homeSections: { 
+                categoryCards: true, 
+                brandsCards: true, 
+                productsCards: true, 
+                flashSaleCards: true, 
+                limitedSaleCards: true 
+              } 
+            } 
+          })),
+          axios.get(`${API_BASE_URL}/api/home-sections/active`).catch(() => ({ data: [] })),
         ])
 
         const categoriesData = categoriesResponse.data
         const brandsData = brandsResponse.data
         const bannersData = bannersResponse.data
         const upgradeFeaturesData = upgradeFeaturesResponse.data
+        const settingsData = settingsResponse.data
+        const sectionsData = sectionsResponse.data
 
         console.log("All Products loaded:", products.length)
         console.log("Categories fetched:", categoriesData)
         console.log("Brands fetched:", brandsData)
+        console.log("Settings fetched:", settingsData)
+        console.log("Home Sections fetched:", sectionsData)
+        console.log("Sections with order:", sectionsData.map(s => ({ name: s.name, order: s.order })))
 
         // Filter and validate categories - ensure they have proper structure
         const validCategories = Array.isArray(categoriesData)
@@ -601,6 +632,8 @@ const Home = () => {
         setAppleProducts(appleData)
         setSamsungProducts(samsungData)
         setUpgradeFeatures(upgradeFeaturesData)
+        setSettings(settingsData)
+        setHomeSections(sectionsData) // Don't pre-sort, let each zone handle its own sorting
         setLoading(false)
 
         console.log("Final Categories:", validCategories)
@@ -920,6 +953,7 @@ const Home = () => {
       {/* Categories Section - Infinite Loop Scroll */}
       <CategorySlider categories={categories} onCategoryClick={handleCategoryClick} />
 
+     
       {/* Three Cards Section - Simple Mobile Grid */}
       <div className="m-3">
         {/* Desktop & Tablet - Grid Layout */}
@@ -979,6 +1013,9 @@ const Home = () => {
         <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757761484/tamara_tabby_kooxbn.webp" alt="" className="w-full  sm:mx-4 h-auto rounded-lg" />
       </div> */}
 
+      {/* Dynamic Section Position 1 */}
+      {/* {renderDynamicSection(1)} */}
+
       {/* Big Sale Section - Handles both mobile and desktop views */}
       <BigSaleSection products={featuredProducts} />
 
@@ -1007,6 +1044,9 @@ const Home = () => {
           />
         </Link>
       </div>
+
+      {/* Dynamic Section Position 2 */}
+      {/* {renderDynamicSection(2)} */}
 
       {/* Desktop Banner - Two separate images side by side */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
@@ -1097,6 +1137,9 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Dynamic Section Position 3 */}
+      {/* {renderDynamicSection(3)} */}
+
       {/* Accessories Banner - Desktop/Mobile Responsive */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
         <Link to="/product-category/accessories-components">
@@ -1143,6 +1186,9 @@ const Home = () => {
           </div>
         )}
       </section>
+  {/* <CategoryBanners /> */}
+      {/* Dynamic Section Position 4 */}
+      {/* {renderDynamicSection(4)} */}
 
       {/* Mobile Banner Asus */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
@@ -1247,6 +1293,9 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Dynamic Section Position 5 */}
+      {/* {renderDynamicSection(5)} */}
+
       {/* Networking Banner - Desktop/Mobile Responsive */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
         <Link to="/product-category/networking">
@@ -1293,6 +1342,9 @@ const Home = () => {
           </div>
         )}
       </section>
+
+      {/* Dynamic Section Position 6 */}
+      {/* {renderDynamicSection(6)} */}
 
       {/* Mobile Banner MSI */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
@@ -1394,6 +1446,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Dynamic Section Position 7 */}
+      {/* {renderDynamicSection(7)} */}
 
       {/* Mobile Banner Apple */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
@@ -1498,6 +1553,9 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Dynamic Section Position 8 */}
+      {/* {renderDynamicSection(8)} */}
+
       {/* Upgrade Features Section - Responsive */}
       {upgradeFeatures.length > 0 && (
         <section className="py-8 md:py-12 bg-gradient-to-br from-blue-50 to-indigo-100 mx-3 rounded-lg my-8">
@@ -1518,8 +1576,14 @@ const Home = () => {
         </section>
       )}
 
+      {/* Dynamic Section Position 9 */}
+      {/* {renderDynamicSection(9)} */}
+
       {/* Featured Brands Section - Use BrandSlider component */}
       {brands.length > 0 && <BrandSlider brands={brands} onBrandClick={handleBrandClick} />}
+
+      {/* Dynamic Section Position 10 */}
+      {/* {renderDynamicSection(10)} */}
 
       {/* Core Service Section - Responsive: Desktop(4 in row), Mobile(2x2 grid) */}
       <section className="py-8 md:py-10 bg-white mt-2">
@@ -1571,6 +1635,7 @@ const Home = () => {
           </div>
         </div>
       </section>
+
       <style>{`
         @keyframes fadeInUp {
           0% { opacity: 0; transform: translateY(32px); }
