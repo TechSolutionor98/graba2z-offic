@@ -71,6 +71,14 @@ import AdminWarranty from "./pages/admin/AdminWarranty"
 import AdminTax from "./pages/admin/AdminTax"
 import AllCoupons from "./pages/admin/AllCoupons"
 import AdminBanners from "./pages/admin/AdminBanners"
+import AdminBannerCards from "./pages/admin/AdminBannerCards"
+import AddBannerCard from "./pages/admin/AddBannerCard"
+import AddHomeSection from "./pages/admin/AddHomeSection"
+import OfferPages from "./pages/admin/OfferPages"
+import AddOfferPage from "./pages/admin/AddOfferPage"
+import AddOfferProduct from "./pages/admin/AddOfferProduct"
+import AddOfferBrand from "./pages/admin/AddOfferBrand"
+import AddOfferCategory from "./pages/admin/AddOfferCategory"
 import AdminDeliveryCharges from "./pages/admin/AdminDeliveryCharges"
 import AdminSettings from "./pages/admin/AdminSettings"
 import AdminBlogs from "./pages/admin/AdminBlogs"
@@ -245,6 +253,21 @@ function App() {
                               <Route path="coupons" element={<AllCoupons />} />
                               <Route path="coupons/all" element={<AllCoupons />} />
                               <Route path="banners" element={<AdminBanners />} />
+                              <Route path="banner-cards" element={<AdminBannerCards />} />
+                              <Route path="banner-cards/add" element={<AddBannerCard />} />
+                              <Route path="banner-cards/edit/:id" element={<AddBannerCard />} />
+                              <Route path="home-sections" element={<AdminBannerCards />} />
+                              <Route path="home-sections/add" element={<AddHomeSection />} />
+                              <Route path="home-sections/edit/:id" element={<AddHomeSection />} />
+                              <Route path="offer-pages" element={<OfferPages />} />
+                              <Route path="offer-pages/add" element={<AddOfferPage />} />
+                              <Route path="offer-pages/edit/:id" element={<AddOfferPage />} />
+                              <Route path="offer-products/add" element={<AddOfferProduct />} />
+                              <Route path="offer-products/edit/:id" element={<AddOfferProduct />} />
+                              <Route path="offer-brands/add" element={<AddOfferBrand />} />
+                              <Route path="offer-brands/edit/:id" element={<AddOfferBrand />} />
+                              <Route path="offer-categories/add" element={<AddOfferCategory />} />
+                              <Route path="offer-categories/edit/:id" element={<AddOfferCategory />} />
                               <Route path="delivery-charges" element={<AdminDeliveryCharges />} />
                               <Route path="delivery-charges/add" element={<AddDeliveryCharge />} />
                               <Route path="settings" element={<AdminSettings />} />

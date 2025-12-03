@@ -446,6 +446,16 @@ const AdminSidebar = () => {
       path: "/admin/banners",
     },
     {
+      title: "Home Sections",
+      icon: ImageIcon,
+      path: "/admin/home-sections",
+    },
+    {
+      title: "Offer Pages",
+      icon: Tag,
+      path: "/admin/offer-pages",
+    },
+    {
       title: "Coupons",
       icon: Percent,
       dropdown: "coupons",
