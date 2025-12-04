@@ -85,9 +85,11 @@ const ProductDetails = () => {
 
   const [showTabbyModal, setShowTabbyModal] = useState(false)
   const [showTamaraModal, setShowTamaraModal] = useState(false)
+  const [showVideoModal, setShowVideoModal] = useState(false)
   
   // Buyer Protection state
   const [selectedProtections, setSelectedProtections] = useState([])
+  const [hasProtectionPlans, setHasProtectionPlans] = useState(false)
 
   // Keyboard navigation
   useEffect(() => {
@@ -201,6 +203,26 @@ const ProductDetails = () => {
       return product.colorVariations[selectedColorIndex]
     }
     return null
+  }
+
+  // Helper function to check if a URL is a YouTube URL
+  const isYouTubeUrl = (url) => {
+    if (!url) return false
+    return url.includes('youtube.com') || url.includes('youtu.be')
+  }
+
+  // Helper function to get YouTube embed URL
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return ''
+    if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1]?.split('?')[0]
+      return `https://www.youtube.com/embed/${videoId}`
+    }
+    if (url.includes('youtube.com/watch')) {
+      const videoId = url.split('v=')[1]?.split('&')[0]
+      return `https://www.youtube.com/embed/${videoId}`
+    }
+    return url
   }
 
   // Get current images based on selected color (includes videos)
@@ -2141,16 +2163,28 @@ const ProductDetails = () => {
               {/* Main Image/Video */}
               <div className="relative rounded-lg p-4 group mb-4">
                 {productImages[selectedImage]?.type === 'video' ? (
-                  <video
-                    key={selectedImage}
-                    src={getFullImageUrl(productImages[selectedImage]?.url) || ""}
-                    controls
-                    autoPlay
-                    className="w-full h-96 object-contain rounded-lg"
-                    poster={getFullImageUrl(product.image)}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
+                  isYouTubeUrl(productImages[selectedImage]?.url) ? (
+                    <iframe
+                      key={selectedImage}
+                      src={getYouTubeEmbedUrl(productImages[selectedImage]?.url)}
+                      title="YouTube video player"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="w-full h-96 rounded-lg"
+                    ></iframe>
+                  ) : (
+                    <video
+                      key={selectedImage}
+                      src={getFullImageUrl(productImages[selectedImage]?.url) || ""}
+                      controls
+                      autoPlay
+                      className="w-full h-96 object-contain rounded-lg"
+                      poster={getFullImageUrl(product.image)}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  )
                 ) : (
                   <img
                     src={getFullImageUrl(productImages[selectedImage]?.url) || "/placeholder.svg?height=400&width=400"}
@@ -2183,7 +2217,20 @@ const ProductDetails = () => {
               </div>
 
 
-                    {/* Buyer Protection Plans - Right Side */}
+          
+
+
+
+
+
+
+
+
+
+
+
+
+          
           
 
               {/* Thumbnail Images */}
@@ -2221,10 +2268,20 @@ const ProductDetails = () => {
                       >
                         {media?.type === 'video' ? (
                           <>
-                            <video
-                              src={getFullImageUrl(media.url)}
-                              className="w-full h-full object-contain"
-                            />
+                            {isYouTubeUrl(media.url) ? (
+                              <img
+                                src={`https://img.youtube.com/vi/${media.url.includes('youtu.be/') 
+                                  ? media.url.split('youtu.be/')[1]?.split('?')[0] 
+                                  : media.url.split('v=')[1]?.split('&')[0]}/mqdefault.jpg`}
+                                alt="YouTube video thumbnail"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <video
+                                src={getFullImageUrl(media.url)}
+                                className="w-full h-full object-contain"
+                              />
+                            )}
                             <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
                               <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
@@ -2266,23 +2323,54 @@ const ProductDetails = () => {
 
 
 
-<div className="lg:col-span-3 mt-8 border border-black rounded">
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
-                <Shield className="text-blue-600" size={24} />
-                Protect Your Purchase
-              </h3>
-              <BuyerProtectionSection
-                productId={product._id}
-                productPrice={product.salePrice || product.price}
-                onSelectProtection={setSelectedProtections}
-                selectedProtections={selectedProtections}
-              />
-            </div>
-          </div>
-
-
-
+            {/* Product Video Section - Only show if product has video */}
+              {product?.video && (
+                <div 
+                  className="mt-12 border border-gray-200 rounded-lg overflow-hidden cursor-pointer group"
+                  onClick={() => setShowVideoModal(true)}
+                >
+                  <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                    <h4 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                      <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                      </svg>
+                      Product Video
+                    </h4>
+                    <span className="text-xs text-gray-500 group-hover:text-blue-600">Click to expand</span>
+                  </div>
+                  <div className="aspect-video w-full bg-black relative">
+                    {isYouTubeUrl(product.video) ? (
+                      <iframe
+                        src={`${getYouTubeEmbedUrl(product.video)}?autoplay=1&mute=1`}
+                        title="Product Video"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        className="w-full h-full pointer-events-none"
+                      ></iframe>
+                    ) : (
+                      <video
+                        src={getFullImageUrl(product.video)}
+                        autoPlay
+                        muted
+                        loop
+                        className="w-full h-full object-contain pointer-events-none"
+                        poster={getFullImageUrl(product.image)}
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                    {/* Overlay for click */}
+                    <div className="absolute inset-0 bg-transparent group-hover:bg-black group-hover:bg-opacity-20 transition-all flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white bg-opacity-90 rounded-full p-3">
+                        <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
 
 
@@ -2819,6 +2907,78 @@ const ProductDetails = () => {
                 </div>
               </div>
 
+  
+
+
+
+{/* Protect Your Purchase - Only show if protection plans are available */}
+{hasProtectionPlans && (
+<div className="lg:col-span-3 mt-8 border border-black rounded">
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
+                <Shield className="text-blue-600" size={24} />
+                Protect Your Purchase
+              </h3>
+              <BuyerProtectionSection
+                productId={product._id}
+                productPrice={product.salePrice || product.price}
+                onSelectProtection={setSelectedProtections}
+                selectedProtections={selectedProtections}
+              />
+            </div>
+          </div>
+)}
+
+{/* Hidden loader to check for protection plans availability */}
+{!hasProtectionPlans && (
+  <BuyerProtectionSection
+    productId={product._id}
+    productPrice={product.salePrice || product.price}
+    onSelectProtection={setSelectedProtections}
+    selectedProtections={selectedProtections}
+    onProtectionsLoaded={setHasProtectionPlans}
+  />
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               {/* Payment Methods */}
               <div className="border-t pt-4">
                 <h4 className="font-bold text-white p-2 rounded-lg bg-red-600 text-center text-md mb-3">
@@ -3185,6 +3345,57 @@ const ProductDetails = () => {
       {/* ADD ONLY THIS LINE */}
       <ProductSchema product={product} />
 
+      {/* Video Modal */}
+      {showVideoModal && product?.video && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowVideoModal(false)
+            }
+          }}
+        >
+          <div className="relative w-[85vw] max-w-3xl">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowVideoModal(false)}
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors z-10"
+            >
+              <X size={28} />
+            </button>
+            
+            {/* Video Container */}
+            <div className="aspect-video w-full bg-black rounded-lg overflow-hidden shadow-2xl">
+              {isYouTubeUrl(product.video) ? (
+                <iframe
+                  src={`${getYouTubeEmbedUrl(product.video)}?autoplay=1`}
+                  title="Product Video"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="w-full h-full"
+                ></iframe>
+              ) : (
+                <video
+                  src={getFullImageUrl(product.video)}
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain"
+                  poster={getFullImageUrl(product.image)}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              )}
+            </div>
+            
+            {/* Product Name */}
+            <div className="mt-3 text-center">
+              <h3 className="text-white text-base font-medium">{product.name}</h3>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Image Modal */}
       {showImageModal && (
         <div
@@ -3214,10 +3425,20 @@ const ProductDetails = () => {
                   >
                     {media?.type === 'video' ? (
                       <>
-                        <video
-                          src={getFullImageUrl(media.url)}
-                          className="w-full h-24 object-cover"
-                        />
+                        {isYouTubeUrl(media.url) ? (
+                          <img
+                            src={`https://img.youtube.com/vi/${media.url.includes('youtu.be/') 
+                              ? media.url.split('youtu.be/')[1]?.split('?')[0] 
+                              : media.url.split('v=')[1]?.split('&')[0]}/mqdefault.jpg`}
+                            alt="YouTube video thumbnail"
+                            className="w-full h-24 object-cover"
+                          />
+                        ) : (
+                          <video
+                            src={getFullImageUrl(media.url)}
+                            className="w-full h-24 object-cover"
+                          />
+                        )}
                         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
                           <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
@@ -3250,10 +3471,20 @@ const ProductDetails = () => {
                 >
                   {media?.type === 'video' ? (
                     <>
-                      <video
-                        src={getFullImageUrl(media.url)}
-                        className="w-full h-full object-cover"
-                      />
+                      {isYouTubeUrl(media.url) ? (
+                        <img
+                          src={`https://img.youtube.com/vi/${media.url.includes('youtu.be/') 
+                            ? media.url.split('youtu.be/')[1]?.split('?')[0] 
+                            : media.url.split('v=')[1]?.split('&')[0]}/mqdefault.jpg`}
+                          alt="YouTube video thumbnail"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <video
+                          src={getFullImageUrl(media.url)}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
                         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
@@ -3274,16 +3505,28 @@ const ProductDetails = () => {
             {/* Main media area */}
             <div className="flex-1 flex items-center justify-center relative">
               {productImages[modalImageIndex]?.type === 'video' ? (
-                <video
-                  key={modalImageIndex}
-                  src={getFullImageUrl(productImages[modalImageIndex]?.url) || ""}
-                  controls
-                  autoPlay
-                  className="max-h-full max-w-full object-contain bg-white"
-                  poster={getFullImageUrl(product.image)}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                isYouTubeUrl(productImages[modalImageIndex]?.url) ? (
+                  <iframe
+                    key={modalImageIndex}
+                    src={getYouTubeEmbedUrl(productImages[modalImageIndex]?.url)}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full max-w-4xl max-h-[80vh]"
+                  ></iframe>
+                ) : (
+                  <video
+                    key={modalImageIndex}
+                    src={getFullImageUrl(productImages[modalImageIndex]?.url) || ""}
+                    controls
+                    autoPlay
+                    className="max-h-full max-w-full object-contain bg-white"
+                    poster={getFullImageUrl(product.image)}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                )
               ) : (
                 <img
                   src={getFullImageUrl(productImages[modalImageIndex]?.url) || "/placeholder.svg?height=600&width=600"}

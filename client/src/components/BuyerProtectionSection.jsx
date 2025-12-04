@@ -3,7 +3,7 @@ import axios from "axios"
 import { Shield, Check, ChevronRight } from "lucide-react"
 import config from "../config/config"
 
-const BuyerProtectionSection = ({ productId, productPrice, onSelectProtection, selectedProtections = [] }) => {
+const BuyerProtectionSection = ({ productId, productPrice, onSelectProtection, selectedProtections = [], onProtectionsLoaded }) => {
   const [protections, setProtections] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -22,8 +22,15 @@ const BuyerProtectionSection = ({ productId, productPrice, onSelectProtection, s
       })
       console.log('Received protections:', data)
       setProtections(data)
+      // Notify parent about whether protections are available
+      if (onProtectionsLoaded) {
+        onProtectionsLoaded(data.length > 0)
+      }
     } catch (error) {
       console.error("Failed to load protection plans:", error)
+      if (onProtectionsLoaded) {
+        onProtectionsLoaded(false)
+      }
     } finally {
       setLoading(false)
     }
@@ -70,7 +77,12 @@ const BuyerProtectionSection = ({ productId, productPrice, onSelectProtection, s
     }
   }
 
+  // Don't show loading skeleton when just checking for availability
   if (loading) {
+    // If onProtectionsLoaded is provided, this is just checking availability - don't show skeleton
+    if (onProtectionsLoaded) {
+      return null
+    }
     return (
       <div className="animate-pulse space-y-3">
         {[1, 2, 3].map((i) => (

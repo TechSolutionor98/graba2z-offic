@@ -77,6 +77,16 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   
   // Color Variations
   const [colorVariations, setColorVariations] = useState([])
+  
+  // Video Source Type (upload or youtube)
+  const [videoSourceType, setVideoSourceType] = useState("youtube") // 'upload' | 'youtube'
+  const [youtubeUrl, setYoutubeUrl] = useState("")
+
+  // Helper function to check if a URL is a YouTube URL
+  const isYouTubeUrl = (url) => {
+    if (!url) return false
+    return url.includes('youtube.com') || url.includes('youtu.be')
+  }
 
   const units = [
     { value: "piece", label: "Piece" },
@@ -269,6 +279,16 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           hideFromShop: product.hideFromShop || false,
           stockStatus: product.stockStatus || "Available Product",
         })
+        
+        // Set video source type based on existing video URL
+        if (product.video) {
+          if (isYouTubeUrl(product.video)) {
+            setVideoSourceType("youtube")
+            setYoutubeUrl(product.video)
+          } else {
+            setVideoSourceType("upload")
+          }
+        }
       }
 
       preload()
@@ -549,6 +569,32 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       ...prev,
       video: url,
     }))
+  }
+
+  const handleYoutubeUrlChange = (e) => {
+    const url = e.target.value
+    setYoutubeUrl(url)
+    setFormData((prev) => ({
+      ...prev,
+      video: url,
+    }))
+  }
+
+  const handleVideoSourceTypeChange = (type) => {
+    setVideoSourceType(type)
+    // Clear video when switching source types
+    if (type === "upload") {
+      setYoutubeUrl("")
+      setFormData((prev) => ({
+        ...prev,
+        video: "",
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        video: youtubeUrl,
+      }))
+    }
   }
 
   const handleVideoGalleryUpload = (url, index) => {
@@ -1046,14 +1092,80 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
             
             {/* Main Video */}
             <div className="mb-6">
-              <VideoUpload 
-                onVideoUpload={handleVideoUpload} 
-                currentVideo={formData.video} 
-                label="Main Product Video (MP4/WebM)" 
-              />
+              {/* Video Source Type Toggle */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Main Video Source</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="videoSourceType"
+                      value="upload"
+                      checked={videoSourceType === "upload"}
+                      onChange={() => handleVideoSourceTypeChange("upload")}
+                      className="mr-2 text-purple-600 focus:ring-purple-500"
+                    />
+                    <span className="text-sm text-gray-700">Upload Video</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="videoSourceType"
+                      value="youtube"
+                      checked={videoSourceType === "youtube"}
+                      onChange={() => handleVideoSourceTypeChange("youtube")}
+                      className="mr-2 text-purple-600 focus:ring-purple-500"
+                    />
+                    <span className="text-sm text-gray-700">YouTube URL</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Upload Video Section */}
+              {videoSourceType === "upload" && (
+                <VideoUpload 
+                  onVideoUpload={handleVideoUpload} 
+                  currentVideo={formData.video} 
+                  label="Main Product Video (MP4/WebM)" 
+                />
+              )}
+
+              {/* YouTube URL Section */}
+              {videoSourceType === "youtube" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">YouTube Video URL</label>
+                  <input
+                    type="url"
+                    value={youtubeUrl}
+                    onChange={handleYoutubeUrlChange}
+                    placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Paste the YouTube video URL. Supports youtube.com/watch?v=... and youtu.be/... formats.
+                  </p>
+                  {youtubeUrl && isYouTubeUrl(youtubeUrl) && (
+                    <div className="mt-3 aspect-video w-full max-w-md">
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        src={`https://www.youtube.com/embed/${youtubeUrl.includes('youtu.be/') 
+                          ? youtubeUrl.split('youtu.be/')[1]?.split('?')[0] 
+                          : youtubeUrl.split('v=')[1]?.split('&')[0]}`}
+                        title="YouTube video preview"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="rounded-lg"
+                      ></iframe>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Video Gallery */}
+            {/* Video Gallery - Only show when Upload Video is selected */}
+            {videoSourceType === "upload" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Video Gallery</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1086,6 +1198,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
                 </div>
               </div>
             </div>
+            )}
           </div>
         </div>
 
