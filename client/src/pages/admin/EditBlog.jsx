@@ -8,6 +8,7 @@ import ImageUpload from "../../components/ImageUpload"
 import TipTapEditor from "../../components/TipTapEditor"
 import { ArrowLeft, X, User, Clock, Tag, Save } from "lucide-react"
 import axios from "axios"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 const EditBlog = () => {
@@ -477,7 +478,7 @@ const EditBlog = () => {
                     {formData.mainImage && (
                       <div className="relative">
                         <img
-                          src={formData.mainImage || "/placeholder.svg"}
+                          src={getFullImageUrl(formData.mainImage) || "/placeholder.svg"}
                           alt="Main blog image"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                         />
@@ -500,7 +501,7 @@ const EditBlog = () => {
                     {formData.additionalImage && (
                       <div className="relative">
                         <img
-                          src={formData.additionalImage || "/placeholder.svg"}
+                          src={getFullImageUrl(formData.additionalImage) || "/placeholder.svg"}
                           alt="Additional blog image"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200"
                         />

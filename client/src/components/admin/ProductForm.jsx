@@ -5,10 +5,12 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import ImageUpload from "../ImageUpload"
+import VideoUpload from "../VideoUpload"
 import TipTapEditor from "../TipTapEditor"
 import { Plus, X } from "lucide-react"
 import ProductVariationModal from "./ProductVariationModal"
 import ColorVariationForm from "./ColorVariationForm"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 const ProductForm = ({ product, onSubmit, onCancel }) => {
@@ -41,6 +43,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     discount: "",
     image: "",
     galleryImages: [],
+    video: "",
+    videoGallery: [],
     countInStock: "",
     lowStockWarning: "5",
     maxPurchaseQty: "10",
@@ -244,6 +248,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           discount: product.discount || "",
           image: product.image || "",
           galleryImages: product.galleryImages || [],
+          video: product.video || "",
+          videoGallery: product.videoGallery || [],
           countInStock: product.countInStock || "",
           lowStockWarning: product.lowStockWarning || "5",
           maxPurchaseQty: product.maxPurchaseQty || "10",
@@ -538,6 +544,35 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     })
   }
 
+  const handleVideoUpload = (url) => {
+    setFormData((prev) => ({
+      ...prev,
+      video: url,
+    }))
+  }
+
+  const handleVideoGalleryUpload = (url, index) => {
+    setFormData((prev) => {
+      const newVideoGallery = [...prev.videoGallery]
+      newVideoGallery[index] = url
+      return {
+        ...prev,
+        videoGallery: newVideoGallery,
+      }
+    })
+  }
+
+  const removeVideoFromGallery = (index) => {
+    setFormData((prev) => {
+      const newVideoGallery = [...prev.videoGallery]
+      newVideoGallery.splice(index, 1)
+      return {
+        ...prev,
+        videoGallery: newVideoGallery,
+      }
+    })
+  }
+
   // Specification handlers
   const addSpecification = () => {
     setFormData((prev) => ({
@@ -598,6 +633,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         tax: taxValue,
         tags: formData.tags ? formData.tags.split(",").map((tag) => tag.trim()) : [],
         galleryImages: formData.galleryImages.filter((img) => img !== ""),
+        video: formData.video || "",
+        videoGallery: formData.videoGallery.filter((vid) => vid !== ""),
         specifications: formData.specifications.filter((spec) => spec.key && spec.value),
         stockStatus: formData.stockStatus,
         isActive: formData.isActive,
@@ -960,24 +997,30 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         {/* Images */}
         <div className="space-y-4">
           <div>
-            <ImageUpload onImageUpload={handleImageUpload} currentImage={formData.image} label="Main Image *" />
+            <ImageUpload 
+              onImageUpload={handleImageUpload} 
+              currentImage={formData.image} 
+              label="Main Product Image (WebP only) *" 
+              isProduct={true}
+            />
           </div>
 
           {/* Gallery Images */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Gallery Images</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Gallery Images (WebP only)</label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {formData.galleryImages.map((img, index) => (
                 <div key={index} className="relative">
                   <ImageUpload
                     onImageUpload={(url) => handleGalleryImageUpload(url, index)}
                     currentImage={img}
-                    label={`Upload Gallery Image ${index + 1}`}
+                    label={`Gallery Image ${index + 1}`}
+                    isProduct={true}
                   />
                   <button
                     type="button"
                     onClick={() => removeGalleryImage(index)}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 z-10"
                     title="Remove Image"
                   >
                     <X size={14} />
@@ -993,6 +1036,54 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
                   <Plus size={24} />
                   <span className="ml-2">Add Image</span>
                 </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Videos Section */}
+          <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Videos</h3>
+            
+            {/* Main Video */}
+            <div className="mb-6">
+              <VideoUpload 
+                onVideoUpload={handleVideoUpload} 
+                currentVideo={formData.video} 
+                label="Main Product Video (MP4/WebM)" 
+              />
+            </div>
+
+            {/* Video Gallery */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Video Gallery</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {formData.videoGallery.map((vid, index) => (
+                  <div key={index} className="relative">
+                    <VideoUpload
+                      onVideoUpload={(url) => handleVideoGalleryUpload(url, index)}
+                      currentVideo={vid}
+                      label={`Gallery Video ${index + 1}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeVideoFromGallery(index)}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 z-10"
+                      title="Remove Video"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, videoGallery: [...prev.videoGallery, ""] }))}
+                    className="w-full h-20 flex items-center justify-center border-2 border-dashed border-purple-300 rounded-lg text-purple-400 hover:text-purple-600 hover:border-purple-400 transition-colors"
+                  >
+                    <Plus size={24} />
+                    <span className="ml-2">Add Video</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1331,7 +1422,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
                   <div className="flex items-start space-x-3">
                     <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                       <img
-                        src={variation.image || "/placeholder.svg"}
+                        src={getFullImageUrl(variation.image) || "/placeholder.svg"}
                         alt={variation.name}
                         className="w-full h-full object-contain"
                       />

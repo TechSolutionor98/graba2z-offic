@@ -27,7 +27,9 @@ const TipTapRenderer = ({ content, className = '' }) => {
         prose-th:border prose-th:border-gray-300 prose-th:bg-gray-50 prose-th:p-3 prose-th:text-left prose-th:font-semibold
         prose-td:border prose-td:border-gray-300 prose-td:p-3
         prose-img:rounded-lg prose-img:shadow-md prose-img:my-6
-        first:prose-h1:mt-0 first:prose-h2:mt-0 first:prose-h3:mt-0 ${className}`}
+        prose-video:rounded-lg prose-video:shadow-md prose-video:my-6 prose-video:max-w-full prose-video:h-auto
+        first:prose-h1:mt-0 first:prose-h2:mt-0 first:prose-h3:mt-0 ${className}
+        [&_video]:rounded-lg [&_video]:shadow-md [&_video]:my-6 [&_video]:max-w-full [&_video]:h-auto`}
       dangerouslySetInnerHTML={{ __html: content }}
     />
   );

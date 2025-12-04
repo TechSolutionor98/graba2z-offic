@@ -2010,6 +2010,7 @@ import { useAuth } from "../context/AuthContext"
 import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X } from "lucide-react"
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 import config from "../config/config"
 const UAE_STATES = ["Abu Dhabi", "Ajman", "Al Ain", "Dubai", "Fujairah", "Ras Al Khaimah", "Sharjah", "Umm al-Qaywain"]
@@ -3696,7 +3697,7 @@ const Checkout = () => {
                     <div className="flex items-center">
                       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
                         <img
-                          src={item.image || "/placeholder.svg?height=48&width=48"}
+                          src={getFullImageUrl(item.image) || "/placeholder.svg?height=48&width=48"}
                           alt={item.name}
                           className="h-full w-full object-cover"
                         />

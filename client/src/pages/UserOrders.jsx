@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { useAuth } from "../context/AuthContext"
 import { CheckCircle, Clock, Package, Truck, AlertTriangle } from "lucide-react"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 import config from "../config/config"
 const UserOrders = () => {
@@ -192,7 +193,7 @@ const UserOrders = () => {
                     <li key={item._id} className="py-4 flex">
                       <div className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden">
                         <img
-                          src={item.image || "/placeholder.svg"}
+                          src={getFullImageUrl(item.image) || "/placeholder.svg"}
                           alt={item.name}
                           className="w-full h-full object-cover"
                         />

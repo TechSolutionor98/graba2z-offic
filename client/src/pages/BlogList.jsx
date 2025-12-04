@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import axios from "axios"
 import { Calendar, User, Eye, Tag, Search, Filter } from "lucide-react"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 import config from "../config/config"
 
@@ -216,7 +217,7 @@ const BlogList = () => {
                 {/* Blog Image */}
                 <div className="h-48 w-full bg-gray-100 flex items-center justify-center overflow-hidden">
                   <img
-                    src={blog.mainImage || blog.image || "/placeholder.svg"}
+                    src={getFullImageUrl(blog.mainImage || blog.image) || "/placeholder.svg"}
                     alt={blog.title}
                     className="object-cover w-full h-full"
                   />

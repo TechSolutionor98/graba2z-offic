@@ -6,6 +6,7 @@ import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Plus, Search, Filter, Edit, Trash2, Eye, Calendar, User, Tag } from "lucide-react"
 import axios from "axios"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 
@@ -486,7 +487,7 @@ const AdminBlogs = () => {
                             <div className="flex items-center">
                               {blog.mainImage && (
                                 <img
-                                  src={blog.mainImage || "/placeholder.svg"}
+                                  src={getFullImageUrl(blog.mainImage) || "/placeholder.svg"}
                                   alt={blog.title}
                                   className="h-12 w-12 rounded-lg object-cover mr-4"
                                 />

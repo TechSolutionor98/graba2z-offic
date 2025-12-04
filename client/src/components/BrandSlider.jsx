@@ -283,6 +283,7 @@
 
 
 import React, { useState, useEffect, useRef } from "react";
+import { getFullImageUrl } from "../utils/imageUtils";
 
 const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
   const [brandIndex, setBrandIndex] = useState(initialIndex);
@@ -497,7 +498,7 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
                   >
                     <div className="w-22 h-22 md:w-26 md:h-26 lg:w-40 lg:h-40 overflow-hidden flex items-center justify-center">
                       <img
-                        src={brand.logo || "/placeholder.svg"}
+                        src={getFullImageUrl(brand.logo) || "/placeholder.svg"}
                         alt={brand.name}
                         className="w-full h-full object-contain"
                       />

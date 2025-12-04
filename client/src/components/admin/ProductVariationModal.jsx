@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import { X, Search, Plus, Check } from "lucide-react"
+import { getFullImageUrl } from "../../utils/imageUtils"
 import config from "../../config/config"
 
 const ProductVariationModal = ({ isOpen, onClose, onSelectProducts, selectedVariations = [], currentProductId, currentProductName = "" }) => {
@@ -225,7 +226,7 @@ const ProductVariationModal = ({ isOpen, onClose, onSelectProducts, selectedVari
                   <div key={product._id} className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded overflow-hidden flex-shrink-0">
                       <img 
-                        src={product.image || "/placeholder.svg"} 
+                        src={getFullImageUrl(product.image) || "/placeholder.svg"} 
                         alt={product.name}
                         className="w-full h-full object-contain"
                       />
@@ -285,7 +286,7 @@ const ProductVariationModal = ({ isOpen, onClose, onSelectProducts, selectedVari
                       )}
                       <div className="aspect-square mb-3 bg-gray-100 rounded-md overflow-hidden">
                         <img
-                          src={product.image || "/placeholder.svg"}
+                          src={getFullImageUrl(product.image) || "/placeholder.svg"}
                           alt={product.name}
                           className="w-full h-full object-contain"
                         />

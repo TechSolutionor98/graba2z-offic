@@ -6,6 +6,7 @@ import { FaEdit, FaTrash, FaPlus, FaSearch, FaChevronLeft, FaChevronRight } from
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import config from "../../config/config"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 const AdminBannerCards = () => {
   const [bannerCards, setBannerCards] = useState([])
@@ -620,7 +621,7 @@ const AdminBannerCards = () => {
                             <tr key={card._id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <img
-                                  src={card.image || card.bgImage}
+                                  src={getFullImageUrl(card.image || card.bgImage)}
                                   alt={card.name}
                                   className="h-12 w-12 rounded object-cover"
                                 />

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Plus, X, Trash2 } from "lucide-react"
 import ImageUpload from "../ImageUpload"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 const ColorVariationForm = ({ colorVariations = [], onChange }) => {
   const [expandedIndex, setExpandedIndex] = useState(null)
@@ -109,7 +110,7 @@ const ColorVariationForm = ({ colorVariations = [], onChange }) => {
                   {variation.image && (
                     <div className="w-12 h-12 bg-white rounded border border-purple-200 overflow-hidden">
                       <img
-                        src={variation.image}
+                        src={getFullImageUrl(variation.image)}
                         alt={variation.color}
                         className="w-full h-full object-contain"
                       />

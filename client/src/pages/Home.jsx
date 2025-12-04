@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import axios from "axios"
 import productCache from "../services/productCache"
 import { generateShopURL } from "../utils/urlUtils"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 import BigSaleSection from "../components/BigSaleSection"
 import {
@@ -1686,7 +1687,7 @@ const MobileProductCard = ({ product }) => {
       <div className="relative mb-2 flex h-[170px] justify-center items-center">
   <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
           <img
-            src={product.image || "/placeholder.svg?height=120&width=120"}
+            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             className="w-full h-full object-contain rounded mx-auto"
           />
@@ -1810,7 +1811,7 @@ const DynamicBrandProductCard = ({ product }) => {
       <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
   <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="w-full h-full flex items-center justify-center">
           <img
-            src={product.image || "/placeholder.svg?height=120&width=120"}
+            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             className="w-full h-full object-contain bg-white rounded mx-auto mb-4"
             style={{maxHeight:165}}
@@ -1933,7 +1934,7 @@ const AccessoriesProductCard = ({ product }) => {
       <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
   <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="w-full h-full flex items-center justify-center">
           <img
-            src={product.image || "/placeholder.svg?height=120&width=120"}
+            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             className="w-full h-full object-contain bg-white rounded mx-auto mb-4"
             style={{maxHeight:165}}

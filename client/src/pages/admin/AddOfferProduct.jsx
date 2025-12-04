@@ -4,6 +4,7 @@ import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { ArrowLeft, Search } from "lucide-react"
 import axios from "axios"
+import { getFullImageUrl } from "../../utils/imageUtils"
 import config from "../../config/config"
 
 const AddOfferProduct = () => {
@@ -263,7 +264,7 @@ const AddOfferProduct = () => {
                           <div className="ml-3 flex items-center gap-3 flex-1">
                             {product.mainImage && (
                               <img
-                                src={product.mainImage}
+                                src={getFullImageUrl(product.mainImage || product.image)}
                                 alt={product.name}
                                 className="w-16 h-16 object-cover rounded"
                               />

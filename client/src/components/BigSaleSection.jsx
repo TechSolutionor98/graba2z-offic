@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Heart, Star, ShoppingBag } from "lucide-reac
 import { Link } from "react-router-dom"
 import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 // Reusable product card component used in both desktop and mobile views
 const ProductCard = ({ product, isMobile = false }) => {
@@ -48,7 +49,7 @@ const ProductCard = ({ product, isMobile = false }) => {
       <div className="relative mb-2 flex h-[150px] justify-center items-cente">
   <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
           <img
-            src={product.image || "/placeholder.svg?height=120&width=120"}
+            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             className="w-full h-full cover object-contain rounded mx-auto"
           />

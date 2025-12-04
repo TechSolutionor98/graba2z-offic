@@ -5,6 +5,7 @@ import { Link } from "react-router-dom"
 import { FaEdit, FaTrash, FaPlus, FaSearch, FaExclamationTriangle, FaTools } from "react-icons/fa"
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 const AdminBrands = () => {
@@ -286,7 +287,7 @@ const AdminBrands = () => {
                             {brand.logo ? (
                               <img
                                 className="h-10 w-10 rounded-full object-cover"
-                                src={brand.logo || "/placeholder.svg"}
+                                src={getFullImageUrl(brand.logo) || "/placeholder.svg"}
                                 alt={displayName}
                               />
                             ) : (

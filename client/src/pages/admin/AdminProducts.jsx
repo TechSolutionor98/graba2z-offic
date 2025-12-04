@@ -8,6 +8,7 @@ import MoveProductsModal from "../../components/admin/MoveProductsModal"
 import ConfirmDialog from "../../components/admin/ConfirmDialog"
 import { useToast } from "../../context/ToastContext"
 import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight, Copy, Upload } from "lucide-react"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 import { exportProductsToExcel } from "../../utils/exportToExcel"
@@ -1483,7 +1484,7 @@ const AdminProducts = () => {
                                   <div className="flex items-center">
                                     <div className="h-10 w-10 flex-shrink-0">
                                       <img
-                                        src={product.image || "/placeholder.svg"}
+                                        src={getFullImageUrl(product.image) || "/placeholder.svg"}
                                         alt={product.name}
                                         className="h-10 w-10 rounded-md object-cover"
                                       />

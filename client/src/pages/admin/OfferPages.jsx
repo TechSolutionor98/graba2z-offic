@@ -6,6 +6,7 @@ import { FaEdit, FaTrash, FaPlus, FaChevronLeft, FaChevronRight } from "react-ic
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import config from "../../config/config"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 const OfferPages = () => {
   const [offerPages, setOfferPages] = useState([])
@@ -445,7 +446,7 @@ const OfferPages = () => {
                       {page.heroImage && (
                         <div className="mb-3">
                           <img
-                            src={page.heroImage}
+                            src={getFullImageUrl(page.heroImage)}
                             alt={page.name}
                             className="w-full h-32 object-cover rounded"
                           />
@@ -616,7 +617,7 @@ const OfferPages = () => {
                             <div className="flex items-center">
                               {item.product?.mainImage && (
                                 <img
-                                  src={item.product.mainImage}
+                                  src={getFullImageUrl(item.product.mainImage || item.product.image)}
                                   alt={item.product?.name}
                                   className="h-10 w-10 rounded object-cover mr-3"
                                 />
@@ -700,7 +701,7 @@ const OfferPages = () => {
                             <div className="flex items-center">
                               {item.brand?.logo && (
                                 <img
-                                  src={item.brand.logo}
+                                  src={getFullImageUrl(item.brand.logo)}
                                   alt={item.brand?.name}
                                   className="h-10 w-10 rounded object-contain mr-3"
                                 />
@@ -778,7 +779,7 @@ const OfferPages = () => {
                             <div className="flex items-center">
                               {item.category?.image && (
                                 <img
-                                  src={item.category.image}
+                                  src={getFullImageUrl(item.category.image)}
                                   alt={item.category?.name}
                                   className="h-10 w-10 rounded object-cover mr-3"
                                 />

@@ -5,13 +5,23 @@ import { Upload, X, ImageIcon } from "lucide-react"
 import axios from "axios"
 
 import config from "../config/config"
+import { getFullImageUrl } from "../utils/imageUtils"
 
-const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", multiple = false, isBanner = false }) => {
+const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", multiple = false, isBanner = false, isProduct = false }) => {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
 
   const handleFileUpload = async (files) => {
     if (!files || files.length === 0) return
+
+    // Validate file type for product/banner images (WebP only)
+    if (isProduct || isBanner) {
+      const invalidFiles = Array.from(files).filter(file => file.type !== "image/webp")
+      if (invalidFiles.length > 0) {
+        alert("Only WebP images are allowed. Please convert your images to WebP format.")
+        return
+      }
+    }
 
     console.log("📤 Starting file upload...")
     console.log("📁 Files to upload:", files.length)
@@ -35,7 +45,10 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
         })
 
         console.log("📤 Uploading multiple images...")
-        const { data } = await axios.post(`${config.API_URL}/api/upload/multiple`, formData, {
+        const uploadUrl = isProduct 
+          ? `${config.API_URL}/api/upload/product-images` 
+          : `${config.API_URL}/api/upload/multiple`
+        const { data } = await axios.post(uploadUrl, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
@@ -49,7 +62,15 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
         formData.append("image", files[0])
 
         console.log("📤 Uploading single image...")
-        const uploadUrl = isBanner ? `${config.API_URL}/api/upload/banner` : `${config.API_URL}/api/upload/single`;
+        let uploadUrl
+        if (isProduct) {
+          uploadUrl = `${config.API_URL}/api/upload/product-image`
+        } else if (isBanner) {
+          uploadUrl = `${config.API_URL}/api/upload/banner`
+        } else {
+          uploadUrl = `${config.API_URL}/api/upload/single`
+        }
+        
         const { data } = await axios.post(uploadUrl, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -106,7 +127,7 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
       {currentImage && !multiple && (
         <div className="relative inline-block">
           <img
-            src={currentImage || "/placeholder.svg"}
+            src={getFullImageUrl(currentImage) || "/placeholder.svg"}
             alt="Current"
             className="h-20 w-20 object-cover rounded-lg border"
           />
@@ -137,7 +158,7 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
         <input
           type="file"
           multiple={multiple}
-          accept="image/*"
+          accept={(isProduct || isBanner) ? "image/webp" : "image/*"}
           onChange={handleChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           disabled={uploading}
@@ -147,7 +168,7 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
           {uploading ? (
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="text-sm text-gray-600">Uploading to Cloudinary...</p>
+              <p className="text-sm text-gray-600">Uploading image...</p>
             </div>
           ) : (
             <>
@@ -163,7 +184,9 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
                   <span className="font-medium text-blue-600 hover:text-blue-500">Click to upload</span> or drag and
                   drop
                 </p>
-                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                <p className="text-xs text-gray-500">
+                  {(isProduct || isBanner) ? "WebP only, up to 10MB" : "PNG, JPG, GIF, WebP up to 10MB"}
+                </p>
               </div>
             </>
           )}

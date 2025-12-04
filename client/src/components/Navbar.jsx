@@ -2,6 +2,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 import config from "../config/config"
 import { Link, useNavigate, useLocation } from "react-router-dom"
@@ -633,7 +634,7 @@ const Navbar = () => {
                           onClick={() => setShowSearchDropdown(false)}
                         >
                           <img
-                            src={product.image || "/placeholder.svg"}
+                            src={getFullImageUrl(product.image) || "/placeholder.svg"}
                             alt={product.name}
                             className="w-16 h-16 object-contain rounded"
                           />
@@ -1215,7 +1216,7 @@ const Navbar = () => {
                         }}
                       >
                         <img
-                          src={product.image || "/placeholder.svg"}
+                          src={getFullImageUrl(product.image) || "/placeholder.svg"}
                           alt={product.name}
                           className="w-12 h-12 object-contain rounded flex-shrink-0"
                         />

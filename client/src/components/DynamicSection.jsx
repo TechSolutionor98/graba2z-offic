@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import axios from 'axios'
 import config from '../config/config'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { getFullImageUrl } from '../utils/imageUtils'
 
 function DynamicSection({ section }) {
   const [cards, setCards] = useState([])
@@ -128,7 +129,7 @@ function BackgroundImageSection({ section, cards, settings }) {
               
               {card.image && (
                 <div className="mt-4 relative h-48 flex-shrink-0 overflow-hidden rounded-lg">
-                  <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                  <img src={getFullImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover" />
                 </div>
               )}
             </Link>
@@ -224,7 +225,7 @@ function ArrowSliderSection({ section, cards, settings, currentIndex, setCurrent
                 
                 {card.image && (
                   <div className="mt-4 relative h-48 flex-shrink-0 overflow-hidden rounded-lg">
-                    <img src={card.image} alt={card.name} className="w-full h-full bg-cover" />
+                    <img src={getFullImageUrl(card.image)} alt={card.name} className="w-full h-full bg-cover" />
                   </div>
                 )}
               </Link>
@@ -279,7 +280,7 @@ function CardsLeftImageRightSection({ section, cards, settings }) {
                 
                 {card.image && (
                   <div className="mt-3 relative h-40 flex-shrink-0 overflow-hidden rounded-lg">
-                    <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                    <img src={getFullImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover" />
                   </div>
                 )}
               </Link>
@@ -290,7 +291,7 @@ function CardsLeftImageRightSection({ section, cards, settings }) {
           {sideImage && (
             <div className="col-span-4">
               <div className="rounded-lg overflow-hidden" style={{ height: '380px' }}>
-                <img src={sideImage} alt={section.name} className="w-full h-full object-cover" />
+                <img src={getFullImageUrl(sideImage)} alt={section.name} className="w-full h-full object-cover" />
               </div>
             </div>
           )}
@@ -319,7 +320,7 @@ function CardsRightImageLeftSection({ section, cards, settings }) {
           {sideImage && (
             <div className="col-span-4">
               <div className="rounded-lg overflow-hidden" style={{ height: '380px' }}>
-                <img src={sideImage} alt={section.name} className="w-full h-full object-cover" />
+                <img src={getFullImageUrl(sideImage)} alt={section.name} className="w-full h-full object-cover" />
               </div>
             </div>
           )}
@@ -352,7 +353,7 @@ function CardsRightImageLeftSection({ section, cards, settings }) {
                 
                 {card.image && (
                   <div className="mt-3 relative h-40 flex-shrink-0 overflow-hidden rounded-lg">
-                    <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                    <img src={getFullImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover" />
                   </div>
                 )}
               </Link>
@@ -409,7 +410,7 @@ function SimpleCardsSection({ section, cards, settings }) {
               
               {card.image && (
                 <div className="mt-3 relative h-40 flex-shrink-0 overflow-hidden rounded-lg">
-                  <img src={card.image} alt={card.name} className="w-full h-full bg-cover" />
+                  <img src={getFullImageUrl(card.image)} alt={card.name} className="w-full h-full bg-cover" />
                 </div>
               )}
             </Link>

@@ -510,8 +510,8 @@ const AddSubCategory = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Sub Category Image</label>
-                <ImageUpload onImageUpload={handleImageUpload} currentImage={formData.image} />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Sub Category Image (WebP only)</label>
+                <ImageUpload onImageUpload={handleImageUpload} currentImage={formData.image} isProduct={true} />
               </div>
 
               <div className="flex items-center">

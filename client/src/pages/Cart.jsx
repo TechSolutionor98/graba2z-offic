@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext"
 import { Trash2, Minus, Plus, ShoppingBag, Package, X, Percent, Gift, Shield } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import axios from "axios"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 import config from "../config/config"
 
@@ -316,7 +317,7 @@ const Cart = () => {
         <div className="block sm:hidden">
           <div className="flex flex-row items-center mb-3">
             <div className="w-20 h-20 flex-shrink-0 overflow-hidden rounded-md bg-white">
-              <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-full h-full object-contain" />
+              <img src={getFullImageUrl(item.image) || "/placeholder.svg"} alt={item.name} className="w-full h-full object-contain" />
             </div>
             <div className="flex-1 ml-4">
               <h3 className="text-base font-medium text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
@@ -406,7 +407,7 @@ const Cart = () => {
         <div className="hidden sm:flex flex-col sm:flex-row">
           <div className="sm:w-40 sm:h-26 flex-shrink-0 overflow-hidden rounded-md mb-4 sm:mb-0">
             <img
-              src={item.image || "/placeholder.svg"}
+              src={getFullImageUrl(item.image) || "/placeholder.svg"}
               alt={item.name}
               className="w-full h-full object-cover"
             />

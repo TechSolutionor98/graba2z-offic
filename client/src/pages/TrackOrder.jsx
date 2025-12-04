@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useToast } from "../context/ToastContext"
 import { Package, Truck, CheckCircle, Clock, AlertCircle, Search } from "lucide-react"
 import axios from "axios"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 import config from "../config/config"
 
@@ -317,7 +318,7 @@ const TrackOrder = () => {
                     <div key={index} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg min-w-0 w-full">
                       <div className="relative">
                         <img
-                          src={item.image || "/placeholder.svg?height=80&width=80"}
+                          src={getFullImageUrl(item.image) || "/placeholder.svg?height=80&width=80"}
                           alt={item.name}
                           className="w-20 h-20 object-contain rounded"
                         />

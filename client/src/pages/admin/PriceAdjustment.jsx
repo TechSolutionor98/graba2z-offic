@@ -5,6 +5,7 @@ import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { useToast } from "../../context/ToastContext"
 import { Search, Tag, CheckSquare, Square, TrendingUp, Percent, DollarSign } from "lucide-react"
+import { getFullImageUrl } from "../../utils/imageUtils"
 import config from "../../config/config"
 
 const PriceAdjustment = () => {
@@ -437,7 +438,7 @@ const PriceAdjustment = () => {
                             <div className="flex items-center">
                               <div className="h-10 w-10 flex-shrink-0">
                                 <img
-                                  src={product.image || "/placeholder.svg"}
+                                  src={getFullImageUrl(product.image) || "/placeholder.svg"}
                                   alt={product.name}
                                   className="h-10 w-10 rounded-md object-cover"
                                 />

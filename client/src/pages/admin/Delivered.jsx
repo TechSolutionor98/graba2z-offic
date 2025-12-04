@@ -6,6 +6,7 @@ import { useReactToPrint } from "react-to-print"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, RefreshCw, CheckCircle2, Star, ChevronDown, X, Printer, Save, Mail, Package, Shield } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
@@ -1036,7 +1037,7 @@ const Delivered = () => {
                           <div className="flex items-center space-x-4">
                             <div className="w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center overflow-hidden">
                               {item.image ? (
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                <img src={getFullImageUrl(item.image)} alt={item.name} className="w-full h-full object-cover" />
                               ) : (
                                 <CheckCircle2 size={24} className="text-gray-400" />
                               )}

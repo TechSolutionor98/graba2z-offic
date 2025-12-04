@@ -5,6 +5,7 @@ import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import ImageUpload from "../../components/ImageUpload"
 import { Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 const AdminBanners = () => {
@@ -241,7 +242,7 @@ const AdminBanners = () => {
 
               {/* Image Upload Section */}
               <div>
-                <ImageUpload onImageUpload={handleImageUpload} currentImage={formData.image} label="Banner Image" isBanner={true} />
+                <ImageUpload onImageUpload={handleImageUpload} currentImage={formData.image} label="Banner Image (WebP only)" isBanner={true} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -413,7 +414,7 @@ const AdminBanners = () => {
                           <div className="flex items-center">
                             <div className="h-12 w-20 flex-shrink-0">
                               <img
-                                src={banner.image || "/placeholder.svg"}
+                                src={getFullImageUrl(banner.image) || "/placeholder.svg"}
                                 alt={banner.title}
                                 className="h-12 w-20 rounded-md object-cover"
                                 onError={(e) => {

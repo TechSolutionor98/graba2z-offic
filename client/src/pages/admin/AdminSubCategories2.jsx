@@ -8,6 +8,7 @@ import SafeDeleteModal from "../../components/admin/SafeDeleteModal"
 import MoveProductsModal from "../../components/admin/MoveProductsModal"
 import { Edit, Trash2, Plus, Search, Filter } from "lucide-react"
 import axios from "axios"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 
@@ -375,7 +376,7 @@ const AdminSubCategories2 = () => {
                           <div className="flex items-center">
                             {subCategory.image && (
                               <img
-                                src={subCategory.image || "/placeholder.svg"}
+                                src={getFullImageUrl(subCategory.image) || "/placeholder.svg"}
                                 alt={subCategory.name}
                                 className="h-10 w-10 rounded-full object-cover mr-4"
                               />

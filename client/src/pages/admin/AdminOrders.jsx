@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, Mail, ChevronDown, RefreshCw } from "lucide-react"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 const AdminOrders = () => {
@@ -534,7 +535,7 @@ const AdminOrders = () => {
                             <div className="flex items-center">
                               <div className="h-10 w-10 flex-shrink-0">
                                 <img
-                                  src={item.image || "/placeholder.svg?height=40&width=40"}
+                                  src={getFullImageUrl(item.image) || "/placeholder.svg?height=40&width=40"}
                                   alt={item.name}
                                   className="h-10 w-10 rounded-md object-cover"
                                 />

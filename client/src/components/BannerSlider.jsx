@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 const BannerSlider = ({ banners }) => {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -52,7 +53,7 @@ const BannerSlider = ({ banners }) => {
       {/* Full Banner Image Only */}
       <div className="absolute inset-0 cover">
         <img
-          src={currentBanner.image || "/placeholder.svg"}
+          src={getFullImageUrl(currentBanner.image) || "/placeholder.svg"}
           alt={currentBanner.title || "Banner"}
           className="w-full h-full cover"
         />

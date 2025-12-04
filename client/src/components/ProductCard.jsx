@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext"
 import { ShoppingCart, Heart, Star, ShoppingBag } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useToast } from "../context/ToastContext"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart()
@@ -55,7 +56,7 @@ const ProductCard = ({ product }) => {
       <Link to={productUrl} className="block flex-1 flex flex-col">
         <div className="relative overflow-hidden flex-shrink-0">
           <img
-            src={product.image || "/placeholder.svg"}
+            src={getFullImageUrl(product.image) || "/placeholder.svg"}
             alt={product.name}
             className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
           />

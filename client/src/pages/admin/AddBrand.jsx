@@ -151,8 +151,8 @@ const AddBrand = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Brand Logo</label>
-                <ImageUpload onImageUpload={handleLogoUpload} currentImage={formData.logo} label="Brand Logo" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Brand Logo (WebP only)</label>
+                <ImageUpload onImageUpload={handleLogoUpload} currentImage={formData.logo} label="Brand Logo" isProduct={true} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Website URL</label>

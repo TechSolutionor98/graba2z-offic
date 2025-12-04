@@ -6,6 +6,7 @@ import { useReactToPrint } from "react-to-print"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, RefreshCw, Pause, Play, ChevronDown, X, Package, CreditCard, MapPin, Clock, User, Printer, Mail, Save, Shield } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
@@ -938,7 +939,7 @@ const OnHold = () => {
                           <div className="flex items-center space-x-4">
                             <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center">
                               {item.image ? (
-                                <img src={item.image} alt={item.name} className="w-14 h-14 object-contain" />
+                                <img src={getFullImageUrl(item.image)} alt={item.name} className="w-14 h-14 object-contain" />
                               ) : (
                                 <Package size={24} className="text-gray-400" />
                               )}

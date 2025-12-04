@@ -1,6 +1,7 @@
 import { useWishlist } from "../context/WishlistContext"
 import { Link } from "react-router-dom"
 import { Trash2, Heart } from "lucide-react"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 const Wishlist = () => {
   const { wishlist, removeFromWishlist, loading } = useWishlist()
@@ -39,7 +40,7 @@ const Wishlist = () => {
               <div className="relative overflow-hidden">
                 <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
                   <img
-                    src={product.image || "/placeholder.svg"}
+                    src={getFullImageUrl(product.image) || "/placeholder.svg"}
                     alt={product.name}
                     className="w-full h-80 lg:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   />

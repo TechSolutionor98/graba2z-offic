@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { productsAPI } from "../services/api"
 import productCache from "../services/productCache"
+import { getFullImageUrl } from "../utils/imageUtils"
 import { FaShoppingCart, FaStar, FaShippingFast, FaUndo, FaShieldAlt, FaArrowRight, FaFire, FaChevronLeft, FaChevronRight } from "react-icons/fa"
 
 const PromotionalPage = () => {
@@ -278,7 +279,7 @@ const PromotionalPage = () => {
                   <div key={product._id} className="min-w-[280px] md:min-w-[300px] bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 snap-start group">
                     <div className="relative h-64 overflow-hidden rounded-t-2xl ">
                       <img
-                        src={product.image || "/placeholder.svg"}
+                        src={getFullImageUrl(product.image) || "/placeholder.svg"}
                         alt={product.name}
                         className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
                       />

@@ -6,6 +6,7 @@ import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import { useWishlist } from "../context/WishlistContext"
+import { getFullImageUrl } from "../utils/imageUtils"
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 import '../styles/phoneInput.css'
@@ -202,21 +203,45 @@ const ProductDetails = () => {
     return null
   }
 
-  // Get current images based on selected color
+  // Get current images based on selected color (includes videos)
   const getCurrentImages = () => {
     const currentColor = getCurrentColor()
+    const media = []
+    
     if (currentColor && currentColor.image) {
-      const images = [currentColor.image]
+      media.push({ type: 'image', url: currentColor.image })
       if (currentColor.galleryImages && currentColor.galleryImages.length > 0) {
-        images.push(...currentColor.galleryImages.filter(img => img))
+        currentColor.galleryImages.filter(img => img).forEach(img => {
+          media.push({ type: 'image', url: img })
+        })
       }
-      return images
+      return media
     }
-    // Fallback to product images
+    
+    // Fallback to product images and videos
+    if (product?.image) {
+      media.push({ type: 'image', url: product.image })
+    }
+    
     if (product?.galleryImages && product.galleryImages.length > 0) {
-      return [product.image, ...product.galleryImages.filter(img => img)]
+      product.galleryImages.filter(img => img).forEach(img => {
+        media.push({ type: 'image', url: img })
+      })
     }
-    return [product?.image].filter(img => img)
+    
+    // Add main product video if exists
+    if (product?.video) {
+      media.push({ type: 'video', url: product.video })
+    }
+    
+    // Add video gallery if exists
+    if (product?.videoGallery && product.videoGallery.length > 0) {
+      product.videoGallery.filter(vid => vid).forEach(vid => {
+        media.push({ type: 'video', url: vid })
+      })
+    }
+    
+    return media
   }
 
   const getEffectivePrice = () => {
@@ -491,7 +516,7 @@ const ProductDetails = () => {
               className="w-5 h-5 text-yellow-600 bg-gray-100 border-gray-300 rounded focus:ring-yellow-500 focus:ring-2"
             />
             <img
-              src={product.image || "/placeholder.svg"}
+              src={getFullImageUrl(product.image) || "/placeholder.svg"}
               alt={product.name}
               className="w-16 h-16 object-cover rounded-md"
             />
@@ -522,7 +547,7 @@ const ProductDetails = () => {
                   className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                 />
                 <img
-                  src={item.image || "/placeholder.svg"}
+                  src={getFullImageUrl(item.image) || "/placeholder.svg"}
                   alt={item.name}
                   className="w-16 h-16 object-cover rounded-md"
                 />
@@ -2113,14 +2138,27 @@ const ProductDetails = () => {
           {/* Product Images - Left Side */}
           <div className="lg:col-span-4">
             <div className="rounded-lg ">
-              {/* Main Image */}
+              {/* Main Image/Video */}
               <div className="relative rounded-lg p-4 group mb-4">
-                <img
-                  src={productImages[selectedImage] || "/placeholder.svg?height=400&width=400"}
-                  alt={product.name}
-                  className="w-full h-96 object-contain cursor-pointer transition-transform hover:scale-105"
-                  onClick={() => handleImageClick(selectedImage)}
-                />
+                {productImages[selectedImage]?.type === 'video' ? (
+                  <video
+                    key={selectedImage}
+                    src={getFullImageUrl(productImages[selectedImage]?.url) || ""}
+                    controls
+                    autoPlay
+                    className="w-full h-96 object-contain rounded-lg"
+                    poster={getFullImageUrl(product.image)}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <img
+                    src={getFullImageUrl(productImages[selectedImage]?.url) || "/placeholder.svg?height=400&width=400"}
+                    alt={product.name}
+                    className="w-full h-96 object-contain cursor-pointer transition-transform hover:scale-105"
+                    onClick={() => handleImageClick(selectedImage)}
+                  />
+                )}
 
                 <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                   <ZoomIn size={16} />
@@ -2171,21 +2209,35 @@ const ProductDetails = () => {
                     onScroll={(e) => setThumbScroll(e.target.scrollLeft)}
                     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                   >
-                    {productImages.map((image, index) => (
+                    {productImages.map((media, index) => (
                       <button
                         key={index}
                         onClick={() => setSelectedImage(index)}
-                        className={`flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden transition-all  ${
+                        className={`relative flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden transition-all  ${
                           selectedImage === index
                             ? "border-green-500 ring-2 ring-green-200"
                             : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
-                        <img
-                          src={image || "/placeholder.svg?height=64&width=64"}
-                          alt={`${product.name} - view ${index + 1}`}
-                          className="w-full h-full object-contain"
-                        />
+                        {media?.type === 'video' ? (
+                          <>
+                            <video
+                              src={getFullImageUrl(media.url)}
+                              className="w-full h-full object-contain"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                              </svg>
+                            </div>
+                          </>
+                        ) : (
+                          <img
+                            src={getFullImageUrl(media?.url) || "/placeholder.svg?height=64&width=64"}
+                            alt={`${product.name} - view ${index + 1}`}
+                            className="w-full h-full object-contain"
+                          />
+                        )}
                       </button>
                     ))}
                   </div>
@@ -2420,7 +2472,7 @@ const ProductDetails = () => {
                             {/* Product Image */}
                             <div className="aspect-square mb-2 bg-white rounded-md overflow-hidden">
                               <img
-                                src={colorVar.image || "/placeholder.svg"}
+                                src={getFullImageUrl(colorVar.image) || "/placeholder.svg"}
                                 alt={colorVar.color}
                                 className="w-full h-full object-contain"
                               />
@@ -3105,7 +3157,7 @@ const ProductDetails = () => {
                   >
                     <Link to={`/product/${encodeURIComponent(relatedProduct.slug || relatedProduct._id)}`}>
                       <img
-                        src={relatedProduct.image || "/placeholder.svg?height=128&width=128"}
+                        src={getFullImageUrl(relatedProduct.image) || "/placeholder.svg?height=128&width=128"}
                         alt={relatedProduct.name}
                         className="w-full h-32 object-contain mb-2"
                       />
@@ -3145,14 +3197,14 @@ const ProductDetails = () => {
           }}
         >
           <div className="relative flex h-[90vh] w-[90vw] max-w-7xl bg-white rounded-lg overflow-hidden">
-            {/* Sidebar with all images (vertical on desktop, horizontal on mobile) */}
+            {/* Sidebar with all images/videos (vertical on desktop, horizontal on mobile) */}
             <div className="hidden md:block w-64 bg-gray-100 p-4 overflow-y-auto">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800">All Images</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">All Media</h3>
               <div className="space-y-2">
-                {productImages.map((image, index) => (
+                {productImages.map((media, index) => (
                   <div
                     key={index}
-                    className={`cursor-pointer border-2 rounded-lg overflow-hidden ${
+                    className={`relative cursor-pointer border-2 rounded-lg overflow-hidden ${
                       index === modalImageIndex ? "border-lime-500" : "border-gray-300"
                     }`}
                     onClick={() => {
@@ -3160,21 +3212,35 @@ const ProductDetails = () => {
                       setIsImageZoomed(false)
                     }}
                   >
-                    <img
-                      src={image || "/placeholder.svg?height=150&width=150"}
-                      alt={`${product.name} ${index + 1}`}
-                      className="w-full h-24 object-cover"
-                    />
+                    {media?.type === 'video' ? (
+                      <>
+                        <video
+                          src={getFullImageUrl(media.url)}
+                          className="w-full h-24 object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                          </svg>
+                        </div>
+                      </>
+                    ) : (
+                      <img
+                        src={getFullImageUrl(media?.url) || "/placeholder.svg?height=150&width=150"}
+                        alt={`${product.name} ${index + 1}`}
+                        className="w-full h-24 object-cover"
+                      />
+                    )}
                   </div>
                 ))}
               </div>
             </div>
             {/* Horizontal thumbnails for mobile */}
             <div className="md:hidden absolute bottom-0 left-0 w-full bg-gray-100 p-2 flex space-x-2 overflow-x-auto z-10">
-              {productImages.map((image, index) => (
+              {productImages.map((media, index) => (
                 <div
                   key={index}
-                  className={`flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden ${
+                  className={`relative flex-shrink-0 w-16 h-16 border-2 rounded-lg overflow-hidden ${
                     index === modalImageIndex ? "border-lime-500" : "border-gray-300"
                   }`}
                   onClick={() => {
@@ -3182,44 +3248,71 @@ const ProductDetails = () => {
                     setIsImageZoomed(false)
                   }}
                 >
-                  <img
-                    src={image || "/placeholder.svg?height=64&width=64"}
-                    alt={`${product.name} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+                  {media?.type === 'video' ? (
+                    <>
+                      <video
+                        src={getFullImageUrl(media.url)}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                        </svg>
+                      </div>
+                    </>
+                  ) : (
+                    <img
+                      src={getFullImageUrl(media?.url) || "/placeholder.svg?height=64&width=64"}
+                      alt={`${product.name} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </div>
               ))}
             </div>
 
-            {/* Main image area */}
+            {/* Main media area */}
             <div className="flex-1 flex items-center justify-center relative">
-              <img
-                src={productImages[modalImageIndex] || "/placeholder.svg?height=600&width=600"}
-                alt={product.name}
-                className={`object-contain bg-white cursor-pointer transition-transform duration-300 ${
-                  isImageZoomed ? "max-h-none max-w-none scale-150" : "max-h-full max-w-full"
-                }`}
-                style={{
-                  transformOrigin: isImageZoomed ? `${mousePosition.x}% ${mousePosition.y}%` : "center",
-                }}
-                onClick={(e) => {
-                  if (!isImageZoomed) {
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    const x = ((e.clientX - rect.left) / rect.width) * 100
-                    const y = ((e.clientY - rect.top) / rect.height) * 100
-                    setMousePosition({ x, y })
-                  }
-                  setIsImageZoomed(!isImageZoomed)
-                }}
-                onMouseMove={(e) => {
-                  if (isImageZoomed) {
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    const x = ((e.clientX - rect.left) / rect.width) * 100
-                    const y = ((e.clientY - rect.top) / rect.height) * 100
-                    setMousePosition({ x, y })
-                  }
-                }}
-              />
+              {productImages[modalImageIndex]?.type === 'video' ? (
+                <video
+                  key={modalImageIndex}
+                  src={getFullImageUrl(productImages[modalImageIndex]?.url) || ""}
+                  controls
+                  autoPlay
+                  className="max-h-full max-w-full object-contain bg-white"
+                  poster={getFullImageUrl(product.image)}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <img
+                  src={getFullImageUrl(productImages[modalImageIndex]?.url) || "/placeholder.svg?height=600&width=600"}
+                  alt={product.name}
+                  className={`object-contain bg-white cursor-pointer transition-transform duration-300 ${
+                    isImageZoomed ? "max-h-none max-w-none scale-150" : "max-h-full max-w-full"
+                  }`}
+                  style={{
+                    transformOrigin: isImageZoomed ? `${mousePosition.x}% ${mousePosition.y}%` : "center",
+                  }}
+                  onClick={(e) => {
+                    if (!isImageZoomed) {
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      const x = ((e.clientX - rect.left) / rect.width) * 100
+                      const y = ((e.clientY - rect.top) / rect.height) * 100
+                      setMousePosition({ x, y })
+                    }
+                    setIsImageZoomed(!isImageZoomed)
+                  }}
+                  onMouseMove={(e) => {
+                    if (isImageZoomed) {
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      const x = ((e.clientX - rect.left) / rect.width) * 100
+                      const y = ((e.clientY - rect.top) / rect.height) * 100
+                      setMousePosition({ x, y })
+                    }
+                  }}
+                />
+              )}
 
               {/* Navigation arrows */}
               <button

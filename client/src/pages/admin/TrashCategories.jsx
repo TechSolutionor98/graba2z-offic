@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { ArrowLeft, RotateCcw, Trash2, Package } from "lucide-react"
+import { getFullImageUrl } from "../../utils/imageUtils"
 import config from "../../config/config"
 import { apiRequest } from "../../services/api"
 
@@ -158,7 +159,7 @@ const TrashCategories = () => {
                             <div className="h-10 w-10 flex-shrink-0">
                               {category.image ? (
                                 <img
-                                  src={category.image || "/placeholder.svg"}
+                                  src={getFullImageUrl(category.image) || "/placeholder.svg"}
                                   alt={category.name}
                                   className="h-10 w-10 rounded-md object-cover opacity-60"
                                 />
