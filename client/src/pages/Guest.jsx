@@ -1,5 +1,10 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import axios from "axios"
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
+import '../styles/phoneInput.css'
+import config from "../config/config"
 
 const UAE_STATES = [
   "Abu Dhabi",
@@ -26,15 +31,74 @@ const Guest = () => {
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  
+  // Email verification states
+  const [verificationCode, setVerificationCode] = useState("")
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [verificationVerified, setVerificationVerified] = useState(false)
+  const [verificationLoading, setVerificationLoading] = useState(false)
+  const [originalEmail, setOriginalEmail] = useState("")
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setGuestInfo({ ...guestInfo, [name]: value })
+    
+    // Reset verification if email changes
+    if (name === "email" && value !== originalEmail) {
+      setVerificationSent(false)
+      setVerificationVerified(false)
+      setVerificationCode("")
+    }
   }
 
-  const handlePhoneChange = (e) => {
-    const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 9)
-    setGuestInfo({ ...guestInfo, phone: val })
+  const handlePhoneChange = (value) => {
+    setGuestInfo({ ...guestInfo, phone: value || "" })
+  }
+
+  const handleSendVerificationCode = async () => {
+    if (!guestInfo.email || !/^\S+@\S+\.\S+$/.test(guestInfo.email)) {
+      setError("Please enter a valid email address first.")
+      return
+    }
+    
+    setVerificationLoading(true)
+    setError("")
+    try {
+      await axios.post(`${config.API_URL}/api/request-callback/send-verification`, {
+        email: guestInfo.email
+      })
+      setVerificationSent(true)
+      setOriginalEmail(guestInfo.email)
+      setError("")
+    } catch (error) {
+      console.error("Error sending verification code:", error)
+      setError("Failed to send verification code. Please try again.")
+    } finally {
+      setVerificationLoading(false)
+    }
+  }
+
+  const handleVerifyCode = async () => {
+    if (verificationCode.length !== 6) {
+      setError("Please enter a 6-digit verification code.")
+      return
+    }
+    
+    setVerificationLoading(true)
+    setError("")
+    try {
+      await axios.post(`${config.API_URL}/api/request-callback/verify-code`, {
+        email: guestInfo.email,
+        code: verificationCode
+      })
+      setVerificationVerified(true)
+      setError("")
+    } catch (error) {
+      console.error("Error verifying code:", error)
+      setError(error.response?.data?.message || "Invalid verification code. Please try again.")
+    } finally {
+      setVerificationLoading(false)
+    }
   }
 
   const validate = () => {
@@ -46,8 +110,12 @@ const Guest = () => {
       setError("Please enter a valid email address.")
       return false
     }
-    if (guestInfo.phone.length !== 9) {
-      setError("Please enter a valid 9-digit phone number.")
+    if (!verificationVerified) {
+      setError("Please verify your email address before continuing.")
+      return false
+    }
+    if (!guestInfo.phone || guestInfo.phone.length < 8) {
+      setError("Please enter a valid phone number.")
       return false
     }
     return true
@@ -107,39 +175,83 @@ const Guest = () => {
                     placeholder="Enter your name"
                   />
                 </div>
+                
+                {/* Email with verification */}
                 <div>
                   <label htmlFor="guest-email" className="block text-sm font-medium text-gray-700 mb-1">E-mail *</label>
-                  <input
-                    id="guest-email"
-                    name="email"
-                    type="email"
-                    required
-                    value={guestInfo.email}
-                    onChange={handleChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
-                    placeholder="Enter your email"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      id="guest-email"
+                      name="email"
+                      type="email"
+                      required
+                      value={guestInfo.email}
+                      onChange={handleChange}
+                      disabled={verificationVerified}
+                      className={`block flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-500 ${verificationVerified ? 'bg-green-50 border-green-300' : ''}`}
+                      placeholder="Enter your email"
+                    />
+                    {!verificationVerified && (
+                      <button
+                        type="button"
+                        onClick={handleSendVerificationCode}
+                        disabled={verificationLoading || !guestInfo.email}
+                        className="px-3 py-2 bg-lime-500 text-white text-sm font-medium rounded-lg hover:bg-lime-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      >
+                        {verificationLoading ? "Sending..." : verificationSent ? "Resend" : "Verify"}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Verification code input */}
+                  {verificationSent && !verificationVerified && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-xs text-blue-700 mb-2">A verification code has been sent to your email.</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                          placeholder="Enter 6-digit code"
+                          maxLength={6}
+                          className="block flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center tracking-widest"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerifyCode}
+                          disabled={verificationLoading || verificationCode.length !== 6}
+                          className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {verificationLoading ? "..." : "Confirm"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Verified badge */}
+                  {verificationVerified && (
+                    <div className="mt-2 flex items-center gap-1 text-green-600 text-sm">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Email verified
+                    </div>
+                  )}
                 </div>
+                
+                {/* Phone Number with International Input */}
                 <div>
                   <label htmlFor="guest-phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-600 text-sm select-none">+971</span>
-                    <input
-                      id="guest-phone"
-                      name="phone"
-                      type="tel"
-                      required
-                      pattern="[0-9]{9}"
-                      maxLength={9}
-                      minLength={9}
-                      value={guestInfo.phone}
-                      onChange={handlePhoneChange}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
-                      placeholder="5XXXXXXXX"
-                      autoComplete="tel"
-                    />
-                  </div>
+                  <PhoneInput
+                    international
+                    defaultCountry="AE"
+                    value={guestInfo.phone}
+                    onChange={handlePhoneChange}
+                    className="w-full"
+                    placeholder="Enter phone number"
+                  />
                 </div>
+                
                 <div>
                   <label htmlFor="guest-address" className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
                   <input
@@ -216,10 +328,15 @@ const Guest = () => {
               <button
                 type="submit"
                 className="w-full py-3 px-4 mt-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-lime-500 hover:bg-lime-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-lime-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={loading}
+                disabled={loading || !verificationVerified}
               >
                 {loading ? "Continuing..." : "Continue to Payment"}
               </button>
+              {!verificationVerified && (
+                <p className="text-xs text-center text-gray-500 mt-2">
+                  Please verify your email before continuing
+                </p>
+              )}
             </form>
           </div>
         </div>

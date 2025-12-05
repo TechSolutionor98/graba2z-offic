@@ -2610,48 +2610,67 @@ const ProductDetails = () => {
                     <span className="text-blue-600 mr-2">🔄</span>
                     Available Variations
                   </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {/* Show current product as a variation (highlighted) */}
-                    {product.reverseVariationText && (
-                      <div
-                        className="px-6 py-3 bg-lime-500 text-white rounded-lg font-semibold text-sm shadow-lg border-2 border-blue-700 cursor-default relative"
-                      >
-                        {product.reverseVariationText}
-                        <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
-                          Current
-                        </span>
-                      </div>
-                    )}
-                    
-                    {/* Show other variations as clickable links */}
-                    {product.variations
-                      .filter(variation => {
-                        // Filter to show only variations with text and valid product reference
-                        const varText = variation.variationText || ""
-                        const varProduct = variation.product
-                        
-                        // Must have variation text and a product reference
-                        if (!varText || !varProduct) return false
-                        
-                        // Show all variations regardless of hideFromShop status
-                        return true
-                      })
-                      .map((variation, index) => {
-                        const varProduct = variation.product
-                        const varId = typeof varProduct === 'object' ? varProduct._id : varProduct
-                        const varSlug = typeof varProduct === 'object' ? varProduct.slug : null
-                        const varText = variation.variationText || ""
-                        
-                        return (
-                          <Link
-                            key={varId || index}
-                            to={`/product/${encodeURIComponent(varSlug || varId)}`}
-                            className="px-6 py-3 bg-lime-500 text-white rounded-lg font-semibold text-sm hover:bg-lime-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                          >
-                            {varText}
-                          </Link>
-                        )
-                      })}
+                  <div className="flex flex-wrap gap-3 pt-4">
+                    {/* Combine current product and all variations, then sort alphabetically */}
+                    {(() => {
+                      // Build array of all variations including current product
+                      const allVariations = []
+                      
+                      // Add current product if it has reverseVariationText
+                      if (product.reverseVariationText) {
+                        allVariations.push({
+                          id: product._id,
+                          text: product.reverseVariationText,
+                          slug: product.slug,
+                          isCurrent: true
+                        })
+                      }
+                      
+                      // Add other variations
+                      product.variations
+                        .filter(variation => {
+                          const varText = variation.variationText || ""
+                          const varProduct = variation.product
+                          if (!varText || !varProduct) return false
+                          return true
+                        })
+                        .forEach(variation => {
+                          const varProduct = variation.product
+                          const varId = typeof varProduct === 'object' ? varProduct._id : varProduct
+                          const varSlug = typeof varProduct === 'object' ? varProduct.slug : null
+                          const varText = variation.variationText || ""
+                          
+                          allVariations.push({
+                            id: varId,
+                            text: varText,
+                            slug: varSlug || varId,
+                            isCurrent: false
+                          })
+                        })
+                      
+                      // Sort alphabetically by text to maintain consistent order
+                      allVariations.sort((a, b) => a.text.localeCompare(b.text))
+                      
+                      return allVariations.map((variation) => (
+                        <div key={variation.id} className="relative">
+                          <span className={`absolute -top-4 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${variation.isCurrent ? 'bg-blue-600 text-white' : 'invisible'}`}>
+                            Current
+                          </span>
+                          {variation.isCurrent ? (
+                            <div className="px-6 py-3 bg-lime-500 text-white rounded-lg font-semibold text-sm shadow-lg border-2 border-blue-700 cursor-default">
+                              {variation.text}
+                            </div>
+                          ) : (
+                            <Link
+                              to={`/product/${encodeURIComponent(variation.slug)}`}
+                              className="block px-6 py-3 bg-lime-500 text-white rounded-lg font-semibold text-sm hover:bg-lime-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            >
+                              {variation.text}
+                            </Link>
+                          )}
+                        </div>
+                      ))
+                    })()}
                   </div>
                   <p className="text-xs text-gray-600 mt-3">
                     Click on any variation to view its details
