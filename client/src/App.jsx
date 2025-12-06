@@ -54,6 +54,7 @@ import PromotionalPage from "./pages/PromotionalPage"
 import BackToSchoolProfessional from "./pages/BackToSchoolProfessional"
 import VoucherTerms from "./pages/VoucherTerms"
 import DeliveryTerms from "./pages/DeliveryTerms"
+import OfferPage from "./pages/OfferPage"
 
 // Import admin pages
 import AdminLogin from "./pages/admin/AdminLogin"
@@ -370,6 +371,7 @@ function App() {
                     <Route path="backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
                     <Route path="voucher-terms" element={<VoucherTerms />} />
                     <Route path="delivery-terms" element={<DeliveryTerms />} />
+                    <Route path="offers/:slug" element={<OfferPage />} />
 
                     {/* Protected Routes */}
                     <Route
