@@ -149,7 +149,16 @@ const Home = () => {
   const renderDynamicSection = (position) => {
     const section = homeSections.find(s => s.isActive && s.order === position)
     if (section) {
-      return <DynamicSection key={section._id} section={section} />
+      // Create a unique key that includes settings to force re-render when settings change
+      const settingsKey = section.settings ? JSON.stringify(section.settings) : 'no-settings'
+      const uniqueKey = `${section._id}-${section.sectionType}-${settingsKey}`
+      console.log(`🔴 CLIENT RENDER: Rendering section at position ${position}:`, {
+        name: section.name,
+        sectionType: section.sectionType,
+        settings: section.settings,
+        uniqueKey: uniqueKey
+      })
+      return <DynamicSection key={uniqueKey} section={section} />
     }
     return null
   }
@@ -192,6 +201,12 @@ const Home = () => {
         console.log("Settings fetched:", settingsData)
         console.log("Home Sections fetched:", sectionsData)
         console.log("Sections with order:", sectionsData.map(s => ({ name: s.name, order: s.order })))
+        console.log('🔴 CLIENT: Sections with full settings:', sectionsData.map(s => ({ 
+          name: s.name, 
+          order: s.order, 
+          sectionType: s.sectionType,
+          settings: s.settings 
+        })))
 
         // Filter and validate categories - ensure they have proper structure
         const validCategories = Array.isArray(categoriesData)

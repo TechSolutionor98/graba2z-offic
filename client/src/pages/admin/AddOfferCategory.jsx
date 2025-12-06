@@ -105,9 +105,11 @@ const AddOfferCategory = () => {
     try {
       const token = localStorage.getItem("adminToken")
       if (isEdit && id) {
+        const selectedCat = categories.find(c => c._id === formData.categories[0])
         await axios.put(`${config.API_URL}/api/offer-categories/${id}`, {
           offerPageSlug: formData.offerPageSlug,
           category: formData.categories[0],
+          categoryType: selectedCat?.type === 'category' ? 'Category' : 'SubCategory',
           isActive: formData.isActive,
           order: formData.order,
         }, {
@@ -123,9 +125,11 @@ const AddOfferCategory = () => {
         
         for (let i = 0; i < formData.categories.length; i++) {
           try {
+            const selectedCat = categories.find(c => c._id === formData.categories[i])
             await axios.post(`${config.API_URL}/api/offer-categories`, {
               offerPageSlug: formData.offerPageSlug,
               category: formData.categories[i],
+              categoryType: selectedCat?.type === 'category' ? 'Category' : 'SubCategory',
               isActive: formData.isActive,
               order: formData.order + i,
             }, {

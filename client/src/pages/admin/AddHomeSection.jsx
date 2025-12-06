@@ -181,12 +181,14 @@ const AddHomeSection = () => {
     try {
       const token = localStorage.getItem("adminToken")
       if (isEdit && id) {
-        await axios.put(`${config.API_URL}/api/home-sections/${id}`, formData, {
+        console.log('🔵 ADMIN: Saving section with settings:', JSON.stringify(formData.settings, null, 2))
+        const response = await axios.put(`${config.API_URL}/api/home-sections/${id}`, formData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         })
+        console.log('🟢 ADMIN: Server response after update:', JSON.stringify(response.data.settings, null, 2))
         showToast("Section updated successfully!", "success")
       } else {
         await axios.post(`${config.API_URL}/api/home-sections`, formData, {
@@ -284,7 +286,8 @@ const AddHomeSection = () => {
                   value={formData.sectionType}
                   onChange={handleSectionTypeChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isEdit}
+                  className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isEdit ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`}
                 >
                   {sectionTypeOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -293,7 +296,10 @@ const AddHomeSection = () => {
                   ))}
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  The layout will be automatically created based on this type
+                  {isEdit 
+                    ? "Section Type cannot be changed after creation. Create a new section to use a different type."
+                    : "The layout will be automatically created based on this type"
+                  }
                 </p>
               </div>
 
@@ -313,6 +319,7 @@ const AddHomeSection = () => {
                         onChange={(e) => handleSettingsChange('cardsCount', parseInt(e.target.value))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
+                        <option value={2}>2 Cards</option>
                         <option value={3}>3 Cards</option>
                         <option value={4}>4 Cards</option>
                         <option value={5}>5 Cards</option>
@@ -368,6 +375,7 @@ const AddHomeSection = () => {
                         onChange={(e) => handleSettingsChange('cardsCount', parseInt(e.target.value))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
+                        <option value={2}>2 Cards</option>
                         <option value={3}>3 Cards</option>
                         <option value={4}>4 Cards</option>
                         <option value={5}>5 Cards</option>
@@ -465,6 +473,7 @@ const AddHomeSection = () => {
                         onChange={(e) => handleSettingsChange('cardsCount', parseInt(e.target.value))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
+                        <option value={2}>2 Cards</option>
                         <option value={3}>3 Cards</option>
                         <option value={4}>4 Cards</option>
                         <option value={5}>5 Cards</option>
