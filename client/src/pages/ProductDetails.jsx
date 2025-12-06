@@ -60,6 +60,7 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedColorIndex, setSelectedColorIndex] = useState(null)
+  const [selectedDosIndex, setSelectedDosIndex] = useState(null)
   const [activeTab, setActiveTab] = useState("description")
   const [showImageModal, setShowImageModal] = useState(false)
   const [modalImageIndex, setModalImageIndex] = useState(0)
@@ -205,6 +206,14 @@ const ProductDetails = () => {
     return null
   }
 
+  // Get current DOS/Windows variation
+  const getCurrentDos = () => {
+    if (selectedDosIndex !== null && product?.dosVariations && product.dosVariations.length > 0) {
+      return product.dosVariations[selectedDosIndex]
+    }
+    return null
+  }
+
   // Helper function to check if a URL is a YouTube URL
   const isYouTubeUrl = (url) => {
     if (!url) return false
@@ -225,11 +234,24 @@ const ProductDetails = () => {
     return url
   }
 
-  // Get current images based on selected color (includes videos)
+  // Get current images based on selected color or DOS variation (includes videos)
   const getCurrentImages = () => {
     const currentColor = getCurrentColor()
+    const currentDos = getCurrentDos()
     const media = []
     
+    // Check DOS variation first (if selected)
+    if (currentDos && currentDos.image) {
+      media.push({ type: 'image', url: currentDos.image })
+      if (currentDos.galleryImages && currentDos.galleryImages.length > 0) {
+        currentDos.galleryImages.filter(img => img).forEach(img => {
+          media.push({ type: 'image', url: img })
+        })
+      }
+      return media
+    }
+    
+    // Check color variation
     if (currentColor && currentColor.image) {
       media.push({ type: 'image', url: currentColor.image })
       if (currentColor.galleryImages && currentColor.galleryImages.length > 0) {
@@ -268,21 +290,29 @@ const ProductDetails = () => {
 
   const getEffectivePrice = () => {
     const currentColor = getCurrentColor()
+    const currentDos = getCurrentDos()
+    
+    // Get base price (from color if selected, otherwise from product)
+    let basePrice = 0
     if (currentColor) {
-      const basePrice = Number(currentColor.price) || 0
-      const offerPrice = Number(currentColor.offerPrice) || 0
-      // If offer price exists and is less than base price, use offer price
-      if (offerPrice > 0 && basePrice > 0 && offerPrice < basePrice) {
-        return offerPrice
-      }
-      // Otherwise use base price if it exists, else use offer price
-      return basePrice > 0 ? basePrice : (offerPrice > 0 ? offerPrice : 0)
+      const colorBasePrice = Number(currentColor.price) || 0
+      const colorOfferPrice = Number(currentColor.offerPrice) || 0
+      basePrice = (colorOfferPrice > 0 && colorOfferPrice < colorBasePrice) ? colorOfferPrice : colorBasePrice
+    } else {
+      const productBasePrice = Number(product?.price) || 0
+      const productOfferPrice = Number(product?.offerPrice) || 0
+      basePrice = (productOfferPrice > 0 && productOfferPrice < productBasePrice) ? productOfferPrice : productBasePrice
     }
-    const basePrice = Number(product?.price) || 0
-    const offerPrice = Number(product?.offerPrice) || 0
-    const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
-    if (hasValidOffer) return offerPrice
-    return basePrice > 0 ? basePrice : (offerPrice > 0 ? offerPrice : 0)
+    
+    // Add DOS price if selected (additive)
+    if (currentDos) {
+      const dosBasePrice = Number(currentDos.price) || 0
+      const dosOfferPrice = Number(currentDos.offerPrice) || 0
+      const dosPrice = (dosOfferPrice > 0 && dosOfferPrice < dosBasePrice) ? dosOfferPrice : dosBasePrice
+      basePrice += dosPrice
+    }
+    
+    return basePrice
   }
   const formatPerMonth = (n) =>
     `AED ${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo`
@@ -639,18 +669,45 @@ const ProductDetails = () => {
   }
 
   const handleAddToCart = () => {
-    // Check stock status based on selected color or main product
+    // Check stock status based on selected color, DOS variation, or main product
     const currentColor = getCurrentColor()
+    const currentDos = getCurrentDos()
+    
+    if (currentDos && currentDos.countInStock <= 0) {
+      showToast("Selected OS option is out of stock", "error")
+      return
+    }
     if (currentColor && currentColor.countInStock <= 0) {
       showToast("Selected color is out of stock", "error")
       return
     }
-    if (!currentColor && product.stockStatus === "Out of Stock") {
+    if (!currentColor && !currentDos && product.stockStatus === "Out of Stock") {
       showToast("Product is out of stock", "error")
       return
     }
     
-    // Prepare product with color variation data
+    // Calculate the final price based on variations:
+    // If color is selected: use color price as base
+    // If DOS is selected: add DOS price to base price (additive)
+    let finalPrice = 0
+    let baseImageUrl = product.image
+    
+    // Get base price from color or product
+    if (currentColor) {
+      const colorPrice = currentColor.offerPrice > 0 ? currentColor.offerPrice : currentColor.price
+      finalPrice = Number(colorPrice) || 0
+      baseImageUrl = currentColor.image || product.image
+    } else {
+      finalPrice = product.offerPrice > 0 ? Number(product.offerPrice) : Number(product.price) || 0
+    }
+    
+    // Add DOS price if selected (additive)
+    if (currentDos) {
+      const dosPrice = currentDos.offerPrice > 0 ? currentDos.offerPrice : currentDos.price
+      finalPrice += Number(dosPrice) || 0
+    }
+    
+    // Prepare product with variation data
     const productToAdd = {
       ...product,
       selectedColorIndex,
@@ -661,10 +718,20 @@ const ProductDetails = () => {
         offerPrice: currentColor.offerPrice,
         sku: currentColor.sku,
       } : null,
-      // Override price with color-specific price if color is selected
-      price: currentColor ? (currentColor.offerPrice > 0 ? currentColor.offerPrice : currentColor.price) : (product.offerPrice > 0 ? product.offerPrice : product.price),
+      selectedDosIndex,
+      selectedDosData: currentDos ? {
+        dosType: currentDos.dosType,
+        image: currentDos.image,
+        price: currentDos.price,
+        offerPrice: currentDos.offerPrice,
+        sku: currentDos.sku,
+      } : null,
+      // Final calculated price (color/product base + DOS if selected)
+      // Clear offerPrice so CartContext uses 'price' as the effective price
+      price: finalPrice,
+      offerPrice: 0, // Reset so computeUnit uses price field
       // Override image with color-specific image if available
-      image: currentColor?.image || product.image,
+      image: baseImageUrl,
     }
     
     // Add main product to cart
@@ -2531,8 +2598,8 @@ const ProductDetails = () => {
               {/* Color Variations */}
               {product.colorVariations && product.colorVariations.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center">
-                    <span className="text-purple-600 mr-2">🎨</span>
+                  <h3 className="font-bold text-gray-900 mb- flex items-center">
+                    <span className="text-purple-600 mr-2"></span>
                     Color: {selectedColorIndex !== null && product.colorVariations[selectedColorIndex]?.color ? product.colorVariations[selectedColorIndex].color : "Select Color"}
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -2603,14 +2670,83 @@ const ProductDetails = () => {
                 </div>
               )}
 
+              {/* DOS/Windows Variations */}
+              {product.dosVariations && product.dosVariations.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-bold text-gray-900 mb-3 flex items-center">
+                    <span className="text-blue-600 mr-2">💻</span>
+                    Windows: {selectedDosIndex !== null && product.dosVariations[selectedDosIndex]?.dosType ? product.dosVariations[selectedDosIndex].dosType : "Select Option"}
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {product.dosVariations
+                      .filter(dosVar => dosVar.dosType)
+                      .map((dosVar, index) => {
+                        const isSelected = index === selectedDosIndex
+                        const dosPrice = dosVar.offerPrice > 0 ? dosVar.offerPrice : dosVar.price
+                        
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              // Toggle: if already selected, deselect to show original product
+                              setSelectedDosIndex(isSelected ? null : index)
+                              setSelectedImage(0)
+                            }}
+                            className={`relative border-2 rounded-lg p-3 transition-all duration-200 hover:shadow-lg ${
+                              isSelected 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : 'border-gray-200 hover:border-blue-300'
+                            }`}
+                          >
+                            {/* Product Image */}
+                           
+                            
+                            {/* OS Type Name */}
+                            <p className={`text-xs font-semibold text-center mb-1 ${
+                              isSelected ? 'text-blue-700' : 'text-gray-700'
+                            }`}>
+                              {dosVar.dosType}
+                            </p>
+                            
+                            {/* Price */}
+                            <p className="text-sm font-bold text-center text-gray-900">
+                              {formatPrice(dosPrice)}
+                            </p>
+                            
+                            {/* Current Selection Indicator */}
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 bg-blue-500 text-white rounded-full p-1">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            )}
+                            
+                            {/* Stock Badge */}
+                            {dosVar.countInStock <= 0 && (
+                              <div className="absolute bottom-2 left-2 right-2 bg-red-500 text-white text-xs py-1 px-2 rounded text-center">
+                                Out of Stock
+                              </div>
+                            )}
+                          </button>
+                        )
+                      })}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-3">
+                    Select an OS option to view its image and price
+                  </p>
+                </div>
+              )}
+
               {/* Product Variations */}
               {product.variations && product.variations.length > 0 && (
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center">
-                    <span className="text-blue-600 mr-2">🔄</span>
-                    Available Variations
+                    <span className="text-blue-600 mr-2"></span>
+                   Available Options:
                   </h3>
-                  <div className="flex flex-wrap gap-3 pt-4">
+                  <div className="flex flex-wrap gap-3 ">
                     {/* Combine current product and all variations, then sort alphabetically */}
                     {(() => {
                       // Build array of all variations including current product
@@ -2653,17 +2789,14 @@ const ProductDetails = () => {
                       
                       return allVariations.map((variation) => (
                         <div key={variation.id} className="relative">
-                          <span className={`absolute -top-4 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${variation.isCurrent ? 'bg-blue-600 text-white' : 'invisible'}`}>
-                            Current
-                          </span>
                           {variation.isCurrent ? (
-                            <div className="px-6 py-3 bg-lime-500 text-white rounded-lg font-semibold text-sm shadow-lg border-2 border-blue-700 cursor-default">
+                            <div className="px-5 py-2 bg-blue-200 text-gray-700 rounded-lg font-medium text-sm border-2 border-blue-400 cursor-default">
                               {variation.text}
                             </div>
                           ) : (
                             <Link
                               to={`/product/${encodeURIComponent(variation.slug)}`}
-                              className="block px-6 py-3 bg-lime-500 text-white rounded-lg font-semibold text-sm hover:bg-lime-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                              className="block px-5 py-2 bg-white text-gray-700 rounded-lg font-medium text-sm border border-gray-400 hover:bg-blue-100 hover:border-blue-400 transition-all duration-200"
                             >
                               {variation.text}
                             </Link>

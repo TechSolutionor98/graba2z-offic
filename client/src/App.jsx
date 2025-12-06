@@ -91,6 +91,7 @@ import AdminSubCategories3 from "./pages/admin/AdminSubCategories3"
 import AdminSubCategories4 from "./pages/admin/AdminSubCategories4"
 import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates"
 import AdminNewsletter from "./pages/admin/AdminNewsletter"
+import ResetCache from "./pages/admin/ResetCache"
 
 // Add review management imports
 import AdminReviews from "./pages/admin/AdminReviews"
@@ -284,6 +285,7 @@ function App() {
                               <Route path="buyer-protection" element={<BuyerProtectionAdmin />} />
                               <Route path="email-templates" element={<AdminEmailTemplates />} />
                               <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
+                              <Route path="reset-cache" element={<ResetCache />} />
                               <Route path="*" element={<NotFound />} />
 
                               {/* SEO Settings Routes */}

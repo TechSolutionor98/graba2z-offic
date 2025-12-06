@@ -27,6 +27,7 @@ import {
   TrendingUp,
   Cog,
   ShoppingBag,
+  RefreshCw,
 } from "lucide-react"
 
 const AdminSidebar = () => {
@@ -476,6 +477,11 @@ const AdminSidebar = () => {
       title: "Newsletter Subscribers",
       icon: Users,
       path: "/admin/newsletter-subscribers",
+    },
+    {
+      title: "Reset Cache",
+      icon: RefreshCw,
+      path: "/admin/reset-cache",
     },
     // {
     //   title: "Settings",

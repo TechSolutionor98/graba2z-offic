@@ -203,6 +203,18 @@ const UserOrders = () => {
                           <h4 className="text-sm font-medium text-gray-900">{item.name}</h4>
                           <p className="text-sm font-medium text-gray-900">AED {item.price.toLocaleString()}</p>
                         </div>
+                        {item.selectedColorData && (
+                          <p className="text-xs text-purple-600 font-medium mt-1 flex items-center">
+                            <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
+                            Color: {item.selectedColorData.color}
+                          </p>
+                        )}
+                        {item.selectedDosData && (
+                          <p className="text-xs text-blue-600 font-medium mt-1 flex items-center">
+                            <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300 bg-blue-500"></span>
+                            OS: {item.selectedDosData.dosType}
+                          </p>
+                        )}
                         <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
                       </div>
                     </li>

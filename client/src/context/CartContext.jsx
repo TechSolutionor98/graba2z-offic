@@ -589,10 +589,10 @@ export const CartProvider = ({ children }) => {
         const existingItemIndex = prevItems.findIndex((item) => {
           // For bundle items, match both product ID and bundle ID
           if (bundleId && item.bundleId) {
-            return item._id === product._id && item.bundleId === bundleId && item.selectedColorIndex === product.selectedColorIndex
+            return item._id === product._id && item.bundleId === bundleId && item.selectedColorIndex === product.selectedColorIndex && item.selectedDosIndex === product.selectedDosIndex
           }
-          // For regular items, match product ID, no bundle, and same color (if any)
-          return item._id === product._id && !item.bundleId && item.selectedColorIndex === product.selectedColorIndex
+          // For regular items, match product ID, no bundle, and same color/DOS (if any)
+          return item._id === product._id && !item.bundleId && item.selectedColorIndex === product.selectedColorIndex && item.selectedDosIndex === product.selectedDosIndex
         })
 
         if (existingItemIndex > -1) {
@@ -602,18 +602,16 @@ export const CartProvider = ({ children }) => {
           return updatedItems
         } else {
           // Store the final unit price on the cart line:
-          // bundlePrice if bundle item; else offerPrice if > 0; else base price
+          // bundlePrice if bundle item; else use the price passed from ProductDetails (already calculated)
           const finalUnitPrice =
             product.isBundleItem && product.bundlePrice
               ? product.bundlePrice
-              : product.offerPrice && Number(product.offerPrice) > 0
-                ? Number(product.offerPrice)
-                : Number(product.price) || 0
+              : Number(product.price) || 0
 
           const cartItem = {
             ...product,
             quantity,
-            cartId: `${product._id}_${bundleId || "regular"}_${product.selectedColorIndex ?? "nocolor"}_${Date.now()}`,
+            cartId: `${product._id}_${bundleId || "regular"}_${product.selectedColorIndex ?? "nocolor"}_${product.selectedDosIndex ?? "nodos"}_${Date.now()}`,
             bundleId: bundleId || null,
             isBundleItem: product.isBundleItem || false,
             bundleDiscount: product.bundleDiscount || false,
@@ -621,6 +619,8 @@ export const CartProvider = ({ children }) => {
             price: finalUnitPrice, // Ensure price reflects the final unit price used in totals
             selectedColorIndex: product.selectedColorIndex ?? null,
             selectedColorData: product.selectedColorData || null,
+            selectedDosIndex: product.selectedDosIndex ?? null,
+            selectedDosData: product.selectedDosData || null,
           }
 
           return [...prevItems, cartItem]

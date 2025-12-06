@@ -211,6 +211,11 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                             Color: {item.selectedColorData.color}
                           </div>
                         )}
+                        {item.selectedDosData && (
+                          <div className="text-xs text-blue-600 font-medium mt-1 flex items-center">
+                            💻 OS: {item.selectedDosData.dosType}
+                          </div>
+                        )}
                         {showDiscount && (
                           <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
                         )}
@@ -1190,6 +1195,11 @@ const orderStatusOptions = [
                                 <p className="text-xs text-purple-600 font-medium mt-1 flex items-center">
                                   <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
                                   Color: {item.selectedColorData.color}
+                                </p>
+                              )}
+                              {item.selectedDosData && (
+                                <p className="text-xs text-blue-600 font-medium mt-1 flex items-center">
+                                  💻 OS: {item.selectedDosData.dosType}
                                 </p>
                               )}
                               <p className="text-sm text-gray-500">Qty: {item.quantity}</p>

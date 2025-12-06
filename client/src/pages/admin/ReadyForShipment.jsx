@@ -146,6 +146,11 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                             Color: {item.selectedColorData.color}
                           </div>
                         )}
+                        {item.selectedDosData && (
+                          <div className="text-xs text-blue-600 font-medium mt-1 flex items-center">
+                            💻 OS: {item.selectedDosData.dosType}
+                          </div>
+                        )}
                         {showDiscount && (
                           <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
                         )}

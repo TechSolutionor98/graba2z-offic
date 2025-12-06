@@ -330,6 +330,11 @@ const Cart = () => {
                   Color: {item.selectedColorData.color}
                 </p>
               )}
+              {item.selectedDosData && (
+                <p className="mt-1 text-xs text-blue-600 font-medium flex items-center">
+                  💻 OS: {item.selectedDosData.dosType}
+                </p>
+              )}
               {isInBundle && (
                 <p className="mt-1 text-xs text-lime-600 font-medium">
                   {item.bundleDiscount ? "Bundle Item (25% OFF)" : "Bundle Item"}
@@ -424,6 +429,12 @@ const Cart = () => {
                     <span className="inline-block w-4 h-4 rounded-full mr-2 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
                     Color: {item.selectedColorData.color}
                     {item.selectedColorData.sku && <span className="ml-2 text-xs text-gray-500">({item.selectedColorData.sku})</span>}
+                  </p>
+                )}
+                {item.selectedDosData && (
+                  <p className="text-sm text-blue-600 font-medium mb-1 flex items-center">
+                    💻 OS: {item.selectedDosData.dosType}
+                    {item.selectedDosData.sku && <span className="ml-2 text-xs text-gray-500">({item.selectedDosData.sku})</span>}
                   </p>
                 )}
                 {isInBundle && (

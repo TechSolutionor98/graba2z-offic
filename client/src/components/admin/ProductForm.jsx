@@ -10,6 +10,7 @@ import TipTapEditor from "../TipTapEditor"
 import { Plus, X } from "lucide-react"
 import ProductVariationModal from "./ProductVariationModal"
 import ColorVariationForm from "./ColorVariationForm"
+import DosVariationForm from "./DosVariationForm"
 import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
@@ -77,6 +78,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   
   // Color Variations
   const [colorVariations, setColorVariations] = useState([])
+  
+  // DOS/Windows Variations
+  const [dosVariations, setDosVariations] = useState([])
   
   // Video Source Type (upload or youtube)
   const [videoSourceType, setVideoSourceType] = useState("youtube") // 'upload' | 'youtube'
@@ -186,6 +190,11 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       // Set color variations if they exist
       if (product.colorVariations && product.colorVariations.length > 0) {
         setColorVariations(product.colorVariations)
+      }
+
+      // Set DOS/Windows variations if they exist
+      if (product.dosVariations && product.dosVariations.length > 0) {
+        setDosVariations(product.dosVariations)
       }
 
       const preload = async () => {
@@ -695,6 +704,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         })), // Add variation IDs with text
         reverseVariationText: reverseVariationText || "", // Text for current product on variation pages
         colorVariations: colorVariations, // Add color variations array
+        dosVariations: dosVariations, // Add DOS/Windows variations array
       }
       await onSubmit(productData)
     } catch (error) {
@@ -1602,6 +1612,14 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           <ColorVariationForm
             colorVariations={colorVariations}
             onChange={setColorVariations}
+          />
+        </div>
+
+        {/* DOS/Windows Variations Section */}
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-6 border border-blue-200">
+          <DosVariationForm
+            dosVariations={dosVariations}
+            onChange={setDosVariations}
           />
         </div>
 

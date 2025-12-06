@@ -607,6 +607,18 @@ const Checkout = () => {
             }
           }
           
+          // Add DOS/Windows variation data if present
+          if (item.selectedDosData) {
+            orderItem.selectedDosIndex = item.selectedDosIndex
+            orderItem.selectedDosData = {
+              dosType: item.selectedDosData.dosType,
+              image: item.selectedDosData.image,
+              price: item.selectedDosData.price,
+              offerPrice: item.selectedDosData.offerPrice,
+              sku: item.selectedDosData.sku,
+            }
+          }
+          
           // Handle buyer protection items separately
           if (item.isProtection) {
             orderItem.isProtection = true
@@ -879,6 +891,18 @@ const Checkout = () => {
               price: item.selectedColorData.price,
               offerPrice: item.selectedColorData.offerPrice,
               sku: item.selectedColorData.sku,
+            }
+          }
+          
+          // Add DOS/Windows variation data if present
+          if (item.selectedDosData) {
+            orderItem.selectedDosIndex = item.selectedDosIndex
+            orderItem.selectedDosData = {
+              dosType: item.selectedDosData.dosType,
+              image: item.selectedDosData.image,
+              price: item.selectedDosData.price,
+              offerPrice: item.selectedDosData.offerPrice,
+              sku: item.selectedDosData.sku,
             }
           }
           
@@ -1695,6 +1719,11 @@ const Checkout = () => {
                         {item.selectedColorData && (
                           <p className="text-xs text-purple-600 font-medium">
                             Color: {item.selectedColorData.color}
+                          </p>
+                        )}
+                        {item.selectedDosData && (
+                          <p className="text-xs text-blue-600 font-medium">
+                            OS: {item.selectedDosData.dosType}
                           </p>
                         )}
                         <p className="text-xs text-black">Qty: {item.quantity}</p>
