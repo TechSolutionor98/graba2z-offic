@@ -74,6 +74,7 @@ function DynamicSection({ section }) {
 function BackgroundImageSection({ section, cards, settings }) {
   const bgImage = settings.backgroundImage ? getFullImageUrl(settings.backgroundImage) : ''
   const overlayOpacity = settings.overlayOpacity || 0.2
+  const cardsCount = settings.cardsCount || 5 // Get card count from settings
 
   return (
     <>
@@ -85,16 +86,15 @@ function BackgroundImageSection({ section, cards, settings }) {
       className="py-12 relative"
       style={{
         backgroundImage: bgImage ? `url(${bgImage})` : 'none',
-        backgroundSize: 'bg-cover',
+        backgroundSize: 'cover',
         backgroundPosition: 'center',
         minHeight: '450px',
-        maxHeight: '450px',
       }}
     >
       {/* Overlay */}
       {bgImage && (
         <div 
-          className="absolute inset-0 "
+          className="absolute inset-0 bg-black"
           style={{ opacity: overlayOpacity }}
         />
       )}
@@ -102,8 +102,9 @@ function BackgroundImageSection({ section, cards, settings }) {
       <div className="max-w-[1920px] mx-auto px-4 relative z-10">
        
         <div className="flex gap-6 flex-nowrap justify-center">
-          {cards.slice(0, 5).map((card) => {
+          {cards.slice(0, cardsCount).map((card) => {
             const cardBgColor = card.bgColor || '#ffffff'
+            const cardWidth = `calc(${100 / cardsCount}% - ${24 * (cardsCount - 1) / cardsCount}px)`
             
             return (
               <Link
@@ -111,22 +112,23 @@ function BackgroundImageSection({ section, cards, settings }) {
                 to={card.linkUrl || '#'}
                 className="p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 group overflow-hidden relative flex flex-col flex-shrink-0 rounded-lg"
                 style={{ 
-                  width: 'calc(20% - 19.2px)', 
-                  minWidth: 'calc(20% - 19.2px)',
+                  width: cardWidth, 
+                  minWidth: cardWidth,
                   minHeight: '320px',
+                  maxHeight: '320px',
                   backgroundColor: cardBgColor,
                 }}
               >
-              <div className="relative z-10">
-                <h3 className="text-xl font-bold mb-3 group-hover:text-gray-900 line-clamp-2 text-gray-800">
+              <div className="relative z-10 flex-grow flex flex-col">
+                <h3 className="text-lg font-bold mb-2 group-hover:text-gray-900 line-clamp-1 text-gray-800">
                   {card.name}
                 </h3>
                 {card.details && (
-                  <p className="text-sm mb-4 line-clamp-3 text-gray-600">
+                  <p className="text-sm mb-3 line-clamp-2 text-gray-600">
                     {card.details}
                   </p>
                 )}
-                <span className="inline-flex items-center text-sm font-semibold text-blue-600 group-hover:text-blue-700">
+                <span className="inline-flex items-center text-sm font-semibold text-blue-600 group-hover:text-blue-700 mt-auto">
                   Shop Now
                   <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -135,8 +137,8 @@ function BackgroundImageSection({ section, cards, settings }) {
               </div>
               
               {card.image && (
-                <div className="mt-4 relative h-48 flex-shrink-0 overflow-hidden rounded-lg">
-                  <img src={getFullImageUrl(card.image)} alt={card.name} className="w-full h-full bg-cover" />
+                <div className="mt-3 relative h-40 flex-shrink-0 overflow-hidden rounded-lg">
+                  <img src={getFullImageUrl(card.image)} alt={card.name} className="w-full h-full object-cover" />
                 </div>
               )}
             </Link>

@@ -864,7 +864,7 @@ const Navbar = () => {
                                           {subCategory.name}
                                         </Link>
                                       <ul className="flex flex-col gap-1 px-1 pb-1 bg-transparent border-none text-left">
-                                        {(level2Subs || []).slice(0, 8).map((sub2) => {
+                                        {(level2Subs || []).slice(0, 12).map((sub2) => {
                                           const level3Subs = getChildSubCategories(sub2._id)
                                           const hasLevel3 = Array.isArray(level3Subs) && level3Subs.length > 0
                                           return (
@@ -927,7 +927,7 @@ const Navbar = () => {
                                             </li>
                                           )
                                         })}
-                                        {level2Subs.length > 8 && (
+                                        {level2Subs.length > 12 && (
                                           <li className="bg-transparent border-none p-0 m-0">
                                             <Link
                                               to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
