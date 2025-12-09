@@ -398,6 +398,12 @@ const ProcessingOrders = () => {
   const [trackingId, setTrackingId] = useState("")
   const [estimatedDelivery, setEstimatedDelivery] = useState("")
   const [sellerComments, setSellerComments] = useState("")
+  const [sellerMessage, setSellerMessage] = useState("")
+  
+  // Notification modal states
+  const [showNotificationModal, setShowNotificationModal] = useState(false)
+  const [notificationMessage, setNotificationMessage] = useState("")
+  const [notificationOrderId, setNotificationOrderId] = useState(null)
 
   // Print ref
   const printComponentRef = useRef(null)
@@ -503,6 +509,7 @@ const ProcessingOrders = () => {
     setTrackingId(order.trackingId || "")
     setEstimatedDelivery(order.estimatedDelivery ? new Date(order.estimatedDelivery).toISOString().split("T")[0] : "")
     setSellerComments(order.sellerComments || "")
+    setSellerMessage(order.sellerMessage || "")
   }
 
   const handleCloseModal = () => {
@@ -511,6 +518,7 @@ const ProcessingOrders = () => {
     setTrackingId("")
     setEstimatedDelivery("")
     setSellerComments("")
+    setSellerMessage("")
   }
 
   const handleUpdateStatus = async (orderId, status) => {
@@ -608,6 +616,7 @@ const ProcessingOrders = () => {
         notes: orderNotes,
         trackingId: trackingId,
         sellerComments: sellerComments,
+        sellerMessage: sellerMessage,
         ...(estimatedDelivery && { estimatedDelivery: new Date(estimatedDelivery).toISOString() }),
       }
 
@@ -625,6 +634,7 @@ const ProcessingOrders = () => {
         trackingId: trackingId,
         estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : null,
         sellerComments: sellerComments,
+        sellerMessage: sellerMessage,
       }
 
       setSelectedOrder(updatedOrder)
@@ -641,14 +651,23 @@ const ProcessingOrders = () => {
   }
 
   const handleSendNotification = async (orderId) => {
+    // Open notification modal instead of sending directly
+    // Pre-populate with existing seller message from order
+    const order = orders.find(o => o._id === orderId) || selectedOrder
+    setNotificationOrderId(orderId)
+    setNotificationMessage(order?.sellerMessage || "")
+    setShowNotificationModal(true)
+  }
+
+  const handleConfirmSendNotification = async () => {
     try {
       setProcessingAction(true)
       const token =
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
       await axios.post(
-        `${config.API_URL}/api/admin/orders/${orderId}/notify`,
-        {},
+        `${config.API_URL}/api/admin/orders/${notificationOrderId}/notify`,
+        { sellerMessage: notificationMessage },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -657,6 +676,22 @@ const ProcessingOrders = () => {
         },
       )
 
+      // Update local state with the new seller message
+      if (notificationMessage) {
+        setSellerMessage(notificationMessage)
+        if (selectedOrder && selectedOrder._id === notificationOrderId) {
+          setSelectedOrder({ ...selectedOrder, sellerMessage: notificationMessage })
+        }
+        setOrders(orders.map((order) => 
+          order._id === notificationOrderId 
+            ? { ...order, sellerMessage: notificationMessage } 
+            : order
+        ))
+      }
+
+      setShowNotificationModal(false)
+      setNotificationMessage("")
+      setNotificationOrderId(null)
       alert("Notification email sent successfully!")
       setProcessingAction(false)
     } catch (error) {
@@ -1549,6 +1584,67 @@ const ProcessingOrders = () => {
       {selectedOrder && (
         <div style={{ display: "none" }}>
           <InvoiceComponent order={selectedOrder} ref={printComponentRef} />
+        </div>
+      )}
+
+      {/* Notification Modal */}
+      {showNotificationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Mail size={20} className="mr-2 text-green-600" />
+                Send Notification Email
+              </h3>
+            </div>
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Seller Message <span className="text-xs text-gray-500">(Optional)</span>
+                </label>
+                <textarea
+                  value={notificationMessage}
+                  onChange={(e) => setNotificationMessage(e.target.value)}
+                  placeholder="Enter a message to include in the notification email..."
+                  rows="4"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This message will be displayed in the customer's notification email. Leave empty to send without a message.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowNotificationModal(false)
+                  setNotificationMessage("")
+                  setNotificationOrderId(null)
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition-colors"
+                disabled={processingAction}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSendNotification}
+                disabled={processingAction}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center transition-colors disabled:bg-gray-400"
+              >
+                {processingAction ? (
+                  <>
+                    <RefreshCw size={16} className="mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Mail size={16} className="mr-2" />
+                    Send Notification
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
