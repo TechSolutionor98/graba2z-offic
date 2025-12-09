@@ -74,7 +74,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   // Product Variations
   const [showVariationModal, setShowVariationModal] = useState(false)
   const [selectedVariations, setSelectedVariations] = useState([])
-  const [reverseVariationText, setReverseVariationText] = useState("")
+  const [reverseVariationText, setReverseVariationText] = useState("") // Deprecated, kept for backward compatibility
+  const [selfVariationText, setSelfVariationText] = useState("") // This product's own variation label
   
   // Color Variations
   const [colorVariations, setColorVariations] = useState([])
@@ -186,6 +187,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         setSelectedVariations(formattedVariations)
         setReverseVariationText(product.reverseVariationText || "")
       }
+      
+      // Set self variation text (this product's own label in variation selectors)
+      setSelfVariationText(product.selfVariationText || product.reverseVariationText || "")
       
       // Set color variations if they exist
       if (product.colorVariations && product.colorVariations.length > 0) {
@@ -702,7 +706,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           product: v._id, 
           variationText: v.variationText || "" 
         })), // Add variation IDs with text
-        reverseVariationText: reverseVariationText || "", // Text for current product on variation pages
+        reverseVariationText: selfVariationText || "", // Backward compatibility
+        selfVariationText: selfVariationText || "", // This product's own variation label
         colorVariations: colorVariations, // Add color variations array
         dosVariations: dosVariations, // Add DOS/Windows variations array
       }
@@ -1513,7 +1518,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Product Variations</h3>
               <p className="text-sm text-gray-600 mt-1">
-                Add different variations of this product (e.g., different colors, sizes, or models)
+                Link this product with other variations (e.g., different RAM sizes, storage options)
               </p>
             </div>
             <button
@@ -1522,8 +1527,26 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
             >
               <Plus size={18} className="mr-2" />
-              Add Variation
+              {selectedVariations.length > 0 ? 'Manage Variations' : 'Add Variation'}
             </button>
+          </div>
+
+          {/* Self Variation Text Input */}
+          <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              This Product's Variation Label
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., 16GB RAM, 512GB SSD, Black Color"
+              value={selfVariationText}
+              onChange={(e) => setSelfVariationText(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm font-medium"
+            />
+            <p className="text-xs text-gray-600 mt-2">
+              <strong>Important:</strong> This label will appear as a selectable option when customers view any linked product. 
+              For example, if you set this to "16GB RAM", customers viewing the 24GB or 32GB variants will see "16GB RAM" as a clickable option.
+            </p>
           </div>
 
           {selectedVariations.length > 0 ? (
@@ -1647,13 +1670,14 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       <ProductVariationModal
         isOpen={showVariationModal}
         onClose={() => setShowVariationModal(false)}
-        onSelectProducts={(products, reverseText) => {
+        onSelectProducts={(products, selfText) => {
           setSelectedVariations(products)
-          setReverseVariationText(reverseText || "")
+          setSelfVariationText(selfText || "")
         }}
         selectedVariations={selectedVariations}
         currentProductId={product?._id}
         currentProductName={formData.name}
+        currentSelfVariationText={selfVariationText}
       />
     </div>
   )

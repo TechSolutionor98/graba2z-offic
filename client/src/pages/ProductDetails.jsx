@@ -2752,29 +2752,36 @@ const ProductDetails = () => {
                       // Build array of all variations including current product
                       const allVariations = []
                       
-                      // Add current product if it has reverseVariationText
-                      if (product.reverseVariationText) {
+                      // Add current product if it has selfVariationText (or fallback to reverseVariationText)
+                      const currentProductText = product.selfVariationText || product.reverseVariationText
+                      if (currentProductText) {
                         allVariations.push({
                           id: product._id,
-                          text: product.reverseVariationText,
+                          text: currentProductText,
                           slug: product.slug,
                           isCurrent: true
                         })
                       }
                       
-                      // Add other variations
+                      // Add other variations - use their selfVariationText, fallback to variationText
                       product.variations
                         .filter(variation => {
-                          const varText = variation.variationText || ""
                           const varProduct = variation.product
-                          if (!varText || !varProduct) return false
-                          return true
+                          if (!varProduct) return false
+                          // Get the text: prefer selfVariationText from the product, fallback to variationText
+                          const varText = (typeof varProduct === 'object' && (varProduct.selfVariationText || varProduct.reverseVariationText)) 
+                            || variation.variationText 
+                            || ""
+                          return varText.trim() !== ""
                         })
                         .forEach(variation => {
                           const varProduct = variation.product
                           const varId = typeof varProduct === 'object' ? varProduct._id : varProduct
                           const varSlug = typeof varProduct === 'object' ? varProduct.slug : null
-                          const varText = variation.variationText || ""
+                          // Get the text: prefer selfVariationText from the product, fallback to variationText
+                          const varText = (typeof varProduct === 'object' && (varProduct.selfVariationText || varProduct.reverseVariationText)) 
+                            || variation.variationText 
+                            || ""
                           
                           allVariations.push({
                             id: varId,
