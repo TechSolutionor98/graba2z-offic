@@ -5,6 +5,9 @@ import { X, Building2, FileText, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import config from '../config/config';
 import { User, Mail, Phone } from "lucide-react";
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
+import '../styles/phoneInput.css'
 
 export default function ReqBulkPurchase() {
   const { user } = useAuth ? useAuth() : { user: null };
@@ -23,6 +26,7 @@ export default function ReqBulkPurchase() {
   const [otp, setOtp] = useState('');
   const [tempId, setTempId] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
+  const [phoneValue, setPhoneValue] = useState("");
   const [countries] = useState([
     { code: '+93', cc: 'AF' },
     { code: '+355', cc: 'AL' },
@@ -263,11 +267,11 @@ export default function ReqBulkPurchase() {
     try {
       const payload = {
         ...callbackForm,
-        phone: callbackForm.countryCode + callbackForm.phone, // Combine country code with phone
+        phone: phoneValue,
         userId: user?._id || null,
       };
 
-      // Remove countryCode from payload as we've combined it with phone
+      // Remove countryCode from payload as it's no longer used
       delete payload.countryCode;
 
       // If user is not logged in, include OTP verification
@@ -517,41 +521,23 @@ export default function ReqBulkPurchase() {
                       </div>
                     )}
 
-                    {/* Phone Field */}
+                    {/* Phone Number with Country Code */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
-                      <div className="flex items-start gap-3">
-                        <div className="text-lime-600 mt-2">
-                          <Phone size={20} />
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                      <div className="flex items-center gap-3">
+                        <div className="text-lime-600">
+                          <Phone size={24} />
                         </div>
-                        <div className="flex-1 flex gap-2">
-                          <select
-                            name="countryCode"
-                            value={callbackForm.countryCode}
-                            onChange={handleCallbackChange}
-                            className="py-2 px-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-500 focus:border-transparent bg-white"
-                            style={{ minWidth: '130px' }}
-                          >
-                            {countries.map((country, index) => (
-                              <option key={`${country.cc}-${index}`} value={country.code}>
-                                {country.code} {country.cc}
-                              </option>
-                            ))}
-                          </select>
-                          <input
-                            type="tel"
-                            name="phone"
-                            value={callbackForm.phone}
-                            onChange={handleCallbackChange}
-                            placeholder="Enter phone number"
-                            className="flex-1 py-2 px-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-500 focus:border-transparent"
-                            required
-                          />
-                        </div>
+                        <PhoneInput
+                          international
+                          defaultCountry="AE"
+                          value={phoneValue}
+                          onChange={setPhoneValue}
+                          className="flex-1"
+                          placeholder="Enter phone number"
+                          required
+                        />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 ml-8">
-                        Select country code and enter your phone number without the country code
-                      </p>
                     </div>
 
                     {/* Company Field */}
