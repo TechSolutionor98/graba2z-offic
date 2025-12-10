@@ -1,17 +1,33 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import ProductForm from "../../components/admin/ProductForm"
 import MoveProductsModal from "../../components/admin/MoveProductsModal"
 import ConfirmDialog from "../../components/admin/ConfirmDialog"
 import { useToast } from "../../context/ToastContext"
-import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight, Copy, Upload } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight, Copy, Upload, ChevronDown, Pause, Play, Columns, Check } from "lucide-react"
 import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 import { exportProductsToExcel } from "../../utils/exportToExcel"
+
+// Define all available columns
+const ALL_COLUMNS = [
+  { id: 'select', label: 'Select', default: true, alwaysVisible: true },
+  { id: 'product', label: 'Product', default: true },
+  { id: 'brand', label: 'Brand', default: true },
+  { id: 'parentCategory', label: 'Parent Category', default: true },
+  { id: 'level1', label: 'Level 1', default: true },
+  { id: 'level2', label: 'Level 2', default: true },
+  { id: 'level3', label: 'Level 3', default: true },
+  { id: 'level4', label: 'Level 4', default: true },
+  { id: 'price', label: 'Price', default: true },
+  { id: 'sku', label: 'SKU', default: true },
+  { id: 'action', label: 'Action', default: true, alwaysVisible: true },
+]
+
 const AdminProducts = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
@@ -51,6 +67,72 @@ const AdminProducts = () => {
   const [importFile, setImportFile] = useState(null)
   const [importing, setImporting] = useState(false)
   const [importResults, setImportResults] = useState(null)
+  
+  // Action dropdown states
+  const [openActionDropdown, setOpenActionDropdown] = useState(null)
+  const [openStatusSubmenu, setOpenStatusSubmenu] = useState(false)
+  const actionDropdownRef = useRef(null)
+  
+  // Column visibility states
+  const [showColumnDropdown, setShowColumnDropdown] = useState(false)
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    // Load from localStorage or use defaults
+    const saved = localStorage.getItem('adminProductsColumns')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        return ALL_COLUMNS.filter(c => c.default).map(c => c.id)
+      }
+    }
+    return ALL_COLUMNS.filter(c => c.default).map(c => c.id)
+  })
+  const columnDropdownRef = useRef(null)
+
+  // Save column visibility to localStorage
+  useEffect(() => {
+    localStorage.setItem('adminProductsColumns', JSON.stringify(visibleColumns))
+  }, [visibleColumns])
+
+  // Close column dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (columnDropdownRef.current && !columnDropdownRef.current.contains(event.target)) {
+        setShowColumnDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Toggle column visibility
+  const toggleColumn = (columnId) => {
+    const column = ALL_COLUMNS.find(c => c.id === columnId)
+    if (column?.alwaysVisible) return // Can't hide always visible columns
+    
+    setVisibleColumns(prev => {
+      if (prev.includes(columnId)) {
+        return prev.filter(id => id !== columnId)
+      } else {
+        return [...prev, columnId]
+      }
+    })
+  }
+
+  // Check if column is visible
+  const isColumnVisible = (columnId) => visibleColumns.includes(columnId)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (actionDropdownRef.current && !actionDropdownRef.current.contains(event.target)) {
+        setOpenActionDropdown(null)
+        setOpenStatusSubmenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Derived counters
   const totalSelected = useMemo(() => {
@@ -350,7 +432,14 @@ const AdminProducts = () => {
     if (filterSubcategory3 && filterSubcategory3 !== 'all') overrides.subCategory3 = filterSubcategory3
     if (filterSubcategory4 && filterSubcategory4 !== 'all') overrides.subCategory4 = filterSubcategory4
     if (filterBrand && filterBrand !== 'all') overrides.brand = filterBrand
-    if (filterStatus && filterStatus !== 'all') overrides.isActive = filterStatus === 'active'
+    if (filterStatus && filterStatus !== 'all') {
+      if (filterStatus === 'onhold') {
+        overrides.onHold = true
+      } else {
+        overrides.isActive = filterStatus === 'active'
+        overrides.onHold = false
+      }
+    }
     if (searchTerm.trim()) overrides.search = searchTerm.trim()
     
     const all = await fetchAllForExport(overrides)
@@ -380,7 +469,14 @@ const AdminProducts = () => {
       if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
       if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
       if (filterBrand && filterBrand !== "all") params.brand = filterBrand
-      if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
+      if (filterStatus && filterStatus !== "all") {
+        if (filterStatus === 'onhold') {
+          params.onHold = true
+        } else {
+          params.isActive = filterStatus === "active"
+          params.onHold = false
+        }
+      }
       
       const { data } = await axios.get(`${config.API_URL}/api/products/admin/count`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -407,7 +503,14 @@ const AdminProducts = () => {
       if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
       if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
       if (filterBrand && filterBrand !== "all") params.brand = filterBrand
-      if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
+      if (filterStatus && filterStatus !== "all") {
+        if (filterStatus === 'onhold') {
+          params.onHold = true
+        } else {
+          params.isActive = filterStatus === "active"
+          params.onHold = false
+        }
+      }
       Object.assign(params, overrides)
       // We may need to loop if more than 1000
       let all = []
@@ -479,7 +582,14 @@ const AdminProducts = () => {
       if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
       if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
       if (filterBrand && filterBrand !== "all") params.brand = filterBrand
-      if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
+      if (filterStatus && filterStatus !== "all") {
+        if (filterStatus === 'onhold') {
+          params.onHold = true
+        } else {
+          params.isActive = filterStatus === "active"
+          params.onHold = false
+        }
+      }
 
       const { data, headers } = await axios.get(`${config.API_URL}/api/products/admin`, {
         headers: {
@@ -673,6 +783,53 @@ const AdminProducts = () => {
     }
   }
 
+  // Update product status (Active, Inactive, On Hold)
+  const handleUpdateProductStatus = async (productId, statusType) => {
+    try {
+      const token = getAdminToken()
+      if (!token) {
+        setError("Authentication required. Please login again.")
+        return
+      }
+
+      let updateData = {}
+      let statusMessage = ""
+
+      switch (statusType) {
+        case 'active':
+          updateData = { isActive: true, onHold: false }
+          statusMessage = "activated"
+          break
+        case 'inactive':
+          updateData = { isActive: false, onHold: false }
+          statusMessage = "deactivated"
+          break
+        case 'onhold':
+          updateData = { isActive: false, onHold: true }
+          statusMessage = "put on hold"
+          break
+        default:
+          return
+      }
+
+      await axios.put(`${config.API_URL}/api/products/${productId}`, updateData, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      // Update local state
+      setProducts(products.map(p => 
+        p._id === productId ? { ...p, ...updateData } : p
+      ))
+
+      setOpenActionDropdown(null)
+      setOpenStatusSubmenu(false)
+      showToast(`Product ${statusMessage} successfully`, "success")
+    } catch (error) {
+      console.error("Failed to update product status:", error)
+      showToast("Failed to update product status", "error")
+    }
+  }
+
   const handleBulkMove = async (categoryData) => {
     try {
       const token = getAdminToken()
@@ -691,7 +848,14 @@ const AdminProducts = () => {
         if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
         if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
         if (filterBrand && filterBrand !== "all") params.brand = filterBrand
-        if (filterStatus && filterStatus !== "all") params.isActive = filterStatus === "active"
+        if (filterStatus && filterStatus !== "all") {
+          if (filterStatus === 'onhold') {
+            params.onHold = true
+          } else {
+            params.isActive = filterStatus === "active"
+            params.onHold = false
+          }
+        }
 
         const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -1246,6 +1410,7 @@ const AdminProducts = () => {
                       <option value="all">All Products</option>
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
+                      <option value="onhold">On Hold</option>
                     </select>
                   </div>
 
@@ -1360,10 +1525,66 @@ const AdminProducts = () => {
                 </div>
               ) : (
                 <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                  {/* Column Visibility and Export Buttons */}
+                  <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+                    <div className="flex items-center gap-3">
+                      {/* Column Visibility Dropdown */}
+                      <div className="relative" ref={columnDropdownRef}>
+                        <button
+                          onClick={() => setShowColumnDropdown(!showColumnDropdown)}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded-md hover:bg-cyan-600 transition-colors text-sm font-medium"
+                        >
+                          <Columns size={16} />
+                          Column visibility
+                        </button>
+                        
+                        {showColumnDropdown && (
+                          <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50 max-h-96 overflow-y-auto">
+                            <div className="py-1">
+                              {ALL_COLUMNS.map((column) => (
+                                <button
+                                  key={column.id}
+                                  onClick={() => toggleColumn(column.id)}
+                                  disabled={column.alwaysVisible}
+                                  className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between ${
+                                    column.alwaysVisible 
+                                      ? 'text-gray-400 cursor-not-allowed bg-gray-50' 
+                                      : isColumnVisible(column.id)
+                                        ? 'text-white bg-cyan-500 hover:bg-cyan-600'
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                  }`}
+                                >
+                                  <span>{column.label}</span>
+                                  {isColumnVisible(column.id) && (
+                                    <Check size={16} className={column.alwaysVisible ? 'text-gray-400' : 'text-white'} />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Export Button */}
+                      {/* <button
+                        onClick={() => handleExport('page')}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
+                      >
+                        <Download size={16} />
+                        Export
+                      </button> */}
+                    </div>
+                    
+                    <div className="text-sm text-gray-600">
+                      Showing {products.length} of {categoryProductCount || products.length} products
+                    </div>
+                  </div>
+                  
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
+                          {isColumnVisible('select') && (
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <div className="flex items-center gap-1">
                               <button
@@ -1380,88 +1601,92 @@ const AdminProducts = () => {
                               )}
                             </div>
                           </th>
+                          )}
+                          {isColumnVisible('product') && (
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Product
                           </th>
+                          )}
+                          {isColumnVisible('brand') && (
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Brand
                           </th>
+                          )}
+                          {isColumnVisible('parentCategory') && (
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Parent Category
                           </th>
+                          )}
+                          {isColumnVisible('level1') && (
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Level 1
                           </th>
+                          )}
+                          {isColumnVisible('level2') && (
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Level 2
                           </th>
+                          )}
+                          {isColumnVisible('level3') && (
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Level 3
                           </th>
+                          )}
+                          {isColumnVisible('level4') && (
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Level 4
                           </th>
+                          )}
+                          {isColumnVisible('price') && (
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Price
                           </th>
+                          )}
+                          {isColumnVisible('sku') && (
                           <th
                             scope="col"
                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             SKU
                           </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Status
-                          </th>
+                          )}
+                          {isColumnVisible('action') && (
                           <th
                             scope="col"
                             className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
-                            Duplicate
+                            Action
                           </th>
-                          <th
-                            scope="col"
-                            className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                          >
-                            Actions
-                          </th>
+                          )}
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {products.length > 0 ? (
                           products.map((product) => {
-                            console.log('Product:', product);
-                            console.log('Product.parentCategory:', product.parentCategory);
-                            console.log('Product.category:', product.category);
-                            console.log('Product.category.category:', product.category?.category);
-                            console.log('Categories list:', categories);
                             return (
                               <tr
                                 key={product._id}
@@ -1472,6 +1697,7 @@ const AdminProducts = () => {
                                     : ""
                                 }`}
                               >
+                                {isColumnVisible('select') && (
                                 <td className="px-4 py-4 whitespace-nowrap">
                                   <button
                                     onClick={() => toggleSelectOne(product._id)}
@@ -1480,6 +1706,8 @@ const AdminProducts = () => {
                                     {(selectAllMode || selectedIds.has(product._id)) ? <CheckSquare size={16} /> : <Square size={16} />}
                                   </button>
                                 </td>
+                                )}
+                                {isColumnVisible('product') && (
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="flex items-center">
                                     <div className="h-10 w-10 flex-shrink-0">
@@ -1497,34 +1725,48 @@ const AdminProducts = () => {
 
                                   </div>
                                 </td>
+                                )}
+                                {isColumnVisible('brand') && (
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="text-sm text-gray-900">{product.brand?.name || 'N/A'}</div>
                                 </td>
+                                )}
+                                {isColumnVisible('parentCategory') && (
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-50 text-blue-800">
                                     {getParentCategoryName(product)}
                                   </span>
                                 </td>
+                                )}
+                                {isColumnVisible('level1') && (
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                                     {product.category?.name || 'N/A'}
                                   </span>
                                 </td>
+                                )}
+                                {isColumnVisible('level2') && (
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-50 text-purple-800">
                                     {product.subCategory2?.name || '-'}
                                   </span>
                                 </td>
+                                )}
+                                {isColumnVisible('level3') && (
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-50 text-indigo-800">
                                     {product.subCategory3?.name || '-'}
                                   </span>
                                 </td>
+                                )}
+                                {isColumnVisible('level4') && (
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-50 text-pink-800">
                                     {product.subCategory4?.name || '-'}
                                   </span>
                                 </td>
+                                )}
+                                {isColumnVisible('price') && (
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="text-sm text-gray-900">{formatPrice(product.price)}</div>
                                   {product.oldPrice && (
@@ -1533,82 +1775,143 @@ const AdminProducts = () => {
                                     </div>
                                   )}
                                 </td>
+                                )}
+                                {isColumnVisible('sku') && (
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="text-sm text-gray-900">{product.sku || 'N/A'}</div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="flex flex-col space-y-1">
-                                    {product.hideFromShop ? (
-                                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
-                                        <EyeOff className="h-3 w-3 mr-1" />
-                                        Hide
-                                      </span>
-                                    ) : (
-                                      <span
-                                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                                          }`}
-                                      >
-                                        {product.isActive ? (
-                                          <>
-                                            <Eye className="h-3 w-3 mr-1" />
-                                            Active
-                                          </>
-                                        ) : (
-                                          <>
-                                            <EyeOff className="h-3 w-3 mr-1" />
-                                            Inactive
-                                          </>
-                                        )}
-                                      </span>
-                                    )}
-                                    {product.featured && (
-                                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                        Featured
-                                      </span>
-                                    )}
-                                  </div>
-                                </td>
+                                )}
+                                {isColumnVisible('action') && (
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
-                                  <button
-                                    onClick={() => handleDuplicate(product._id)}
-                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
-                                    title="Duplicate this product"
-                                  >
-                                    <Copy size={14} />
-                                    Duplicate
-                                  </button>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                  <div className="flex items-center justify-end space-x-2">
+                                  <div className="relative inline-block text-left" ref={openActionDropdown === product._id ? actionDropdownRef : null}>
                                     <button
-                                      onClick={() => exportProductsToExcel([product], `product_${product.sku || product._id}.xlsx`)}
-                                      className="text-gray-700 hover:text-gray-900"
-                                      title="Download this product"
+                                      onClick={() => {
+                                        setOpenActionDropdown(openActionDropdown === product._id ? null : product._id)
+                                        setOpenStatusSubmenu(false)
+                                      }}
+                                      className="inline-flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
                                     >
-                                      <Download size={18} />
+                                      Actions
+                                      <ChevronDown size={16} />
                                     </button>
-                                    <button
-                                      onClick={() => handleEdit(product)}
-                                      className="text-blue-600 hover:text-blue-900"
-                                      title="Edit this product"
-                                    >
-                                      <Edit size={18} />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDelete(product._id)}
-                                      className="text-red-600 hover:text-red-900"
-                                      title="Delete this product"
-                                    >
-                                      <Trash2 size={18} />
-                                    </button>
+                                    
+                                    {openActionDropdown === product._id && (
+                                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                                        <div className="py-1">
+                                          {/* Status submenu */}
+                                          <div 
+                                            className="relative"
+                                            onMouseEnter={() => setOpenStatusSubmenu(true)}
+                                            onMouseLeave={() => setOpenStatusSubmenu(false)}
+                                          >
+                                            <button
+                                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+                                            >
+                                              <span className="flex items-center gap-2">
+                                                {product.onHold ? (
+                                                  <Pause size={14} className="text-orange-500" />
+                                                ) : product.isActive ? (
+                                                  <Eye size={14} className="text-green-500" />
+                                                ) : (
+                                                  <EyeOff size={14} className="text-red-500" />
+                                                )}
+                                                Status
+                                              </span>
+                                              <ChevronDown size={14} className="rotate-90" />
+                                            </button>
+                                            
+                                            {openStatusSubmenu && (
+                                              <div className="absolute right-full top-0 mr-1 w-36 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+                                                <div className="py-1">
+                                                  <button
+                                                    onClick={() => handleUpdateProductStatus(product._id, 'active')}
+                                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2 ${product.isActive && !product.onHold ? 'bg-green-50 text-green-700' : 'text-gray-700'}`}
+                                                  >
+                                                    <Eye size={14} className="text-green-500" />
+                                                    Active
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleUpdateProductStatus(product._id, 'inactive')}
+                                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2 ${!product.isActive && !product.onHold ? 'bg-red-50 text-red-700' : 'text-gray-700'}`}
+                                                  >
+                                                    <EyeOff size={14} className="text-red-500" />
+                                                    Inactive
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleUpdateProductStatus(product._id, 'onhold')}
+                                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2 ${product.onHold ? 'bg-orange-50 text-orange-700' : 'text-gray-700'}`}
+                                                  >
+                                                    <Pause size={14} className="text-orange-500" />
+                                                    On Hold
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                          
+                                          <hr className="my-1" />
+                                          
+                                          {/* Duplicate */}
+                                          <button
+                                            onClick={() => {
+                                              handleDuplicate(product._id)
+                                              setOpenActionDropdown(null)
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                          >
+                                            <Copy size={14} className="text-green-600" />
+                                            Duplicate
+                                          </button>
+                                          
+                                          {/* Download */}
+                                          <button
+                                            onClick={() => {
+                                              exportProductsToExcel([product], `product_${product.sku || product._id}.xlsx`)
+                                              setOpenActionDropdown(null)
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                          >
+                                            <Download size={14} className="text-gray-600" />
+                                            Download
+                                          </button>
+                                          
+                                          {/* Edit */}
+                                          <button
+                                            onClick={() => {
+                                              handleEdit(product)
+                                              setOpenActionDropdown(null)
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                          >
+                                            <Edit size={14} className="text-blue-600" />
+                                            Edit
+                                          </button>
+                                          
+                                          <hr className="my-1" />
+                                          
+                                          {/* Delete */}
+                                          <button
+                                            onClick={() => {
+                                              handleDelete(product._id)
+                                              setOpenActionDropdown(null)
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                          >
+                                            <Trash2 size={14} />
+                                            Delete
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 </td>
+                                )}
                               </tr>
                             );
                           })
                         ) : (
                           <tr>
-                            <td colSpan="10" className="px-6 py-4 text-center text-gray-500">
+                            <td colSpan={visibleColumns.length} className="px-6 py-4 text-center text-gray-500">
                               No products found
                             </td>
                           </tr>
