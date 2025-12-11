@@ -177,9 +177,10 @@ const AddOfferCategory = () => {
     }
   }
 
-  const filteredCategories = categories.filter((category) =>
-    category.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredCategories = categories.filter((category) => {
+    if (!searchTerm.trim()) return true // Show all if no search term
+    return category.name?.toLowerCase() === searchTerm.toLowerCase()
+  })
 
   return (
     <div className="flex min-h-screen bg-gray-50">

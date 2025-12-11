@@ -366,6 +366,182 @@ const AdminSettings = () => {
                     </div>
                   )}
 
+                  {/* Category Slider Shape Setting */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                      Category Slider Image Shape
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderShape: "circle" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderShape === "circle"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center">
+                          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full mb-2"></div>
+                          <span className="font-medium text-sm">Circle</span>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderShape: "square" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderShape === "square"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center">
+                          <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 mb-2"></div>
+                          <span className="font-medium text-sm">Square</span>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderShape: "triangle" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderShape === "triangle"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 mb-2"
+                            style={{ clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)" }}
+                          ></div>
+                          <span className="font-medium text-sm">Triangle</span>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderShape: "octagon" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderShape === "octagon"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 mb-2"
+                            style={{ clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)" }}
+                          ></div>
+                          <span className="font-medium text-sm">Octagon</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Category Slider Layout Type Setting */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                      Category Slider Card Layout Type
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderLayoutType: "default" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderLayoutType === "default"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm mb-2">Default</span>
+                          <p className="text-xs text-gray-600">Standard layout with image on top and text below</p>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderLayoutType: "compact" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderLayoutType === "compact"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm mb-2">Compact</span>
+                          <p className="text-xs text-gray-600">Smaller images with tighter spacing</p>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderLayoutType: "modern" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderLayoutType === "modern"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm mb-2">Modern</span>
+                          <p className="text-xs text-gray-600">Rounded borders with shadow and hover effects</p>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderLayoutType: "minimal" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderLayoutType === "minimal"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm mb-2">Minimal</span>
+                          <p className="text-xs text-gray-600">Clean design with subtle borders</p>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderLayoutType: "card" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderLayoutType === "card"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm mb-2">Card</span>
+                          <p className="text-xs text-gray-600">Elevated card design with background</p>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderLayoutType: "banner" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderLayoutType === "banner"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm mb-2">Banner</span>
+                          <p className="text-xs text-gray-600">Wide banner style with gradient background</p>
+                        </div>
+                      </div>
+
+                      <div
+                        onClick={() => setSettings({ ...settings, categorySliderLayoutType: "circularCard" })}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                          settings.categorySliderLayoutType === "circularCard"
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm mb-2">Circular Card</span>
+                          <p className="text-xs text-gray-600">Entire card in circular shape with centered text</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="flex justify-end">
                     <button
                       type="submit"

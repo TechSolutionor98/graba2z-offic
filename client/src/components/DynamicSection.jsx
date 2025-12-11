@@ -481,7 +481,7 @@ function SimpleCardsSection({ section, cards, settings }) {
 
 // Vertical Grid Section - Cards wrap to new rows based on cardsPerRow setting
 function VerticalGridSection({ section, cards, settings }) {
-  const cardsPerRow = settings.cardsPerRow || 4
+  const cardsPerRow = settings.cardsPerRow || 7
   const backgroundColor = settings.backgroundColor || '#ffffff'
   
   // Calculate card width based on cards per row
@@ -491,8 +491,9 @@ function VerticalGridSection({ section, cards, settings }) {
     4: 'calc(25% - 18px)',
     5: 'calc(20% - 19.2px)',
     6: 'calc(16.666% - 20px)',
+    7: 'calc(14.285% - 20px)',
   }
-  const cardWidth = cardWidthMap[cardsPerRow] || cardWidthMap[4]
+  const cardWidth = cardWidthMap[cardsPerRow] || cardWidthMap[7]
 
   return (
     <>
@@ -504,7 +505,6 @@ function VerticalGridSection({ section, cards, settings }) {
       <div className="max-w-[1920px] mx-auto px-4">
         <div className="flex gap-6 flex-wrap">
           {cards.map((card) => {
-            const cardBgColor = card.bgColor || '#f3f4f6'
             
             return (
               <Link
@@ -516,36 +516,28 @@ function VerticalGridSection({ section, cards, settings }) {
                   minWidth: cardWidth,
                 }}
               >
-                {/* Card with Image and Text Inside */}
+                {/* Image with rounded corners */}
                 <div 
-                  className="relative overflow-hidden rounded-2xl shadow-md group-hover:shadow-xl transition-shadow duration-300 flex flex-col"
+                  className="overflow-hidden rounded-3xl shadow-md group-hover:shadow-xl transition-shadow duration-300"
                   style={{ 
-                    backgroundColor: cardBgColor,
-                    padding: '16px',
+                    height: '200px',
                   }}
                 >
-                  {/* Image Section */}
+                  {/* Full Image */}
                   {card.image && (
-                    <div className="relative" style={{ height: '220px' }}>
-                      <img 
-                        src={getFullImageUrl(card.image)} 
-                        alt={card.name} 
-                        className="w-full h-full bg-contain"
-                      />
-                    </div>
+                    <img 
+                      src={getFullImageUrl(card.image)} 
+                      alt={card.name} 
+                      className="w-full h-full bg-cover"
+                    />
                   )}
-                  
-                  {/* Text Section - Inside Card at Bottom */}
-                  <div className="mt-4">
-                    <h3 className="text-base font-semibold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-1">
-                      {card.name}
-                    </h3>
-                    {card.details && (
-                      <p className="text-sm text-blue-600 mt-1 font-medium line-clamp-1">
-                        {card.details}
-                      </p>
-                    )}
-                  </div>
+                </div>
+                
+                {/* Text Below Image */}
+                <div className="mt-3">
+                  <h3 className="text-sm font-semibold text-gray-800 text-center line-clamp-2">
+                    {card.name}
+                  </h3>
                 </div>
               </Link>
             )

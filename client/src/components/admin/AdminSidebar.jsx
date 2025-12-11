@@ -154,7 +154,8 @@ const AdminSidebar = () => {
     if (
       path.includes("/admin/categories") ||
       path.includes("/admin/add-category") ||
-      path.includes("/admin/trash-categories")
+      path.includes("/admin/trash-categories") ||
+      path.includes("/admin/categories/slider")
     ) {
       newOpenDropdowns.categories = true
     }
@@ -244,6 +245,7 @@ const AdminSidebar = () => {
             { title: "List Categories", path: "/admin/categories" },
             { title: "Add Category", path: "/admin/categories/add" },
             { title: "Trash Categories", path: "/admin/categories/trash" },
+            { title: "Category Slider", path: "/admin/categories/slider" },
           ],
         },
         {

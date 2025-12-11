@@ -63,6 +63,7 @@ import AdminProducts from "./pages/admin/AdminProducts"
 import AdminOrders from "./pages/admin/AdminOrders"
 import AdminUsers from "./pages/admin/AdminUsers"
 import AdminCategories from "./pages/admin/AdminCategories"
+import AdminCategorySlider from "./pages/admin/AdminCategorySlider"
 import AdminBrands from "./pages/admin/AdminBrands"
 import AdminColors from "./pages/admin/AdminColors"
 import AdminSizes from "./pages/admin/AdminSizes"
@@ -224,6 +225,7 @@ function App() {
                               <Route path="categories/add" element={<AddCategory />} />
                               <Route path="categories/edit/:id" element={<EditCategory />} />
                               <Route path="categories/trash" element={<TrashCategories />} />
+                              <Route path="categories/slider" element={<AdminCategorySlider />} />
                               <Route path="subcategories" element={<AdminSubCategories />} />
                               <Route path="subcategories/add" element={<AddSubCategory />} />
                               <Route path="subcategories/edit/:id" element={<EditSubCategory />} />

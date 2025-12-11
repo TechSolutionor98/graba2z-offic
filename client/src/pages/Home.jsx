@@ -26,6 +26,7 @@ import {
 import { Link, useNavigate } from "react-router-dom"
 import BannerSlider from "../components/BannerSlider"
 import CategorySlider from "../components/CategorySlider"
+import CategorySliderUpdated from "../components/CategorySliderUpdated"
 import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
 import BrandSlider from "../components/BrandSlider"
@@ -966,8 +967,8 @@ const Home = () => {
           (banner) => banner.deviceType && banner.deviceType.toLowerCase() === deviceType.toLowerCase(),
         )}
       />
-      {/* Categories Section - Infinite Loop Scroll */}
-      <CategorySlider categories={categories} onCategoryClick={handleCategoryClick} />
+      {/* Categories Section - Admin Controlled Slider */}
+      <CategorySliderUpdated onCategoryClick={handleCategoryClick} />
 
      
       {/* Three Cards Section - Simple Mobile Grid */}
@@ -1030,7 +1031,7 @@ const Home = () => {
       </div> */}
 
       {/* Dynamic Section Position 1 */}
-      {/* {renderDynamicSection(1)} */}
+      {renderDynamicSection(1)}
 
       {/* Big Sale Section - Handles both mobile and desktop views */}
       <BigSaleSection products={featuredProducts} />
