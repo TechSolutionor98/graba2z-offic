@@ -73,6 +73,11 @@ const AdminProducts = () => {
   const [openStatusSubmenu, setOpenStatusSubmenu] = useState(false)
   const actionDropdownRef = useRef(null)
   
+  // Bulk status dropdown
+  const [showBulkStatusDropdown, setShowBulkStatusDropdown] = useState(false)
+  const [bulkUpdating, setBulkUpdating] = useState(false)
+  const bulkStatusDropdownRef = useRef(null)
+  
   // Column visibility states
   const [showColumnDropdown, setShowColumnDropdown] = useState(false)
   const [visibleColumns, setVisibleColumns] = useState(() => {
@@ -128,6 +133,9 @@ const AdminProducts = () => {
       if (actionDropdownRef.current && !actionDropdownRef.current.contains(event.target)) {
         setOpenActionDropdown(null)
         setOpenStatusSubmenu(false)
+      }
+      if (bulkStatusDropdownRef.current && !bulkStatusDropdownRef.current.contains(event.target)) {
+        setShowBulkStatusDropdown(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -830,6 +838,107 @@ const AdminProducts = () => {
     }
   }
 
+  // Bulk status update function
+  const handleBulkStatusUpdate = async (statusType) => {
+    try {
+      const token = getAdminToken()
+      if (!token) {
+        showToast("Authentication required. Please login again.", "error")
+        return
+      }
+
+      setBulkUpdating(true)
+      setShowBulkStatusDropdown(false)
+
+      // Get product IDs to update
+      let productIds
+      if (selectAllMode) {
+        // If all products are selected, fetch all IDs with current filters
+        const params = {}
+        if (searchTerm.trim() !== "") params.search = searchTerm.trim()
+        if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
+        if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
+        if (filterSubcategory2 && filterSubcategory2 !== "all") params.subCategory2 = filterSubcategory2
+        if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
+        if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
+        if (filterBrand && filterBrand !== "all") params.brand = filterBrand
+        if (filterStatus && filterStatus !== "all") {
+          if (filterStatus === 'onhold') {
+            params.onHold = true
+          } else {
+            params.isActive = filterStatus === "active"
+            params.onHold = false
+          }
+        }
+
+        const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { ...params, limit: 10000, page: 1 }
+        })
+        
+        productIds = data.products.map(p => p._id)
+      } else {
+        productIds = Array.from(selectedIds)
+      }
+
+      if (productIds.length === 0) {
+        showToast("No products selected", "error")
+        setBulkUpdating(false)
+        return
+      }
+
+      // Determine update data based on status type
+      let updateData = {}
+      let statusMessage = ""
+
+      switch (statusType) {
+        case 'active':
+          updateData = { isActive: true, onHold: false }
+          statusMessage = "activated"
+          break
+        case 'inactive':
+          updateData = { isActive: false, onHold: false }
+          statusMessage = "deactivated"
+          break
+        case 'onhold':
+          updateData = { isActive: false, onHold: true }
+          statusMessage = "put on hold (hidden from shop)"
+          break
+        default:
+          setBulkUpdating(false)
+          return
+      }
+
+      // Make bulk update request
+      await axios.put(
+        `${config.API_URL}/api/products/bulk-status`,
+        {
+          productIds,
+          ...updateData
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+
+      showToast(`Successfully ${statusMessage} ${productIds.length} product(s)`, "success")
+      
+      // Clear selection and refresh products
+      setSelectAllMode(false)
+      setSelectedIds(new Set())
+      setAllProductIds([])
+      await fetchProducts()
+    } catch (error) {
+      console.error("Failed to update product status:", error)
+      showToast(error.response?.data?.message || "Failed to update product status", "error")
+    } finally {
+      setBulkUpdating(false)
+    }
+  }
+
   const handleBulkMove = async (categoryData) => {
     try {
       const token = getAdminToken()
@@ -1487,12 +1596,61 @@ const AdminProducts = () => {
                       )}
                     </div>
 
-                    {/* Download Options - Only show when there are products selected */}
+                    {/* Bulk Action Options - Only show when there are products selected */}
                     {totalSelected > 0 && (
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-blue-700">
                           {selectAllMode ? `${totalSelected} products selected` : `${totalSelected} product${totalSelected > 1 ? 's' : ''} selected`}
                         </div>
+                        
+                        {/* Change Status Dropdown */}
+                        <div className="relative" ref={bulkStatusDropdownRef}>
+                          <button
+                            onClick={() => setShowBulkStatusDropdown(!showBulkStatusDropdown)}
+                            disabled={bulkUpdating}
+                            className="inline-flex items-center gap-1 px-4 py-1 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700 disabled:bg-purple-400"
+                          >
+                            {bulkUpdating ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+                                Updating...
+                              </>
+                            ) : (
+                              <>
+                                <Tag size={14} /> Change Status <ChevronDown size={14} />
+                              </>
+                            )}
+                          </button>
+                          
+                          {showBulkStatusDropdown && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => handleBulkStatusUpdate('active')}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 flex items-center gap-2"
+                                >
+                                  <Play size={14} className="text-green-600" />
+                                  Set Active
+                                </button>
+                                <button
+                                  onClick={() => handleBulkStatusUpdate('inactive')}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 flex items-center gap-2"
+                                >
+                                  <Pause size={14} className="text-red-600" />
+                                  Set Inactive
+                                </button>
+                                <button
+                                  onClick={() => handleBulkStatusUpdate('onhold')}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-700 flex items-center gap-2"
+                                >
+                                  <EyeOff size={14} className="text-yellow-600" />
+                                  Hide from Shop
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
                         <button
                           onClick={() => setShowMoveModal(true)}
                           className="inline-flex items-center gap-1 px-4 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"
@@ -1782,127 +1940,66 @@ const AdminProducts = () => {
                                 </td>
                                 )}
                                 {isColumnVisible('action') && (
-                                <td className="px-6 py-4 whitespace-nowrap text-center">
-                                  <div className="relative inline-block text-left" ref={openActionDropdown === product._id ? actionDropdownRef : null}>
-                                    <button
-                                      onClick={() => {
-                                        setOpenActionDropdown(openActionDropdown === product._id ? null : product._id)
-                                        setOpenStatusSubmenu(false)
-                                      }}
-                                      className="inline-flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
-                                    >
-                                      Actions
-                                      <ChevronDown size={16} />
-                                    </button>
-                                    
-                                    {openActionDropdown === product._id && (
-                                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-                                        <div className="py-1">
-                                          {/* Status submenu */}
-                                          <div 
-                                            className="relative"
-                                            onMouseEnter={() => setOpenStatusSubmenu(true)}
-                                            onMouseLeave={() => setOpenStatusSubmenu(false)}
-                                          >
-                                            <button
-                                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-                                            >
-                                              <span className="flex items-center gap-2">
-                                                {product.onHold ? (
-                                                  <Pause size={14} className="text-orange-500" />
-                                                ) : product.isActive ? (
-                                                  <Eye size={14} className="text-green-500" />
-                                                ) : (
-                                                  <EyeOff size={14} className="text-red-500" />
-                                                )}
-                                                Status
-                                              </span>
-                                              <ChevronDown size={14} className="rotate-90" />
-                                            </button>
-                                            
-                                            {openStatusSubmenu && (
-                                              <div className="absolute right-full top-0 mr-1 w-36 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
-                                                <div className="py-1">
-                                                  <button
-                                                    onClick={() => handleUpdateProductStatus(product._id, 'active')}
-                                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2 ${product.isActive && !product.onHold ? 'bg-green-50 text-green-700' : 'text-gray-700'}`}
-                                                  >
-                                                    <Eye size={14} className="text-green-500" />
-                                                    Active
-                                                  </button>
-                                                  <button
-                                                    onClick={() => handleUpdateProductStatus(product._id, 'inactive')}
-                                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2 ${!product.isActive && !product.onHold ? 'bg-red-50 text-red-700' : 'text-gray-700'}`}
-                                                  >
-                                                    <EyeOff size={14} className="text-red-500" />
-                                                    Inactive
-                                                  </button>
-                                                  <button
-                                                    onClick={() => handleUpdateProductStatus(product._id, 'onhold')}
-                                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2 ${product.onHold ? 'bg-orange-50 text-orange-700' : 'text-gray-700'}`}
-                                                  >
-                                                    <Pause size={14} className="text-orange-500" />
-                                                    On Hold
-                                                  </button>
-                                                </div>
-                                              </div>
-                                            )}
-                                          </div>
-                                          
-                                          <hr className="my-1" />
-                                          
-                                          {/* Duplicate */}
-                                          <button
-                                            onClick={() => {
-                                              handleDuplicate(product._id)
-                                              setOpenActionDropdown(null)
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                          >
-                                            <Copy size={14} className="text-green-600" />
-                                            Duplicate
-                                          </button>
-                                          
-                                          {/* Download */}
-                                          <button
-                                            onClick={() => {
-                                              exportProductsToExcel([product], `product_${product.sku || product._id}.xlsx`)
-                                              setOpenActionDropdown(null)
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                          >
-                                            <Download size={14} className="text-gray-600" />
-                                            Download
-                                          </button>
-                                          
-                                          {/* Edit */}
-                                          <button
-                                            onClick={() => {
-                                              handleEdit(product)
-                                              setOpenActionDropdown(null)
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                                          >
-                                            <Edit size={14} className="text-blue-600" />
-                                            Edit
-                                          </button>
-                                          
-                                          <hr className="my-1" />
-                                          
-                                          {/* Delete */}
-                                          <button
-                                            onClick={() => {
-                                              handleDelete(product._id)
-                                              setOpenActionDropdown(null)
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                          >
-                                            <Trash2 size={14} />
-                                            Delete
-                                          </button>
-                                        </div>
+                                <td className="px-4 py-3 whitespace-nowrap text-center">
+                                  <div className="flex items-center justify-center gap-2">
+                                    {/* Quick Action Icons - 2 rows */}
+                                    <div className="flex flex-col gap-1 mr-2">
+                                      {/* Row 1: Status Icons */}
+                                      <div className="flex items-center gap-1">
+                                        <button
+                                          onClick={() => handleUpdateProductStatus(product._id, 'active')}
+                                          className={`p-1 rounded hover:bg-green-100 transition-colors ${product.isActive && !product.onHold ? 'bg-green-100 text-green-600' : 'text-gray-400 hover:text-green-600'}`}
+                                          title="Set Active"
+                                        >
+                                          <Eye size={15} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleUpdateProductStatus(product._id, 'inactive')}
+                                          className={`p-1 rounded hover:bg-red-100 transition-colors ${!product.isActive && !product.onHold ? 'bg-red-100 text-red-600' : 'text-gray-400 hover:text-red-600'}`}
+                                          title="Set Inactive"
+                                        >
+                                          <EyeOff size={15} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleUpdateProductStatus(product._id, 'onhold')}
+                                          className={`p-1 rounded hover:bg-yellow-100 transition-colors ${product.onHold ? 'bg-yellow-100 text-yellow-600' : 'text-gray-400 hover:text-yellow-600'}`}
+                                          title="Hide from Shop"
+                                        >
+                                          <Pause size={15} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDelete(product._id)}
+                                          className="p-1 rounded text-gray-400 hover:bg-red-100 hover:text-red-600 transition-colors"
+                                          title="Delete"
+                                        >
+                                          <Trash2 size={15} />
+                                        </button>
                                       </div>
-                                    )}
+                                      {/* Row 2: Other Actions */}
+                                      <div className="flex items-center gap-1">
+                                        <button
+                                          onClick={() => handleDuplicate(product._id)}
+                                          className="p-1 rounded text-gray-400 hover:bg-green-100 hover:text-green-600 transition-colors"
+                                          title="Duplicate"
+                                        >
+                                          <Copy size={15} />
+                                        </button>
+                                        <button
+                                          onClick={() => exportProductsToExcel([product], `product_${product.sku || product._id}.xlsx`)}
+                                          className="p-1 rounded text-gray-400 hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                                          title="Download"
+                                        >
+                                          <Download size={15} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleEdit(product)}
+                                          className="p-1 rounded text-gray-400 hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                                          title="Edit"
+                                        >
+                                          <Edit size={15} />
+                                        </button>
+                                      </div>
+                                    </div>
                                   </div>
                                 </td>
                                 )}
