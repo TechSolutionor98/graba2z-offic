@@ -1042,7 +1042,7 @@ const Home = () => {
           <h2 className="text-lg font-bold text-gray-900">Featured Products</h2>
           <button className="text-green-600 hover:text-green-800 font-medium text-sm">View All</button>
         </div>
-
+         
         <div className="grid grid-cols-2 gap-3">
           {featuredProducts.slice(0, 4).map((product, index) => (
             <MobileProductCard key={product._id} product={product} index={index} />

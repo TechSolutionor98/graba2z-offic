@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown, Minus } from "lucide-react"
+import { ChevronDown, Minus, Plus } from "lucide-react"
 import axios from "axios"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
@@ -246,6 +246,10 @@ const Shop = () => {
   const [showBrandFilter, setShowBrandFilter] = useState(true)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
+  // State for expandable category tree
+  const [expandedCategories, setExpandedCategories] = useState({})
+  const [allSubcategories, setAllSubcategories] = useState([])
+
   const [productsToShow, setProductsToShow] = useState(20)
   const [delayedLoading, setDelayedLoading] = useState(false)
   const fetchTimeout = useRef()
@@ -429,9 +433,18 @@ const Shop = () => {
           sortBy: sortBy,
         }
 
-        console.log("Applying filters in filterProductsFromCache:", filters)
+        console.log("🔍 Active Filters:", {
+          parentCategory: filters.parent_category ? "✅" : "❌",
+          level1: filters.category ? "✅" : "❌", 
+          level2: filters.subcategory2 ? "✅" : "❌",
+          level3: filters.subcategory3 ? "✅" : "❌",
+          level4: filters.subcategory4 ? "✅" : "❌",
+          brands: filters.brand ? `✅ (${filters.brand.length})` : "❌",
+          priceRange: `${filters.priceRange[0]} - ${filters.priceRange[1]}`,
+          stockStatus: filters.stockStatus ? `✅ (${filters.stockStatus.join(", ")})` : "❌",
+        })
         filteredProducts = productCache.filterProducts(allProducts, filters)
-        console.log("Filtered products count from cache:", filteredProducts.length)
+        console.log(`📊 Results: ${filteredProducts.length} products (from ${allProducts.length} total)`)
       }
 
       if (filteredProducts.length > 0) {
@@ -454,6 +467,7 @@ const Shop = () => {
     fetchCategories()
     fetchBrands()
     fetchBanners()
+    fetchAllSubcategories()
     loadAndFilterProducts()
   }, [])
 
@@ -500,16 +514,21 @@ const Shop = () => {
   ])
 
   useEffect(() => {
+    // Parse URL when location changes or categories load
+    if (categories.length === 0) return
+    
     const urlParams = parseShopURL(location.pathname, location.search)
-    if (categories.length > 0) {
-      const foundCategory = categories.find(
-        (cat) =>
-          cat._id === urlParams.parentCategory ||
-          cat.slug === urlParams.parentCategory ||
-          createSlug(cat.name) === urlParams.parentCategory,
-      )
-      setSelectedCategory(foundCategory ? foundCategory._id : "all")
-
+    const foundCategory = categories.find(
+      (cat) =>
+        cat._id === urlParams.parentCategory ||
+        cat.slug === urlParams.parentCategory ||
+        createSlug(cat.name) === urlParams.parentCategory,
+    )
+    const newCategory = foundCategory ? foundCategory._id : "all"
+    
+    // Only update if different to prevent loops
+    if (newCategory !== selectedCategory) {
+      setSelectedCategory(newCategory)
       setSelectedSubCategories([])
       setSelectedSubCategory2(null)
       setSelectedSubCategory3(null)
@@ -519,7 +538,7 @@ const Shop = () => {
       setCurrentSubCategory3Name(null)
       setCurrentSubCategory4Name(null)
     }
-  }, [location.pathname, location.search, categories])
+  }, [categories, location.pathname, location.search])
 
   useEffect(() => {
     if (selectedCategory && selectedCategory !== "all") {
@@ -531,111 +550,92 @@ const Shop = () => {
   }, [selectedCategory])
 
   useEffect(() => {
+    // Parse URL and set subcategories after allSubcategories are loaded
+    if (allSubcategories.length === 0) return
+    
     const urlParams = parseShopURL(location.pathname, location.search)
-    console.log("Parsed URL params:", urlParams)
-    console.log("Current selectedSubCategory2 state:", selectedSubCategory2)
 
-    const fetchAndSetSubcategoryIds = async () => {
-      try {
-        const { data: allSubs } = await axios.get(`${API_BASE_URL}/api/subcategories`)
-        console.log("All subcategories fetched:", allSubs.length)
-
-        if (urlParams.subcategory) {
-          // Match by exact slug first, then ID, then name
-          const foundSub = allSubs.find((sub) => sub.slug === urlParams.subcategory) ||
-            allSubs.find((sub) => sub._id === urlParams.subcategory) ||
-            allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory)
-          if (foundSub) {
-            setCurrentSubCategoryName(foundSub.name)
-            // Always set Level 1 subcategory for hierarchical filtering
-            setSelectedSubCategories([foundSub._id])
-          } else {
-            setSelectedSubCategories([])
-            setCurrentSubCategoryName(urlParams.subcategory)
-          }
-        } else {
-          setSelectedSubCategories([])
-          setCurrentSubCategoryName(null)
-        }
-
-        if (urlParams.subcategory2) {
-          // Match by exact slug first, then ID, then name
-          const found2 = allSubs.find((sub) => sub.slug === urlParams.subcategory2) ||
-            allSubs.find((sub) => sub._id === urlParams.subcategory2) ||
-            allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory2)
-          console.log("Found subcategory2:", found2)
-          console.log("Setting selectedSubCategory2 to:", found2 ? found2._id : urlParams.subcategory2)
-          setSelectedSubCategory2(found2 ? found2._id : urlParams.subcategory2)
-          setSubCategory2Data(found2 || null) // Store full data object
-          setCurrentSubCategory2Name(found2 ? found2.name : urlParams.subcategory2)
-          // Keep Level 1 for hierarchical filtering (already set above)
-        } else {
-          setSelectedSubCategory2(null)
-          setSubCategory2Data(null)
-          setCurrentSubCategory2Name(null)
-        }
-
-        if (urlParams.subcategory3) {
-          // Match by exact slug first, then ID, then name
-          const found3 = allSubs.find((sub) => sub.slug === urlParams.subcategory3) ||
-            allSubs.find((sub) => sub._id === urlParams.subcategory3) ||
-            allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory3)
-          setSelectedSubCategory3(found3 ? found3._id : urlParams.subcategory3)
-          setSubCategory3Data(found3 || null) // Store full data object
-          setCurrentSubCategory3Name(found3 ? found3.name : urlParams.subcategory3)
-          // Keep Level 1 for hierarchical filtering (already set above)
-        } else {
-          setSelectedSubCategory3(null)
-          setSubCategory3Data(null)
-          setCurrentSubCategory3Name(null)
-        }
-
-        if (urlParams.subcategory4) {
-          // Match by exact slug first, then ID, then name
-          const found4 = allSubs.find((sub) => sub.slug === urlParams.subcategory4) ||
-            allSubs.find((sub) => sub._id === urlParams.subcategory4) ||
-            allSubs.find((sub) => createSlug(sub.name) === urlParams.subcategory4)
-          setSelectedSubCategory4(found4 ? found4._id : urlParams.subcategory4)
-          setSubCategory4Data(found4 || null) // Store full data object
-          setCurrentSubCategory4Name(found4 ? found4.name : urlParams.subcategory4)
-          // Keep Level 1 for hierarchical filtering (already set above)
-        } else {
-          setSelectedSubCategory4(null)
-          setSubCategory4Data(null)
-          setCurrentSubCategory4Name(null)
-        }
-      } catch (error) {
-        console.error("Error fetching subcategories:", error)
-        setSelectedSubCategory2(urlParams.subcategory2 || null)
-        setSelectedSubCategory3(urlParams.subcategory3 || null)
-        setSelectedSubCategory4(urlParams.subcategory4 || null)
-        setCurrentSubCategory2Name(urlParams.subcategory2 || null)
-        setCurrentSubCategory3Name(urlParams.subcategory3 || null)
-        setCurrentSubCategory4Name(urlParams.subcategory4 || null)
+    if (urlParams.subcategory) {
+      const foundSub = allSubcategories.find((sub) => sub.slug === urlParams.subcategory) ||
+        allSubcategories.find((sub) => sub._id === urlParams.subcategory) ||
+        allSubcategories.find((sub) => createSlug(sub.name) === urlParams.subcategory)
+      if (foundSub) {
+        setCurrentSubCategoryName(foundSub.name)
+        setSelectedSubCategories([foundSub._id])
+      } else {
+        setSelectedSubCategories([])
+        setCurrentSubCategoryName(urlParams.subcategory)
       }
+    } else {
+      setSelectedSubCategories([])
+      setCurrentSubCategoryName(null)
     }
 
-    fetchAndSetSubcategoryIds()
-  }, [location.pathname, location.search])
+    if (urlParams.subcategory2) {
+      const found2 = allSubcategories.find((sub) => sub.slug === urlParams.subcategory2) ||
+        allSubcategories.find((sub) => sub._id === urlParams.subcategory2) ||
+        allSubcategories.find((sub) => createSlug(sub.name) === urlParams.subcategory2)
+      setSelectedSubCategory2(found2 ? found2._id : urlParams.subcategory2)
+      setSubCategory2Data(found2 || null)
+      setCurrentSubCategory2Name(found2 ? found2.name : urlParams.subcategory2)
+    } else {
+      setSelectedSubCategory2(null)
+      setSubCategory2Data(null)
+      setCurrentSubCategory2Name(null)
+    }
+
+    if (urlParams.subcategory3) {
+      const found3 = allSubcategories.find((sub) => sub.slug === urlParams.subcategory3) ||
+        allSubcategories.find((sub) => sub._id === urlParams.subcategory3) ||
+        allSubcategories.find((sub) => createSlug(sub.name) === urlParams.subcategory3)
+      setSelectedSubCategory3(found3 ? found3._id : urlParams.subcategory3)
+      setSubCategory3Data(found3 || null)
+      setCurrentSubCategory3Name(found3 ? found3.name : urlParams.subcategory3)
+    } else {
+      setSelectedSubCategory3(null)
+      setSubCategory3Data(null)
+      setCurrentSubCategory3Name(null)
+    }
+
+    if (urlParams.subcategory4) {
+      const found4 = allSubcategories.find((sub) => sub.slug === urlParams.subcategory4) ||
+        allSubcategories.find((sub) => sub._id === urlParams.subcategory4) ||
+        allSubcategories.find((sub) => createSlug(sub.name) === urlParams.subcategory4)
+      setSelectedSubCategory4(found4 ? found4._id : urlParams.subcategory4)
+      setSubCategory4Data(found4 || null)
+      setCurrentSubCategory4Name(found4 ? found4.name : urlParams.subcategory4)
+    } else {
+      setSelectedSubCategory4(null)
+      setSubCategory4Data(null)
+      setCurrentSubCategory4Name(null)
+    }
+  }, [allSubcategories, location.pathname, location.search])
 
   useEffect(() => {
+    // Parse URL when location changes or brands load
+    if (brands.length === 0) return
+    
     const urlParams = parseShopURL(location.pathname, location.search)
-    if (brands.length > 0 && urlParams.brand) {
+    if (urlParams.brand) {
       const foundBrand = brands.find(
         (brand) => brand.name === urlParams.brand || createSlug(brand.name) === createSlug(urlParams.brand),
       )
-      if (foundBrand) {
-        setSelectedBrands([foundBrand._id])
-      } else {
-        setSelectedBrands([])
+      const newBrands = foundBrand ? [foundBrand._id] : []
+      // Only update if different
+      if (JSON.stringify(newBrands) !== JSON.stringify(selectedBrands)) {
+        setSelectedBrands(newBrands)
       }
+    } else if (selectedBrands.length > 0) {
+      setSelectedBrands([])
     }
-  }, [location.pathname, location.search, brands])
+  }, [brands, location.pathname, location.search])
 
   useEffect(() => {
+    // Parse search query from URL
     const urlParams = parseShopURL(location.pathname, location.search)
-    if (urlParams.search) {
-      setSearchQuery(urlParams.search)
+    const newSearch = urlParams.search || ""
+    if (newSearch !== searchQuery) {
+      setSearchQuery(newSearch)
     }
   }, [location.pathname, location.search])
 
@@ -718,6 +718,29 @@ const Shop = () => {
     }
   }
 
+  const fetchAllSubcategories = async () => {
+    try {
+      const { data } = await axios.get(`${API_BASE_URL}/api/subcategories`)
+      const validSubCategories = data.filter((subCat) => {
+        const isValid =
+          subCat &&
+          typeof subCat === "object" &&
+          subCat.name &&
+          typeof subCat.name === "string" &&
+          subCat.name.trim() !== "" &&
+          subCat.isActive !== false &&
+          !subCat.isDeleted &&
+          !subCat.name.match(/^[0-9a-fA-F]{24}$/)
+        return isValid
+      })
+      console.log('📁 All Subcategories loaded:', validSubCategories.length)
+      console.log('Sample subcategory:', validSubCategories[0])
+      setAllSubcategories(validSubCategories)
+    } catch (err) {
+      console.error('Error fetching subcategories:', err)
+    }
+  }
+
   const fetchSubCategories = async () => {
     try {
       const catObj = categories.find((cat) => cat._id === selectedCategory)
@@ -747,9 +770,45 @@ const Shop = () => {
 
   const filteredBrands = brands.filter((brand) => brand.name.toLowerCase().includes(brandSearch.toLowerCase()))
 
+  // Helper function to get children of a category/subcategory
+  const getChildren = (parentId, parentType = 'category') => {
+    const children = allSubcategories.filter(sub => {
+      const category = typeof sub.category === 'object' ? sub.category?._id : sub.category
+      const parentSubCategory = typeof sub.parentSubCategory === 'object' ? sub.parentSubCategory?._id : sub.parentSubCategory
+      
+      if (parentType === 'category') {
+        // For parent categories, get Level 1 subcategories (where category matches and parentSubCategory is null)
+        const matches = category === parentId && !parentSubCategory
+        return matches
+      } else if (parentType === 'subcategory') {
+        // For any subcategory level, get children where parentSubCategory matches
+        const matches = parentSubCategory === parentId
+        return matches
+      }
+      return false
+    })
+    
+    if (children.length > 0) {
+      console.log(`🌳 Found ${children.length} children for ${parentId} (type: ${parentType})`, children.map(c => c.name))
+    }
+    
+    return children
+  }
+
+  // Toggle category expansion
+  const toggleExpanded = (id) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }))
+  }
+
   const handleCategoryChange = (categoryId) => {
     setSelectedCategory(categoryId)
     setSelectedSubCategories([])
+    setSelectedSubCategory2(null)
+    setSelectedSubCategory3(null)
+    setSelectedSubCategory4(null)
     setCurrentSubCategoryName(null)
     setCurrentSubCategory2Name(null)
     setCurrentSubCategory3Name(null)
@@ -764,6 +823,125 @@ const Shop = () => {
       search: searchQuery || null,
     })
 
+    navigate(url)
+  }
+
+  // Unified handler for selecting any level of subcategory
+  const handleSubcategorySelect = (subcatId, level) => {
+    const subcatObj = allSubcategories.find((sub) => sub._id === subcatId)
+    if (!subcatObj) return
+
+    // Helper function to trace back the full hierarchy
+    const traceHierarchy = (subcat) => {
+      const hierarchy = {
+        parentCategory: null,
+        level1: null,
+        level2: null,
+        level3: null,
+        level4: null,
+      }
+
+      let current = subcat
+      let currentLevel = level
+
+      // Set the current level
+      if (currentLevel === 1) {
+        hierarchy.level1 = current._id
+      } else if (currentLevel === 2) {
+        hierarchy.level2 = current._id
+      } else if (currentLevel === 3) {
+        hierarchy.level3 = current._id
+      } else if (currentLevel === 4) {
+        hierarchy.level4 = current._id
+      }
+
+      // Trace back through parentSubCategory
+      while (current && current.parentSubCategory) {
+        const parentId = typeof current.parentSubCategory === 'object' 
+          ? current.parentSubCategory._id 
+          : current.parentSubCategory
+        
+        const parent = allSubcategories.find(s => s._id === parentId)
+        if (!parent) break
+
+        currentLevel--
+        if (currentLevel === 1) {
+          hierarchy.level1 = parent._id
+        } else if (currentLevel === 2) {
+          hierarchy.level2 = parent._id
+        } else if (currentLevel === 3) {
+          hierarchy.level3 = parent._id
+        }
+
+        current = parent
+      }
+
+      // Get parent category from the top-level subcategory
+      if (current && current.category) {
+        hierarchy.parentCategory = typeof current.category === 'object' 
+          ? current.category._id 
+          : current.category
+      }
+
+      return hierarchy
+    }
+
+    // Get the complete hierarchy
+    const hierarchy = traceHierarchy(subcatObj)
+
+    // Update all states with the correct hierarchy
+    setSelectedCategory(hierarchy.parentCategory || 'all')
+    
+    if (hierarchy.level1) {
+      const level1Obj = allSubcategories.find(s => s._id === hierarchy.level1)
+      setSelectedSubCategories([hierarchy.level1])
+      setCurrentSubCategoryName(level1Obj?.name || null)
+    } else {
+      setSelectedSubCategories([])
+      setCurrentSubCategoryName(null)
+    }
+
+    if (hierarchy.level2) {
+      const level2Obj = allSubcategories.find(s => s._id === hierarchy.level2)
+      setSelectedSubCategory2(hierarchy.level2)
+      setSubCategory2Data(level2Obj || null)
+      setCurrentSubCategory2Name(level2Obj?.name || null)
+    } else {
+      setSelectedSubCategory2(null)
+      setSubCategory2Data(null)
+      setCurrentSubCategory2Name(null)
+    }
+
+    if (hierarchy.level3) {
+      const level3Obj = allSubcategories.find(s => s._id === hierarchy.level3)
+      setSelectedSubCategory3(hierarchy.level3)
+      setSubCategory3Data(level3Obj || null)
+      setCurrentSubCategory3Name(level3Obj?.name || null)
+    } else {
+      setSelectedSubCategory3(null)
+      setSubCategory3Data(null)
+      setCurrentSubCategory3Name(null)
+    }
+
+    if (hierarchy.level4) {
+      const level4Obj = allSubcategories.find(s => s._id === hierarchy.level4)
+      setSelectedSubCategory4(hierarchy.level4)
+      setSubCategory4Data(level4Obj || null)
+      setCurrentSubCategory4Name(level4Obj?.name || null)
+    } else {
+      setSelectedSubCategory4(null)
+      setSubCategory4Data(null)
+      setCurrentSubCategory4Name(null)
+    }
+
+    // Update URL with correct hierarchy
+    const categoryObj = categories.find((cat) => cat._id === hierarchy.parentCategory)
+    const url = generateShopURL({
+      parentCategory: hierarchy.parentCategory && hierarchy.parentCategory !== 'all' ? categoryObj?.name || hierarchy.parentCategory : null,
+      subcategory: hierarchy.level1 ? allSubcategories.find(s => s._id === hierarchy.level1)?.name : null,
+      brand: selectedBrands.length > 0 ? brands.find((b) => b._id === selectedBrands[0])?.name : null,
+      search: searchQuery || null,
+    })
     navigate(url)
   }
 
@@ -936,7 +1114,8 @@ const Shop = () => {
       <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-1/4 hidden md:block">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
+            {/* <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6 sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide"> */}
+             <div className="bg-white rounded-lg p-6 space-y-6 sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide">
               {showBreadcrumb && (
                 <div className="bg-lime-50 border border-lime-200 rounded-lg p-4 mb-4">
                   <p className="text-sm font-semibold text-lime-900">Current Path:</p>
@@ -944,10 +1123,204 @@ const Shop = () => {
                 </div>
               )}
 
+              {/* Active Filters Section */}
+              {(selectedCategory !== "all" || 
+                selectedSubCategories.length > 0 || 
+                selectedSubCategory2 || 
+                selectedSubCategory3 || 
+                selectedSubCategory4 || 
+                selectedBrands.length > 0 || 
+                stockFilters.inStock || 
+                stockFilters.outOfStock || 
+                stockFilters.onSale ||
+                priceRange[0] !== minPrice || 
+                priceRange[1] !== maxPrice) && (
+                <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-xs text-red-600 hover:text-red-700 font-medium hover:underline"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {/* Parent Category Filter */}
+                    {selectedCategory !== "all" && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Category:</span>{" "}
+                          {categories.find((cat) => cat._id === selectedCategory)?.name || selectedCategory}
+                        </span>
+                        <button
+                          onClick={() => handleCategoryChange("all")}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Level 1 Subcategory */}
+                    {selectedSubCategories.length > 0 && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Subcategory:</span> {currentSubCategoryName}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedSubCategories([])
+                            setCurrentSubCategoryName(null)
+                          }}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Level 2 Subcategory */}
+                    {selectedSubCategory2 && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Level 2:</span> {currentSubCategory2Name}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedSubCategory2(null)
+                            setCurrentSubCategory2Name(null)
+                          }}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Level 3 Subcategory */}
+                    {selectedSubCategory3 && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Level 3:</span> {currentSubCategory3Name}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedSubCategory3(null)
+                            setCurrentSubCategory3Name(null)
+                          }}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Level 4 Subcategory */}
+                    {selectedSubCategory4 && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Level 4:</span> {currentSubCategory4Name}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedSubCategory4(null)
+                            setCurrentSubCategory4Name(null)
+                          }}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Selected Brands */}
+                    {selectedBrands.map((brandId) => {
+                      const brand = brands.find((b) => b._id === brandId)
+                      return brand ? (
+                        <div key={brandId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold">Brand:</span> {brand.name}
+                          </span>
+                          <button
+                            onClick={() => handleBrandChange(brandId)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : null
+                    })}
+
+                    {/* Price Range Filter */}
+                    {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Price:</span> ₹{priceRange[0]} - ₹{priceRange[1]}
+                        </span>
+                        <button
+                          onClick={() => setPriceRange([minPrice, maxPrice])}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Stock Status Filters */}
+                    {stockFilters.inStock && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Stock:</span> In Stock
+                        </span>
+                        <button
+                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+
+                    {stockFilters.outOfStock && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Stock:</span> Out of Stock
+                        </span>
+                        <button
+                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+
+                    {stockFilters.onSale && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Stock:</span> On Sale
+                        </span>
+                        <button
+                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="border-b pb-4">
                 <button
                   onClick={() => setShowPriceFilter(!showPriceFilter)}
-                  className="flex items-center justify-between w-full text-left font-medium text-gray-900"
+                  className={`flex items-center justify-between w-full text-left font-medium ${
+                    priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+                      ? "text-lime-500"
+                      : "text-gray-900"
+                  }`}
                 >
                   Price Range
                   {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
@@ -967,14 +1340,19 @@ const Shop = () => {
               <div className="border-b pb-4">
                 <button
                   onClick={() => setShowCategoryFilter(!showCategoryFilter)}
-                  className="flex items-center justify-between w-full text-left font-medium text-gray-900"
+                  className={`flex items-center justify-between w-full text-left font-medium ${
+                    selectedCategory !== "all" || selectedSubCategories.length > 0 || selectedSubCategory2 || selectedSubCategory3 || selectedSubCategory4
+                      ? "text-lime-500"
+                      : "text-gray-900"
+                  }`}
                 >
                   Categories
                   {showCategoryFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                 </button>
                 {showCategoryFilter && (
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center cursor-pointer" onClick={() => handleCategoryChange("all")}>
+                  <div className="mt-4 space-y-1">
+                    {/* All Categories Option */}
+                    <div className="flex items-center cursor-pointer py-1" onClick={() => handleCategoryChange("all")}>
                       <div className="relative flex items-center">
                         <input
                           type="radio"
@@ -984,8 +1362,9 @@ const Shop = () => {
                           className="absolute opacity-0 w-0 h-0"
                         />
                         <div
-                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === "all" ? "border-lime-600 bg-lime-600" : "border-gray-300"
-                            }`}
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                            selectedCategory === "all" ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                          }`}
                         >
                           {selectedCategory === "all" && <div className="w-2 h-2 rounded-full bg-white"></div>}
                         </div>
@@ -993,32 +1372,341 @@ const Shop = () => {
                       <span className="text-sm text-gray-700">All Categories</span>
                     </div>
 
-                    {categories.map((category) => (
-                      <div
-                        key={category._id}
-                        className="flex items-center cursor-pointer"
-                        onClick={() => handleCategoryChange(category._id)}
-                      >
-                        <div className="relative flex items-center">
-                          <input
-                            type="radio"
-                            name="category-group"
-                            checked={selectedCategory === category._id}
-                            readOnly
-                            className="absolute opacity-0 w-0 h-0"
-                          />
-                          <div
-                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${selectedCategory === category._id ? "border-lime-600 bg-lime-600" : "border-gray-300"
-                              }`}
-                          >
-                            {selectedCategory === category._id && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                    {/* Hierarchical Category Tree */}
+                    {categories.map((category) => {
+                      const level1Children = getChildren(category._id, 'category')
+                      const hasChildren = level1Children.length > 0
+                      const isExpanded = expandedCategories[category._id]
+                      const isSelected = selectedCategory === category._id
+
+                      return (
+                        <div key={category._id} className="space-y-1">
+                          {/* Parent Category */}
+                          <div className="flex items-center justify-between py-1 group">
+                            <div 
+                              className="flex items-center cursor-pointer flex-1"
+                              onClick={() => handleCategoryChange(category._id)}
+                            >
+                              <div className="relative flex items-center">
+                                <input
+                                  type="radio"
+                                  name="category-group"
+                                  checked={isSelected}
+                                  readOnly
+                                  className="absolute opacity-0 w-0 h-0"
+                                />
+                                <div
+                                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                                    isSelected ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                                  }`}
+                                >
+                                  {isSelected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                </div>
+                              </div>
+                              <span className={`text-sm ${isSelected ? "text-lime-600 font-semibold" : "text-gray-700"}`}>
+                                {category.name}
+                              </span>
+                            </div>
+                            {hasChildren && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleExpanded(category._id)
+                                }}
+                                className="p-1 hover:bg-gray-100 rounded ml-2"
+                              >
+                                {isExpanded ? <Minus size={14} /> : <Plus size={14} />}
+                              </button>
+                            )}
                           </div>
+
+                          {/* Level 1 Subcategories */}
+                          {isExpanded && level1Children.map((level1) => {
+                            const level2Children = getChildren(level1._id, 'subcategory')
+                            const hasLevel2 = level2Children.length > 0
+                            const isLevel1Expanded = expandedCategories[level1._id]
+                            const isLevel1Selected = selectedSubCategories.includes(level1._id)
+
+                            return (
+                              <div key={level1._id} className="ml-6 space-y-1">
+                                {/* Level 1 Item */}
+                                <div className="flex items-center justify-between py-1 group">
+                                  <div
+                                    className="flex items-center cursor-pointer flex-1"
+                                    onClick={() => handleSubcategorySelect(level1._id, 1)}
+                                  >
+                                    <div className="relative flex items-center">
+                                      <input
+                                        type="radio"
+                                        checked={isLevel1Selected}
+                                        readOnly
+                                        className="absolute opacity-0 w-0 h-0"
+                                      />
+                                      <div
+                                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                                          isLevel1Selected ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                                        }`}
+                                      >
+                                        {isLevel1Selected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                      </div>
+                                    </div>
+                                    <span className={`text-sm ${isLevel1Selected ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
+                                      {level1.name}
+                                    </span>
+                                  </div>
+                                  {hasLevel2 && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        toggleExpanded(level1._id)
+                                      }}
+                                      className="p-1 hover:bg-gray-100 rounded ml-2"
+                                    >
+                                      {isLevel1Expanded ? <Minus size={14} /> : <Plus size={14} />}
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Level 2 Subcategories */}
+                                {isLevel1Expanded && level2Children.map((level2) => {
+                                  const level3Children = getChildren(level2._id, 'subcategory')
+                                  const hasLevel3 = level3Children.length > 0
+                                  const isLevel2Expanded = expandedCategories[level2._id]
+                                  const isLevel2Selected = selectedSubCategory2 === level2._id
+
+                                  return (
+                                    <div key={level2._id} className="ml-6 space-y-1">
+                                      {/* Level 2 Item */}
+                                      <div className="flex items-center justify-between py-1 group">
+                                        <div
+                                          className="flex items-center cursor-pointer flex-1"
+                                          onClick={() => handleSubcategorySelect(level2._id, 2)}
+                                        >
+                                          <div className="relative flex items-center">
+                                            <input
+                                              type="radio"
+                                              checked={isLevel2Selected}
+                                              readOnly
+                                              className="absolute opacity-0 w-0 h-0"
+                                            />
+                                            <div
+                                              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                                                isLevel2Selected ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                                              }`}
+                                            >
+                                              {isLevel2Selected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                            </div>
+                                          </div>
+                                          <span className={`text-sm ${isLevel2Selected ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
+                                            {level2.name}
+                                          </span>
+                                        </div>
+                                        {hasLevel3 && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              toggleExpanded(level2._id)
+                                            }}
+                                            className="p-1 hover:bg-gray-100 rounded ml-2"
+                                          >
+                                            {isLevel2Expanded ? <Minus size={14} /> : <Plus size={14} />}
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      {/* Level 3 Subcategories */}
+                                      {isLevel2Expanded && level3Children.map((level3) => {
+                                        const level4Children = getChildren(level3._id, 'subcategory')
+                                        const hasLevel4 = level4Children.length > 0
+                                        const isLevel3Expanded = expandedCategories[level3._id]
+                                        const isLevel3Selected = selectedSubCategory3 === level3._id
+
+                                        return (
+                                          <div key={level3._id} className="ml-6 space-y-1">
+                                            {/* Level 3 Item */}
+                                            <div className="flex items-center justify-between py-1 group">
+                                              <div
+                                                className="flex items-center cursor-pointer flex-1"
+                                                onClick={() => handleSubcategorySelect(level3._id, 3)}
+                                              >
+                                                <div className="relative flex items-center">
+                                                  <input
+                                                    type="radio"
+                                                    checked={isLevel3Selected}
+                                                    readOnly
+                                                    className="absolute opacity-0 w-0 h-0"
+                                                  />
+                                                  <div
+                                                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                                                      isLevel3Selected ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                                                    }`}
+                                                  >
+                                                    {isLevel3Selected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                                  </div>
+                                                </div>
+                                                <span className={`text-sm ${isLevel3Selected ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
+                                                  {level3.name}
+                                                </span>
+                                              </div>
+                                              {hasLevel4 && (
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    toggleExpanded(level3._id)
+                                                  }}
+                                                  className="p-1 hover:bg-gray-100 rounded ml-2"
+                                                >
+                                                  {isLevel3Expanded ? <Minus size={14} /> : <Plus size={14} />}
+                                                </button>
+                                              )}
+                                            </div>
+
+                                            {/* Level 4 Subcategories */}
+                                            {isLevel3Expanded && level4Children.map((level4) => {
+                                              const isLevel4Selected = selectedSubCategory4 === level4._id
+
+                                              return (
+                                                <div key={level4._id} className="ml-6 flex items-center justify-between py-1 group">
+                                                  <div
+                                                    className="flex items-center cursor-pointer flex-1"
+                                                    onClick={() => handleSubcategorySelect(level4._id, 4)}
+                                                  >
+                                                    <div className="relative flex items-center">
+                                                      <input
+                                                        type="radio"
+                                                        checked={isLevel4Selected}
+                                                        readOnly
+                                                        className="absolute opacity-0 w-0 h-0"
+                                                      />
+                                                      <div
+                                                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                                                          isLevel4Selected ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                                                        }`}
+                                                      >
+                                                        {isLevel4Selected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                                      </div>
+                                                    </div>
+                                                    <span className={`text-sm ${isLevel4Selected ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
+                                                      {level4.name}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              )
+                                            })}
+                                          </div>
+                                        )
+                                      })}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )
+                          })}
                         </div>
-                        <span className="text-sm text-gray-700">{category.name}</span>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
+              </div>
+
+              {/* Brand Filter */}
+              <div className="border-b pb-4">
+                <button
+                  onClick={() => setShowBrandFilter(!showBrandFilter)}
+                  className={`flex items-center justify-between w-full text-left font-medium ${
+                    selectedBrands.length > 0 ? "text-lime-500" : "text-gray-900"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    Brands
+                    {selectedBrands.length > 0 && (
+                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-lime-500 rounded-full">
+                        {selectedBrands.length}
+                      </span>
+                    )}
+                  </span>
+                  {showBrandFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {showBrandFilter && (
+                  <div className="mt-4 space-y-2">
+                    <input
+                      type="text"
+                      placeholder="Search brands..."
+                      value={brandSearch}
+                      onChange={(e) => setBrandSearch(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500"
+                    />
+                    <div className="space-y-2">
+                      {filteredBrands.map((brand) => (
+                        <div key={brand._id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`brand-${brand._id}`}
+                            checked={selectedBrands.includes(brand._id)}
+                            onChange={() => handleBrandChange(brand._id)}
+                            className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
+                          />
+                          <label htmlFor={`brand-${brand._id}`} className="ml-2 text-sm text-gray-700 cursor-pointer">
+                            {brand.name}
+                          </label>
+                        </div>
+                      ))}
+                      {filteredBrands.length === 0 && (
+                        <p className="text-sm text-gray-500 italic">No brands found</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Stock Status Filter */}
+              <div className="border-b pb-4">
+                <div className={`font-medium mb-4 ${
+                  stockFilters.inStock || stockFilters.outOfStock || stockFilters.onSale
+                    ? "text-lime-500"
+                    : "text-gray-900"
+                }`}>Stock Status</div>
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="stock-all"
+                      name="stock-filter"
+                      checked={!stockFilters.inStock && !stockFilters.outOfStock && !stockFilters.onSale}
+                      onChange={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                      className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
+                    />
+                    <label htmlFor="stock-all" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                      All Products
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="stock-in"
+                      name="stock-filter"
+                      checked={stockFilters.inStock}
+                      onChange={() => handleStockFilterChange('inStock')}
+                      className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
+                    />
+                    <label htmlFor="stock-in" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                      In Stock
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="stock-out"
+                      name="stock-filter"
+                      checked={stockFilters.outOfStock}
+                      onChange={() => handleStockFilterChange('outOfStock')}
+                      className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
+                    />
+                    <label htmlFor="stock-out" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                      Out of Stock
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-4">
@@ -1047,12 +1735,25 @@ const Shop = () => {
                       )}
                     </>
                   ) : (
-                    currentSubCategory4Name ||
-                    currentSubCategory3Name ||
-                    currentSubCategory2Name ||
-                    currentSubCategoryName ||
-                    categories.find((cat) => cat._id === selectedCategory)?.name ||
-                    "All Products"
+                    (() => {
+                      // Show brand name if a single brand is selected
+                      if (selectedBrands.length === 1) {
+                        const brandName = brands.find((b) => b._id === selectedBrands[0])?.name
+                        if (brandName) return brandName
+                      }
+                      
+                      // Show subcategory names (deepest first)
+                      if (currentSubCategory4Name) return currentSubCategory4Name
+                      if (currentSubCategory3Name) return currentSubCategory3Name
+                      if (currentSubCategory2Name) return currentSubCategory2Name
+                      if (currentSubCategoryName) return currentSubCategoryName
+                      
+                      // Show category name
+                      const categoryName = categories.find((cat) => cat._id === selectedCategory)?.name
+                      if (categoryName) return categoryName
+                      
+                      return "All Products"
+                    })()
                   )}
                 </h1>
                 <p className="text-gray-600 mt-1">{products.length} products found</p>

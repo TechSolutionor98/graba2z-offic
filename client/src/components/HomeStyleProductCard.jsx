@@ -189,11 +189,11 @@ const HomeStyleProductCard = ({ product }) => {
       <div className="relative mb-2 flex h-[180px] justify-center items-cente">
   <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
           <img
-            src={getImageUrl(product) || "/placeholder.svg"}
+            src={getImageUrl(product) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E"}
             alt={product.name}
             className="w-full h-full cover object-contain rounded mx-auto"
             onError={(e) => {
-              e.target.src = "/placeholder.svg?height=120&width=120"
+              e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E"
             }}
           />
         </Link>
