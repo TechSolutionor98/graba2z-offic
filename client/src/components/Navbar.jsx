@@ -29,6 +29,120 @@ import {
 } from "lucide-react"
 import axios from "axios"
 
+// Recursive component for mobile subcategory rendering
+const MobileSubCategoryItem = ({ 
+  subCategory, 
+  parentCategory, 
+  level, 
+  expandedId, 
+  onToggle, 
+  closeMobileMenu,
+  parentChain = []
+}) => {
+  // Helper to get children of current subcategory
+  const getChildSubCategories = (parentNodeId) => {
+    const stack = []
+    // Get all categories from window context (we'll pass this data)
+    const categories = window.__navbarCategories || []
+    for (const c of categories) {
+      if (Array.isArray(c.children)) stack.push(...c.children)
+    }
+    const visited = new Set()
+    while (stack.length) {
+      const node = stack.pop()
+      if (!node || visited.has(node._id)) continue
+      visited.add(node._id)
+      if (node._id === parentNodeId) {
+        return Array.isArray(node.children) ? node.children : []
+      }
+      if (Array.isArray(node.children) && node.children.length) {
+        stack.push(...node.children)
+      }
+    }
+    return []
+  }
+
+  const nestedChildren = getChildSubCategories(subCategory._id)
+  const hasNested = nestedChildren && nestedChildren.length > 0
+  const isExpanded = Array.isArray(expandedId) ? expandedId.includes(subCategory._id) : expandedId === subCategory._id
+  
+  // Build the URL params based on level
+  const buildUrlParams = () => {
+    const params = { parentCategory: parentCategory.name }
+    const chain = [...parentChain, subCategory.name]
+    
+    if (level === 1) params.subcategory = subCategory.name
+    else if (level === 2) {
+      params.subcategory = chain[0]
+      params.subcategory2 = subCategory.name
+    } else if (level === 3) {
+      params.subcategory = chain[0]
+      params.subcategory2 = chain[1]
+      params.subcategory3 = subCategory.name
+    } else if (level === 4) {
+      params.subcategory = chain[0]
+      params.subcategory2 = chain[1]
+      params.subcategory3 = chain[2]
+      params.subcategory4 = subCategory.name
+    }
+    
+    return params
+  }
+
+  const textSizeClass = level === 1 ? 'text-sm' : level === 2 ? 'text-xs' : 'text-xs'
+  const textColorClass = level === 1 ? 'text-red-600' : 'text-gray-700'
+
+  return (
+    <div className="space-y-1">
+      <div className={`flex items-center justify-between py-2 px-2 ${textColorClass} hover:bg-gray-50 rounded-lg ${textSizeClass}`}>
+        <Link
+          to={generateShopURL(buildUrlParams())}
+          className="flex-1"
+          onClick={closeMobileMenu}
+        >
+          <strong>{subCategory.name}</strong>
+        </Link>
+        {hasNested && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onToggle(subCategory._id)
+            }}
+            className="ml-2 inline-flex items-center justify-center w-7 h-7 rounded-full bg-lime-500 text-white hover:bg-lime-600 focus:outline-none focus:ring-2 focus:ring-lime-500 shadow-sm active:scale-95 transition"
+            aria-expanded={isExpanded}
+            aria-controls={`mobile-subcat-${subCategory._id}`}
+          >
+            {isExpanded ? (
+              <ChevronDown size={16} />
+            ) : (
+              <ChevronRight size={16} />
+            )}
+          </button>
+        )}
+      </div>
+
+      {hasNested && isExpanded && (
+        <div id={`mobile-subcat-${subCategory._id}`} className="ml-4 space-y-1 pb-2">
+          {nestedChildren.map((nested) => (
+            <MobileSubCategoryItem
+              key={nested._id}
+              subCategory={nested}
+              parentCategory={parentCategory}
+              level={level + 1}
+              expandedId={expandedId}
+              onToggle={onToggle}
+              closeMobileMenu={closeMobileMenu}
+              parentChain={[...parentChain, subCategory.name]}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
   const { cartCount } = useCart()
@@ -52,7 +166,7 @@ const Navbar = () => {
   const [hoveredSubCategory2, setHoveredSubCategory2] = useState(null) // For Level 3
   const [hoveredSubCategory3, setHoveredSubCategory3] = useState(null) // For Level 4
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null)
-  const [expandedMobileSubCategory, setExpandedMobileSubCategory] = useState(null)
+  const [expandedMobileSubCategories, setExpandedMobileSubCategories] = useState([])
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
   const profileRef = useRef(null)
   const profileButtonRef = useRef(null)
@@ -196,6 +310,10 @@ const Navbar = () => {
       ])
       const treeData = Array.isArray(treeResp.data) ? treeResp.data : []
       setCategories(treeData)
+      // Store categories globally for mobile subcategory component
+      if (typeof window !== 'undefined') {
+        window.__navbarCategories = treeData
+      }
       setFlatSubCategories(Array.isArray(subsResp.data) ? subsResp.data : [])
     } catch (error) {
       console.error("Error fetching category tree:", error)
@@ -234,26 +352,19 @@ const Navbar = () => {
 
   const toggleMobileCategory = (categoryId) => {
     setExpandedMobileCategory((prev) => (prev === categoryId ? null : categoryId))
-    setExpandedMobileSubCategory(null)
+    setExpandedMobileSubCategories([])
   }
-
-  const mobileSubCategoryButtonTouchedRef = useRef(false)
 
   const handleMobileSubCategoryToggle = (subCategoryId) => {
-    setExpandedMobileSubCategory((prev) => (prev === subCategoryId ? null : subCategoryId))
-  }
-
-  const handleMobileSubCategoryTouch = (subCategoryId) => {
-    mobileSubCategoryButtonTouchedRef.current = true
-    handleMobileSubCategoryToggle(subCategoryId)
-  }
-
-  const handleMobileSubCategoryClick = (subCategoryId) => {
-    if (mobileSubCategoryButtonTouchedRef.current) {
-      mobileSubCategoryButtonTouchedRef.current = false
-      return
-    }
-    handleMobileSubCategoryToggle(subCategoryId)
+    setExpandedMobileSubCategories((prev) => {
+      if (prev.includes(subCategoryId)) {
+        // Remove this ID and all its children
+        return prev.filter(id => id !== subCategoryId)
+      } else {
+        // Add this ID to the array
+        return [...prev, subCategoryId]
+      }
+    })
   }
 
   // Function to check if search query matches a product's SKU (or name) exactly
@@ -1375,59 +1486,16 @@ const Navbar = () => {
                         {isExpanded && categorySubCategories.length > 0 && (
                           <div className="ml-4 space-y-1 pb-2">
                             {categorySubCategories.map((subCategory) => {
-                              const nestedChildren = getChildSubCategories(subCategory._id)
-                              const hasNested = nestedChildren && nestedChildren.length > 0
-
-                              const isSubExpanded = expandedMobileSubCategory === subCategory._id
                               return (
-                                <div key={subCategory._id} className="space-y-1">
-                                  <div
-                                    className="flex items-center justify-between py-2 px-2 text-red-600 hover:bg-gray-50 rounded-lg text-sm"
-                                  >
-                                    <Link
-                                      to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
-                                      className="flex-1"
-                                      onClick={closeMobileMenu}
-                                    >
-                                      <strong>{subCategory.name}</strong>
-                                    </Link>
-                                    {hasNested && (
-                                      <button
-                                        type="button"
-                                        onTouchStart={() => handleMobileSubCategoryTouch(subCategory._id)}
-                                        onClick={() => handleMobileSubCategoryClick(subCategory._id)}
-                                        className="ml-2 inline-flex items-center justify-center w-7 h-7 rounded-full bg-white text-gray-400 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-lime-500"
-                                        aria-expanded={isSubExpanded}
-                                        aria-controls={`mobile-subcat-${subCategory._id}`}
-                                      >
-                                        {isSubExpanded ? (
-                                          <ChevronDown size={16} />
-                                        ) : (
-                                          <ChevronRight size={16} />
-                                        )}
-                                      </button>
-                                    )}
-                                  </div>
-
-                                  {hasNested && isSubExpanded && (
-                                    <div id={`mobile-subcat-${subCategory._id}`} className="ml-4 space-y-1 pb-2">
-                                      {nestedChildren.map((nested) => (
-                                        <Link
-                                          key={nested._id}
-                                          to={generateShopURL({
-                                            parentCategory: parentCategory.name,
-                                            subcategory: subCategory.name,
-                                            subcategory2: nested.name,
-                                          })}
-                                          className="block py-2 px-2 text-gray-700 hover:bg-gray-50 rounded-lg text-xs"
-                                          onClick={closeMobileMenu}
-                                        >
-                                          {nested.name}
-                                        </Link>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
+                                <MobileSubCategoryItem
+                                  key={subCategory._id}
+                                  subCategory={subCategory}
+                                  parentCategory={parentCategory}
+                                  level={1}
+                                  expandedId={expandedMobileSubCategories}
+                                  onToggle={handleMobileSubCategoryToggle}
+                                  closeMobileMenu={closeMobileMenu}
+                                />
                               )
                             })}
                           </div>

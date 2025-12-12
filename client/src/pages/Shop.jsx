@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown, Minus, Plus } from "lucide-react"
+import { ChevronDown, Minus, Plus, X } from "lucide-react"
 import axios from "axios"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
@@ -242,8 +242,8 @@ const Shop = () => {
   const [minPrice, setMinPrice] = useState(0)
 
   const [showPriceFilter, setShowPriceFilter] = useState(true)
-  const [showCategoryFilter, setShowCategoryFilter] = useState(true)
-  const [showBrandFilter, setShowBrandFilter] = useState(true)
+  const [showCategoryFilter, setShowCategoryFilter] = useState(false)
+  const [showBrandFilter, setShowBrandFilter] = useState(false)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
   // State for expandable category tree
@@ -1111,6 +1111,608 @@ const Shop = () => {
     <div className="min-h-screen bg-white">
       <SEO title={seoTitle} description={seoDescription} canonicalPath={buildCanonicalPath()} />
       <ProductSchema products={products} type="list" />
+      
+      {/* Mobile Filter Modal */}
+      {isMobileFilterOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
+          <div className="fixed inset-y-0 left-0 w-full max-w-sm bg-white shadow-xl overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b z-10 px-4 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold">Filters</h2>
+              <button
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-6">
+              {/* Active Filters Section - Mobile */}
+              {(selectedCategory !== "all" || 
+                selectedSubCategories.length > 0 || 
+                selectedSubCategory2 || 
+                selectedSubCategory3 || 
+                selectedSubCategory4 || 
+                selectedBrands.length > 0 || 
+                stockFilters.inStock || 
+                stockFilters.outOfStock || 
+                stockFilters.onSale ||
+                priceRange[0] !== minPrice || 
+                priceRange[1] !== maxPrice) && (
+                <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-xs text-red-600 hover:text-red-700 font-medium hover:underline"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {selectedCategory !== "all" && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Category:</span>{" "}
+                          {categories.find((cat) => cat._id === selectedCategory)?.name || selectedCategory}
+                        </span>
+                        <button
+                          onClick={() => handleCategoryChange("all")}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {selectedSubCategories.length > 0 && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Subcategory:</span> {currentSubCategoryName}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedSubCategories([])
+                            setCurrentSubCategoryName(null)
+                          }}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {selectedSubCategory2 && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Level 2:</span> {currentSubCategory2Name}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedSubCategory2(null)
+                            setCurrentSubCategory2Name(null)
+                          }}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {selectedSubCategory3 && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Level 3:</span> {currentSubCategory3Name}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedSubCategory3(null)
+                            setCurrentSubCategory3Name(null)
+                          }}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {selectedSubCategory4 && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Level 4:</span> {currentSubCategory4Name}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSelectedSubCategory4(null)
+                            setCurrentSubCategory4Name(null)
+                          }}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {selectedBrands.map((brandId) => {
+                      const brand = brands.find((b) => b._id === brandId)
+                      return brand ? (
+                        <div key={brandId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold">Brand:</span> {brand.name}
+                          </span>
+                          <button
+                            onClick={() => handleBrandChange(brandId)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : null
+                    })}
+                    {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Price:</span> ₹{priceRange[0]} - ₹{priceRange[1]}
+                        </span>
+                        <button
+                          onClick={() => setPriceRange([minPrice, maxPrice])}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {stockFilters.inStock && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Stock:</span> In Stock
+                        </span>
+                        <button
+                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {stockFilters.outOfStock && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Stock:</span> Out of Stock
+                        </span>
+                        <button
+                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {stockFilters.onSale && (
+                      <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold">Stock:</span> On Sale
+                        </span>
+                        <button
+                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Price Filter - Mobile */}
+              <div className="border-b pb-4">
+                <button
+                  onClick={() => setShowPriceFilter(!showPriceFilter)}
+                  className={`flex items-center justify-between w-full text-left font-medium ${
+                    priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+                      ? "text-lime-500"
+                      : "text-gray-900"
+                  }`}
+                >
+                  Price Range
+                  {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {showPriceFilter && (
+                  <div className="mt-4 space-y-4">
+                    <PriceFilter
+                      min={minPrice}
+                      max={maxPrice}
+                      initialRange={priceRange}
+                      onApply={(range) => setPriceRange(range)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Categories Filter - Mobile */}
+              <div className="border-b pb-4">
+                <button
+                  onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+                  className={`flex items-center justify-between w-full text-left font-medium ${
+                    selectedCategory !== "all" || selectedSubCategories.length > 0 || selectedSubCategory2 || selectedSubCategory3 || selectedSubCategory4
+                      ? "text-lime-500"
+                      : "text-gray-900"
+                  }`}
+                >
+                  Categories
+                  {showCategoryFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {showCategoryFilter && (
+                  <div className="mt-4 space-y-1">
+                    <div className="flex items-center cursor-pointer py-1" onClick={() => handleCategoryChange("all")}>
+                      <div className="relative flex items-center">
+                        <input
+                          type="radio"
+                          name="category-group-mobile"
+                          checked={selectedCategory === "all"}
+                          readOnly
+                          className="absolute opacity-0 w-0 h-0"
+                        />
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                            selectedCategory === "all" ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                          }`}
+                        >
+                          {selectedCategory === "all" && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                        </div>
+                      </div>
+                      <span className="text-sm text-gray-700">All Categories</span>
+                    </div>
+
+                    {categories.map((category) => {
+                      const level1Children = getChildren(category._id, 'category')
+                      const hasChildren = level1Children.length > 0
+                      const isExpanded = expandedCategories[category._id]
+                      const isSelected = selectedCategory === category._id
+
+                      return (
+                        <div key={category._id} className="space-y-1">
+                          <div className="flex items-center justify-between py-1 group">
+                            <div 
+                              className="flex items-center cursor-pointer flex-1"
+                              onClick={() => handleCategoryChange(category._id)}
+                            >
+                              <div className="relative flex items-center">
+                                <input
+                                  type="radio"
+                                  name="category-group-mobile"
+                                  checked={isSelected}
+                                  readOnly
+                                  className="absolute opacity-0 w-0 h-0"
+                                />
+                                <div
+                                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                                    isSelected ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                                  }`}
+                                >
+                                  {isSelected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                </div>
+                              </div>
+                              <span className={`text-sm ${isSelected ? "text-lime-600 font-semibold" : "text-gray-700"}`}>
+                                {category.name}
+                              </span>
+                            </div>
+                            {hasChildren && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleExpanded(category._id)
+                                }}
+                                className="p-1 hover:bg-gray-100 rounded ml-2"
+                              >
+                                {isExpanded ? <Minus size={14} /> : <Plus size={14} />}
+                              </button>
+                            )}
+                          </div>
+
+                          {isExpanded && level1Children.map((level1) => {
+                            const level2Children = getChildren(level1._id, 'subcategory')
+                            const hasLevel2 = level2Children.length > 0
+                            const isLevel1Expanded = expandedCategories[level1._id]
+                            const isLevel1Selected = selectedSubCategories.includes(level1._id)
+
+                            return (
+                              <div key={level1._id} className="ml-6 space-y-1">
+                                <div className="flex items-center justify-between py-1 group">
+                                  <div
+                                    className="flex items-center cursor-pointer flex-1"
+                                    onClick={() => handleSubcategorySelect(level1._id, 1)}
+                                  >
+                                    <div className="relative flex items-center">
+                                      <input
+                                        type="radio"
+                                        checked={isLevel1Selected}
+                                        readOnly
+                                        className="absolute opacity-0 w-0 h-0"
+                                      />
+                                      <div
+                                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                                          isLevel1Selected ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                                        }`}
+                                      >
+                                        {isLevel1Selected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                      </div>
+                                    </div>
+                                    <span className={`text-sm ${isLevel1Selected ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
+                                      {level1.name}
+                                    </span>
+                                  </div>
+                                  {hasLevel2 && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        toggleExpanded(level1._id)
+                                      }}
+                                      className="p-1 hover:bg-gray-100 rounded ml-2"
+                                    >
+                                      {isLevel1Expanded ? <Minus size={14} /> : <Plus size={14} />}
+                                    </button>
+                                  )}
+                                </div>
+
+                                {isLevel1Expanded && level2Children.map((level2) => {
+                                  const level3Children = getChildren(level2._id, 'subcategory')
+                                  const hasLevel3 = level3Children.length > 0
+                                  const isLevel2Expanded = expandedCategories[level2._id]
+                                  const isLevel2Selected = selectedSubCategory2 === level2._id
+
+                                  return (
+                                    <div key={level2._id} className="ml-6 space-y-1">
+                                      <div className="flex items-center justify-between py-1 group">
+                                        <div
+                                          className="flex items-center cursor-pointer flex-1"
+                                          onClick={() => handleSubcategorySelect(level2._id, 2)}
+                                        >
+                                          <div className="relative flex items-center">
+                                            <input
+                                              type="radio"
+                                              checked={isLevel2Selected}
+                                              readOnly
+                                              className="absolute opacity-0 w-0 h-0"
+                                            />
+                                            <div
+                                              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                                                isLevel2Selected ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                                              }`}
+                                            >
+                                              {isLevel2Selected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                            </div>
+                                          </div>
+                                          <span className={`text-sm ${isLevel2Selected ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
+                                            {level2.name}
+                                          </span>
+                                        </div>
+                                        {hasLevel3 && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              toggleExpanded(level2._id)
+                                            }}
+                                            className="p-1 hover:bg-gray-100 rounded ml-2"
+                                          >
+                                            {isLevel2Expanded ? <Minus size={14} /> : <Plus size={14} />}
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      {isLevel2Expanded && level3Children.map((level3) => {
+                                        const level4Children = getChildren(level3._id, 'subcategory')
+                                        const hasLevel4 = level4Children.length > 0
+                                        const isLevel3Expanded = expandedCategories[level3._id]
+                                        const isLevel3Selected = selectedSubCategory3 === level3._id
+
+                                        return (
+                                          <div key={level3._id} className="ml-6 space-y-1">
+                                            <div className="flex items-center justify-between py-1 group">
+                                              <div
+                                                className="flex items-center cursor-pointer flex-1"
+                                                onClick={() => handleSubcategorySelect(level3._id, 3)}
+                                              >
+                                                <div className="relative flex items-center">
+                                                  <input
+                                                    type="radio"
+                                                    checked={isLevel3Selected}
+                                                    readOnly
+                                                    className="absolute opacity-0 w-0 h-0"
+                                                  />
+                                                  <div
+                                                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                                                      isLevel3Selected ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                                                    }`}
+                                                  >
+                                                    {isLevel3Selected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                                  </div>
+                                                </div>
+                                                <span className={`text-sm ${isLevel3Selected ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
+                                                  {level3.name}
+                                                </span>
+                                              </div>
+                                              {hasLevel4 && (
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    toggleExpanded(level3._id)
+                                                  }}
+                                                  className="p-1 hover:bg-gray-100 rounded ml-2"
+                                                >
+                                                  {isLevel3Expanded ? <Minus size={14} /> : <Plus size={14} />}
+                                                </button>
+                                              )}
+                                            </div>
+
+                                            {isLevel3Expanded && level4Children.map((level4) => {
+                                              const isLevel4Selected = selectedSubCategory4 === level4._id
+
+                                              return (
+                                                <div key={level4._id} className="ml-6 space-y-1">
+                                                  <div className="flex items-center py-1">
+                                                    <div
+                                                      className="flex items-center cursor-pointer flex-1"
+                                                      onClick={() => handleSubcategorySelect(level4._id, 4)}
+                                                    >
+                                                      <div className="relative flex items-center">
+                                                        <input
+                                                          type="radio"
+                                                          checked={isLevel4Selected}
+                                                          readOnly
+                                                          className="absolute opacity-0 w-0 h-0"
+                                                        />
+                                                        <div
+                                                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mr-2 ${
+                                                            isLevel4Selected ? "border-lime-600 bg-lime-600" : "border-gray-300"
+                                                          }`}
+                                                        >
+                                                          {isLevel4Selected && <div className="w-2 h-2 rounded-full bg-white"></div>}
+                                                        </div>
+                                                      </div>
+                                                      <span className={`text-sm ${isLevel4Selected ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
+                                                        {level4.name}
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )
+                                            })}
+                                          </div>
+                                        )
+                                      })}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Brand Filter - Mobile */}
+              <div className="border-b pb-4">
+                <button
+                  onClick={() => setShowBrandFilter(!showBrandFilter)}
+                  className={`flex items-center justify-between w-full text-left font-medium ${
+                    selectedBrands.length > 0 ? "text-lime-500" : "text-gray-900"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    Brands
+                    {selectedBrands.length > 0 && (
+                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-lime-500 rounded-full">
+                        {selectedBrands.length}
+                      </span>
+                    )}
+                  </span>
+                  {showBrandFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {showBrandFilter && (
+                  <div className="mt-4 space-y-2">
+                    <input
+                      type="text"
+                      placeholder="Search brands..."
+                      value={brandSearch}
+                      onChange={(e) => setBrandSearch(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500"
+                    />
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {filteredBrands.map((brand) => (
+                        <div key={brand._id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`brand-mobile-${brand._id}`}
+                            checked={selectedBrands.includes(brand._id)}
+                            onChange={() => handleBrandChange(brand._id)}
+                            className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
+                          />
+                          <label htmlFor={`brand-mobile-${brand._id}`} className="ml-2 text-sm text-gray-700 cursor-pointer">
+                            {brand.name}
+                          </label>
+                        </div>
+                      ))}
+                      {filteredBrands.length === 0 && (
+                        <p className="text-sm text-gray-500 italic">No brands found</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Stock Status Filter - Mobile */}
+              <div className="border-b pb-4">
+                <div className={`font-medium mb-4 ${
+                  stockFilters.inStock || stockFilters.outOfStock || stockFilters.onSale
+                    ? "text-lime-500"
+                    : "text-gray-900"
+                }`}>Stock Status</div>
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="stock-all-mobile"
+                      name="stock-filter-mobile"
+                      checked={!stockFilters.inStock && !stockFilters.outOfStock && !stockFilters.onSale}
+                      onChange={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                      className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
+                    />
+                    <label htmlFor="stock-all-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                      All Products
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="stock-in-mobile"
+                      name="stock-filter-mobile"
+                      checked={stockFilters.inStock}
+                      onChange={() => handleStockFilterChange('inStock')}
+                      className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
+                    />
+                    <label htmlFor="stock-in-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                      In Stock
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="stock-out-mobile"
+                      name="stock-filter-mobile"
+                      checked={stockFilters.outOfStock}
+                      onChange={() => handleStockFilterChange('outOfStock')}
+                      className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
+                    />
+                    <label htmlFor="stock-out-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                      Out of Stock
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Apply & Clear Buttons - Mobile */}
+              <div className="space-y-3 pt-4">
+                <button
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="w-full px-4 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold"
+                >
+                  Show {products.length} Products
+                </button>
+                <button
+                  onClick={() => {
+                    clearAllFilters()
+                    setIsMobileFilterOpen(false)
+                  }}
+                  className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-1/4 hidden md:block">
@@ -1722,6 +2324,36 @@ const Shop = () => {
 
           {/* Main Content */}
           <div className="lg:w-3/4">
+            {/* Mobile Filter Button */}
+            <div className="md:hidden mb-4 flex gap-2">
+              <button
+                onClick={() => setIsMobileFilterOpen(true)}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold shadow-md"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Filters
+                {(selectedCategory !== "all" || 
+                  selectedSubCategories.length > 0 || 
+                  selectedBrands.length > 0 || 
+                  stockFilters.inStock || 
+                  stockFilters.outOfStock || 
+                  stockFilters.onSale ||
+                  priceRange[0] !== minPrice || 
+                  priceRange[1] !== maxPrice) && (
+                  <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold bg-white text-lime-600 rounded-full">
+                    {[selectedCategory !== "all", selectedSubCategories.length > 0, selectedBrands.length, 
+                      stockFilters.inStock || stockFilters.outOfStock || stockFilters.onSale,
+                      priceRange[0] !== minPrice || priceRange[1] !== maxPrice].filter(Boolean).length}
+                  </span>
+                )}
+              </button>
+              <div className="flex-shrink-0">
+                <SortDropdown value={sortBy} onChange={handleSortChange} />
+              </div>
+            </div>
+            
             <div className="flex flex-row justify-between items-center mb-6 relative z-10">
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl font-bold text-gray-900">
