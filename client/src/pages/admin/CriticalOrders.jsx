@@ -17,6 +17,7 @@ import {
   User,
   Printer,
   Save,
+  AlertTriangle,
   Shield,
 } from "lucide-react"
 
@@ -99,23 +100,34 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
 
           <div className="w-1/2 text-end p-5   rounded-xl backdrop-blur-sm max-w-xs ml-auto">
-            <h2 className="text-2xl font-bold mb-1">VAT INVOICE</h2>
+            <h2 className="text-2xl font-bold mb-1 text-red-600">⚠️ CRITICAL ORDER</h2>
             <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
             <div className="text-sm">📅 Date: {orderDate}</div>
           </div>
         </div>
       </div>
 
+      {/* Payment Warning */}
+      <div className="bg-red-50 border-2 border-red-300 rounded-lg p-3 mb-4">
+        <div className="flex items-center gap-2 text-red-800">
+          <AlertTriangle size={20} />
+          <span className="font-bold">⚠️ CRITICAL: Payment Failed / Transaction Cancelled</span>
+        </div>
+        <div className="mt-2 text-sm text-red-700">
+          <p>Customer attempted to pay via <strong>{getPaymentMethodDisplay(order)}</strong> but the transaction was not completed.</p>
+        </div>
+      </div>
+
       {/* Order Summary Section */}
-      <div className="bg-white  border-l-4 pl-2 border-lime-500">
-        <h3 className="text-2xl font-bold text-lime-800 mb-2 uppercase tracking-wide">📋 Order Summary</h3>
+      <div className="bg-white  border-l-4 pl-2 border-red-500">
+        <h3 className="text-2xl font-bold text-red-800 mb-2 uppercase tracking-wide">📋 Order Summary</h3>
 
         {/* Addresses */}
         <div className="grid grid-cols-2 md:grid-cols-2 gap-6 mb-2">
           {/* Shipping Address */}
-          <div className="bg-white border-2 border-lime-200 rounded-lg px-3 py-1 relative">
+          <div className="bg-white border-2 border-red-200 rounded-lg px-3 py-1 relative">
             <div className="absolute -top-3 left-3 bg-white px-2">
-              <h4 className="text-sm font-bold text-lime-700 uppercase">📦 Shipping Address</h4>
+              <h4 className="text-sm font-bold text-red-700 uppercase">📦 Shipping Address</h4>
             </div>
             <div className="pt-2 space-y-1 text-sm">
               <p>
@@ -143,9 +155,9 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
 
           {/* Billing Address */}
-          <div className="bg-white border-2 border-lime-200 rounded-lg px-3 py-1 relative">
+          <div className="bg-white border-2 border-red-200 rounded-lg px-3 py-1 relative">
             <div className="absolute -top-3 left-3 bg-white px-2">
-              <h4 className="text-sm font-bold text-lime-700 uppercase">💳 Billing Address</h4>
+              <h4 className="text-sm font-bold text-red-700 uppercase">💳 Billing Address</h4>
             </div>
             <div className="pt-2 space-y-1 text-sm">
               <p>
@@ -183,15 +195,15 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
 
         {/* Order Items */}
         <div className="mb-4">
-          <h4 className="text-lg font-bold text-lime-800 mb-2 uppercase">🛍️ Order Items</h4>
+          <h4 className="text-lg font-bold text-red-800 mb-2 uppercase">🛍️ Order Items</h4>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-lime-300">
+            <table className="w-full border-collapse border border-red-300">
               <thead>
-                <tr className="bg-lime-100">
-                  <th className="border border-lime-300 px-3 py-2 text-left text-sm font-bold">Product</th>
-                  <th className="border border-lime-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
-                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Price</th>
-                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Total</th>
+                <tr className="bg-red-100">
+                  <th className="border border-red-300 px-3 py-2 text-left text-sm font-bold">Product</th>
+                  <th className="border border-red-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
+                  <th className="border border-red-300 px-3 py-2 text-right text-sm font-bold">Price</th>
+                  <th className="border border-red-300 px-3 py-2 text-right text-sm font-bold">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -203,8 +215,8 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                   const baseTotal = basePrice * (item.quantity || 0)
 
                   return (
-                    <tr key={index} className="hover:bg-lime-50">
-                      <td className="border border-lime-300 px-3 py-2 text-sm">
+                    <tr key={index} className="hover:bg-red-50">
+                      <td className="border border-red-300 px-3 py-2 text-sm">
                         <div className="font-medium text-gray-900">{item.name}</div>
                         {item.selectedColorData && (
                           <div className="text-xs text-purple-600 font-medium mt-1 flex items-center">
@@ -221,14 +233,14 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
                           <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
                         )}
                       </td>
-                      <td className="border border-lime-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
-                      <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                      <td className="border border-red-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
+                      <td className="border border-red-300 px-3 py-2 text-right text-sm">
                         {showDiscount && (
                           <span className="block text-xs text-gray-400 line-through">{formatPrice(basePrice)}</span>
                         )}
                         <span className="font-semibold text-gray-900">{formatPrice(itemPrice)}</span>
                       </td>
-                      <td className="border border-lime-300 px-3 py-2 text-right text-sm font-semibold">
+                      <td className="border border-red-300 px-3 py-2 text-right text-sm font-semibold">
                         {showDiscount && (
                           <span className="block text-xs text-gray-400 font-normal line-through">
                             {formatPrice(baseTotal)}
@@ -285,8 +297,8 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
         )}
 
         {/* Total Amount */}
-        <div className="bg-lime-50 border-2 border-lime-200 rounded-lg p-4">
-          <h4 className="text-lg font-bold text-lime-800 mb-2 uppercase">💰 Total Amount</h4>
+        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+          <h4 className="text-lg font-bold text-red-800 mb-2 uppercase">💰 Total Amount</h4>
           <div className="space-y-2">
             {baseSubtotal > 0 && (
               <div className="flex justify-between text-gray-500">
@@ -325,20 +337,16 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
             </div>
             <div className="border-t pt-2 flex justify-between">
               <span className="text-lg font-semibold text-gray-900">Total:</span>
-              <span className="text-lg font-bold text-lime-600">{formatPrice(displayTotal)}</span>
+              <span className="text-lg font-bold text-red-600">{formatPrice(displayTotal)}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 mt-2 bg-yellow-50 p-2 rounded-lg border-2 border-yellow-200 text-sm">
+        <div className="flex items-center gap-4 mt-2 bg-red-50 p-2 rounded-lg border-2 border-red-200 text-sm">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-gray-800">💳 Payment Status:</span>
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-bold ${
-                order.isPaid ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
-              }`}
-            >
-              {order.isPaid ? "✅ Paid" : "❌ Unpaid"}
+            <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-200 text-red-800">
+              ❌ Unpaid
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -351,12 +359,6 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
             <div className="flex items-center gap-2">
               <span className="font-semibold text-gray-800">📦 Tracking ID:</span>
               <code className="bg-gray-100 px-2 py-0.5 rounded text-xs font-mono">{order.trackingId}</code>
-            </div>
-          )}
-          {order.paidAt && (
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-800">✅ Paid At:</span>
-              <span className="text-gray-700 text-xs">{new Date(order.paidAt).toLocaleString()}</span>
             </div>
           )}
         </div>
@@ -375,7 +377,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   )
 })
 
-const NewOrders = () => {
+const CriticalOrders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -406,7 +408,7 @@ const NewOrders = () => {
   // Print ref
   const printComponentRef = useRef(null)
 
-const orderStatusOptions = [
+  const orderStatusOptions = [
     "New",
     "Processing",
     "Confirmed",
@@ -442,7 +444,7 @@ const orderStatusOptions = [
   // Print handler
   const handlePrint = useReactToPrint({
     contentRef: printComponentRef,
-    documentTitle: `Invoice-${selectedOrder?._id.slice(-6)}`,
+    documentTitle: `Critical-Order-${selectedOrder?._id.slice(-6)}`,
     pageStyle: `
       @page {
         size: A4;
@@ -478,21 +480,19 @@ const orderStatusOptions = [
         return
       }
 
-      const { data } = await axios.get(`${config.API_URL}/api/admin/orders`, {
+      const { data } = await axios.get(`${config.API_URL}/api/admin/orders/critical`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       })
 
-      const newOrders = data.filter((order) => !order.status || order.status === "New" || order.status === "Pending")
-
-      setOrders(newOrders)
+      setOrders(data)
       setError(null)
       setLoading(false)
     } catch (error) {
-      console.error("Error fetching orders:", error)
-      setError("Failed to load orders. Please try again later.")
+      console.error("Error fetching critical orders:", error)
+      setError("Failed to load critical orders. Please try again later.")
       setLoading(false)
     }
   }
@@ -566,7 +566,7 @@ const orderStatusOptions = [
         ...(!isPaid && { paidAt: null }),
       }
 
-      console.log("Updating payment status with data:", updateData) // Debug log
+      console.log("Updating payment status with data:", updateData)
 
       const response = await axios.put(`${config.API_URL}/api/admin/orders/${orderId}`, updateData, {
         headers: {
@@ -575,18 +575,24 @@ const orderStatusOptions = [
         },
       })
 
-      console.log("Payment update response:", response.data) // Debug log
+      console.log("Payment update response:", response.data)
 
-      // Update local state with the response data
-      const updatedOrderData = {
-        ...updateData,
-        paidAt: isPaid ? new Date() : null,
-      }
-
-      setOrders(orders.map((order) => (order._id === orderId ? { ...order, ...updatedOrderData } : order)))
-
-      if (selectedOrder && selectedOrder._id === orderId) {
-        setSelectedOrder({ ...selectedOrder, ...updatedOrderData })
+      // If marked as paid, remove from critical orders list
+      if (isPaid) {
+        setOrders(orders.filter((order) => order._id !== orderId))
+        if (selectedOrder && selectedOrder._id === orderId) {
+          handleCloseModal()
+        }
+        alert("Order marked as paid and removed from critical orders!")
+      } else {
+        const updatedOrderData = {
+          ...updateData,
+          paidAt: isPaid ? new Date() : null,
+        }
+        setOrders(orders.map((order) => (order._id === orderId ? { ...order, ...updatedOrderData } : order)))
+        if (selectedOrder && selectedOrder._id === orderId) {
+          setSelectedOrder({ ...selectedOrder, ...updatedOrderData })
+        }
       }
 
       setShowPaymentDropdown({})
@@ -594,7 +600,7 @@ const orderStatusOptions = [
       setProcessingAction(false)
     } catch (error) {
       console.error("Error updating payment status:", error)
-      console.error("Error details:", error.response?.data) // More detailed error logging
+      console.error("Error details:", error.response?.data)
       setError("Failed to update payment status: " + (error.response?.data?.message || error.message))
       setProcessingAction(false)
     }
@@ -646,7 +652,6 @@ const orderStatusOptions = [
 
   const handleSendNotification = async (orderId) => {
     // Open notification modal instead of sending directly
-    // Pre-populate with existing seller message from order
     const order = orders.find(o => o._id === orderId) || selectedOrder
     setNotificationOrderId(orderId)
     setNotificationMessage(order?.sellerMessage || "")
@@ -765,7 +770,8 @@ const orderStatusOptions = [
     (order) =>
       order._id.includes(searchTerm) ||
       order.shippingAddress?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.shippingAddress?.email?.toLowerCase().includes(searchTerm.toLowerCase()),
+      order.shippingAddress?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.shippingAddress?.phone?.includes(searchTerm),
   )
 
   const toggleStatusDropdown = (orderId) => {
@@ -804,13 +810,16 @@ const orderStatusOptions = [
 
       <div className="p-8 ml-64 ">
         <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">New Orders</h1>
-            <p className="text-gray-600 mt-1">All new orders will be displayed here</p>
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="text-red-500" size={32} />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Critical Orders</h1>
+              <p className="text-gray-600 mt-1">Orders where customers attempted card payment but transaction failed</p>
+            </div>
           </div>
           <button
             onClick={fetchOrders}
-            className="flex items-center space-x-2 bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 rounded-md transition-colors"
+            className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors"
             disabled={loading}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -827,8 +836,23 @@ const orderStatusOptions = [
           </div>
         )}
 
+        {/* Alert Banner */}
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+            <div>
+              <h3 className="font-semibold text-red-800">What are Critical Orders?</h3>
+              <p className="text-sm text-red-700 mt-1">
+                These are orders where customers tried to pay using Tabby, Tamara, or Pay by Card, but the transaction was 
+                cancelled or failed. The orders are created but remain unpaid. Consider contacting these customers 
+                to complete their purchase.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {showBulkActions && (
-          <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border-l-4 border-lime-500">
+          <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border-l-4 border-red-500">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <span className="text-sm font-medium text-gray-700">
@@ -839,7 +863,7 @@ const orderStatusOptions = [
                   <select
                     value={bulkStatus}
                     onChange={(e) => setBulkStatus(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
+                    className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
                     <option value="">Select Status</option>
                     {orderStatusOptions.map((status) => (
@@ -851,7 +875,7 @@ const orderStatusOptions = [
                   <button
                     onClick={handleBulkStatusUpdate}
                     disabled={!bulkStatus || processingAction}
-                    className="bg-lime-500 hover:bg-lime-600 disabled:bg-gray-400 text-white px-4 py-1 rounded-md text-sm font-medium transition-colors"
+                    className="bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white px-4 py-1 rounded-md text-sm font-medium transition-colors"
                   >
                     {processingAction ? "Updating..." : "Update"}
                   </button>
@@ -879,22 +903,22 @@ const orderStatusOptions = [
               placeholder="Search orders by ID, customer name, or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full md:w-96 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+              className="pl-10 pr-4 py-2 w-full md:w-96 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
           </div>
           <div className="text-sm text-gray-600">
-            Total New Orders: <span className="font-semibold text-lime-600">{filteredOrders.length}</span>
+            Total Critical Orders: <span className="font-semibold text-red-600">{filteredOrders.length}</span>
           </div>
         </div>
 
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-lime-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
           </div>
         ) : (
-          <div className="bg-white  rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto   ">
-              <table className="min-w-full  divide-y divide-gray-200">
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left">
@@ -902,7 +926,7 @@ const orderStatusOptions = [
                         type="checkbox"
                         checked={selectAll}
                         onChange={handleSelectAll}
-                        className="h-4 w-4 text-lime-500 focus:ring-lime-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-red-500 focus:ring-red-500 border-gray-300 rounded"
                       />
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -932,18 +956,18 @@ const orderStatusOptions = [
                   {filteredOrders.map((order) => (
                     <tr
                       key={order._id}
-                      className={`hover:bg-gray-50 ${selectedOrders.includes(order._id) ? "bg-lime-50" : ""}`}
+                      className={`hover:bg-gray-50 ${selectedOrders.includes(order._id) ? "bg-red-50" : ""}`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={selectedOrders.includes(order._id)}
                           onChange={() => handleSelectOrder(order._id)}
-                          className="h-4 w-4 text-lime-500 focus:ring-lime-500 border-gray-300 rounded"
+                          className="h-4 w-4 text-red-500 focus:ring-red-500 border-gray-300 rounded"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-lime-600">#{order._id.slice(-6)}</div>
+                        <div className="text-sm font-medium text-red-600">#{order._id.slice(-6)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {order.deliveryType === "pickup" ? (
@@ -1016,12 +1040,16 @@ const orderStatusOptions = [
                               e.stopPropagation()
                               togglePaymentDropdown(order._id)
                             }}
-                            className={`px-3 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full cursor-pointer hover:opacity-80 transition-colors
-                            ${order.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                            className="px-3 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full cursor-pointer hover:opacity-80 transition-colors bg-red-100 text-red-800"
                           >
-                            {order.isPaid ? "Paid" : "Unpaid"}
+                            Unpaid
                             <ChevronDown size={12} className="ml-1" />
                           </button>
+                          <div className="mt-1">
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPaymentMethodBadgeColor(order)}`}>
+                              {getPaymentMethodDisplay(order)}
+                            </span>
+                          </div>
 
                           {showPaymentDropdown[order._id] && (
                             <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-20">
@@ -1048,7 +1076,7 @@ const orderStatusOptions = [
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => handleViewOrder(order)}
-                          className="text-lime-600 hover:text-lime-900 mr-4"
+                          className="text-red-600 hover:text-red-900 mr-4"
                           title="View Order Details"
                         >
                           <Eye size={18} />
@@ -1070,8 +1098,8 @@ const orderStatusOptions = [
 
             {filteredOrders.length === 0 && !loading && (
               <div className="text-center py-12">
-                <div className="text-gray-500 text-lg">No new orders found</div>
-                <p className="text-gray-400 mt-2">New orders will appear here when customers place orders</p>
+                <div className="text-gray-500 text-lg">No critical orders found</div>
+                <p className="text-gray-400 mt-2">Great! All card payment orders have been successfully processed.</p>
               </div>
             )}
           </div>
@@ -1087,11 +1115,14 @@ const orderStatusOptions = [
                   <div className="flex items-center space-x-2 text-sm text-gray-500 mb-1">
                     <span>Dashboard</span>
                     <span>/</span>
-                    <span>New Orders</span>
+                    <span>Critical Orders</span>
                     <span>/</span>
-                    <span className="text-lime-600">View</span>
+                    <span className="text-red-600">View</span>
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Order ID: {selectedOrder._id.slice(-6)}</h2>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="text-red-500" size={20} />
+                    <h2 className="text-2xl font-bold text-gray-900">Critical Order: {selectedOrder._id.slice(-6)}</h2>
+                  </div>
                 </div>
                 <button
                   onClick={handleCloseModal}
@@ -1104,12 +1135,12 @@ const orderStatusOptions = [
               <div className="p-6">
                 {/* Order Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-lime-50 p-4 rounded-lg">
+                  <div className="bg-red-50 p-4 rounded-lg">
                     <div className="flex items-center space-x-2">
-                      <Package className="text-lime-600" size={20} />
+                      <Package className="text-red-600" size={20} />
                       <div>
                         <p className="text-sm text-gray-600">Status</p>
-                        <p className="font-semibold text-lime-900">{selectedOrder.status || "New"}</p>
+                        <p className="font-semibold text-red-900">{selectedOrder.status || "New"}</p>
                       </div>
                     </div>
                   </div>
@@ -1131,8 +1162,8 @@ const orderStatusOptions = [
                       <MapPin className="text-purple-600" size={20} />
                       <div>
                         <p className="text-sm text-gray-600">Payment Status</p>
-                        <p className={`font-semibold px-2 py-0.5 rounded-full text-xs inline-block ${selectedOrder.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                          {selectedOrder.isPaid ? "Paid" : "Unpaid"}
+                        <p className="font-semibold px-2 py-0.5 rounded-full text-xs inline-block bg-red-100 text-red-800">
+                          Unpaid
                         </p>
                       </div>
                     </div>
@@ -1156,7 +1187,7 @@ const orderStatusOptions = [
                     <select
                       value={selectedOrder.status || "New"}
                       onChange={(e) => handleUpdateStatus(selectedOrder._id, e.target.value)}
-                      className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                      className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                       disabled={processingAction}
                     >
                       {orderStatusOptions.map((status) => (
@@ -1341,7 +1372,7 @@ const orderStatusOptions = [
                     )}
                     <div className="border-t pt-2 flex justify-between">
                       <span className="text-lg font-semibold text-gray-900">Total:</span>
-                      <span className="text-lg font-bold text-lime-600">
+                      <span className="text-lg font-bold text-red-600">
                         {formatPrice(selectedTotals.total)}
                       </span>
                     </div>
@@ -1471,7 +1502,7 @@ const orderStatusOptions = [
                           value={trackingId}
                           onChange={(e) => setTrackingId(e.target.value)}
                           placeholder="Enter tracking ID"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -1483,15 +1514,15 @@ const orderStatusOptions = [
                           type="date"
                           value={estimatedDelivery}
                           onChange={(e) => setEstimatedDelivery(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                         />
                       </div>
                     </div>
                   </div>
 
                   {showCouponDetail && (
-                    <div className="mt-4 bg-lime-50 border border-lime-200 p-4 rounded-lg space-y-2">
-                      <p className="text-sm font-medium text-lime-700">{couponCodeLabel ? "Coupon Details" : "Discount Details"}</p>
+                    <div className="mt-4 bg-red-50 border border-red-200 p-4 rounded-lg space-y-2">
+                      <p className="text-sm font-medium text-red-700">{couponCodeLabel ? "Coupon Details" : "Discount Details"}</p>
                       {couponCodeLabel && (
                         <div className="flex justify-between text-sm text-gray-700">
                           <span>Code:</span>
@@ -1521,7 +1552,7 @@ const orderStatusOptions = [
                       onChange={(e) => setSellerComments(e.target.value)}
                       placeholder="Add seller comments here..."
                       rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     />
                   </div>
 
@@ -1554,7 +1585,7 @@ const orderStatusOptions = [
                   </button>
                   <button
                     onClick={() => handleSendNotification(selectedOrder._id)}
-                    className="bg-lime-600 hover:bg-lime-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
+                    className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
                     disabled={processingAction}
                   >
                     <Mail size={18} className="mr-2" />
@@ -1638,4 +1669,4 @@ const orderStatusOptions = [
   )
 }
 
-export default NewOrders
+export default CriticalOrders

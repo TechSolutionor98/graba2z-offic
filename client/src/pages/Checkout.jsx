@@ -557,6 +557,7 @@ const Checkout = () => {
         {
           ...orderData,
           paymentMethod: "cod",
+          actualPaymentMethod: "cod",
           paymentStatus: "pending",
           isPaid: false,
         },
@@ -635,6 +636,7 @@ const Checkout = () => {
         totalPrice: finalTotal,
         deliveryType: deliveryType,
         paymentMethod: actualPaymentMethod, // Use actual payment method (card for tabby)
+        actualPaymentMethod: selectedPaymentMethod, // Store the original selected payment method (tabby, tamara, card, cod)
         paymentStatus: "pending",
         isPaid: false,
         customerNotes: customerNotes.trim() || undefined,

@@ -23,6 +23,7 @@ import {
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
+import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo } from "../../utils/paymentUtils"
 
 // Invoice Component for Printing - Using forwardRef
 const InvoiceComponent = forwardRef(({ order }, ref) => {
@@ -356,7 +357,9 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
           </div>
           <div className="flex items-center gap-2">
             <span className="font-semibold text-gray-800">💰 Payment Method:</span>
-            <span className="text-gray-700">{order.paymentMethod || "Card"}</span>
+            <span className={`px-2 py-1 rounded-full text-xs font-bold ${getPaymentMethodBadgeColor(order)}`}>
+              {getPaymentMethodDisplay(order)}
+            </span>
           </div>
           {order.trackingId && (
             <div className="flex items-center gap-2">

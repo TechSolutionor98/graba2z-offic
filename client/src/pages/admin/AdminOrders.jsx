@@ -5,6 +5,7 @@ import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, Mail, ChevronDown, RefreshCw } from "lucide-react"
 import { getFullImageUrl } from "../../utils/imageUtils"
+import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo } from "../../utils/paymentUtils"
 
 import config from "../../config/config"
 const AdminOrders = () => {
@@ -395,7 +396,12 @@ const AdminOrders = () => {
                       </td>
                       {/* Clickable Payment Status Column */}
                       <td className="px-6 py-4 whitespace-nowrap relative">
-                        <div className="relative">
+                        <div className="relative flex flex-col gap-1">
+                          {/* Payment Method Badge */}
+                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPaymentMethodBadgeColor(order)}`}>
+                            {getPaymentMethodDisplay(order)}
+                          </span>
+                          {/* Payment Status Button */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
@@ -604,10 +610,28 @@ const AdminOrders = () => {
                       <span className="text-gray-600">Shipping</span>
                       <span className="text-gray-900">{formatPrice(selectedOrder.shippingPrice)}</span>
                     </div>
-                    <div className="flex justify-between py-2 font-medium">
+                    <div className="flex justify-between py-2 border-b font-medium">
                       <span className="text-gray-900">Total</span>
                       <span className="text-blue-600">{formatPrice(selectedOrder.totalPrice)}</span>
                     </div>
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-gray-600">Payment Method</span>
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPaymentMethodBadgeColor(selectedOrder)}`}>
+                        {getPaymentMethodDisplay(selectedOrder)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-2">
+                      <span className="text-gray-600">Payment Status</span>
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${selectedOrder.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        {selectedOrder.isPaid ? "Paid" : "Unpaid"}
+                      </span>
+                    </div>
+                    {selectedOrder.paidAt && (
+                      <div className="flex justify-between py-2 text-sm">
+                        <span className="text-gray-600">Paid At</span>
+                        <span className="text-gray-900">{new Date(selectedOrder.paidAt).toLocaleString()}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

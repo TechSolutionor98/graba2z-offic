@@ -28,6 +28,7 @@ import {
   Cog,
   ShoppingBag,
   RefreshCw,
+  AlertTriangle,
 } from "lucide-react"
 
 const AdminSidebar = () => {
@@ -396,6 +397,7 @@ const AdminSidebar = () => {
         { title: "On Hold", path: "/admin/orders/on-hold" },
         { title: "Cancelled", path: "/admin/orders/cancelled" },
         { title: "Deleted", path: "/admin/orders/deleted" },
+        { title: "Critical Orders", path: "/admin/orders/critical", icon: AlertTriangle, highlight: true },
       ],
     },
     {

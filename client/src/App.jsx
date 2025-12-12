@@ -143,6 +143,7 @@ import ProcessingOrders from "./pages/admin/ProcessingOrders"
 import OnHoldOrders from "./pages/admin/OnHoldOrders"
 import CancelledOrders from "./pages/admin/CancelledOrders"
 import DeletedOrders from "./pages/admin/DeletedOrders"
+import CriticalOrders from "./pages/admin/CriticalOrders"
 
 // Stock Adjustment page imports
 import PriceAdjustment from "./pages/admin/PriceAdjustment"
@@ -305,6 +306,7 @@ function App() {
                               <Route path="orders/on-hold" element={<OnHoldOrders />} />
                               <Route path="orders/cancelled" element={<CancelledOrders />} />
                               <Route path="orders/deleted" element={<DeletedOrders />} />
+                              <Route path="orders/critical" element={<CriticalOrders />} />
 
                               <Route path="orders/create" element={<CreateOrder />} />
                             </Routes>
