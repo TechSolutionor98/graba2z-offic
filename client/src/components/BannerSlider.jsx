@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Link } from "react-router-dom"
 import { getFullImageUrl } from "../utils/imageUtils"
 
 const BannerSlider = ({ banners }) => {
@@ -44,14 +45,10 @@ const BannerSlider = ({ banners }) => {
 
   const currentBanner = banners[currentSlide]
 
-  return (
-    <section
-      className="relative w-full h-[170px] sm:h-[250px] md:h-[300px] lg:h-[310px] cover"
-      onMouseEnter={() => setIsAutoPlaying(false)}
-      onMouseLeave={() => setIsAutoPlaying(true)}
-    >
-      {/* Full Banner Image Only */}
-      <div className="absolute inset-0 cover">
+  // Helper function to render banner content
+  const renderBannerContent = () => {
+    const content = (
+      <>
         <img
           src={getFullImageUrl(currentBanner.image) || "/placeholder.svg"}
           alt={currentBanner.title || "Banner"}
@@ -59,7 +56,56 @@ const BannerSlider = ({ banners }) => {
         />
         {/* Optional subtle overlay for better navigation visibility */}
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+      </>
+    )
+
+    // Check if banner has a valid link
+    const hasValidLink = currentBanner.buttonLink && currentBanner.buttonLink.trim() !== ""
+
+    if (hasValidLink) {
+      const link = currentBanner.buttonLink.trim()
+      // Check if it's an external link
+      const isExternal = link.startsWith("http://") || link.startsWith("https://")
+      
+      if (isExternal) {
+        return (
+          <a 
+            href={link} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="absolute inset-0 cover cursor-pointer"
+          >
+            {content}
+          </a>
+        )
+      } else {
+        return (
+          <Link 
+            to={link} 
+            className="absolute inset-0 cover cursor-pointer"
+          >
+            {content}
+          </Link>
+        )
+      }
+    }
+
+    // No link, just render the content
+    return (
+      <div className="absolute inset-0 cover">
+        {content}
       </div>
+    )
+  }
+
+  return (
+    <section
+      className="relative w-full h-[170px] sm:h-[250px] md:h-[300px] lg:h-[310px] cover"
+      onMouseEnter={() => setIsAutoPlaying(false)}
+      onMouseLeave={() => setIsAutoPlaying(true)}
+    >
+      {/* Full Banner Image - Clickable if link exists */}
+      {renderBannerContent()}
 
       {/* Navigation Arrows */}
       {banners.length > 1 && (
