@@ -892,8 +892,8 @@ const orderStatusOptions = [
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-lime-500"></div>
           </div>
         ) : (
-          <div className="bg-white  rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto   ">
+          <div className="bg-white  rounded-lg shadow-sm" style={{ overflow: 'visible' }}>
+            <div className="overflow-x-auto   " style={{ overflow: 'visible' }}>
               <table className="min-w-full  divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -962,8 +962,8 @@ const orderStatusOptions = [
                         <div className="text-sm text-gray-900">{new Date(order.createdAt).toLocaleDateString()}</div>
                         <div className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap relative">
-                        <div className="relative">
+                      <td className="px-6 py-4 whitespace-nowrap" style={{ overflow: 'visible' }}>
+                        <div style={{ position: 'relative' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
@@ -991,7 +991,7 @@ const orderStatusOptions = [
                           </button>
 
                           {showStatusDropdown[order._id] && (
-                            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                            <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', width: '192px', backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', zIndex: 9999 }}>
                               {orderStatusOptions.map((status) => (
                                 <button
                                   key={status}
@@ -1009,8 +1009,8 @@ const orderStatusOptions = [
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap relative">
-                        <div className="relative">
+                      <td className="px-6 py-4 whitespace-nowrap" style={{ overflow: 'visible' }}>
+                        <div style={{ position: 'relative' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
@@ -1024,7 +1024,7 @@ const orderStatusOptions = [
                           </button>
 
                           {showPaymentDropdown[order._id] && (
-                            <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                            <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', width: '128px', backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', zIndex: 9999 }}>
                               {paymentStatusOptions.map((status) => (
                                 <button
                                   key={status}

@@ -1926,8 +1926,8 @@ const DeletedOrders = () => {
                         <div className="text-sm text-gray-900">{new Date(order.createdAt).toLocaleDateString()}</div>
                         <div className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap relative">
-                        <div className="relative">
+                      <td className="px-6 py-4 whitespace-nowrap" style={{ overflow: 'visible' }}>
+                        <div style={{ position: 'relative' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
@@ -1940,7 +1940,7 @@ const DeletedOrders = () => {
                           </button>
 
                           {showStatusDropdown[order._id] && (
-                            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                            <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', width: '192px', backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', zIndex: 9999 }}>
                               {orderStatusOptions.map((status) => (
                                 <button
                                   key={status}
@@ -1958,8 +1958,8 @@ const DeletedOrders = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap relative">
-                        <div className="relative">
+                      <td className="px-6 py-4 whitespace-nowrap" style={{ overflow: 'visible' }}>
+                        <div style={{ position: 'relative' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
@@ -1973,7 +1973,7 @@ const DeletedOrders = () => {
                           </button>
 
                           {showPaymentDropdown[order._id] && (
-                            <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                            <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', width: '128px', backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', zIndex: 9999 }}>
                               {paymentStatusOptions.map((status) => (
                                 <button
                                   key={status}

@@ -47,7 +47,8 @@ const AdminCategories = () => {
 
       if (response.ok) {
         const data = await response.json()
-        setCategories(data.filter((cat) => !cat.isDeleted))
+        // Filter to show only parent categories (level 0) and not deleted
+        setCategories(data.filter((cat) => !cat.isDeleted && cat.level === 0))
       } else if (response.status === 401) {
         showToast("Authentication failed. Please login again.", "error")
       } else {
@@ -236,7 +237,7 @@ const AdminCategories = () => {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Categories</h1>
-              <p className="text-gray-600 mt-2">Manage your product categories</p>
+              <p className="text-gray-600 mt-2">Manage your product categories • <span className="font-semibold">{categories.length} Total Categories</span></p>
             </div>
             {/* <Link
               to="/admin/add-category"
