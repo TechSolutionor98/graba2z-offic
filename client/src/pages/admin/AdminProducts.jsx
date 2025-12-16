@@ -7,7 +7,7 @@ import ProductForm from "../../components/admin/ProductForm"
 import MoveProductsModal from "../../components/admin/MoveProductsModal"
 import ConfirmDialog from "../../components/admin/ConfirmDialog"
 import { useToast } from "../../context/ToastContext"
-import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight, Copy, Upload, ChevronDown, Pause, Play, Columns, Check } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Tag, Eye, EyeOff, Download, CheckSquare, Square, MoveRight, Copy, Upload, ChevronDown, Pause, Play, Columns, Check, X, ChevronLeft, ChevronRight } from "lucide-react"
 import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
@@ -94,10 +94,45 @@ const AdminProducts = () => {
   })
   const columnDropdownRef = useRef(null)
 
+  // Table scroll states for horizontal navigation
+  const tableContainerRef = useRef(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
   // Save column visibility to localStorage
   useEffect(() => {
     localStorage.setItem('adminProductsColumns', JSON.stringify(visibleColumns))
   }, [visibleColumns])
+
+  // Check scroll position for horizontal navigation buttons
+  const checkScroll = () => {
+    if (tableContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current
+      setCanScrollLeft(scrollLeft > 0)
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1)
+    }
+  }
+
+  // Update scroll buttons when table loads or products change
+  useEffect(() => {
+    checkScroll()
+    const container = tableContainerRef.current
+    if (container) {
+      container.addEventListener('scroll', checkScroll)
+      return () => container.removeEventListener('scroll', checkScroll)
+    }
+  }, [products])
+
+  // Scroll table horizontally
+  const scrollTable = (direction) => {
+    if (tableContainerRef.current) {
+      const { scrollWidth, clientWidth } = tableContainerRef.current
+      tableContainerRef.current.scrollTo({
+        left: direction === 'left' ? 0 : scrollWidth - clientWidth,
+        behavior: 'smooth'
+      })
+    }
+  }
 
   // Close column dropdown when clicking outside
   useEffect(() => {
@@ -1360,7 +1395,7 @@ const AdminProducts = () => {
         </div>
       )} */}
 
-      <div className="flex-1 ml-64">
+      <div className="flex-1 ml-64 overflow-hidden">
         <div className="p-8">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Products</h1>
@@ -1395,18 +1430,18 @@ const AdminProducts = () => {
           ) : (
             <>
               {/* Search and Filters Section */}
-              <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6">
+              <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6 max-w-full overflow-hidden">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Filter & Search Products</h3>
                 
-                {/* <!-- Filter Controls and Search --> */}
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-4">
+                {/* First Row: Parent Category, Level 1, Level 2, Level 3 */}
+                <div className="grid grid-cols-4 gap-3 mb-4">
                   {/* Parent Category Filter */}
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
                     <select
                       value={filterCategory}
                       onChange={(e) => setFilterCategory(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     >
                       <option value="all">All Categories</option>
                       {categories.map((category) => (
@@ -1418,13 +1453,13 @@ const AdminProducts = () => {
                   </div>
 
                   {/* Level 1 Subcategory Filter */}
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Level 1</label>
                     <select
                       value={filterSubcategory}
                       onChange={(e) => setFilterSubcategory(e.target.value)}
                       disabled={filterCategory === "all"}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                      className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
                     >
                       <option value="all">{filterCategory === "all" ? "Select Parent First" : "All Level 1"}</option>
                       {filteredSubcategories.map((subcategory) => (
@@ -1436,13 +1471,13 @@ const AdminProducts = () => {
                   </div>
 
                   {/* Level 2 Subcategory Filter */}
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Level 2</label>
                     <select
                       value={filterSubcategory2}
                       onChange={(e) => setFilterSubcategory2(e.target.value)}
                       disabled={filterSubcategory === "all" || filteredSubcategories2.length === 0}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                      className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
                     >
                       <option value="all">{filterSubcategory === "all" ? "Select Level 1 First" : filteredSubcategories2.length === 0 ? "No Level 2" : "All Level 2"}</option>
                       {filteredSubcategories2.map((subcategory) => (
@@ -1454,13 +1489,13 @@ const AdminProducts = () => {
                   </div>
 
                   {/* Level 3 Subcategory Filter */}
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Level 3</label>
                     <select
                       value={filterSubcategory3}
                       onChange={(e) => setFilterSubcategory3(e.target.value)}
                       disabled={filterSubcategory === "all" || filteredSubcategories3.length === 0}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                      className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
                     >
                       <option value="all">{filterSubcategory === "all" ? "Select Level 1 First" : filteredSubcategories3.length === 0 ? "No Level 3" : "All Level 3"}</option>
                       {filteredSubcategories3.map((subcategory) => (
@@ -1470,15 +1505,18 @@ const AdminProducts = () => {
                       ))}
                     </select>
                   </div>
+                </div>
 
+                {/* Second Row: Level 4, Status, Search */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
                   {/* Level 4 Subcategory Filter */}
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Level 4</label>
                     <select
                       value={filterSubcategory4}
                       onChange={(e) => setFilterSubcategory4(e.target.value)}
                       disabled={filterSubcategory === "all" || filteredSubcategories4.length === 0}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                      className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
                     >
                       <option value="all">{filterSubcategory === "all" ? "Select Level 1 First" : filteredSubcategories4.length === 0 ? "No Level 4" : "All Level 4"}</option>
                       {filteredSubcategories4.map((subcategory) => (
@@ -1489,32 +1527,13 @@ const AdminProducts = () => {
                     </select>
                   </div>
 
-                  {/* Brand Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-                    <select
-                      value={filterBrand}
-                      onChange={(e) => setFilterBrand(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    >
-                      <option value="all">All Brands</option>
-                      {brands.map((brand) => (
-                        <option key={brand._id} value={brand._id}>
-                          {brand.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Second Row: Status and Search */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
+                  {/* Status Filter */}
+                  <div className="min-w-0">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                     <select
                       value={filterStatus}
                       onChange={(e) => setFilterStatus(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     >
                       <option value="all">All Products</option>
                       <option value="active">Active</option>
@@ -1523,7 +1542,8 @@ const AdminProducts = () => {
                     </select>
                   </div>
 
-                  <div>
+                  {/* Search Filter */}
+                  <div className="min-w-0">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -1532,11 +1552,33 @@ const AdminProducts = () => {
                         placeholder="Name, SKU, Brand..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 pr-3 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        className="pl-9 pr-2 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       />
                     </div>
                   </div>
                 </div>
+
+                {/* Clear Filters Button */}
+                {(searchTerm || filterCategory !== "all" || filterSubcategory !== "all" || filterSubcategory2 !== "all" || filterSubcategory3 !== "all" || filterSubcategory4 !== "all" || filterBrand !== "all" || filterStatus !== "all") && (
+                  <div className="flex justify-start mt-4">
+                    <button
+                      onClick={() => {
+                        setSearchTerm("")
+                        setFilterCategory("all")
+                        setFilterSubcategory("all")
+                        setFilterSubcategory2("all")
+                        setFilterSubcategory3("all")
+                        setFilterSubcategory4("all")
+                        setFilterBrand("all")
+                        setFilterStatus("all")
+                      }}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
+                    >
+                      <X size={16} />
+                      Clear Filters
+                    </button>
+                  </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex justify-between items-center">
@@ -1555,7 +1597,7 @@ const AdminProducts = () => {
                         }}
                         className="text-sm text-gray-600 hover:text-gray-800 underline"
                       >
-                        Clear all filters
+                        
                       </button>
                     )}
                   </div>
@@ -1733,17 +1775,47 @@ const AdminProducts = () => {
                       </button> */}
                     </div>
                     
-                    <div className="text-sm text-gray-600">
-                      Showing {products.length} of {categoryProductCount || products.length} products
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm text-gray-600">
+                        Showing {products.length} of {categoryProductCount || products.length} products
+                      </div>
+                      
+                      {/* Horizontal Scroll Navigation Arrows */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => scrollTable('left')}
+                          disabled={!canScrollLeft}
+                          className={`p-2 rounded-md transition-colors ${
+                            canScrollLeft 
+                              ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          }`}
+                          title="Scroll left"
+                        >
+                          <ChevronLeft size={18} />
+                        </button>
+                        <button
+                          onClick={() => scrollTable('right')}
+                          disabled={!canScrollRight}
+                          className={`p-2 rounded-md transition-colors ${
+                            canScrollRight 
+                              ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          }`}
+                          title="Scroll right"
+                        >
+                          <ChevronRight size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="overflow-x-auto">
+                  <div ref={tableContainerRef} className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
                           {isColumnVisible('select') && (
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             <div className="flex items-center gap-1">
                               <button
                                 onClick={toggleSelectPage}
@@ -1763,7 +1835,7 @@ const AdminProducts = () => {
                           {isColumnVisible('product') && (
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Product
                           </th>
@@ -1771,7 +1843,7 @@ const AdminProducts = () => {
                           {isColumnVisible('brand') && (
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Brand
                           </th>
@@ -1779,7 +1851,7 @@ const AdminProducts = () => {
                           {isColumnVisible('parentCategory') && (
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
                           >
                             Parent Category
                           </th>
@@ -1787,7 +1859,7 @@ const AdminProducts = () => {
                           {isColumnVisible('level1') && (
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
                           >
                             Level 1
                           </th>
@@ -1795,7 +1867,7 @@ const AdminProducts = () => {
                           {isColumnVisible('level2') && (
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
                           >
                             Level 2
                           </th>
@@ -1803,7 +1875,7 @@ const AdminProducts = () => {
                           {isColumnVisible('level3') && (
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
                           >
                             Level 3
                           </th>
@@ -1811,7 +1883,7 @@ const AdminProducts = () => {
                           {isColumnVisible('level4') && (
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
                           >
                             Level 4
                           </th>
@@ -1819,7 +1891,7 @@ const AdminProducts = () => {
                           {isColumnVisible('price') && (
                           <th
                             scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                           >
                             Price
                           </th>
@@ -1856,7 +1928,7 @@ const AdminProducts = () => {
                                 }`}
                               >
                                 {isColumnVisible('select') && (
-                                <td className="px-4 py-4 whitespace-nowrap">
+                                <td className="px-2 py-4 whitespace-nowrap">
                                   <button
                                     onClick={() => toggleSelectOne(product._id)}
                                     className={`${(selectAllMode || selectedIds.has(product._id)) ? 'text-lime-500 hover:text-lime-600' : 'text-gray-600 hover:text-gray-800'} rounded focus:outline-none`}
@@ -1866,7 +1938,7 @@ const AdminProducts = () => {
                                 </td>
                                 )}
                                 {isColumnVisible('product') && (
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-2 py-4 whitespace-nowrap">
                                   <div className="flex items-center">
                                     <div className="h-10 w-10 flex-shrink-0">
                                       <img
@@ -1885,47 +1957,47 @@ const AdminProducts = () => {
                                 </td>
                                 )}
                                 {isColumnVisible('brand') && (
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-4 py-4 whitespace-nowrap">
                                   <div className="text-sm text-gray-900">{product.brand?.name || 'N/A'}</div>
                                 </td>
                                 )}
                                 {isColumnVisible('parentCategory') && (
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-50 text-blue-800">
-                                    {getParentCategoryName(product)}
+                                <td className="px-1 py-4 whitespace-nowrap w-24">
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-50 text-blue-800 truncate max-w-full" title={getParentCategoryName(product)}>
+                                    {getParentCategoryName(product).substring(0, 6)}{getParentCategoryName(product).length > 6 ? '...' : ''}
                                   </span>
                                 </td>
                                 )}
                                 {isColumnVisible('level1') && (
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    {product.category?.name || 'N/A'}
+                                <td className="px-1 py-4 whitespace-nowrap w-24">
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 truncate max-w-full" title={product.category?.name || 'N/A'}>
+                                    {(product.category?.name || 'N/A').substring(0, 6)}{(product.category?.name || 'N/A').length > 6 ? '...' : ''}
                                   </span>
                                 </td>
                                 )}
                                 {isColumnVisible('level2') && (
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-50 text-purple-800">
-                                    {product.subCategory2?.name || '-'}
+                                <td className="px-1 py-4 whitespace-nowrap w-24">
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-50 text-purple-800 truncate max-w-full" title={product.subCategory2?.name || '-'}>
+                                    {(product.subCategory2?.name || '-').substring(0, 6)}{(product.subCategory2?.name || '-').length > 6 ? '...' : ''}
                                   </span>
                                 </td>
                                 )}
                                 {isColumnVisible('level3') && (
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-50 text-indigo-800">
-                                    {product.subCategory3?.name || '-'}
+                                <td className="px-1 py-4 whitespace-nowrap w-24">
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-50 text-indigo-800 truncate max-w-full" title={product.subCategory3?.name || '-'}>
+                                    {(product.subCategory3?.name || '-').substring(0, 6)}{(product.subCategory3?.name || '-').length > 6 ? '...' : ''}
                                   </span>
                                 </td>
                                 )}
                                 {isColumnVisible('level4') && (
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-50 text-pink-800">
-                                    {product.subCategory4?.name || '-'}
+                                <td className="px-1 py-4 whitespace-nowrap w-24">
+                                  <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-50 text-pink-800 truncate max-w-full" title={product.subCategory4?.name || '-'}>
+                                    {(product.subCategory4?.name || '-').substring(0, 6)}{(product.subCategory4?.name || '-').length > 6 ? '...' : ''}
                                   </span>
                                 </td>
                                 )}
                                 {isColumnVisible('price') && (
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-1 py-4 whitespace-nowrap">
                                   <div className="text-sm text-gray-900">{formatPrice(product.price)}</div>
                                   {product.oldPrice && (
                                     <div className="text-xs text-gray-500 line-through">
@@ -1935,12 +2007,14 @@ const AdminProducts = () => {
                                 </td>
                                 )}
                                 {isColumnVisible('sku') && (
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-900">{product.sku || 'N/A'}</div>
+                                <td className="px-1 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-900 truncate" title={product.sku || 'N/A'}>
+                                    {(product.sku || 'N/A').substring(0, 10)}{(product.sku || 'N/A').length > 10 ? '...' : ''}
+                                  </div>
                                 </td>
                                 )}
                                 {isColumnVisible('action') && (
-                                <td className="px-4 py-3 whitespace-nowrap text-center">
+                                <td className="px-1 py-3 whitespace-nowrap text-center">
                                   <div className="flex items-center justify-center gap-2">
                                     {/* Quick Action Icons - 2 rows */}
                                     <div className="flex flex-col gap-1 mr-2">
@@ -2015,6 +2089,37 @@ const AdminProducts = () => {
                         )}
                       </tbody>
                     </table>
+                  </div>
+                  
+                  {/* Bottom Horizontal Scroll Navigation Arrows */}
+                  <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-end bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 mr-2">Scroll table:</span>
+                      <button
+                        onClick={() => scrollTable('left')}
+                        disabled={!canScrollLeft}
+                        className={`p-2 rounded-md transition-colors ${
+                          canScrollLeft 
+                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
+                        title="Scroll left"
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+                      <button
+                        onClick={() => scrollTable('right')}
+                        disabled={!canScrollRight}
+                        className={`p-2 rounded-md transition-colors ${
+                          canScrollRight 
+                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
+                        title="Scroll right"
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
