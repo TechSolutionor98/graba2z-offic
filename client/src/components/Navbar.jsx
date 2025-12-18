@@ -1252,7 +1252,7 @@ const Navbar = () => {
                 className="hidden md:inline-flex items-center gap-1.5 pl-3 pr-4 xl:pr-8 2xl:pr-12 py-2 h-full self-stretch bg-[#2b3497] text-white  border-white transition text-sm font-medium whitespace-nowrap -mr-4 xl:-mr-8 2xl:-mr-12"
                 aria-label="Crown Excel"
               >
-                <span className="text-xs xl:text-sm">Crown Excel</span>
+                <span className="text-xs xl:text-sm">Crown Ex</span>
               </a>
             </div>
           </div>
