@@ -17,6 +17,8 @@ const AdminCategorySlider = () => {
   const [sliderFilter, setSliderFilter] = useState("all") // all, showing, notShowing
   const [sliderShape, setSliderShape] = useState("circle")
   const [layoutType, setLayoutType] = useState("default")
+  const [parentCategories, setParentCategories] = useState([]) // List of parent categories
+  const [selectedParentId, setSelectedParentId] = useState("all") // Selected parent for hierarchical filtering
   const { showToast } = useToast()
 
   useEffect(() => {
@@ -26,7 +28,7 @@ const AdminCategorySlider = () => {
 
   useEffect(() => {
     applyFilters()
-  }, [searchTerm, levelFilter, statusFilter, sliderFilter, allCategories])
+  }, [searchTerm, levelFilter, statusFilter, sliderFilter, selectedParentId, allCategories])
 
   const fetchSettings = async () => {
     try {
@@ -113,6 +115,15 @@ const AdminCategorySlider = () => {
       const categories = await catRes.json()
       const subcategories = await subRes.json()
 
+      // Store parent categories separately for the dropdown
+      const parents = categories
+        .filter((c) => !c.isDeleted)
+        .map((c) => ({
+          _id: c._id,
+          name: c.name,
+        }))
+      setParentCategories(parents)
+
       // Combine and mark level
       const allItems = [
         ...categories
@@ -123,16 +134,32 @@ const AdminCategorySlider = () => {
             levelLabel: "Parent Category",
             displayName: c.name,
             type: "category",
+            parentCategoryId: null,
+            parentCategoryName: null,
           })),
         ...subcategories
           .filter((s) => !s.isDeleted)
-          .map((s) => ({
-            ...s,
-            levelType: s.level || 1,
-            levelLabel: `Level ${s.level || 1}`,
-            displayName: `${s.name} (${s.categoryName || "Unknown"})`,
-            type: "subcategory",
-          })),
+          .map((s) => {
+            // Get parent category info
+            const parentCatId = typeof s.category === 'object' ? s.category?._id : s.category
+            const parentCat = categories.find(c => c._id === parentCatId)
+            
+            // Get parent subcategory info (for levels 2+)
+            const parentSubId = typeof s.parentSubCategory === 'object' ? s.parentSubCategory?._id : s.parentSubCategory
+            const parentSub = parentSubId ? subcategories.find(sub => sub._id === parentSubId) : null
+            
+            return {
+              ...s,
+              levelType: s.level || 1,
+              levelLabel: `Level ${s.level || 1}`,
+              displayName: `${s.name}`,
+              type: "subcategory",
+              parentCategoryId: parentCatId,
+              parentCategoryName: parentCat?.name || s.categoryName || "Unknown",
+              parentSubCategoryId: parentSubId,
+              parentSubCategoryName: parentSub?.name || null,
+            }
+          }),
       ]
 
       setAllCategories(allItems)
@@ -147,6 +174,21 @@ const AdminCategorySlider = () => {
 
   const applyFilters = () => {
     let filtered = [...allCategories]
+
+    // Apply parent category filter first (hierarchical)
+    if (selectedParentId !== "all") {
+      filtered = filtered.filter((item) => {
+        // Include the parent category itself
+        if (item.type === "category" && item._id === selectedParentId) {
+          return true
+        }
+        // Include all subcategories that belong to this parent
+        if (item.type === "subcategory" && item.parentCategoryId === selectedParentId) {
+          return true
+        }
+        return false
+      })
+    }
 
     // Apply level filter
     if (levelFilter !== "all") {
@@ -174,6 +216,7 @@ const AdminCategorySlider = () => {
         (item) =>
           item.name?.toLowerCase().includes(term) ||
           item.displayName?.toLowerCase().includes(term) ||
+          item.parentCategoryName?.toLowerCase().includes(term) ||
           item.categoryName?.toLowerCase().includes(term)
       )
     }
@@ -322,7 +365,36 @@ const AdminCategorySlider = () => {
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-lg font-semibold mb-4">Filters</h2>
             
-           
+            {/* Hierarchical Parent Category Filter */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                📁 Select Parent Category (Hierarchical Filter)
+              </label>
+              <select
+                value={selectedParentId}
+                onChange={(e) => {
+                  setSelectedParentId(e.target.value)
+                  // Reset level filter when changing parent to show all levels under that parent
+                  if (e.target.value !== "all") {
+                    setLevelFilter("all")
+                  }
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500 bg-white"
+              >
+                <option value="all">🌐 All Categories (No Parent Filter)</option>
+                {parentCategories.map((parent) => (
+                  <option key={parent._id} value={parent._id}>
+                    📂 {parent.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedParentId === "all" 
+                  ? "Showing all categories from all parents"
+                  : `Showing only categories under "${parentCategories.find(p => p._id === selectedParentId)?.name}"`
+                }
+              </p>
+            </div>
             
             {/* Status Filter Buttons */}
             <div className="flex flex-wrap gap-2 mb-4">
@@ -403,7 +475,7 @@ const AdminCategorySlider = () => {
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
-                All Categories
+                All Levels {selectedParentId !== "all" && "(under selected parent)"}
               </button>
               <button
                 onClick={() => setLevelFilter("parent")}
@@ -412,6 +484,8 @@ const AdminCategorySlider = () => {
                     ? "bg-lime-500 text-white"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
+                disabled={selectedParentId !== "all"}
+                title={selectedParentId !== "all" ? "Parent filter is already selected above" : ""}
               >
                 Parent Category
               </button>
@@ -667,6 +741,7 @@ const AdminCategorySlider = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Checkbox</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hierarchy Path</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preview Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
                   </tr>
@@ -674,13 +749,13 @@ const AdminCategorySlider = () => {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                         Loading...
                       </td>
                     </tr>
                   ) : filteredCategories.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                         No categories found
                       </td>
                     </tr>
@@ -709,8 +784,34 @@ const AdminCategorySlider = () => {
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">{item.displayName || item.name}</div>
+                          <div className="text-sm font-medium text-gray-900">{item.name}</div>
                           <div className="text-xs text-gray-500">{item.levelLabel}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-xs text-gray-700">
+                            {item.type === "category" ? (
+                              <span className="font-semibold text-blue-600">🏠 Root Parent</span>
+                            ) : (
+                              <div className="space-y-1">
+                                <div>
+                                  <span className="font-semibold">Parent:</span>{" "}
+                                  <span className="text-blue-600">{item.parentCategoryName}</span>
+                                </div>
+                                {item.parentSubCategoryName && (
+                                  <div>
+                                    <span className="font-semibold">Under:</span>{" "}
+                                    <span className="text-purple-600">{item.parentSubCategoryName}</span>
+                                  </div>
+                                )}
+                                <div className="text-gray-500 italic">
+                                  {item.levelType === 1 && `${item.parentCategoryName} → ${item.name}`}
+                                  {item.levelType === 2 && `${item.parentCategoryName} → ... → ${item.name}`}
+                                  {item.levelType === 3 && `${item.parentCategoryName} → ... → ... → ${item.name}`}
+                                  {item.levelType === 4 && `${item.parentCategoryName} → ... → ... → ... → ${item.name}`}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm font-medium">
