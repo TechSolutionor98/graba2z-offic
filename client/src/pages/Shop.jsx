@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown, Minus, Plus, X } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react"
 import axios from "axios"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
@@ -11,6 +11,7 @@ import SEO from "../components/SEO"
 import productCache from "../services/productCache"
 import { generateShopURL, parseShopURL, createSlug } from "../utils/urlUtils"
 import { createMetaDescription, generateSEOTitle } from "../utils/seoHelpers"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 import config from "../config/config"
 import "rc-slider/assets/index.css"
@@ -250,12 +251,74 @@ const Shop = () => {
   const [expandedCategories, setExpandedCategories] = useState({})
   const [allSubcategories, setAllSubcategories] = useState([])
 
+  // Subcategory slider state
+  const subCategorySliderRef = useRef(null)
+  const [subCategoryScrollState, setSubCategoryScrollState] = useState({
+    canScrollPrev: false,
+    canScrollNext: false
+  })
+
+  // Brand slider state
+  const brandSliderRef = useRef(null)
+  const [brandScrollState, setBrandScrollState] = useState({
+    canScrollPrev: false,
+    canScrollNext: false
+  })
+
   const [productsToShow, setProductsToShow] = useState(20)
   const [delayedLoading, setDelayedLoading] = useState(false)
   const fetchTimeout = useRef()
   const loadingTimeout = useRef()
 
   // Progressive search function
+  // Subcategory slider handlers
+  const updateSubCategoryScrollState = () => {
+    const container = subCategorySliderRef.current
+    if (!container) return
+
+    const { scrollLeft, scrollWidth, clientWidth } = container
+    setSubCategoryScrollState({
+      canScrollPrev: scrollLeft > 0,
+      canScrollNext: scrollLeft < scrollWidth - clientWidth - 1
+    })
+  }
+
+  const scrollSubCategoryPrev = () => {
+    if (subCategorySliderRef.current) {
+      subCategorySliderRef.current.scrollBy({ left: -300, behavior: 'smooth' })
+    }
+  }
+
+  const scrollSubCategoryNext = () => {
+    if (subCategorySliderRef.current) {
+      subCategorySliderRef.current.scrollBy({ left: 300, behavior: 'smooth' })
+    }
+  }
+
+  // Brand slider handlers
+  const updateBrandScrollState = () => {
+    const container = brandSliderRef.current
+    if (!container) return
+
+    const { scrollLeft, scrollWidth, clientWidth } = container
+    setBrandScrollState({
+      canScrollPrev: scrollLeft > 0,
+      canScrollNext: scrollLeft < scrollWidth - clientWidth - 1
+    })
+  }
+
+  const scrollBrandPrev = () => {
+    if (brandSliderRef.current) {
+      brandSliderRef.current.scrollBy({ left: -300, behavior: 'smooth' })
+    }
+  }
+
+  const scrollBrandNext = () => {
+    if (brandSliderRef.current) {
+      brandSliderRef.current.scrollBy({ left: 300, behavior: 'smooth' })
+    }
+  }
+
   const performProgressiveSearch = async (searchTerm) => {
     if (!searchTerm || searchTerm.trim() === "") {
       setActualSearchQuery("")
@@ -660,6 +723,44 @@ const Shop = () => {
   useEffect(() => {
     setProductsToShow(20)
   }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, products.length])
+
+  // Update subcategory slider scroll state on mount and when content changes
+  useEffect(() => {
+    const container = subCategorySliderRef.current
+    if (!container) return
+
+    // Initial update
+    updateSubCategoryScrollState()
+
+    // Update on resize
+    const resizeObserver = new ResizeObserver(() => {
+      updateSubCategoryScrollState()
+    })
+    resizeObserver.observe(container)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [selectedCategory, selectedSubCategories, selectedSubCategory2, selectedSubCategory3, selectedSubCategory4])
+
+  // Update brand slider scroll state when products change
+  useEffect(() => {
+    const container = brandSliderRef.current
+    if (!container) return
+
+    // Initial update
+    updateBrandScrollState()
+
+    // Update on resize
+    const resizeObserver = new ResizeObserver(() => {
+      updateBrandScrollState()
+    })
+    resizeObserver.observe(container)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [products])
 
   const fetchCategories = async () => {
     try {
@@ -2395,6 +2496,182 @@ const Shop = () => {
                 <SortDropdown value={sortBy} onChange={handleSortChange} />
               </div>
             </div>
+
+            {/* Child Categories Section - Shows children of the deepest selected level */}
+            {!searchQuery.trim() && (() => {
+              // Determine the deepest selected level and its type
+              let currentLevelId = null
+              let currentLevelType = null
+              let nextLevel = 1
+              
+              if (selectedSubCategory4) {
+                currentLevelId = selectedSubCategory4
+                currentLevelType = 'subcategory'
+                nextLevel = 5
+              } else if (selectedSubCategory3) {
+                currentLevelId = selectedSubCategory3
+                currentLevelType = 'subcategory'
+                nextLevel = 4
+              } else if (selectedSubCategory2) {
+                currentLevelId = selectedSubCategory2
+                currentLevelType = 'subcategory'
+                nextLevel = 3
+              } else if (selectedSubCategories.length > 0) {
+                currentLevelId = selectedSubCategories[0]
+                currentLevelType = 'subcategory'
+                nextLevel = 2
+              } else if (selectedCategory && selectedCategory !== "all") {
+                currentLevelId = selectedCategory
+                currentLevelType = 'category'
+                nextLevel = 1
+              }
+              
+              // If no category is selected, don't show anything
+              if (!currentLevelId) return null
+              
+              // Get children of the current deepest level
+              const childCategories = getChildren(currentLevelId, currentLevelType)
+              if (childCategories.length === 0) return null
+              
+              return (
+                <section className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4">Sub Categories...</h2>
+                  <div className="relative">
+                    <button
+                      onClick={scrollSubCategoryPrev}
+                      className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+
+                    <div
+                      ref={subCategorySliderRef}
+                      onScroll={updateSubCategoryScrollState}
+                      className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                      {childCategories.map((child) => (
+                        <button
+                          key={child._id}
+                          onClick={() => handleSubcategorySelect(child._id, nextLevel)}
+                          className="flex-shrink-0 w-32 h-24 rounded-lg transition-all flex items-center justify-center p-4"
+                        >
+                          {child?.image ? (
+                            <img
+                              src={getFullImageUrl(child.image)}
+                              alt={child.name || "Subcategory"}
+                              className="max-h-full max-w-full object-contain"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none"
+                                const btn = e.currentTarget.closest("button")
+                                const fallback = btn?.querySelector("[data-fallback-name]")
+                                if (fallback) fallback.classList.remove("hidden")
+                              }}
+                            />
+                          ) : null}
+                          <span data-fallback-name className={child?.image ? "hidden" : "text-sm font-semibold text-gray-700 text-center"}>
+                            {child.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={scrollSubCategoryNext}
+                      className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                  </div>
+                </section>
+              )
+            })()}
+
+            {/* Brand Slider - Shows brands from currently displayed products */}
+            {!searchQuery.trim() && products.length > 0 && (() => {
+              // Extract unique brand IDs from current products
+              // Products may have brand as object or ID string
+              const productBrandIds = [...new Set(
+                products
+                  .map(p => {
+                    // Handle both populated brand object and brand ID string
+                    if (typeof p.brand === 'object' && p.brand !== null) {
+                      return p.brand._id
+                    }
+                    return p.brand
+                  })
+                  .filter(Boolean)
+              )]
+              
+              const availableBrands = brands.filter(brand => productBrandIds.includes(brand._id))
+              
+              console.log('Products count:', products.length)
+              console.log('Sample product brands:', products.slice(0, 3).map(p => p.brand))
+              console.log('Product brand IDs:', productBrandIds)
+              console.log('All brands:', brands.length)
+              console.log('Available brands:', availableBrands)
+              
+              if (availableBrands.length === 0) return null
+
+              return (
+                <section className="mb-8">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4">Brand...</h2>
+                  <div className="relative">
+                    <button
+                      onClick={scrollBrandPrev}
+                      className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+
+                    <div
+                      ref={brandSliderRef}
+                      onScroll={updateBrandScrollState}
+                      className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                      {availableBrands.map((brand) => (
+                        <button
+                          key={brand._id}
+                          onClick={() => handleBrandChange(brand._id)}
+                          className={`flex-shrink-0 w-32 h-24 rounded-lg transition-all flex items-center justify-center p-4 ${
+                            selectedBrands.includes(brand._id)
+                              ? 'bg-lime-100 border-2 border-lime-600'
+                              : ''
+                          }`}
+                        >
+                          {brand.logo ? (
+                            <img
+                              src={getFullImageUrl(brand.logo)}
+                              alt={brand.name || "Brand"}
+                              className="max-h-full max-w-full object-contain"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none"
+                                const btn = e.currentTarget.closest("button")
+                                const fallback = btn?.querySelector("[data-brand-fallback]")
+                                if (fallback) fallback.classList.remove("hidden")
+                              }}
+                            />
+                          ) : null}
+                          <span data-brand-fallback className={brand.logo ? "hidden" : "text-sm font-semibold text-gray-700 text-center"}>
+                            {brand.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={scrollBrandNext}
+                      className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                  </div>
+                </section>
+              )
+            })()}
 
             {products.length > 0 ? (
               <>

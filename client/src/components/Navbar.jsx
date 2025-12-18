@@ -91,6 +91,31 @@ const MobileSubCategoryItem = ({
 
   const textSizeClass = level === 1 ? 'text-sm' : level === 2 ? 'text-xs' : 'text-xs'
   const textColorClass = level === 1 ? 'text-red-600' : 'text-gray-700'
+  
+  // Visual hierarchy for arrow buttons based on level
+  const getArrowButtonStyles = () => {
+    switch(level) {
+      case 1:
+        return 'w-7 h-7 bg-lime-500 hover:bg-lime-600 shadow-sm'
+      case 2:
+        return 'w-6 h-6 bg-lime-400 hover:bg-lime-500 shadow-sm'
+      case 3:
+        return 'w-5 h-5 bg-lime-300 hover:bg-lime-400'
+      default:
+        return 'w-5 h-5 bg-lime-200 hover:bg-lime-300'
+    }
+  }
+  
+  const getArrowIconSize = () => {
+    switch(level) {
+      case 1:
+        return 16
+      case 2:
+        return 14
+      default:
+        return 12
+    }
+  }
 
   return (
     <div className="space-y-1">
@@ -110,14 +135,14 @@ const MobileSubCategoryItem = ({
               e.stopPropagation()
               onToggle(subCategory._id)
             }}
-            className="ml-2 inline-flex items-center justify-center w-7 h-7 rounded-full bg-lime-500 text-white hover:bg-lime-600 focus:outline-none focus:ring-2 focus:ring-lime-500 shadow-sm active:scale-95 transition"
+            className={`ml-2 inline-flex items-center justify-center rounded-full text-white focus:outline-none focus:ring-2 focus:ring-lime-500 active:scale-95 transition ${getArrowButtonStyles()}`}
             aria-expanded={isExpanded}
             aria-controls={`mobile-subcat-${subCategory._id}`}
           >
             {isExpanded ? (
-              <ChevronDown size={16} />
+              <ChevronDown size={getArrowIconSize()} />
             ) : (
-              <ChevronRight size={16} />
+              <ChevronRight size={getArrowIconSize()} />
             )}
           </button>
         )}
@@ -168,10 +193,16 @@ const Navbar = () => {
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null)
   const [expandedMobileSubCategories, setExpandedMobileSubCategories] = useState([])
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
+  const [isDesktopCategoryDropdownOpen, setIsDesktopCategoryDropdownOpen] = useState(false)
+  const [desktopCascadeIds, setDesktopCascadeIds] = useState([]) // [parentId, level1Id, level2Id, ...]
   const profileRef = useRef(null)
   const profileButtonRef = useRef(null)
-  const [visibleCategoriesCount, setVisibleCategoriesCount] = useState(8)
-  const [categoryOffset, setCategoryOffset] = useState(0)
+  const desktopCategoryDropdownRef = useRef(null)
+  const categoryScrollRef = useRef(null)
+  const [categoryScrollState, setCategoryScrollState] = useState({
+    canScrollPrev: false,
+    canScrollNext: false,
+  })
   // Timeout refs for delayed hover states
   const categoryTimeoutRef = useRef(null)
   const categoryOpenTimeoutRef = useRef(null)
@@ -544,32 +575,42 @@ const Navbar = () => {
     }
   }, [hoveredCategory])
 
-  // Fixed 10 categories visible - font size will adjust instead of count
+  const updateCategoryScrollState = () => {
+    const el = categoryScrollRef.current
+    if (!el) return
+
+    const maxScrollLeft = Math.max(0, el.scrollWidth - el.clientWidth)
+    const epsilon = 2
+    const canScrollPrev = el.scrollLeft > epsilon
+    const canScrollNext = el.scrollLeft < maxScrollLeft - epsilon
+
+    setCategoryScrollState((prev) => {
+      if (prev.canScrollPrev === canScrollPrev && prev.canScrollNext === canScrollNext) return prev
+      return { canScrollPrev, canScrollNext }
+    })
+  }
+
   useEffect(() => {
-    const updateVisibleCategories = () => {
-      const width = window.innerWidth
-      
-      // Always show 10 categories on desktop/tablet, 8 on mobile
-      if (width >= 768) {
-        setVisibleCategoriesCount(10)
-      } else {
-        setVisibleCategoriesCount(8) // mobile - show 8 in mobile menu
-      }
+    updateCategoryScrollState()
+
+    const el = categoryScrollRef.current
+    if (!el) return
+
+    let ro
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => updateCategoryScrollState())
+      ro.observe(el)
     }
 
-    updateVisibleCategories()
-    window.addEventListener("resize", updateVisibleCategories)
-    const interval = setInterval(updateVisibleCategories, 500)
+    window.addEventListener("resize", updateCategoryScrollState)
+    const rafId = requestAnimationFrame(updateCategoryScrollState)
+
     return () => {
-      window.removeEventListener("resize", updateVisibleCategories)
-      clearInterval(interval)
+      if (ro) ro.disconnect()
+      window.removeEventListener("resize", updateCategoryScrollState)
+      cancelAnimationFrame(rafId)
     }
-  }, [])
-
-  useEffect(() => {
-    const maxOffset = Math.max(0, categories.length - visibleCategoriesCount)
-    setCategoryOffset((prev) => Math.min(prev, maxOffset))
-  }, [categories, visibleCategoriesCount])
+  }, [categories])
 
   // Close profile dropdown on outside click (desktop only)
   useEffect(() => {
@@ -589,6 +630,19 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleProfileClick)
     return () => document.removeEventListener("mousedown", handleProfileClick)
   }, [isProfileOpen])
+
+  // Close desktop category dropdown on outside click
+  useEffect(() => {
+    if (!isDesktopCategoryDropdownOpen) return
+    function handleCategoryClick(e) {
+      if (window.innerWidth < 768) return
+      if (desktopCategoryDropdownRef.current && !desktopCategoryDropdownRef.current.contains(e.target)) {
+        setIsDesktopCategoryDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleCategoryClick)
+    return () => document.removeEventListener("mousedown", handleCategoryClick)
+  }, [isDesktopCategoryDropdownOpen])
 
   // Cleanup hover timeouts on unmount
   useEffect(() => {
@@ -646,6 +700,19 @@ const Navbar = () => {
     setExpandedMobileCategory(null)
   }
 
+  const toggleDesktopCategoryDropdown = () => {
+    setIsDesktopCategoryDropdownOpen((prev) => {
+      const next = !prev
+      if (next) setDesktopCascadeIds([])
+      return next
+    })
+  }
+
+  const closeDesktopCategoryDropdown = () => {
+    setIsDesktopCategoryDropdownOpen(false)
+    setDesktopCascadeIds([])
+  }
+
   const handleMobileSearchOpen = () => {
     setIsMobileSearchOpen(true)
   }
@@ -653,24 +720,24 @@ const Navbar = () => {
     setIsMobileSearchOpen(false)
   }
 
-  const visibleCategoryList = categories.slice(
-    categoryOffset,
-    categoryOffset + visibleCategoriesCount,
-  )
-  const canScrollPrev = categoryOffset > 0
-  const canScrollNext = categoryOffset + visibleCategoriesCount < categories.length
-
   const scrollPrev = () => {
-    if (!canScrollPrev) return
-    setCategoryOffset((prev) => Math.max(prev - 1, 0))
+    if (!categoryScrollState.canScrollPrev) return
+    const el = categoryScrollRef.current
+    if (!el) return
+    const amount = Math.max(180, Math.round(el.clientWidth * 0.7))
+    el.scrollBy({ left: -amount, behavior: "smooth" })
     resetMegaMenu()
+    requestAnimationFrame(updateCategoryScrollState)
   }
 
   const scrollNext = () => {
-    if (!canScrollNext) return
-    const maxOffset = Math.max(0, categories.length - visibleCategoriesCount)
-    setCategoryOffset((prev) => Math.min(prev + 1, maxOffset))
+    if (!categoryScrollState.canScrollNext) return
+    const el = categoryScrollRef.current
+    if (!el) return
+    const amount = Math.max(180, Math.round(el.clientWidth * 0.7))
+    el.scrollBy({ left: amount, behavior: "smooth" })
     resetMegaMenu()
+    requestAnimationFrame(updateCategoryScrollState)
   }
 
   return (
@@ -870,25 +937,161 @@ const Navbar = () => {
           {/* Navigation Menu - Dynamic Categories with Dropdowns */}
           <div className="bg-lime-500 mt-3 xl:mt-3.5 2xl:mt-4 flex relative">
           <div className="w-full">
-            <div className="grid grid-cols-[auto,1fr,auto] items-center h-10 xl:h-11 2xl:h-12 px-4 xl:px-8 2xl:px-12 gap-2 xl:gap-2.5 2xl:gap-3">
+            <div className="grid grid-cols-[auto,auto,1fr,auto,auto] items-center h-10 xl:h-11 2xl:h-12 px-4 xl:px-8 2xl:px-12 gap-2 xl:gap-2.5 2xl:gap-3">
+              {/* Toggle Button for All Categories */}
+              <div className="relative" ref={desktopCategoryDropdownRef}>
+                <button
+                  type="button"
+                  onClick={toggleDesktopCategoryDropdown}
+                  className="hidden md:inline-flex items-center gap-2 px-3 xl:px-3.5 py-2 rounded-lg bg-white text-gray-800 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition text-sm font-semibold whitespace-nowrap shadow-sm"
+                  aria-label="All categories"
+                >
+                  <Grid3X3 className="w-4 h-4 text-gray-700" />
+                  <span className="text-xs xl:text-sm">All Categories</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                </button>
+                
+                {/* Desktop Category Dropdown (horizontal cascade) */}
+                {isDesktopCategoryDropdownOpen && (
+                  <div
+                    className="absolute left-0 top-full mt-2 bg-white shadow-2xl rounded-lg z-[70] border border-gray-200 overflow-hidden max-w-[calc(100vw-32px)]"
+                    onMouseLeave={() => setDesktopCascadeIds([])}
+                  >
+                    <div className="flex max-h-[calc(100vh-160px)] overflow-x-auto">
+                      <div className="flex min-w-max">
+                        {/* Column 0: Parent Categories */}
+                        <div className="w-64 border-r border-gray-100 overflow-y-auto">
+                          <div className="p-2">
+                            {categories.map((parentCategory) => {
+                              const level1 = getSubCategoriesForCategory(parentCategory._id)
+                              const hasChildren = level1.length > 0
+                              const isActive = desktopCascadeIds[0] === parentCategory._id
+                              return (
+                                <Link
+                                  key={parentCategory._id}
+                                  to={generateShopURL({ parentCategory: parentCategory.name })}
+                                  onMouseEnter={() => setDesktopCascadeIds([parentCategory._id])}
+                                  onClick={closeDesktopCategoryDropdown}
+                                  className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-semibold text-gray-800 hover:bg-gray-100 transition ${
+                                    isActive ? "bg-gray-50" : ""
+                                  }`}
+                                >
+                                  <span className="flex-1 pr-2">{parentCategory.name}</span>
+                                  {hasChildren && <ChevronRight size={14} className="text-gray-400" />}
+                                </Link>
+                              )
+                            })}
+                          </div>
+                        </div>
+
+                        {(() => {
+                          const cols = []
+                          const activeParentId = desktopCascadeIds[0]
+                          if (!activeParentId) return null
+                          const parent = categories.find((c) => c._id === activeParentId)
+                          if (!parent) return null
+
+                          const buildParams = (chain) => {
+                            const params = { parentCategory: parent.name }
+                            const keys = ["subcategory", "subcategory2", "subcategory3", "subcategory4"]
+                            for (let i = 0; i < Math.min(chain.length, keys.length); i++) {
+                              params[keys[i]] = chain[i]
+                            }
+                            return params
+                          }
+
+                          const getNameById = (id) => {
+                            if (!id) return ""
+                            const stack = [...categories]
+                            const visited = new Set()
+                            while (stack.length) {
+                              const node = stack.pop()
+                              if (!node || visited.has(node._id)) continue
+                              visited.add(node._id)
+                              if (node._id === id) return node.name || ""
+                              if (Array.isArray(node.children) && node.children.length) {
+                                stack.push(...node.children)
+                              }
+                            }
+                            return ""
+                          }
+
+                          const getItemsForLevel = (levelIndex) => {
+                            if (levelIndex === 1) return getSubCategoriesForCategory(activeParentId)
+                            const prevSelectedId = desktopCascadeIds[levelIndex - 1]
+                            if (!prevSelectedId) return []
+                            return getChildSubCategories(prevSelectedId)
+                          }
+
+                          for (let levelIndex = 1; levelIndex < 10; levelIndex++) {
+                            const items = getItemsForLevel(levelIndex)
+                            if (!Array.isArray(items) || items.length === 0) break
+                            cols.push(
+                              <div key={`col-${levelIndex}`} className="w-64 border-r border-gray-100 last:border-r-0 overflow-y-auto">
+                                <div className="p-2">
+                                  {items.map((node) => {
+                                    const hasNested = Array.isArray(node.children) && node.children.length > 0
+                                    const isActive = desktopCascadeIds[levelIndex] === node._id
+                                    const chainPrefix = desktopCascadeIds
+                                      .slice(1, levelIndex)
+                                      .map(getNameById)
+                                      .filter(Boolean)
+                                    const params = buildParams([...chainPrefix, node.name])
+                                    return (
+                                      <Link
+                                        key={node._id}
+                                        to={generateShopURL(params)}
+                                        onMouseEnter={() => {
+                                          setDesktopCascadeIds((prev) => {
+                                            const next = prev.slice(0, levelIndex)
+                                            next[levelIndex] = node._id
+                                            return next
+                                          })
+                                        }}
+                                        onClick={closeDesktopCategoryDropdown}
+                                        className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition ${
+                                          isActive ? "bg-gray-50" : ""
+                                        }`}
+                                      >
+                                        <span className="flex-1 pr-2">{node.name}</span>
+                                        {hasNested && <ChevronRight size={14} className="text-gray-400" />}
+                                      </Link>
+                                    )
+                                  })}
+                                </div>
+                              </div>,
+                            )
+                          }
+                          return cols
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button
                 type="button"
                 onClick={scrollPrev}
                 className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full bg-white text-lime-500 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={!canScrollPrev}
+                disabled={!categoryScrollState.canScrollPrev}
                 aria-label="Previous categories"
               >
                 <ChevronLeft className="w-4 h-4 xl:w-[17px] xl:h-[17px] 2xl:w-[18px] 2xl:h-[18px]" />
               </button>
-              <div className="flex-1 overflow-hidden min-w-0">
-                <div className="flex items-center justify-evenly px-2">
-                  {visibleCategoryList.map((parentCategory) => {
+              <div className="flex-1 min-w-0">
+                <div
+                  ref={categoryScrollRef}
+                  className="flex items-center justify-start gap-4 px-2 overflow-x-auto hide-scrollbar scroll-smooth"
+                  onScroll={updateCategoryScrollState}
+                >
+                  {categories.map((parentCategory) => {
                     const categorySubCategories = getSubCategoriesForCategory(parentCategory._id)
                     const isActiveCategory = hoveredCategory === parentCategory._id
                     return (
                       <div
                         key={parentCategory._id}
-                        className="relative flex items-center h-full flex-1"
+                        className="relative flex items-center h-full flex-shrink-0"
                         onMouseEnter={(e) => {
                           if (categoryTimeoutRef.current) {
                             clearTimeout(categoryTimeoutRef.current)
@@ -975,7 +1178,7 @@ const Navbar = () => {
                                           {subCategory.name}
                                         </Link>
                                       <ul className="flex flex-col gap-1 px-1 pb-1 bg-transparent border-none text-left">
-                                        {(level2Subs || []).slice(0, 12).map((sub2) => {
+                                        {(level2Subs || []).slice(0, 13).map((sub2) => {
                                           const level3Subs = getChildSubCategories(sub2._id)
                                           const hasLevel3 = Array.isArray(level3Subs) && level3Subs.length > 0
                                           return (
@@ -992,48 +1195,7 @@ const Navbar = () => {
                                                 className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
                                                 onClick={() => resetMegaMenu()}
                                               >
-                                                <span className="flex items-start gap-2">
-                                                  <span className="flex-1 break-words leading-snug text-left">{sub2.name}</span>
-                                                  {hasLevel3 && (
-                                                    <span
-                                                      onMouseEnter={(e) => {
-                                                        e.stopPropagation()
-                                                        if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
-                                                        const rect = e.currentTarget.closest('li').getBoundingClientRect()
-                                                        const direction = computeRightDir(rect)
-                                                        setLevel2Dir(direction)
-                                                        setHoveredSubCategory1({
-                                                          rootCategoryId: parentCategory._id,
-                                                          parentCategoryName: parentCategory.name,
-                                                          level1Name: subCategory.name,
-                                                          current: { id: sub2._id, name: sub2.name },
-                                                          rect,
-                                                          direction,
-                                                          items: level3Subs,
-                                                        })
-                                                        setHoveredSubCategory2(null)
-                                                        setHoveredSubCategory3(null)
-                                                      }}
-                                                      onMouseLeave={() => {
-                                                        subCategory1TimeoutRef.current = setTimeout(() => {
-                                                          setHoveredSubCategory1(null)
-                                                          setHoveredSubCategory2(null)
-                                                          setHoveredSubCategory3(null)
-                                                        }, 200)
-                                                      }}
-                                                      className="cursor-pointer"
-                                                    >
-                                                      <ChevronRight
-                                                        size={14}
-                                                        className={`mt-0.5 flex-shrink-0 text-gray-400 transition-transform duration-150 ${
-                                                          hoveredSubCategory1 && hoveredSubCategory1.current?.id === sub2._id
-                                                            ? "rotate-90"
-                                                            : ""
-                                                        }`}
-                                                      />
-                                                    </span>
-                                                  )}
-                                                </span>
+                                                <span className="flex-1 break-words leading-snug text-left">{sub2.name}</span>
                                               </Link>
                                             </li>
                                           )
@@ -1064,145 +1226,6 @@ const Navbar = () => {
                                   <ChevronRight size={16} />
                                 </button>
                               )}
-                              {hoveredSubCategory1 &&
-                                hoveredSubCategory1.rootCategoryId === parentCategory._id &&
-                                Array.isArray(hoveredSubCategory1.items) &&
-                                hoveredSubCategory1.items.length > 0 && (
-                                  <div
-                                    className="fixed z-[65] bg-white shadow-lg border border-gray-200 rounded p-3 w-[280px] max-h-[500px] overflow-y-auto"
-                                    style={getPanelStyle(hoveredSubCategory1.rect, hoveredSubCategory1.direction, 280, 400)}
-                                    onMouseEnter={() => {
-                                      if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
-                                    }}
-                                    onMouseLeave={() => {
-                                      subCategory1TimeoutRef.current = setTimeout(() => {
-                                        setHoveredSubCategory1(null)
-                                        setHoveredSubCategory2(null)
-                                        setHoveredSubCategory3(null)
-                                      }, 200)
-                                    }}
-                                  >
-                                    <div className="text-xs font-semibold text-red-600 mb-3">
-                                      {hoveredSubCategory1.current?.name || "Subcategories"}
-                                    </div>
-                                    <ul className="space-y-0.5">
-                                      {hoveredSubCategory1.items.map((sub3) => {
-                                        const level4Subs = getChildSubCategories(sub3._id)
-                                        const hasLevel4 = Array.isArray(level4Subs) && level4Subs.length > 0
-                                        return (
-                                          <li
-                                            key={sub3._id}
-                                            className="relative"
-                                          >
-                                            <Link
-                                              to={generateShopURL({
-                                                parentCategory: hoveredSubCategory1.parentCategoryName,
-                                                subcategory: hoveredSubCategory1.level1Name,
-                                                subcategory2: hoveredSubCategory1.current?.name,
-                                                subcategory3: sub3.name,
-                                              })}
-                                              className={`flex items-start gap-2 rounded px-2 py-1 text-xs text-gray-700 hover:text-red-600 hover:bg-gray-50 ${MEGA_LABEL_LIMIT_CLASS}`}
-                                              onClick={() => resetMegaMenu()}
-                                            >
-                                              <span className="flex-1 break-words leading-snug text-left">{sub3.name}</span>
-                                              {hasLevel4 && (
-                                                <span
-                                                  onMouseEnter={(e) => {
-                                                    e.stopPropagation()
-                                                    if (subCategory2TimeoutRef.current) clearTimeout(subCategory2TimeoutRef.current)
-                                                    const rect = e.currentTarget.closest('li').getBoundingClientRect()
-                                                    const dir = hoveredSubCategory1.direction === "right" ? computeRightDir(rect) : computeLeftDir(rect)
-                                                    setLevel3Dir(dir)
-                                                    setHoveredSubCategory2({
-                                                      rootCategoryId: hoveredSubCategory1.rootCategoryId,
-                                                      parentInfo: hoveredSubCategory1,
-                                                      subCategory: { id: sub3._id, name: sub3.name },
-                                                      items: level4Subs,
-                                                      rect,
-                                                      direction: dir,
-                                                    })
-                                                    setHoveredSubCategory3(null)
-                                                  }}
-                                                  onMouseLeave={() => {
-                                                    subCategory2TimeoutRef.current = setTimeout(() => {
-                                                      setHoveredSubCategory2(null)
-                                                      setHoveredSubCategory3(null)
-                                                    }, 200)
-                                                  }}
-                                                  className="cursor-pointer"
-                                                >
-                                                  {hoveredSubCategory2 && hoveredSubCategory2.subCategory?.id === sub3._id ? (
-                                                    hoveredSubCategory2.direction === "right" ? (
-                                                      <ChevronRight size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transform rotate-90 transition-transform" />
-                                                    ) : (
-                                                      <ChevronLeft size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transform -rotate-90 transition-transform" />
-                                                    )
-                                                  ) : hoveredSubCategory1.direction === "right" ? (
-                                                    <ChevronRight size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transition-transform" />
-                                                  ) : (
-                                                    <ChevronLeft size={14} className="mt-0.5 flex-shrink-0 text-gray-400 transition-transform" />
-                                                  )}
-                                                </span>
-                                              )}
-                                            </Link>
-                                          </li>
-                                        )
-                                      })}
-                                    </ul>
-                                  </div>
-                                )}
-                              {hoveredSubCategory2 &&
-                                hoveredSubCategory1 &&
-                                hoveredSubCategory2.rootCategoryId === parentCategory._id &&
-                                Array.isArray(hoveredSubCategory2.items) &&
-                                hoveredSubCategory2.items.length > 0 && (
-                                  <div
-                                    className="fixed z-[66] bg-white shadow-lg border border-gray-200 rounded p-3 ml-3 w-[260px] max-h-[380px] overflow-y-auto"
-                                    style={getPanelStyle(hoveredSubCategory2.rect, hoveredSubCategory2.direction, 260, 350)}
-                                    onMouseEnter={() => {
-                                      if (subCategory2TimeoutRef.current) clearTimeout(subCategory2TimeoutRef.current)
-                                      if (subCategory1TimeoutRef.current) clearTimeout(subCategory1TimeoutRef.current)
-                                      if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current)
-                                    }}
-                                    onMouseLeave={() => {
-                                      subCategory2TimeoutRef.current = setTimeout(() => {
-                                        setHoveredSubCategory2(null)
-                                        setHoveredSubCategory3(null)
-                                      }, 200)
-                                    }}
-                                  >
-                                    <div className="text-xs font-semibold text-red-600 mb-3">
-                                      {hoveredSubCategory2.subCategory?.name || "More"}
-                                    </div>
-                                    <ul className="space-y-0.5">
-                                      {hoveredSubCategory2.items.map((sub4) => (
-                                        <li key={sub4._id} className="relative">
-                                          <Link
-                                            to={generateShopURL({
-                                              parentCategory: hoveredSubCategory1.parentCategoryName,
-                                              subcategory: hoveredSubCategory1.level1Name,
-                                              subcategory2: hoveredSubCategory1.current?.name,
-                                              subcategory3: hoveredSubCategory2.subCategory?.name,
-                                              subcategory4: sub4.name,
-                                            })}
-                                            className={`block rounded px-2 py-1 text-xs text-gray-700 hover:text-red-600 hover:bg-gray-50 whitespace-normal break-words ${MEGA_LABEL_LIMIT_CLASS}`}
-                                            onMouseEnter={() => {
-                                              if (subCategory3TimeoutRef.current) clearTimeout(subCategory3TimeoutRef.current)
-                                            }}
-                                            onMouseLeave={() => {
-                                              subCategory3TimeoutRef.current = setTimeout(() => {
-                                                setHoveredSubCategory3(null)
-                                              }, 200)
-                                            }}
-                                              onClick={() => resetMegaMenu()}
-                                          >
-                                            {sub4.name}
-                                          </Link>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
                             </div>
                           </div>
                         )}
@@ -1215,11 +1238,22 @@ const Navbar = () => {
                 type="button"
                 onClick={scrollNext}
                 className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full bg-white text-lime-500 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={!canScrollNext}
+                disabled={!categoryScrollState.canScrollNext}
                 aria-label="Next categories"
               >
                 <ChevronRight className="w-4 h-4 xl:w-[17px] xl:h-[17px] 2xl:w-[18px] 2xl:h-[18px]" />
               </button>
+
+              {/* Crown Excel Button */}
+              <a
+                href="https://crownexcel.ae"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:inline-flex items-center gap-1.5 pl-3 pr-4 xl:pr-8 2xl:pr-12 py-2 h-full self-stretch bg-[#2b3497] text-white  border-white transition text-sm font-medium whitespace-nowrap -mr-4 xl:-mr-8 2xl:-mr-12"
+                aria-label="Crown Excel"
+              >
+                <span className="text-xs xl:text-sm">Crown Excel</span>
+              </a>
             </div>
           </div>
         </div>
