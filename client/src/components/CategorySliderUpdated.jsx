@@ -7,6 +7,8 @@ import config from "../config/config";
 const CategorySliderUpdated = ({ onCategoryClick }) => {
   const containerRef = useRef(null);
   const [categories, setCategories] = useState([]);
+  const [customItems, setCustomItems] = useState([]);
+  const [allSliderItems, setAllSliderItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(8);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -29,6 +31,15 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
         const sliderRes = await axios.get(`${config.API_URL}/api/categories/slider`);
         const sliderData = sliderRes.data || [];
         
+        // Fetch custom slider items (admin-created promotional items)
+        let customSliderItems = [];
+        try {
+          const customRes = await axios.get(`${config.API_URL}/api/custom-slider-items/active`);
+          customSliderItems = customRes.data || [];
+        } catch (customErr) {
+          console.log("No custom slider items or error fetching them:", customErr);
+        }
+        
         // Fetch settings for shape
         const settingsRes = await axios.get(`${config.API_URL}/api/settings`);
         const settingsData = settingsRes.data || {};
@@ -36,21 +47,49 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
         setLayoutType(settingsData.categorySliderLayoutType || "default");
         
         // If admin selected categories exist, use them
+        let regularCategories = [];
         if (Array.isArray(sliderData) && sliderData.length > 0) {
-          setCategories(sliderData.filter((c) => c && c.isActive !== false && !c.isDeleted));
+          regularCategories = sliderData.filter((c) => c && c.isActive !== false && !c.isDeleted);
         } else {
           // Fallback: fetch all categories
           const allRes = await axios.get(`${config.API_URL}/api/categories`);
           const allData = allRes.data || [];
-          setCategories(allData.filter((c) => c && c.isActive !== false && !c.isDeleted));
+          regularCategories = allData.filter((c) => c && c.isActive !== false && !c.isDeleted);
         }
+        
+        setCategories(regularCategories);
+        setCustomItems(customSliderItems);
+        
+        // Merge custom items and regular categories
+        // Custom items come first, then regular categories
+        const mergedItems = [
+          ...customSliderItems.map(item => ({
+            ...item,
+            isCustomItem: true,
+            type: 'custom'
+          })),
+          ...regularCategories.map(cat => ({
+            ...cat,
+            isCustomItem: false,
+            type: 'category'
+          }))
+        ];
+        
+        setAllSliderItems(mergedItems);
+        
       } catch (err) {
         console.error("Error fetching slider data:", err);
         // Fallback on error
         try {
           const allRes = await axios.get(`${config.API_URL}/api/categories`);
           const allData = allRes.data || [];
-          setCategories(allData.filter((c) => c && c.isActive !== false && !c.isDeleted));
+          const regularCategories = allData.filter((c) => c && c.isActive !== false && !c.isDeleted);
+          setCategories(regularCategories);
+          setAllSliderItems(regularCategories.map(cat => ({
+            ...cat,
+            isCustomItem: false,
+            type: 'category'
+          })));
         } catch (fallbackErr) {
           console.error("Error fetching fallback categories:", fallbackErr);
         }
@@ -115,12 +154,12 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
   }, []);
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % categories.length);
+    setCurrentIndex((prev) => (prev + 1) % allSliderItems.length);
   };
 
   const handlePrev = () => {
     setCurrentIndex((prev) =>
-      prev - 1 < 0 ? categories.length - 1 : prev - 1
+      prev - 1 < 0 ? allSliderItems.length - 1 : prev - 1
     );
   };
 
@@ -216,15 +255,18 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
   };
 
   const getVisibleCategories = () => {
-    // If we have fewer categories than visible slots, just show all without repeating
-    if (categories.length <= visibleCount) {
-      return categories;
+    // Use merged items instead of just categories
+    const items = allSliderItems;
+    
+    // If we have fewer items than visible slots, just show all without repeating
+    if (items.length <= visibleCount) {
+      return items;
     }
     
     // Otherwise, use the carousel logic with wrapping
     const visible = [];
     for (let i = 0; i < visibleCount; i++) {
-      visible.push(categories[(currentIndex + i) % categories.length]);
+      visible.push(items[(currentIndex + i) % items.length]);
     }
     return visible;
   };
@@ -233,12 +275,12 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
     return null;
   }
 
-  if (categories.length === 0) {
+  if (allSliderItems.length === 0) {
     return null;
   }
 
   const visibleCategories = getVisibleCategories();
-  const shouldShowArrows = categories.length > visibleCount;
+  const shouldShowArrows = allSliderItems.length > visibleCount;
 
   const sliderStyle = {
     transform: `translateX(${dragOffset}px)`,
@@ -272,11 +314,31 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
           >
             <div
               className={`flex items-center transition-transform duration-300 ease-in-out ${
-                categories.length <= visibleCount ? 'justify-center' : 'justify-evenly'
+                allSliderItems.length <= visibleCount ? 'justify-center' : 'justify-evenly'
               }`}
               style={shouldShowArrows ? sliderStyle : {}}
             >
-              {visibleCategories.map((category, index) => {
+              {visibleCategories.map((item, index) => {
+                // Handle click based on item type
+                const handleItemClick = () => {
+                  if (item.isCustomItem) {
+                    // Custom item - redirect to specified URL
+                    if (item.redirectUrl) {
+                      // Check if it's an external URL or internal path
+                      if (item.redirectUrl.startsWith('http://') || item.redirectUrl.startsWith('https://')) {
+                        window.location.href = item.redirectUrl;
+                      } else {
+                        window.location.href = item.redirectUrl;
+                      }
+                    }
+                  } else {
+                    // Regular category - use onCategoryClick
+                    if (onCategoryClick) {
+                      onCategoryClick(item.name);
+                    }
+                  }
+                };
+
                 // Get shape-specific styles
                 const getShapeStyle = () => {
                   switch (sliderShape) {
@@ -380,11 +442,11 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
 
                 return (
                   <button
-                    key={category._id + '-' + index}
-                    onClick={() => onCategoryClick && onCategoryClick(category.name)}
+                    key={(item._id || item.id) + '-' + index}
+                    onClick={handleItemClick}
                     className={layoutClasses.container}
                     style={{
-                      width: categories.length <= visibleCount ? 'auto' : `${100 / visibleCount}%`,
+                      width: allSliderItems.length <= visibleCount ? 'auto' : `${100 / visibleCount}%`,
                       maxWidth: "160px",
                       minWidth: "80px",
                     }}
@@ -399,10 +461,10 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                             ...layoutClasses.cardWrapperStyle 
                           }}
                         >
-                          {category.image ? (
+                          {item.image ? (
                             <img
-                              src={getFullImageUrl(category.image)}
-                              alt={category.name}
+                              src={getFullImageUrl(item.image)}
+                              alt={item.name}
                               width="176"
                               height="176"
                               loading="eager"
@@ -417,7 +479,7 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                         <span className={layoutClasses.textClass}>
                           {(() => {
                             const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-                            const name = category.name;
+                            const name = item.name;
                             if (isMobile && name.length > 14) {
                               return name.slice(0, 14) + '...';
                             }
@@ -431,10 +493,10 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                           className={`flex items-center justify-center w-full ${layoutClasses.imageWrapper || ''}`}
                           style={{ willChange: 'transform', transform: 'translateZ(0)' }}
                         >
-                          {category.image ? (
+                          {item.image ? (
                             <img
-                              src={getFullImageUrl(category.image)}
-                              alt={category.name}
+                              src={getFullImageUrl(item.image)}
+                              alt={item.name}
                               width="176"
                               height="176"
                               loading="eager"
@@ -454,7 +516,7 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                         <span className={layoutClasses.textClass}>
                           {(() => {
                             const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-                            const name = category.name;
+                            const name = item.name;
                             if (isMobile && name.length > 14) {
                               return name.slice(0, 14) + '...';
                             }
