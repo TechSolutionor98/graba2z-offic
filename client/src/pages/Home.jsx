@@ -1031,7 +1031,7 @@ const Home = () => {
       </div> */}
 
       {/* Dynamic Section Position 1 */}
-      {renderDynamicSection(1)}
+      {/* {renderDynamicSection(1)} */}
 
       {/* Big Sale Section - Handles both mobile and desktop views */}
       <BigSaleSection products={featuredProducts} />

@@ -8,7 +8,7 @@ function WhatsAppButton() {
       href="https://wa.me/971508604360"
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-16 md:bottom-8 right-4 z-50"
+      className="fixed bottom-30 md:bottom-24 right-4 z-50"
       aria-label="Chat on WhatsApp"
       style={{ transition: 'transform 0.2s' }}
     >
