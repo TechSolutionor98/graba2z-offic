@@ -2574,7 +2574,12 @@ const Shop = () => {
                   <div className="relative">
                     <button
                       onClick={scrollSubCategoryPrev}
-                      className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
+                      className={`absolute -left-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
+                        subCategoryScrollState.canScrollPrev 
+                          ? 'bg-lime-500 text-white hover:bg-lime-600 cursor-pointer' 
+                          : 'bg-white cursor-default opacity-50'
+                      }`}
+                      disabled={!subCategoryScrollState.canScrollPrev}
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </button>
@@ -2593,11 +2598,11 @@ const Shop = () => {
                         >
                           {child?.image ? (
                             <>
-                              <div className="h-16 flex items-center justify-center">
+                              <div className="h-20 flex items-center justify-center">
                                 <img
                                   src={getFullImageUrl(child.image)}
                                   alt={child.name || "Subcategory"}
-                                  className="max-h-full max-w-full object-contain"
+                                  className="max-h-full max-w-full bg-cover"
                                   loading="lazy"
                                   onError={(e) => {
                                     e.currentTarget.style.display = "none"
@@ -2625,7 +2630,12 @@ const Shop = () => {
 
                     <button
                       onClick={scrollSubCategoryNext}
-                      className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
+                      className={`absolute -right-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
+                        subCategoryScrollState.canScrollNext 
+                          ? 'bg-lime-500 text-white hover:bg-lime-600 cursor-pointer' 
+                          : 'bg-white cursor-default opacity-50'
+                      }`}
+                      disabled={!subCategoryScrollState.canScrollNext}
                     >
                       <ChevronRight className="w-6 h-6" />
                     </button>
@@ -2665,7 +2675,12 @@ const Shop = () => {
                   <div className="relative">
                     <button
                       onClick={scrollBrandPrev}
-                      className="absolute -left-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
+                      className={`absolute -left-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
+                        brandScrollState.canScrollPrev 
+                          ? 'bg-lime-500 text-white hover:bg-lime-600 cursor-pointer' 
+                          : 'bg-white cursor-default opacity-50'
+                      }`}
+                      disabled={!brandScrollState.canScrollPrev}
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </button>
@@ -2692,7 +2707,7 @@ const Shop = () => {
                                 <img
                                   src={getFullImageUrl(brand.logo)}
                                   alt={brand.name || "Brand"}
-                                  className="max-h-full max-w-full object-contain"
+                                  className="max-h-full max-w-full bg-cover"
                                   loading="lazy"
                                   onError={(e) => {
                                     e.currentTarget.style.display = "none"
@@ -2720,7 +2735,12 @@ const Shop = () => {
 
                     <button
                       onClick={scrollBrandNext}
-                      className="absolute -right-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
+                      className={`absolute -right-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
+                        brandScrollState.canScrollNext 
+                          ? 'bg-lime-500 text-white hover:bg-lime-600 cursor-pointer' 
+                          : 'bg-white cursor-default opacity-50'
+                      }`}
+                      disabled={!brandScrollState.canScrollNext}
                     >
                       <ChevronRight className="w-6 h-6" />
                     </button>
