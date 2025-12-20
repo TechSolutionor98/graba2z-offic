@@ -687,11 +687,39 @@ const AddBulkProducts = () => {
     setLoading(true)
 
     try {
-      // Parse CSV file
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: async (results) => {
+      // Read file as text with proper encoding first
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        let csvText = event.target.result
+        
+        // Clean up common encoding issues
+        csvText = csvText
+          .replace(/\uFFFD/g, '') // Remove replacement character (�)
+          .replace(/[\u0080-\u009F]/g, '') // Remove Windows-1252 control chars
+          .replace(/\u2019/g, "'") // Smart single quote to regular
+          .replace(/\u2018/g, "'") // Smart single quote to regular
+          .replace(/\u201C/g, '"') // Smart double quote to regular
+          .replace(/\u201D/g, '"') // Smart double quote to regular
+          .replace(/\u2013/g, '-') // En dash to hyphen
+          .replace(/\u2014/g, '-') // Em dash to hyphen
+          .replace(/\u2022/g, '*') // Bullet to asterisk
+          .replace(/\u00A0/g, ' ') // Non-breaking space to regular space
+        
+        // Parse CSV from cleaned text
+        Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: (header) => header.trim().replace(/^\uFEFF/, ''), // Remove BOM from headers
+          transform: (value) => {
+            if (typeof value === 'string') {
+              return value
+                .replace(/\uFFFD/g, '') // Remove any remaining replacement characters
+                .replace(/[\u0000-\u001F\u007F]/g, '') // Remove control characters
+                .trim()
+            }
+            return value
+          },
+          complete: async (results) => {
           console.log("CSV parsed:", results)
 
           if (results.errors.length > 0) {
@@ -732,6 +760,15 @@ const AddBulkProducts = () => {
           setLoading(false)
         },
       })
+      }
+      
+      reader.onerror = () => {
+        setError("Error reading the file")
+        setLoading(false)
+      }
+      
+      // Read as UTF-8 text
+      reader.readAsText(file, 'UTF-8')
     } catch (err) {
       console.error("File upload error:", err)
       setError(err.message)
