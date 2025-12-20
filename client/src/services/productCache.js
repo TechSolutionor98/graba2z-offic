@@ -603,6 +603,7 @@ class ProductCacheService {
         offerPrice: product.offerPrice,
         brand: product.brand,
         category: product.category,
+        subCategory: product.subCategory, // Legacy field for backward compatibility
         parentCategory: product.parentCategory,
         subCategory2: product.subCategory2,
         subCategory3: product.subCategory3,
@@ -817,59 +818,61 @@ class ProductCacheService {
       })
     }
 
-    // Filter by category (subcategory level 1)
-    if (filters.category && filters.category !== "all") {
-      filteredProducts = filteredProducts.filter((product) => {
-        if (!product.category) return false
-        const categoryId = typeof product.category === "string" ? product.category : product.category._id
-        const categorySlug = typeof product.category === "string" ? null : product.category.slug
-        const categoryName = typeof product.category === "string" ? null : product.category.name
-        // Match by ID, slug, or name
-        return categoryId === filters.category || 
-               categorySlug === filters.category ||
-               (categoryName && categoryName.toLowerCase().replace(/\s+/g, '-') === filters.category)
-      })
+    const normalizeSlug = (value) => {
+      if (value == null) return ""
+      return String(value)
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-+|-+$/g, "")
     }
 
-    // Filter by subcategory level 2
-    if (filters.subcategory2) {
-      filteredProducts = filteredProducts.filter((product) => {
-        if (!product.subCategory2) return false
-        const subCategory2Id = typeof product.subCategory2 === "string" ? product.subCategory2 : product.subCategory2._id
-        const subCategory2Slug = typeof product.subCategory2 === "string" ? null : product.subCategory2.slug
-        const subCategory2Name = typeof product.subCategory2 === "string" ? null : product.subCategory2.name
-        // Match by ID, slug, or name
-        return subCategory2Id === filters.subcategory2 || 
-               subCategory2Slug === filters.subcategory2 ||
-               (subCategory2Name && subCategory2Name.toLowerCase().replace(/\s+/g, '-') === filters.subcategory2)
-      })
-    }
+    // Collect all subcategory filters into an array
+    const subcategoryFilters = []
+    if (filters.category && filters.category !== "all") subcategoryFilters.push(filters.category)
+    if (filters.subcategory2) subcategoryFilters.push(filters.subcategory2)
+    if (filters.subcategory3) subcategoryFilters.push(filters.subcategory3)
+    if (filters.subcategory4) subcategoryFilters.push(filters.subcategory4)
 
-    // Filter by subcategory level 3
-    if (filters.subcategory3) {
-      filteredProducts = filteredProducts.filter((product) => {
-        if (!product.subCategory3) return false
-        const subCategory3Id = typeof product.subCategory3 === "string" ? product.subCategory3 : product.subCategory3._id
-        const subCategory3Slug = typeof product.subCategory3 === "string" ? null : product.subCategory3.slug
-        const subCategory3Name = typeof product.subCategory3 === "string" ? null : product.subCategory3.name
-        // Match by ID, slug, or name
-        return subCategory3Id === filters.subcategory3 || 
-               subCategory3Slug === filters.subcategory3 ||
-               (subCategory3Name && subCategory3Name.toLowerCase().replace(/\s+/g, '-') === filters.subcategory3)
-      })
-    }
+    // Filter by subcategories (requires all provided levels).
+    // Supports both ObjectId values and slug-ish values.
+    if (subcategoryFilters.length > 0) {
+      const normalizedFilters = subcategoryFilters.map((v) => ({ raw: String(v), norm: normalizeSlug(v) }))
 
-    // Filter by subcategory level 4
-    if (filters.subcategory4) {
+      const addTokens = (tokenSet, field) => {
+        if (!field) return
+        if (typeof field === "string") {
+          tokenSet.add(field)
+          tokenSet.add(normalizeSlug(field))
+          return
+        }
+
+        if (field._id) {
+          tokenSet.add(String(field._id))
+          tokenSet.add(normalizeSlug(field._id))
+        }
+        if (field.slug) {
+          tokenSet.add(String(field.slug))
+          tokenSet.add(normalizeSlug(field.slug))
+        }
+        if (field.name) {
+          tokenSet.add(normalizeSlug(field.name))
+        }
+      }
+
       filteredProducts = filteredProducts.filter((product) => {
-        if (!product.subCategory4) return false
-        const subCategory4Id = typeof product.subCategory4 === "string" ? product.subCategory4 : product.subCategory4._id
-        const subCategory4Slug = typeof product.subCategory4 === "string" ? null : product.subCategory4.slug
-        const subCategory4Name = typeof product.subCategory4 === "string" ? null : product.subCategory4.name
-        // Match by ID, slug, or name
-        return subCategory4Id === filters.subcategory4 || 
-               subCategory4Slug === filters.subcategory4 ||
-               (subCategory4Name && subCategory4Name.toLowerCase().replace(/\s+/g, '-') === filters.subcategory4)
+        const tokens = new Set()
+
+        // Collect tokens from all subcategory fields (legacy + level 1-4)
+        addTokens(tokens, product.subCategory)
+        addTokens(tokens, product.category)
+        addTokens(tokens, product.subCategory2)
+        addTokens(tokens, product.subCategory3)
+        addTokens(tokens, product.subCategory4)
+
+        return normalizedFilters.every((f) => tokens.has(f.raw) || (f.norm && tokens.has(f.norm)))
       })
     }
 

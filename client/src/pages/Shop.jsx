@@ -497,14 +497,20 @@ const Shop = () => {
         }
 
         console.log("🔍 Active Filters:", {
-          parentCategory: filters.parent_category ? "✅" : "❌",
-          level1: filters.category ? "✅" : "❌", 
-          level2: filters.subcategory2 ? "✅" : "❌",
-          level3: filters.subcategory3 ? "✅" : "❌",
-          level4: filters.subcategory4 ? "✅" : "❌",
+          parentCategory: filters.parent_category ? `✅ ${selectedCategory}` : "❌",
+          level1: filters.category ? `✅ ${selectedSubCategories[0]}` : "❌", 
+          level1Name: currentSubCategoryName || "none",
+          level2: filters.subcategory2 ? `✅ ${selectedSubCategory2}` : "❌",
+          level3: filters.subcategory3 ? `✅ ${selectedSubCategory3}` : "❌",
+          level4: filters.subcategory4 ? `✅ ${selectedSubCategory4}` : "❌",
           brands: filters.brand ? `✅ (${filters.brand.length})` : "❌",
           priceRange: `${filters.priceRange[0]} - ${filters.priceRange[1]}`,
           stockStatus: filters.stockStatus ? `✅ (${filters.stockStatus.join(", ")})` : "❌",
+        })
+        console.log("📌 Selected States:", {
+          selectedCategory,
+          selectedSubCategories,
+          allSubcategoriesLoaded: allSubcategories.length,
         })
         filteredProducts = productCache.filterProducts(allProducts, filters)
         console.log(`📊 Results: ${filteredProducts.length} products (from ${allProducts.length} total)`)
@@ -615,64 +621,79 @@ const Shop = () => {
   useEffect(() => {
     // Parse URL and set subcategories after allSubcategories are loaded
     if (allSubcategories.length === 0) return
+    if (categories.length === 0) return
     
     const urlParams = parseShopURL(location.pathname, location.search)
+    console.log("🔗 URL Parsing - Subcategories:", { 
+      pathname: location.pathname, 
+      urlParams, 
+      allSubcategoriesCount: allSubcategories.length 
+    })
 
+    const foundCategory = categories.find(
+      (cat) =>
+        cat._id === urlParams.parentCategory ||
+        cat.slug === urlParams.parentCategory ||
+        createSlug(cat.name) === urlParams.parentCategory,
+    )
+    const parentCategoryId = foundCategory ? foundCategory._id : null
+
+    const level1 = urlParams.subcategory
+      ? (parentCategoryId
+          ? findLevel1SubcategoryForCategory(parentCategoryId, urlParams.subcategory)
+          : findSubcategoryByUrlPart(urlParams.subcategory))
+      : null
     if (urlParams.subcategory) {
-      const foundSub = allSubcategories.find((sub) => sub.slug === urlParams.subcategory) ||
-        allSubcategories.find((sub) => sub._id === urlParams.subcategory) ||
-        allSubcategories.find((sub) => createSlug(sub.name) === urlParams.subcategory)
-      if (foundSub) {
-        setCurrentSubCategoryName(foundSub.name)
-        setSelectedSubCategories([foundSub._id])
-      } else {
-        setSelectedSubCategories([])
-        setCurrentSubCategoryName(urlParams.subcategory)
-      }
-    } else {
-      setSelectedSubCategories([])
-      setCurrentSubCategoryName(null)
+      console.log("🔍 Looking for subcategory:", urlParams.subcategory, "Found:", level1?.name, "ID:", level1?._id)
     }
 
-    if (urlParams.subcategory2) {
-      const found2 = allSubcategories.find((sub) => sub.slug === urlParams.subcategory2) ||
-        allSubcategories.find((sub) => sub._id === urlParams.subcategory2) ||
-        allSubcategories.find((sub) => createSlug(sub.name) === urlParams.subcategory2)
-      setSelectedSubCategory2(found2 ? found2._id : urlParams.subcategory2)
-      setSubCategory2Data(found2 || null)
-      setCurrentSubCategory2Name(found2 ? found2.name : urlParams.subcategory2)
+    if (level1) {
+      setCurrentSubCategoryName(level1.name)
+      setSelectedSubCategories([level1._id])
+    } else {
+      setSelectedSubCategories([])
+      setCurrentSubCategoryName(urlParams.subcategory || null)
+    }
+
+    const level2 = urlParams.subcategory2
+      ? (level1?._id ? findChildSubcategoryByUrlPart(level1._id, urlParams.subcategory2) : findSubcategoryByUrlPart(urlParams.subcategory2))
+      : null
+    if (level2) {
+      setSelectedSubCategory2(level2._id)
+      setSubCategory2Data(level2)
+      setCurrentSubCategory2Name(level2.name)
     } else {
       setSelectedSubCategory2(null)
       setSubCategory2Data(null)
-      setCurrentSubCategory2Name(null)
+      setCurrentSubCategory2Name(urlParams.subcategory2 || null)
     }
 
-    if (urlParams.subcategory3) {
-      const found3 = allSubcategories.find((sub) => sub.slug === urlParams.subcategory3) ||
-        allSubcategories.find((sub) => sub._id === urlParams.subcategory3) ||
-        allSubcategories.find((sub) => createSlug(sub.name) === urlParams.subcategory3)
-      setSelectedSubCategory3(found3 ? found3._id : urlParams.subcategory3)
-      setSubCategory3Data(found3 || null)
-      setCurrentSubCategory3Name(found3 ? found3.name : urlParams.subcategory3)
+    const level3 = urlParams.subcategory3
+      ? (level2?._id ? findChildSubcategoryByUrlPart(level2._id, urlParams.subcategory3) : findSubcategoryByUrlPart(urlParams.subcategory3))
+      : null
+    if (level3) {
+      setSelectedSubCategory3(level3._id)
+      setSubCategory3Data(level3)
+      setCurrentSubCategory3Name(level3.name)
     } else {
       setSelectedSubCategory3(null)
       setSubCategory3Data(null)
-      setCurrentSubCategory3Name(null)
+      setCurrentSubCategory3Name(urlParams.subcategory3 || null)
     }
 
-    if (urlParams.subcategory4) {
-      const found4 = allSubcategories.find((sub) => sub.slug === urlParams.subcategory4) ||
-        allSubcategories.find((sub) => sub._id === urlParams.subcategory4) ||
-        allSubcategories.find((sub) => createSlug(sub.name) === urlParams.subcategory4)
-      setSelectedSubCategory4(found4 ? found4._id : urlParams.subcategory4)
-      setSubCategory4Data(found4 || null)
-      setCurrentSubCategory4Name(found4 ? found4.name : urlParams.subcategory4)
+    const level4 = urlParams.subcategory4
+      ? (level3?._id ? findChildSubcategoryByUrlPart(level3._id, urlParams.subcategory4) : findSubcategoryByUrlPart(urlParams.subcategory4))
+      : null
+    if (level4) {
+      setSelectedSubCategory4(level4._id)
+      setSubCategory4Data(level4)
+      setCurrentSubCategory4Name(level4.name)
     } else {
       setSelectedSubCategory4(null)
       setSubCategory4Data(null)
-      setCurrentSubCategory4Name(null)
+      setCurrentSubCategory4Name(urlParams.subcategory4 || null)
     }
-  }, [allSubcategories, location.pathname, location.search])
+  }, [allSubcategories, categories, location.pathname, location.search])
 
   useEffect(() => {
     // Parse URL when location changes or brands load
@@ -871,9 +892,57 @@ const Shop = () => {
 
   const filteredBrands = brands.filter((brand) => brand.name.toLowerCase().includes(brandSearch.toLowerCase()))
 
+  const getSubcategoryCategoryId = (sub) => {
+    if (!sub) return null
+    return typeof sub.category === "object" ? sub.category?._id : sub.category
+  }
+
+  const getSubcategoryParentId = (sub) => {
+    if (!sub) return null
+    return typeof sub.parentSubCategory === "object" ? sub.parentSubCategory?._id : sub.parentSubCategory
+  }
+
+  const findLevel1SubcategoryForCategory = (categoryId, urlPart) => {
+    if (!categoryId || !urlPart) return null
+    const normalized = createSlug(String(urlPart))
+    return allSubcategories.find((sub) => {
+      const subCategoryId = getSubcategoryCategoryId(sub)
+      const parentId = getSubcategoryParentId(sub)
+      if (subCategoryId !== categoryId) return false
+      if (parentId) return false
+      return createSlug(sub.slug || "") === normalized || createSlug(sub.name || "") === normalized
+    })
+  }
+
+  const findSubcategoryByUrlPart = (urlPart) => {
+    if (!urlPart) return null
+    const normalized = createSlug(String(urlPart))
+    return (
+      allSubcategories.find((sub) => sub._id === urlPart) ||
+      allSubcategories.find((sub) => createSlug(sub.slug || "") === normalized) ||
+      allSubcategories.find((sub) => createSlug(sub.name || "") === normalized)
+    )
+  }
+
+  const findChildSubcategoryByUrlPart = (parentSubCategoryId, urlPart) => {
+    if (!parentSubCategoryId || !urlPart) return null
+    const normalized = createSlug(String(urlPart))
+    return allSubcategories.find((sub) => {
+      const parentId = typeof sub.parentSubCategory === "object" ? sub.parentSubCategory?._id : sub.parentSubCategory
+      if (!parentId || parentId !== parentSubCategoryId) return false
+      return createSlug(sub.slug || "") === normalized || createSlug(sub.name || "") === normalized
+    })
+  }
+
   // Helper function to get children of a category/subcategory
   const getChildren = (parentId, parentType = 'category') => {
+    if (!parentId || !allSubcategories || allSubcategories.length === 0) {
+      return []
+    }
+
     const children = allSubcategories.filter(sub => {
+      if (!sub) return false
+      
       const category = typeof sub.category === 'object' ? sub.category?._id : sub.category
       const parentSubCategory = typeof sub.parentSubCategory === 'object' ? sub.parentSubCategory?._id : sub.parentSubCategory
       
@@ -1035,11 +1104,20 @@ const Shop = () => {
       setCurrentSubCategory4Name(null)
     }
 
-    // Update URL with correct hierarchy
+    // Update URL with full hierarchy (up to level 4) so deep links work consistently
     const categoryObj = categories.find((cat) => cat._id === hierarchy.parentCategory)
+    const level1Name = hierarchy.level1 ? allSubcategories.find((s) => s._id === hierarchy.level1)?.name : null
+    const level2Name = hierarchy.level2 ? allSubcategories.find((s) => s._id === hierarchy.level2)?.name : null
+    const level3Name = hierarchy.level3 ? allSubcategories.find((s) => s._id === hierarchy.level3)?.name : null
+    const level4Name = hierarchy.level4 ? allSubcategories.find((s) => s._id === hierarchy.level4)?.name : null
+
     const url = generateShopURL({
-      parentCategory: hierarchy.parentCategory && hierarchy.parentCategory !== 'all' ? categoryObj?.name || hierarchy.parentCategory : null,
-      subcategory: hierarchy.level1 ? allSubcategories.find(s => s._id === hierarchy.level1)?.name : null,
+      parentCategory:
+        hierarchy.parentCategory && hierarchy.parentCategory !== "all" ? categoryObj?.name || hierarchy.parentCategory : null,
+      subcategory: level1Name,
+      subcategory2: level2Name,
+      subcategory3: level3Name,
+      subcategory4: level4Name,
       brand: selectedBrands.length > 0 ? brands.find((b) => b._id === selectedBrands[0])?.name : null,
       search: searchQuery || null,
     })
@@ -2455,50 +2533,8 @@ const Shop = () => {
               </div>
             </div>
             
-            <div className="flex flex-row justify-between items-center mb-6 relative z-10">
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {searchQuery.trim() ? (
-                    <>
-                      Results for "{searchQuery.trim()}"
-                      {actualSearchQuery && actualSearchQuery !== searchQuery.trim() && (
-                        <span className="text-sm text-gray-500 block mt-1">
-                          Showing results for "{actualSearchQuery}" instead
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    (() => {
-                      // Show brand name if a single brand is selected
-                      if (selectedBrands.length === 1) {
-                        const brandName = brands.find((b) => b._id === selectedBrands[0])?.name
-                        if (brandName) return brandName
-                      }
-                      
-                      // Show subcategory names (deepest first)
-                      if (currentSubCategory4Name) return currentSubCategory4Name
-                      if (currentSubCategory3Name) return currentSubCategory3Name
-                      if (currentSubCategory2Name) return currentSubCategory2Name
-                      if (currentSubCategoryName) return currentSubCategoryName
-                      
-                      // Show category name
-                      const categoryName = categories.find((cat) => cat._id === selectedCategory)?.name
-                      if (categoryName) return categoryName
-                      
-                      return "All Products"
-                    })()
-                  )}
-                </h1>
-                <p className="text-gray-600 mt-1">{products.length} products found</p>
-              </div>
-
-              <div className="hidden md:block mt-0 flex-shrink-0 relative z-20">
-                <SortDropdown value={sortBy} onChange={handleSortChange} />
-              </div>
-            </div>
-
             {/* Child Categories Section - Shows children of the deepest selected level */}
-            {!searchQuery.trim() && (() => {
+            {!searchQuery.trim() && allSubcategories.length > 0 && (() => {
               // Determine the deepest selected level and its type
               let currentLevelId = null
               let currentLevelType = null
@@ -2535,7 +2571,6 @@ const Shop = () => {
               
               return (
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">Sub Categories...</h2>
                   <div className="relative">
                     <button
                       onClick={scrollSubCategoryPrev}
@@ -2554,23 +2589,34 @@ const Shop = () => {
                         <button
                           key={child._id}
                           onClick={() => handleSubcategorySelect(child._id, nextLevel)}
-                          className="flex-shrink-0 w-32 h-24 rounded-lg transition-all flex items-center justify-center p-4"
+                          className="flex-shrink-0 w-32 rounded-lg transition-all flex flex-col items-center justify-center p-3 gap-2"
                         >
                           {child?.image ? (
-                            <img
-                              src={getFullImageUrl(child.image)}
-                              alt={child.name || "Subcategory"}
-                              className="max-h-full max-w-full object-contain"
-                              loading="lazy"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none"
-                                const btn = e.currentTarget.closest("button")
-                                const fallback = btn?.querySelector("[data-fallback-name]")
-                                if (fallback) fallback.classList.remove("hidden")
-                              }}
-                            />
-                          ) : null}
-                          <span data-fallback-name className={child?.image ? "hidden" : "text-sm font-semibold text-gray-700 text-center"}>
+                            <>
+                              <div className="h-16 flex items-center justify-center">
+                                <img
+                                  src={getFullImageUrl(child.image)}
+                                  alt={child.name || "Subcategory"}
+                                  className="max-h-full max-w-full object-contain"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = "none"
+                                    const btn = e.currentTarget.closest("button")
+                                    const fallback = btn?.querySelector("[data-fallback-name]")
+                                    if (fallback) fallback.classList.remove("hidden")
+                                  }}
+                                />
+                              </div>
+                              <span className="text-xs font-semibold text-gray-700 text-center line-clamp-2">
+                                {child.name}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-sm font-semibold text-gray-700 text-center">
+                              {child.name}
+                            </span>
+                          )}
+                          <span data-fallback-name className="hidden text-sm font-semibold text-gray-700 text-center">
                             {child.name}
                           </span>
                         </button>
@@ -2616,7 +2662,6 @@ const Shop = () => {
 
               return (
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">Brand...</h2>
                   <div className="relative">
                     <button
                       onClick={scrollBrandPrev}
@@ -2635,27 +2680,38 @@ const Shop = () => {
                         <button
                           key={brand._id}
                           onClick={() => handleBrandChange(brand._id)}
-                          className={`flex-shrink-0 w-32 h-24 rounded-lg transition-all flex items-center justify-center p-4 ${
+                          className={`flex-shrink-0 w-32 rounded-lg transition-all flex flex-col items-center justify-center p-3 gap-2 ${
                             selectedBrands.includes(brand._id)
                               ? 'bg-lime-100 border-2 border-lime-600'
                               : ''
                           }`}
                         >
                           {brand.logo ? (
-                            <img
-                              src={getFullImageUrl(brand.logo)}
-                              alt={brand.name || "Brand"}
-                              className="max-h-full max-w-full object-contain"
-                              loading="lazy"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none"
-                                const btn = e.currentTarget.closest("button")
-                                const fallback = btn?.querySelector("[data-brand-fallback]")
-                                if (fallback) fallback.classList.remove("hidden")
-                              }}
-                            />
-                          ) : null}
-                          <span data-brand-fallback className={brand.logo ? "hidden" : "text-sm font-semibold text-gray-700 text-center"}>
+                            <>
+                              <div className="h-24 flex items-center justify-center">
+                                <img
+                                  src={getFullImageUrl(brand.logo)}
+                                  alt={brand.name || "Brand"}
+                                  className="max-h-full max-w-full object-contain"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = "none"
+                                    const btn = e.currentTarget.closest("button")
+                                    const fallback = btn?.querySelector("[data-brand-fallback]")
+                                    if (fallback) fallback.classList.remove("hidden")
+                                  }}
+                                />
+                              </div>
+                              <span className="text-xs font-semibold text-gray-700 text-center line-clamp-2">
+                                {brand.name}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-sm font-semibold text-gray-700 text-center">
+                              {brand.name}
+                            </span>
+                          )}
+                          <span data-brand-fallback className="hidden text-sm font-semibold text-gray-700 text-center">
                             {brand.name}
                           </span>
                         </button>
@@ -2672,6 +2728,49 @@ const Shop = () => {
                 </section>
               )
             })()}
+
+            {/* Products Found and Sort Section - Above Product Cards */}
+            <div className="flex flex-row justify-between items-center mb-6 relative z-10">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {searchQuery.trim() ? (
+                    <>
+                      Results for "{searchQuery.trim()}"
+                      {actualSearchQuery && actualSearchQuery !== searchQuery.trim() && (
+                        <span className="text-sm text-gray-500 block mt-1">
+                          Showing results for "{actualSearchQuery}" instead
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    (() => {
+                      // Show brand name if a single brand is selected
+                      if (selectedBrands.length === 1) {
+                        const brandName = brands.find((b) => b._id === selectedBrands[0])?.name
+                        if (brandName) return brandName
+                      }
+                      
+                      // Show subcategory names (deepest first)
+                      if (currentSubCategory4Name) return currentSubCategory4Name
+                      if (currentSubCategory3Name) return currentSubCategory3Name
+                      if (currentSubCategory2Name) return currentSubCategory2Name
+                      if (currentSubCategoryName) return currentSubCategoryName
+                      
+                      // Show category name
+                      const categoryName = categories.find((cat) => cat._id === selectedCategory)?.name
+                      if (categoryName) return categoryName
+                      
+                      return "All Products"
+                    })()
+                  )}
+                </h1>
+                <p className="text-gray-600 mt-1">{products.length} products found</p>
+              </div>
+
+              <div className="hidden md:block mt-0 flex-shrink-0 relative z-20">
+                <SortDropdown value={sortBy} onChange={handleSortChange} />
+              </div>
+            </div>
 
             {products.length > 0 ? (
               <>
