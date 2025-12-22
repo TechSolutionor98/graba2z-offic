@@ -1162,10 +1162,18 @@ const Shop = () => {
     const categoryObj = categories.find((cat) => cat._id === selectedCategory)
     const subcategoryObj =
       selectedSubCategories.length > 0 ? subCategories.find((sub) => sub._id === selectedSubCategories[0]) : null
+    
+    // Preserve deeper subcategory levels
+    const subcategory2Obj = selectedSubCategory2 ? allSubcategories.find((sub) => sub._id === selectedSubCategory2) : null
+    const subcategory3Obj = selectedSubCategory3 ? allSubcategories.find((sub) => sub._id === selectedSubCategory3) : null
+    const subcategory4Obj = selectedSubCategory4 ? allSubcategories.find((sub) => sub._id === selectedSubCategory4) : null
 
     const url = generateShopURL({
       parentCategory: selectedCategory !== "all" ? categoryObj?.name || selectedCategory : null,
       subcategory: subcategoryObj?.name || selectedSubCategories[0] || null,
+      subcategory2: subcategory2Obj?.name || null,
+      subcategory3: subcategory3Obj?.name || null,
+      subcategory4: subcategory4Obj?.name || null,
       brand: newSelectedBrands.length > 0 ? brands.find((b) => b._id === newSelectedBrands[0])?.name : null,
       search: searchQuery || null,
     })
@@ -1188,10 +1196,18 @@ const Shop = () => {
     const categoryObj = categories.find((cat) => cat._id === selectedCategory)
     const subcategoryObj =
       selectedSubCategories.length > 0 ? subCategories.find((sub) => sub._id === selectedSubCategories[0]) : null
+    
+    // Preserve deeper subcategory levels
+    const subcategory2Obj = selectedSubCategory2 ? allSubcategories.find((sub) => sub._id === selectedSubCategory2) : null
+    const subcategory3Obj = selectedSubCategory3 ? allSubcategories.find((sub) => sub._id === selectedSubCategory3) : null
+    const subcategory4Obj = selectedSubCategory4 ? allSubcategories.find((sub) => sub._id === selectedSubCategory4) : null
 
     const url = generateShopURL({
       parentCategory: selectedCategory !== "all" ? categoryObj?.name || selectedCategory : null,
       subcategory: subcategoryObj?.name || selectedSubCategories[0] || null,
+      subcategory2: subcategory2Obj?.name || null,
+      subcategory3: subcategory3Obj?.name || null,
+      subcategory4: subcategory4Obj?.name || null,
       brand: selectedBrands.length > 0 ? brands.find((b) => b._id === selectedBrands[0])?.name : null,
       search: newSearchQuery || null,
     })

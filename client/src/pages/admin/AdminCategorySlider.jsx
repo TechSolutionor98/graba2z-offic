@@ -201,6 +201,13 @@ const AdminCategorySlider = () => {
   const handleImageSelect = (e) => {
     const file = e.target.files[0]
     if (file) {
+      // Validate WEBP format only
+      if (file.type !== 'image/webp') {
+        showToast("Only WEBP image format is allowed. Please select a .webp file.", "error")
+        e.target.value = '' // Clear the input
+        return
+      }
+      
       setSelectedImage(file)
       // Create preview
       const reader = new FileReader()
@@ -694,7 +701,7 @@ const AdminCategorySlider = () => {
                       <div className="relative">
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/webp"
                           onChange={handleImageSelect}
                           className="hidden"
                           id="customItemImage"
@@ -719,15 +726,15 @@ const AdminCategorySlider = () => {
                               />
                             </svg>
                             <p className="mt-1 text-sm text-gray-600">
-                              {selectedImage ? selectedImage.name : "Click to upload image"}
+                              {selectedImage ? selectedImage.name : "Click to upload WEBP image"}
                             </p>
-                            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                            <p className="text-xs text-gray-500">Only WEBP format allowed (up to 10MB)</p>
                           </div>
                         </label>
                       </div>
                       
                       {!editingCustomItem && !selectedImage && (
-                        <p className="text-xs text-red-500 mt-1">* Please select an image</p>
+                        <p className="text-xs text-red-500 mt-1">* Please select a WEBP image</p>
                       )}
                     </div>
 
