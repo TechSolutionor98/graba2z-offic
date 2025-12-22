@@ -91,12 +91,21 @@ const EditSubCategory = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      const response = await axios.get(`${config.API_URL}/api/categories`, {
+      // Use admin endpoint so inactive parent categories still appear (required for auto-select on edit)
+      const response = await axios.get(`${config.API_URL}/api/categories/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCategories(response.data);
+      setCategories(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      showToast("Failed to load categories", "error");
+      try {
+        const token = localStorage.getItem("adminToken");
+        const response = await axios.get(`${config.API_URL}/api/categories`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCategories(Array.isArray(response.data) ? response.data : []);
+      } catch (fallbackError) {
+        showToast("Failed to load categories", "error");
+      }
     }
   };
 
@@ -185,6 +194,13 @@ const EditSubCategory = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const subCategoryData = response.data;
+
+      const normalizeId = (value) => {
+        if (!value) return "";
+        if (typeof value === "string") return value;
+        if (typeof value === "object") return value._id || value.id || "";
+        return "";
+      };
       
       // For Level 3 and 4, we need to traverse up to find intermediate parents
       let subCat1 = "";
@@ -228,10 +244,10 @@ const EditSubCategory = () => {
         metaDescription: subCategoryData.metaDescription || "",
         redirectUrl: subCategoryData.redirectUrl || "",
         image: subCategoryData.image || "",
-        category: subCategoryData.category?._id || subCategoryData.category || "",
+        category: normalizeId(subCategoryData.category),
         subCategory1: subCat1,
         subCategory2: subCat2,
-        parentSubCategory: subCategoryData.parentSubCategory?._id || subCategoryData.parentSubCategory || "",
+        parentSubCategory: normalizeId(subCategoryData.parentSubCategory),
         level: subCategoryData.level || level,
         isActive: subCategoryData.isActive !== undefined ? subCategoryData.isActive : true,
         sortOrder: subCategoryData.sortOrder || 0,

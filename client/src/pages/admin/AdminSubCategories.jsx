@@ -15,6 +15,7 @@ const AdminSubCategories = () => {
   const [subCategories, setSubCategories] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [brokenImageMap, setBrokenImageMap] = useState({})
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -203,6 +204,15 @@ const AdminSubCategories = () => {
     return matchesSearch && matchesCategory && matchesLevel
   })
 
+  const level1TotalCount = subCategories.filter((subCategory) => !subCategory.level || subCategory.level === 1).length
+
+  const markImageBroken = (subCategoryId) => {
+    setBrokenImageMap((prev) => {
+      if (prev[subCategoryId]) return prev
+      return { ...prev, [subCategoryId]: true }
+    })
+  }
+
   if (loading) {
     return (
       <div className="flex h-screen bg-gray-100">
@@ -249,8 +259,11 @@ const AdminSubCategories = () => {
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Sub Categories</h1>
-              <p className="text-gray-600 mt-2">Manage your product sub categories</p>
+              <h1 className="text-3xl font-bold text-gray-900">Sub Categories Level 1</h1>
+              <p className="text-gray-600 mt-2">
+                Manage your product sub categories
+                <span className="ml-2 font-bold text-gray-500">({level1TotalCount})</span>
+              </p>
             </div>
             <Link
               to="/admin/subcategories/add"
@@ -296,14 +309,14 @@ const AdminSubCategories = () => {
 
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[980px]">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Sub Category
+                      Sub Category Level 1
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
+                    Parent  Category
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Description
@@ -333,13 +346,27 @@ const AdminSubCategories = () => {
                       <tr key={subCategory._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            {subCategory.image && (
-                              <img
-                                src={getFullImageUrl(subCategory.image) || "/placeholder.svg"}
-                                alt={subCategory.name}
-                                className="h-10 w-10 rounded-full object-cover mr-4"
-                              />
-                            )}
+                            <div className="mr-4 h-10 w-10 flex-shrink-0">
+                              {subCategory.image ? (
+                                brokenImageMap[subCategory._id] ? (
+                                  <div className="h-10 w-10 rounded-full bg-orange-100 border border-orange-300 flex items-center justify-center">
+                                    <span className="text-[10px] font-semibold text-orange-700">Error</span>
+                                  </div>
+                                ) : (
+                                  <img
+                                    src={getFullImageUrl(subCategory.image)}
+                                    alt={subCategory.name}
+                                    className="h-10 w-10 rounded-full bg-cover"
+                                    loading="lazy"
+                                    onError={() => markImageBroken(subCategory._id)}
+                                  />
+                                )
+                              ) : (
+                                <div className="h-10 w-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
+                                  <span className="text-[10px] font-medium text-gray-500">No img</span>
+                                </div>
+                              )}
+                            </div>
                             <div>
                               <div className="text-sm font-medium text-gray-900">{subCategory.name}</div>
                               <div className="text-sm text-gray-500">/{subCategory.slug}</div>

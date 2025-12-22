@@ -18,6 +18,7 @@ const AdminSubCategories3 = () => {
   const [level1SubCategories, setLevel1SubCategories] = useState([]) // Level 1 subcategories
   const [level2SubCategories, setLevel2SubCategories] = useState([]) // Level 2 subcategories
   const [loading, setLoading] = useState(true)
+  const [brokenImageMap, setBrokenImageMap] = useState({})
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [level1Filter, setLevel1Filter] = useState("all")
@@ -254,6 +255,15 @@ const AdminSubCategories3 = () => {
     return matchesSearch && matchesCategory && matchesLevel1 && matchesLevel2 && matchesLevel
   })
 
+  const markImageBroken = (subCategoryId) => {
+    setBrokenImageMap((prev) => {
+      if (prev[subCategoryId]) return prev
+      return { ...prev, [subCategoryId]: true }
+    })
+  }
+
+  const level3TotalCount = subCategories.length
+
   if (loading) {
     return (
       <div className="flex h-screen bg-gray-100">
@@ -269,7 +279,7 @@ const AdminSubCategories3 = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100 overflow-x-hidden">
       <AdminSidebar />
       
       {/* Safe Delete Modal */}
@@ -296,12 +306,15 @@ const AdminSubCategories3 = () => {
         onMove={handleProductsMove}
       />
       
-      <div className="flex-1 ml-64">
+      <div className="flex-1 ml-64 overflow-x-hidden">
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Sub Categories Level 3</h1>
-              <p className="text-gray-600 mt-2">Manage your third level subcategories</p>
+              <p className="text-gray-600 mt-2">
+                Manage your third level subcategories
+                <span className="ml-2 font-bold text-gray-500">({level3TotalCount})</span>
+              </p>
             </div>
             <Link
               to="/admin/subcategories-3/add"
@@ -313,9 +326,9 @@ const AdminSubCategories3 = () => {
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
+          <div className="sticky top-4 z-20 mb-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex flex-col gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
@@ -326,59 +339,67 @@ const AdminSubCategories3 = () => {
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Filter size={20} className="text-gray-400" />
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => {
-                    setCategoryFilter(e.target.value)
-                    setLevel1Filter("all") // Reset level 1 filter
-                    setLevel2Filter("all") // Reset level 2 filter
-                  }}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Categories</option>
-                  {categories.map((category) => (
-                    <option key={category._id} value={category._id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={level1Filter}
-                  onChange={(e) => {
-                    setLevel1Filter(e.target.value)
-                    setLevel2Filter("all") // Reset level 2 filter when level 1 changes
-                  }}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Level 1 SubCategories</option>
-                  {filteredLevel1SubCategories.map((sub) => (
-                    <option key={sub._id} value={sub._id}>
-                      {sub.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={level2Filter}
-                  onChange={(e) => setLevel2Filter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Level 2 SubCategories</option>
-                  {filteredLevel2SubCategories.map((sub) => (
-                    <option key={sub._id} value={sub._id}>
-                      {sub.name}
-                    </option>
-                  ))}
-                </select>
+
+                <div className="flex items-start gap-2 flex-col sm:flex-row sm:items-center">
+                  <div className="flex items-center gap-2 text-gray-400 shrink-0">
+                    <Filter size={20} />
+                  </div>
+
+                  <div className="w-full flex flex-col sm:flex-row gap-2">
+                    <select
+                      value={categoryFilter}
+                      onChange={(e) => {
+                        setCategoryFilter(e.target.value)
+                        setLevel1Filter("all") // Reset level 1 filter
+                        setLevel2Filter("all") // Reset level 2 filter
+                      }}
+                      className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">All Categories</option>
+                      {categories.map((category) => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={level1Filter}
+                      onChange={(e) => {
+                        setLevel1Filter(e.target.value)
+                        setLevel2Filter("all") // Reset level 2 filter when level 1 changes
+                      }}
+                      className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">All Level 1 SubCategories</option>
+                      {filteredLevel1SubCategories.map((sub) => (
+                        <option key={sub._id} value={sub._id}>
+                          {sub.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={level2Filter}
+                      onChange={(e) => setLevel2Filter(e.target.value)}
+                      className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">All Level 2 SubCategories</option>
+                      {filteredLevel2SubCategories.map((sub) => (
+                        <option key={sub._id} value={sub._id}>
+                          {sub.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="w-full max-w-full overflow-x-auto">
+              <table className="w-full min-w-[1200px]">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -391,7 +412,7 @@ const AdminSubCategories3 = () => {
                       Level 1 SubCategory
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
+                     Parent Category
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Description
@@ -418,13 +439,27 @@ const AdminSubCategories3 = () => {
                       <tr key={subCategory._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            {subCategory.image && (
-                              <img
-                                src={getFullImageUrl(subCategory.image) || "/placeholder.svg"}
-                                alt={subCategory.name}
-                                className="h-10 w-10 rounded-full object-cover mr-4"
-                              />
-                            )}
+                            <div className="mr-4 h-10 w-10 flex-shrink-0">
+                              {subCategory.image ? (
+                                brokenImageMap[subCategory._id] ? (
+                                  <div className="h-10 w-10 rounded-full bg-orange-100 border border-orange-300 flex items-center justify-center">
+                                    <span className="text-[10px] font-semibold text-orange-700">Error</span>
+                                  </div>
+                                ) : (
+                                  <img
+                                    src={getFullImageUrl(subCategory.image)}
+                                    alt={subCategory.name}
+                                    className="h-10 w-10 rounded-full object-cover"
+                                    loading="lazy"
+                                    onError={() => markImageBroken(subCategory._id)}
+                                  />
+                                )
+                              ) : (
+                                <div className="h-10 w-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
+                                  <span className="text-[10px] font-medium text-gray-500">No img</span>
+                                </div>
+                              )}
+                            </div>
                             <div>
                               <div className="text-sm font-medium text-gray-900">{subCategory.name}</div>
                               <div className="text-sm text-gray-500">/{subCategory.slug}</div>

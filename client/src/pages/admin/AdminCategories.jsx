@@ -236,7 +236,7 @@ const AdminCategories = () => {
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Categories</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Parent Categories</h1>
               <p className="text-gray-600 mt-2">Manage your product categories • <span className="font-semibold">{categories.length} Total Categories</span></p>
             </div>
             {/* <Link
@@ -254,7 +254,7 @@ const AdminCategories = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
+                    Parent Category
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Description
@@ -288,13 +288,41 @@ const AdminCategories = () => {
                       <tr key={category._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            {category.image && (
-                              <img
-                                src={getFullImageUrl(category.image) || "/placeholder.svg"}
-                                alt={category.name}
-                                className="h-10 w-10 rounded-full object-cover mr-4"
-                              />
-                            )}
+                            <div className="mr-4 flex-shrink-0">
+                              {category.image ? (
+                                <div className="relative h-10 w-10">
+                                  <img
+                                    src={getFullImageUrl(category.image)}
+                                    alt={category.name}
+                                    className="h-10 w-10 rounded-lg object-cover"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      e.currentTarget.classList.add("hidden")
+                                      const fallback = e.currentTarget.parentElement?.querySelector(
+                                        "[data-image-error]",
+                                      )
+                                      if (fallback) fallback.classList.remove("hidden")
+                                    }}
+                                  />
+                                  <div
+                                    data-image-error
+                                    className="hidden h-10 w-10 rounded-lg border border-orange-400 bg-orange-50 flex items-center justify-center px-1"
+                                    title="Image exists but failed to load"
+                                  >
+                                    <span className="text-[9px] leading-tight font-semibold text-orange-700 text-center line-clamp-2">
+                                      {category.name}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div
+                                  className="h-10 w-10 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center"
+                                  title="No image added"
+                                >
+                                  <span className="text-[10px] font-semibold text-gray-400">N/A</span>
+                                </div>
+                              )}
+                            </div>
                             <div>
                               <div className="text-sm font-medium text-gray-900">{category.name}</div>
                             </div>

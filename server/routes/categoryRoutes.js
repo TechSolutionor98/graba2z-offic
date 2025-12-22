@@ -199,6 +199,7 @@ router.get(
         _id: cat._id,
         name: cat.name,
         slug: cat.slug,
+        image: cat.image,
         isActive: cat.isActive,
         sortOrder: cat.sortOrder,
         level: 0,
