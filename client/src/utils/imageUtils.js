@@ -24,13 +24,45 @@ export const isCloudinaryUrl = (url) => {
  * Get the full image URL with proper base URL
  * - If it's a Cloudinary URL, return as-is
  * - If it's a local path starting with /uploads, prepend API_URL
- * - If it's already a full URL (http/https), return as-is
+ * - If it's already a full URL with localhost, replace with current API_URL
+ * - If it's already a full URL (http/https), check if it needs API_URL replacement
  */
 export const getFullImageUrl = (imageUrl) => {
   if (!imageUrl) return ""
   
-  // Already a full URL (Cloudinary or other external source)
+  // Handle Cloudinary URLs - return as-is
+  if (isCloudinaryUrl(imageUrl)) {
+    return imageUrl
+  }
+  
+  // Handle full URLs (http:// or https://)
   if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+    // Check if it's a localhost URL that needs to be replaced
+    if (imageUrl.includes("localhost") || imageUrl.includes("127.0.0.1")) {
+      // Extract just the /uploads/... part
+      const uploadsMatch = imageUrl.match(/(\/uploads\/.+)/)
+      if (uploadsMatch) {
+        return `${config.API_URL}${uploadsMatch[1]}`
+      }
+    }
+    
+    // Check if it contains /uploads/ and the hostname doesn't match current API
+    if (imageUrl.includes("/uploads/")) {
+      try {
+        const urlObj = new URL(imageUrl)
+        const currentApiHost = new URL(config.API_URL).hostname
+        
+        // If the hostname doesn't match, replace with current API_URL
+        if (urlObj.hostname !== currentApiHost) {
+          const uploadsPath = urlObj.pathname
+          return `${config.API_URL}${uploadsPath}`
+        }
+      } catch (e) {
+        // If URL parsing fails, continue to return as-is
+      }
+    }
+    
+    // Return other full URLs as-is
     return imageUrl
   }
   

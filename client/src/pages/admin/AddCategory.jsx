@@ -34,7 +34,7 @@ const AddCategory = () => {
       setLoading(true)
       // Fetch category data
       const token = localStorage.getItem("adminToken")
-      fetch(`${config.API_URL}/api/categories/${id}`, {
+      fetch(`${config.API_URL}/api/categories/${id}/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

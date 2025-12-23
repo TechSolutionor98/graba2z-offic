@@ -112,7 +112,7 @@ const EditSubCategory = () => {
   const fetchSubCategories1 = async (categoryId) => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`${config.API_URL}/api/subcategories/category/${categoryId}`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/category/${categoryId}/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       // Filter to only show Level 1 subcategories (or those without level for backward compatibility)
@@ -128,7 +128,7 @@ const EditSubCategory = () => {
   const fetchSubCategories2 = async (subCategory1Id) => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`${config.API_URL}/api/subcategories/children/${subCategory1Id}`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/children/${subCategory1Id}/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setSubCategories2(response.data)
@@ -143,7 +143,7 @@ const EditSubCategory = () => {
     try {
       const token = localStorage.getItem("adminToken")
       // For level 2, fetch subcategories of the selected category (level 1)
-      const response = await axios.get(`${config.API_URL}/api/subcategories/category/${categoryId}`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/category/${categoryId}/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       // Filter to only show Level 1 subcategories
@@ -160,7 +160,7 @@ const EditSubCategory = () => {
     try {
       const token = localStorage.getItem("adminToken")
       // For level 3, fetch children of level 1 subcategory (level 2 subcategories)
-      const response = await axios.get(`${config.API_URL}/api/subcategories/children/${subCategory1Id}`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/children/${subCategory1Id}/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setParentSubCategories(response.data)
@@ -175,7 +175,7 @@ const EditSubCategory = () => {
     try {
       const token = localStorage.getItem("adminToken")
       // For level 4, fetch children of level 2 subcategory (level 3 subcategories)
-      const response = await axios.get(`${config.API_URL}/api/subcategories/children/${subCategory2Id}`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/children/${subCategory2Id}/admin`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setParentSubCategories(response.data)

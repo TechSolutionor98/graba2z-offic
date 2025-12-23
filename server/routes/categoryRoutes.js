@@ -395,6 +395,25 @@ router.get(
   })
 )
 
+// @desc    Fetch single category (Admin - includes inactive)
+// @route   GET /api/categories/:id/admin
+// @access  Private/Admin
+router.get(
+  "/:id/admin",
+  protect,
+  admin,
+  asyncHandler(async (req, res) => {
+    const category = await Category.findById(req.params.id)
+
+    if (category && !category.isDeleted) {
+      res.json(category)
+    } else {
+      res.status(404)
+      throw new Error("Category not found")
+    }
+  }),
+)
+
 // @desc    Fetch single category
 // @route   GET /api/categories/:id
 // @access  Public
