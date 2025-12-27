@@ -1169,8 +1169,15 @@ const Navbar = () => {
                               >
                                 {categorySubCategories.map((subCategory) => {
                                   const level2Subs = getChildSubCategories(subCategory._id)
+                                  const LEVEL2_ITEMS_PER_COLUMN = 14
+                                  const firstColumnLevel2 = level2Subs.slice(0, LEVEL2_ITEMS_PER_COLUMN)
+                                  const moreLevel2Items = level2Subs.slice(LEVEL2_ITEMS_PER_COLUMN)
+                                  const hasMoreLevel2 = moreLevel2Items.length > 0
+                                  
                                   return (
-                                    <div key={subCategory._id} className="w-[150px] flex-shrink-0 flex flex-col gap-3">
+                                    <div key={subCategory._id} className="contents">
+                                      {/* Main Column - First Level-2 items */}
+                                      <div className="w-[150px] flex-shrink-0 flex flex-col gap-3">
                                         <Link
                                           to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
                                           className={`block text-red-600 text-xs font-semibold hover:text-red-600 ${MEGA_LABEL_LIMIT_CLASS}`}
@@ -1178,41 +1185,64 @@ const Navbar = () => {
                                         >
                                           {subCategory.name}
                                         </Link>
-                                      <ul className="flex flex-col gap-1 px-1 pb-1 bg-transparent border-none text-left">
-                                        {(level2Subs || []).slice(0, 13).map((sub2) => {
-                                          const level3Subs = getChildSubCategories(sub2._id)
-                                          const hasLevel3 = Array.isArray(level3Subs) && level3Subs.length > 0
-                                          return (
-                                            <li
-                                              key={sub2._id}
-                                              className="bg-transparent border-none p-0 m-0"
-                                            >
-                                              <Link
-                                                to={generateShopURL({
-                                                  parentCategory: parentCategory.name,
-                                                  subcategory: subCategory.name,
-                                                  subcategory2: sub2.name,
-                                                })}
-                                                className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
-                                                onClick={() => resetMegaMenu()}
+                                        <ul className="flex flex-col gap-1 px-1 pb-1 bg-transparent border-none text-left">
+                                          {firstColumnLevel2.map((sub2) => {
+                                            const level3Subs = getChildSubCategories(sub2._id)
+                                            const hasLevel3 = Array.isArray(level3Subs) && level3Subs.length > 0
+                                            return (
+                                              <li
+                                                key={sub2._id}
+                                                className="bg-transparent border-none p-0 m-0"
                                               >
-                                                <span className="flex-1 break-words leading-snug text-left">{sub2.name}</span>
-                                              </Link>
-                                            </li>
-                                          )
-                                        })}
-                                        {level2Subs.length > 12 && (
-                                          <li className="bg-transparent border-none p-0 m-0">
-                                            <Link
-                                              to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
-                                              className="text-xs text-red-600 font-medium"
-                                              onClick={() => resetMegaMenu()}
-                                            >
-                                              View all
-                                            </Link>
-                                          </li>
-                                        )}
-                                      </ul>
+                                                <Link
+                                                  to={generateShopURL({
+                                                    parentCategory: parentCategory.name,
+                                                    subcategory: subCategory.name,
+                                                    subcategory2: sub2.name,
+                                                  })}
+                                                  className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
+                                                  onClick={() => resetMegaMenu()}
+                                                >
+                                                  <span className="flex-1 break-words leading-snug text-left">{sub2.name}</span>
+                                                </Link>
+                                              </li>
+                                            )
+                                          })}
+                                        </ul>
+                                      </div>
+
+                                      {/* "More" Column - Remaining Level-2 items */}
+                                      {hasMoreLevel2 && (
+                                        <div className="w-[150px] flex-shrink-0 flex flex-col gap-3">
+                                          <div className={`block text-lime-600 text-xs font-bold uppercase tracking-wide ${MEGA_LABEL_LIMIT_CLASS}`}>
+                                            More
+                                          </div>
+                                          <ul className="flex flex-col gap-1 px-1 pb-1 bg-transparent border-none text-left">
+                                            {moreLevel2Items.map((sub2) => {
+                                              const level3Subs = getChildSubCategories(sub2._id)
+                                              const hasLevel3 = Array.isArray(level3Subs) && level3Subs.length > 0
+                                              return (
+                                                <li
+                                                  key={sub2._id}
+                                                  className="bg-transparent border-none p-0 m-0"
+                                                >
+                                                  <Link
+                                                    to={generateShopURL({
+                                                      parentCategory: parentCategory.name,
+                                                      subcategory: subCategory.name,
+                                                      subcategory2: sub2.name,
+                                                    })}
+                                                    className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
+                                                    onClick={() => resetMegaMenu()}
+                                                  >
+                                                    <span className="flex-1 break-words leading-snug text-left">{sub2.name}</span>
+                                                  </Link>
+                                                </li>
+                                              )
+                                            })}
+                                          </ul>
+                                        </div>
+                                      )}
                                     </div>
                                   )
                                 })}
