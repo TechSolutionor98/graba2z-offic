@@ -150,7 +150,7 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
       </Link>
       {categoryName && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
       <div className="text-xs text-green-600">Inclusive VAT</div>
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
+      <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
           {formatPrice(priceToShow)}
         </div>

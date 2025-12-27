@@ -740,7 +740,7 @@ const Home = () => {
     if (category && category.name) {
       navigate(generateShopURL({ parentCategory: category.name }))
     } else {
-      navigate(`/shop`)
+      navigate(`/product-category/computers/networking`)
     }
   }
 
@@ -1050,6 +1050,13 @@ const Home = () => {
         </div>
       </section>
 
+
+
+      {/* Dynamic Section Position 2 */}
+      {/* {renderDynamicSection(2)} */}
+
+
+
       {/* Mobile Banner (now clickable linking to HP brand page) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
   <Link to={brandUrls.HP} aria-label="Browse HP products">
@@ -1062,9 +1069,7 @@ const Home = () => {
         </Link>
       </div>
 
-      {/* Dynamic Section Position 2 */}
-      {/* {renderDynamicSection(2)} */}
-
+     
       {/* Desktop Banner - Two separate images side by side */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
         <div className="w-1/2">
@@ -1159,7 +1164,7 @@ const Home = () => {
 
       {/* Accessories Banner - Desktop/Mobile Responsive */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
-        <Link to="/product-category/accessories-components">
+        <Link to="/product-category/accessories">
           <img
             src="12.png"
             alt="Accessories Promotion Banner Mobile"
@@ -1315,7 +1320,7 @@ const Home = () => {
 
       {/* Networking Banner - Desktop/Mobile Responsive */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
-        <Link to="/product-category/networking">
+        <Link to="/product-category/computers/networking">
           <img
             src="13.png"
             alt="Networking Banner Mobile"
@@ -1503,6 +1508,8 @@ const Home = () => {
         </div>
       </div>
 
+
+
       {/* Apple and Samsung Products Section - Mobile shows only Apple */}
       <section className="py-8 mx-3">
         <div className="flex flex-col md:flex-row gap-6">
@@ -1570,9 +1577,9 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Dynamic Section Position 8 */}
-      {/* {renderDynamicSection(8)} */}
-
+           {/* Dynamic Section Position 8 */}
+      {/* {renderDynamicSection(8)}
+  */}
       {/* Upgrade Features Section - Responsive */}
       {upgradeFeatures.length > 0 && (
         <section className="py-8 md:py-12 bg-gradient-to-br from-blue-50 to-indigo-100 mx-3 rounded-lg my-8">
@@ -1723,7 +1730,7 @@ const MobileProductCard = ({ product }) => {
       
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs inline-block`}>
-          {stockStatus}
+          {stockStatus.replace('Available Product', 'Available')}
         </div>
         {discount && (
           <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs inline-block">{discount}</div>
@@ -1846,7 +1853,7 @@ const DynamicBrandProductCard = ({ product }) => {
         </button>
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
-          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus}</div>
+          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus.replace('Available Product', 'Available')}</div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
               {finalDiscountLabel}
@@ -1969,7 +1976,7 @@ const AccessoriesProductCard = ({ product }) => {
         </button>
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
-          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus}</div>
+          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus.replace('Available Product', 'Available')}</div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
               {finalDiscountLabel}

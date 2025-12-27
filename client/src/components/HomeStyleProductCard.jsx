@@ -222,7 +222,7 @@ const HomeStyleProductCard = ({ product }) => {
       </Link>
       {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
       <div className="text-xs text-green-600">Inclusive VAT</div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
         </div>

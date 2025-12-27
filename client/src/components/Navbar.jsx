@@ -190,6 +190,7 @@ const Navbar = () => {
   const [hoveredSubCategory1, setHoveredSubCategory1] = useState(null) // For Level 2
   const [hoveredSubCategory2, setHoveredSubCategory2] = useState(null) // For Level 3
   const [hoveredSubCategory3, setHoveredSubCategory3] = useState(null) // For Level 4
+  const [isStaticCategoryHovered, setIsStaticCategoryHovered] = useState(false)
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null)
   const [expandedMobileSubCategories, setExpandedMobileSubCategories] = useState([])
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
@@ -943,12 +944,12 @@ const Navbar = () => {
                 <button
                   type="button"
                   onClick={toggleDesktopCategoryDropdown}
-                  className="hidden md:inline-flex items-center gap-2 px-3 xl:px-3.5 py-2 rounded-lg bg-white text-gray-800 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition text-sm font-semibold whitespace-nowrap shadow-sm"
+                  className="hidden md:inline-flex items-center gap-2 px-3 xl:px-3.5 py-2 rounded-lg  text-white   transition text-sm font-semibold whitespace-nowrap shadow-sm"
                   aria-label="All categories"
                 >
-                  <Grid3X3 className="w-4 h-4 text-gray-700" />
+                  {/* <Grid3X3 className="w-4 h-4 text-white" /> */}
                   <span className="text-xs xl:text-sm">All Categories</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                  <ChevronDown className="w-3.5 h-3.5 text-white" />
                 </button>
                 
                 {/* Desktop Category Dropdown (horizontal cascade) */}
@@ -1232,6 +1233,25 @@ const Navbar = () => {
                       </div>
                     )
                   })}
+
+                  {/* Static Category - Add your custom category here */}
+                  <div 
+                    className="relative flex items-center h-full flex-shrink-0"
+                    onMouseEnter={() => setIsStaticCategoryHovered(true)}
+                    onMouseLeave={() => setIsStaticCategoryHovered(false)}
+                  >
+                    <a
+                      href="/gaming-zone" // ← Change this to your custom link
+                      className={`text-white font-medium whitespace-nowrap text-[clamp(0.7rem,0.9vw,0.875rem)] px-1 py-2 text-center w-full leading-tight ${
+                        isStaticCategoryHovered ? "font-semibold" : ""
+                      }`}
+                    >
+                      Gaming Zone {/* ← Change this to your desired name */}
+                    </a>
+                    {isStaticCategoryHovered && (
+                      <span className="pointer-events-none absolute bottom-0 left-1 right-1 h-1.5 rounded-full bg-white shadow-sm" />
+                    )}
+                  </div>
                 </div>
               </div>
               <button
@@ -1249,10 +1269,10 @@ const Navbar = () => {
                 href="https://crownexcel.ae"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden md:inline-flex items-center gap-1.5 pl-3 pr-4 xl:pr-8 2xl:pr-12 py-2 h-full self-stretch bg-[#2b3497] text-white  border-white transition text-sm font-medium whitespace-nowrap -mr-4 xl:-mr-8 2xl:-mr-12"
+                className="hidden md:inline-flex items-center gap-1.5 pl-3 pr-3 xl:pr-4 2xl:pr-8 py-2 h-full self-stretch bg-[#2b3497] text-white  border-white transition text-sm font-medium whitespace-nowrap -mr-2 xl:-mr-4 2xl:-mr-8"
                 aria-label="Crown Excel"
               >
-                <span className="text-xs xl:text-sm">CROWNYX</span>
+                <span className="text-xs  xl:text-sm">CROWNYX</span>
               </a>
             </div>
           </div>
