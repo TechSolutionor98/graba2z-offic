@@ -8,6 +8,74 @@ import { ChevronLeft, ChevronRight, ChevronDown, Minus, Plus } from "lucide-reac
 import Slider from "rc-slider"
 import "rc-slider/assets/index.css"
 
+const SortDropdown = ({ value, onChange }) => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const options = [
+    { value: "newest", label: "Newest First" },
+    { value: "price-low", label: "Price: Low to High" },
+    { value: "price-high", label: "Price: High to Low" },
+    { value: "name", label: "Name: A-Z" },
+  ]
+
+  const current = options.find((o) => o.value === value)?.label || "Sort"
+
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("mousedown", onDocClick)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", onDocClick)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [])
+
+  const handleSelect = (val) => {
+    onChange?.({ target: { value: val } })
+    setOpen(false)
+  }
+
+  return (
+    <div className="relative inline-block text-left" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((s) => !s)}
+        className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center gap-2"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="truncate max-w-[46vw] sm:max-w-none">{current}</span>
+        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <ul
+          className="absolute right-0 mt-1 w-56 max-w-[80vw] bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden"
+          role="listbox"
+        >
+          {options.map((opt) => (
+            <li key={opt.value} role="option" aria-selected={opt.value === value}>
+              <button
+                type="button"
+                onClick={() => handleSelect(opt.value)}
+                className={`w-full text-left px-4 py-2 text-gray-900 hover:bg-gray-100 ${
+                  opt.value === value ? "font-semibold" : ""
+                }`}
+              >
+                {opt.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 const OfferPage = () => {
   const { slug } = useParams()
   const [loading, setLoading] = useState(true)
@@ -34,6 +102,7 @@ const OfferPage = () => {
   const [selectedBrands, setSelectedBrands] = useState([])
   const [stockFilters, setStockFilters] = useState({ inStock: false, outOfStock: false })
   const [brandSearch, setBrandSearch] = useState("")
+  const [sortBy, setSortBy] = useState("newest")
   const [showPriceFilter, setShowPriceFilter] = useState(true)
   const [showCategoryFilter, setShowCategoryFilter] = useState(false)
   const [showBrandFilter, setShowBrandFilter] = useState(false)
@@ -587,6 +656,33 @@ const OfferPage = () => {
       filtered = filtered.filter(item => item.product?.countInStock === 0)
     }
 
+    // Apply sorting
+    if (sortBy === "price-low") {
+      filtered.sort((a, b) => {
+        const priceA = a.product?.salePrice || a.product?.regularPrice || 0
+        const priceB = b.product?.salePrice || b.product?.regularPrice || 0
+        return priceA - priceB
+      })
+    } else if (sortBy === "price-high") {
+      filtered.sort((a, b) => {
+        const priceA = a.product?.salePrice || a.product?.regularPrice || 0
+        const priceB = b.product?.salePrice || b.product?.regularPrice || 0
+        return priceB - priceA
+      })
+    } else if (sortBy === "name") {
+      filtered.sort((a, b) => {
+        const nameA = a.product?.name?.toLowerCase() || ""
+        const nameB = b.product?.name?.toLowerCase() || ""
+        return nameA.localeCompare(nameB)
+      })
+    } else if (sortBy === "newest") {
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.product?.createdAt || 0)
+        const dateB = new Date(b.product?.createdAt || 0)
+        return dateB - dateA
+      })
+    }
+
     setFilteredProducts(filtered)
   }
 
@@ -595,7 +691,7 @@ const OfferPage = () => {
     if (products.length > 0) {
       applyFilters()
     }
-  }, [selectedBrands, selectedCategory, priceRange, stockFilters, products])
+  }, [selectedBrands, selectedCategory, priceRange, stockFilters, sortBy, products])
 
   // Calculate price range when products load
   useEffect(() => {
@@ -1380,7 +1476,7 @@ const OfferPage = () => {
               {/* Categories Slider - First Line */}
               {sliderCategories.length > 0 && (
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">Categories...</h2>
+                  {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Categories...</h2> */}
                   <div className="relative">
                     <button
                       onClick={() => scrollSlider(categoriesScrollRef, 'left')}
@@ -1402,23 +1498,26 @@ const OfferPage = () => {
                           <button
                             key={item._id}
                             onClick={() => handleCategoryClick(catData._id)}
-                            className={`flex-shrink-0 w-32 h-24 rounded-lg transition-all flex items-center justify-center p-4 ${
+                            className={`flex-shrink-0 w-32 rounded-lg transition-all flex flex-col items-center p-2 ${
                               selectedCategory === catData._id
                                 ? 'bg-lime-100 border-2 border-lime-600'
                                 : ''
                             }`}
                           >
-                            {displayImage ? (
-                              <img
-                                src={displayImage}
-                                alt={displayName}
-                                className="max-h-full max-w-full object-contain"
-                              />
-                            ) : (
-                              <span className="text-sm font-semibold text-gray-700 text-center">
-                                {displayName}
-                              </span>
-                            )}
+                            <div className="flex-1 flex items-center justify-center w-full mb-2">
+                              {displayImage ? (
+                                <img
+                                  src={displayImage}
+                                  alt={displayName}
+                                  className="max-h-16 max-w-full object-contain"
+                                />
+                              ) : (
+                                <span className="text-2xl">📦</span>
+                              )}
+                            </div>
+                            <span className="text-xs font-semibold text-gray-700 text-center line-clamp-2 w-full">
+                              {displayName}
+                            </span>
                           </button>
                         )
                       })}
@@ -1437,7 +1536,7 @@ const OfferPage = () => {
               {/* Brands Slider - Second Line */}
               {sliderBrands.length > 0 && (
                 <section className="mb-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">Brands...</h2>
+                  {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Brands...</h2> */}
                   <div className="relative">
                     <button
                       onClick={() => scrollSlider(brandsScrollRef, 'left')}
@@ -1455,23 +1554,26 @@ const OfferPage = () => {
                         <button
                           key={item._id}
                           onClick={() => handleBrandClick(item.brand._id)}
-                          className={`flex-shrink-0 w-32 h-24 rounded-lg transition-all flex items-center justify-center p-4 ${
+                          className={`flex-shrink-0 w-32 rounded-lg transition-all flex flex-col items-center p-2 ${
                             selectedBrand === item.brand._id
                               ? 'bg-lime-100 border-2 border-lime-600'
                               : ''
                           }`}
                         >
-                          {item.brand.logo ? (
-                            <img
-                              src={item.brand.logo}
-                              alt={item.brand.name}
-                              className="max-h-full max-w-full object-contain"
-                            />
-                          ) : (
-                            <span className="text-sm font-semibold text-gray-700 text-center">
-                              {item.brand.name}
-                            </span>
-                          )}
+                          <div className="flex-1 flex items-center justify-center w-full mb-2">
+                            {item.brand.logo ? (
+                              <img
+                                src={item.brand.logo}
+                                alt={item.brand.name}
+                                className="max-h-16 max-w-full object-contain"
+                              />
+                            ) : (
+                              <span className="text-2xl">🏷️</span>
+                            )}
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700 text-center line-clamp-2 w-full">
+                            {item.brand.name}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -1492,7 +1594,8 @@ const OfferPage = () => {
               {filteredProducts.length > 0 && (
                 <section>
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-3xl font-bold text-gray-800">Products...</h2>
+                    <h2 className="text-3xl font-bold text-gray-800">Products</h2>
+                    <SortDropdown value={sortBy} onChange={(e) => setSortBy(e.target.value)} />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {filteredProducts.map((item, index) => (
