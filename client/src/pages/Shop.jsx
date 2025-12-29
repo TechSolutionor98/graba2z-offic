@@ -2590,7 +2590,7 @@ const Shop = () => {
                   <div className="relative">
                     <button
                       onClick={scrollSubCategoryPrev}
-                      className={`absolute -left-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
+                      className={`absolute left-0 md:-left-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
                         subCategoryScrollState.canScrollPrev 
                           ? 'bg-lime-500 text-white hover:bg-lime-600 cursor-pointer' 
                           : 'bg-white cursor-default opacity-50'
@@ -2603,7 +2603,7 @@ const Shop = () => {
                     <div
                       ref={subCategorySliderRef}
                       onScroll={updateSubCategoryScrollState}
-                      className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                      className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-10 md:px-12"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
                       {childCategories.map((child) => (
@@ -2646,7 +2646,7 @@ const Shop = () => {
 
                     <button
                       onClick={scrollSubCategoryNext}
-                      className={`absolute -right-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
+                      className={`absolute right-0 md:-right-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
                         subCategoryScrollState.canScrollNext 
                           ? 'bg-lime-500 text-white hover:bg-lime-600 cursor-pointer' 
                           : 'bg-white cursor-default opacity-50'
@@ -2691,7 +2691,7 @@ const Shop = () => {
                   <div className="relative">
                     <button
                       onClick={scrollBrandPrev}
-                      className={`absolute -left-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
+                      className={`absolute left-0 md:-left-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
                         brandScrollState.canScrollPrev 
                           ? 'bg-lime-500 text-white hover:bg-lime-600 cursor-pointer' 
                           : 'bg-white cursor-default opacity-50'
@@ -2704,7 +2704,7 @@ const Shop = () => {
                     <div
                       ref={brandSliderRef}
                       onScroll={updateBrandScrollState}
-                      className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                      className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-10 md:px-12"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
                       {availableBrands.map((brand) => (
@@ -2751,7 +2751,7 @@ const Shop = () => {
 
                     <button
                       onClick={scrollBrandNext}
-                      className={`absolute -right-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
+                      className={`absolute right-0 md:-right-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
                         brandScrollState.canScrollNext 
                           ? 'bg-lime-500 text-white hover:bg-lime-600 cursor-pointer' 
                           : 'bg-white cursor-default opacity-50'
