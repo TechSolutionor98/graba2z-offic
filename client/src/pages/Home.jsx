@@ -735,12 +735,42 @@ const Home = () => {
     }
   }, [brandCurrentIndex, brands.length])
 
-  const handleCategoryClick = (categoryName) => {
-    const category = categories.find((cat) => cat.name === categoryName)
-    if (category && category.name) {
-      navigate(generateShopURL({ parentCategory: category.name }))
-    } else {
-      navigate(`/product-category/computers/networking`)
+  const handleCategoryClick = (categoryOrItem) => {
+    // Handle if called with string (legacy compatibility) or object (new format)
+    if (typeof categoryOrItem === 'string') {
+      // Legacy: string name passed
+      const category = categories.find((cat) => cat.name === categoryOrItem)
+      if (category && category.name) {
+        navigate(generateShopURL({ parentCategory: category.name }))
+      } else {
+        navigate(`/shop`)
+      }
+    } else if (categoryOrItem && typeof categoryOrItem === 'object') {
+      // New format: full item object passed from CategorySliderUpdated
+      const item = categoryOrItem
+      
+      // Check if this is a subcategory (has category or parentSubCategory fields)
+      const isSubcategory = item.category || item.parentSubCategory
+      
+      if (isSubcategory) {
+        // This is a subcategory - need to find its parent category and build proper URL
+        const parentCategoryId = typeof item.category === 'object' ? item.category._id : item.category
+        const parentCategory = categories.find((cat) => cat._id === parentCategoryId)
+        
+        if (parentCategory) {
+          // Navigate with both parent category and subcategory
+          navigate(generateShopURL({ 
+            parentCategory: parentCategory.name,
+            subcategory: item.name
+          }))
+        } else {
+          // Fallback: just navigate to the subcategory name
+          navigate(generateShopURL({ subcategory: item.name }))
+        }
+      } else {
+        // This is a main category
+        navigate(generateShopURL({ parentCategory: item.name }))
+      }
     }
   }
 

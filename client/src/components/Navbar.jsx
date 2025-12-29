@@ -1501,6 +1501,16 @@ const Navbar = () => {
                   <HelpCircle size={20} className="mr-3" />
                   <strong>Help Center</strong>
                 </Link>
+                <a
+                  href="https://crownexcel.ae"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center py-3 text-gray-700 hover:bg-gray-50 rounded-lg px-2"
+                  onClick={closeMobileMenu}
+                >
+                  <Grid3X3 size={20} className="mr-3" />
+                  <strong>CROWNYX</strong>
+                </a>
               </div>
 
               {/* Shop by Category */}
@@ -1587,6 +1597,18 @@ const Navbar = () => {
                       </div>
                     )
                   })}
+
+                  {/* Static Category - Gaming Zone */}
+                  <div className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg">
+                    <a
+                      href="/gaming-zone"
+                      className="flex items-center flex-1"
+                      onClick={closeMobileMenu}
+                    >
+                      <strong>Gaming Zone</strong>
+                    </a>
+                    {/* <span className="text-gray-400 text-2xl font-bold">›</span> */}
+                  </div>
                 </div>
               </div>
             </div>

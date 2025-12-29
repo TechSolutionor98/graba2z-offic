@@ -332,9 +332,9 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                       }
                     }
                   } else {
-                    // Regular category - use onCategoryClick
+                    // Regular category or subcategory - pass the full item object
                     if (onCategoryClick) {
-                      onCategoryClick(item.name);
+                      onCategoryClick(item);
                     }
                   }
                 };
