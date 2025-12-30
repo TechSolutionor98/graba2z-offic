@@ -407,7 +407,7 @@ const AdminSubCategories3 = () => {
 
                 <div className="flex items-start gap-2 flex-col sm:flex-row sm:items-center">
                   <div className="flex items-center gap-2 text-gray-400 shrink-0">
-                    <Filter size={20} />
+                    {/* <Filter size={20} /> */}
                   </div>
 
                   <div className="w-full flex flex-col sm:flex-row gap-2">
