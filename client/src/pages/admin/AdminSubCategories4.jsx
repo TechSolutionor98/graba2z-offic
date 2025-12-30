@@ -6,7 +6,7 @@ import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import SafeDeleteModal from "../../components/admin/SafeDeleteModal"
 import MoveProductsModal from "../../components/admin/MoveProductsModal"
-import { Edit, Trash2, Plus, Search, Filter } from "lucide-react"
+import { Edit, Trash2, Plus, Search, Filter, X } from "lucide-react"
 import axios from "axios"
 import { getFullImageUrl } from "../../utils/imageUtils"
 
@@ -20,17 +20,51 @@ const AdminSubCategories4 = () => {
   const [level3SubCategories, setLevel3SubCategories] = useState([]) // Level 3
   const [loading, setLoading] = useState(true)
   const [brokenImageMap, setBrokenImageMap] = useState({})
-  const [searchTerm, setSearchTerm] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("all")
-  const [level1Filter, setLevel1Filter] = useState("all")
-  const [level2Filter, setLevel2Filter] = useState("all")
-  const [level3Filter, setLevel3Filter] = useState("all")
+  
+  // Restore filters from sessionStorage
+  const [searchTerm, setSearchTerm] = useState(() => {
+    return sessionStorage.getItem("adminSubCat4_searchTerm") || ""
+  })
+  const [categoryFilter, setCategoryFilter] = useState(() => {
+    return sessionStorage.getItem("adminSubCat4_categoryFilter") || "all"
+  })
+  const [level1Filter, setLevel1Filter] = useState(() => {
+    return sessionStorage.getItem("adminSubCat4_level1Filter") || "all"
+  })
+  const [level2Filter, setLevel2Filter] = useState(() => {
+    return sessionStorage.getItem("adminSubCat4_level2Filter") || "all"
+  })
+  const [level3Filter, setLevel3Filter] = useState(() => {
+    return sessionStorage.getItem("adminSubCat4_level3Filter") || "all"
+  })
+  
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [subcategoryToDelete, setSubcategoryToDelete] = useState(null)
   const [showMoveModal, setShowMoveModal] = useState(false)
   const [productsToMove, setProductsToMove] = useState([])
   const [deletionPending, setDeletionPending] = useState(null)
   const { showToast } = useToast()
+
+  // Persist filters to sessionStorage whenever they change
+  useEffect(() => {
+    sessionStorage.setItem("adminSubCat4_searchTerm", searchTerm)
+  }, [searchTerm])
+
+  useEffect(() => {
+    sessionStorage.setItem("adminSubCat4_categoryFilter", categoryFilter)
+  }, [categoryFilter])
+
+  useEffect(() => {
+    sessionStorage.setItem("adminSubCat4_level1Filter", level1Filter)
+  }, [level1Filter])
+
+  useEffect(() => {
+    sessionStorage.setItem("adminSubCat4_level2Filter", level2Filter)
+  }, [level2Filter])
+
+  useEffect(() => {
+    sessionStorage.setItem("adminSubCat4_level3Filter", level3Filter)
+  }, [level3Filter])
 
   useEffect(() => {
     fetchSubCategories()
@@ -39,6 +73,39 @@ const AdminSubCategories4 = () => {
     fetchLevel2SubCategories()
     fetchLevel3SubCategories()
   }, [])
+
+  // Validate filters after data is loaded
+  useEffect(() => {
+    if (!loading && categories.length > 0) {
+      if (categoryFilter !== "all" && !categories.find(c => c._id === categoryFilter)) {
+        setCategoryFilter("all")
+      }
+    }
+  }, [loading, categories, categoryFilter])
+
+  useEffect(() => {
+    if (!loading && level1SubCategories.length > 0) {
+      if (level1Filter !== "all" && !level1SubCategories.find(s => s._id === level1Filter)) {
+        setLevel1Filter("all")
+      }
+    }
+  }, [loading, level1SubCategories, level1Filter])
+
+  useEffect(() => {
+    if (!loading && level2SubCategories.length > 0) {
+      if (level2Filter !== "all" && !level2SubCategories.find(s => s._id === level2Filter)) {
+        setLevel2Filter("all")
+      }
+    }
+  }, [loading, level2SubCategories, level2Filter])
+
+  useEffect(() => {
+    if (!loading && level3SubCategories.length > 0) {
+      if (level3Filter !== "all" && !level3SubCategories.find(s => s._id === level3Filter)) {
+        setLevel3Filter("all")
+      }
+    }
+  }, [loading, level3SubCategories, level3Filter])
 
   const fetchSubCategories = async () => {
     try {
@@ -245,6 +312,14 @@ const AdminSubCategories4 = () => {
     }
   }
 
+  const clearFilters = () => {
+    setSearchTerm("")
+    setCategoryFilter("all")
+    setLevel1Filter("all")
+    setLevel2Filter("all")
+    setLevel3Filter("all")
+  }
+
   // Filter Level 1 subcategories based on selected category
   const filteredLevel1SubCategories = categoryFilter === "all" 
     ? level1SubCategories 
@@ -267,6 +342,7 @@ const AdminSubCategories4 = () => {
     : level3SubCategories.filter(sub => sub.parentSubCategory?._id === level2Filter)
 
   const filteredSubCategories = subCategories.filter((subCategory) => {
+    if (!subCategory || !subCategory.name) return false
     const matchesSearch = subCategory.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = categoryFilter === "all" || subCategory.category?._id === categoryFilter
     const matchesLevel3 = level3Filter === "all" || subCategory.parentSubCategory?._id === level3Filter
@@ -424,7 +500,7 @@ const AdminSubCategories4 = () => {
                 </div>
 
                 {/* Row 3: Level 3 */}
-                <div className="flex">
+                <div className="flex gap-2">
                   <select
                     value={level3Filter}
                     onChange={(e) => setLevel3Filter(e.target.value)}
@@ -437,6 +513,14 @@ const AdminSubCategories4 = () => {
                       </option>
                     ))}
                   </select>
+
+                  <button
+                    onClick={clearFilters}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <X size={16} />
+                    Clear Filters
+                  </button>
                 </div>
               </div>
             </div>

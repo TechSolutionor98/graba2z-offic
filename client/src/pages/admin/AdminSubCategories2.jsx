@@ -6,7 +6,7 @@ import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import SafeDeleteModal from "../../components/admin/SafeDeleteModal"
 import MoveProductsModal from "../../components/admin/MoveProductsModal"
-import { Edit, Trash2, Plus, Search, Filter } from "lucide-react"
+import { Edit, Trash2, Plus, Search, Filter, X } from "lucide-react"
 import axios from "axios"
 import { getFullImageUrl } from "../../utils/imageUtils"
 
@@ -18,9 +18,18 @@ const AdminSubCategories2 = () => {
   const [parentSubCategories, setParentSubCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [brokenImageMap, setBrokenImageMap] = useState({})
-  const [searchTerm, setSearchTerm] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("all")
-  const [parentFilter, setParentFilter] = useState("all")
+  
+  // Restore filters from sessionStorage
+  const [searchTerm, setSearchTerm] = useState(() => {
+    return sessionStorage.getItem("adminSubCat2_searchTerm") || ""
+  })
+  const [categoryFilter, setCategoryFilter] = useState(() => {
+    return sessionStorage.getItem("adminSubCat2_categoryFilter") || "all"
+  })
+  const [parentFilter, setParentFilter] = useState(() => {
+    return sessionStorage.getItem("adminSubCat2_parentFilter") || "all"
+  })
+  
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [subcategoryToDelete, setSubcategoryToDelete] = useState(null)
   const [showMoveModal, setShowMoveModal] = useState(false)
@@ -28,11 +37,41 @@ const AdminSubCategories2 = () => {
   const [deletionPending, setDeletionPending] = useState(null)
   const { showToast } = useToast()
 
+  // Persist filters to sessionStorage whenever they change
+  useEffect(() => {
+    sessionStorage.setItem("adminSubCat2_searchTerm", searchTerm)
+  }, [searchTerm])
+
+  useEffect(() => {
+    sessionStorage.setItem("adminSubCat2_categoryFilter", categoryFilter)
+  }, [categoryFilter])
+
+  useEffect(() => {
+    sessionStorage.setItem("adminSubCat2_parentFilter", parentFilter)
+  }, [parentFilter])
+
   useEffect(() => {
     fetchSubCategories()
     fetchCategories()
     fetchParentSubCategories()
   }, [])
+
+  // Validate filters after data is loaded
+  useEffect(() => {
+    if (!loading && categories.length > 0) {
+      if (categoryFilter !== "all" && !categories.find(c => c._id === categoryFilter)) {
+        setCategoryFilter("all")
+      }
+    }
+  }, [loading, categories, categoryFilter])
+
+  useEffect(() => {
+    if (!loading && parentSubCategories.length > 0) {
+      if (parentFilter !== "all" && !parentSubCategories.find(s => s._id === parentFilter)) {
+        setParentFilter("all")
+      }
+    }
+  }, [loading, parentSubCategories, parentFilter])
 
   const fetchSubCategories = async () => {
     try {
@@ -212,7 +251,11 @@ const AdminSubCategories2 = () => {
       showToast(error.response?.data?.message || "Error moving products", "error")
     }
   }
-
+  const clearFilters = () => {
+    setSearchTerm("")
+    setCategoryFilter("all")
+    setParentFilter("all")
+  }
   // Filter parent subcategories (Level 1) based on selected parent category
   const filteredParentSubCategories = categoryFilter === "all" 
     ? parentSubCategories 
@@ -222,6 +265,7 @@ const AdminSubCategories2 = () => {
       })
 
   const filteredSubCategories = subCategories.filter((subCategory) => {
+    if (!subCategory || !subCategory.name) return false
     const matchesSearch = subCategory.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = categoryFilter === "all" || subCategory.category?._id === categoryFilter
     const matchesParent = parentFilter === "all" || subCategory.parentSubCategory?._id === parentFilter
@@ -349,6 +393,14 @@ const AdminSubCategories2 = () => {
                         </option>
                       ))}
                     </select>
+
+                    <button
+                      onClick={clearFilters}
+                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap"
+                    >
+                      <X size={16} />
+                      Clear Filters
+                    </button>
                   </div>
                 </div>
               </div>
