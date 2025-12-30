@@ -461,6 +461,11 @@ const AdminSidebar = () => {
       path: "/admin/offer-pages",
     },
     {
+      title: "Gaming Zone",
+      icon: Tag,
+      path: "/admin/gaming-zone",
+    },
+    {
       title: "Coupons",
       icon: Percent,
       dropdown: "coupons",

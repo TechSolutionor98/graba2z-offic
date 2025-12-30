@@ -55,6 +55,7 @@ import BackToSchoolProfessional from "./pages/BackToSchoolProfessional"
 import VoucherTerms from "./pages/VoucherTerms"
 import DeliveryTerms from "./pages/DeliveryTerms"
 import OfferPage from "./pages/OfferPage"
+import GamingZonePage from "./pages/GamingZonePage"
 
 // Import admin pages
 import AdminLogin from "./pages/admin/AdminLogin"
@@ -81,6 +82,10 @@ import AddOfferPage from "./pages/admin/AddOfferPage"
 import AddOfferProduct from "./pages/admin/AddOfferProduct"
 import AddOfferBrand from "./pages/admin/AddOfferBrand"
 import AddOfferCategory from "./pages/admin/AddOfferCategory"
+import GamingZonePages from "./pages/admin/GamingZonePages"
+import AddGamingZonePage from "./pages/admin/AddGamingZonePage"
+import AddGamingZoneBrand from "./pages/admin/AddGamingZoneBrand"
+import AddGamingZoneCategory from "./pages/admin/AddGamingZoneCategory"
 import AdminDeliveryCharges from "./pages/admin/AdminDeliveryCharges"
 import AdminSettings from "./pages/admin/AdminSettings"
 import AdminBlogs from "./pages/admin/AdminBlogs"
@@ -273,6 +278,13 @@ function App() {
                               <Route path="offer-brands/edit/:id" element={<AddOfferBrand />} />
                               <Route path="offer-categories/add" element={<AddOfferCategory />} />
                               <Route path="offer-categories/edit/:id" element={<AddOfferCategory />} />
+                              <Route path="gaming-zone" element={<GamingZonePages />} />
+                              <Route path="gaming-zone/add" element={<AddGamingZonePage />} />
+                              <Route path="gaming-zone/edit/:id" element={<AddGamingZonePage />} />
+                              <Route path="gaming-zone-brands/add" element={<AddGamingZoneBrand />} />
+                              <Route path="gaming-zone-brands/edit/:id" element={<AddGamingZoneBrand />} />
+                              <Route path="gaming-zone-categories/add" element={<AddGamingZoneCategory />} />
+                              <Route path="gaming-zone-categories/edit/:id" element={<AddGamingZoneCategory />} />
                               <Route path="delivery-charges" element={<AdminDeliveryCharges />} />
                               <Route path="delivery-charges/add" element={<AddDeliveryCharge />} />
                               <Route path="settings" element={<AdminSettings />} />
@@ -376,6 +388,7 @@ function App() {
                     <Route path="voucher-terms" element={<VoucherTerms />} />
                     <Route path="delivery-terms" element={<DeliveryTerms />} />
                     <Route path="offers/:slug" element={<OfferPage />} />
+                    <Route path="gaming-zone/:slug" element={<GamingZonePage />} />
 
                     {/* Protected Routes */}
                     <Route
