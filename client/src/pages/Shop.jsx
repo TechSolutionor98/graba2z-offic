@@ -2661,7 +2661,7 @@ const Shop = () => {
             })()}
 
             {/* Brand Slider - Shows brands from currently displayed products */}
-            {!searchQuery.trim() && products.length > 0 && (() => {
+            {/* {!searchQuery.trim() && products.length > 0 && (() => {
               // Extract unique brand IDs from current products
               // Products may have brand as object or ID string
               const productBrandIds = [...new Set(
@@ -2763,7 +2763,7 @@ const Shop = () => {
                   </div>
                 </section>
               )
-            })()}
+            })()} */}
 
             {/* Products Found and Sort Section - Above Product Cards */}
             <div className="flex flex-row justify-between items-center mb-6 relative z-10">
