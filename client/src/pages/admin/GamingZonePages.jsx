@@ -8,6 +8,20 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import config from "../../config/config"
 import { getFullImageUrl } from "../../utils/imageUtils"
 
+// Helper function to get category level label
+const getCategoryLevelLabel = (category) => {
+  if (!category) return 'N/A'
+  if (category.type === 'category' || !category.level) {
+    return 'Parent Category'
+  }
+  // SubCategory with level field
+  if (category.level === 1) return 'SubCategory Level 1'
+  if (category.level === 2) return 'SubCategory Level 2'
+  if (category.level === 3) return 'SubCategory Level 3'
+  if (category.level === 4) return 'SubCategory Level 4'
+  return 'SubCategory'
+}
+
 const GamingZonePages = () => {
   const [gamingZonePages, setGamingZonePages] = useState([])
   const [pagesLoading, setPagesLoading] = useState(true)
@@ -435,7 +449,7 @@ const GamingZonePages = () => {
                   >
                     Categories
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => setActiveTab('brands')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       activeTab === 'brands'
@@ -444,7 +458,7 @@ const GamingZonePages = () => {
                     }`}
                   >
                     Brands
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
@@ -571,7 +585,7 @@ const GamingZonePages = () => {
                           Category
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Type
+                          Level
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                           Status
@@ -601,8 +615,18 @@ const GamingZonePages = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                              {item.categoryType || 'N/A'}
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                              item.category?.type === 'category' || !item.category?.level
+                                ? 'bg-purple-100 text-purple-800'
+                                : item.category?.level === 1
+                                ? 'bg-blue-100 text-blue-800'
+                                : item.category?.level === 2
+                                ? 'bg-green-100 text-green-800'
+                                : item.category?.level === 3
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-orange-100 text-orange-800'
+                            }`}>
+                              {getCategoryLevelLabel(item.category)}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">

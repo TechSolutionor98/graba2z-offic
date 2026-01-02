@@ -249,6 +249,13 @@ const GamingZonePage = () => {
         `${config.API_URL}/api/gaming-zone-categories/page/${slug}`
       )
       const activeCategories = categoriesResponse.data.filter(cat => cat.isActive)
+      console.log('\n🎮 Gaming Zone Categories from Admin:')
+      console.log('Total categories:', activeCategories.length)
+      activeCategories.forEach((cat, index) => {
+        console.log(`\n  ${index + 1}. ${cat.category?.name}`)
+        console.log('     ID:', cat.category?._id)
+        console.log('     Full structure:', cat.category)
+      })
       setGamingZoneCategories(activeCategories)
 
       // Fetch all products for this gaming zone (no pagination)
@@ -256,7 +263,39 @@ const GamingZonePage = () => {
         `${config.API_URL}/api/gaming-zone-pages/slug/${slug}/products?page=1&limit=10000`
       )
 
+      console.log('\n🌐 API Response:', productsResponse.data)
+      
       const fetchedProducts = productsResponse.data.products || []
+      console.log('\n🎮 Gaming Zone Products Loaded:', fetchedProducts.length)
+      
+      if (fetchedProducts.length === 0) {
+        console.error('⚠️ WARNING: API returned 0 products!')
+        console.log('API URL called:', `${config.API_URL}/api/gaming-zone-pages/slug/${slug}/products?page=1&limit=10000`)
+        console.log('Full API response:', productsResponse.data)
+        console.log('\n❌ PROBLEM: The backend is not returning any products for this gaming zone.')
+        console.log('Possible causes:')
+        console.log('1. Products are not linked to this gaming zone in the database')
+        console.log('2. The gaming zone categories don\'t match any product categories')
+        console.log('3. The backend API logic needs to be checked')
+        console.log('\nCategories configured for this gaming zone:')
+        activeCategories.forEach(cat => {
+          console.log(`  - ${cat.category?.name} (ID: ${cat.category?._id})`)
+        })
+      }
+      
+      // Log sample products to understand structure
+      if (fetchedProducts.length > 0) {
+        console.log('\n📦 Sample Product Structures:')
+        fetchedProducts.slice(0, 3).forEach((product, index) => {
+          console.log(`\n  Product ${index + 1}: ${product.name}`)
+          console.log('    Parent Category:', product.parentCategory?.name, '|', product.parentCategory?._id)
+          console.log('    Category (L1):', product.category?.name, '|', product.category?._id)
+          console.log('    SubCategory2 (L2):', product.subCategory2?.name, '|', product.subCategory2?._id)
+          console.log('    SubCategory3 (L3):', product.subCategory3?.name, '|', product.subCategory3?._id)
+          console.log('    SubCategory4 (L4):', product.subCategory4?.name, '|', product.subCategory4?._id)
+        })
+      }
+      
       setAllProducts(fetchedProducts)
       setProducts(fetchedProducts)
       setFilteredProducts(fetchedProducts)
@@ -292,35 +331,85 @@ const GamingZonePage = () => {
   const applyFiltersAndSort = () => {
     let filtered = [...allProducts]
 
+    console.log('\n🎮 ===== GAMING ZONE FILTER DEBUG =====')
+    console.log('📊 Total products available:', allProducts.length)
+    console.log('🎯 Selected categories:', selectedCategories)
+    console.log('🏷️ Selected brands:', selectedBrands)
+    console.log('💰 Price range:', priceRange, '(min:', minPrice, 'max:', maxPrice, ')')
+    console.log('📦 Stock filters:', stockFilters)
+    
     // Filter by selected categories
     if (selectedCategories.length > 0) {
-      filtered = filtered.filter(product => 
-        selectedCategories.some(catId => 
-          product.parentCategory?._id === catId ||
-          product.category?._id === catId ||
-          product.subCategory2?._id === catId
+      console.log('\n🔍 APPLYING CATEGORY FILTER...')
+      
+      const beforeCount = filtered.length
+      
+      filtered = filtered.filter((product, index) => {
+        // Helper function to get ID from field (handles both object and string)
+        const getId = (field) => {
+          if (!field) return null
+          return typeof field === 'object' ? field._id : field
+        }
+
+        // Build array of all category IDs in this product's hierarchy
+        const productCategoryIds = [
+          getId(product.parentCategory),
+          getId(product.parent_category),
+          getId(product.category),
+          getId(product.subCategory2),
+          getId(product.subcategory2),
+          getId(product.subCategory3),
+          getId(product.subcategory3),
+          getId(product.subCategory4),
+          getId(product.subcategory4)
+        ].filter(Boolean) // Remove null/undefined values
+
+        // Check if ANY selected category matches ANY of the product's category IDs
+        const match = selectedCategories.some(selectedCatId => 
+          productCategoryIds.includes(selectedCatId)
         )
-      )
+
+        // Debug first 3 products in detail
+        if (index < 3) {
+          console.log(`\n  📦 Product ${index + 1}: "${product.name}"`)
+          console.log('     Product category IDs:', productCategoryIds)
+          console.log('     Match:', match ? '✅ YES' : '❌ NO')
+        }
+        
+        return match
+      })
+      
+      console.log(`\n  ✅ Category filter: ${beforeCount} → ${filtered.length} products`)
+    } else {
+      console.log('\n⚠️ No categories selected - showing all products')
     }
 
     // Filter by selected brands
     if (selectedBrands.length > 0) {
+      const beforeCount = filtered.length
       filtered = filtered.filter(product =>
         selectedBrands.includes(product.brand?._id)
       )
+      console.log(`  ✅ Brand filter: ${beforeCount} → ${filtered.length} products`)
     }
 
     // Filter by price range
+    const beforePriceCount = filtered.length
     filtered = filtered.filter(product => {
       const price = product.price || 0
       return price >= priceRange[0] && price <= priceRange[1]
     })
+    console.log(`  ✅ Price filter: ${beforePriceCount} → ${filtered.length} products`)
 
     // Filter by stock status
     if (stockFilters.inStock && !stockFilters.outOfStock) {
+      const beforeCount = filtered.length
       filtered = filtered.filter(p => p.stockStatus !== "Out of Stock")
+      console.log(`  ✅ Stock filter (In Stock): ${beforeCount} → ${filtered.length} products`)
     } else if (!stockFilters.inStock && stockFilters.outOfStock) {
+      const beforeCount = filtered.length
       filtered = filtered.filter(p => p.stockStatus === "Out of Stock")
+      console.log(`  ✅ Stock filter (Out of Stock): ${beforeCount} → ${filtered.length} products`)
     }
 
     // Apply sorting
@@ -338,6 +427,9 @@ const GamingZonePage = () => {
       default:
         filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     }
+
+    console.log(`\n🎉 FINAL RESULT: ${filtered.length} products after all filters\n`)
+    console.log('=====================================\n')
 
     setFilteredProducts(filtered)
     setTotalProducts(filtered.length)
@@ -478,28 +570,122 @@ const GamingZonePage = () => {
             {/* Sidebar Filters - Desktop */}
             <aside className="hidden lg:block w-64 flex-shrink-0">
               <div className="sticky top-4 space-y-6">
-                {/* Clear Filters */}
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-                  <button
-                    onClick={clearAllFilters}
-                    className="text-sm text-blue-600 hover:text-blue-700"
-                  >
-                    Clear All
-                  </button>
-                </div>
+                {/* Active Filters Section */}
+                {(selectedCategories.length > 0 || 
+                  selectedBrands.length > 0 || 
+                  stockFilters.inStock || 
+                  stockFilters.outOfStock || 
+                  priceRange[0] !== minPrice || 
+                  priceRange[1] !== maxPrice) && (
+                  <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
+                      <button
+                        onClick={clearAllFilters}
+                        className="text-xs text-red-600 hover:text-red-700 font-medium hover:underline"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {/* Category Filters */}
+                      {selectedCategories.map((catId) => {
+                        const category = gamingZoneCategories.find(c => c.category._id === catId)
+                        return category ? (
+                          <div key={catId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                            <span className="text-gray-700">
+                              <span className="font-semibold">Category:</span> {category.category.name}
+                            </span>
+                            <button
+                              onClick={() => handleCategoryToggle(catId)}
+                              className="text-red-500 hover:text-red-700 ml-2"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : null
+                      })}
+
+                      {/* Selected Brands */}
+                      {selectedBrands.map((brandId) => {
+                        const brand = brands.find(b => b._id === brandId)
+                        return brand ? (
+                          <div key={brandId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                            <span className="text-gray-700">
+                              <span className="font-semibold">Brand:</span> {brand.name}
+                            </span>
+                            <button
+                              onClick={() => handleBrandToggle(brandId)}
+                              className="text-red-500 hover:text-red-700 ml-2"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : null
+                      })}
+
+                      {/* Price Range Filter */}
+                      {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
+                        <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold">Price:</span> AED {priceRange[0].toLocaleString()} - AED {priceRange[1].toLocaleString()}
+                          </span>
+                          <button
+                            onClick={() => setPriceRange([minPrice, maxPrice])}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Stock Status Filters */}
+                      {stockFilters.inStock && (
+                        <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold">Stock:</span> In Stock
+                          </span>
+                          <button
+                            onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+
+                      {stockFilters.outOfStock && (
+                        <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold">Stock:</span> Out of Stock
+                          </span>
+                          <button
+                            onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Price Filter */}
                 <div className="border-b pb-4">
                   <button
                     onClick={() => setShowPriceFilter(!showPriceFilter)}
-                    className="flex justify-between items-center w-full text-left"
+                    className={`flex items-center justify-between w-full text-left font-medium ${
+                      priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+                        ? "text-lime-500"
+                        : "text-gray-900"
+                    }`}
                   >
-                    <span className="font-medium text-gray-900">Price Range</span>
-                    {showPriceFilter ? <Minus size={20} /> : <Plus size={20} />}
+                    Price Range
+                    {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                   </button>
                   {showPriceFilter && (
-                    <div className="mt-4">
+                    <div className="mt-4 space-y-4">
                       <PriceFilter
                         min={minPrice}
                         max={maxPrice}
@@ -515,13 +701,17 @@ const GamingZonePage = () => {
                   <div className="border-b pb-4">
                     <button
                       onClick={() => setShowCategoryFilter(!showCategoryFilter)}
-                      className="flex justify-between items-center w-full text-left"
+                      className={`flex items-center justify-between w-full text-left font-medium ${
+                        selectedCategories.length > 0
+                          ? "text-lime-500"
+                          : "text-gray-900"
+                      }`}
                     >
-                      <span className="font-medium text-gray-900">Categories</span>
-                      {showCategoryFilter ? <Minus size={20} /> : <Plus size={20} />}
+                      Categories
+                      {showCategoryFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                     </button>
                     {showCategoryFilter && (
-                      <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
+                      <div className="mt-4 space-y-2 max-h-64 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                         {gamingZoneCategories.map((cat) => (
                           <label key={cat._id} className="flex items-center space-x-2 cursor-pointer">
                             <input
@@ -543,10 +733,19 @@ const GamingZonePage = () => {
                   <div className="border-b pb-4">
                     <button
                       onClick={() => setShowBrandFilter(!showBrandFilter)}
-                      className="flex justify-between items-center w-full text-left"
+                      className={`flex items-center justify-between w-full text-left font-medium ${
+                        selectedBrands.length > 0 ? "text-lime-500" : "text-gray-900"
+                      }`}
                     >
-                      <span className="font-medium text-gray-900">Brands</span>
-                      {showBrandFilter ? <Minus size={20} /> : <Plus size={20} />}
+                      <span className="flex items-center gap-2">
+                        Brands
+                        {selectedBrands.length > 0 && (
+                          <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-lime-500 rounded-full">
+                            {selectedBrands.length}
+                          </span>
+                        )}
+                      </span>
+                      {showBrandFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                     </button>
                     {showBrandFilter && (
                       <div className="mt-4 space-y-2">
@@ -555,20 +754,23 @@ const GamingZonePage = () => {
                           placeholder="Search brands..."
                           value={brandSearch}
                           onChange={(e) => setBrandSearch(e.target.value)}
-                          className="w-full px-3 py-2 border rounded-md text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500"
                         />
-                        <div className="max-h-48 overflow-y-auto space-y-2">
+                        <div className="max-h-48 overflow-y-auto space-y-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                           {filteredBrands.map((brand) => (
                             <label key={brand._id} className="flex items-center space-x-2 cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={selectedBrands.includes(brand._id)}
                                 onChange={() => handleBrandToggle(brand._id)}
-                                className="w-4 h-4 text-blue-600 rounded"
+                                className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
                               />
                               <span className="text-sm text-gray-700">{brand.name}</span>
                             </label>
                           ))}
+                          {filteredBrands.length === 0 && (
+                            <p className="text-sm text-gray-500 italic">No brands found</p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -577,75 +779,185 @@ const GamingZonePage = () => {
 
                 {/* Stock Status Filter */}
                 <div className="border-b pb-4">
-                  <h4 className="font-medium text-gray-900 mb-3">Stock Status</h4>
+                  <div className={`font-medium mb-4 ${
+                    stockFilters.inStock || stockFilters.outOfStock
+                      ? "text-lime-500"
+                      : "text-gray-900"
+                  }`}>Stock Status</div>
                   <div className="space-y-2">
-                    <label className="flex items-center space-x-2 cursor-pointer">
+                    <div className="flex items-center">
                       <input
-                        type="checkbox"
+                        type="radio"
+                        id="stock-all"
+                        name="stock-filter"
+                        checked={!stockFilters.inStock && !stockFilters.outOfStock}
+                        onChange={() => setStockFilters({ inStock: false, outOfStock: false })}
+                        className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
+                      />
+                      <label htmlFor="stock-all" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                        All Products
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        id="stock-in"
+                        name="stock-filter"
                         checked={stockFilters.inStock}
                         onChange={(e) =>
-                          setStockFilters({ ...stockFilters, inStock: e.target.checked })
+                          setStockFilters({ inStock: e.target.checked, outOfStock: false })
                         }
-                        className="w-4 h-4 text-blue-600 rounded"
+                        className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
-                      <span className="text-sm text-gray-700">In Stock</span>
-                    </label>
-                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <label htmlFor="stock-in" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                        In Stock
+                      </label>
+                    </div>
+                    <div className="flex items-center">
                       <input
-                        type="checkbox"
+                        type="radio"
+                        id="stock-out"
+                        name="stock-filter"
                         checked={stockFilters.outOfStock}
                         onChange={(e) =>
-                          setStockFilters({ ...stockFilters, outOfStock: e.target.checked })
+                          setStockFilters({ inStock: false, outOfStock: e.target.checked })
                         }
-                        className="w-4 h-4 text-blue-600 rounded"
+                        className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
-                      <span className="text-sm text-gray-700">Out of Stock</span>
-                    </label>
+                      <label htmlFor="stock-out" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                        Out of Stock
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
             </aside>
 
-            {/* Mobile Filter Button */}
-            <button
-              onClick={() => setIsMobileFilterOpen(true)}
-              className="lg:hidden fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-full shadow-lg z-40"
-            >
-              <Filter size={24} />
-            </button>
-
             {/* Mobile Filter Overlay */}
             {isMobileFilterOpen && (
-              <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50">
-                <div className="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-xl overflow-y-auto">
-                  <div className="p-4">
-                    <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-lg font-semibold">Filters</h3>
-                      <button onClick={() => setIsMobileFilterOpen(false)}>
-                        <X size={24} />
-                      </button>
-                    </div>
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
+                <div className="fixed inset-y-0 left-0 w-full max-w-sm bg-white shadow-xl overflow-y-auto">
+                  <div className="sticky top-0 bg-white border-b z-10 px-4 py-4 flex items-center justify-between">
+                    <h2 className="text-lg font-bold">Filters</h2>
+                    <button
+                      onClick={() => setIsMobileFilterOpen(false)}
+                      className="p-2 hover:bg-gray-100 rounded-full"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                  
+                  <div className="p-4 space-y-6">
+                    {/* Active Filters Section - Mobile */}
+                    {(selectedCategories.length > 0 || 
+                      selectedBrands.length > 0 || 
+                      stockFilters.inStock || 
+                      stockFilters.outOfStock || 
+                      priceRange[0] !== minPrice || 
+                      priceRange[1] !== maxPrice) && (
+                      <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
+                          <button
+                            onClick={clearAllFilters}
+                            className="text-xs text-red-600 hover:text-red-700 font-medium hover:underline"
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          {selectedCategories.map((catId) => {
+                            const category = gamingZoneCategories.find(c => c.category._id === catId)
+                            return category ? (
+                              <div key={catId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                                <span className="text-gray-700">
+                                  <span className="font-semibold">Category:</span> {category.category.name}
+                                </span>
+                                <button
+                                  onClick={() => handleCategoryToggle(catId)}
+                                  className="text-red-500 hover:text-red-700 ml-2"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ) : null
+                          })}
+                          {selectedBrands.map((brandId) => {
+                            const brand = brands.find((b) => b._id === brandId)
+                            return brand ? (
+                              <div key={brandId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                                <span className="text-gray-700">
+                                  <span className="font-semibold">Brand:</span> {brand.name}
+                                </span>
+                                <button
+                                  onClick={() => handleBrandToggle(brandId)}
+                                  className="text-red-500 hover:text-red-700 ml-2"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ) : null
+                          })}
+                          {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
+                            <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                              <span className="text-gray-700">
+                                <span className="font-semibold">Price:</span> AED{priceRange[0]} - AED{priceRange[1]}
+                              </span>
+                              <button
+                                onClick={() => setPriceRange([minPrice, maxPrice])}
+                                className="text-red-500 hover:text-red-700 ml-2"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
+                          {stockFilters.inStock && (
+                            <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                              <span className="text-gray-700">
+                                <span className="font-semibold">Stock:</span> In Stock
+                              </span>
+                              <button
+                                onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
+                                className="text-red-500 hover:text-red-700 ml-2"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
+                          {stockFilters.outOfStock && (
+                            <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                              <span className="text-gray-700">
+                                <span className="font-semibold">Stock:</span> Out of Stock
+                              </span>
+                              <button
+                                onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
+                                className="text-red-500 hover:text-red-700 ml-2"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Same filters as desktop */}
                     <div className="space-y-6">
-                      <button
-                        onClick={clearAllFilters}
-                        className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                      >
-                        Clear All Filters
-                      </button>
-
-                      {/* Price Filter */}
+                      {/* Price Filter - Mobile */}
                       <div className="border-b pb-4">
                         <button
                           onClick={() => setShowPriceFilter(!showPriceFilter)}
-                          className="flex justify-between items-center w-full text-left"
+                          className={`flex items-center justify-between w-full text-left font-medium ${
+                            priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+                              ? "text-lime-500"
+                              : "text-gray-900"
+                          }`}
                         >
-                          <span className="font-medium text-gray-900">Price Range</span>
-                          {showPriceFilter ? <Minus size={20} /> : <Plus size={20} />}
+                          Price Range
+                          {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                         </button>
                         {showPriceFilter && (
-                          <div className="mt-4">
+                          <div className="mt-4 space-y-4">
                             <PriceFilter
                               min={minPrice}
                               max={maxPrice}
@@ -656,15 +968,19 @@ const GamingZonePage = () => {
                         )}
                       </div>
 
-                      {/* Categories */}
+                      {/* Categories - Mobile */}
                       {gamingZoneCategories.length > 0 && (
                         <div className="border-b pb-4">
                           <button
                             onClick={() => setShowCategoryFilter(!showCategoryFilter)}
-                            className="flex justify-between items-center w-full text-left"
+                            className={`flex items-center justify-between w-full text-left font-medium ${
+                              selectedCategories.length > 0
+                                ? "text-lime-500"
+                                : "text-gray-900"
+                            }`}
                           >
-                            <span className="font-medium text-gray-900">Categories</span>
-                            {showCategoryFilter ? <Minus size={20} /> : <Plus size={20} />}
+                            Categories
+                            {showCategoryFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                           </button>
                           {showCategoryFilter && (
                             <div className="mt-4 space-y-2 max-h-64 overflow-y-auto">
@@ -674,7 +990,7 @@ const GamingZonePage = () => {
                                     type="checkbox"
                                     checked={selectedCategories.includes(cat.category._id)}
                                     onChange={() => handleCategoryToggle(cat.category._id)}
-                                    className="w-4 h-4 text-blue-600 rounded"
+                                    className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
                                   />
                                   <span className="text-sm text-gray-700">{cat.category.name}</span>
                                 </label>
@@ -684,15 +1000,24 @@ const GamingZonePage = () => {
                         </div>
                       )}
 
-                      {/* Brands */}
+                      {/* Brands - Mobile */}
                       {brands.length > 0 && (
                         <div className="border-b pb-4">
                           <button
                             onClick={() => setShowBrandFilter(!showBrandFilter)}
-                            className="flex justify-between items-center w-full text-left"
+                            className={`flex items-center justify-between w-full text-left font-medium ${
+                              selectedBrands.length > 0 ? "text-lime-500" : "text-gray-900"
+                            }`}
                           >
-                            <span className="font-medium text-gray-900">Brands</span>
-                            {showBrandFilter ? <Minus size={20} /> : <Plus size={20} />}
+                            <span className="flex items-center gap-2">
+                              Brands
+                              {selectedBrands.length > 0 && (
+                                <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-lime-500 rounded-full">
+                                  {selectedBrands.length}
+                                </span>
+                              )}
+                            </span>
+                            {showBrandFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                           </button>
                           {showBrandFilter && (
                             <div className="mt-4 space-y-2">
@@ -701,53 +1026,103 @@ const GamingZonePage = () => {
                                 placeholder="Search brands..."
                                 value={brandSearch}
                                 onChange={(e) => setBrandSearch(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-md text-sm"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500"
                               />
-                              <div className="max-h-48 overflow-y-auto space-y-2">
+                              <div className="space-y-2 max-h-64 overflow-y-auto">
                                 {filteredBrands.map((brand) => (
-                                  <label key={brand._id} className="flex items-center space-x-2 cursor-pointer">
+                                  <div key={brand._id} className="flex items-center">
                                     <input
                                       type="checkbox"
+                                      id={`brand-mobile-${brand._id}`}
                                       checked={selectedBrands.includes(brand._id)}
                                       onChange={() => handleBrandToggle(brand._id)}
-                                      className="w-4 h-4 text-blue-600 rounded"
+                                      className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
                                     />
-                                    <span className="text-sm text-gray-700">{brand.name}</span>
-                                  </label>
+                                    <label htmlFor={`brand-mobile-${brand._id}`} className="ml-2 text-sm text-gray-700 cursor-pointer">
+                                      {brand.name}
+                                    </label>
+                                  </div>
                                 ))}
+                                {filteredBrands.length === 0 && (
+                                  <p className="text-sm text-gray-500 italic">No brands found</p>
+                                )}
                               </div>
                             </div>
                           )}
                         </div>
                       )}
 
-                      {/* Stock Status */}
+                      {/* Stock Status - Mobile */}
                       <div className="border-b pb-4">
-                        <h4 className="font-medium text-gray-900 mb-3">Stock Status</h4>
+                        <div className={`font-medium mb-4 ${
+                          stockFilters.inStock || stockFilters.outOfStock
+                            ? "text-lime-500"
+                            : "text-gray-900"
+                        }`}>Stock Status</div>
                         <div className="space-y-2">
-                          <label className="flex items-center space-x-2 cursor-pointer">
+                          <div className="flex items-center">
                             <input
-                              type="checkbox"
+                              type="radio"
+                              id="stock-all-mobile"
+                              name="stock-filter-mobile"
+                              checked={!stockFilters.inStock && !stockFilters.outOfStock}
+                              onChange={() => setStockFilters({ inStock: false, outOfStock: false })}
+                              className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
+                            />
+                            <label htmlFor="stock-all-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                              All Products
+                            </label>
+                          </div>
+                          <div className="flex items-center">
+                            <input
+                              type="radio"
+                              id="stock-in-mobile"
+                              name="stock-filter-mobile"
                               checked={stockFilters.inStock}
                               onChange={(e) =>
-                                setStockFilters({ ...stockFilters, inStock: e.target.checked })
+                                setStockFilters({ inStock: e.target.checked, outOfStock: false })
                               }
-                              className="w-4 h-4 text-blue-600 rounded"
+                              className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                             />
-                            <span className="text-sm text-gray-700">In Stock</span>
-                          </label>
-                          <label className="flex items-center space-x-2 cursor-pointer">
+                            <label htmlFor="stock-in-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                              In Stock
+                            </label>
+                          </div>
+                          <div className="flex items-center">
                             <input
-                              type="checkbox"
+                              type="radio"
+                              id="stock-out-mobile"
+                              name="stock-filter-mobile"
                               checked={stockFilters.outOfStock}
                               onChange={(e) =>
-                                setStockFilters({ ...stockFilters, outOfStock: e.target.checked })
+                                setStockFilters({ inStock: false, outOfStock: e.target.checked })
                               }
-                              className="w-4 h-4 text-blue-600 rounded"
+                              className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                             />
-                            <span className="text-sm text-gray-700">Out of Stock</span>
-                          </label>
+                            <label htmlFor="stock-out-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                              Out of Stock
+                            </label>
+                          </div>
                         </div>
+                      </div>
+
+                      {/* Apply & Clear Buttons - Mobile */}
+                      <div className="space-y-3 pt-4">
+                        <button
+                          onClick={() => setIsMobileFilterOpen(false)}
+                          className="w-full px-4 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold"
+                        >
+                          Show {filteredProducts.length} Products
+                        </button>
+                        <button
+                          onClick={() => {
+                            clearAllFilters()
+                            setIsMobileFilterOpen(false)
+                          }}
+                          className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                        >
+                          Clear All Filters
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -760,9 +1135,37 @@ const GamingZonePage = () => {
   
             {/* Main Content */}
             <div className="flex-1 min-w-0">
+              {/* Mobile Filter Button */}
+              <div className="md:hidden mb-4 flex gap-2">
+                <button
+                  onClick={() => setIsMobileFilterOpen(true)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold shadow-md"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  Filters
+                  {(selectedCategories.length > 0 || 
+                    selectedBrands.length > 0 || 
+                    stockFilters.inStock || 
+                    stockFilters.outOfStock || 
+                    priceRange[0] !== minPrice || 
+                    priceRange[1] !== maxPrice) && (
+                    <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold bg-white text-lime-600 rounded-full">
+                      {[selectedCategories.length > 0, selectedBrands.length > 0, 
+                        stockFilters.inStock || stockFilters.outOfStock,
+                        priceRange[0] !== minPrice || priceRange[1] !== maxPrice].filter(Boolean).length}
+                    </span>
+                  )}
+                </button>
+                <div className="flex-shrink-0">
+                  <SortDropdown value={sortBy} onChange={(e) => setSortBy(e.target.value)} />
+                </div>
+              </div>
+
               {/* Brand Slider - Shows brands from currently displayed products */}
               {brands.length > 0 && (
-                <section className="mb-8 ml-6">
+                <section className="mb-8 ">
                   <div className="relative">
                     <button
                       onClick={scrollBrandPrev}
@@ -797,7 +1200,7 @@ const GamingZonePage = () => {
                               <div className="h-24 flex items-center justify-center">
                                 <img
                                   src={getFullImageUrl(brand.logo)}
-                                  alt={brand.name || "Brand"}
+                                  alt={`${brand.name || "Brand"} Logo`}
                                   className="max-h-full max-w-full bg-cover"
                                   loading="lazy"
                                   onError={(e) => {
@@ -839,13 +1242,16 @@ const GamingZonePage = () => {
                 </section>
               )}
 
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{gamingZonePage?.name}</h1>
-                  <p className="text-gray-600">{totalProducts} products found</p>
+              <div className="flex flex-row justify-between items-center mb-6 relative z-10">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl font-bold text-gray-900">{gamingZonePage?.name}</h1>
+                  <p className="text-gray-600 mt-1">{totalProducts} products found</p>
                 </div>
-                <SortDropdown value={sortBy} onChange={(e) => setSortBy(e.target.value)} />
+                <div className="hidden md:block mt-0 flex-shrink-0 relative z-20">
+                  <SortDropdown value={sortBy} onChange={(e) => setSortBy(e.target.value)} />
+                </div>
               </div>
+
 
               {/* Products Grid */}
               {filteredProducts.length === 0 ? (

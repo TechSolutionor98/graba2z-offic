@@ -7,6 +7,19 @@ import axios from "axios"
 import { getFullImageUrl } from "../../utils/imageUtils"
 import config from "../../config/config"
 
+// Helper function to get category level label
+const getCategoryLevelLabel = (category) => {
+  if (category.type === 'category') {
+    return 'Parent Category'
+  }
+  // SubCategory with level field
+  if (category.level === 1) return 'SubCategory Level 1'
+  if (category.level === 2) return 'SubCategory Level 2'
+  if (category.level === 3) return 'SubCategory Level 3'
+  if (category.level === 4) return 'SubCategory Level 4'
+  return 'SubCategory'
+}
+
 const AddGamingZoneCategory = () => {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -274,9 +287,21 @@ const AddGamingZoneCategory = () => {
                             <p className="text-sm font-medium text-gray-900">
                               {category.name}
                             </p>
-                            <p className="text-xs text-gray-500">
-                              Type: {category.type === 'category' ? 'Main Category' : 'Sub Category'}
-                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
+                                category.type === 'category' 
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : category.level === 1
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : category.level === 2
+                                  ? 'bg-green-100 text-green-800'
+                                  : category.level === 3
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-orange-100 text-orange-800'
+                              }`}>
+                                {getCategoryLevelLabel(category)}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </label>
