@@ -81,6 +81,7 @@ const Home = () => {
   const [isAutoScrolling, setIsAutoScrolling] = useState(true)
   const [settings, setSettings] = useState(null)
   const [homeSections, setHomeSections] = useState([])
+  const [homeBanners, setHomeBanners] = useState([]) // Dynamic home page banners
   const [deviceType, setDeviceType] = useState(() => {
     if (typeof window !== "undefined") {
       return window.innerWidth < 768 ? "Mobile" : "Desktop"
@@ -175,16 +176,16 @@ const Home = () => {
           axios.get(`${API_BASE_URL}/api/brands`),
           axios.get(`${API_BASE_URL}/api/banners?active=true`),
           axios.get(`${API_BASE_URL}/api/upgrade-features?active=true`).catch(() => ({ data: [] })),
-          axios.get(`${API_BASE_URL}/api/settings`).catch(() => ({ 
-            data: { 
-              homeSections: { 
-                categoryCards: true, 
-                brandsCards: true, 
-                productsCards: true, 
-                flashSaleCards: true, 
-                limitedSaleCards: true 
-              } 
-            } 
+          axios.get(`${API_BASE_URL}/api/settings`).catch(() => ({
+            data: {
+              homeSections: {
+                categoryCards: true,
+                brandsCards: true,
+                productsCards: true,
+                flashSaleCards: true,
+                limitedSaleCards: true
+              }
+            }
           })),
           axios.get(`${API_BASE_URL}/api/home-sections/active`).catch(() => ({ data: [] })),
         ])
@@ -202,52 +203,52 @@ const Home = () => {
         console.log("Settings fetched:", settingsData)
         console.log("Home Sections fetched:", sectionsData)
         console.log("Sections with order:", sectionsData.map(s => ({ name: s.name, order: s.order })))
-        console.log('🔴 CLIENT: Sections with full settings:', sectionsData.map(s => ({ 
-          name: s.name, 
-          order: s.order, 
+        console.log('🔴 CLIENT: Sections with full settings:', sectionsData.map(s => ({
+          name: s.name,
+          order: s.order,
           sectionType: s.sectionType,
-          settings: s.settings 
+          settings: s.settings
         })))
 
         // Filter and validate categories - ensure they have proper structure
         const validCategories = Array.isArray(categoriesData)
           ? categoriesData.filter((cat) => {
-              const isValid =
-                cat &&
-                typeof cat === "object" &&
-                cat.name &&
-                typeof cat.name === "string" &&
-                cat.name.trim() !== "" &&
-                cat.isActive !== false &&
-                !cat.isDeleted &&
-                !cat.name.match(/^[0-9a-fA-F]{24}$/) // Not an ID
+            const isValid =
+              cat &&
+              typeof cat === "object" &&
+              cat.name &&
+              typeof cat.name === "string" &&
+              cat.name.trim() !== "" &&
+              cat.isActive !== false &&
+              !cat.isDeleted &&
+              !cat.name.match(/^[0-9a-fA-F]{24}$/) // Not an ID
 
-              if (!isValid) {
-                console.warn("Invalid category found:", cat)
-              }
-              return isValid
-            })
+            if (!isValid) {
+              console.warn("Invalid category found:", cat)
+            }
+            return isValid
+          })
           : []
 
         // Filter and validate brands - ensure they have proper structure and names
         const validBrands = Array.isArray(brandsData)
           ? brandsData.filter((brand) => {
-              const isValid =
-                brand &&
-                typeof brand === "object" &&
-                brand.name &&
-                typeof brand.name === "string" &&
-                brand.name.trim() !== "" &&
-                brand.isActive !== false &&
-                !brand.name.match(/^[0-9a-fA-F]{24}$/) && // Not an ID
-                brand.logo && // Has logo
-                brand.logo.trim() !== ""
+            const isValid =
+              brand &&
+              typeof brand === "object" &&
+              brand.name &&
+              typeof brand.name === "string" &&
+              brand.name.trim() !== "" &&
+              brand.isActive !== false &&
+              !brand.name.match(/^[0-9a-fA-F]{24}$/) && // Not an ID
+              brand.logo && // Has logo
+              brand.logo.trim() !== ""
 
-              if (!isValid) {
-                console.warn("Invalid brand found:", brand)
-              }
-              return isValid
-            })
+            if (!isValid) {
+              console.warn("Invalid brand found:", brand)
+            }
+            return isValid
+          })
           : []
 
         // Create brand lookup maps
@@ -634,6 +635,16 @@ const Home = () => {
         setBanners(promotionalBanners)
         setHeroBanners(heroData)
         setMobileBanners(mobileData)
+
+        // Filter home page banners (not hero/promotional)
+        const homeBannersData = bannersData.filter((banner) =>
+          banner.position &&
+          banner.position.startsWith("home-") &&
+          banner.isActive
+        )
+        setHomeBanners(homeBannersData)
+        console.log("Home Page Banners:", homeBannersData)
+
         // Add log after setting hero banners
         console.log("[DEBUG] deviceType:", deviceType)
         console.log("[DEBUG] heroBanners:", heroData)
@@ -748,18 +759,18 @@ const Home = () => {
     } else if (categoryOrItem && typeof categoryOrItem === 'object') {
       // New format: full item object passed from CategorySliderUpdated
       const item = categoryOrItem
-      
+
       // Check if this is a subcategory (has category or parentSubCategory fields)
       const isSubcategory = item.category || item.parentSubCategory
-      
+
       if (isSubcategory) {
         // This is a subcategory - need to find its parent category and build proper URL
         const parentCategoryId = typeof item.category === 'object' ? item.category._id : item.category
         const parentCategory = categories.find((cat) => cat._id === parentCategoryId)
-        
+
         if (parentCategory) {
           // Navigate with both parent category and subcategory
-          navigate(generateShopURL({ 
+          navigate(generateShopURL({
             parentCategory: parentCategory.name,
             subcategory: item.name
           }))
@@ -850,6 +861,16 @@ const Home = () => {
     setBrandIndex((prev) => (prev + 1) % totalBrands)
   }
 
+  // Helper function to get banners for a specific section and device type
+  const getBannersForSection = (section, position = null) => {
+    return homeBanners.filter((banner) => {
+      const matchesSection = section ? banner.section === section : true
+      const matchesPosition = position ? banner.position === position : true
+      const matchesDevice = banner.deviceType ? banner.deviceType.toLowerCase() === deviceType.toLowerCase() : true
+      return matchesSection && matchesPosition && matchesDevice
+    })
+  }
+
   const handleNotifDeny = () => {
     setShowNotifPopup(false)
     localStorage.setItem(NOTIF_POPUP_KEY, "1")
@@ -904,7 +925,7 @@ const Home = () => {
         description="Discover the best deals on laptops, desktops, mobiles, and gaming products in UAE. Grabatoz is your trusted electronics shop in Dubai."
         canonicalPath="/"
       />
-      
+
       {/* Notification/Newsletter Popup */}
       {showNotifPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
@@ -1000,60 +1021,86 @@ const Home = () => {
       {/* Categories Section - Admin Controlled Slider */}
       <CategorySliderUpdated onCategoryClick={handleCategoryClick} />
 
-     
-      {/* Three Cards Section - Simple Mobile Grid */}
+
+      {/* Three Cards Section - Dynamic Banners */}
       <div className="m-3">
         {/* Desktop & Tablet - Grid Layout */}
         <div className="hidden md:flex justify-between gap-4">
-          <div className="w-1/3 lg:w-1/3">
-            <Link to="product-category/laptops" aria-label="Browse Lenovo products">
-              <img
-                src="laptop00.png"
-                alt="Lenovo Banner"
-                className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
-              />
-            </Link>
-          </div>
-          <div className="w-1/3 lg:w-1/3">
-            <Link to="/product-category/electronics" aria-label="Browse Acer products">
-              <img
-                src="electronoc resixe.png"
-                alt="Acer Banner"
-                className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
-              />
-            </Link>
-          </div>
-          <div className="w-1/3 lg:w-1/3">
-            <Link to="/product-category/camera" aria-label="Browse Asus products">
-              <img
-                src="camera (2).png"
-                alt="Asus Banner"
-                className="w-full h-auto rounded-lg cover hover:opacity-90 transition-opacity cursor-pointer"
-              />
-            </Link>
-          </div>
+          {(() => {
+            const banners = getBannersForSection("top-triple", "home-top-triple")
+            const fallbacks = [
+              { image: "laptop00.png", link: "product-category/laptops", alt: "Lenovo Banner" },
+              { image: "electronoc resixe.png", link: "/product-category/electronics", alt: "Acer Banner" },
+              { image: "camera (2).png", link: "/product-category/camera", alt: "Asus Banner" }
+            ]
+
+            // Merge banners with fallbacks - show banner if exists, else show fallback
+            return [0, 1, 2].map((index) => {
+              const banner = banners[index]
+              const fallback = fallbacks[index]
+
+              return (
+                <div key={index} className="w-1/3 lg:w-1/3 h-[280px]">
+                  {banner ? (
+                    <Link to={banner.link || banner.buttonLink || "#"} aria-label={banner.title || "View products"} className="block h-full">
+                      <img
+                        src={getFullImageUrl(banner.image)}
+                        alt={banner.title || "Banner"}
+                        className="w-full h-full rounded-lg bg-cover hover:opacity-90 transition-opacity cursor-pointer"
+                      />
+                    </Link>
+                  ) : (
+                    <Link to={fallback.link} aria-label={fallback.alt} className="block h-full">
+                      <img
+                        src={fallback.image}
+                        alt={fallback.alt}
+                        className="w-full h-full rounded-lg bg-cover hover:opacity-90 transition-opacity cursor-pointer"
+                      />
+                    </Link>
+                  )}
+                </div>
+              )
+            })
+          })()}
         </div>
 
         {/* Mobile - Simple Grid */}
         <div className="md:hidden grid grid-cols-2 gap-3">
-          <div>
-            <Link to="/product-category/electronics" aria-label="Browse Lenovo products">
-              <img
-                src="electronoc resixe.png"
-                alt="Lenovo Banner"
-                className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer"
-              />
-            </Link>
-          </div>
-          <div>
-            <Link to="/product-category/camera" aria-label="Browse Acer products">
-              <img
-                src="camera (2).png"
-                alt="Acer Banner"
-                className="w-full h-auto rounded-lg cover hover:opacity-95 transition-opacity cursor-pointer"
-              />
-            </Link>
-          </div>
+          {(() => {
+            const banners = getBannersForSection("top-mobile", "home-top-triple")
+            const fallbacks = [
+              { image: "electronoc resixe.png", link: "/product-category/electronics", alt: "Lenovo Banner" },
+              { image: "camera (2).png", link: "/product-category/camera", alt: "Acer Banner" }
+            ]
+
+            // Merge banners with fallbacks
+            return [0, 1].map((index) => {
+              const banner = banners[index]
+              const fallback = fallbacks[index]
+
+              return (
+                <div key={index} className="h-[105px]">
+                  {banner ? (
+                    <Link to={banner.link || banner.buttonLink || "#"} aria-label={banner.title || "View products"} className="block h-full">
+                      <img
+                        src={getFullImageUrl(banner.image)}
+                        alt={banner.title || "Banner"}
+                        className="w-full h-full rounded-lg bg-cover hover:opacity-95 transition-opacity cursor-pointer"
+                      />
+                    </Link>
+                  ) : (
+                    <Link to={fallback.link} aria-label={fallback.alt} className="block h-full">
+                      <img
+                        src={fallback.image}
+                        alt={fallback.alt}
+                        className="w-full h-full rounded-lg bg-cover hover:opacity-95 transition-opacity cursor-pointer"
+                      />
+                    </Link>
+                  )}
+                </div>
+              )
+            })
+          })()}
         </div>
       </div>
       {/* <div className=" flex items-center justify-center mt-2 mx-2">
@@ -1072,7 +1119,7 @@ const Home = () => {
           <h2 className="text-lg font-bold text-gray-900">Featured Products</h2>
           <button className="text-green-600 hover:text-green-800 font-medium text-sm">View All</button>
         </div>
-         
+
         <div className="grid grid-cols-2 gap-3">
           {featuredProducts.slice(0, 4).map((product, index) => (
             <MobileProductCard key={product._id} product={product} index={index} />
@@ -1087,41 +1134,78 @@ const Home = () => {
 
 
 
-      {/* Mobile Banner (now clickable linking to HP brand page) */}
+      {/* Mobile Banner - HP Section (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-  <Link to={brandUrls.HP} aria-label="Browse HP products">
-          <img
-          //  src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939738/hp_ntmpcm.png"
-           src="11.png" 
-          alt="HP Products Banner Mobile"
-            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-          />
-        </Link>
+        {getBannersForSection("hp-mobile", "home-brand-single").length > 0 ? (
+          <Link to={getBannersForSection("hp-mobile", "home-brand-single")[0].link || brandUrls.HP} aria-label="Browse HP products">
+            <img
+              src={getFullImageUrl(getBannersForSection("hp-mobile", "home-brand-single")[0].image)}
+              alt={getBannersForSection("hp-mobile", "home-brand-single")[0].title || "HP Products Banner Mobile"}
+              className="w-full h-full bg-cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+            />
+          </Link>
+        ) : (
+          <Link to={brandUrls.HP} aria-label="Browse HP products">
+            <img
+              src="11.png"
+              alt="HP Products Banner Mobile"
+              className="w-full h-full bg-cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+            />
+          </Link>
+        )}
       </div>
 
-     
-      {/* Desktop Banner - Two separate images side by side */}
+
+      {/* Desktop Banner - HP and Dell (Dynamic) */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
-        <div className="w-1/2">
-          <Link to={brandUrls.HP}>
-            <img
-             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/hp_half_side_1_iqvlks.png"
-             src="hp.png"
-             alt="HP Products Banner"
-              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-            />
-          </Link>
-        </div>
-        <div className="w-1/2">
-          <Link to={brandUrls.Dell}>
-            <img
-             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/dell_half_side_6_igop3u.png"
-             src="dell1.png"
-             alt="Dell Products Banner"
-              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-            />
-          </Link>
-        </div>
+        {(() => {
+          const banners = getBannersForSection("hp-dell-desktop", "home-brand-dual")
+          const hpBanner = banners[0]
+          const dellBanner = banners[1]
+
+          return (
+            <>
+              <div className="w-1/2">
+                {hpBanner ? (
+                  <Link to={hpBanner.link || brandUrls.HP}>
+                    <img
+                      src={getFullImageUrl(hpBanner.image)}
+                      alt={hpBanner.title || "HP Products Banner"}
+                      className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                ) : (
+                  <Link to={brandUrls.HP}>
+                    <img
+                      src="hp.png"
+                      alt="HP Products Banner"
+                      className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                )}
+              </div>
+              <div className="w-1/2">
+                {dellBanner ? (
+                  <Link to={dellBanner.link || brandUrls.Dell}>
+                    <img
+                      src={getFullImageUrl(dellBanner.image)}
+                      alt={dellBanner.title || "Dell Products Banner"}
+                      className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                ) : (
+                  <Link to={brandUrls.Dell}>
+                    <img
+                      src="dell1.png"
+                      alt="Dell Products Banner"
+                      className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                )}
+              </div>
+            </>
+          )
+        })()}
       </div>
 
       {/* HP and Dell Section - Mobile shows only HP */}
@@ -1192,20 +1276,30 @@ const Home = () => {
       {/* Dynamic Section Position 3 */}
       {/* {renderDynamicSection(3)} */}
 
-      {/* Accessories Banner - Desktop/Mobile Responsive */}
+      {/* Accessories Banner - Dynamic */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
-        <Link to="/product-category/accessories">
-          <img
-            src="12.png"
-            alt="Accessories Promotion Banner Mobile"
-            className="w-full h-full cover rounded-lg lg:hidden"
-          />
-          <img
-            src="acessories (1).png"
-            alt="Accessories Promotion Banner Desktop"
-            className="w-full h-full cover rounded-lg hidden lg:block"
-          />
-        </Link>
+        {getBannersForSection("accessories", "home-category-banner").length > 0 ? (
+          <Link to={getBannersForSection("accessories", "home-category-banner")[0].link || "/product-category/accessories"}>
+            <img
+              src={getFullImageUrl(getBannersForSection("accessories", "home-category-banner")[0].image)}
+              alt={getBannersForSection("accessories", "home-category-banner")[0].title || "Accessories Promotion Banner"}
+              className="w-full h-full cover rounded-lg"
+            />
+          </Link>
+        ) : (
+          <Link to="/product-category/accessories">
+            <img
+              src="12.png"
+              alt="Accessories Promotion Banner Mobile"
+              className="w-full h-full cover rounded-lg lg:hidden"
+            />
+            <img
+              src="acessories (1).png"
+              alt="Accessories Promotion Banner Desktop"
+              className="w-full h-full cover rounded-lg hidden lg:block"
+            />
+          </Link>
+        )}
       </div>
 
       {/* Accessories Section - Mobile shows 2 products */}
@@ -1238,44 +1332,81 @@ const Home = () => {
           </div>
         )}
       </section>
-  {/* <CategoryBanners /> */}
+      {/* <CategoryBanners /> */}
       {/* Dynamic Section Position 4 */}
       {/* {renderDynamicSection(4)} */}
 
-      {/* Mobile Banner Asus */}
+      {/* Mobile Banner Asus (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-  <Link to={brandUrls.ASUS} aria-label="Browse ASUS products">
-          <img
-            //src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939737/asus_f95cjw.png"
-            src="laptop (2).png"
-            alt="ASUS Products Banner Mobile"
-            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-          />
-        </Link>
+        {getBannersForSection("asus-mobile", "home-brand-single").length > 0 ? (
+          <Link to={getBannersForSection("asus-mobile", "home-brand-single")[0].link || brandUrls.ASUS} aria-label="Browse ASUS products">
+            <img
+              src={getFullImageUrl(getBannersForSection("asus-mobile", "home-brand-single")[0].image)}
+              alt={getBannersForSection("asus-mobile", "home-brand-single")[0].title || "ASUS Products Banner Mobile"}
+              className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+            />
+          </Link>
+        ) : (
+          <Link to={brandUrls.ASUS} aria-label="Browse ASUS products">
+            <img
+              src="laptop (2).png"
+              alt="ASUS Products Banner Mobile"
+              className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+            />
+          </Link>
+        )}
       </div>
 
-      {/* Desktop Banner - Two separate images side by side */}
+      {/* Desktop Banner - Acer and ASUS (Dynamic) */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
-        <div className="w-1/2">
-          <Link to={brandUrls.Acer}>
-            <img
-             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/acer_half_side_jkun9a.png"
-             src="acer01.png"
-             alt="HP Products Banner"
-              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-            />
-          </Link>
-        </div>
-        <div className="w-1/2">
-          <Link to={brandUrls.ASUS}>
-            <img
-             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/asus_half_side_aikrmo.png"
-             src="asus01.png"
-             alt="Dell Products Banner"
-              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-            />
-          </Link>
-        </div>
+        {(() => {
+          const banners = getBannersForSection("acer-asus-desktop", "home-brand-dual")
+          const acerBanner = banners[0]
+          const asusBanner = banners[1]
+
+          return (
+            <>
+              <div className="w-1/2">
+                {acerBanner ? (
+                  <Link to={acerBanner.link || brandUrls.Acer}>
+                    <img
+                      src={getFullImageUrl(acerBanner.image)}
+                      alt={acerBanner.title || "Acer Products Banner"}
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                ) : (
+                  <Link to={brandUrls.Acer}>
+                    <img
+                      src="acer01.png"
+                      alt="Acer Products Banner"
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                )}
+              </div>
+              <div className="w-1/2">
+                {asusBanner ? (
+                  <Link to={asusBanner.link || brandUrls.ASUS}>
+                    <img
+                      src={getFullImageUrl(asusBanner.image)}
+                      alt={asusBanner.title || "ASUS Products Banner"}
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                ) : (
+                  <Link to={brandUrls.ASUS}>
+                    <img
+                      src="asus01.png"
+                      alt="ASUS Products Banner"
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                )}
+              </div>
+            </>
+          )
+        })()}
       </div>
 
       {/* Acer and ASUS Section - Mobile shows only ASUS */}
@@ -1348,20 +1479,30 @@ const Home = () => {
       {/* Dynamic Section Position 5 */}
       {/* {renderDynamicSection(5)} */}
 
-      {/* Networking Banner - Desktop/Mobile Responsive */}
+      {/* Networking Banner - Dynamic */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
-        <Link to="/product-category/computers/networking">
-          <img
-            src="13.png"
-            alt="Networking Banner Mobile"
-            className="w-full h-full cover rounded-lg lg:hidden"
-          />
-          <img
-            src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png"
-            alt="Networking Banner Desktop"
-            className="w-full h-full cover rounded-lg hidden lg:block"
-          />
-        </Link>
+        {getBannersForSection("networking", "home-category-banner").length > 0 ? (
+          <Link to={getBannersForSection("networking", "home-category-banner")[0].link || "/product-category/computers/networking"}>
+            <img
+              src={getFullImageUrl(getBannersForSection("networking", "home-category-banner")[0].image)}
+              alt={getBannersForSection("networking", "home-category-banner")[0].title || "Networking Banner"}
+              className="w-full h-full cover rounded-lg"
+            />
+          </Link>
+        ) : (
+          <Link to="/product-category/computers/networking">
+            <img
+              src="13.png"
+              alt="Networking Banner Mobile"
+              className="w-full h-full cover rounded-lg lg:hidden"
+            />
+            <img
+              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png"
+              alt="Networking Banner Desktop"
+              className="w-full h-full cover rounded-lg hidden lg:block"
+            />
+          </Link>
+        )}
       </div>
 
       {/* Networking Products Section - Mobile shows 2 products */}
@@ -1398,40 +1539,77 @@ const Home = () => {
       {/* Dynamic Section Position 6 */}
       {/* {renderDynamicSection(6)} */}
 
-      {/* Mobile Banner MSI */}
+      {/* Mobile Banner MSI (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-  <Link to={brandUrls.MSI} aria-label="Browse MSI products">
-          <img
-            //src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939739/msi_mmaozn.png"
-            src="14.png"
-            alt="MSI Products Banner Mobile"
-            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-          />
-        </Link>
+        {getBannersForSection("msi-mobile", "home-brand-single").length > 0 ? (
+          <Link to={getBannersForSection("msi-mobile", "home-brand-single")[0].link || brandUrls.MSI} aria-label="Browse MSI products">
+            <img
+              src={getFullImageUrl(getBannersForSection("msi-mobile", "home-brand-single")[0].image)}
+              alt={getBannersForSection("msi-mobile", "home-brand-single")[0].title || "MSI Products Banner Mobile"}
+              className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+            />
+          </Link>
+        ) : (
+          <Link to={brandUrls.MSI} aria-label="Browse MSI products">
+            <img
+              src="14.png"
+              alt="MSI Products Banner Mobile"
+              className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+            />
+          </Link>
+        )}
       </div>
 
-      {/* Desktop Banner - Two separate images side by side */}
+      {/* Desktop Banner - MSI and Lenovo (Dynamic) */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
-        <div className="w-1/2">
-          <Link to={brandUrls.MSI}>
-            <img
-             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854476/msi_half_side_1_k4dmhz.png"
-             src="msi01.png"
-             alt="HP Products Banner"
-              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-            />
-          </Link>
-        </div>
-        <div className="w-1/2">
-          <Link to={brandUrls.Lenovo}>
-            <img
-             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753854475/lenovo_half_side_daug2k.png"
-             src="lenovo01.png"
-             alt="Dell Products Banner"
-              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-            />
-          </Link>
-        </div>
+        {(() => {
+          const banners = getBannersForSection("msi-lenovo-desktop", "home-brand-dual")
+          const msiBanner = banners[0]
+          const lenovoBanner = banners[1]
+
+          return (
+            <>
+              <div className="w-1/2">
+                {msiBanner ? (
+                  <Link to={msiBanner.link || brandUrls.MSI}>
+                    <img
+                      src={getFullImageUrl(msiBanner.image)}
+                      alt={msiBanner.title || "MSI Products Banner"}
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                ) : (
+                  <Link to={brandUrls.MSI}>
+                    <img
+                      src="msi01.png"
+                      alt="MSI Products Banner"
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                )}
+              </div>
+              <div className="w-1/2">
+                {lenovoBanner ? (
+                  <Link to={lenovoBanner.link || brandUrls.Lenovo}>
+                    <img
+                      src={getFullImageUrl(lenovoBanner.image)}
+                      alt={lenovoBanner.title || "Lenovo Products Banner"}
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                ) : (
+                  <Link to={brandUrls.Lenovo}>
+                    <img
+                      src="lenovo01.png"
+                      alt="Lenovo Products Banner"
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                )}
+              </div>
+            </>
+          )
+        })()}
       </div>
 
       {/* MSI and Lenovo Products Section - Mobile shows only MSI */}
@@ -1502,40 +1680,77 @@ const Home = () => {
       {/* Dynamic Section Position 7 */}
       {/* {renderDynamicSection(7)} */}
 
-      {/* Mobile Banner Apple */}
+      {/* Mobile Banner Apple (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
-  <Link to={brandUrls.Apple} aria-label="Browse Apple products">
-          <img
-          //  src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757769951/apple_half_side_n1cxhc.png"
-          src="15.png"
-          alt="Apple Products Banner Mobile"
-            className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-          />
-        </Link>
+        {getBannersForSection("apple-mobile", "home-brand-single").length > 0 ? (
+          <Link to={getBannersForSection("apple-mobile", "home-brand-single")[0].link || brandUrls.Apple} aria-label="Browse Apple products">
+            <img
+              src={getFullImageUrl(getBannersForSection("apple-mobile", "home-brand-single")[0].image)}
+              alt={getBannersForSection("apple-mobile", "home-brand-single")[0].title || "Apple Products Banner Mobile"}
+              className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+            />
+          </Link>
+        ) : (
+          <Link to={brandUrls.Apple} aria-label="Browse Apple products">
+            <img
+              src="15.png"
+              alt="Apple Products Banner Mobile"
+              className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+            />
+          </Link>
+        )}
       </div>
 
-      {/* Desktop Banner - Two separate images side by side */}
+      {/* Desktop Banner - Apple and Samsung (Dynamic) */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
-        <div className="w-1/2">
-          <Link to={brandUrls.Apple}>
-            <img
-             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757769951/apple_half_side_n1cxhc.png"
-             src="apple (1).png"
-             alt="HP Products Banner"
-              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-            />
-          </Link>
-        </div>
-        <div className="w-1/2">
-          <Link to={brandUrls.Samsung}>
-            <img
-             // src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/samsung_half_side_gtslyc.png"
-             src="samsung01.png" 
-             alt="Dell Products Banner"
-              className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-            />
-          </Link>
-        </div>
+        {(() => {
+          const banners = getBannersForSection("apple-samsung-desktop", "home-brand-dual")
+          const appleBanner = banners[0]
+          const samsungBanner = banners[1]
+
+          return (
+            <>
+              <div className="w-1/2">
+                {appleBanner ? (
+                  <Link to={appleBanner.link || brandUrls.Apple}>
+                    <img
+                      src={getFullImageUrl(appleBanner.image)}
+                      alt={appleBanner.title || "Apple Products Banner"}
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                ) : (
+                  <Link to={brandUrls.Apple}>
+                    <img
+                      src="apple (1).png"
+                      alt="Apple Products Banner"
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                )}
+              </div>
+              <div className="w-1/2">
+                {samsungBanner ? (
+                  <Link to={samsungBanner.link || brandUrls.Samsung}>
+                    <img
+                      src={getFullImageUrl(samsungBanner.image)}
+                      alt={samsungBanner.title || "Samsung Products Banner"}
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                ) : (
+                  <Link to={brandUrls.Samsung}>
+                    <img
+                      src="samsung01.png"
+                      alt="Samsung Products Banner"
+                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                    />
+                  </Link>
+                )}
+              </div>
+            </>
+          )
+        })()}
       </div>
 
 
@@ -1607,7 +1822,7 @@ const Home = () => {
         </div>
       </section>
 
-           {/* Dynamic Section Position 8 */}
+      {/* Dynamic Section Position 8 */}
       {/* {renderDynamicSection(8)}
   */}
       {/* Upgrade Features Section - Responsive */}
@@ -1738,7 +1953,7 @@ const MobileProductCard = ({ product }) => {
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
       <div className="relative mb-2 flex h-[170px] justify-center items-center">
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
+        <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
           <img
             src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
@@ -1757,7 +1972,7 @@ const MobileProductCard = ({ product }) => {
           <Heart size={12} className={isInWishlist(product._id) ? "text-red-500 fill-red-500" : "text-gray-400"} />
         </button>
       </div>
-      
+
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs inline-block`}>
           {stockStatus.replace('Available Product', 'Available')}
@@ -1766,14 +1981,14 @@ const MobileProductCard = ({ product }) => {
           <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs inline-block">{discount}</div>
         )}
       </div>
-      
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
+
+      <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
         <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px] mb-1">{product.name}</h3>
       </Link>
-      
+
       {product.category && <div className="text-xs text-yellow-600 mb-1">Category: {categoryName}</div>}
       <div className="text-xs text-green-600 mb-1">Inclusive VAT</div>
-      
+
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0 mb-1">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
@@ -1861,13 +2076,13 @@ const DynamicBrandProductCard = ({ product }) => {
 
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
-      <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="w-full h-full flex items-center justify-center">
+      <div className="relative mb-2 flex justify-center items-center" style={{ height: 190 }}>
+        <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="w-full h-full flex items-center justify-center">
           <img
             src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             className="w-full h-full object-contain bg-white rounded mx-auto mb-4"
-            style={{maxHeight:165}}
+            style={{ maxHeight: 165 }}
           />
         </Link>
         <button
@@ -1891,8 +2106,8 @@ const DynamicBrandProductCard = ({ product }) => {
           )}
         </div>
       </div>
-      
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
+
+      <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
         <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">{product.name}</h3>
       </Link>
       {product.category && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
@@ -1921,7 +2136,7 @@ const DynamicBrandProductCard = ({ product }) => {
         </div>
         <span className="text-xs text-gray-500 ml-1">({Number(product.numReviews) || 0})</span>
       </div>
-      
+
       <button
         onClick={(e) => {
           e.preventDefault()
@@ -1984,13 +2199,13 @@ const AccessoriesProductCard = ({ product }) => {
 
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
-      <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="w-full h-full flex items-center justify-center">
+      <div className="relative mb-2 flex justify-center items-center" style={{ height: 190 }}>
+        <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="w-full h-full flex items-center justify-center">
           <img
             src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             className="w-full h-full object-contain bg-white rounded mx-auto mb-4"
-            style={{maxHeight:165}}
+            style={{ maxHeight: 165 }}
           />
         </Link>
         <button
@@ -2014,7 +2229,7 @@ const AccessoriesProductCard = ({ product }) => {
           )}
         </div>
       </div>
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
+      <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
         <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">{product.name}</h3>
       </Link>
       {product.category && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
@@ -2043,7 +2258,7 @@ const AccessoriesProductCard = ({ product }) => {
         </div>
         <span className="text-xs text-gray-500 ml-1">({Number(product.numReviews) || 0})</span>
       </div>
-      
+
       <button
         onClick={(e) => {
           e.preventDefault()
@@ -2084,9 +2299,8 @@ const UpgradeFeatureCard = ({ feature }) => {
     <div className="rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 group">
       <div className="flex items-start space-x-4">
         <div
-          className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center ${
-            feature.iconColor || "bg-blue-100"
-          } group-hover:scale-110 transition-transform duration-300`}
+          className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center ${feature.iconColor || "bg-blue-100"
+            } group-hover:scale-110 transition-transform duration-300`}
         >
           <div className={`${feature.iconTextColor || "text-blue-600"}`}>{getIconComponent(feature.icon)}</div>
         </div>
@@ -2128,9 +2342,8 @@ const UpgradeFeatureCard = ({ feature }) => {
           {feature.badge && (
             <div className="mt-3">
               <span
-                className={`inline-block px-2 py-1 md:px-3 md:py-1 text-xs font-medium rounded-full ${
-                  feature.badgeColor || "bg-green-100 text-green-800"
-                }`}
+                className={`inline-block px-2 py-1 md:px-3 md:py-1 text-xs font-medium rounded-full ${feature.badgeColor || "bg-green-100 text-green-800"
+                  }`}
               >
                 {feature.badge}
               </span>

@@ -24,6 +24,8 @@ const AdminBanners = () => {
     buttonText: "Shop Now",
     buttonLink: "/shop",
     position: "hero",
+    section: "", // Add section field
+    link: "", // Add direct link field
     category: "",
     discount: "",
     isActive: true,
@@ -34,10 +36,25 @@ const AdminBanners = () => {
   })
 
   const positions = [
-    { value: "hero", label: "Hero Section" },
-    { value: "category", label: "Category Section" },
-    { value: "promotional", label: "Promotional Section" },
-    { value: "footer", label: "Footer Section" },
+    { value: "hero", label: "Hero Section (Main Slider)" },
+    // { value: "category", label: "Category Section" },
+    // { value: "promotional", label: "Promotional Section" },
+    // { value: "footer", label: "Footer Section" },
+    // Home Page Sections - Desktop
+    { value: "top-triple", label: "🏠 Top 3 Banners Section (Desktop)" },
+    { value: "hp-dell-desktop", label: "🏠 HP & Dell Section (Desktop)" },
+    { value: "acer-asus-desktop", label: "🏠 Acer & ASUS Section (Desktop)" },
+    { value: "msi-lenovo-desktop", label: "🏠 MSI & Lenovo Section (Desktop)" },
+    { value: "apple-samsung-desktop", label: "🏠 Apple & Samsung Section (Desktop)" },
+    // Home Page Sections - Mobile
+    { value: "top-mobile", label: "📱 Top 2 Banners Section (Mobile)" },
+    { value: "hp-mobile", label: "📱 HP Banner Section (Mobile)" },
+    { value: "asus-mobile", label: "📱 ASUS Banner Section (Mobile)" },
+    { value: "msi-mobile", label: "📱 MSI Banner Section (Mobile)" },
+    { value: "apple-mobile", label: "📱 Apple Banner Section (Mobile)" },
+    // Home Page Sections - Category Banners (Both)
+    { value: "accessories", label: "🏠 Accessories Section (Full Width)" },
+    { value: "networking", label: "🏠 Networking Section (Full Width)" },
   ]
 
   useEffect(() => {
@@ -85,8 +102,34 @@ const AdminBanners = () => {
     e.preventDefault()
     try {
       const token = localStorage.getItem("adminToken")
+      
+      // Auto-map position to section and position for home banners
+      let finalPosition = formData.position
+      let finalSection = formData.section
+      
+      // If position is one of the home sections, use it as section name
+      const homeSections = ['top-triple', 'top-mobile', 'hp-mobile', 'hp-dell-desktop', 'asus-mobile', 
+                           'acer-asus-desktop', 'accessories', 'msi-mobile', 'msi-lenovo-desktop', 
+                           'apple-mobile', 'apple-samsung-desktop', 'networking']
+      
+      if (homeSections.includes(formData.position)) {
+        finalSection = formData.position // Section name is the same as position
+        // Determine the position type based on the section
+        if (['top-triple', 'top-mobile'].includes(formData.position)) {
+          finalPosition = 'home-top-triple'
+        } else if (['hp-mobile', 'asus-mobile', 'msi-mobile', 'apple-mobile'].includes(formData.position)) {
+          finalPosition = 'home-brand-single'
+        } else if (['hp-dell-desktop', 'acer-asus-desktop', 'msi-lenovo-desktop', 'apple-samsung-desktop'].includes(formData.position)) {
+          finalPosition = 'home-brand-dual'
+        } else if (['accessories', 'networking'].includes(formData.position)) {
+          finalPosition = 'home-category-banner'
+        }
+      }
+      
       const bannerData = {
         ...formData,
+        position: finalPosition,
+        section: finalSection,
         sortOrder: Number.parseInt(formData.sortOrder) || 0,
         discount: formData.discount ? Number.parseFloat(formData.discount) : null,
         validFrom: formData.validFrom ? new Date(formData.validFrom) : new Date(),
@@ -127,6 +170,8 @@ const AdminBanners = () => {
       buttonText: "Shop Now",
       buttonLink: "/shop",
       position: "hero",
+      section: "",
+      link: "",
       category: "",
       discount: "",
       isActive: true,
@@ -139,6 +184,17 @@ const AdminBanners = () => {
 
   const handleEdit = (banner) => {
     setEditingBanner(banner)
+    
+    // If banner has a section that matches one of our home sections, show that in position dropdown
+    let displayPosition = banner.position
+    const homeSections = ['top-triple', 'top-mobile', 'hp-mobile', 'hp-dell-desktop', 'asus-mobile', 
+                         'acer-asus-desktop', 'accessories', 'msi-mobile', 'msi-lenovo-desktop', 
+                         'apple-mobile', 'apple-samsung-desktop', 'networking']
+    
+    if (banner.section && homeSections.includes(banner.section)) {
+      displayPosition = banner.section // Show section name in position dropdown
+    }
+    
     setFormData({
       title: banner.title,
       subtitle: banner.subtitle || "",
@@ -146,7 +202,9 @@ const AdminBanners = () => {
       image: banner.image,
       buttonText: banner.buttonText,
       buttonLink: banner.buttonLink,
-      position: banner.position,
+      position: displayPosition,
+      section: banner.section || "",
+      link: banner.link || "",
       category: banner.category?._id || "",
       discount: banner.discount || "",
       isActive: banner.isActive,
@@ -298,6 +356,30 @@ const AdminBanners = () => {
                 </div>
               </div>
 
+              {/* Direct Link field for home page banners */}
+              {(formData.position === 'top-triple' || formData.position === 'top-mobile' || 
+                formData.position === 'hp-mobile' || formData.position === 'hp-dell-desktop' ||
+                formData.position === 'asus-mobile' || formData.position === 'acer-asus-desktop' ||
+                formData.position === 'accessories' || formData.position === 'msi-mobile' ||
+                formData.position === 'msi-lenovo-desktop' || formData.position === 'apple-mobile' ||
+                formData.position === 'apple-samsung-desktop' || formData.position === 'networking') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Direct Link <span className="text-gray-400">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.link}
+                    onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="/brand/hp or /product-category/laptops"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Where should this banner link to? Examples: /brand/hp, /product-category/laptops, /shop
+                  </p>
+                </div>
+              )}
+
               {formData.position === "category" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
@@ -396,7 +478,10 @@ const AdminBanners = () => {
                       Position
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
+                      Section
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Device
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -430,18 +515,31 @@ const AdminBanners = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            (banner.deviceType || 'desktop').toLowerCase() === 'desktop' 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-orange-100 text-orange-800'
+                          }`}>
                             {positions.find((p) => p.value === banner.position)?.label || banner.position}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {banner.category ? (
-                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              {banner.category.name}
+                          {banner.section ? (
+                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                              {banner.section}
                             </span>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            (banner.deviceType || 'desktop').toLowerCase() === 'desktop' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {banner.deviceType || 'desktop'}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
@@ -476,7 +574,7 @@ const AdminBanners = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
                         No banners found
                       </td>
                     </tr>
