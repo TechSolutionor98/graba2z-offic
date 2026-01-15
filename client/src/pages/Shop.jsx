@@ -890,7 +890,17 @@ const Shop = () => {
     }
   }
 
-  const filteredBrands = brands.filter((brand) => brand.name.toLowerCase().includes(brandSearch.toLowerCase()))
+  // Get unique brand IDs from currently displayed products
+  const brandsInProducts = [...new Set(products.map(product => {
+    // Handle both object and string brand IDs
+    return typeof product.brand === 'object' ? product.brand?._id : product.brand
+  }).filter(Boolean))]
+
+  // Filter brands to only show those with products currently displayed
+  const availableBrands = brands.filter((brand) => brandsInProducts.includes(brand._id))
+
+  // Apply search filter on available brands
+  const filteredBrands = availableBrands.filter((brand) => brand.name.toLowerCase().includes(brandSearch.toLowerCase()))
 
   const getSubcategoryCategoryId = (sub) => {
     if (!sub) return null
