@@ -1047,6 +1047,10 @@ const Home = () => {
                         src={getFullImageUrl(banner.image)}
                         alt={banner.title || "Banner"}
                         className="w-full h-full rounded-lg bg-cover hover:opacity-90 transition-opacity cursor-pointer"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = fallback.image;
+                        }}
                       />
                     </Link>
                   ) : (
@@ -1086,6 +1090,10 @@ const Home = () => {
                         src={getFullImageUrl(banner.image)}
                         alt={banner.title || "Banner"}
                         className="w-full h-full rounded-lg bg-cover hover:opacity-95 transition-opacity cursor-pointer"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = fallback.image;
+                        }}
                       />
                     </Link>
                   ) : (
@@ -1142,6 +1150,10 @@ const Home = () => {
               src={getFullImageUrl(getBannersForSection("hp-mobile", "home-brand-single")[0].image)}
               alt={getBannersForSection("hp-mobile", "home-brand-single")[0].title || "HP Products Banner Mobile"}
               className="w-full h-full bg-cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "11.png";
+              }}
             />
           </Link>
         ) : (
@@ -1172,6 +1184,10 @@ const Home = () => {
                       src={getFullImageUrl(hpBanner.image)}
                       alt={hpBanner.title || "HP Products Banner"}
                       className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "hp.png";
+                      }}
                     />
                   </Link>
                 ) : (
@@ -1191,6 +1207,10 @@ const Home = () => {
                       src={getFullImageUrl(dellBanner.image)}
                       alt={dellBanner.title || "Dell Products Banner"}
                       className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "dell1.png";
+                      }}
                     />
                   </Link>
                 ) : (
@@ -1284,6 +1304,14 @@ const Home = () => {
               src={getFullImageUrl(getBannersForSection("accessories", "home-category-banner")[0].image)}
               alt={getBannersForSection("accessories", "home-category-banner")[0].title || "Accessories Promotion Banner"}
               className="w-full h-full cover rounded-lg"
+              onError={(e) => {
+                e.target.onerror = null;
+                if (window.innerWidth < 1024) {
+                  e.target.src = "12.png";
+                } else {
+                  e.target.src = "acessories (1).png";
+                }
+              }}
             />
           </Link>
         ) : (
@@ -1344,6 +1372,10 @@ const Home = () => {
               src={getFullImageUrl(getBannersForSection("asus-mobile", "home-brand-single")[0].image)}
               alt={getBannersForSection("asus-mobile", "home-brand-single")[0].title || "ASUS Products Banner Mobile"}
               className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "laptop (2).png";
+              }}
             />
           </Link>
         ) : (
@@ -1373,6 +1405,10 @@ const Home = () => {
                       src={getFullImageUrl(acerBanner.image)}
                       alt={acerBanner.title || "Acer Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "acer01.png";
+                      }}
                     />
                   </Link>
                 ) : (
@@ -1392,6 +1428,10 @@ const Home = () => {
                       src={getFullImageUrl(asusBanner.image)}
                       alt={asusBanner.title || "ASUS Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "asus01.png";
+                      }}
                     />
                   </Link>
                 ) : (
@@ -1487,6 +1527,14 @@ const Home = () => {
               src={getFullImageUrl(getBannersForSection("networking", "home-category-banner")[0].image)}
               alt={getBannersForSection("networking", "home-category-banner")[0].title || "Networking Banner"}
               className="w-full h-full cover rounded-lg"
+              onError={(e) => {
+                e.target.onerror = null;
+                if (window.innerWidth < 1024) {
+                  e.target.src = "13.png";
+                } else {
+                  e.target.src = "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png";
+                }
+              }}
             />
           </Link>
         ) : (
@@ -1547,6 +1595,10 @@ const Home = () => {
               src={getFullImageUrl(getBannersForSection("msi-mobile", "home-brand-single")[0].image)}
               alt={getBannersForSection("msi-mobile", "home-brand-single")[0].title || "MSI Products Banner Mobile"}
               className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "14.png";
+              }}
             />
           </Link>
         ) : (
@@ -1576,6 +1628,10 @@ const Home = () => {
                       src={getFullImageUrl(msiBanner.image)}
                       alt={msiBanner.title || "MSI Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "msi01.png";
+                      }}
                     />
                   </Link>
                 ) : (
@@ -1595,6 +1651,10 @@ const Home = () => {
                       src={getFullImageUrl(lenovoBanner.image)}
                       alt={lenovoBanner.title || "Lenovo Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "lenovo01.png";
+                      }}
                     />
                   </Link>
                 ) : (
@@ -1688,6 +1748,10 @@ const Home = () => {
               src={getFullImageUrl(getBannersForSection("apple-mobile", "home-brand-single")[0].image)}
               alt={getBannersForSection("apple-mobile", "home-brand-single")[0].title || "Apple Products Banner Mobile"}
               className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "15.png";
+              }}
             />
           </Link>
         ) : (
@@ -1717,6 +1781,10 @@ const Home = () => {
                       src={getFullImageUrl(appleBanner.image)}
                       alt={appleBanner.title || "Apple Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "apple (1).png";
+                      }}
                     />
                   </Link>
                 ) : (
@@ -1736,6 +1804,10 @@ const Home = () => {
                       src={getFullImageUrl(samsungBanner.image)}
                       alt={samsungBanner.title || "Samsung Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "samsung01.png";
+                      }}
                     />
                   </Link>
                 ) : (

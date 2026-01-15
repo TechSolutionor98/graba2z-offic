@@ -2555,23 +2555,30 @@ const Shop = () => {
               let currentLevelId = null
               let currentLevelType = null
               let nextLevel = 1
+              let parentLevelId = null
+              let isLevel4 = false
               
               if (selectedSubCategory4) {
-                currentLevelId = selectedSubCategory4
+                // When at level 4, always show level 4 siblings (from level 3 parent)
+                currentLevelId = selectedSubCategory3
                 currentLevelType = 'subcategory'
-                nextLevel = 5
+                nextLevel = 4
+                isLevel4 = true
               } else if (selectedSubCategory3) {
                 currentLevelId = selectedSubCategory3
                 currentLevelType = 'subcategory'
                 nextLevel = 4
+                parentLevelId = selectedSubCategory2 || selectedSubCategories[0]
               } else if (selectedSubCategory2) {
                 currentLevelId = selectedSubCategory2
                 currentLevelType = 'subcategory'
                 nextLevel = 3
+                parentLevelId = selectedSubCategories[0]
               } else if (selectedSubCategories.length > 0) {
                 currentLevelId = selectedSubCategories[0]
                 currentLevelType = 'subcategory'
                 nextLevel = 2
+                parentLevelId = selectedCategory
               } else if (selectedCategory && selectedCategory !== "all") {
                 currentLevelId = selectedCategory
                 currentLevelType = 'category'
@@ -2582,7 +2589,8 @@ const Shop = () => {
               if (!currentLevelId) return null
               
               // Get children of the current deepest level
-              const childCategories = getChildren(currentLevelId, currentLevelType)
+              let childCategories = getChildren(currentLevelId, currentLevelType)
+              
               if (childCategories.length === 0) return null
               
               return (
@@ -2606,42 +2614,53 @@ const Shop = () => {
                       className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-10 md:px-12"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
-                      {childCategories.map((child) => (
-                        <button
-                          key={child._id}
-                          onClick={() => handleSubcategorySelect(child._id, nextLevel)}
-                          className="flex-shrink-0 w-32 rounded-lg transition-all flex flex-col items-center justify-center p-3 gap-2"
-                        >
-                          {child?.image ? (
-                            <>
-                              <div className="h-20 flex items-center justify-center">
-                                <img
-                                  src={getFullImageUrl(child.image)}
-                                  alt={child.name || "Subcategory"}
-                                  className="max-h-full max-w-full bg-cover"
-                                  loading="lazy"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = "none"
-                                    const btn = e.currentTarget.closest("button")
-                                    const fallback = btn?.querySelector("[data-fallback-name]")
-                                    if (fallback) fallback.classList.remove("hidden")
-                                  }}
-                                />
-                              </div>
-                              <span className="text-xs font-semibold text-gray-700 text-center line-clamp-2">
+                      {childCategories.map((child) => {
+                        // Check if this category is currently selected
+                        const isSelected = child._id === selectedSubCategory4
+                        
+                        return (
+                          <button
+                            key={child._id}
+                            onClick={() => handleSubcategorySelect(child._id, nextLevel)}
+                            className={`flex-shrink-0 w-32 rounded-lg transition-all flex flex-col items-center justify-center p-3 gap-2 ${
+                              isSelected ? 'bg-lime-100 border-2 border-lime-500' : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            {child?.image ? (
+                              <>
+                                <div className="h-20 flex items-center justify-center">
+                                  <img
+                                    src={getFullImageUrl(child.image)}
+                                    alt={child.name || "Subcategory"}
+                                    className="max-h-full max-w-full bg-cover"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = "none"
+                                      const btn = e.currentTarget.closest("button")
+                                      const fallback = btn?.querySelector("[data-fallback-name]")
+                                      if (fallback) fallback.classList.remove("hidden")
+                                    }}
+                                  />
+                                </div>
+                                <span className={`text-xs font-semibold text-center line-clamp-2 ${
+                                  isSelected ? 'text-lime-700' : 'text-gray-700'
+                                }`}>
+                                  {child.name}
+                                </span>
+                              </>
+                            ) : (
+                              <span className={`text-sm font-semibold text-center ${
+                                isSelected ? 'text-lime-700' : 'text-gray-700'
+                              }`}>
                                 {child.name}
                               </span>
-                            </>
-                          ) : (
-                            <span className="text-sm font-semibold text-gray-700 text-center">
+                            )}
+                            <span data-fallback-name className="hidden text-sm font-semibold text-gray-700 text-center">
                               {child.name}
                             </span>
-                          )}
-                          <span data-fallback-name className="hidden text-sm font-semibold text-gray-700 text-center">
-                            {child.name}
-                          </span>
-                        </button>
-                      ))}
+                          </button>
+                        )
+                      })}
                     </div>
 
                     <button
