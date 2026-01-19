@@ -1,2 +1,3 @@
 User-agent: *
 Disallow:
+sitemap:https://www.grabatoz.ae/sitemap.xml
