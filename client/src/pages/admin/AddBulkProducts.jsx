@@ -100,7 +100,7 @@
 //         price: 100,
 //         offerPrice: 90,
 //         tax: "VAT 5%",
-//         stockStatus: "Available Product",
+//         stockStatus: "In Stock",
 //         showStockOut: "true",
 //         canPurchase: "true",
 //         refundable: "true",
@@ -251,7 +251,7 @@
 //             </li>
 //             <li>• Categories and Brands will be created automatically if they don't exist</li>
 //             <li>• Required fields: name, parent_category, price</li>
-//             <li>• Stock Status options: "Available Product", "Out of Stock", "PreOrder"</li>
+//             <li>• Stock Status options: "In Stock", "Out of Stock", "PreOrder"</li>
 //             <li>• Boolean fields (showStockOut, canPurchase, refundable): use "true" or "false"</li>
 //           </ul>
 //         </div>
@@ -485,7 +485,7 @@
 //                     <td className="px-2 py-1">{product.category?.name || product.category || "N/A"}</td>
 //                     <td className="px-2 py-1">{product.brand?.name || product.brand || "N/A"}</td>
 //                     <td className="px-2 py-1">{product.price || 0}</td>
-//                     <td className="px-2 py-1">{product.stockStatus || "Available Product"}</td>
+//                     <td className="px-2 py-1">{product.stockStatus || "In Stock"}</td>
 //                   </tr>
 //                 ))}
 //               </tbody>
@@ -796,7 +796,7 @@ const AddBulkProducts = () => {
         offerPrice: 4200,
         discount: 7,
         tax: "VAT 5%",
-        stockStatus: "Available Product",
+        stockStatus: "In Stock",
         countInStock: 50,
         showStockOut: "true",
         canPurchase: "true",
@@ -834,7 +834,7 @@ const AddBulkProducts = () => {
         offerPrice: 4200,
         discount: 7,
         tax: "VAT 5%",
-        stockStatus: "Available Product",
+        stockStatus: "In Stock",
         countInStock: 50,
         showStockOut: "true",
         canPurchase: "true",
@@ -865,7 +865,7 @@ const AddBulkProducts = () => {
         offerPrice: 4999,
         discount: 4,
         tax: "VAT 5%",
-        stockStatus: "Available Product",
+        stockStatus: "In Stock",
         countInStock: 25,
         showStockOut: "true",
         canPurchase: "true",
@@ -896,7 +896,7 @@ const AddBulkProducts = () => {
         offerPrice: 1199,
         discount: 8,
         tax: "VAT 5%",
-        stockStatus: "Available Product",
+        stockStatus: "In Stock",
         countInStock: 100,
         showStockOut: "true",
         canPurchase: "true",
@@ -927,7 +927,7 @@ const AddBulkProducts = () => {
         offerPrice: 5999,
         discount: 8,
         tax: "VAT 5%",
-        stockStatus: "Available Product",
+        stockStatus: "In Stock",
         countInStock: 15,
         showStockOut: "true",
         canPurchase: "true",
@@ -1055,7 +1055,7 @@ const AddBulkProducts = () => {
             <li>• <strong>category_level_2/3/4</strong>: Optional deeper levels (will be auto-created & linked)</li>
             <li>• Any missing categories/brands/tax/unit will be created automatically</li>
             <li>• Required fields: name, parent_category, price (category_level_1 recommended)</li>
-            <li>• Stock Status: "Available Product" | "Out of Stock" | "PreOrder" (defaults to Available Product)</li>
+            <li>• Stock Status: "In Stock" | "Out of Stock" | "PreOrder" (defaults to In Stock)</li>
             <li>• Boolean fields: use "true" or "false"</li>
           </ul>
         </div>
@@ -1356,7 +1356,7 @@ const AddBulkProducts = () => {
                     <td className="px-2 py-1">{product.subCategory4?.name || product.subCategory4 || "-"}</td>
                     <td className="px-2 py-1">{product.brand?.name || product.brand || "N/A"}</td>
                     <td className="px-2 py-1">{product.price || 0}</td>
-                    <td className="px-2 py-1">{product.stockStatus || "Available Product"}</td>
+                    <td className="px-2 py-1">{product.stockStatus || "In Stock"}</td>
                   </tr>
                 ))}
               </tbody>

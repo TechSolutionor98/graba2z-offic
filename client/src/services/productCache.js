@@ -924,8 +924,8 @@ class ProductCacheService {
           const matches = stockFilters.some((filter) => {
             switch (filter) {
               case "inStock":
-                // Product is in stock if stockStatus is "Available Product" OR countInStock > 0
-                return product.stockStatus === "Available Product" || (product.countInStock || 0) > 0
+                // Product is in stock if stockStatus is "In Stock" OR countInStock > 0
+                return product.stockStatus === "In Stock" || (product.countInStock || 0) > 0
               case "outOfStock":
                 // Product is out of stock if stockStatus is "Out of Stock" AND countInStock === 0
                 return product.stockStatus === "Out of Stock" && (product.countInStock || 0) === 0
@@ -948,9 +948,9 @@ class ProductCacheService {
     filteredProducts.sort((a, b) => {
       // Check if products are in stock
       const aInStock =
-        a.stockStatus === "Available" || a.stockStatus === "Available Product" || (!a.stockStatus && a.countInStock > 0)
+        a.stockStatus === "In Stock" || (!a.stockStatus && a.countInStock > 0)
       const bInStock =
-        b.stockStatus === "Available" || b.stockStatus === "Available Product" || (!b.stockStatus && b.countInStock > 0)
+        b.stockStatus === "In Stock" || (!b.stockStatus && b.countInStock > 0)
 
       // In-stock products come first
       if (aInStock && !bInStock) return -1

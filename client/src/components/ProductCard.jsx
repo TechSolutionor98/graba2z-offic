@@ -49,7 +49,7 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
     priceToShow = offerPrice
   }
   
-  const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
+  const stockStatus = product.stockStatus || (product.countInStock > 0 ? "In Stock" : "Out of Stock")
 
   // Fix rating and reviews display
   const rating = Number(product.rating) || 0
@@ -134,7 +134,7 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
         )}
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
-          <div className={`${stockStatus === "Available" || stockStatus === "Available Product" ? "bg-green-600" : "bg-red-600"} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>
+          <div className={`${stockStatus === "In Stock" ? "bg-green-600" : stockStatus === "PreOrder" ? "bg-yellow-500" : "bg-red-600"} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>
             {stockStatus}
           </div>
           {finalDiscountLabel && (

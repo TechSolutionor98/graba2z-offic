@@ -65,11 +65,11 @@ const PromotionalPage = () => {
             // Check if products are in stock or pre-order
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && b.countInStock > 0)
 
             const aPreOrder = a.stockStatus === "PreOrder"

@@ -31,6 +31,7 @@ const AddProduct = () => {
     category: "",
     subCategory: "",
     barcode: "",
+    gtin: "",
     buyingPrice: "",
     price: "", // This will be base price + tax
     offerPrice: "", // This will be offer price + tax
@@ -588,6 +589,19 @@ const AddProduct = () => {
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">GTIN Number</label>
+                  <input
+                    type="text"
+                    name="gtin"
+                    value={formData.gtin}
+                    onChange={handleChange}
+                    placeholder="Global Trade Item Number for Google Merchant"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Used for Google Merchant feed. Leave empty if not available.</p>
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Stock Status <span className="text-red-500">*</span>
                   </label>
@@ -599,7 +613,7 @@ const AddProduct = () => {
                     required
                   >
                     <option value="">Select Any One</option>
-                    <option value="Available Product">Available Product</option>
+                    <option value="In Stock">In Stock</option>
                     <option value="Out of Stock">Out of Stock</option>
                     <option value="PreOrder">PreOrder</option>
                   </select>

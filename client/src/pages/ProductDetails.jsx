@@ -2096,7 +2096,7 @@ const ProductDetails = () => {
     const baseClass =
       "inline-flex items-center justify-center min-h-[32px] px-4 py-1 rounded-md text-sm font-bold leading-none";
     switch (product.stockStatus) {
-      case "Available Product":
+      case "In Stock":
         return (
           <span className={baseClass + " bg-lime-500 text-white"}>In Stock</span>
         );
@@ -2580,14 +2580,14 @@ const ProductDetails = () => {
               <div className="mb-6">
                 <div
                   className={`font-medium text-lg ${
-                    product.stockStatus === "Available Product"
+                    product.stockStatus === "In Stock"
                       ? "text-green-600"
                       : product.stockStatus === "Out of Stock"
                         ? "text-red-600"
                         : "text-orange-600"
                   }`}
                 >
-                  {product.stockStatus === "Available Product" && "Available in stock"}
+                  {product.stockStatus === "In Stock" && "Available in stock"}
                   {product.stockStatus === "Out of Stock" && "Currently out of stock"}
                   {product.stockStatus === "PreOrder" && "Available for pre-order"}
                 </div>
@@ -4059,3 +4059,4 @@ const ProductDetails = () => {
 }
 
 export default ProductDetails
+

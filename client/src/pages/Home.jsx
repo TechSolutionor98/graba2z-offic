@@ -281,11 +281,11 @@ const Home = () => {
             // Check if products are in stock or pre-order
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && b.countInStock > 0)
 
             const aPreOrder = a.stockStatus === "PreOrder"
@@ -365,11 +365,11 @@ const Home = () => {
           .sort((a, b) => {
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && a.countInStock > 0)
             if (aInStock && !bInStock) return -1
             if (!aInStock && bInStock) return 1
@@ -380,11 +380,11 @@ const Home = () => {
           .sort((a, b) => {
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && b.countInStock > 0)
             if (aInStock && !bInStock) return -1
             if (!aInStock && bInStock) return 1
@@ -395,11 +395,11 @@ const Home = () => {
           .sort((a, b) => {
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && b.countInStock > 0)
             if (aInStock && !bInStock) return -1
             if (!aInStock && bInStock) return 1
@@ -410,11 +410,11 @@ const Home = () => {
           .sort((a, b) => {
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && b.countInStock > 0)
             if (aInStock && !bInStock) return -1
             if (!aInStock && bInStock) return 1
@@ -427,11 +427,11 @@ const Home = () => {
           .sort((a, b) => {
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && b.countInStock > 0)
             if (aInStock && !bInStock) return -1
             if (!aInStock && bInStock) return 1
@@ -457,11 +457,11 @@ const Home = () => {
             .sort((a, b) => {
               const aInStock =
                 a.stockStatus === "Available" ||
-                a.stockStatus === "Available Product" ||
+                a.stockStatus === "In Stock" ||
                 (!a.stockStatus && a.countInStock > 0)
               const bInStock =
                 b.stockStatus === "Available" ||
-                b.stockStatus === "Available Product" ||
+                b.stockStatus === "In Stock" ||
                 (!b.stockStatus && b.countInStock > 0)
               if (aInStock && !bInStock) return -1
               if (!aInStock && bInStock) return 1
@@ -476,11 +476,11 @@ const Home = () => {
           .sort((a, b) => {
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && b.countInStock > 0)
             if (aInStock && !bInStock) return -1
             if (!aInStock && bInStock) return 1
@@ -494,11 +494,11 @@ const Home = () => {
           .sort((a, b) => {
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && b.countInStock > 0)
             if (aInStock && !bInStock) return -1
             if (!aInStock && bInStock) return 1
@@ -512,11 +512,11 @@ const Home = () => {
           .sort((a, b) => {
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && b.countInStock > 0)
             if (aInStock && !bInStock) return -1
             if (!aInStock && bInStock) return 1
@@ -530,11 +530,11 @@ const Home = () => {
           .sort((a, b) => {
             const aInStock =
               a.stockStatus === "Available" ||
-              a.stockStatus === "Available Product" ||
+              a.stockStatus === "In Stock" ||
               (!a.stockStatus && a.countInStock > 0)
             const bInStock =
               b.stockStatus === "Available" ||
-              b.stockStatus === "Available Product" ||
+              b.stockStatus === "In Stock" ||
               (!b.stockStatus && b.countInStock > 0)
             if (aInStock && !bInStock) return -1
             if (!aInStock && bInStock) return 1
@@ -2047,7 +2047,7 @@ const MobileProductCard = ({ product }) => {
 
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs inline-block`}>
-          {stockStatus.replace('Available Product', 'Available')}
+          {stockStatus}
         </div>
         {discount && (
           <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs inline-block">{discount}</div>
@@ -2170,7 +2170,7 @@ const DynamicBrandProductCard = ({ product }) => {
         </button>
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
-          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus.replace('Available Product', 'Available')}</div>
+          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus}</div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
               {finalDiscountLabel}
@@ -2293,7 +2293,7 @@ const AccessoriesProductCard = ({ product }) => {
         </button>
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
-          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus.replace('Available Product', 'Available')}</div>
+          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus}</div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
               {finalDiscountLabel}
@@ -2428,10 +2428,11 @@ const UpgradeFeatureCard = ({ feature }) => {
 }
 
 const getStatusColor = (status) => {
-  if (status === "Available Product" || status === "Available") return "bg-green-600"
-  if (status === "Stock Out" || status === "Out of Stock") return "bg-red-600"
-  if (status === "Pre-Order") return "bg-yellow-400 text-black"
+  if (status === "In Stock") return "bg-green-600"
+  if (status === "Out of Stock") return "bg-red-600"
+  if (status === "PreOrder") return "bg-yellow-500"
   return "bg-gray-400"
 }
 
 export default Home
+

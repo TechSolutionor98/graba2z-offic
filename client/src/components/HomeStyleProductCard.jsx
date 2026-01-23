@@ -6,7 +6,7 @@
 // import { getImageUrl } from "../utils/imageUtils"
 
 // const getStatusColor = (status) => {
-//   if (status === "Available Product" || status === "Available") return "bg-green-600"
+//   if (status === "In Stock" || status === "Available") return "bg-green-600"
 //   if (status === "Stock Out" || status === "Out of Stock") return "bg-red-600"
 //   if (status === "Pre-Order") return "bg-yellow-400 text-black"
 //   return "bg-gray-400"
@@ -18,7 +18,7 @@
 //   const { showToast } = useToast()
 //   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
 //   // Treat both 'Available' and 'Available Product' as available
-//   const isAvailable = (product.stockStatus === "Available" || product.stockStatus === "Available Product" || (!product.stockStatus && product.countInStock > 0))
+//   const isAvailable = (product.stockStatus === "Available" || product.stockStatus === "In Stock" || (!product.stockStatus && product.countInStock > 0))
 //   const stockStatus = isAvailable ? "Available" : (product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock"))
 //   const basePrice = Number(product.price) || 0
 //   const offerPrice = Number(product.offerPrice) || 0
@@ -140,9 +140,9 @@ import { useToast } from "../context/ToastContext"
 import { getImageUrl } from "../utils/imageUtils"
 
 const getStatusColor = (status) => {
-  if (status === "Available Product" || status === "Available") return "bg-green-600"
-  if (status === "Stock Out" || status === "Out of Stock") return "bg-red-600"
-  if (status === "Pre-Order") return "bg-yellow-400 text-black"
+  if (status === "In Stock") return "bg-green-600"
+  if (status === "Out of Stock") return "bg-red-600"
+  if (status === "PreOrder") return "bg-yellow-500"
   return "bg-gray-400"
 }
 
@@ -151,14 +151,9 @@ const HomeStyleProductCard = ({ product }) => {
   const { addToCart } = useCart()
   const { showToast } = useToast()
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
-  // Treat both 'Available' and 'Available Product' as available
-  const isAvailable =
-    product.stockStatus === "Available" ||
-    product.stockStatus === "Available Product" ||
-    (!product.stockStatus && product.countInStock > 0)
-  const stockStatus = isAvailable
-    ? "Available"
-    : product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
+  // Determine stock status
+  const stockStatus = product.stockStatus || (product.countInStock > 0 ? "In Stock" : "Out of Stock")
+  const isAvailable = stockStatus === "In Stock" || stockStatus === "PreOrder"
   const basePrice = Number(product.price) || 0
   const offerPrice = Number(product.offerPrice) || 0
 
@@ -269,3 +264,4 @@ const HomeStyleProductCard = ({ product }) => {
 }
 
 export default HomeStyleProductCard
+
