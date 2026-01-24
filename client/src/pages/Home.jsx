@@ -1116,7 +1116,7 @@ const Home = () => {
       </div> */}
 
       {/* Dynamic Section Position 1 */}
-      {/* {renderDynamicSection(1)} */}
+      {renderDynamicSection(1)}
 
       {/* Big Sale Section - Handles both mobile and desktop views */}
       <BigSaleSection products={featuredProducts} />
@@ -1138,7 +1138,7 @@ const Home = () => {
 
 
       {/* Dynamic Section Position 2 */}
-      {/* {renderDynamicSection(2)} */}
+      {renderDynamicSection(2)}
 
 
 
@@ -1294,7 +1294,7 @@ const Home = () => {
       </section>
 
       {/* Dynamic Section Position 3 */}
-      {/* {renderDynamicSection(3)} */}
+      {renderDynamicSection(3)}
 
       {/* Accessories Banner - Dynamic */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
@@ -1362,7 +1362,7 @@ const Home = () => {
       </section>
       {/* <CategoryBanners /> */}
       {/* Dynamic Section Position 4 */}
-      {/* {renderDynamicSection(4)} */}
+      {renderDynamicSection(4)}
 
       {/* Mobile Banner Asus (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
@@ -1517,7 +1517,7 @@ const Home = () => {
       </section>
 
       {/* Dynamic Section Position 5 */}
-      {/* {renderDynamicSection(5)} */}
+      {renderDynamicSection(5)}
 
       {/* Networking Banner - Dynamic */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
@@ -1585,7 +1585,7 @@ const Home = () => {
       </section>
 
       {/* Dynamic Section Position 6 */}
-      {/* {renderDynamicSection(6)} */}
+      {renderDynamicSection(6)}
 
       {/* Mobile Banner MSI (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
@@ -1738,7 +1738,7 @@ const Home = () => {
       </section>
 
       {/* Dynamic Section Position 7 */}
-      {/* {renderDynamicSection(7)} */}
+      {renderDynamicSection(7)}
 
       {/* Mobile Banner Apple (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
