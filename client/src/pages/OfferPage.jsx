@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom"
 import axios from "axios"
 import config from "../config/config"
 import ProductCard from "../components/ProductCard"
+import { getFullImageUrl } from "../utils/imageUtils"
 import { Helmet } from "react-helmet-async"
 import { ChevronLeft, ChevronRight, ChevronDown, Minus, Plus, X } from "lucide-react"
 import Slider from "rc-slider"
@@ -1250,7 +1251,7 @@ const OfferPage = () => {
           <div className="relative">
             <div className="relative h-[170px] sm:h-[250px] md:h-[300px] lg:h-[310px] bg-gradient-to-r from-lime-600 to-green-600">
               <img
-                src={offerPage.heroImage}
+                src={getFullImageUrl(offerPage.heroImage)}
                 alt={offerPage.name}
                 className="w-full h-full object-cover"
               />
@@ -1271,24 +1272,18 @@ const OfferPage = () => {
                   {offerPage.cardImages
                     .sort((a, b) => (a.order || 0) - (b.order || 0))
                     .filter(cardImage => cardImage.image)
-                    .map((cardImage, index) => {
-                      // Fix double slashes in image path
-                      const imageUrl = cardImage.image.replace(/\/\//g, '/')
-                      const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${config.API_URL}${imageUrl}`
-                      
-                      return (
-                        <div
-                          key={index}
-                          className="bg-white rounded-lg shadow-lg overflow-hidden w-full h-16 sm:h-20 md:h-30 lg:h-35 max-w-full"
-                        >
-                          <img
-                            src={fullImageUrl}
-                            alt={`Offer ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )
-                    })}
+                    .map((cardImage, index) => (
+                      <div
+                        key={index}
+                        className="bg-white rounded-lg shadow-lg overflow-hidden w-full h-16 sm:h-20 md:h-30 lg:h-35 max-w-full"
+                      >
+                        <img
+                          src={getFullImageUrl(cardImage.image)}
+                          alt={`Offer ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
