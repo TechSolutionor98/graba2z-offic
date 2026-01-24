@@ -1,10 +1,12 @@
-"use client"
+﻿"use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import axios from "axios"
-import { Calendar, User, Eye, Tag, Search, Filter } from "lucide-react"
+import { Calendar, User, Eye, Tag, Search, Filter, TrendingUp, Clock, Heart, MessageSquare, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
+import SEO from "../components/SEO"
+import BlogHeroSection from "../components/BlogHeroSection"
 
 import config from "../config/config"
 
@@ -25,37 +27,82 @@ if (typeof document !== 'undefined' && !document.getElementById('bounce-keyframe
 
 const BlogList = () => {
   const [blogs, setBlogs] = useState([])
+  const [featuredBlogs, setFeaturedBlogs] = useState([])
+  const [trendingBlogs, setTrendingBlogs] = useState([])
   const [categories, setCategories] = useState([])
   const [topics, setTopics] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedTopic, setSelectedTopic] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [blogsPerPage] = useState(6)
+  const [latestPage, setLatestPage] = useState(1)
+  const [latestHasMore, setLatestHasMore] = useState(false)
+  
+  // Trending scroll state
+  const trendingRef = useRef(null)
+  const [trendCanLeft, setTrendCanLeft] = useState(false)
+  const [trendCanRight, setTrendCanRight] = useState(false)
+  const [activeTrendingIndex, setActiveTrendingIndex] = useState(0)
+
+  // Helper function to get the deepest selected category level
+  const getDeepestCategory = (blog) => {
+    // Check from level 4 down to level 1, then mainCategory
+    if (blog.subCategory4) return blog.subCategory4
+    if (blog.subCategory3) return blog.subCategory3
+    if (blog.subCategory2) return blog.subCategory2
+    if (blog.subCategory1) return blog.subCategory1
+    return blog.mainCategory
+  }
 
   useEffect(() => {
-    fetchBlogs()
-    fetchCategories()
-    fetchTopics()
+    fetchAllData()
   }, [])
 
-  const fetchBlogs = async () => {
+  const fetchAllData = async () => {
     try {
       setLoading(true)
-      const { data } = await axios.get(`${API_BASE_URL}/api/blogs`)
-      setBlogs(data.filter((blog) => blog.status === "published"))
+      // Fetch featured, trending, categories, and topics
+      await Promise.all([
+        fetchFeaturedBlogs(),
+        fetchTrendingBlogs(),
+        fetchCategories(),
+        fetchTopics(),
+      ])
+      // Fetch latest blogs
+      await fetchLatestBlogs(1, true)
     } catch (error) {
-      console.error("Error fetching blogs:", error)
+      console.error("Error fetching data:", error)
     } finally {
       setLoading(false)
     }
   }
 
+  const fetchFeaturedBlogs = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/blogs?limit=9&featured=true&sort=-publishedAt`)
+      setFeaturedBlogs(response.data.blogs || response.data || [])
+    } catch (error) {
+      console.error("Error fetching featured blogs:", error)
+    }
+  }
+
+  const fetchTrendingBlogs = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/blogs/trending?limit=20`)
+      const list = Array.isArray(response.data) ? response.data : response.data.blogs
+      setTrendingBlogs(Array.isArray(list) ? list : [])
+    } catch (error) {
+      console.error("Error fetching trending blogs:", error)
+    }
+  }
+
   const fetchCategories = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/api/blog-categories`)
-      setCategories(data)
+      const response = await axios.get(`${API_BASE_URL}/api/blog-categories`)
+      setCategories(response.data.blogCategories || response.data || [])
     } catch (error) {
       console.error("Error fetching categories:", error)
     }
@@ -63,19 +110,109 @@ const BlogList = () => {
 
   const fetchTopics = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/api/blog-topics`)
-      setTopics(data)
+      const response = await axios.get(`${API_BASE_URL}/api/blog-topics`)
+      setTopics(response.data.blogTopics || response.data || [])
     } catch (error) {
       console.error("Error fetching topics:", error)
     }
   }
 
+  const fetchLatestBlogs = async (page = 1, replace = false) => {
+    if (page === 1) setLoading(true)
+    if (page > 1) setLoadingMore(true)
+
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "6",
+        sort: "-publishedAt",
+        status: "published",
+      })
+
+      const response = await axios.get(`${API_BASE_URL}/api/blogs?${params}`)
+      const data = response.data
+
+      setBlogs((prev) => (replace ? data.blogs : [...prev, ...data.blogs]))
+      const pag = data.pagination || {}
+      setLatestPage(pag.current || page)
+      setLatestHasMore(!!pag.hasNext)
+    } catch (error) {
+      console.error("Error fetching latest blogs:", error)
+    } finally {
+      if (page === 1) setLoading(false)
+      if (page > 1) setLoadingMore(false)
+    }
+  }
+
+  // Update Trending arrows visibility based on scroll position
+  useEffect(() => {
+    const el = trendingRef.current
+    if (!el) return
+    const update = () => {
+      const maxScroll = el.scrollWidth - el.clientWidth
+      setTrendCanLeft(el.scrollLeft > 2)
+      setTrendCanRight(el.scrollLeft < maxScroll - 2)
+      
+      // Calculate active index based on scroll position
+      if (el.firstElementChild) {
+        const cardWidth = el.firstElementChild.offsetWidth
+        const gap = 24 // gap-6 = 24px
+        const scrollPos = el.scrollLeft
+        // Add half card width for better detection of which card is "active"
+        const index = Math.round((scrollPos + gap / 2) / (cardWidth + gap))
+        setActiveTrendingIndex(Math.max(0, Math.min(index, trendingBlogs.length - 1)))
+      }
+    }
+    update()
+    const onScroll = () => update()
+    el.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("resize", update)
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null
+    if (ro) ro.observe(el)
+    return () => {
+      el.removeEventListener("scroll", onScroll)
+      window.removeEventListener("resize", update)
+      if (ro) ro.disconnect()
+    }
+  }, [trendingBlogs])
+
+  const scrollTrending = (dir) => {
+    const el = trendingRef.current
+    if (!el) return
+    let step = 0
+    const first = el.firstElementChild
+    if (first) {
+      const second = first.nextElementSibling
+      if (second) {
+        const r1 = first.getBoundingClientRect()
+        const r2 = second.getBoundingClientRect()
+        step = Math.round(r2.left - r1.left)
+      } else {
+        step = Math.round(first.getBoundingClientRect().width)
+      }
+    }
+    if (!step) {
+      step = Math.max(Math.round(el.clientWidth / 4), 200)
+    }
+    el.scrollBy({ left: dir === "left" ? -step : step, behavior: "smooth" })
+  }
+
+  const scrollTrendingToIndex = (index) => {
+    const el = trendingRef.current
+    if (!el || !el.firstElementChild) return
+    const cardWidth = el.firstElementChild.offsetWidth
+    const gap = 24 // gap-6 = 24px
+    const scrollPos = index * (cardWidth + gap)
+    el.scrollTo({ left: scrollPos, behavior: "smooth" })
+  }
+
   // Filter blogs based on search and filters
-  const filteredBlogs = blogs.filter((blog) => {
+  const filteredBlogs = (blogs || []).filter((blog) => {
     const matchesSearch =
-      blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      blog.content.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = !selectedCategory || blog.category?._id === selectedCategory
+      blog.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      blog.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      false
+    const matchesCategory = !selectedCategory || blog.mainCategory?._id === selectedCategory
     const matchesTopic = !selectedTopic || blog.topic?._id === selectedTopic
 
     return matchesSearch && matchesCategory && matchesTopic
@@ -115,189 +252,210 @@ const BlogList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-lime-300 to-lime-600 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">Our Blog</h1>
-            <p className="text-xl md:text-2xl opacity-90">Discover insights, tips, and stories from our community</p>
-          </div>
-        </div>
-      </div>
+    <>
+      <SEO
+        title="Blogs - GrabA2Z | Tech Insights, Reviews & Guides"
+        description="Explore our blog for the latest tech news, product reviews, buying guides, and expert insights on laptops, computers, and technology."
+        keywords="tech blog, laptop reviews, computer guides, technology news, product reviews, tech insights"
+        canonicalUrl="https://www.grabatoz.ae/blogs"
+      />
+      
+      <div className="min-h-screen bg-white overflow-x-hidden">
+        {/* Hero Section - Featured Blogs Slider */}
+        <BlogHeroSection featuredBlogs={featuredBlogs} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Search blogs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              />
+        {/* Trending Section */}
+        <section className="bg-white py-6 sm:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-4 sm:mb-12">
+              <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2">TRENDING THIS WEEK</h2>
             </div>
 
-            {/* Category Filter */}
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none"
-              >
-                <option value="">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Topic Filter */}
-            <div className="relative">
-              <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <select
-                value={selectedTopic}
-                onChange={(e) => setSelectedTopic(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none"
-              >
-                <option value="">All Topics</option>
-                {topics.map((topic) => (
-                  <option key={topic._id} value={topic._id}>
-                    {topic.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Clear Filters */}
-            <button
-              onClick={() => {
-                setSearchTerm("")
-                setSelectedCategory("")
-                setSelectedTopic("")
-                setCurrentPage(1)
-              }}
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              Clear Filters
-            </button>
-          </div>
-        </div>
-
-        {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-gray-600">
-            Showing {currentBlogs.length} of {filteredBlogs.length} blog posts
-          </p>
-        </div>
-
-        {/* Blog Grid */}
-        {currentBlogs.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <Search size={64} className="mx-auto" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No blogs found</h3>
-            <p className="text-gray-500">Try adjusting your search criteria</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {currentBlogs.map((blog) => (
-              <article
-                key={blog._id}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col"
-              >
-                {/* Blog Image */}
-                <div className="h-48 w-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                  <img
-                    src={getFullImageUrl(blog.mainImage || blog.image) || "/placeholder.svg"}
-                    alt={blog.title}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-                <div className="p-5 flex flex-col flex-1">
-                  {/* Category/Tag */}
-                  {blog.mainCategory && (
-                    <span className="inline-block bg-lime-100 text-lime-700 text-xs px-3 py-1 rounded-full mb-2">
-                      {blog.mainCategory.name}
-                    </span>
-                  )}
-                  {/* Title */}
-                  <h2 className="text-lg font-bold mb-2 line-clamp-2">{blog.title}</h2>
-                  {/* Description/Snippet */}
-                  <p className="text-gray-600 mb-4 text-sm line-clamp-3">
-                    {truncateContent(blog.description || blog.content)}
-                  </p>
-                  {/* Meta Info */}
-                  <div className="flex items-center text-xs text-gray-500 mb-3 gap-4">
-                    <span className="flex items-center gap-1">
-                      <User size={14} /> {blog.postedBy || "Admin"}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Calendar size={14} /> {formatDate(blog.createdAt)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Eye size={14} /> {blog.views || 0}
-                    </span>
-                  </div>
-                  {/* Read More */}
-                  <Link
-                    to={`/blogs/${blog.slug}`}
-                    className="text-lime-600 hover:text-lime-500 hover:underline font-semibold mt-auto"
+            {(() => {
+              const trendingList = Array.isArray(trendingBlogs) ? trendingBlogs : []
+              const scrollable = trendingList.length > 4
+              return (
+                <div className="relative">
+                  <div
+                    ref={trendingRef}
+                    className={
+                      scrollable
+                        ? "flex gap-6 overflow-x-auto pb-4 scroll-smooth"
+                        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                    }
+                    style={scrollable ? { scrollbarWidth: 'none', msOverflowStyle: 'none' } : {}}
                   >
-                    Read More →
-                  </Link>
+                    {trendingList.map((blog) => (
+                      <div
+                        key={blog._id}
+                        className={`${scrollable ? "flex-none w-full md:w-[calc((100%-24px)/2)] lg:w-[calc((100%-72px)/4)]" : ""}`}
+                      >
+                        <Link to={`/blogs/${blog.slug}`} className="block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+                          <div className="aspect-square relative flex-shrink-0">
+                            <img
+                              src={blog.mainImage ? getFullImageUrl(blog.mainImage) : "/placeholder.svg?height=250&width=250"}
+                              alt={blog.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="p-4 flex flex-col overflow-hidden" style={{ height: '160px' }}>
+                            {(() => {
+                              const deepestCategory = getDeepestCategory(blog)
+                              return deepestCategory && (
+                                <div
+                                  className="inline-block px-2 py-1 rounded text-xs font-medium text-white mb-2 w-fit flex-shrink-0"
+                                  style={{ backgroundColor: deepestCategory.color || blog.mainCategory?.color || "#2563eb" }}
+                                >
+                                  {deepestCategory.name}
+                                </div>
+                              )
+                            })()}
+                            <h3 className="font-bold text-base text-gray-900 mb-2 line-clamp-2 flex-shrink-0 leading-tight">{blog.title}</h3>
+                            <p className="text-sm text-gray-600 line-clamp-2 flex-shrink-0 leading-snug">{truncateContent(blog.description)}</p>
+                          </div>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+
+                  {scrollable && trendCanLeft && (
+                    <button
+                      type="button"
+                      aria-label="Scroll left"
+                      onClick={() => scrollTrending("left")}
+                      className="flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/90 shadow hover:bg-white text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                  )}
+
+                  {scrollable && trendCanRight && (
+                    <button
+                      type="button"
+                      aria-label="Scroll right"
+                      onClick={() => scrollTrending("right")}
+                      className="flex items-center justify-center absolute right-2 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/90 shadow hover:bg-white text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  )}
+
+                  {/* Dot Indicators */}
+                  {scrollable && trendingList.length > 0 && (
+                    <div className="flex justify-center gap-2 mt-6">
+                      {Array.from({ length: trendingList.length }).map((_, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          aria-label={`Go to slide ${index + 1}`}
+                          onClick={() => scrollTrendingToIndex(index)}
+                          className={`transition-all duration-300 ${
+                            activeTrendingIndex === index
+                              ? "w-8 h-2 bg-lime-500"
+                              : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
+                          } rounded-full`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </article>
-            ))}
+              )
+            })()}
           </div>
-        )}
+        </section>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center mt-12">
-            <nav className="flex space-x-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-2 rounded-md bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
+        {/* Latest Posts Section */}
+        <section className="mb-9">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2">LATEST POSTS</h2>
+            </div>
 
-              {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index + 1}
-                  onClick={() => setCurrentPage(index + 1)}
-                  className={`px-3 py-2 rounded-md ${
-                    currentPage === index + 1
-                      ? "bg-orange-500 text-white"
-                      : "bg-white border border-gray-300 text-gray-500 hover:bg-gray-50"
-                  }`}
-                >
-                  {index + 1}
-                </button>
-              ))}
+            {/* Loading State */}
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-lime-500"></div>
+                <p className="mt-4 text-gray-600">Loading blogs...</p>
+              </div>
+            )}
 
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-2 rounded-md bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </nav>
+            {/* Blogs Grid */}
+            {!loading && (
+              <>
+                {(blogs || []).length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                    {(blogs || []).map((blog) => (
+                      <Link key={blog._id} to={`/blogs/${blog.slug}`} className="group">
+                        <article className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full">
+                          <div className="relative h-56 w-full bg-gray-100 overflow-hidden">
+                            <img
+                              src={getFullImageUrl(blog.mainImage) || "/placeholder.svg"}
+                              alt={blog.title}
+                              className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                            />
+                          </div>
+                          
+                          <div className="p-6 flex flex-col flex-1">
+                            {(() => {
+                              const deepestCategory = getDeepestCategory(blog)
+                              return deepestCategory && (
+                                <span className="inline-block bg-lime-100 text-lime-700 text-xs px-3 py-1 rounded-full mb-3 w-fit">
+                                  {deepestCategory.name}
+                                </span>
+                              )
+                            })()}
+                            
+                            <h3 className="text-xl font-bold mb-3 line-clamp-2 group-hover:text-lime-600 transition-colors">
+                              {blog.title}
+                            </h3>
+                            
+                            <p className="text-gray-600 mb-4 text-sm line-clamp-3 flex-1">
+                              {truncateContent(blog.description, 120)}
+                            </p>
+                            
+                            <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-100">
+                              <div className="flex items-center gap-3">
+                                <span className="flex items-center gap-1">
+                                  <User size={14} /> {blog.postedBy || "Admin"}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Eye size={14} /> {blog.views || 0}
+                                </span>
+                              </div>
+                              <span className="flex items-center gap-1 text-gray-400">
+                                <Clock size={14} /> {blog.readMinutes || 5} min
+                              </span>
+                            </div>
+                          </div>
+                        </article>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No blogs found</h3>
+                    <p className="text-gray-600">No blogs available at the moment</p>
+                  </div>
+                )}
+
+                {/* Load More */}
+                {latestHasMore && (
+                  <div className="flex items-center justify-center">
+                    <button
+                      onClick={() => fetchLatestBlogs(latestPage + 1, false)}
+                      disabled={loadingMore}
+                      className="px-6 py-3 rounded-lg bg-lime-500 text-white hover:bg-lime-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {loadingMore ? "Loading..." : "Load More"}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        )}
+        </section>
       </div>
-    </div>
+    </>
   )
 }
 

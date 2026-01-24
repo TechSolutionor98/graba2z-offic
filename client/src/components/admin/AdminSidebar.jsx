@@ -118,12 +118,15 @@ const AdminSidebar = () => {
 
     // Blogs dropdown - open if any blog-related route is active
     if (
+      path.includes("/admin/blog-dashboard") ||
       path.includes("/admin/blogs") ||
       path.includes("/admin/add-blog") ||
       path.includes("/admin/blog-topics") ||
       path.includes("/admin/add-blog-topic") ||
       path.includes("/admin/blog-categories") ||
       path.includes("/admin/add-blog-category") ||
+      path.includes("/admin/blog-brands") ||
+      path.includes("/admin/blog-comments") ||
       path.includes("/admin/blog-rating")
     ) {
       newOpenDropdowns.blogs = true
@@ -426,20 +429,16 @@ const AdminSidebar = () => {
       icon: Shield,
       path: "/admin/buyer-protection",
     },
-    // {
-    //   title: "Blogs",
-    //   icon: BookOpen,
-    //   dropdown: "blogs",
-    //   items: [
-    //     { title: "Blogs", path: "/admin/blogs" },
-    //     { title: "Add Blog", path: "/admin/blogs/add" },
-    //     { title: "Blog Categories", path: "/admin/blogs/categories" },
-    //     { title: "Add Blog Category", path: "/admin/blogs/categories/add" },
-    //     { title: "Blog Topics", path: "/admin/blogs/topics" },
-    //     { title: "Add Blog Topic", path: "/admin/blogs/topics/add" },
-    //     { title: "Blog Rating", path: "/admin/blogs/rating" },
-    //   ],
-    // },
+    {
+      title: "Blogs",
+      icon: BookOpen,
+      dropdown: "blogs",
+      items: [
+        { title: "Dashboard", path: "/admin/blog-dashboard" },
+        { title: "Blogs", path: "/admin/blogs" },
+        { title: "Comments", path: "/admin/blog-comments" },
+      ],
+    },
     {
       title: "Users",
       icon: Users,
@@ -548,27 +547,28 @@ const AdminSidebar = () => {
         <Link
           key={item.title}
           to={item.path}
-          className={`block ${paddingLeft} py-2 ${textSize} transition-colors duration-200 ${
+          className={`flex items-center space-x-3 ${paddingLeft} py-2 ${textSize} transition-colors duration-200 ${
             isActive(item.path)
               ? "bg-lime-100 text-lime-800 border-r-4 border-lime-400"
               : "text-gray-700 hover:bg-gray-100"
           }`}
         >
-          {item.title}
+          {item.icon && <item.icon size={20} />}
+          <span>{item.title}</span>
         </Link>
       )
     }
   }
 
   return (
-    <div className="w-64 bg-white shadow-lg h-screen overflow-y-auto fixed left-0 top-0 z-50">
-      <div className="p-6 border-b">
+    <div className="w-64 bg-white shadow-lg h-screen overflow-y-auto fixed left-0 top-0 z-50 flex flex-col">
+      <div className="p-6 border-b flex-shrink-0">
         <Link to="/admin/dashboard" className="flex items-center space-x-2">
           <img src="/admin-logo.svg" alt="Admin" className="" />
         </Link>
       </div>
 
-      <nav className="mt-6 pb-6">
+      <nav className="mt-6 pb-20 flex-1 overflow-y-auto">
         {menuItems.map((item, index) => (
           <div key={index}>
             {item.dropdown ? (

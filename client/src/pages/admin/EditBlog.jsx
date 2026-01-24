@@ -18,7 +18,10 @@ const EditBlog = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [categories, setCategories] = useState([])
-  const [subCategories, setSubCategories] = useState([])
+  const [subCategories1, setSubCategories1] = useState([])
+  const [subCategories2, setSubCategories2] = useState([])
+  const [subCategories3, setSubCategories3] = useState([])
+  const [subCategories4, setSubCategories4] = useState([])
   const [topics, setTopics] = useState([])
   const [brands, setBrands] = useState([])
 
@@ -27,8 +30,13 @@ const EditBlog = () => {
     title: "",
     slug: "",
     status: "draft",
+    featured: false,
+    trending: false,
     mainCategory: "",
-    subCategory: "",
+    subCategory1: "",
+    subCategory2: "",
+    subCategory3: "",
+    subCategory4: "",
     topic: "",
     brand: "",
     mainImage: "",
@@ -46,14 +54,47 @@ const EditBlog = () => {
     fetchAllData()
   }, [id])
 
+  // Fetch SubCategory Level 1 when main category changes
   useEffect(() => {
     if (formData.mainCategory) {
-      fetchSubCategories(formData.mainCategory)
+      fetchSubCategories(formData.mainCategory, 1)
     } else {
-      setSubCategories([])
-      setFormData((prev) => ({ ...prev, subCategory: "" }))
+      setSubCategories1([])
+      setSubCategories2([])
+      setSubCategories3([])
+      setSubCategories4([])
     }
   }, [formData.mainCategory])
+
+  // Fetch SubCategory Level 2 when level 1 changes
+  useEffect(() => {
+    if (formData.subCategory1) {
+      fetchSubCategories(formData.subCategory1, 2)
+    } else {
+      setSubCategories2([])
+      setSubCategories3([])
+      setSubCategories4([])
+    }
+  }, [formData.subCategory1])
+
+  // Fetch SubCategory Level 3 when level 2 changes
+  useEffect(() => {
+    if (formData.subCategory2) {
+      fetchSubCategories(formData.subCategory2, 3)
+    } else {
+      setSubCategories3([])
+      setSubCategories4([])
+    }
+  }, [formData.subCategory2])
+
+  // Fetch SubCategory Level 4 when level 3 changes
+  useEffect(() => {
+    if (formData.subCategory3) {
+      fetchSubCategories(formData.subCategory3, 4)
+    } else {
+      setSubCategories4([])
+    }
+  }, [formData.subCategory3])
 
   const fetchBlogData = async () => {
     try {
@@ -70,8 +111,13 @@ const EditBlog = () => {
         title: blog.title || "",
         slug: blog.slug || "",
         status: blog.status || "draft",
+        featured: blog.featured || false,
+        trending: blog.trending || false,
         mainCategory: blog.mainCategory?._id || "",
-        subCategory: blog.subCategory?._id || "",
+        subCategory1: blog.subCategory1?._id || "",
+        subCategory2: blog.subCategory2?._id || "",
+        subCategory3: blog.subCategory3?._id || "",
+        subCategory4: blog.subCategory4?._id || "",
         topic: blog.topic?._id || "",
         brand: blog.brand?._id || "",
         mainImage: blog.mainImage || blog.featuredImage || "",
@@ -122,17 +168,55 @@ const EditBlog = () => {
     }
   }
 
-  const fetchSubCategories = async (categoryId) => {
+  const fetchSubCategories = async (parentId, level) => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`${config.API_URL}/api/subcategories/category/${categoryId}`, {
+      // For level 1, fetch by category. For levels 2-4, fetch by parent subcategory
+      const endpoint = level === 1 
+        ? `${config.API_URL}/api/subcategories/category/${parentId}`
+        : `${config.API_URL}/api/subcategories/children/${parentId}`
+      
+      const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      const subCategoryData = response.data
-      setSubCategories(Array.isArray(subCategoryData) ? subCategoryData : subCategoryData.data || [])
+      const subcats = Array.isArray(response.data) ? response.data : response.data.data || []
+      
+      // Set the appropriate state based on level
+      switch (level) {
+        case 1:
+          setSubCategories1(subcats)
+          break
+        case 2:
+          setSubCategories2(subcats)
+          break
+        case 3:
+          setSubCategories3(subcats)
+          break
+        case 4:
+          setSubCategories4(subcats)
+          break
+        default:
+          break
+      }
     } catch (error) {
-      console.error("Error fetching subcategories:", error)
-      setSubCategories([])
+      console.error(`Error fetching subcategories level ${level}:`, error)
+      // Clear the appropriate state based on level
+      switch (level) {
+        case 1:
+          setSubCategories1([])
+          break
+        case 2:
+          setSubCategories2([])
+          break
+        case 3:
+          setSubCategories3([])
+          break
+        case 4:
+          setSubCategories4([])
+          break
+        default:
+          break
+      }
     }
   }
 
@@ -214,8 +298,13 @@ const EditBlog = () => {
         title: formData.title.trim(),
         slug: formData.slug.trim(),
         status: formData.status,
+        featured: formData.featured,
+        trending: formData.trending,
         mainCategory: formData.mainCategory,
-        subCategory: formData.subCategory || null,
+        subCategory1: formData.subCategory1 || null,
+        subCategory2: formData.subCategory2 || null,
+        subCategory3: formData.subCategory3 || null,
+        subCategory4: formData.subCategory4 || null,
         topic: formData.topic || null,
         brand: formData.brand || null,
         mainImage: formData.mainImage,
@@ -353,6 +442,44 @@ const EditBlog = () => {
                   </select>
                 </div>
 
+                <div className="md:col-span-2 space-y-4">
+                  <div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="featured"
+                        checked={formData.featured}
+                        onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        ⭐ Featured Blog (Show in Hero Slider)
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1 ml-6">
+                      Featured blogs will appear in the hero slider on the blogs home page
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="trending"
+                        checked={formData.trending}
+                        onChange={(e) => setFormData({ ...formData, trending: e.target.checked })}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        🔥 Trending Blog (Show in Trending Section)
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1 ml-6">
+                      Trending blogs will appear in the "Trending This Week" section
+                    </p>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Main Category <span className="text-red-500">*</span>
@@ -374,16 +501,16 @@ const EditBlog = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Sub Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sub Category Level 1</label>
                   <select
-                    name="subCategory"
-                    value={formData.subCategory}
+                    name="subCategory1"
+                    value={formData.subCategory1}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     disabled={!formData.mainCategory}
                   >
-                    <option value="">Select Sub Category</option>
-                    {subCategories.map((subCategory) => (
+                    <option value="">Select Sub Category Level 1</option>
+                    {subCategories1.map((subCategory) => (
                       <option key={subCategory._id} value={subCategory._id}>
                         {subCategory.name}
                       </option>
@@ -391,6 +518,69 @@ const EditBlog = () => {
                   </select>
                   {!formData.mainCategory && (
                     <p className="text-xs text-gray-500 mt-1">Please select a main category first</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sub Category Level 2</label>
+                  <select
+                    name="subCategory2"
+                    value={formData.subCategory2}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!formData.subCategory1}
+                  >
+                    <option value="">Select Sub Category Level 2</option>
+                    {subCategories2.map((subCategory) => (
+                      <option key={subCategory._id} value={subCategory._id}>
+                        {subCategory.name}
+                      </option>
+                    ))}
+                  </select>
+                  {!formData.subCategory1 && (
+                    <p className="text-xs text-gray-500 mt-1">Please select level 1 first</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sub Category Level 3</label>
+                  <select
+                    name="subCategory3"
+                    value={formData.subCategory3}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!formData.subCategory2}
+                  >
+                    <option value="">Select Sub Category Level 3</option>
+                    {subCategories3.map((subCategory) => (
+                      <option key={subCategory._id} value={subCategory._id}>
+                        {subCategory.name}
+                      </option>
+                    ))}
+                  </select>
+                  {!formData.subCategory2 && (
+                    <p className="text-xs text-gray-500 mt-1">Please select level 2 first</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sub Category Level 4</label>
+                  <select
+                    name="subCategory4"
+                    value={formData.subCategory4}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!formData.subCategory3}
+                  >
+                    <option value="">Select Sub Category Level 4</option>
+                    {subCategories4.map((subCategory) => (
+                      <option key={subCategory._id} value={subCategory._id}>
+                        {subCategory.name}
+                      </option>
+                    ))}
+                  </select>
+                  {!formData.subCategory3 && (
+                    <p className="text-xs text-gray-500 mt-1">Please select level 3 first</p>
                   )}
                 </div>
 

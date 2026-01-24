@@ -179,6 +179,16 @@ const AdminBlogs = () => {
     return "Not Set"
   }
 
+  // Helper function to get the deepest selected category level
+  const getDeepestCategory = (blog) => {
+    // Check from level 4 down to level 1, then mainCategory
+    if (blog.subCategory4) return blog.subCategory4
+    if (blog.subCategory3) return blog.subCategory3
+    if (blog.subCategory2) return blog.subCategory2
+    if (blog.subCategory1) return blog.subCategory1
+    return blog.mainCategory
+  }
+
   const getSubCategoryName = (subCategory) => {
     if (!subCategory) return "Not Set"
 
@@ -468,6 +478,9 @@ const AdminBlogs = () => {
                         Status
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Visibility
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Stats
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -501,10 +514,20 @@ const AdminBlogs = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{getCategoryName(blog.mainCategory)}</div>
-                            {blog.subCategory && (
-                              <div className="text-xs text-red-500">{getSubCategoryName(blog.subCategory)}</div>
-                            )}
+                            <div className="text-sm text-gray-900">
+                              {(() => {
+                                const deepestCategory = getDeepestCategory(blog)
+                                if (!deepestCategory) return getCategoryName(blog.mainCategory)
+                                
+                                // If it's mainCategory (no subcategories selected)
+                                if (deepestCategory === blog.mainCategory) {
+                                  return getCategoryName(blog.mainCategory)
+                                }
+                                
+                                // It's a subcategory
+                                return getSubCategoryName(deepestCategory)
+                              })()}
+                            </div>
                             {blog.topic && (
                               <div className="text-xs text-gray-500">Topic: {getTopicName(blog.topic)}</div>
                             )}
@@ -534,6 +557,23 @@ const AdminBlogs = () => {
                               <option value="published">Published</option>
                               <option value="archived">Archived</option>
                             </select>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex flex-col gap-1">
+                              {blog.featured && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 w-fit">
+                                  ⭐ Featured
+                                </span>
+                              )}
+                              {blog.trending && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 w-fit">
+                                  🔥 Trending
+                                </span>
+                              )}
+                              {!blog.featured && !blog.trending && (
+                                <span className="text-xs text-gray-400">—</span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             <div className="flex items-center gap-3">

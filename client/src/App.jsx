@@ -125,6 +125,9 @@ import AddBlogTopic from "./pages/admin/AddBlogTopic"
 import BlogCategories from "./pages/admin/BlogCategories"
 import BlogTopics from "./pages/admin/BlogTopics"
 import BlogRating from "./pages/admin/BlogRating"
+import BlogDashboard from "./pages/admin/BlogDashboard"
+import ManageBlogBrands from "./pages/admin/ManageBlogBrands"
+import ManageBlogComments from "./pages/admin/ManageBlogComments"
 import AddBulkProducts from "./pages/admin/AddBulkProducts"
 import EditCategory from "./pages/admin/EditCategory"
 import EditSubCategory from "./pages/admin/EditSubCategory"
@@ -288,14 +291,20 @@ function App() {
                               <Route path="delivery-charges" element={<AdminDeliveryCharges />} />
                               <Route path="delivery-charges/add" element={<AddDeliveryCharge />} />
                               <Route path="settings" element={<AdminSettings />} />
+                              
+                              {/* Blog Routes */}
+                              <Route path="blog-dashboard" element={<BlogDashboard />} />
                               <Route path="blogs" element={<AdminBlogs />} />
                               <Route path="blogs/add" element={<AddBlog />} />
                               <Route path="blogs/edit/:id" element={<EditBlog />} />
-                              <Route path="blogs/categories" element={<BlogCategories />} />
-                              <Route path="blogs/categories/add" element={<AddBlogCategory />} />
-                              <Route path="blogs/topics" element={<BlogTopics />} />
-                              <Route path="blogs/topics/add" element={<AddBlogTopic />} />
-                              <Route path="blogs/rating" element={<BlogRating />} />
+                              <Route path="blog-categories" element={<BlogCategories />} />
+                              <Route path="blog-categories/add" element={<AddBlogCategory />} />
+                              <Route path="blog-topics" element={<BlogTopics />} />
+                              <Route path="blog-topics/add" element={<AddBlogTopic />} />
+                              <Route path="blog-brands" element={<ManageBlogBrands />} />
+                              <Route path="blog-comments" element={<ManageBlogComments />} />
+                              <Route path="blog-rating" element={<BlogRating />} />
+                              
                               <Route path="request-callbacks" element={<AdminRequestCallbacks />} />
                               <Route path="bulk-purchase" element={<AdminBulkPurchase />} />
                               <Route path="buyer-protection" element={<BuyerProtectionAdmin />} />
