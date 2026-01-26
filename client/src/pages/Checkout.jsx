@@ -1398,7 +1398,7 @@ const Checkout = () => {
                           className="flex-1 bg-lime-500 hover:bg-lime-600 text-white font-semibold lg:py-3 lg:px-6 py-2 px-3 rounded-lg transition duration-300"
                         >
                           <span className="block lg:hidden"><TranslatedText>Continue Summary</TranslatedText></span> {/* Mobile */}
-                          <span className="hidden lg:block"><TranslatedText>Continue to Summary</TranslatedText></span> {/* Desktop */}}
+                          <span className="hidden lg:block"><TranslatedText>Continue to Summary</TranslatedText></span> {/* Desktop */}
                         </button>
                       </div>
                     </form>

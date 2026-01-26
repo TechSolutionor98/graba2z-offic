@@ -16,7 +16,7 @@ export default function DeliveryInfo() {
             </p>
           </div>
 
-          {/* Standard Delivery Section */}}
+          {/* Standard Delivery Section */}
           <div className="bg-lime-50 p-6 rounded-lg border-l-4 border-lime-500">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
               🚚 <TranslatedText>Standard Delivery to Your Doorstep (UAE Only)</TranslatedText>
