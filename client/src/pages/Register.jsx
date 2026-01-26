@@ -3,8 +3,11 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
+import { useLanguage } from "../context/LanguageContext"
+import TranslatedText from "../components/TranslatedText"
 
 const Register = () => {
+  const { getLocalizedPath } = useLanguage()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -116,11 +119,11 @@ const Register = () => {
           <div className="max-w-md w-full min-h-[500px] space-y-8">
             <div>
               
-              <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Create your account</h2>
+              <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900"><TranslatedText>Create your account</TranslatedText></h2>
               <p className="mt-2 text-center text-sm text-gray-600">
-                Or{" "}
-                <Link to="/login" className="font-medium text-green-600 hover:text-green-500">
-                  sign in to your existing account
+                <TranslatedText>Or</TranslatedText>{" "}
+                <Link to={getLocalizedPath("/login")} className="font-medium text-green-600 hover:text-green-500">
+                  <TranslatedText>sign in to your existing account</TranslatedText>
                 </Link>
               </p>
             </div>
@@ -148,7 +151,7 @@ const Register = () => {
               <div className="space-y-4 ">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Full Name
+                    <TranslatedText>Full Name</TranslatedText>
                   </label>
                   <div className="mt-1">
                     <input
@@ -170,7 +173,7 @@ const Register = () => {
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email Address
+                    <TranslatedText>Email Address</TranslatedText>
                   </label>
                   <div className="mt-1">
                     <input
@@ -192,7 +195,7 @@ const Register = () => {
 
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Password
+                    <TranslatedText>Password</TranslatedText>
                   </label>
                   <div className="mt-1 relative">
                     <input
@@ -245,7 +248,7 @@ const Register = () => {
 
                 <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                    Confirm Password
+                    <TranslatedText>Confirm Password</TranslatedText>
                   </label>
                   <div className="mt-1 relative">
                     <input
@@ -313,23 +316,23 @@ const Register = () => {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      Creating Account...
+                      <TranslatedText>Creating Account...</TranslatedText>
                     </div>
                   ) : (
-                    "Create Account"
+                    <TranslatedText>Create Account</TranslatedText>
                   )}
                 </button>
               </div>
 
               <div className="text-center">
                 <p className="text-xs text-gray-500">
-                  By creating an account, you agree to our{" "}
-                  <Link to="/terms" className="text-green-600 hover:text-green-500">
-                    Terms of Service
+                  <TranslatedText>By creating an account, you agree to our</TranslatedText>{" "}
+                  <Link to={getLocalizedPath("/terms")} className="text-green-600 hover:text-green-500">
+                    <TranslatedText>Terms of Service</TranslatedText>
                   </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" className="text-green-600 hover:text-green-500">
-                    Privacy Policy
+                  <TranslatedText>and</TranslatedText>{" "}
+                  <Link to={getLocalizedPath("/privacy")} className="text-green-600 hover:text-green-500">
+                    <TranslatedText>Privacy Policy</TranslatedText>
                   </Link>
                 </p>
               </div>

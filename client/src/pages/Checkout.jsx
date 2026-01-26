@@ -7,10 +7,12 @@ import { useLocation } from "react-router-dom"
 import axios from "axios"
 import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
+import { useLanguage } from "../context/LanguageContext"
 import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X } from "lucide-react"
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
 import { getFullImageUrl } from "../utils/imageUtils"
+import TranslatedText from "../components/TranslatedText"
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 import '../styles/phoneInput.css'
@@ -139,6 +141,7 @@ const Checkout = () => {
     removeFromCart,
   } = useCart()
   const { user } = useAuth()
+  const { getLocalizedPath } = useLanguage()
   const location = useLocation()
 
   const [tax, setTax] = useState(null)
@@ -1219,10 +1222,10 @@ const Checkout = () => {
   if (cartItems.length === 0) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-10 text-center">
-        <h2 className="text-2xl font-bold mb-4">Your cart is empty</h2>
-        <p className="text-gray-600 mb-6">Add some items to your cart before checkout.</p>
-        <button onClick={() => navigate("/")} className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3">
-          Continue Shopping
+        <h2 className="text-2xl font-bold mb-4"><TranslatedText>Your cart is empty</TranslatedText></h2>
+        <p className="text-gray-600 mb-6"><TranslatedText>Add some items to your cart before checkout.</TranslatedText></p>
+        <button onClick={() => navigate(getLocalizedPath("/"))} className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3">
+          <TranslatedText>Continue Shopping</TranslatedText>
         </button>
       </div>
     )
@@ -1236,7 +1239,7 @@ const Checkout = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8 px-6">
         <nav className="text-sm text-gray-500 mb-4">
-          Home <span className="mx-2">›</span> <span className="font-semibold text-black">Checkout</span>
+          <TranslatedText>Home</TranslatedText> <span className="mx-2">›</span> <span className="font-semibold text-black"><TranslatedText>Checkout</TranslatedText></span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-5">
@@ -1249,7 +1252,7 @@ const Checkout = () => {
                 >
                   01
                 </span>
-                <span className="font-semibold text-xs sm:text-sm md:text-base">Shipping Details</span>
+                <span className="font-semibold text-xs sm:text-sm md:text-base"><TranslatedText>Shipping Details</TranslatedText></span>
               </div>
               <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
               <div className="flex items-center gap-1 sm:gap-2">
@@ -1265,7 +1268,7 @@ const Checkout = () => {
                       : "text-gray-400 text-xs sm:text-sm md:text-base"
                   }
                 >
-                  Summary
+                  <TranslatedText>Summary</TranslatedText>
                 </span>
               </div>
               <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
@@ -1282,7 +1285,7 @@ const Checkout = () => {
                       : "text-gray-400 text-xs sm:text-sm md:text-base"
                   }
                 >
-                  Payment Method
+                  <TranslatedText>Payment Method</TranslatedText>
                 </span>
               </div>
             </div>
@@ -1303,7 +1306,7 @@ const Checkout = () => {
                     onChange={() => setDeliveryType("home")}
                     className="accent-lime-500 mr-2"
                   />
-                  <span className="font-semibold text-lg">Home Delivery</span>
+                  <span className="font-semibold text-lg"><TranslatedText>Home Delivery</TranslatedText></span>
                 </label>
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -1314,7 +1317,7 @@ const Checkout = () => {
                     onChange={() => setDeliveryType("pickup")}
                     className="accent-lime-500 mr-2"
                   />
-                  <span className="font-semibold text-lg">Pickup From Store</span>
+                  <span className="font-semibold text-lg"><TranslatedText>Pickup From Store</TranslatedText></span>
                 </label>
               </div>
             )}
@@ -1323,10 +1326,10 @@ const Checkout = () => {
                 <>
                   {deliveryType === "home" && (
                     <form onSubmit={handleContinueToSummary}>
-                      <h3 className="font-bold text-lg mb-4">Contact Details</h3>
+                      <h3 className="font-bold text-lg mb-4"><TranslatedText>Contact Details</TranslatedText></h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                          <label className="block text-sm font-medium mb-1">E-mail *</label>
+                          <label className="block text-sm font-medium mb-1"><TranslatedText>E-mail</TranslatedText> *</label>
                           <input
                             type="email"
                             name="email"
@@ -1337,7 +1340,7 @@ const Checkout = () => {
                           />
                         </div>
                         <div>
-                          <label className="block -mt-2 text-sm font-medium mb-2 ">Phone number *</label>
+                          <label className="block -mt-2 text-sm font-medium mb-2 "><TranslatedText>Phone number</TranslatedText> *</label>
                           <PhoneInput
                             international
                             defaultCountry="AE"
@@ -1351,7 +1354,7 @@ const Checkout = () => {
 
                       {formData.address && (
                         <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-semibold mb-1">Shipping Address</h4>
+                          <h4 className="font-semibold mb-1"><TranslatedText>Shipping Address</TranslatedText></h4>
                           <div className="text-gray-700">{formData.address}</div>
                           <div className="text-gray-700">
                             {formData.city}, {formData.state} {formData.zipCode}
@@ -1361,7 +1364,7 @@ const Checkout = () => {
                             onClick={() => setShowAddressModal(true)}
                             className="text-lime-500 text-sm mt-2 mr-4"
                           >
-                            Edit Address
+                            <TranslatedText>Edit Address</TranslatedText>
                           </button>
                           <button
                             type="button"
@@ -1377,7 +1380,7 @@ const Checkout = () => {
                             }}
                             className="text-red-500 text-sm mt-2"
                           >
-                            Remove Address
+                            <TranslatedText>Remove Address</TranslatedText>
                           </button>
                         </div>
                       )}
@@ -1388,14 +1391,14 @@ const Checkout = () => {
                           onClick={() => navigate("/cart")}
                           className="flex-1 border border-gray-300 hover:bg-gray-100 text-gray-700 bg-red-500 font-semibold lg:py-3 lg:px-6 py-2 px-3 rounded-lg transition duration-300"
                         >
-                          Back to Cart
+                          <TranslatedText>Back to Cart</TranslatedText>
                         </button>
                         <button
                           type="submit"
                           className="flex-1 bg-lime-500 hover:bg-lime-600 text-white font-semibold lg:py-3 lg:px-6 py-2 px-3 rounded-lg transition duration-300"
                         >
-                          <span className="block lg:hidden">Continue Summary</span> {/* Mobile */}
-                          <span className="hidden lg:block">Continue to Summary</span> {/* Desktop */}
+                          <span className="block lg:hidden"><TranslatedText>Continue Summary</TranslatedText></span> {/* Mobile */}
+                          <span className="hidden lg:block"><TranslatedText>Continue to Summary</TranslatedText></span> {/* Desktop */}}
                         </button>
                       </div>
                     </form>
@@ -1403,10 +1406,10 @@ const Checkout = () => {
 
                   {deliveryType === "pickup" && (
                     <form onSubmit={handleContinueToSummary}>
-                      <h3 className="font-bold text-lg mb-4">Where do you want to pick up?</h3>
+                      <h3 className="font-bold text-lg mb-4"><TranslatedText>Where do you want to pick up?</TranslatedText></h3>
 
                       <div className="mb-6">
-                        <label className="block text-sm font-medium mb-1">Phone number *</label>
+                        <label className="block text-sm font-medium mb-1"><TranslatedText>Phone number</TranslatedText> *</label>
                         <div className="max-w-md">
                           <PhoneInput
                             international
@@ -1422,7 +1425,7 @@ const Checkout = () => {
                       <div className="mb-6">
                         <h4 className="font-semibold mb-4 flex items-center gap-2">
                           <MapPin className="h-5 w-5 text-lime-500" />
-                          Select Store *
+                          <TranslatedText>Select Store</TranslatedText> *
                         </h4>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1477,8 +1480,8 @@ const Checkout = () => {
                               <div className="border rounded-lg h-80 flex items-center justify-center bg-gray-50">
                                 <div className="text-center text-gray-500">
                                   <MapPin className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                                  <p className="font-medium">Select a store to view location</p>
-                                  <p className="text-sm">Choose from the stores on the left</p>
+                                  <p className="font-medium"><TranslatedText>Select a store to view location</TranslatedText></p>
+                                  <p className="text-sm"><TranslatedText>Choose from the stores on the left</TranslatedText></p>
                                 </div>
                               </div>
                             )}
@@ -1491,7 +1494,7 @@ const Checkout = () => {
                         className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3 disabled:opacity-50"
                         disabled={!pickupDetails.phone || !pickupDetails.storeId}
                       >
-                        Continue
+                        <TranslatedText>Continue</TranslatedText>
                       </button>
                     </form>
                   )}
@@ -1500,12 +1503,12 @@ const Checkout = () => {
 
               {step === 2 && (
                 <div>
-                  <h3 className="font-bold text-lg mb-4">Order Summary</h3>
+                  <h3 className="font-bold text-lg mb-4"><TranslatedText>Order Summary</TranslatedText></h3>
                   <div className="mb-6">
-                    <h4 className="font-semibold mb-2">Delivery Details</h4>
+                    <h4 className="font-semibold mb-2"><TranslatedText>Delivery Details</TranslatedText></h4>
                     {deliveryType === "home" ? (
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="font-medium">Home Delivery</div>
+                        <div className="font-medium"><TranslatedText>Home Delivery</TranslatedText></div>
                         <div className="text-sm text-gray-600 mt-1">
                           {formData.name && <div>{formData.name}</div>}
                           <div>{formData.email}</div>
@@ -1518,9 +1521,9 @@ const Checkout = () => {
                       </div>
                     ) : (
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <div className="font-medium">Store Pickup</div>
+                        <div className="font-medium"><TranslatedText>Store Pickup</TranslatedText></div>
                         <div className="text-sm text-gray-600 mt-1">
-                          <div>Phone: +971{pickupDetails.phone}</div>
+                          <div><TranslatedText>Phone:</TranslatedText> +971{pickupDetails.phone}</div>
                           {selectedStore && (
                             <>
                               <div className="font-medium mt-2">{selectedStore.name}</div>
@@ -1534,9 +1537,9 @@ const Checkout = () => {
                   </div>
 
                   <div className="mb-6">
-                    <h4 className="font-semibold mb-2">Order Notes (Optional)</h4>
+                    <h4 className="font-semibold mb-2"><TranslatedText>Order Notes (Optional)</TranslatedText></h4>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <label className="block text-sm font-medium mb-2">Add a note to your order:</label>
+                      <label className="block text-sm font-medium mb-2"><TranslatedText>Add a note to your order:</TranslatedText></label>
                       <textarea
                         value={customerNotes}
                         onChange={(e) => setCustomerNotes(e.target.value)}
@@ -1554,13 +1557,13 @@ const Checkout = () => {
                       onClick={() => setStep(1)}
                       className="border border-gray-300 text-gray-700 rounded-lg px-8 py-3"
                     >
-                      Back
+                      <TranslatedText>Back</TranslatedText>
                     </button>
                     <button
                       onClick={handleContinueToPayment}
                       className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3"
                     >
-                      Continue to Payment
+                      <TranslatedText>Continue to Payment</TranslatedText>
                     </button>
                   </div>
                 </div>
@@ -1568,7 +1571,7 @@ const Checkout = () => {
 
               {step === 3 && (
                 <div>
-                  <h3 className="font-bold text-lg mb-6">Payment Method</h3>
+                  <h3 className="font-bold text-lg mb-6"><TranslatedText>Payment Method</TranslatedText></h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
                     {PAYMENT_METHODS.map((method) => (
@@ -1612,11 +1615,10 @@ const Checkout = () => {
                     <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
                       <div className="flex items-center gap-2 mb-2">
                         <Banknote className="h-5 w-5 text-yellow-600" />
-                        <span className="font-semibold text-yellow-800">Cash on Delivery</span>
+                        <span className="font-semibold text-yellow-800"><TranslatedText>Cash on Delivery</TranslatedText></span>
                       </div>
                       <p className="text-sm text-yellow-700">
-                        You will pay in cash when your order is delivered to your address. Please have the exact amount
-                        ready.
+                        <TranslatedText>You will pay in cash when your order is delivered to your address. Please have the exact amount ready.</TranslatedText>
                       </p>
                     </div>
                   )}
@@ -1625,10 +1627,10 @@ const Checkout = () => {
                     <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="h-5 w-5 text-blue-600" />
-                        <span className="font-semibold text-blue-800">Buy Now, Pay Later</span>
+                        <span className="font-semibold text-blue-800"><TranslatedText>Buy Now, Pay Later</TranslatedText></span>
                       </div>
                       <p className="text-sm text-blue-700">
-                        Split your purchase into 3 interest-free installments with Tamara.
+                        <TranslatedText>Split your purchase into 3 interest-free installments with Tamara.</TranslatedText>
                       </p>
                     </div>
                   )}
@@ -1637,10 +1639,10 @@ const Checkout = () => {
                     <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg mb-6">
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="h-5 w-5 text-purple-600" />
-                        <span className="font-semibold text-purple-800">Split into 4 Payments</span>
+                        <span className="font-semibold text-purple-800"><TranslatedText>Split into 4 Payments</TranslatedText></span>
                       </div>
                       <p className="text-sm text-purple-700">
-                        Split your purchase into 4 interest-free installments with Tabby.
+                        <TranslatedText>Split your purchase into 4 interest-free installments with Tabby.</TranslatedText>
                       </p>
                     </div>
                   )}
@@ -1649,9 +1651,9 @@ const Checkout = () => {
                     <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
                       <div className="flex items-center gap-2 mb-2">
                         <Clock className="h-5 w-5 text-blue-600" />
-                        <span className="font-semibold text-blue-800">Card Payment</span>
+                        <span className="font-semibold text-blue-800"><TranslatedText>Card Payment</TranslatedText></span>
                       </div>
-                      <p className="text-sm text-blue-700">Pay securely with your credit or debit card.</p>
+                      <p className="text-sm text-blue-700"><TranslatedText>Pay securely with your credit or debit card.</TranslatedText></p>
                     </div>
                   )}
 
@@ -1660,7 +1662,7 @@ const Checkout = () => {
                       onClick={() => setStep(2)}
                       className="border border-gray-300 text-gray-700 rounded-lg px-8 py-3"
                     >
-                      Back
+                      <TranslatedText>Back</TranslatedText>
                     </button>
                     <button
                       onClick={
@@ -1680,7 +1682,7 @@ const Checkout = () => {
                             alt="Loading..."
                             style={{ width: 24, height: 24, animation: "bounce 1s infinite" }}
                           />
-                          Processing...
+                          <TranslatedText>Processing...</TranslatedText>
                         </>
                       ) : (
                         `Place Order - ${formatPrice(finalTotal)}`
@@ -1700,8 +1702,8 @@ const Checkout = () => {
                   <Truck className="h-8 w-8 text-lime-600" />
                 </div>
                 <div className="ml-3">
-                  <h2 className="text-lg font-bold text-black">Order Summary</h2>
-                  <p className="text-sm text-black">Review your order</p>
+                  <h2 className="text-lg font-bold text-black"><TranslatedText>Order Summary</TranslatedText></h2>
+                  <p className="text-sm text-black"><TranslatedText>Review your order</TranslatedText></p>
                 </div>
               </div>
 
@@ -1717,18 +1719,18 @@ const Checkout = () => {
                         />
                       </div>
                       <div className="ml-3">
-                        <h3 className="text-sm font-medium text-black truncate max-w-32">{item.name}</h3>
+                        <h3 className="text-sm font-medium text-black truncate max-w-32"><TranslatedText text={item.name} /></h3>
                         {item.selectedColorData && (
                           <p className="text-xs text-purple-600 font-medium">
-                            Color: {item.selectedColorData.color}
+                            <TranslatedText>Color:</TranslatedText> {item.selectedColorData.color}
                           </p>
                         )}
                         {item.selectedDosData && (
                           <p className="text-xs text-blue-600 font-medium">
-                            OS: {item.selectedDosData.dosType}
+                            <TranslatedText>OS:</TranslatedText> {item.selectedDosData.dosType}
                           </p>
                         )}
-                        <p className="text-xs text-black">Qty: {item.quantity}</p>
+                        <p className="text-xs text-black"><TranslatedText>Qty:</TranslatedText> {item.quantity}</p>
                       </div>
                     </div>
                     <span className="text-sm font-medium text-black">
@@ -1746,11 +1748,11 @@ const Checkout = () => {
                     {showAllItems ? (
                       <>
                         <ChevronUp className="h-4 w-4" />
-                        Show less
+                        <TranslatedText>Show less</TranslatedText>
                       </>
                     ) : (
                       <>
-                        <ChevronDown className="h-4 w-4" />+{remainingItemsCount} more items
+                        <ChevronDown className="h-4 w-4" />+{remainingItemsCount} <TranslatedText>more items</TranslatedText>
                       </>
                     )}
                   </button>
@@ -1762,20 +1764,20 @@ const Checkout = () => {
                 {cartTotals.totalBasePrice > cartTotals.totalOfferPrice && (
                   <>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Sale Price Total</span>
+                      <span className="text-gray-600"><TranslatedText>Sale Price Total</TranslatedText></span>
                       <span className="text-gray-500 line-through">{formatPrice(cartTotals.totalBasePrice)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Our Offer Price</span>
+                      <span className="text-gray-600"><TranslatedText>Our Offer Price</TranslatedText></span>
                       <span className="text-red-600 font-medium">{formatPrice(cartTotals.totalOfferPrice)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-green-600">
-                      <span className="font-medium">You Save</span>
+                      <span className="font-medium"><TranslatedText>You Save</TranslatedText></span>
                       <span className="font-medium">- {formatPrice(cartTotals.totalSavings)}</span>
                     </div>
                     <div className="border-t pt-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Subtotal</span>
+                        <span className="text-gray-600"><TranslatedText>Subtotal</TranslatedText></span>
                         <span className="text-black font-medium">{formatPrice(cartTotal)}</span>
                       </div>
                     </div>
@@ -1785,20 +1787,20 @@ const Checkout = () => {
                 {/* Simple subtotal when no discounts */}
                 {cartTotals.totalBasePrice <= cartTotals.totalOfferPrice && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal</span>
+                    <span className="text-gray-600"><TranslatedText>Subtotal</TranslatedText></span>
                     <span className="text-black">{formatPrice(cartTotal)}</span>
                   </div>
                 )}
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="text-black">{deliveryCharge === 0 ? "Free" : formatPrice(deliveryCharge)}</span>
+                  <span className="text-gray-600"><TranslatedText>Shipping</TranslatedText></span>
+                  <span className="text-black">{deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}</span>
                 </div>
 
                 {/* Protection Plans Section */}
                 {protectionItems.length > 0 && (
                   <div className="border-t pt-4">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Protection Plans</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3"><TranslatedText>Protection Plans</TranslatedText></h3>
                     <div className="space-y-2">
                       {protectionItems.map((item) => (
                         <div key={item._id} className="flex items-start justify-between bg-blue-50 p-3 rounded-lg border border-blue-200">
@@ -1829,7 +1831,7 @@ const Checkout = () => {
                 )}
 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">VAT Included</span>
+                  <span className="text-gray-600"><TranslatedText>VAT Included</TranslatedText></span>
                   <span className="text-gray-600">✓</span>
                 </div>
 
@@ -1850,7 +1852,7 @@ const Checkout = () => {
                         onClick={handleApplyCoupon}
                         disabled={couponLoading || !couponInput}
                       >
-                        {couponLoading ? "Applying..." : "Apply"}
+                        {couponLoading ? <TranslatedText>Applying...</TranslatedText> : <TranslatedText>Apply</TranslatedText>}
                       </button>
                     ) : (
                       <button
@@ -1862,21 +1864,21 @@ const Checkout = () => {
                           setCouponError("")
                         }}
                       >
-                        Remove
+                        <TranslatedText>Remove</TranslatedText>
                       </button>
                     )}
                   </div>
                   {couponError && <div className="text-red-500 text-xs">{couponError}</div>}
                   {coupon && (
                     <div className="flex justify-between text-sm text-green-600">
-                      <span>Coupon: {coupon.code}</span>
+                      <span><TranslatedText>Coupon:</TranslatedText> {coupon.code}</span>
                       <span>- {formatPrice(couponDiscount)}</span>
                     </div>
                   )}
                 </div>
 
                 <div className="border-t pt-3 flex justify-between font-bold text-lg">
-                  <span className="text-black">Total Amount</span>
+                  <span className="text-black"><TranslatedText>Total Amount</TranslatedText></span>
                   <span className="text-black">{formatPrice(finalTotal)}</span>
                 </div>
 
@@ -1884,7 +1886,7 @@ const Checkout = () => {
                 {cartTotal < 500 && cartTotal > 0 && (
                   <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-700">
-                      Purchase for {formatPrice(500 - cartTotal)} or more to enable free shipping
+                      <TranslatedText>Purchase for</TranslatedText> {formatPrice(500 - cartTotal)} <TranslatedText>or more to enable free shipping</TranslatedText>
                     </p>
                   </div>
                 )}
@@ -1892,7 +1894,7 @@ const Checkout = () => {
                 {cartTotal >= 500 && (
                   <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
                     <span className="text-lg">🎉</span>
-                    <p className="text-sm text-green-700 font-medium">You qualify for free shipping!</p>
+                    <p className="text-sm text-green-700 font-medium"><TranslatedText>You qualify for free shipping!</TranslatedText></p>
                   </div>
                 )}
               </div>
@@ -1904,7 +1906,7 @@ const Checkout = () => {
                   </div>
                   <div className="ml-2">
                     <p className="text-xs text-gray-700">
-                      Your order is secure and encrypted. We never store your payment information.
+                      <TranslatedText>Your order is secure and encrypted. We never store your payment information.</TranslatedText>
                     </p>
                   </div>
                 </div>
@@ -1926,7 +1928,7 @@ const Checkout = () => {
               >
                 <X />
               </button>
-              <h3 className="font-bold text-2xl mb-6">Address Details</h3>
+              <h3 className="font-bold text-2xl mb-6"><TranslatedText>Address Details</TranslatedText></h3>
               <form onSubmit={handleAddressModalSubmit}>
                 <div className="flex gap-6 mb-6">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -1938,7 +1940,7 @@ const Checkout = () => {
                       onChange={() => setAddressType("home")}
                       className="accent-lime-500"
                     />
-                    Home
+                    <TranslatedText>Home</TranslatedText>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -1949,12 +1951,12 @@ const Checkout = () => {
                       onChange={() => setAddressType("office")}
                       className="accent-lime-500"
                     />
-                    Office
+                    <TranslatedText>Office</TranslatedText>
                   </label>
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1">Address *</label>
+                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Address</TranslatedText> *</label>
                   <input
                     type="text"
                     className="w-full border rounded-lg px-4 py-3"
@@ -1966,7 +1968,7 @@ const Checkout = () => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1">Zip Code *</label>
+                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Zip Code</TranslatedText> *</label>
                   <input
                     type="text"
                     className="w-full border rounded-lg px-4 py-3"
@@ -1978,7 +1980,7 @@ const Checkout = () => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1">Country</label>
+                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Country</TranslatedText></label>
                   <select
                     className="w-full border rounded-lg px-4 py-3"
                     value={addressDetails.country}
@@ -1990,7 +1992,7 @@ const Checkout = () => {
 
                 <div className="flex gap-4 mb-4">
                   <div className="w-1/2">
-                    <label className="block text-gray-700 font-medium mb-1">State/Region *</label>
+                    <label className="block text-gray-700 font-medium mb-1"><TranslatedText>State/Region</TranslatedText> *</label>
                     <select
                       className="w-full border rounded-lg px-4 py-3"
                       value={addressDetails.state}
@@ -2006,7 +2008,7 @@ const Checkout = () => {
                     </select>
                   </div>
                   <div className="w-1/2">
-                    <label className="block text-gray-700 font-medium mb-1">City *</label>
+                    <label className="block text-gray-700 font-medium mb-1"><TranslatedText>City</TranslatedText> *</label>
                     <input
                       type="text"
                       className="w-full border rounded-lg px-4 py-3"
@@ -2025,7 +2027,7 @@ const Checkout = () => {
                     onChange={(e) => setAddressDetails({ ...addressDetails, isDefault: e.target.checked })}
                     className="accent-lime-500"
                   />
-                  <span>Default Address</span>
+                  <span><TranslatedText>Default Address</TranslatedText></span>
                 </div>
 
                 <div className="flex gap-4">
@@ -2034,10 +2036,10 @@ const Checkout = () => {
                     onClick={() => setShowAddressModal(false)}
                     className="border border-gray-300 text-gray-700 rounded-lg px-8 py-3"
                   >
-                    Cancel
+                    <TranslatedText>Cancel</TranslatedText>
                   </button>
                   <button type="submit" className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3">
-                    Save Address
+                    <TranslatedText>Save Address</TranslatedText>
                   </button>
                 </div>
               </form>

@@ -6,11 +6,14 @@ import { Link } from "react-router-dom"
 import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
 import { getFullImageUrl } from "../utils/imageUtils"
+import TranslatedText from "./TranslatedText"
+import { useLanguage } from "../context/LanguageContext"
 
 // Reusable product card component used in both desktop and mobile views
 const ProductCard = ({ product, isMobile = false }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
+  const { getLocalizedPath } = useLanguage()
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
   const basePrice = Number(product.price) || 0
@@ -47,7 +50,7 @@ const ProductCard = ({ product, isMobile = false }) => {
   return (
     <div className="border p-2 h-[360px] flex flex-col justify-between bg-white w-full box-border">
       <div className="relative mb-2 flex h-[150px] justify-center items-cente">
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
+  <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
             src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
@@ -68,17 +71,17 @@ const ProductCard = ({ product, isMobile = false }) => {
       </div>
       <div className="mb-1 flex items-center gap-2 ">
         <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px]  inline-block mr-1`}>
-          {stockStatus}
+          <TranslatedText text={stockStatus} />
         </div>
         {discount && (
-          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px]  inline-block">{discount}</div>
+          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px]  inline-block"><TranslatedText text={discount} /></div>
         )}
       </div>
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
-        <h3 className="text-[11px] font-sm text-gray-900  line-clamp-3 hover:text-blue-600 h-[45px]">{product.name}</h3>
+  <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
+        <h3 className="text-[11px] font-sm text-gray-900  line-clamp-3 hover:text-blue-600 h-[45px]"><TranslatedText text={product.name} /></h3>
       </Link>
-      {product.category && <div className="text-[10px] text-yellow-600 ">Category: {categoryName}</div>}
-      <div className="text-[10px] text-green-600">Inclusive VAT</div>
+      {product.category && <div className="text-[10px] text-yellow-600 "><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      <div className="text-[10px] text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex items-center gap-2">
         <div className="text-red-600 font-bold text-xs">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
@@ -117,7 +120,7 @@ const ProductCard = ({ product, isMobile = false }) => {
         disabled={stockStatus === "Out of Stock"}
       >
         <ShoppingBag size={11} />
-        Add to Cart
+        <TranslatedText>Add to Cart</TranslatedText>
       </button>
     </div>
   )

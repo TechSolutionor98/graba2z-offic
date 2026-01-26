@@ -29,9 +29,11 @@ import CategorySlider from "../components/CategorySlider"
 import CategorySliderUpdated from "../components/CategorySliderUpdated"
 import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
+import { useLanguage } from "../context/LanguageContext"
 import BrandSlider from "../components/BrandSlider"
 import SEO from "../components/SEO"
 import DynamicSection from "../components/DynamicSection"
+import TranslatedText from "../components/TranslatedText"
 
 
 import config from "../config/config"
@@ -48,6 +50,7 @@ const NEWSLETTER_OPTIONS = [
 ]
 
 const Home = () => {
+  const { getLocalizedPath } = useLanguage()
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [banners, setBanners] = useState([])
@@ -1299,7 +1302,7 @@ const Home = () => {
       {/* Accessories Banner - Dynamic */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
         {getBannersForSection("accessories", "home-category-banner").length > 0 ? (
-          <Link to={getBannersForSection("accessories", "home-category-banner")[0].link || "/product-category/accessories"}>
+          <Link to={getLocalizedPath(getBannersForSection("accessories", "home-category-banner")[0].link || "/product-category/accessories")}>
             <img
               src={getFullImageUrl(getBannersForSection("accessories", "home-category-banner")[0].image)}
               alt={getBannersForSection("accessories", "home-category-banner")[0].title || "Accessories Promotion Banner"}
@@ -1315,7 +1318,7 @@ const Home = () => {
             />
           </Link>
         ) : (
-          <Link to="/product-category/accessories">
+          <Link to={getLocalizedPath("/product-category/accessories")}>
             <img
               src="12.png"
               alt="Accessories Promotion Banner Mobile"
@@ -1522,7 +1525,7 @@ const Home = () => {
       {/* Networking Banner - Dynamic */}
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
         {getBannersForSection("networking", "home-category-banner").length > 0 ? (
-          <Link to={getBannersForSection("networking", "home-category-banner")[0].link || "/product-category/computers/networking"}>
+          <Link to={getLocalizedPath(getBannersForSection("networking", "home-category-banner")[0].link || "/product-category/computers/networking")}>
             <img
               src={getFullImageUrl(getBannersForSection("networking", "home-category-banner")[0].image)}
               alt={getBannersForSection("networking", "home-category-banner")[0].title || "Networking Banner"}
@@ -1538,7 +1541,7 @@ const Home = () => {
             />
           </Link>
         ) : (
-          <Link to="/product-category/computers/networking">
+          <Link to={getLocalizedPath("/product-category/computers/networking")}>
             <img
               src="13.png"
               alt="Networking Banner Mobile"
@@ -1930,7 +1933,7 @@ const Home = () => {
       <section className="py-8 md:py-10 bg-white mt-2">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <h2 className="text-lg lg:text-xl xl:text-2xl font-bold text-center text-gray-900 mb-6 lg:mb-8 xl:mb-12">
-            Core Service Aspects
+            <TranslatedText>Core Service Aspects</TranslatedText>
           </h2>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-6 xl:gap-8 2xl:gap-10">
@@ -1938,9 +1941,9 @@ const Home = () => {
               <div className="w-10 h-10 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-lg flex items-center justify-center mb-2 lg:mb-3 xl:mb-4">
                 <CreditCard className="w-6 h-6 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-lime-500" />
               </div>
-              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2">Secure Payment Method</h3>
+              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2"><TranslatedText>Secure Payment Method</TranslatedText></h3>
               <p className="text-[10px] lg:text-xs xl:text-sm text-gray-600 leading-relaxed">
-                Available Different secure Payment Methods
+                <TranslatedText>Available Different secure Payment Methods</TranslatedText>
               </p>
             </div>
 
@@ -1948,9 +1951,9 @@ const Home = () => {
               <div className="w-10 h-10 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-lg flex items-center justify-center mb-2 lg:mb-3 xl:mb-4">
                 <Truck className="w-6 h-6 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-lime-500" />
               </div>
-              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2">Extreme Fast Delivery</h3>
+              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2"><TranslatedText>Extreme Fast Delivery</TranslatedText></h3>
               <p className="text-[10px] lg:text-xs xl:text-sm text-gray-600 leading-relaxed">
-                Fast and convenient From door to door delivery
+                <TranslatedText>Fast and convenient From door to door delivery</TranslatedText>
               </p>
             </div>
 
@@ -1958,9 +1961,9 @@ const Home = () => {
               <div className="w-10 h-10 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-lg flex items-center justify-center mb-2 lg:mb-3 xl:mb-4">
                 <Heart className="w-6 h-6 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-lime-500" />
               </div>
-              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2">Quality & Savings</h3>
+              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2"><TranslatedText>Quality & Savings</TranslatedText></h3>
               <p className="text-[10px] lg:text-xs xl:text-sm text-gray-600 leading-relaxed">
-                Comprehensive quality control and affordable price
+                <TranslatedText>Comprehensive quality control and affordable price</TranslatedText>
               </p>
             </div>
 
@@ -1968,9 +1971,9 @@ const Home = () => {
               <div className="w-10 h-10 lg:w-14 lg:h-14 xl:w-16 xl:h-16 rounded-lg flex items-center justify-center mb-2 lg:mb-3 xl:mb-4">
                 <Headphones className="w-6 h-6 lg:w-10 lg:h-10 xl:w-12 xl:h-12 text-lime-500" />
               </div>
-              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2">Professional Support</h3>
+              <h3 className="text-xs lg:text-sm xl:text-base 2xl:text-lg font-semibold text-gray-900 mb-1 lg:mb-2"><TranslatedText>Professional Support</TranslatedText></h3>
               <p className="text-[10px] lg:text-xs xl:text-sm text-gray-600 leading-relaxed">
-                Efficient customer support from passionate team
+                <TranslatedText>Efficient customer support from passionate team</TranslatedText>
               </p>
             </div>
           </div>
@@ -1993,6 +1996,7 @@ const Home = () => {
 const MobileProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
+  const { getLocalizedPath } = useLanguage()
   // Use dynamic discount
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Use dynamic stock status
@@ -2025,7 +2029,7 @@ const MobileProductCard = ({ product }) => {
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
       <div className="relative mb-2 flex h-[170px] justify-center items-center">
-        <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
+        <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
             src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
@@ -2047,19 +2051,19 @@ const MobileProductCard = ({ product }) => {
 
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs inline-block`}>
-          {stockStatus}
+          <TranslatedText text={stockStatus} />
         </div>
         {discount && (
-          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs inline-block">{discount}</div>
+          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs inline-block"><TranslatedText text={discount} /></div>
         )}
       </div>
 
-      <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
-        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px] mb-1">{product.name}</h3>
+      <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
+        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px] mb-1"><TranslatedText text={product.name} /></h3>
       </Link>
 
-      {product.category && <div className="text-xs text-yellow-600 mb-1">Category: {categoryName}</div>}
-      <div className="text-xs text-green-600 mb-1">Inclusive VAT</div>
+      {product.category && <div className="text-xs text-yellow-600 mb-1"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      <div className="text-xs text-green-600 mb-1"><TranslatedText>Inclusive VAT</TranslatedText></div>
 
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0 mb-1">
         <div className="text-red-600 font-bold text-sm">
@@ -2100,7 +2104,7 @@ const MobileProductCard = ({ product }) => {
         disabled={stockStatus === "Out of Stock"}
       >
         <ShoppingBag size={12} />
-        Add to Cart
+        <TranslatedText>Add to Cart</TranslatedText>
       </button>
     </div>
   )
@@ -2109,6 +2113,7 @@ const MobileProductCard = ({ product }) => {
 const DynamicBrandProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
+  const { getLocalizedPath } = useLanguage()
   // Use dynamic discount
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Use dynamic stock status
@@ -2149,7 +2154,7 @@ const DynamicBrandProductCard = ({ product }) => {
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
       <div className="relative mb-2 flex justify-center items-center" style={{ height: 190 }}>
-        <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="w-full h-full flex items-center justify-center">
+        <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)} className="w-full h-full flex items-center justify-center">
           <img
             src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
@@ -2170,20 +2175,20 @@ const DynamicBrandProductCard = ({ product }) => {
         </button>
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
-          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus}</div>
+          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}><TranslatedText text={stockStatus} /></div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
-              {finalDiscountLabel}
+              <TranslatedText text={finalDiscountLabel} />
             </div>
           )}
         </div>
       </div>
 
-      <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
-        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">{product.name}</h3>
+      <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
+        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]"><TranslatedText text={product.name} /></h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
-      <div className="text-xs text-green-600">Inclusive VAT</div>
+      {product.category && <div className="text-xs text-yellow-600"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
@@ -2223,7 +2228,7 @@ const DynamicBrandProductCard = ({ product }) => {
         disabled={stockStatus === "Out of Stock"}
       >
         <ShoppingBag size={12} />
-        Add to Cart
+        <TranslatedText>Add to Cart</TranslatedText>
       </button>
     </div>
   )
@@ -2232,6 +2237,7 @@ const DynamicBrandProductCard = ({ product }) => {
 const AccessoriesProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
+  const { getLocalizedPath } = useLanguage()
   // Use dynamic discount
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Use dynamic stock status
@@ -2272,7 +2278,7 @@ const AccessoriesProductCard = ({ product }) => {
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
       <div className="relative mb-2 flex justify-center items-center" style={{ height: 190 }}>
-        <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="w-full h-full flex items-center justify-center">
+        <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)} className="w-full h-full flex items-center justify-center">
           <img
             src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
@@ -2293,19 +2299,19 @@ const AccessoriesProductCard = ({ product }) => {
         </button>
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
-          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>{stockStatus}</div>
+          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}><TranslatedText text={stockStatus} /></div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
-              {finalDiscountLabel}
+              <TranslatedText text={finalDiscountLabel} />
             </div>
           )}
         </div>
       </div>
-      <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
-        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">{product.name}</h3>
+      <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
+        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]"><TranslatedText text={product.name} /></h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
-      <div className="text-xs text-green-600">Inclusive VAT</div>
+      {product.category && <div className="text-xs text-yellow-600"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
@@ -2343,7 +2349,7 @@ const AccessoriesProductCard = ({ product }) => {
         disabled={stockStatus === "Out of Stock"}
       >
         <ShoppingBag size={12} />
-        Add to Cart
+        <TranslatedText>Add to Cart</TranslatedText>
       </button>
     </div>
   )

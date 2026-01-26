@@ -4,8 +4,10 @@ import { productsAPI } from "../services/api"
 import productCache from "../services/productCache"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { FaShoppingCart, FaStar, FaShippingFast, FaUndo, FaShieldAlt, FaArrowRight, FaFire, FaChevronLeft, FaChevronRight } from "react-icons/fa"
+import { useLanguage } from "../context/LanguageContext"
 
 const PromotionalPage = () => {
+  const { getLocalizedPath } = useLanguage()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [timeLeft, setTimeLeft] = useState({
@@ -300,7 +302,7 @@ const PromotionalPage = () => {
                         </p>
                       </div>
 
-                      <Link to={`/product/${product.slug || product._id}`}>
+                      <Link to={getLocalizedPath(`/product/${product.slug || product._id}`)}>
                         <h3 className="font-bold text-gray-900 mb-2 line-clamp-1 hover:text-green-600 transition-colors">
                           {product.name}
                         </h3>

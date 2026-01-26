@@ -10,6 +10,9 @@ import { generateShopURL } from "../utils/urlUtils"
 import { useAuth } from "../context/AuthContext"
 import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
+import { useLanguage } from "../context/LanguageContext"
+import LanguageSelector from "./LanguageSelector"
+import TranslatedText from "./TranslatedText"
 import {
   Search,
   Heart,
@@ -125,7 +128,7 @@ const MobileSubCategoryItem = ({
           className="flex-1"
           onClick={closeMobileMenu}
         >
-          <strong>{subCategory.name}</strong>
+          <strong><TranslatedText text={subCategory.name} /></strong>
         </Link>
         {hasNested && (
           <button
@@ -172,6 +175,7 @@ const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
   const { cartCount } = useCart()
   const { wishlist } = useWishlist()
+  const { currentLanguage, getLocalizedPath } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -761,7 +765,7 @@ const Navbar = () => {
                   <div className="flex items-center gap-2 m-1">
                     <input
                       type="text"
-                      placeholder="Search"
+                      placeholder={currentLanguage.code === "ar" ? "بحث" : "Search"}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-3 xl:pl-4 pr-3 xl:pr-4 py-2 xl:py-2.5 2xl:py-3 border border-gray-300 focus:outline-none focus:border-lime-500 w-[75%] xl:w-[78%] 2xl:w-[80%] text-sm xl:text-base"
@@ -808,7 +812,7 @@ const Navbar = () => {
                       {searchResults.map((product) => (
                         <Link
                           key={product._id}
-                          to={`/product/${encodeURIComponent(product.slug || product._id)}`}
+                          to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}
                           className="flex items-start gap-4 px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
                           onClick={() => setShowSearchDropdown(false)}
                         >
@@ -818,8 +822,8 @@ const Navbar = () => {
                             className="w-16 h-16 object-contain rounded"
                           />
                           <div className="flex-1">
-                            <div className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</div>
-                            <div className="text-xs text-gray-500 line-clamp-2">{product.description}</div>
+                            <div className="font-semibold text-gray-900 text-sm line-clamp-2"><TranslatedText text={product.name} /></div>
+                            <div className="text-xs text-gray-500 line-clamp-2"><TranslatedText text={product.description} /></div>
                           </div>
                         </Link>
                       ))}
@@ -932,6 +936,9 @@ const Navbar = () => {
                   </span>
                 )}
               </Link>
+
+              {/* Language Selector */}
+              <LanguageSelector variant="compact" />
             </div>
           </div>
 
@@ -948,7 +955,7 @@ const Navbar = () => {
                   aria-label="All categories"
                 >
                   {/* <Grid3X3 className="w-4 h-4 text-white" /> */}
-                  <span className="text-xs xl:text-sm">All Categories</span>
+                  <span className="text-xs xl:text-sm"><TranslatedText>All Categories</TranslatedText></span>
                   <ChevronDown className="w-3.5 h-3.5 text-white" />
                 </button>
                 
@@ -977,7 +984,7 @@ const Navbar = () => {
                                     isActive ? "bg-gray-50" : ""
                                   }`}
                                 >
-                                  <span className="flex-1 pr-2">{parentCategory.name}</span>
+                                  <span className="flex-1 pr-2"><TranslatedText text={parentCategory.name} /></span>
                                   {hasChildren && <ChevronRight size={14} className="text-gray-400" />}
                                 </Link>
                               )
@@ -1054,7 +1061,7 @@ const Navbar = () => {
                                           isActive ? "bg-gray-50" : ""
                                         }`}
                                       >
-                                        <span className="flex-1 pr-2">{node.name}</span>
+                                        <span className="flex-1 pr-2"><TranslatedText text={node.name} /></span>
                                         {hasNested && <ChevronRight size={14} className="text-gray-400" />}
                                       </Link>
                                     )
@@ -1130,7 +1137,7 @@ const Navbar = () => {
                             isActiveCategory ? "font-semibold" : ""
                           }`}
                         >
-                          {parentCategory.name}
+                          <TranslatedText text={parentCategory.name} />
                         </Link>
                         {isActiveCategory && (
                           <span className="pointer-events-none absolute bottom-0 left-1 right-1 h-1.5 rounded-full bg-white shadow-sm" />
@@ -1183,7 +1190,7 @@ const Navbar = () => {
                                           className={`block text-red-600 text-xs font-semibold hover:text-red-600 ${MEGA_LABEL_LIMIT_CLASS}`}
                                           onClick={() => resetMegaMenu()}
                                         >
-                                          {subCategory.name}
+                                          <TranslatedText text={subCategory.name} />
                                         </Link>
                                         <ul className="flex flex-col gap-1 px-1 pb-1 bg-transparent border-none text-left">
                                           {firstColumnLevel2.map((sub2) => {
@@ -1203,7 +1210,7 @@ const Navbar = () => {
                                                   className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
                                                   onClick={() => resetMegaMenu()}
                                                 >
-                                                  <span className="flex-1 break-words leading-snug text-left">{sub2.name}</span>
+                                                  <span className="flex-1 break-words leading-snug text-left"><TranslatedText text={sub2.name} /></span>
                                                 </Link>
                                               </li>
                                             )
@@ -1235,7 +1242,7 @@ const Navbar = () => {
                                                     className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
                                                     onClick={() => resetMegaMenu()}
                                                   >
-                                                    <span className="flex-1 break-words leading-snug text-left">{sub2.name}</span>
+                                                    <span className="flex-1 break-words leading-snug text-left"><TranslatedText text={sub2.name} /></span>
                                                   </Link>
                                                 </li>
                                               )
@@ -1271,12 +1278,12 @@ const Navbar = () => {
                     onMouseLeave={() => setIsStaticCategoryHovered(false)}
                   >
                     <a
-                      href="/gaming-zone" // ← Change this to your custom link
+                      href={getLocalizedPath("/gaming-zone")} // ← Change this to your custom link
                       className={`text-white font-medium whitespace-nowrap text-[clamp(0.7rem,0.9vw,0.875rem)] px-1 py-2 text-center w-full leading-tight ${
                         isStaticCategoryHovered ? "font-semibold" : ""
                       }`}
                     >
-                      Gaming Zone {/* ← Change this to your desired name */}
+                      <TranslatedText>Gaming Zone</TranslatedText> {/* ← Change this to your desired name */}
                     </a>
                     {isStaticCategoryHovered && (
                       <span className="pointer-events-none absolute bottom-0 left-1 right-1 h-1.5 rounded-full bg-white shadow-sm" />
@@ -1359,7 +1366,7 @@ const Navbar = () => {
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    placeholder="Search products..."
+                    placeholder={currentLanguage.code === "ar" ? "البحث عن المنتجات..." : "Search products..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-lime-500"
@@ -1403,7 +1410,7 @@ const Navbar = () => {
                     {searchResults.map((product) => (
                       <Link
                         key={product._id}
-                        to={`/product/${encodeURIComponent(product.slug || product._id)}`}
+                        to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}
                         className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 border-b last:border-b-0"
                         onClick={() => {
                           setShowSearchDropdown(false)
@@ -1416,8 +1423,8 @@ const Navbar = () => {
                           className="w-12 h-12 object-contain rounded flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 text-sm break-words">{product.name}</div>
-                          <div className="text-xs text-gray-500 break-words line-clamp-2">{product.description}</div>
+                          <div className="font-semibold text-gray-900 text-sm break-words"><TranslatedText text={product.name} /></div>
+                          <div className="text-xs text-gray-500 break-words line-clamp-2"><TranslatedText text={product.description} /></div>
                         </div>
                       </Link>
                     ))}
@@ -1475,6 +1482,14 @@ const Navbar = () => {
 
             {/* Drawer Content */}
             <div className="p-4">
+              {/* Language Selector for Mobile */}
+              <div className="mb-4 pb-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">Language</span>
+                  <LanguageSelector variant="compact" />
+                </div>
+              </div>
+
               {/* Quick Actions */}
               <div className="mb-6">
                 <Link
@@ -1554,7 +1569,7 @@ const Navbar = () => {
                             className="flex items-center flex-1"
                             onClick={closeMobileMenu}
                           >
-                            <strong>{parentCategory.name}</strong>
+                            <strong><TranslatedText text={parentCategory.name} /></strong>
                           </Link>
 
                           {/* Toggle button for subcategories */}
@@ -1601,11 +1616,11 @@ const Navbar = () => {
                   {/* Static Category - Gaming Zone */}
                   <div className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg">
                     <a
-                      href="/gaming-zone"
+                      href={getLocalizedPath("/gaming-zone")}
                       className="flex items-center flex-1"
                       onClick={closeMobileMenu}
                     >
-                      <strong>Gaming Zone</strong>
+                      <strong><TranslatedText>Gaming Zone</TranslatedText></strong>
                     </a>
                     {/* <span className="text-gray-400 text-2xl font-bold">›</span> */}
                   </div>

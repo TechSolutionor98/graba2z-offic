@@ -2,10 +2,12 @@
 
 import { Link } from "react-router-dom"
 import { useCart } from "../context/CartContext"
+import { useLanguage } from "../context/LanguageContext"
 import { Trash2, Minus, Plus, ShoppingBag, Package, X, Percent, Gift, Shield } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import axios from "axios"
 import { getFullImageUrl } from "../utils/imageUtils"
+import TranslatedText from "../components/TranslatedText"
 
 import config from "../config/config"
 
@@ -28,6 +30,7 @@ const Cart = () => {
     couponDiscount,
     setCouponDiscount,
   } = useCart()
+  const { getLocalizedPath } = useLanguage()
 
   const [couponInput, setCouponInput] = useState("")
   const [couponLoading, setCouponLoading] = useState(false)
@@ -321,7 +324,7 @@ const Cart = () => {
             </div>
             <div className="flex-1 ml-4">
               <h3 className="text-base font-medium text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
-                {item.name.length > 30 ? item.name.slice(0, 25) + "..." : item.name}
+                <TranslatedText text={item.name.length > 30 ? item.name.slice(0, 25) + "..." : item.name} />
               </h3>
               <p className="mt-1 text-sm text-gray-500">{item.brand?.name || 'N/A'}</p>
               {item.selectedColorData && (
@@ -348,24 +351,24 @@ const Cart = () => {
             {pricingDetails.hasDiscount ? (
               <>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Original Price:</span>
+                  <span className="text-gray-600"><TranslatedText>Original Price</TranslatedText>:</span>
                   <span className="line-through text-gray-500">{formatPrice(pricingDetails.basePrice)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Our Price:</span>
+                  <span className="text-gray-600"><TranslatedText>Our Price</TranslatedText>:</span>
                   <span className="text-red-600 font-medium">{formatPrice(pricingDetails.currentPrice)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-green-600">You Save:</span>
+                  <span className="text-green-600"><TranslatedText>You Save</TranslatedText>:</span>
                   <span className="text-green-600 font-medium">
                     {formatPrice(pricingDetails.savings)} ({pricingDetails.discountPercentage}%)
-                    {pricingDetails.isBundleDiscount && " (Bundle Discount)"}
+                    {pricingDetails.isBundleDiscount && <TranslatedText> (Bundle Discount)</TranslatedText>}
                   </span>
                 </div>
               </>
             ) : (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Price:</span>
+                <span className="text-gray-600"><TranslatedText>Price</TranslatedText>:</span>
                 <span className="text-red-600 font-medium">{formatPrice(pricingDetails.currentPrice)}</span>
               </div>
             )}
@@ -421,7 +424,7 @@ const Cart = () => {
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <h3 className="text-lg font-medium text-gray-900 mb-1">
-                  {item.name.length > 60 ? item.name.slice(0, 60) + "..." : item.name}
+                  <TranslatedText text={item.name.length > 60 ? item.name.slice(0, 60) + "..." : item.name} />
                 </h3>
                 <p className="text-sm text-gray-500 mb-1">{item.brand?.name || 'N/A'}</p>
                 {item.selectedColorData && (
@@ -448,15 +451,15 @@ const Cart = () => {
                   {pricingDetails.hasDiscount ? (
                     <>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Original Price:</span>
+                        <span className="text-gray-600"><TranslatedText>Original Price</TranslatedText>:</span>
                         <span className="line-through text-gray-500">{formatPrice(pricingDetails.basePrice)}</span>
                       </div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Our Price:</span>
+                        <span className="text-gray-600"><TranslatedText>Our Price</TranslatedText>:</span>
                         <span className="text-red-600 font-medium">{formatPrice(pricingDetails.currentPrice)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-green-600">You Save:</span>
+                        <span className="text-green-600"><TranslatedText>You Save</TranslatedText>:</span>
                         <span className="text-green-600 font-medium">
                           {formatPrice(pricingDetails.savings)} ({pricingDetails.discountPercentage}%)
                           {pricingDetails.isBundleDiscount && " (Bundle Discount)"}
@@ -465,7 +468,7 @@ const Cart = () => {
                     </>
                   ) : (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Price:</span>
+                      <span className="text-gray-600"><TranslatedText>Price</TranslatedText>:</span>
                       <span className="text-red-600 font-medium">{formatPrice(pricingDetails.currentPrice)}</span>
                     </div>
                   )}
@@ -496,7 +499,7 @@ const Cart = () => {
                 </p>
                 {pricingDetails.hasDiscount && (
                   <p className="text-sm text-green-600 font-medium">
-                    Total Save: {formatPrice(pricingDetails.savings * item.quantity)}
+                    <TranslatedText>Total Save</TranslatedText>: {formatPrice(pricingDetails.savings * item.quantity)}
                   </p>
                 )}
               </div>
@@ -517,17 +520,17 @@ const Cart = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Shopping Cart</h1>
+        <h1 className="text-2xl font-bold text-gray-900"><TranslatedText>Shopping Cart</TranslatedText></h1>
         <div className="flex space-x-3">
           <button
             onClick={handleOpenCouponsModal}
             className="px-2 py-2 lg:px-5 lg:py-2 text-sm font-medium text-black bg-yellow-400 hover:bg-yellow-500 rounded-md transition-colors flex items-center"
           >
             <Gift size={16} className="mr-2" />
-            Available Coupons
+            <TranslatedText>Available Coupons</TranslatedText>
           </button>
-          <Link to="/" className="px-2 py-2 lg:px-5 lg:py-2 text-sm font-medium text-white bg-lime-600 rounded-md">
-            Continue Shopping
+          <Link to={getLocalizedPath("/")} className="px-2 py-2 lg:px-5 lg:py-2 text-sm font-medium text-white bg-lime-600 rounded-md">
+            <TranslatedText>Continue Shopping</TranslatedText>
           </Link>
         </div>
       </div>
@@ -535,10 +538,10 @@ const Cart = () => {
       {cartItems.length === 0 ? (
         <div className="text-center py-12">
           <ShoppingBag size={64} className="mx-auto text-gray-300 mb-4" />
-          <h2 className="text-xl font-medium text-gray-900 mb-2">Your cart is empty</h2>
-          <p className="text-gray-600 mb-6">Looks like you haven't added any items to your cart yet.</p>
-          <Link to="/" className="btn-primary">
-            Continue Shopping
+          <h2 className="text-xl font-medium text-gray-900 mb-2"><TranslatedText>Your cart is empty</TranslatedText></h2>
+          <p className="text-gray-600 mb-6"><TranslatedText>Looks like you haven't added any items to your cart yet.</TranslatedText></p>
+          <Link to={getLocalizedPath("/")} className="btn-primary">
+            <TranslatedText>Continue Shopping</TranslatedText>
           </Link>
         </div>
       ) : (
@@ -556,7 +559,7 @@ const Cart = () => {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
                         <Package className="text-lime-600 mr-2" size={20} />
-                        <h3 className="text-lg font-semibold text-lime-800">Frequently Bought Together</h3>
+                        <h3 className="text-lg font-semibold text-lime-800"><TranslatedText>Frequently Bought Together</TranslatedText></h3>
                       </div>
                       <button
                         onClick={() => removeBundleFromCart(bundle.bundleId)}
@@ -564,11 +567,11 @@ const Cart = () => {
                         title="Remove entire bundle"
                       >
                         <Trash2 size={16} className="mr-1" />
-                        Remove Bundle
+                        <TranslatedText>Remove Bundle</TranslatedText>
                       </button>
                     </div>
                     <div className="text-sm text-lime-600 mt-1">
-                      Bundle Total: {formatPrice(bundleTotals.total)} | You Save: {formatPrice(bundleTotals.savings)}
+                      <TranslatedText>Bundle Total</TranslatedText>: {formatPrice(bundleTotals.total)} | <TranslatedText>You Save</TranslatedText>: {formatPrice(bundleTotals.savings)}
                     </div>
                     <div className="text-xs text-lime-700 mt-1">
                       ⓘ Removing any item will remove the entire bundle
@@ -601,27 +604,27 @@ const Cart = () => {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md shadow-lime-500 p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Order Summary</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4"><TranslatedText>Order Summary</TranslatedText></h2>
 
               <div className="space-y-4">
                 {/* Detailed Price Breakdown */}
                 {cartTotals.totalSavings > 0 && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Original Price</span>
+                      <span className="text-gray-600"><TranslatedText>Original Price</TranslatedText></span>
                       <span className="text-gray-500 line-through">{formatPrice(cartTotals.totalBasePrice)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Discounted Price</span>
+                      <span className="text-gray-600"><TranslatedText>Discounted Price</TranslatedText></span>
                       <span className="text-red-600 font-medium">{formatPrice(cartTotals.totalCurrentPrice)}</span>
                     </div>
                     <div className="flex justify-between text-green-600">
-                      <span className="font-medium">Total Savings</span>
+                      <span className="font-medium"><TranslatedText>Total Savings</TranslatedText></span>
                       <span className="font-medium">- {formatPrice(cartTotals.totalSavings)}</span>
                     </div>
                     <div className="border-t pt-2">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Subtotal</span>
+                        <span className="text-gray-600"><TranslatedText>Subtotal</TranslatedText></span>
                         <span className="text-black font-medium">{formatPrice(cartTotals.totalCurrentPrice)}</span>
                       </div>
                     </div>
@@ -631,7 +634,7 @@ const Cart = () => {
                 {/* Simple subtotal when no discounts */}
                 {cartTotals.totalSavings <= 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
+                    <span className="text-gray-600"><TranslatedText>Subtotal</TranslatedText></span>
                     <span className="text-black">{formatPrice(cartTotals.totalCurrentPrice)}</span>
                   </div>
                 )}
@@ -639,7 +642,7 @@ const Cart = () => {
                 {/* Delivery Options */}
                 {cartTotals.totalCurrentPrice <= 500 && (
                   <div className="mb-2">
-                    <span className="text-gray-600 block mb-1">Delivery Options</span>
+                    <span className="text-gray-600 block mb-1"><TranslatedText>Delivery Options</TranslatedText></span>
                     {deliveryOptions.length > 0 ? (
                       <select
                         className="w-full border rounded px-2 py-1"
@@ -656,19 +659,19 @@ const Cart = () => {
                         ))}
                       </select>
                     ) : (
-                      <span className="text-gray-500">No delivery options</span>
+                      <span className="text-gray-500"><TranslatedText>No delivery options</TranslatedText></span>
                     )}
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="text-gray-900">{deliveryCharge === 0 ? 'Free' : formatPrice(deliveryCharge)}</span>
+                  <span className="text-gray-600"><TranslatedText>Shipping</TranslatedText></span>
+                  <span className="text-gray-900">{deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}</span>
                 </div>
 
                 {/* Protection Plans Section */}
                 {protectionItems.length > 0 && (
                   <div className="border-t pt-4">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Protection Plans</h3>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3"><TranslatedText>Protection Plans</TranslatedText></h3>
                     <div className="space-y-2">
                       {protectionItems.map((item) => (
                         <div key={item._id} className="flex items-start justify-between bg-blue-50 p-3 rounded-lg border border-blue-200">
@@ -699,7 +702,7 @@ const Cart = () => {
 
                 {/* VAT included note */}
                 <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm">VAT Included</span>
+                  <span className="text-gray-600 text-sm"><TranslatedText>VAT Included</TranslatedText></span>
                   <span className="text-gray-600 text-sm">✓</span>
                 </div>
 
@@ -719,7 +722,7 @@ const Cart = () => {
                       onClick={handleApplyCoupon}
                       disabled={couponLoading || !couponInput}
                     >
-                      {couponLoading ? "Applying..." : "Apply"}
+                      {couponLoading ? <TranslatedText>Applying...</TranslatedText> : <TranslatedText>Apply</TranslatedText>}
                     </button>
                   ) : (
                     <button
@@ -730,20 +733,20 @@ const Cart = () => {
                         setCouponInput("");
                       }}
                     >
-                      Remove
+                      <TranslatedText>Remove</TranslatedText>
                     </button>
                   )}
                 </div>
                 {couponError && <div className="text-red-500 text-xs mt-1">{couponError}</div>}
                 {coupon && (
                   <div className="flex justify-between text-green-600 text-sm">
-                    <span>Coupon: {coupon.code}</span>
+                    <span><TranslatedText>Coupon</TranslatedText>: {coupon.code}</span>
                     <span>-{formatPrice(couponDiscount)}</span>
                   </div>
                 )}
 
                 <div className="border-t pt-4 flex justify-between font-medium">
-                  <span className="text-gray-900">Total Amount</span>
+                  <span className="text-gray-900"><TranslatedText>Total Amount</TranslatedText></span>
                   <span className="text-black hover:text-lime-500">{formatPrice(totalWithDeliveryTaxCoupon)}</span>
                 </div>
               </div>
@@ -752,7 +755,7 @@ const Cart = () => {
               {cartTotals.totalCurrentPrice < 500 && cartTotals.totalCurrentPrice > 0 && (
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-700">
-                  You are just {formatPrice(500 - cartTotals.totalCurrentPrice)} away from free shipping. Shop more to get free and express delivery.
+                  <TranslatedText>You are just</TranslatedText> {formatPrice(500 - cartTotals.totalCurrentPrice)} <TranslatedText>away from free shipping. Shop more to get free and express delivery.</TranslatedText>
                   </p>
                 </div>
               )}
@@ -760,7 +763,7 @@ const Cart = () => {
               {cartTotals.totalCurrentPrice >= 500 && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-700 font-medium">
-                    🎉 You qualify for free shipping!
+                    🎉 <TranslatedText>You qualify for free shipping!</TranslatedText>
                   </p>
                 </div>
               )}
@@ -775,23 +778,23 @@ const Cart = () => {
                       defaultChecked 
                     />
                     <span>
-                      I agree to our{' '}
-                      <Link to="/terms" className="text-lime-600 hover:text-lime-700 underline">
-                        Terms of use
+                      <TranslatedText>I agree to our</TranslatedText>{' '}
+                      <Link to={getLocalizedPath("/terms")} className="text-lime-600 hover:text-lime-700 underline">
+                        <TranslatedText>Terms of use</TranslatedText>
                       </Link>
                       {' '}&{' '}
-                      <Link to="/privacy" className="text-lime-600 hover:text-lime-700 underline">
-                        Privacy Policy
+                      <Link to={getLocalizedPath("/privacy")} className="text-lime-600 hover:text-lime-700 underline">
+                        <TranslatedText>Privacy Policy</TranslatedText>
                       </Link>
                     </span>
                   </label>
                 </div>
 
                 <Link
-                  to="/checkout"
+                  to={getLocalizedPath("/checkout")}
                   className="w-full bg-lime-500 hover:bg-lime-600 text-white font-medium py-3 px-4 rounded-md flex items-center justify-center transition-colors"
                 >
-                  Checkout
+                  <TranslatedText>Checkout</TranslatedText>
                 </Link>
               </div>
             </div>

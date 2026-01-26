@@ -2,20 +2,23 @@ import { useWishlist } from "../context/WishlistContext"
 import { Link } from "react-router-dom"
 import { Trash2, Heart } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
+import { useLanguage } from "../context/LanguageContext"
+import TranslatedText from "../components/TranslatedText"
 
 const Wishlist = () => {
   const { wishlist, removeFromWishlist, loading } = useWishlist()
+  const { getLocalizedPath } = useLanguage()
 
-  if (loading) return <div className="max-w-3xl mx-auto py-12 text-center">Loading...</div>
+  if (loading) return <div className="max-w-3xl mx-auto py-12 text-center"><TranslatedText>Loading...</TranslatedText></div>
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center gap-3 mb-8">
         <Heart className="text-red-500" size={28} />
-        <h1 className="text-3xl font-bold text-gray-900">My Wishlist</h1>
+        <h1 className="text-3xl font-bold text-gray-900"><TranslatedText>My Wishlist</TranslatedText></h1>
         {Array.isArray(wishlist) && wishlist.length > 0 && (
           <span className="bg-lime-500 text-white text-sm font-medium px-3 py-1 rounded-full">
-            {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'}
+            {wishlist.length} {wishlist.length === 1 ? <TranslatedText>item</TranslatedText> : <TranslatedText>items</TranslatedText>}
           </span>
         )}
       </div>
@@ -23,13 +26,13 @@ const Wishlist = () => {
       {Array.isArray(wishlist) && wishlist.length === 0 ? (
         <div className="text-center py-18">
           <Heart className="mx-auto text-gray-300 mb-4" size={64} />
-          <h3 className="text-xl font-medium text-gray-900 mb-2">Your wishlist is empty</h3>
-          <p className="text-gray-500 mb-6">Start adding items you love to your wishlist</p>
+          <h3 className="text-xl font-medium text-gray-900 mb-2"><TranslatedText>Your wishlist is empty</TranslatedText></h3>
+          <p className="text-gray-500 mb-6"><TranslatedText>Start adding items you love to your wishlist</TranslatedText></p>
           <Link
-            to="/"
+            to={getLocalizedPath("/")}
             className="inline-flex items-center px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
           >
-            Browse Products
+            <TranslatedText>Browse Products</TranslatedText>
           </Link>
         </div>
       ) : (
@@ -38,7 +41,7 @@ const Wishlist = () => {
             <div key={product._id} className="group bg-white rounded-xl shadow-sm border border-lime-500 hover:shadow-lg hover:border-gray-200 transition-all duration-300 overflow-hidden">
               {/* Product Image */}
               <div className="relative overflow-hidden">
-                <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
+                <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
                   <img
                     src={getFullImageUrl(product.image) || "/placeholder.svg"}
                     alt={product.name}
@@ -56,7 +59,7 @@ const Wishlist = () => {
 
               {/* Product Info */}
               <div className="p-4">
-                <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`} className="block">
+                <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)} className="block">
                   {/* Brand */}
                   {(product.brand?.name || product.brand) && (
                     <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">

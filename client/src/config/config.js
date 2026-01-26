@@ -14,9 +14,26 @@ const resolveApiUrl = () => {
   return "https://api.grabatoz.ae"
 }
 
+// Resolve Translation API URL
+const resolveTranslationApiUrl = () => {
+  const envUrl = (import.meta.env?.VITE_TRANSLATION_API_URL || "").trim()
+  const isLocalHost =
+    typeof window !== "undefined" && ["localhost", "127.0.0.1"].includes(window.location.hostname)
+
+  // Prefer local translation API when developing locally
+  if (isLocalHost) return "http://localhost:5001"
+
+  // Otherwise use env if valid, or fall back to the production API
+  if (envUrl && /^https?:\/\//i.test(envUrl)) return envUrl.replace(/\/$/, "")
+  return "https://langaimodel.grabatoz.ae" // Production translation API on VPS
+}
+
 const config = {
   // API Configuration - Handle both development and production
   API_URL: resolveApiUrl(),
+
+  // Translation Model API
+  TRANSLATION_API_URL: resolveTranslationApiUrl(),
 
   // Payment Gateway Configuration
   TAMARA_API_KEY: import.meta.env.VITE_TAMARA_API_KEY,

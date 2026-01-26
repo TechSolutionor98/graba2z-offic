@@ -1,27 +1,31 @@
+import { useLanguage } from "../context/LanguageContext";
+import TranslatedText from "../components/TranslatedText";
+
 export default function DeliveryInfo() {
+    const { getLocalizedPath } = useLanguage();
+    
     return (
       <div className="max-w-4xl mx-auto p-6 bg-white">
         <div className="space-y-8">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Delivery Information</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2"><TranslatedText>Delivery Information</TranslatedText></h1>
             <p className="text-lg text-lime-500 font-semibold">Grabatoz, Powered by Crown Excel General Trading LLC</p>
             <p className="text-gray-600 mt-2">
-              we are committed to delivering your orders efficiently and reliably across the United Arab Emirates. Please
-              review the following delivery options, charges, and terms:
+              <TranslatedText>we are committed to delivering your orders efficiently and reliably across the United Arab Emirates. Please review the following delivery options, charges, and terms:</TranslatedText>
             </p>
           </div>
-  
-          {/* Standard Delivery Section */}
+
+          {/* Standard Delivery Section */}}
           <div className="bg-lime-50 p-6 rounded-lg border-l-4 border-lime-500">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">
-              🚚 Standard Delivery to Your Doorstep (UAE Only)
+              🚚 <TranslatedText>Standard Delivery to Your Doorstep (UAE Only)</TranslatedText>
             </h2>
             <p className="text-gray-700 mb-4">
               Deliveries are available to your provided shipping address anywhere in the UAE.
             </p>
   
-            <h3 className="text-xl font-semibold text-lime-500 mb-3">Order Value wise Shipping Fee</h3>
+            <h3 className="text-xl font-semibold text-lime-500 mb-3"><TranslatedText>Order Value wise Shipping Fee</TranslatedText></h3>
   
             <div className="space-y-4">
               <div className="bg-white p-4 rounded border border-lime-200">
@@ -45,7 +49,7 @@ export default function DeliveryInfo() {
             </div>
   
             <div className="mt-6">
-              <h3 className="text-xl font-semibold text-lime-500 mb-3">Payment Methods Available</h3>
+              <h3 className="text-xl font-semibold text-lime-500 mb-3"><TranslatedText>Payment Methods Available</TranslatedText></h3>
               <p className="text-gray-700">Cash on Delivery, Credit Card, Bank Transfer, Tabby, Tamara</p>
             </div>
   
@@ -67,7 +71,7 @@ export default function DeliveryInfo() {
   
           {/* In-Store Pickup Section */}
           <div className="bg-lime-50 p-6 rounded-lg border-l-4 border-lime-500">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">🏪 In-Store Pickup</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center">🏪 <TranslatedText>In-Store Pickup</TranslatedText></h2>
             <p className="text-gray-700 mb-4">
               Collect your items from designated in-store pickup Grabatoz Powered by Crown Excel General Trading LLC offer
               4 locations at Dubai UAE for in-store Pickup.
@@ -102,7 +106,7 @@ export default function DeliveryInfo() {
   
           {/* Delivery Policy Section */}
           <div className="bg-lime-50 p-6 rounded-lg border-l-4 border-lime-500">
-            <h2 className="text-2xl font-semibold text-lime-500 mb-4">Delivery Policy for Retail</h2>
+            <h2 className="text-2xl font-semibold text-lime-500 mb-4"><TranslatedText>Delivery Policy for Retail</TranslatedText></h2>
             <p className="text-gray-700 mb-4">
               At Grabatoz, powered by Crown Excel General Trading LLC, we are committed to providing a smooth, reliable,
               and express delivery experience. As part of our promise, all standard deliveries are handled on a priority
@@ -114,12 +118,12 @@ export default function DeliveryInfo() {
   
             <div className="space-y-4">
               <div className="bg-white p-4 rounded border border-lime-200">
-                <h3 className="text-lg font-semibold text-lime-500">Delivery Schedule:</h3>
+                <h3 className="text-lg font-semibold text-lime-500"><TranslatedText>Delivery Schedule:</TranslatedText></h3>
                 <p className="text-gray-700">We arrange daily deliveries, except on Sundays and UAE Public Holidays.</p>
               </div>
   
               <div className="bg-white p-4 rounded border border-lime-200">
-                <h3 className="text-lg font-semibold text-lime-500">Possible Delays:</h3>
+                <h3 className="text-lg font-semibold text-lime-500"><TranslatedText>Possible Delays:</TranslatedText></h3>
                 <p className="text-gray-700 mb-2">
                   While we aim to meet the estimated delivery timelines at checkout, delays may occasionally occur due to
                   circumstances beyond our control, including:
@@ -134,7 +138,7 @@ export default function DeliveryInfo() {
               </div>
   
               <div className="bg-white p-4 rounded border border-lime-200">
-                <h3 className="text-lg font-semibold text-lime-500">Change of Delivery Address:</h3>
+                <h3 className="text-lg font-semibold text-lime-500"><TranslatedText>Change of Delivery Address:</TranslatedText></h3>
                 <p className="text-gray-700">
                   If you need to update your shipping address, kindly contact our Customer Care Team before dispatch
                   confirmation.
@@ -154,7 +158,7 @@ export default function DeliveryInfo() {
   
           {/* Bulk Orders Section */}
           <div className="bg-lime-50 p-6 rounded-lg border-l-4 border-lime-500">
-            <h2 className="text-2xl font-semibold text-lime-500 mb-4">Bulk Orders Delivery Information</h2>
+            <h2 className="text-2xl font-semibold text-lime-500 mb-4"><TranslatedText>Bulk Orders Delivery Information</TranslatedText></h2>
             <p className="text-gray-700 mb-4">
               At Grabatoz, powered by Crown Excel General Trading LLC, we are pleased to accommodate bulk orders. However,
               please note the following important information regarding shipping:
@@ -162,7 +166,7 @@ export default function DeliveryInfo() {
   
             <div className="mb-4">
               <div className="bg-white p-4 rounded border border-lime-200">
-                <h3 className="text-lg font-semibold text-lime-500 mb-2">Shipping Costs</h3>
+                <h3 className="text-lg font-semibold text-lime-500 mb-2"><TranslatedText>Shipping Costs</TranslatedText></h3>
                 <p className="text-gray-700 mb-2">
                   While we gladly accept bulk purchases, shipping charges for bulk orders will either be borne by the
                   customer or mutually agreed upon, as per the applicable terms.
@@ -176,7 +180,7 @@ export default function DeliveryInfo() {
   
             <div className="mb-4">
               <div className="bg-white p-4 rounded border border-lime-200">
-                <h3 className="text-lg font-semibold text-lime-500 mb-2">How It Works:</h3>
+                <h3 className="text-lg font-semibold text-lime-500 mb-2"><TranslatedText>How It Works:</TranslatedText></h3>
                 <p className="text-gray-700 mb-2">Once we receive your bulk order request:</p>
                 <ol className="list-decimal list-inside text-gray-700 space-y-1 ml-4">
                   <li>Our team will calculate the shipping cost.</li>
@@ -193,7 +197,7 @@ export default function DeliveryInfo() {
   
             <div>
               <div className="bg-white p-4 rounded border border-lime-200">
-                <h3 className="text-lg font-semibold text-lime-500 mb-2">Contact for Bulk Orders:</h3>
+                <h3 className="text-lg font-semibold text-lime-500 mb-2"><TranslatedText>Contact for Bulk Orders:</TranslatedText></h3>
                 <p className="text-gray-700">
                   To inquire about bulk orders and associated shipping costs, please contact our Customer Care Team.
                 </p>
@@ -209,7 +213,7 @@ export default function DeliveryInfo() {
               <p className="text-gray-700 mb-4">P.O. Box No: 241975, Dubai, UAE</p>
   
               <div className="space-y-2">
-                <h4 className="text-lg font-semibold text-lime-500">Customer Service:</h4>
+                <h4 className="text-lg font-semibold text-lime-500"><TranslatedText>Customer Service:</TranslatedText></h4>
                 <p className="text-gray-700">📞 Tel: +971 4 354 0566</p>
                 <p className="text-gray-700">✉️ Email: customercare@grabatoz.ae</p>
                 <p className="text-gray-700">🕒 Customer service hours: Every day from 9:00 AM to 7:00 PM</p>

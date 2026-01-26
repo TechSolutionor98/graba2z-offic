@@ -6,11 +6,14 @@ import { ShoppingCart, Heart, Star, ShoppingBag } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useToast } from "../context/ToastContext"
 import { getFullImageUrl } from "../utils/imageUtils"
+import TranslatedText from "./TranslatedText"
+import { useLanguage } from "../context/LanguageContext"
 
 const ProductCard = ({ product, offerPageName, cardIndex }) => {
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const { showToast } = useToast()
+  const { getLocalizedPath } = useLanguage()
 
   // Offer badge color rotation
   const offerBadgeColors = ['#fee2e2', '#dcfce7', '#ecfccb', '#ffd900', '#f37021', '#dbb27c']
@@ -28,7 +31,7 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
   }
 
   // Use slug if available, otherwise fall back to ID
-  const productUrl = `/product/${product.slug || product._id}`
+  const productUrl = getLocalizedPath(`/product/${product.slug || product._id}`)
 
   // Determine which price to show
   const hasDiscount = product.discount && Number(product.discount) > 0
@@ -135,21 +138,23 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
           <div className={`${stockStatus === "In Stock" ? "bg-green-600" : stockStatus === "PreOrder" ? "bg-yellow-500" : "bg-red-600"} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>
-            {stockStatus}
+            <TranslatedText text={stockStatus} />
           </div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
-              {finalDiscountLabel}
+              <TranslatedText text={finalDiscountLabel} />
             </div>
           )}
         </div>
       </div>
       
       <Link to={productUrl}>
-        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">{product.name}</h3>
+        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">
+          <TranslatedText text={product.name} />
+        </h3>
       </Link>
-      {categoryName && <div className="text-xs text-yellow-600">Category: {categoryName}</div>}
-      <div className="text-xs text-green-600">Inclusive VAT</div>
+      {categoryName && <div className="text-xs text-yellow-600"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
           {formatPrice(priceToShow)}
@@ -181,7 +186,7 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
         disabled={stockStatus === "Out of Stock"}
       >
         <ShoppingBag size={12} />
-        Add to Cart
+        <TranslatedText>Add to Cart</TranslatedText>
       </button>
     </div>
   )

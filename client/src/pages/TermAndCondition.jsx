@@ -3,9 +3,12 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Shield, FileText, Users, CreditCard, Globe, Phone, Mail, MapPin, Clock } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
+import TranslatedText from "../components/TranslatedText";
 
 export default function TermsAndConditions() {
   const navigate = useNavigate();
+  const { getLocalizedPath } = useLanguage();
 
   // Future functionality for Arabic version
   // const handleArabicClick = () => {
@@ -23,7 +26,7 @@ export default function TermsAndConditions() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Terms & Conditions
+            <TranslatedText>Terms & Conditions</TranslatedText>
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Welcome to Grabatoz.ae, a service by Crown Excel General Trading LLC. Understanding our terms and your rights when using our services.
@@ -53,7 +56,7 @@ export default function TermsAndConditions() {
               </div>
             </div>
             <div className="text-center md:text-left">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Introduction</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>Introduction</TranslatedText></h2>
               <div className="text-gray-700 leading-relaxed space-y-4">
                 <p>
                   Welcome to Grabatoz.ae, a service provided by Crown Excel General Trading LLC, United Arab Emirates. By accessing or using Grabatoz.ae or any associated services, you acknowledge and agree to the terms and conditions outlined below. These terms apply to all users of the site, including without limitation vendors, customers, merchants, and/or contributors of content.
@@ -78,7 +81,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Membership Eligibility</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>1. Membership Eligibility</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>The services of Grabatoz.ae are only available to individuals who are legally eligible to enter into contracts as per UAE laws.</p>
                   <ul className="list-disc list-inside space-y-2 ml-4">
@@ -100,7 +103,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Account & Registration</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>2. Account & Registration</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>When using Grabatoz.ae, you are responsible for maintaining the confidentiality of your account and password and for restricting access to your device. You agree to accept responsibility for all activities under your account.</p>
                   <div>
@@ -126,7 +129,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">3. Pricing & Orders</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>3. Pricing & Orders</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>Grabatoz.ae strives to provide accurate product descriptions and pricing. However, errors may occur.</p>
                   <ul className="list-disc list-inside space-y-2 ml-4">
@@ -149,7 +152,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Order Cancellation</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>4. Order Cancellation</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>
                     <strong>By Grabatoz:</strong> We reserve the right to cancel orders due to stock issues, pricing errors, or fraud concerns.
@@ -172,7 +175,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Third-Party & Branded Product Disclaimer</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>5. Third-Party & Branded Product Disclaimer</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>
                     Grabatoz.ae offers a variety of products, including items listed by third-party vendors, marketplace partners, and branded products supplied via external platforms. While some of these branded products may have originally been sourced through Grabatoz or Crown Excel General Trading LLC, we are not responsible for products sold directly by third-party sellers, vendors, or external platforms.
@@ -194,7 +197,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Payment & Credit Card Information</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>6. Payment & Credit Card Information</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <ul className="list-disc list-inside space-y-2">
                     <li>Payments must be made using valid credit/debit cards owned by the customer.</li>
@@ -215,7 +218,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Declined or Fraudulent Transactions</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>7. Declined or Fraudulent Transactions</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>Grabatoz reserves the right to recover the cost of goods, collection charges, and legal fees from users involved in fraudulent transactions.</p>
                 </div>
@@ -232,7 +235,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Electronic Communications</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>8. Electronic Communications</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>By visiting Grabatoz.ae or communicating with us electronically, you consent to receive communications from us electronically, including emails, notices, and updates.</p>
                 </div>
@@ -249,7 +252,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Currency & Foreign Transactions</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>9. Currency & Foreign Transactions</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <ul className="list-disc list-inside space-y-2">
                     <li>All transactions are processed in UAE Dirham (AED).</li>
@@ -269,7 +272,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Product Availability & "On Demand" Items</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>10. Product Availability & "On Demand" Items</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <ul className="list-disc list-inside space-y-2">
                     <li>Items marked "check availability" are sourced upon order confirmation and may take additional time.</li>
@@ -289,7 +292,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Use of the Site</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>11. Use of the Site</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>You agree not to use the website for:</p>
                   <ul className="list-disc list-inside space-y-2 ml-4">
@@ -312,7 +315,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">12. Colors & Product Display</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>12. Colors & Product Display</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>We strive to display the colors and images of all products available on Grabatoz.ae as accurately as possible. However, the actual colors you see may vary depending on your screen resolution, device settings, or lighting conditions. Therefore, we cannot guarantee that your device's display will reflect the true color or appearance of the product.</p>
                   <p>To avoid misunderstandings, we strongly encourage customers to carefully review the complete product descriptions, specifications, and additional details provided on each product page. If you require further clarification or specific information about any product, our dedicated support team is always available to assist you.</p>
@@ -336,7 +339,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">13. Intellectual Property Rights</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>13. Intellectual Property Rights</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>All content, design, layout, graphics, and logos on Grabatoz.ae are the property of Crown Excel General Trading LLC or its licensors. You may not reproduce, distribute, or create derivative works without express written permission.</p>
                 </div>
@@ -353,7 +356,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">14. Reviews & Submissions</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>14. Reviews & Submissions</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>All content submitted to Grabatoz.ae (reviews, comments, suggestions) becomes the property of Grabatoz. We reserve the right to use, publish, or remove content at our discretion.</p>
                   <p>You agree not to post:</p>
@@ -376,7 +379,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">15. Indemnification</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>15. Indemnification</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>You agree to indemnify and hold Grabatoz, its affiliates, employees, directors, and agents harmless from any claims, liabilities, or losses arising out of your violation of these terms, use of the site, or breach of laws.</p>
                 </div>
@@ -393,7 +396,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">16. Termination</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>16. Termination</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>Grabatoz reserves the right to suspend or terminate your access to the site at any time without notice, including for breach of terms or unlawful activity.</p>
                 </div>
@@ -410,7 +413,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">17. Governing Law & Jurisdiction</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>17. Governing Law & Jurisdiction</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>These Terms shall be governed by and construed in accordance with the laws of the United Arab Emirates. Any disputes shall be subject to the exclusive jurisdiction of the courts of Dubai.</p>
                 </div>
@@ -427,7 +430,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">18. OFAC Compliance</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>18. OFAC Compliance</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>Grabatoz will not process or ship any orders to OFAC-sanctioned countries, as per UAE regulations.</p>
                 </div>
@@ -444,7 +447,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">19. Privacy Policy</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>19. Privacy Policy</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>Your use of Grabatoz.ae is subject to our Privacy Policy, which outlines how we collect, use, and protect your personal data. We do not sell or rent your data without your consent. See our full <Link to="/privacy-policy" className="text-lime-600 hover:underline font-medium">Privacy Policy</Link> for more details.</p>
                 </div>
@@ -461,7 +464,7 @@ export default function TermsAndConditions() {
                 </div>
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">20. Changes to Terms</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4"><TranslatedText>20. Changes to Terms</TranslatedText></h2>
                 <div className="space-y-4 text-gray-700 leading-relaxed">
                   <p>Grabatoz may update these Terms & Conditions at any time without prior notice. Continued use of the site after updates constitutes your acceptance of the revised terms.</p>
                 </div>
@@ -476,8 +479,8 @@ export default function TermsAndConditions() {
       <section className="bg-gray-50 text-black p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-semibold mb-2">Contact Information</h2>
-            <p className="text-black">Get in touch with our team for any questions or concerns</p>
+            <h2 className="text-2xl font-semibold mb-2"><TranslatedText>Contact Information</TranslatedText></h2>
+            <p className="text-black"><TranslatedText>Get in touch with our team for any questions or concerns</TranslatedText></p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -485,7 +488,7 @@ export default function TermsAndConditions() {
               <div className="flex justify-center mb-2">
                 <Phone className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Phone</h3>
+              <h3 className="font-medium mb-1"><TranslatedText>Phone</TranslatedText></h3>
               <a href="tel:+97143540566" className="text-black">
                 +971 4 354 0566
               </a>
@@ -495,7 +498,7 @@ export default function TermsAndConditions() {
               <div className="flex justify-center mb-2">
                 <Mail className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Email</h3>
+              <h3 className="font-medium mb-1"><TranslatedText>Email</TranslatedText></h3>
               <a href="mailto:customercare@grabatoz.ae" className="text-black">
                 customercare@grabatoz.ae
               </a>
@@ -505,23 +508,23 @@ export default function TermsAndConditions() {
               <div className="flex justify-center mb-2">
                 <Clock className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Hours</h3>
-              <p className="text-black">Daily 9:00 AM - 7:00 PM</p>
+              <h3 className="font-medium mb-1"><TranslatedText>Hours</TranslatedText></h3>
+              <p className="text-black"><TranslatedText>Daily 9:00 AM - 7:00 PM</TranslatedText></p>
             </div>
             
             <div className="text-center">
               <div className="flex justify-center mb-2">
                 <MapPin className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Address</h3>
-              <p className="text-black">P.O. Box 241975, Dubai, UAE</p>
+              <h3 className="font-medium mb-1"><TranslatedText>Address</TranslatedText></h3>
+              <p className="text-black"><TranslatedText>P.O. Box 241975, Dubai, UAE</TranslatedText></p>
             </div>
           </div>
           
           <div className="text-center pt-4 border-t border-gray-700">
             <p className="text-black">
               <strong>Grabatoz.ae</strong><br />
-              <b>Powered by Crown Excel General Trading LLC</b>
+              <b><TranslatedText>Powered by Crown Excel General Trading LLC</TranslatedText></b>
             </p>
           </div>
         </div>

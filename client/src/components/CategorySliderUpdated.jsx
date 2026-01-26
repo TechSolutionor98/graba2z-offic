@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getFullImageUrl } from "../utils/imageUtils";
 import axios from "axios";
 import config from "../config/config";
+import TranslatedText from "./TranslatedText";
 
 const CategorySliderUpdated = ({ onCategoryClick }) => {
   const containerRef = useRef(null);
@@ -481,9 +482,9 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                             const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
                             const name = item.name;
                             if (isMobile && name.length > 14) {
-                              return name.slice(0, 14) + '...';
+                              return <TranslatedText text={name.slice(0, 14) + '...'} />;
                             }
-                            return name;
+                            return <TranslatedText text={name} />;
                           })()}
                         </span>
                       </>
@@ -518,9 +519,9 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                             const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
                             const name = item.name;
                             if (isMobile && name.length > 14) {
-                              return name.slice(0, 14) + '...';
+                              return <TranslatedText text={name.slice(0, 14) + '...'} />;
                             }
-                            return name;
+                            return <TranslatedText text={name} />;
                           })()}
                         </span>
                       </>

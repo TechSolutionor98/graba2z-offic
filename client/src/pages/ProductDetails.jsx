@@ -37,12 +37,15 @@ import { trackProductView } from "../utils/gtmTracking"
 import config from "../config/config"
 import ProductSchema from "../components/ProductSchema"
 import ReviewSection from "../components/ReviewSection"
+import { useLanguage } from "../context/LanguageContext"
 
 import TabbyModal from "../components/payments/TabbyModal"
 import TamaraModal from "../components/payments/TamaraModal"
 import SEO from "../components/SEO"
 import TipTapRenderer from "../components/TipTapRenderer"
+import TranslatedTipTapRenderer from "../components/TranslatedTipTapRenderer"
 import BuyerProtectionSection from "../components/BuyerProtectionSection"
+import TranslatedText from "../components/TranslatedText"
 
 const WHATSAPP_NUMBER = "971508604360" // Replace with your WhatsApp number
 
@@ -53,6 +56,7 @@ const ProductDetails = () => {
   const { user } = useAuth()
   const { showToast } = useToast()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+  const { getLocalizedPath } = useLanguage()
   const [product, setProduct] = useState(null)
   const [relatedProducts, setRelatedProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -426,7 +430,7 @@ const ProductDetails = () => {
       // Add GTM tracking here - after product is successfully loaded
       if (data && data._id) {
         try {
-          trackProductView(data)
+          trackProductV iew(data)
         } catch (trackingError) {
           console.error("GTM tracking error:", trackingError)
         }
@@ -554,8 +558,8 @@ const ProductDetails = () => {
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold text-gray-900">Frequently Bought Together</h3>
-          <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">25% OFF BUNDLE</div>
+          <h3 className="text-xl font-semibold text-gray-900"><TranslatedText>Frequently Bought Together</TranslatedText></h3>
+          <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">25% <TranslatedText>OFF BUNDLE</TranslatedText></div>
         </div>
 
         <div className="space-y-4">
@@ -573,11 +577,11 @@ const ProductDetails = () => {
               className="w-16 h-16 object-cover rounded-md"
             />
             <div className="flex-1">
-              <h4 className="font-medium text-gray-900">{product.name}</h4>
+              <h4 className="font-medium text-gray-900"><TranslatedText text={product.name}>{product.name}</TranslatedText></h4>
               <p className="text-yellow-600 font-semibold">
                 {formatPrice(product.offerPrice && product.offerPrice > 0 ? product.offerPrice : product.price)}
               </p>
-              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Current Item</span>
+              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full"><TranslatedText>Current Item</TranslatedText></span>
             </div>
           </div>
 
@@ -604,13 +608,13 @@ const ProductDetails = () => {
                   className="w-16 h-16 object-cover rounded-md"
                 />
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">{item.name}</h4>
+                  <h4 className="font-medium text-gray-900"><TranslatedText text={item.name}>{item.name}</TranslatedText></h4>
                   <div className="flex items-center gap-2">
                     <p className="text-green-600 font-semibold">{formatDiscountedPrice(originalPrice, 25)}</p>
                     <p className="text-sm text-gray-500 line-through">{formatPrice(originalPrice)}</p>
-                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">Save 25%</span>
+                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium"><TranslatedText>Save</TranslatedText> 25%</span>
                   </div>
-                  <p className="text-sm text-green-600 font-medium">You save {formatPrice(savings)}</p>
+                  <p className="text-sm text-green-600 font-medium"><TranslatedText>You save</TranslatedText> {formatPrice(savings)}</p>
 
                   {/* Show original offer details if any */}
                   {item.offerPrice && item.offerPrice > 0 && item.offerPrice < item.price && (
@@ -630,7 +634,7 @@ const ProductDetails = () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="text-lg mb-2">
-                <span className="text-gray-700">Bundle price: </span>
+                <span className="text-gray-700"><TranslatedText>Bundle price</TranslatedText>: </span>
                 <span className="font-bold text-xl text-green-600">{formatPrice(bundleTotals.discountedTotal)}</span>
                 {bundleTotals.savings > 0 && (
                   <span className="text-sm text-gray-500 line-through ml-2">
@@ -640,11 +644,11 @@ const ProductDetails = () => {
               </div>
               {bundleTotals.savings > 0 && (
                 <div className="text-sm text-red-600 font-medium">
-                  You save {formatPrice(bundleTotals.savings)} with bundle discount!
+                  <TranslatedText>You save</TranslatedText> {formatPrice(bundleTotals.savings)} <TranslatedText>with bundle discount!</TranslatedText>
                 </div>
               )}
               <div className="text-sm text-gray-600 mt-1">
-                For {selectedCount} item{selectedCount !== 1 ? "s" : ""}
+                <TranslatedText>For</TranslatedText> {selectedCount} <TranslatedText>{selectedCount !== 1 ? "items" : "item"}</TranslatedText>
               </div>
             </div>
 
@@ -655,10 +659,10 @@ const ProductDetails = () => {
               className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
             >
               <ShoppingCart size={20} />
-              Add all {selectedCount} to Cart
+              <TranslatedText>Add all</TranslatedText> {selectedCount} <TranslatedText>to Cart</TranslatedText>
               {bundleTotals.savings > 0 && (
                 <span className="text-xs bg-white text-red-600 px-2 py-1 rounded-full">
-                  Save {formatPrice(bundleTotals.savings)}
+                  <TranslatedText>Save</TranslatedText> {formatPrice(bundleTotals.savings)}
                 </span>
               )}
             </button>
@@ -2098,15 +2102,15 @@ const ProductDetails = () => {
     switch (product.stockStatus) {
       case "In Stock":
         return (
-          <span className={baseClass + " bg-lime-500 text-white"}>In Stock</span>
+          <span className={baseClass + " bg-lime-500 text-white"}><TranslatedText>In Stock</TranslatedText></span>
         );
       case "Out of Stock":
         return (
-          <span className={baseClass + " bg-red-500 text-white"}>Out of Stock</span>
+          <span className={baseClass + " bg-red-500 text-white"}><TranslatedText>Out of Stock</TranslatedText></span>
         );
       case "PreOrder":
         return (
-          <span className={baseClass + " bg-orange-400 text-white"}>Pre-order</span>
+          <span className={baseClass + " bg-orange-400 text-white"}><TranslatedText>Pre-order</TranslatedText></span>
         );
       default:
         return null;
@@ -2145,12 +2149,12 @@ const ProductDetails = () => {
       <div className="max-w-8xl mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6 overflow-x-auto">
-          <Link to="/" className="hover:text-green-600 whitespace-nowrap">
-            Home
+          <Link to={getLocalizedPath("/")} className="hover:text-green-600 whitespace-nowrap">
+            <TranslatedText>Home</TranslatedText>
           </Link>
           <span>/</span>
-          <Link to="/shop" className="hover:text-green-600 whitespace-nowrap">
-            Shop
+          <Link to={getLocalizedPath("/shop")} className="hover:text-green-600 whitespace-nowrap">
+            <TranslatedText>Shop</TranslatedText>
           </Link>
           
           {/* Parent Category */}
@@ -2219,7 +2223,7 @@ const ProductDetails = () => {
           )}
           
           <span>/</span>
-          <span className="text-black block truncate max-w-[120px] sm:max-w-none whitespace-nowrap">{product.name}</span>
+          <span className="text-black block truncate max-w-[120px] sm:max-w-none whitespace-nowrap"><TranslatedText text={product.name}>{product.name}</TranslatedText></span>
         </nav>
 
         {/* Product Images and Info Grid */}
@@ -2456,22 +2460,22 @@ const ProductDetails = () => {
                   {getDiscountBadge()}
                 </div>
               </div>
-              <h1 className="text-xl font-bold text-gray-900 mb-4">{product.name}</h1>
+              <h1 className="text-xl font-bold text-gray-900 mb-4"><TranslatedText text={product.name}>{product.name}</TranslatedText></h1>
 
               {/* Brand and Category */}
               <div className="flex items-center gap-4 mb-4 text-sm">
                 <span className="text-gray-600">
-                  Brand:{" "}
-                  <span className="font-medium text-green-600">{product.brand?.name || product.brand || "N/A"}</span>
+                  <TranslatedText>Brand</TranslatedText>:{" "}
+                  <span className="font-medium text-green-600"><TranslatedText text={product.brand?.name || product.brand || "N/A"}>{product.brand?.name || product.brand || "N/A"}</TranslatedText></span>
                 </span>
                 <span className="text-gray-600">
-                  Category:{" "}
+                  <TranslatedText>Category</TranslatedText>:{" "}
                   <span className="font-medium text-green-600">
-                    {product.category?.name || product.category || "N/A"}
+                    <TranslatedText text={product.category?.name || product.category || "N/A"}>{product.category?.name || product.category || "N/A"}</TranslatedText>
                   </span>
                 </span>
                 <span className="text-gray-600">
-                  SKU: <span className="font-medium text-green-600">{product.sku || "N/A"}</span>
+                  <TranslatedText>SKU</TranslatedText>: <span className="font-medium text-green-600">{product.sku || "N/A"}</span>
                 </span>
               </div>
 
@@ -2564,10 +2568,10 @@ const ProductDetails = () => {
                           <div className="text-xl text-gray-500 line-through font-medium">{formatPrice(basePrice)}</div>
                         )}
                       </div>
-                      <div className="text-md text-black">Including VAT</div>
+                      <div className="text-md text-black"><TranslatedText>Including VAT</TranslatedText></div>
                       {hasValidOffer && (
                         <div className="text-lg text-emerald-800 font-medium">
-                          You Save {formatPrice(basePrice - priceToShow)}
+                          <TranslatedText>You Save</TranslatedText> {formatPrice(basePrice - priceToShow)}
                           {discount > 0 && ` (${discount}%)`}
                         </div>
                       )}
@@ -2587,9 +2591,9 @@ const ProductDetails = () => {
                         : "text-orange-600"
                   }`}
                 >
-                  {product.stockStatus === "In Stock" && "Available in stock"}
-                  {product.stockStatus === "Out of Stock" && "Currently out of stock"}
-                  {product.stockStatus === "PreOrder" && "Available for pre-order"}
+                  {product.stockStatus === "In Stock" && <TranslatedText>Available in stock</TranslatedText>}
+                  {product.stockStatus === "Out of Stock" && <TranslatedText>Currently out of stock</TranslatedText>}
+                  {product.stockStatus === "PreOrder" && <TranslatedText>Available for pre-order</TranslatedText>}
                 </div>
               </div>
 
@@ -2600,7 +2604,7 @@ const ProductDetails = () => {
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb- flex items-center">
                     <span className="text-purple-600 mr-2"></span>
-                    Color: {selectedColorIndex !== null && product.colorVariations[selectedColorIndex]?.color ? product.colorVariations[selectedColorIndex].color : "Select Color"}
+                    <TranslatedText>Color</TranslatedText>: {selectedColorIndex !== null && product.colorVariations[selectedColorIndex]?.color ? <TranslatedText text={product.colorVariations[selectedColorIndex].color}>{product.colorVariations[selectedColorIndex].color}</TranslatedText> : <TranslatedText>Select Color</TranslatedText>}
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {product.colorVariations
@@ -2744,7 +2748,7 @@ const ProductDetails = () => {
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center">
                     <span className="text-blue-600 mr-2"></span>
-                   Available Options:
+                   <TranslatedText>Available Options</TranslatedText>:
                   </h3>
                   <div className="flex flex-wrap gap-3 ">
                     {/* Combine current product and all variations, then sort alphabetically */}
@@ -2802,7 +2806,7 @@ const ProductDetails = () => {
                             </div>
                           ) : (
                             <Link
-                              to={`/product/${encodeURIComponent(variation.slug)}`}
+                              to={getLocalizedPath(`/product/${encodeURIComponent(variation.slug)}`)}
                               className="block px-5 py-2 bg-white text-gray-700 rounded-lg font-medium text-sm border border-gray-400 hover:bg-blue-100 hover:border-blue-400 transition-all duration-200"
                             >
                               {variation.text}
@@ -2813,7 +2817,7 @@ const ProductDetails = () => {
                     })()}
                   </div>
                   <p className="text-xs text-gray-600 mt-3">
-                    Click on any variation to view its details
+                    <TranslatedText>Click on any variation to view its details</TranslatedText>
                   </p>
                 </div>
               )}
@@ -2822,7 +2826,7 @@ const ProductDetails = () => {
                   {/* Key Features */}
               {product.shortDescription && (
                 <div className="mb-6">
-                  <h3 className="font-bold text-gray-900 mb-3">Key Features:</h3>
+                  <h3 className="font-bold text-gray-900 mb-3"><TranslatedText>Key Features</TranslatedText>:</h3>
                   <TipTapRenderer 
                     content={product.shortDescription} 
                     className="text-sm line-clamp-5 sm:line-clamp-none"
@@ -2844,10 +2848,10 @@ const ProductDetails = () => {
                     </div>
                     <div className="flex-1">
                       <div className="text-sm text-gray-800 leading-relaxed">
-                        Pay in 4 simple, interest free payments of{" "}
+                        <TranslatedText>Pay in 4 simple, interest free payments of</TranslatedText>{" "}
                         <span className="font-bold text-gray-900">{formatPerMonth(getEffectivePrice() / 4)}</span>
                         <br />
-                        <span className="text-blue-600 underline font-medium">Learn more</span>
+                        <span className="text-blue-600 underline font-medium"><TranslatedText>Learn more</TranslatedText></span>
                       </div>
                     </div>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 shadow-sm">
@@ -2868,11 +2872,11 @@ const ProductDetails = () => {
                     </div>
                     <div className="flex-1">
                       <div className="text-sm text-gray-800 leading-relaxed">
-                        As low as{" "}
-                        <span className="font-bold text-gray-900">{formatPerMonth(getEffectivePrice() / 12)}</span> or
-                        4 interest-free payments.
+                        <TranslatedText>As low as</TranslatedText>{" "}
+                        <span className="font-bold text-gray-900">{formatPerMonth(getEffectivePrice() / 12)}</span> <TranslatedText>or</TranslatedText>{" "}
+                        <TranslatedText>4 interest-free payments.</TranslatedText>
                         <br />
-                        <span className="text-blue-600 underline font-medium">Learn more</span>
+                        <span className="text-blue-600 underline font-medium"><TranslatedText>Learn more</TranslatedText></span>
                       </div>
                     </div>
                     <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-extrabold text-white bg-emerald-600 shadow-sm">
@@ -2936,7 +2940,7 @@ const ProductDetails = () => {
                       className="hidden sm:block w-full ml-1 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-3 py-3 rounded-lg font-medium transition-colors"
                       onClick={handleBuyNow}
                     >
-                      Buy Now
+                      <TranslatedText>Buy Now</TranslatedText>
                     </button>
                   </div>
                 </div>
@@ -2946,7 +2950,7 @@ const ProductDetails = () => {
                   className=" md:hidden lg:hidden w-full ml-1 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-3 py-3 rounded-lg font-medium transition-colors"
                   onClick={handleBuyNow}
                 >
-                  Buy Now
+                  <TranslatedText>Buy Now</TranslatedText>
                 </button>
               </div>
 
@@ -2967,7 +2971,7 @@ const ProductDetails = () => {
                       className="mb-2 text-lime-500 transform transition-transform duration-300 group-hover:-translate-y-1"
                     />
                     <span className="text-xs text-black font-medium group-hover:text-lime-500">
-                      Chat With Specialist
+                      <TranslatedText>Chat With Specialist</TranslatedText>
                     </span>
                   </button>
                 </div>
@@ -2982,7 +2986,7 @@ const ProductDetails = () => {
                       size={24}
                       className="mb-2 text-lime-500 transform transition-transform duration-300 group-hover:-translate-y-1"
                     />
-                    <span className="text-xs text-black font-medium group-hover:text-lime-500">Request a Callback</span>
+                    <span className="text-xs text-black font-medium group-hover:text-lime-500"><TranslatedText>Request a Callback</TranslatedText></span>
                   </button>
                 </div>
 
@@ -2991,14 +2995,14 @@ const ProductDetails = () => {
                   <button
                     type="button"
                     className="flex flex-col items-center w-full focus:outline-none group"
-                    onClick={() => navigate("/bulk-purchase")}
+                    onClick={() => navigate(getLocalizedPath("/bulk-purchase"))}
                   >
                     <Shield
                       className="mx-auto mb-2 text-lime-500 transform transition-transform duration-300 group-hover:-translate-y-1"
                       size={24}
                     />
                     <span className="text-xs font-medium group-hover:text-lime-500 transition-colors">
-                      Request Bulk Purchase
+                      <TranslatedText>Request Bulk Purchase</TranslatedText>
                     </span>
                   </button>
                 </div>
@@ -3011,15 +3015,15 @@ const ProductDetails = () => {
             <div className="bg-white rounded-lg p-3 space-y-6">
               {/* Get My Coupon */}
               <div className="bg-yellow-50 rounded-lg p-4">
-                <h4 className="font-bold text-gray-900 text-md mb-2 flex items-center">🎯 Get My Coupon</h4>
+                <h4 className="font-bold text-gray-900 text-md mb-2 flex items-center">🎯 <TranslatedText>Get My Coupon</TranslatedText></h4>
                 <p className="text-sm text-gray-700 mb-3">
-                  Free shipping when you spend AED500 & above. Unlimited destinations in Dubai and Abu Dhabi
+                  <TranslatedText>Free shipping when you spend AED500 & above. Unlimited destinations in Dubai and Abu Dhabi</TranslatedText>
                 </p>
                 <button
                   className="w-full bg-yellow-400 text-black py-2 px-4 rounded font-bold text-sm hover:bg-yellow-500 transition-colors"
                   onClick={handleOpenCouponsModal}
                 >
-                  Get Coupons
+                  <TranslatedText>Get Coupons</TranslatedText>
                 </button>
               </div>
 
@@ -3027,40 +3031,39 @@ const ProductDetails = () => {
               <div className="space-y-4">
                 <div 
                   className="flex items-start space-x-3 cursor-pointer  border-2 border-yellow-400 hover:bg-lime-100 p-2 rounded-lg transition-colors"
-                  onClick={() => navigate('/delivery-terms')}
+                  onClick={() => navigate(getLocalizedPath('/delivery-terms'))}
                 >
                   <Truck className="text-green-600 mt-1" size={60} />
                   <div>
-                    <h4 className="font-bold text-gray-900 text-sm">Express Delivery</h4>
+                    <h4 className="font-bold text-gray-900 text-sm"><TranslatedText>Express Delivery</TranslatedText></h4>
                     <p className="text-xs text-gray-700">
-                      Free shipping when you spend AED500 & above. Unlimited destinations in Dubai and Abu Dhabi
+                      <TranslatedText>Free shipping when you spend AED500 & above. Unlimited destinations in Dubai and Abu Dhabi</TranslatedText>
                     </p>
                   </div>
                 </div>
 
                 <div 
                   className="flex items-start space-x-3 cursor-pointer border-2 border-yellow-400 hover:bg-lime-100 p-2 rounded-lg transition-colors"
-                  onClick={() => navigate('/refund-return')}
+                  onClick={() => navigate(getLocalizedPath('/refund-return'))}
                 >
                   <RotateCcw className="text-green-600 mt-1" size={60} />
                   <div>
-                    <h4 className="font-bold text-gray-900 text-sm">Delivery & Returns Policy</h4>
+                    <h4 className="font-bold text-gray-900 text-sm"><TranslatedText>Delivery & Returns Policy</TranslatedText></h4>
                     <p className="text-xs text-gray-700">
-                      Delivery in remote areas will be considered as normal delivery which takes place with 1 working
-                      day delivery.
+                      <TranslatedText>Delivery in remote areas will be considered as normal delivery which takes place with 1 working day delivery.</TranslatedText>
                     </p>
                   </div>
                 </div>
 
                 <div 
                   className="flex items-start space-x-3 cursor-pointer border-2 border-yellow-400 hover:bg-lime-100 p-2 rounded-lg transition-colors"
-                  onClick={() => navigate('/terms-conditions')}
+                  onClick={() => navigate(getLocalizedPath('/terms-conditions'))}
                 >
                   <Award className="text-green-600 mt-1" size={33} />
                   <div>
-                    <h4 className="font-bold text-gray-900 text-sm">Warranty Information</h4>
+                    <h4 className="font-bold text-gray-900 text-sm"><TranslatedText>Warranty Information</TranslatedText></h4>
                     <p className="text-xs text-gray-700">
-                      {product.warranty || "Standard warranty applies as per manufacturer terms"}
+                      <TranslatedText text={product.warranty || "Standard warranty applies as per manufacturer terms"}>{product.warranty || "Standard warranty applies as per manufacturer terms"}</TranslatedText>
                     </p>
                   </div>
                 </div>
@@ -3076,7 +3079,7 @@ const ProductDetails = () => {
             <div className="bg-white rounded-lg p-4 border border-gray-200">
               <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
                 <Shield className="text-blue-600" size={24} />
-                Protect Your Purchase
+                <TranslatedText>Protect Your Purchase</TranslatedText>
               </h3>
               <BuyerProtectionSection
                 productId={product._id}
@@ -3141,7 +3144,7 @@ const ProductDetails = () => {
               {/* Payment Methods */}
               <div className="border-t pt-4">
                 <h4 className="font-bold text-white p-2 rounded-lg bg-red-600 text-center text-md mb-3">
-                  Payment Methods :{" "}
+                  <TranslatedText>Payment Methods</TranslatedText> :{" "}
                 </h4>
                 <div className=" ml-8 items-center space-x-2 flex-wrap gap-2">
                   <div className="px-2 py-1 rounded flex items-center ">
@@ -3217,39 +3220,39 @@ const ProductDetails = () => {
           <div className="p-6">
             {activeTab === "description" && (
               <div>
-                <h3 className="text-lg font-bold mb-4">Product Description</h3>
-                <TipTapRenderer content={product.description} />
+                <h3 className="text-lg font-bold mb-4"><TranslatedText>Product Description</TranslatedText></h3>
+                <TranslatedTipTapRenderer content={product.description} />
               </div>
             )}
 
             {activeTab === "information" && (
               <div>
-                <h3 className="text-lg font-bold mb-4">More Information</h3>
+                <h3 className="text-lg font-bold mb-4"><TranslatedText>More Information</TranslatedText></h3>
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <tbody>
                       <tr className="bg-gray-50">
-                        <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">Brand</td>
+                        <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4"><TranslatedText>Brand</TranslatedText></td>
                         <td className="border border-gray-200 px-4 py-3 text-gray-700">
-                          {product.brand?.name || product.brand || "N/A"}
+                          <TranslatedText text={product.brand?.name || product.brand || "N/A"}>{product.brand?.name || product.brand || "N/A"}</TranslatedText>
                         </td>
                       </tr>
                       <tr className="bg-white">
                         <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">
-                          Model Number
+                          <TranslatedText>Model Number</TranslatedText>
                         </td>
                         <td className="border border-gray-200 px-4 py-3 text-gray-700">{product.sku || "N/A"}</td>
                       </tr>
                       <tr className="bg-white">
-                        <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">Category</td>
+                        <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4"><TranslatedText>Category</TranslatedText></td>
                         <td className="border border-gray-200 px-4 py-3 text-gray-700">
-                          {product.category?.name || product.category || "N/A"}
+                          <TranslatedText text={product.category?.name || product.category || "N/A"}>{product.category?.name || product.category || "N/A"}</TranslatedText>
                         </td>
                       </tr>
                       {product.warranty && (
                         <tr className="bg-white">
-                          <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">Warranty</td>
-                          <td className="border border-gray-200 px-4 py-3 text-gray-700">{product.warranty}</td>
+                          <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4"><TranslatedText>Warranty</TranslatedText></td>
+                          <td className="border border-gray-200 px-4 py-3 text-gray-700"><TranslatedText text={product.warranty}>{product.warranty}</TranslatedText></td>
                         </tr>
                       )}
 
@@ -3258,9 +3261,9 @@ const ProductDetails = () => {
                         product.specifications.map((spec, index) => (
                           <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                             <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">
-                              {spec.key}
+                              <TranslatedText text={spec.key}>{spec.key}</TranslatedText>
                             </td>
-                            <td className="border border-gray-200 px-4 py-3 text-gray-700">{spec.value}</td>
+                            <td className="border border-gray-200 px-4 py-3 text-gray-700"><TranslatedText text={spec.value}>{spec.value}</TranslatedText></td>
                           </tr>
                         ))}
                     </tbody>
@@ -3296,7 +3299,7 @@ const ProductDetails = () => {
             : "bg-lime-700 text-white hover:bg-lime-800"
         }`}
       >
-        <span className="hidden sm:inline">Product </span>Description
+        <span className="hidden sm:inline"><TranslatedText>Product</TranslatedText> </span><TranslatedText>Description</TranslatedText>
       </button>
       <button
         onClick={() => setActiveTab("information")}
@@ -3306,7 +3309,7 @@ const ProductDetails = () => {
             : "bg-lime-700 text-white hover:bg-lime-800"
         }`}
       >
-        <span className="hidden sm:inline">More </span>Information
+        <span className="hidden sm:inline"><TranslatedText>More</TranslatedText> </span><TranslatedText>Information</TranslatedText>
       </button>
       <button
         onClick={() => setActiveTab("reviews")}
@@ -3316,46 +3319,46 @@ const ProductDetails = () => {
             : "bg-lime-700 text-white hover:bg-lime-800"
         }`}
       >
-        Reviews ({reviewStats.totalReviews || 0})
+        <TranslatedText>Reviews</TranslatedText> ({reviewStats.totalReviews || 0})
       </button>
     </div>
   </div>
   <div className="p-6">
     {activeTab === "description" && (
       <div>
-        <h3 className="text-lg font-bold mb-4">Product Description</h3>
-        <TipTapRenderer content={product.description} />
+        <h3 className="text-lg font-bold mb-4"><TranslatedText>Product Description</TranslatedText></h3>
+        <TranslatedTipTapRenderer content={product.description} />
       </div>
     )}
 
     {activeTab === "information" && (
       <div>
-        <h3 className="text-lg font-bold mb-4">More Information</h3>
+        <h3 className="text-lg font-bold mb-4"><TranslatedText>More Information</TranslatedText></h3>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <tbody>
               <tr className="bg-gray-50">
-                <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">Brand</td>
+                <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4"><TranslatedText>Brand</TranslatedText></td>
                 <td className="border border-gray-200 px-4 py-3 text-gray-700">
-                  {product.brand?.name || product.brand || "N/A"}
+                  <TranslatedText text={product.brand?.name || product.brand || "N/A"}>{product.brand?.name || product.brand || "N/A"}</TranslatedText>
                 </td>
               </tr>
               <tr className="bg-white">
                 <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">
-                  Model Number
+                  <TranslatedText>Model Number</TranslatedText>
                 </td>
                 <td className="border border-gray-200 px-4 py-3 text-gray-700">{product.sku || "N/A"}</td>
               </tr>
               <tr className="bg-white">
-                <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">Category</td>
+                <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4"><TranslatedText>Category</TranslatedText></td>
                 <td className="border border-gray-200 px-4 py-3 text-gray-700">
-                  {product.category?.name || product.category || "N/A"}
+                  <TranslatedText text={product.category?.name || product.category || "N/A"}>{product.category?.name || product.category || "N/A"}</TranslatedText>
                 </td>
               </tr>
               {product.warranty && (
                 <tr className="bg-white">
-                  <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">Warranty</td>
-                  <td className="border border-gray-200 px-4 py-3 text-gray-700">{product.warranty}</td>
+                  <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4"><TranslatedText>Warranty</TranslatedText></td>
+                  <td className="border border-gray-200 px-4 py-3 text-gray-700"><TranslatedText text={product.warranty}>{product.warranty}</TranslatedText></td>
                 </tr>
               )}
 
@@ -3364,9 +3367,9 @@ const ProductDetails = () => {
                 product.specifications.map((spec, index) => (
                   <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                     <td className="border border-gray-200 px-4 py-3 font-medium text-gray-900 w-1/4">
-                      {spec.key}
+                      <TranslatedText text={spec.key}>{spec.key}</TranslatedText>
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-gray-700">{spec.value}</td>
+                    <td className="border border-gray-200 px-4 py-3 text-gray-700"><TranslatedText text={spec.value}>{spec.value}</TranslatedText></td>
                   </tr>
                 ))}
             </tbody>
@@ -3474,13 +3477,13 @@ const ProductDetails = () => {
                     key={relatedProduct._id}
                     className="bg-white rounded-lg shadow-sm p-4 border hover:shadow-md transition-shadow"
                   >
-                    <Link to={`/product/${encodeURIComponent(relatedProduct.slug || relatedProduct._id)}`}>
+                    <Link to={getLocalizedPath(`/product/${encodeURIComponent(relatedProduct.slug || relatedProduct._id)}`)}>
                       <img
                         src={getFullImageUrl(relatedProduct.image) || "/placeholder.svg?height=128&width=128"}
                         alt={relatedProduct.name}
                         className="w-full h-32 object-contain mb-2"
                       />
-                      <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">{relatedProduct.name}</h3>
+                      <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2"><TranslatedText text={relatedProduct.name}>{relatedProduct.name}</TranslatedText></h3>
                       <div className="text-red-600 font-bold text-sm">
                         {relatedProduct.offerPrice > 0
                           ? formatPrice(relatedProduct.offerPrice)

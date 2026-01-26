@@ -137,7 +137,9 @@ import { Heart, Star, ShoppingBag } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
 import { useToast } from "../context/ToastContext"
+import { useLanguage } from "../context/LanguageContext"
 import { getImageUrl } from "../utils/imageUtils"
+import TranslatedText from "./TranslatedText"
 
 const getStatusColor = (status) => {
   if (status === "In Stock") return "bg-green-600"
@@ -150,6 +152,7 @@ const HomeStyleProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
   const { showToast } = useToast()
+  const { getLocalizedPath } = useLanguage()
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Determine stock status
   const stockStatus = product.stockStatus || (product.countInStock > 0 ? "In Stock" : "Out of Stock")
@@ -182,7 +185,7 @@ const HomeStyleProductCard = ({ product }) => {
   return (
     <div className="border p-2 h-[400px] flex flex-col justify-between bg-white">
       <div className="relative mb-2 flex h-[180px] justify-center items-cente">
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
+  <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
             src={getImageUrl(product) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%239ca3af'%3ENo Image%3C/text%3E%3C/svg%3E"}
             alt={product.name}
@@ -206,17 +209,17 @@ const HomeStyleProductCard = ({ product }) => {
       </div>
       <div className="mb-1 flex items-center gap-2 ">
         <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}>
-          {stockStatus}
+          <TranslatedText text={stockStatus} />
         </div>
         {discount && (
           <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs  inline-block">{discount}</div>
         )}
       </div>
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
-        <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
+  <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
+        <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]"><TranslatedText text={product.name} /></h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
-      <div className="text-xs text-green-600">Inclusive VAT</div>
+      {product.category && <div className="text-xs text-yellow-600 "><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
@@ -257,7 +260,7 @@ const HomeStyleProductCard = ({ product }) => {
         disabled={stockStatus === "Out of Stock"}
       >
         <ShoppingBag size={12} />
-        Add to Cart
+        <TranslatedText>Add to Cart</TranslatedText>
       </button>
     </div>
   )

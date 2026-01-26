@@ -1,8 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
 import { CartProvider } from "./context/CartContext"
 import { WishlistProvider } from "./context/WishlistContext"
 import { ToastProvider } from "./context/ToastContext"
+import { LanguageProvider } from "./context/LanguageContext"
 
 // Import components
 import Layout from "./components/Layout"
@@ -193,11 +194,15 @@ function App() {
         <CartProvider>
           <WishlistProvider>
             <Router>
+              <LanguageProvider>
               <DefaultCanonical />
               <ScrollToTop />
               <RedirectHandler />
               <div className="App">
                 <Routes>
+                  {/* Root redirect to default language */}
+                  <Route path="/" element={<Navigate to="/ae-en" replace />} />
+                  
                   {/* Admin Routes */}
                   <Route path="/grabiansadmin/login" element={<AdminLogin />} />
                   <Route
@@ -337,7 +342,201 @@ function App() {
                     }
                   />
 
-                  {/* Public Routes */}
+                  {/* Public Routes with Language Prefix (English) */}
+                  <Route
+                    path="/ae-en/*"
+                    element={
+                      <>
+                        <RouteCanonical />
+                        <Layout />
+                      </>
+                    }
+                  >
+                    <Route index element={<Home />} />
+                    <Route path="shop" element={<Shop />} />
+                    <Route path="shop/:parentCategory" element={<Shop />} />
+                    <Route path="shop/:parentCategory/:subcategory" element={<Shop />} />
+                    <Route path="shop/:parentCategory/:subcategory/:subcategory2" element={<Shop />} />
+                    <Route path="shop/:parentCategory/:subcategory/:subcategory2/:subcategory3" element={<Shop />} />
+                    <Route
+                      path="shop/:parentCategory/:subcategory/:subcategory2/:subcategory3/:subcategory4"
+                      element={<Shop />}
+                    />
+                    <Route path="product-category" element={<Shop />} />
+                    <Route path="product-category/:parentCategory" element={<Shop />} />
+                    <Route path="product-category/:parentCategory/:subcategory" element={<Shop />} />
+                    <Route path="product-category/:parentCategory/:subcategory/:subcategory2" element={<Shop />} />
+                    <Route
+                      path="product-category/:parentCategory/:subcategory/:subcategory2/:subcategory3"
+                      element={<Shop />}
+                    />
+                    <Route
+                      path="product-category/:parentCategory/:subcategory/:subcategory2/:subcategory3/:subcategory4"
+                      element={<Shop />}
+                    />
+                    <Route path="product/:slug" element={<ProductDetails />} />
+                    <Route path="cart" element={<Cart />} />
+                    <Route path="login" element={<Login />} />
+                    <Route path="register" element={<Register />} />
+                    <Route path="verify-email" element={<EmailVerification />} />
+                    <Route path="track-order" element={<TrackOrder />} />
+                    <Route path="about" element={<About />} />
+                    <Route path="blogs" element={<BlogList />} />
+                    <Route path="blogs/:slug" element={<BlogPost />} />
+                    <Route path="privacy-policy" element={<PrivacyAndPolicy />} />
+                    <Route path="privacy-policy-arabic" element={<ArabicContent />} />
+                    <Route path="disclaimer-policy" element={<DisclaimerPolicy />} />
+                    <Route path="terms-conditions" element={<TermAndCondition />} />
+                    <Route path="refund-return" element={<RefundAndReturn />} />
+                    <Route path="cookies-policy" element={<CookiesAndPolicy />} />
+                    <Route path="bulk-purchase" element={<ReqBulkPurchase />} />
+                    <Route path="contact" element={<ContactUs />} />
+                    <Route path="guest" element={<Guest />} />
+                    <Route path="guest-order" element={<GuestOrder />} />
+                    <Route path="payment/success" element={<PaymentSuccess />} />
+                    <Route path="payment/cancel" element={<PaymentCancel />} />
+                    <Route path="forgot-password" element={<ForgotPassword />} />
+                    <Route path="reset-password" element={<ResetPassword />} />
+                    <Route path="green-friday-promotional" element={<PromotionalPage />} />
+                    <Route path="backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
+                    <Route path="voucher-terms" element={<VoucherTerms />} />
+                    <Route path="delivery-terms" element={<DeliveryTerms />} />
+                    <Route path="offers/:slug" element={<OfferPage />} />
+                    <Route path="gaming-zone/:slug" element={<GamingZonePage />} />
+
+                    {/* Protected Routes */}
+                    <Route
+                      path="checkout"
+                      element={
+                        <ProtectedRoute>
+                          <Checkout />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="profile"
+                      element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="orders"
+                      element={
+                        <ProtectedRoute>
+                          <UserOrders />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="wishlist"
+                      element={
+                        <ProtectedRoute>
+                          <Wishlist />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Route>
+
+                  {/* Public Routes with Language Prefix (Arabic) */}
+                  <Route
+                    path="/ae-ar/*"
+                    element={
+                      <>
+                        <RouteCanonical />
+                        <Layout />
+                      </>
+                    }
+                  >
+                    <Route index element={<Home />} />
+                    <Route path="shop" element={<Shop />} />
+                    <Route path="shop/:parentCategory" element={<Shop />} />
+                    <Route path="shop/:parentCategory/:subcategory" element={<Shop />} />
+                    <Route path="shop/:parentCategory/:subcategory/:subcategory2" element={<Shop />} />
+                    <Route path="shop/:parentCategory/:subcategory/:subcategory2/:subcategory3" element={<Shop />} />
+                    <Route
+                      path="shop/:parentCategory/:subcategory/:subcategory2/:subcategory3/:subcategory4"
+                      element={<Shop />}
+                    />
+                    <Route path="product-category" element={<Shop />} />
+                    <Route path="product-category/:parentCategory" element={<Shop />} />
+                    <Route path="product-category/:parentCategory/:subcategory" element={<Shop />} />
+                    <Route path="product-category/:parentCategory/:subcategory/:subcategory2" element={<Shop />} />
+                    <Route
+                      path="product-category/:parentCategory/:subcategory/:subcategory2/:subcategory3"
+                      element={<Shop />}
+                    />
+                    <Route
+                      path="product-category/:parentCategory/:subcategory/:subcategory2/:subcategory3/:subcategory4"
+                      element={<Shop />}
+                    />
+                    <Route path="product/:slug" element={<ProductDetails />} />
+                    <Route path="cart" element={<Cart />} />
+                    <Route path="login" element={<Login />} />
+                    <Route path="register" element={<Register />} />
+                    <Route path="verify-email" element={<EmailVerification />} />
+                    <Route path="track-order" element={<TrackOrder />} />
+                    <Route path="about" element={<About />} />
+                    <Route path="blogs" element={<BlogList />} />
+                    <Route path="blogs/:slug" element={<BlogPost />} />
+                    <Route path="privacy-policy" element={<PrivacyAndPolicy />} />
+                    <Route path="privacy-policy-arabic" element={<ArabicContent />} />
+                    <Route path="disclaimer-policy" element={<DisclaimerPolicy />} />
+                    <Route path="terms-conditions" element={<TermAndCondition />} />
+                    <Route path="refund-return" element={<RefundAndReturn />} />
+                    <Route path="cookies-policy" element={<CookiesAndPolicy />} />
+                    <Route path="bulk-purchase" element={<ReqBulkPurchase />} />
+                    <Route path="contact" element={<ContactUs />} />
+                    <Route path="guest" element={<Guest />} />
+                    <Route path="guest-order" element={<GuestOrder />} />
+                    <Route path="payment/success" element={<PaymentSuccess />} />
+                    <Route path="payment/cancel" element={<PaymentCancel />} />
+                    <Route path="forgot-password" element={<ForgotPassword />} />
+                    <Route path="reset-password" element={<ResetPassword />} />
+                    <Route path="green-friday-promotional" element={<PromotionalPage />} />
+                    <Route path="backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
+                    <Route path="voucher-terms" element={<VoucherTerms />} />
+                    <Route path="delivery-terms" element={<DeliveryTerms />} />
+                    <Route path="offers/:slug" element={<OfferPage />} />
+                    <Route path="gaming-zone/:slug" element={<GamingZonePage />} />
+
+                    {/* Protected Routes */}
+                    <Route
+                      path="checkout"
+                      element={
+                        <ProtectedRoute>
+                          <Checkout />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="profile"
+                      element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="orders"
+                      element={
+                        <ProtectedRoute>
+                          <UserOrders />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="wishlist"
+                      element={
+                        <ProtectedRoute>
+                          <Wishlist />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Route>
+
+                  {/* Fallback for old routes without language prefix - redirect to English */}
                   <Route
                     path="*"
                     element={
@@ -435,6 +634,7 @@ function App() {
                   </Route>
                 </Routes>
               </div>
+              </LanguageProvider>
             </Router>
           </WishlistProvider>
         </CartProvider>

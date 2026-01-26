@@ -3,9 +3,12 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, Cookie, Eye, Database, Lock, Globe, Phone, Mail, MapPin, Clock, FileText } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
+import TranslatedText from "../components/TranslatedText";
 
 export default function CookiesAndPolicy() {
   const navigate = useNavigate();
+  const { getLocalizedPath } = useLanguage();
 
   // Future functionality for Arabic version
   // const handleArabicClick = () => {
@@ -23,7 +26,7 @@ export default function CookiesAndPolicy() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Cookies & Tracking Technologies
+            <TranslatedText>Cookies & Tracking Technologies</TranslatedText>
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Understanding how we use cookies and tracking technologies to improve your experience at Grabatoz.ae
@@ -51,7 +54,7 @@ export default function CookiesAndPolicy() {
               <FileText className="w-8 h-8 text-lime-500 mt-1 flex-shrink-0" />
             </div>
             <div className="text-center md:text-left">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Important Notice</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3"><TranslatedText>Important Notice</TranslatedText></h2>
               <p className="text-gray-700 leading-relaxed">
                 Our site uses cookies and similar tracking technologies to improve user experience, security, and site functionality.
                 Cookies may be used to remember your preferences, enable shopping features, analyze site traffic, and display personalized content or advertisements.
@@ -67,7 +70,7 @@ export default function CookiesAndPolicy() {
             <div className="flex justify-center md:justify-start">
               <Eye className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Disclosure to Third Parties</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Disclosure to Third Parties</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-center text-gray-700">
@@ -85,7 +88,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
             <div className="flex justify-center md:justify-start">
               <Cookie className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Analysis Services</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Analysis Services</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-center text-gray-700">
@@ -118,7 +121,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
             <div className="flex justify-center md:justify-start">
               <Database className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Google Analytics</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Google Analytics</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -134,7 +137,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
             <div className="flex justify-center md:justify-start">
               <Database className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Sentry</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Sentry</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -154,7 +157,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
             <div className="flex justify-center md:justify-start">
               <Shield className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Your Users' Rights</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Your Users' Rights</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -178,7 +181,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
             <div className="flex justify-center md:justify-start">
               <Mail className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Email & Postal Communication</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Email & Postal Communication</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -193,7 +196,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
             <div className="flex justify-center md:justify-start">
               <Globe className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Links to External Websites</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Links to External Websites</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -208,7 +211,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
             <div className="flex justify-center md:justify-start">
               <Lock className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Data Security</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Data Security</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -227,7 +230,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
             <div className="flex justify-center md:justify-start">
               <FileText className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Updates to Privacy Notice</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Updates to Privacy Notice</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -255,7 +258,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
             <div className="flex justify-center md:justify-start">
               <Shield className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Your Consent</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Your Consent</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -269,8 +272,8 @@ We use necessary cookies for app navigation, basic functions, and security purpo
       <section className="bg-gray-50 text-black p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-semibold mb-2">Contact Information</h2>
-            <p className="text-black">Get in touch with our team for any questions or concerns</p>
+            <h2 className="text-2xl font-semibold mb-2"><TranslatedText>Contact Information</TranslatedText></h2>
+            <p className="text-black"><TranslatedText>Get in touch with our team for any questions or concerns</TranslatedText></p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -278,7 +281,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
               <div className="flex justify-center mb-2">
                 <Phone className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Phone</h3>
+              <h3 className="font-medium mb-1"><TranslatedText>Phone</TranslatedText></h3>
               <a href="tel:+97143540566" className="text-black">
                 +971 4 354 0566
               </a>
@@ -288,7 +291,7 @@ We use necessary cookies for app navigation, basic functions, and security purpo
               <div className="flex justify-center mb-2">
                 <Mail className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Email</h3>
+              <h3 className="font-medium mb-1"><TranslatedText>Email</TranslatedText></h3>
               <a href="mailto:customercare@grabatoz.ae" className="text-black">
                 customercare@grabatoz.ae
               </a>
@@ -298,23 +301,23 @@ We use necessary cookies for app navigation, basic functions, and security purpo
               <div className="flex justify-center mb-2">
                 <Clock className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Hours</h3>
-              <p className="text-black">Daily 9:00 AM - 7:00 PM</p>
+              <h3 className="font-medium mb-1"><TranslatedText>Hours</TranslatedText></h3>
+              <p className="text-black"><TranslatedText>Daily 9:00 AM - 7:00 PM</TranslatedText></p>
             </div>
 
             <div className="text-center">
               <div className="flex justify-center mb-2">
                 <MapPin className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Address</h3>
-              <p className="text-black">P.O. Box 241975, Dubai, UAE</p>
+              <h3 className="font-medium mb-1"><TranslatedText>Address</TranslatedText></h3>
+              <p className="text-black"><TranslatedText>P.O. Box 241975, Dubai, UAE</TranslatedText></p>
             </div>
           </div>
 
           <div className="text-center pt-4 border-t border-gray-700">
             <p className="text-black">
               <strong>Grabatoz.ae</strong><br />
-              <b>Powered by Crown Excel General Trading LLC</b>
+              <b><TranslatedText>Powered by Crown Excel General Trading LLC</TranslatedText></b>
             </p>
           </div>
         </div>

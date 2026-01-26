@@ -12,6 +12,7 @@ import { generateShopURL } from "../utils/urlUtils"
 
 import config from "../config/config"
 import NewsletterModal from "./NewsletterModal";
+import TranslatedText from "./TranslatedText";
 
 const API_BASE_URL = `${config.API_URL}`
 
@@ -195,7 +196,7 @@ const Footer = ({ className = "" }) => {
 
               {/* Column 2 - Top Categories */}
               <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Top Categories</h3>
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>Top Categories</TranslatedText></h3>
                 <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                   <li>
                     <Link to="/gaming-zone" className="hover:text-lime-400">
@@ -205,7 +206,17 @@ const Footer = ({ className = "" }) => {
                   {categories.slice(0, 7).map((category) => (
                     <li key={category._id}>
                       <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
-                        {category.name}
+                        <TranslatedText text={category.name} />
+                      </Link>
+                    </li>
+                  ))}
+                  {subCategories.slice(0, 2).map((subCategory) => (
+                    <li key={`sub-${subCategory._id}`}>
+                      <Link to={generateShopURL({
+                        parentCategory: subCategory.category?.name || '',
+                        subCategory: subCategory.name
+                      })} className="hover:text-lime-400">
+                        <TranslatedText text={subCategory.name} />
                       </Link>
                     </li>
                   ))}
@@ -214,15 +225,22 @@ const Footer = ({ className = "" }) => {
 
               {/* Column 3 - More Categories */}
               <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">More Categories</h3>
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>More Categories</TranslatedText></h3>
                 <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
-                  {subCategories.slice(8, 16).map((subCategory) => (
-                    <li key={subCategory._id}>
+                  {categories.slice(6, 10).map((category) => (
+                    <li key={category._id}>
+                      <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
+                        <TranslatedText text={category.name} />
+                      </Link>
+                    </li>
+                  ))}
+                  {subCategories.slice(4, 8).map((subCategory) => (
+                    <li key={`sub-${subCategory._id}`}>
                       <Link to={generateShopURL({
                         parentCategory: subCategory.category?.name || '',
                         subCategory: subCategory.name
                       })} className="hover:text-lime-400">
-                        {subCategory.name}
+                        <TranslatedText text={subCategory.name} />
                       </Link>
                     </li>
                   ))}
@@ -231,47 +249,47 @@ const Footer = ({ className = "" }) => {
 
               {/* Column 4 - Support */}
               <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Legal</h3>
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>Legal</TranslatedText></h3>
                 <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                   <li>
                     <Link to="/refund-return" className="hover:text-lime-400">
-                      Refund and Return
+                      <TranslatedText>Refund and Return</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/cookies-policy" className="hover:text-lime-400">
-                      Cookies Policy
+                      <TranslatedText>Cookies Policy</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/terms-conditions" className="hover:text-lime-400">
-                      Terms & Conditions
+                      <TranslatedText>Terms & Conditions</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/privacy-policy" className="hover:text-lime-400">
-                      Privacy Policy
+                      <TranslatedText>Privacy Policy</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/disclaimer-policy" className="hover:text-lime-400">
-                      Disclaimer Policy
+                      <TranslatedText>Disclaimer Policy</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/track-order" className="hover:text-lime-400">
-                      Track Order
+                      <TranslatedText>Track Order</TranslatedText>
                     </Link>
                   </li>
 
                   <li>
                     <Link to="/voucher-terms" className="hover:text-lime-400">
-                      Voucher Terms
+                      <TranslatedText>Voucher Terms</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/delivery-terms" className="hover:text-lime-400">
-                      Delivery Terms
+                      <TranslatedText>Delivery Terms</TranslatedText>
                     </Link>
                   </li>
                 </ul>
@@ -279,46 +297,46 @@ const Footer = ({ className = "" }) => {
 
               {/* Column 5 - Legal */}
               <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4">Support</h3>
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>Support</TranslatedText></h3>
                 <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                   <li>
                     <Link to="/about" className="hover:text-lime-400">
-                      About Us
+                      <TranslatedText>About Us</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/contact" className="hover:text-lime-400">
-                      Contact Us
+                      <TranslatedText>Contact Us</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <a href="https://blog.grabatoz.ae/" rel="noopener noreferrer" className="hover:text-lime-400">
-                      Blog
+                      <TranslatedText>Blog</TranslatedText>
                     </a>
                   </li>
                   <li>
                     <Link to="/shop" className="hover:text-lime-400">
-                      Shop
+                      <TranslatedText>Shop</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/login" className="hover:text-lime-400">
-                      Login
+                      <TranslatedText>Login</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/register" className="hover:text-lime-400">
-                      Register
+                      <TranslatedText>Register</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/wishlist" className="hover:text-lime-400">
-                      Wishlist
+                      <TranslatedText>Wishlist</TranslatedText>
                     </Link>
                   </li>
                   <li>
                     <Link to="/cart" className="hover:text-lime-400 font-semibold">
-                      Cart
+                      <TranslatedText>Cart</TranslatedText>
                     </Link>
                   </li>
                 </ul>
@@ -358,7 +376,7 @@ const Footer = ({ className = "" }) => {
             onClick={() => toggleSection("categories")}
             className="w-full flex justify-between items-center p-4 text-left"
           >
-            <span className="text-lg font-semibold text-gray-900">Categories</span>
+            <span className="text-lg font-semibold text-gray-900"><TranslatedText>Categories</TranslatedText></span>
             {openSections.categories ? <Minus size={20} /> : <Plus size={20} />}
           </button>
           {openSections.categories && (
@@ -367,7 +385,7 @@ const Footer = ({ className = "" }) => {
                 {categories.map((category) => (
                   <li key={category._id}>
                     <Link to={`/shop?parentCategory=${category._id}`} className="text-gray-700 hover:text-orange-500">
-                      {category.name}
+                      <TranslatedText text={category.name} />
                     </Link>
                   </li>
                 ))}
@@ -382,7 +400,7 @@ const Footer = ({ className = "" }) => {
             onClick={() => toggleSection("legal")}
             className="w-full flex justify-between items-center p-4 text-left"
           >
-            <span className="text-lg font-semibold text-gray-900">Legal</span>
+            <span className="text-lg font-semibold text-gray-900"><TranslatedText>Legal</TranslatedText></span>
             {openSections.legal ? <Minus size={20} /> : <Plus size={20} />}
           </button>
           {openSections.legal && (
@@ -390,32 +408,32 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-3">
                 <li>
                   <Link to="/about" className="text-gray-700 hover:text-orange-500">
-                    About Us
+                    <TranslatedText>About Us</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <Link to="/contact" className="text-gray-700 hover:text-orange-500">
-                    Contact Us
+                    <TranslatedText>Contact Us</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <a href="https://blog.grabatoz.ae/" rel="noopener noreferrer" className="text-gray-700 hover:text-orange-500">
-                    Blog
+                    <TranslatedText>Blog</TranslatedText>
                   </a>
                 </li>
                 <li>
                   <Link to="/shop" className="text-gray-700 hover:text-orange-500">
-                    Shop
+                    <TranslatedText>Shop</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <Link to="/login" className="text-gray-700 hover:text-orange-500">
-                    Login
+                    <TranslatedText>Login</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <Link to="/register" className="text-gray-700 hover:text-orange-500">
-                    Register
+                    <TranslatedText>Register</TranslatedText>
                   </Link>
                 </li>
               </ul>
@@ -429,7 +447,7 @@ const Footer = ({ className = "" }) => {
             onClick={() => toggleSection("support")}
             className="w-full flex justify-between items-center p-4 text-left"
           >
-            <span className="text-lg font-semibold text-gray-900">Support</span>
+            <span className="text-lg font-semibold text-gray-900"><TranslatedText>Support</TranslatedText></span>
             {openSections.support ? <Minus size={20} /> : <Plus size={20} />}
           </button>
           {openSections.support && (
@@ -437,42 +455,42 @@ const Footer = ({ className = "" }) => {
               <ul className="space-y-3">
                 <li>
                   <Link to="/refund-return" className="text-gray-700 hover:text-orange-500">
-                    Refund and Return
+                    <TranslatedText>Refund and Return</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <Link to="/cookies-policy" className="text-gray-700 hover:text-orange-500">
-                    Cookies Policy
+                    <TranslatedText>Cookies Policy</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <Link to="/terms-conditions" className="text-gray-700 hover:text-orange-500">
-                    Terms & Conditions
+                    <TranslatedText>Terms & Conditions</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <Link to="/privacy-policy" className="text-gray-700 hover:text-orange-500">
-                    Privacy Policy
+                    <TranslatedText>Privacy Policy</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <Link to="/disclaimer-policy" className="text-gray-700 hover:text-orange-500">
-                    Disclaimer Policy
+                    <TranslatedText>Disclaimer Policy</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <Link to="/track-order" className="text-gray-700 hover:text-orange-500">
-                    Track Order
+                    <TranslatedText>Track Order</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <Link to="/wishlist" className="text-gray-700 hover:text-orange-500">
-                    Wishlist
+                    <TranslatedText>Wishlist</TranslatedText>
                   </Link>
                 </li>
                 <li>
                   <Link to="/cart" className="text-gray-700 hover:text-orange-500 font-semibold">
-                    Cart
+                    <TranslatedText>Cart</TranslatedText>
                   </Link>
                 </li>
               </ul>

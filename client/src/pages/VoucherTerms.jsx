@@ -1,5 +1,7 @@
 // Card Component Definitions (instead of import)
 import * as React from "react"
+import { useLanguage } from "../context/LanguageContext"
+import TranslatedText from "../components/TranslatedText"
 
 function Card({ className, ...props }) {
   return <div className={`bg-white rounded-lg ${className}`} {...props} />
@@ -35,6 +37,8 @@ import {
 } from "lucide-react"
 
 export default function VoucherTermsConditions() {
+  const { getLocalizedPath } = useLanguage();
+  
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
@@ -42,7 +46,7 @@ export default function VoucherTermsConditions() {
           <CardHeader className="text-center bg-gradient-to-r from-lime-500 to-lime-600 text-white rounded-t-lg">
             <div className="flex items-center justify-center gap-3 mb-2">
               <FileText className="h-8 w-8" />
-              <CardTitle className="text-3xl font-bold">Voucher Terms & Conditions</CardTitle>
+              <CardTitle className="text-3xl font-bold"><TranslatedText>Voucher Terms & Conditions</TranslatedText></CardTitle>
             </div>
           </CardHeader>
 
@@ -51,7 +55,7 @@ export default function VoucherTermsConditions() {
             <section>
               <div className="flex items-center gap-3 mb-6">
                 <Shield className="h-6 w-6 text-lime-500" />
-                <h2 className="text-2xl font-semibold text-gray-800">General Conditions</h2>
+                <h2 className="text-2xl font-semibold text-gray-800"><TranslatedText>General Conditions</TranslatedText></h2>
               </div>
 
               <div className="space-y-4 text-gray-700 leading-relaxed">
@@ -159,7 +163,7 @@ export default function VoucherTermsConditions() {
             <section>
               <div className="flex items-center gap-3 mb-6">
                 <Gift className="h-6 w-6 text-lime-500" />
-                <h2 className="text-2xl font-semibold text-gray-800">How to Apply a Voucher or Discount Code</h2>
+                <h2 className="text-2xl font-semibold text-gray-800"><TranslatedText>How to Apply a Voucher or Discount Code</TranslatedText></h2>
               </div>
 
               <p className="text-gray-700 mb-4">
@@ -253,7 +257,7 @@ export default function VoucherTermsConditions() {
               <div className="flex items-center gap-3 mb-6">
                 <Smartphone className="h-6 w-6 text-lime-500" />
                 <h2 className="text-2xl font-semibold text-gray-800">
-                  In-Store Voucher Codes (for Mobile App Use Only)
+                  <TranslatedText>In-Store Voucher Codes (for Mobile App Use Only)</TranslatedText>
                 </h2>
               </div>
 

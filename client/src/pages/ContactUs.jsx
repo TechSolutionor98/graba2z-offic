@@ -2,8 +2,11 @@
 import React, { useState } from "react";
 import axios from "axios";
 import config from "../config/config";
+import { useLanguage } from "../context/LanguageContext";
+import TranslatedText from "../components/TranslatedText";
 
 const ContactUs = () => {
+  const { getLocalizedPath } = useLanguage();
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -37,15 +40,15 @@ const ContactUs = () => {
               <path d="M21 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2m18 0v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8m18 0l-9 6-9-6" />
             </svg>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Contact Us</h2>
-          <p className="mt-2 text-center text-sm text-green-600">We'd love to hear from you!</p>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900"><TranslatedText>Contact Us</TranslatedText></h2>
+          <p className="mt-2 text-center text-sm text-green-600"><TranslatedText>We'd love to hear from you!</TranslatedText></p>
         </div>
         {success ? (
-          <div className="text-green-600 font-medium text-center">Request submitted successfully!</div>
+          <div className="text-green-600 font-medium text-center"><TranslatedText>Request submitted successfully!</TranslatedText></div>
         ) : (
           <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Your Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700"><TranslatedText>Your Name</TranslatedText></label>
               <div className="mt-1">
                 <input
                   id="name"
@@ -61,7 +64,7 @@ const ContactUs = () => {
               </div>
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Your Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700"><TranslatedText>Your Email</TranslatedText></label>
               <div className="mt-1">
                 <input
                   id="email"
@@ -77,7 +80,7 @@ const ContactUs = () => {
               </div>
             </div>
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700"><TranslatedText>Phone Number</TranslatedText></label>
               <div className="mt-1">
                 <input
                   id="phone"
@@ -98,12 +101,12 @@ const ContactUs = () => {
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-lime-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 disabled={loading}
               >
-                {loading ? "Submitting..." : "Send Request"}
+                {loading ? <TranslatedText>Submitting...</TranslatedText> : <TranslatedText>Send Request</TranslatedText>}
               </button>
             </div>
           </form>
         )}
-        <p className="text-xs text-gray-500 text-center mt-4">We'll get back to you as soon as possible.</p>
+        <p className="text-xs text-gray-500 text-center mt-4"><TranslatedText>We'll get back to you as soon as possible.</TranslatedText></p>
       </div>
     </div>
   );

@@ -5,11 +5,14 @@ import { useToast } from "../context/ToastContext"
 import { Package, Truck, CheckCircle, Clock, AlertCircle, Search } from "lucide-react"
 import axios from "axios"
 import { getFullImageUrl } from "../utils/imageUtils"
+import { useLanguage } from "../context/LanguageContext"
+import TranslatedText from "../components/TranslatedText"
 
 import config from "../config/config"
 
 const TrackOrder = () => {
   const { showToast } = useToast()
+  const { getLocalizedPath } = useLanguage()
   const [formData, setFormData] = useState({
     email: "",
     orderId: "",
@@ -131,8 +134,8 @@ const TrackOrder = () => {
     <div className="min-h-screen bg-gray-50 py-8 overflow-x-hidden">
       <div className="max-w-4xl w-full mx-auto px-4">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Track Your Order</h1>
-          <p className="text-gray-600">Enter your email and order ID to track your order status</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2"><TranslatedText>Track Your Order</TranslatedText></h1>
+          <p className="text-gray-600"><TranslatedText>Enter your email and order ID to track your order status</TranslatedText></p>
         </div>
 
         {/* Track Order Form */}
@@ -140,7 +143,7 @@ const TrackOrder = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2"><TranslatedText>Email Address</TranslatedText></label>
                 <input
                   type="email"
                   name="email"
@@ -152,7 +155,7 @@ const TrackOrder = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Order ID</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2"><TranslatedText>Order ID</TranslatedText></label>
                 <input
                   type="text"
                   name="orderId"
@@ -171,7 +174,7 @@ const TrackOrder = () => {
                 className="bg-lime-500 text-white px-8 py-3 rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center space-x-2"
               >
                 <Search size={20} />
-                <span>{loading ? "Tracking..." : "Track Order"}</span>
+                <span>{loading ? <TranslatedText>Tracking...</TranslatedText> : <TranslatedText>Track Order</TranslatedText>}</span>
               </button>
             </div>
           </form>

@@ -130,6 +130,7 @@ import { Link } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import { ShoppingBag, Heart, Star } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
+import { useLanguage } from "../context/LanguageContext"
 
 // Helper function to determine status color
 const getStatusColor = (status) => {
@@ -144,6 +145,7 @@ const getStatusColor = (status) => {
 const CampaignProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
+  const { getLocalizedPath } = useLanguage()
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
   const basePrice = Number(product.price) || 0
@@ -171,7 +173,7 @@ const CampaignProductCard = ({ product }) => {
   return (
     <div className="border p-2 h-auto md:h-[400px] flex flex-col justify-between bg-white w-full md:w-[210px]">
       <div className="relative mb-2 flex md:h-[180px] justify-center items-center">
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
+  <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
             src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
@@ -198,7 +200,7 @@ const CampaignProductCard = ({ product }) => {
           <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs  inline-block">{discount}</div>
         )}
       </div>
-  <Link to={`/product/${encodeURIComponent(product.slug || product._id)}`}>
+  <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
         <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
       </Link>
       {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}

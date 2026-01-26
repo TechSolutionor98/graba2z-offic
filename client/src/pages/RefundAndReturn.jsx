@@ -3,9 +3,12 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, RotateCcw, Clock, CheckCircle, XCircle, CreditCard, AlertTriangle, Phone, Mail, MapPin, FileText, Home, Truck, Settings, Info } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
+import TranslatedText from "../components/TranslatedText";
 
 export default function RefundAndReturn() {
   const navigate = useNavigate();
+  const { getLocalizedPath } = useLanguage();
 
   // Future functionality for Arabic version
   // const handleArabicClick = () => {
@@ -23,7 +26,7 @@ export default function RefundAndReturn() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Return & Refund & Exchange Policy
+            <TranslatedText>Return & Refund & Exchange Policy</TranslatedText>
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             At Grabatoz, powered by Crown Excel General Trading LLC we value your satisfaction and strive to provide a smooth and reliable shopping experience. for any reason if you are not fully satisfied with our products, you can return or exchange your product.
@@ -50,7 +53,7 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <Shield className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Return Eligibility</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Return Eligibility</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -87,7 +90,7 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <CheckCircle className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Return Methods</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Return Methods</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -105,7 +108,7 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <MapPin className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">In-Store Return, Refund & Exchange</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>In-Store Return, Refund & Exchange</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -130,12 +133,12 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <Settings className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">How It Works:</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>How It Works:</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
             <p>
-              You may visit any of our Crown Excel experience center or branch and locations to request a return, refund, or product exchange. Please make sure sure the item is in the original packaging, unused, and sealed exactly as time of received.
+              <TranslatedText>You may visit any of our Crown Excel experience center or branch and locations to request a return, refund, or product exchange. Please make sure sure the item is in the original packaging, unused, and sealed exactly as time of received.</TranslatedText>
             </p>
           </div>
         </section>
@@ -146,7 +149,7 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <AlertTriangle className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Important note:</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Important note:</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -164,7 +167,7 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <Home className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Pick-Up from Home – Return Service</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Pick-Up from Home – Return Service</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -180,7 +183,7 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <Truck className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">How It Works:</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>How It Works:</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -198,7 +201,7 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <Info className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Important:</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Important:</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -218,7 +221,7 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <CreditCard className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Refund Process</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Refund Process</TranslatedText></h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
@@ -243,7 +246,7 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <FileText className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Important Policy Notes</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Important Policy Notes</TranslatedText></h2>
 
           </div>
           <p className="text-red-400"><strong>Grabatoz reserves the right to:</strong> </p>
@@ -260,7 +263,7 @@ export default function RefundAndReturn() {
             <div className="flex justify-center md:justify-start">
               <AlertTriangle className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Defective (Damaged) & Non-Defective Items</h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Defective (Damaged) & Non-Defective Items</TranslatedText></h2>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center gap-6 text-gray-700">
@@ -304,8 +307,8 @@ export default function RefundAndReturn() {
       <section className="bg-gray-50 text-black p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-semibold mb-2">Contact Information</h2>
-            <p className="text-black">For questions or concerns regarding Return and Refunds terms please contact:</p>
+            <h2 className="text-2xl font-semibold mb-2"><TranslatedText>Contact Information</TranslatedText></h2>
+            <p className="text-black"><TranslatedText>For questions or concerns regarding Return and Refunds terms please contact:</TranslatedText></p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -313,7 +316,7 @@ export default function RefundAndReturn() {
               <div className="flex justify-center mb-2">
                 <Phone className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Phone</h3>
+              <h3 className="font-medium mb-1"><TranslatedText>Phone</TranslatedText></h3>
               <a href="tel:+97143540566" className="text-black">
                 +971 4 354 0566
               </a>
@@ -323,7 +326,7 @@ export default function RefundAndReturn() {
               <div className="flex justify-center mb-2">
                 <Mail className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Email</h3>
+              <h3 className="font-medium mb-1"><TranslatedText>Email</TranslatedText></h3>
               <a href="mailto:support@grabatoz.com" className="text-black">
                 customercare@grabatoz.ae
               </a>
@@ -333,23 +336,23 @@ export default function RefundAndReturn() {
               <div className="flex justify-center mb-2">
                 <Clock className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Hours</h3>
-              <p className="text-black">Daily 9:00 AM - 7:00 PM</p>
+              <h3 className="font-medium mb-1"><TranslatedText>Hours</TranslatedText></h3>
+              <p className="text-black"><TranslatedText>Daily 9:00 AM - 7:00 PM</TranslatedText></p>
             </div>
 
             <div className="text-center">
               <div className="flex justify-center mb-2">
                 <MapPin className="w-5 h-5 text-lime-500" />
               </div>
-              <h3 className="font-medium mb-1">Address</h3>
-              <p className="text-black">P.O. Box 241975, Dubai, UAE</p>
+              <h3 className="font-medium mb-1"><TranslatedText>Address</TranslatedText></h3>
+              <p className="text-black"><TranslatedText>P.O. Box 241975, Dubai, UAE</TranslatedText></p>
             </div>
           </div>
 
           <div className="text-center pt-4 border-t border-gray-700">
             <p className="text-black">
               <strong>Grabatoz.ae</strong><br />
-              <b>Powered by Crown Excel General Trading LLC</b>
+              <b><TranslatedText>Powered by Crown Excel General Trading LLC</TranslatedText></b>
             </p>
           </div>
         </div>
