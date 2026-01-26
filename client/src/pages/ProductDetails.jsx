@@ -430,7 +430,7 @@ const ProductDetails = () => {
       // Add GTM tracking here - after product is successfully loaded
       if (data && data._id) {
         try {
-          trackProductV iew(data)
+          trackProductView(data)
         } catch (trackingError) {
           console.error("GTM tracking error:", trackingError)
         }
