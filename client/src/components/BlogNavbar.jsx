@@ -3,6 +3,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Search, Menu, X, ShoppingBag, LayoutGrid, ChevronRight } from "lucide-react"
+import config from "../config/config"
+
+const API_BASE_URL = `${config.API_URL}`
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState("")
@@ -31,7 +34,7 @@ const Header = () => {
   const fetchCategories = async () => {
     try {
       // Fetch all published blogs to determine which categories are used
-      const blogsResponse = await fetch("/api/blogs?status=published")
+      const blogsResponse = await fetch(`${API_BASE_URL}/api/blogs?status=published`)
       const blogsData = await blogsResponse.json()
       const blogs = blogsData.blogs || blogsData || []
       
@@ -52,8 +55,8 @@ const Header = () => {
       
       // Fetch all categories/subcategories
       const [categoriesRes, subCategoriesRes] = await Promise.all([
-        fetch("/api/categories"),
-        fetch("/api/subcategories")
+        fetch(`${API_BASE_URL}/api/categories`),
+        fetch(`${API_BASE_URL}/api/subcategories`)
       ])
       
       const allCategories = await categoriesRes.json()

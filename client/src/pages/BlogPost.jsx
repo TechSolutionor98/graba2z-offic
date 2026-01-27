@@ -215,7 +215,7 @@ const BlogPost = () => {
                   <button
                     onClick={async () => {
                       try {
-                        const response = await fetch(`/api/blogs?status=published&limit=1000`);
+                        const response = await fetch(`${API_BASE_URL}/api/blogs?status=published&limit=1000`);
                         const data = await response.json();
                         const allBlogs = data.blogs || data || [];
                         
