@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import React, { useState, useEffect, useRef } from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import axios from "axios"
 import { Calendar, User, Eye, Tag, Search, Filter, TrendingUp, Clock, Heart, MessageSquare, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
@@ -26,6 +26,7 @@ if (typeof document !== 'undefined' && !document.getElementById('bounce-keyframe
 }
 
 const BlogList = () => {
+  const [searchParams] = useSearchParams()
   const [blogs, setBlogs] = useState([])
   const [featuredBlogs, setFeaturedBlogs] = useState([])
   const [trendingBlogs, setTrendingBlogs] = useState([])
@@ -60,6 +61,16 @@ const BlogList = () => {
   useEffect(() => {
     fetchAllData()
   }, [])
+
+  // Sync URL params with state
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get('category')
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl)
+    } else {
+      setSelectedCategory("")
+    }
+  }, [searchParams])
 
   const fetchAllData = async () => {
     try {

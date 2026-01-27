@@ -212,12 +212,34 @@ const BlogPost = () => {
               {/* Category Badge */}
               {deepestCategory && (
                 <div className="mb-4">
-                  <span
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`/api/blogs?status=published&limit=1000`);
+                        const data = await response.json();
+                        const allBlogs = data.blogs || data || [];
+                        
+                        // Filter blogs with the same deepest category
+                        const categoryBlogs = allBlogs.filter(b => {
+                          const blogCatId = b.subCategory4?._id || b.subCategory3?._id || 
+                                          b.subCategory2?._id || b.subCategory1?._id || 
+                                          b.mainCategory?._id;
+                          return blogCatId === deepestCategory._id && b.slug !== blog.slug;
+                        });
+                        
+                        if (categoryBlogs.length > 0) {
+                          const randomBlog = categoryBlogs[Math.floor(Math.random() * categoryBlogs.length)];
+                          window.location.href = `/blogs/${randomBlog.slug}`;
+                        }
+                      } catch (error) {
+                        console.error('Error fetching random blog:', error);
+                      }
+                    }}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
                     style={{ backgroundColor: deepestCategory.color || blog.mainCategory?.color || "#16a34a" }}
                   >
                     {deepestCategory.name}
-                  </span>
+                  </button>
                 </div>
               )}
 

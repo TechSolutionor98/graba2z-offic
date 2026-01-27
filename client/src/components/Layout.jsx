@@ -26,7 +26,9 @@ function WhatsAppButton() {
 
 function Layout() {
   const location = useLocation()
-  const isBlogPage = location.pathname.startsWith('/blogs')
+  // Check if current path is a blog page (with or without language prefix)
+  // Matches: /blogs, /blogs/slug, /ae-en/blogs, /ae-en/blogs/slug, /ar/blogs, etc.
+  const isBlogPage = location.pathname.match(/^\/([a-z]{2}(-[a-z]{2})?\/)?blogs(\/|$)/i)
 
   return (
     <div className="flex flex-col min-h-screen">

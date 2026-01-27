@@ -20,10 +20,10 @@ const Footer = () => {
         setLoading(true);
 
         // Fetch all data concurrently
-        const [editorsResponse, randomResponse, categoriesResponse] = await Promise.all([
+        const [editorsResponse, randomResponse, allBlogsResponse] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/blogs/trending?limit=3`),
           axios.get(`${API_BASE_URL}/api/blogs?limit=3&sort=-publishedAt&status=published`),
-          axios.get(`${API_BASE_URL}/api/blog-categories`)
+          axios.get(`${API_BASE_URL}/api/blogs?status=published`)
         ]);
 
         // Set trending blogs for Editor's Pick
@@ -34,9 +34,34 @@ const Footer = () => {
         const latestBlogs = randomResponse.data.blogs || randomResponse.data || [];
         setRandomPosts(latestBlogs);
 
-        // Set blog categories
-        const cats = categoriesResponse.data.blogCategories || categoriesResponse.data || [];
-        setPopularCategories(Array.isArray(cats) ? cats : []);
+        // Get all published blogs and count categories
+        const allBlogs = allBlogsResponse.data.blogs || allBlogsResponse.data || [];
+        
+        // Count blogs per category and store random blog slugs (using deepest category)
+        const categoryCounts = {};
+        allBlogs.forEach(blog => {
+          const categoryId = blog.subCategory4?._id || blog.subCategory3?._id || 
+                            blog.subCategory2?._id || blog.subCategory1?._id || 
+                            blog.mainCategory?._id;
+          const categoryName = blog.subCategory4?.name || blog.subCategory3?.name || 
+                              blog.subCategory2?.name || blog.subCategory1?.name || 
+                              blog.mainCategory?.name;
+          
+          if (categoryId && categoryName && blog.slug) {
+            if (!categoryCounts[categoryId]) {
+              categoryCounts[categoryId] = { _id: categoryId, name: categoryName, blogCount: 0, slugs: [] };
+            }
+            categoryCounts[categoryId].blogCount++;
+            categoryCounts[categoryId].slugs.push(blog.slug);
+          }
+        });
+        
+        // Convert to array, add random slug for each, and sort by blog count
+        const usedCategories = Object.values(categoryCounts).map(cat => {
+          const randomSlug = cat.slugs[Math.floor(Math.random() * cat.slugs.length)];
+          return { ...cat, randomBlogSlug: randomSlug };
+        }).sort((a, b) => b.blogCount - a.blogCount);
+        setPopularCategories(usedCategories);
       } catch (error) {
         console.error('Error fetching footer data:', error);
       } finally {
@@ -155,7 +180,7 @@ const Footer = () => {
               {popularCategories.slice(0, 5).map((category) => (
                 <Link 
                   key={category._id} 
-                  to={`/blogs?category=${category._id}`}
+                  to={`/blogs/${category.randomBlogSlug}`}
                   className="flex items-center justify-between group p-2 rounded transition-colors"
                 >
                   <div className="flex items-center gap-2">

@@ -30,9 +30,46 @@ const Header = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("/api/categories")
-      const data = await response.json()
-      setCategories(data)
+      // Fetch all published blogs to determine which categories are used
+      const blogsResponse = await fetch("/api/blogs?status=published")
+      const blogsData = await blogsResponse.json()
+      const blogs = blogsData.blogs || blogsData || []
+      
+      // Group blogs by category ID and get a random blog slug for each
+      const categoryBlogs = {}
+      blogs.forEach(blog => {
+        // Get the deepest category (priority: subCategory4 > 3 > 2 > 1 > mainCategory)
+        const categoryId = blog.subCategory4?._id || blog.subCategory3?._id || 
+                          blog.subCategory2?._id || blog.subCategory1?._id || 
+                          blog.mainCategory?._id
+        if (categoryId && blog.slug) {
+          if (!categoryBlogs[categoryId]) {
+            categoryBlogs[categoryId] = []
+          }
+          categoryBlogs[categoryId].push(blog.slug)
+        }
+      })
+      
+      // Fetch all categories/subcategories
+      const [categoriesRes, subCategoriesRes] = await Promise.all([
+        fetch("/api/categories"),
+        fetch("/api/subcategories")
+      ])
+      
+      const allCategories = await categoriesRes.json()
+      const allSubCategories = await subCategoriesRes.json()
+      
+      // Combine categories and subcategories, filter to only used ones, add random blog slug
+      const combined = [...allCategories, ...allSubCategories]
+      const usedCategories = combined
+        .filter(cat => categoryBlogs[cat._id])
+        .map(cat => {
+          const slugs = categoryBlogs[cat._id]
+          const randomSlug = slugs[Math.floor(Math.random() * slugs.length)]
+          return { ...cat, randomBlogSlug: randomSlug }
+        })
+      
+      setCategories(usedCategories)
     } catch (error) {
       console.error("Error fetching categories:", error)
     }
@@ -287,7 +324,7 @@ const Header = () => {
                         {categories.slice(visibleCount ?? 0).map((category) => (
                           <Link
                             key={category._id}
-                            to={`/category/${category._id}`}
+                            to={`/blogs/${category.randomBlogSlug}`}
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                             onClick={() => setIsMoreOpen(false)}
                           >
@@ -300,17 +337,17 @@ const Header = () => {
                 )}
 
                 {/* All in one always visible */}
-                <li ref={allInOneRef}>
+                {/* <li ref={allInOneRef}>
                   <Link to="/" className="text-white hover:text-lime-100 font-medium">
                     All in one
                   </Link>
-                </li>
+                </li> */}
 
                 {/* Visible categories */}
                 {categories.slice(0, visibleCount ?? categories.length).map((category, idx) => (
                   <li key={category._id} ref={(el) => (itemRefs.current[idx] = el)}>
                     <Link
-                      to={`/category/${category._id}`}
+                      to={`/blogs/${category.randomBlogSlug}`}
                       className="text-white hover:text-lime-100 font-medium"
                     >
                       {category.name}
@@ -376,7 +413,7 @@ const Header = () => {
                   {categories.map((category) => (
                     <Link
                       key={category._id}
-                      to={`/category/${category._id}`}
+                      to={`/blogs/${category.randomBlogSlug}`}
                       onClick={() => setIsMenuOpen(false)}
                       className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 text-gray-800 text-medium font-medium"
                     >
