@@ -41,8 +41,8 @@ const Header = () => {
       // Group blogs by category ID and get a random blog slug for each
       const categoryBlogs = {}
       blogs.forEach(blog => {
-        // Get the deepest category (priority: subCategory4 > 3 > 2 > 1 > mainCategory)
-        const categoryId = blog.subCategory4?._id || blog.subCategory3?._id || 
+        // Get the deepest category (priority: blogCategory > subCategory4 > 3 > 2 > 1 > mainCategory)
+        const categoryId = blog.blogCategory?._id || blog.subCategory4?._id || blog.subCategory3?._id || 
                           blog.subCategory2?._id || blog.subCategory1?._id || 
                           blog.mainCategory?._id
         if (categoryId && blog.slug) {
@@ -53,17 +53,12 @@ const Header = () => {
         }
       })
       
-      // Fetch all categories/subcategories
-      const [categoriesRes, subCategoriesRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/categories`),
-        fetch(`${API_BASE_URL}/api/subcategories`)
-      ])
-      
+      // Fetch blog-specific categories
+      const categoriesRes = await fetch(`${API_BASE_URL}/api/blog-categories`)
       const allCategories = await categoriesRes.json()
-      const allSubCategories = await subCategoriesRes.json()
       
-      // Combine categories and subcategories, filter to only used ones, add random blog slug
-      const combined = [...allCategories, ...allSubCategories]
+      // Use only blog categories
+      const combined = allCategories
       const usedCategories = combined
         .filter(cat => categoryBlogs[cat._id])
         .map(cat => {

@@ -51,6 +51,7 @@ const BlogList = () => {
   // Helper function to get the deepest selected category level
   const getDeepestCategory = (blog) => {
     // Check from level 4 down to level 1, then mainCategory
+    if (blog.blogCategory) return blog.blogCategory
     if (blog.subCategory4) return blog.subCategory4
     if (blog.subCategory3) return blog.subCategory3
     if (blog.subCategory2) return blog.subCategory2
@@ -223,7 +224,7 @@ const BlogList = () => {
       blog.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       blog.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       false
-    const matchesCategory = !selectedCategory || blog.mainCategory?._id === selectedCategory
+    const matchesCategory = !selectedCategory || blog.blogCategory?._id === selectedCategory || blog.mainCategory?._id === selectedCategory
     const matchesTopic = !selectedTopic || blog.topic?._id === selectedTopic
 
     return matchesSearch && matchesCategory && matchesTopic
@@ -315,7 +316,7 @@ const BlogList = () => {
                               return deepestCategory && (
                                 <div
                                   className="inline-block px-2 py-1 rounded text-xs font-medium text-white mb-2 w-fit flex-shrink-0"
-                                  style={{ backgroundColor: deepestCategory.color || blog.mainCategory?.color || "#2563eb" }}
+                                  style={{ backgroundColor: deepestCategory.color || blog.blogCategory?.color || blog.mainCategory?.color || "#2563eb" }}
                                 >
                                   {deepestCategory.name}
                                 </div>

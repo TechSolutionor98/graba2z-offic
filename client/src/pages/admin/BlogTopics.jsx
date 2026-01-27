@@ -81,7 +81,7 @@ const BlogTopics = () => {
               <p className="text-gray-600 mt-2">Manage topics for better content organization</p>
             </div>
             <Link
-              to="/admin/add-blog-topic"
+              to="/admin/blog-topics/add"
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus size={20} />
@@ -115,7 +115,7 @@ const BlogTopics = () => {
                   {searchTerm ? "Try adjusting your search terms" : "Get started by creating your first blog topic"}
                 </p>
                 <Link
-                  to="/admin/add-blog-topic"
+                  to="/admin/blog-topics/add"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Plus size={16} />

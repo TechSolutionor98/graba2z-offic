@@ -122,9 +122,7 @@ const AdminSidebar = () => {
       path.includes("/admin/blogs") ||
       path.includes("/admin/add-blog") ||
       path.includes("/admin/blog-topics") ||
-      path.includes("/admin/add-blog-topic") ||
       path.includes("/admin/blog-categories") ||
-      path.includes("/admin/add-blog-category") ||
       path.includes("/admin/blog-brands") ||
       path.includes("/admin/blog-comments") ||
       path.includes("/admin/blog-rating")
@@ -437,6 +435,9 @@ const AdminSidebar = () => {
         { title: "Dashboard", path: "/admin/blog-dashboard" },
         { title: "Blogs", path: "/admin/blogs" },
         { title: "Comments", path: "/admin/blog-comments" },
+        { title: "Categories", path: "/admin/blog-categories" },
+        { title: "Topics", path: "/admin/blog-topics" },
+        { title: "Brands", path: "/admin/blog-brands" },
       ],
     },
     {

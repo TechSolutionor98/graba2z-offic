@@ -159,7 +159,7 @@ const BlogDashboard = () => {
                               {blog.title}
                             </Link>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{blog.mainCategory?.name || 'N/A'}</td>
+                          <td className="px-6 py-4 text-sm text-gray-500">{blog.blogCategory?.name || blog.mainCategory?.name || 'N/A'}</td>
                           <td className="px-6 py-4 text-sm text-gray-500">{new Date(blog.createdAt).toLocaleDateString()}</td>
                           <td className="px-6 py-4">
                             <span
@@ -208,7 +208,7 @@ const BlogDashboard = () => {
                               {blog.title}
                             </Link>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{blog.mainCategory?.name || 'N/A'}</td>
+                          <td className="px-6 py-4 text-sm text-gray-500">{blog.blogCategory?.name || blog.mainCategory?.name || 'N/A'}</td>
                           <td className="px-6 py-4 text-sm text-gray-500">
                             <span className="flex items-center gap-1">
                               <Eye className="w-4 h-4" />

@@ -181,7 +181,9 @@ const AdminBlogs = () => {
 
   // Helper function to get the deepest selected category level
   const getDeepestCategory = (blog) => {
-    // Check from level 4 down to level 1, then mainCategory
+    // Check blog-specific category first
+    if (blog.blogCategory) return blog.blogCategory
+    // Fall back to old multi-level category system
     if (blog.subCategory4) return blog.subCategory4
     if (blog.subCategory3) return blog.subCategory3
     if (blog.subCategory2) return blog.subCategory2
@@ -288,9 +290,11 @@ const AdminBlogs = () => {
 
         // Updated category matching to handle both populated and non-populated data
         const blogCategoryId =
-          blog.mainCategory && typeof blog.mainCategory === "object"
+          blog.blogCategory && typeof blog.blogCategory === "object"
+            ? blog.blogCategory._id
+            : blog.blogCategory || (blog.mainCategory && typeof blog.mainCategory === "object"
             ? blog.mainCategory._id
-            : blog.mainCategory
+            : blog.mainCategory)
         const matchesCategory = categoryFilter === "all" || blogCategoryId === categoryFilter
 
         return matchesSearch && matchesStatus && matchesCategory
@@ -517,7 +521,12 @@ const AdminBlogs = () => {
                             <div className="text-sm text-gray-900">
                               {(() => {
                                 const deepestCategory = getDeepestCategory(blog)
-                                if (!deepestCategory) return getCategoryName(blog.mainCategory)
+                                if (!deepestCategory) return "Not Set"
+                                
+                                // If it's blogCategory, show it directly
+                                if (deepestCategory === blog.blogCategory) {
+                                  return getCategoryName(blog.blogCategory)
+                                }
                                 
                                 // If it's mainCategory (no subcategories selected)
                                 if (deepestCategory === blog.mainCategory) {

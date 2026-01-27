@@ -40,10 +40,10 @@ const Footer = () => {
         // Count blogs per category and store random blog slugs (using deepest category)
         const categoryCounts = {};
         allBlogs.forEach(blog => {
-          const categoryId = blog.subCategory4?._id || blog.subCategory3?._id || 
+          const categoryId = blog.blogCategory?._id || blog.subCategory4?._id || blog.subCategory3?._id || 
                             blog.subCategory2?._id || blog.subCategory1?._id || 
                             blog.mainCategory?._id;
-          const categoryName = blog.subCategory4?.name || blog.subCategory3?.name || 
+          const categoryName = blog.blogCategory?.name || blog.subCategory4?.name || blog.subCategory3?.name || 
                               blog.subCategory2?.name || blog.subCategory1?.name || 
                               blog.mainCategory?.name;
           

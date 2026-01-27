@@ -26,6 +26,7 @@ const BlogPost = () => {
   // Helper function to get the deepest selected category level
   const getDeepestCategory = (blog) => {
     if (!blog) return null
+    if (blog.blogCategory) return blog.blogCategory
     if (blog.subCategory4) return blog.subCategory4
     if (blog.subCategory3) return blog.subCategory3
     if (blog.subCategory2) return blog.subCategory2
@@ -236,7 +237,7 @@ const BlogPost = () => {
                       }
                     }}
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
-                    style={{ backgroundColor: deepestCategory.color || blog.mainCategory?.color || "#16a34a" }}
+                    style={{ backgroundColor: deepestCategory.color || blog.blogCategory?.color || blog.mainCategory?.color || "#16a34a" }}
                   >
                     {deepestCategory.name}
                   </button>

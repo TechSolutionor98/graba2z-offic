@@ -122,9 +122,14 @@ import AddDeliveryCharge from "./pages/admin/AddDeliveryCharge"
 import AddBlog from "./pages/admin/AddBlog"
 import EditBlog from "./pages/admin/EditBlog"
 import AddBlogCategory from "./pages/admin/AddBlogCategory"
+import EditBlogCategory from "./pages/admin/EditBlogCategory"
 import AddBlogTopic from "./pages/admin/AddBlogTopic"
+import EditBlogTopic from "./pages/admin/EditBlogTopic"
 import BlogCategories from "./pages/admin/BlogCategories"
 import BlogTopics from "./pages/admin/BlogTopics"
+import BlogBrands from "./pages/admin/BlogBrands"
+import AddBlogBrand from "./pages/admin/AddBlogBrand"
+import EditBlogBrand from "./pages/admin/EditBlogBrand"
 import BlogRating from "./pages/admin/BlogRating"
 import BlogDashboard from "./pages/admin/BlogDashboard"
 import ManageBlogBrands from "./pages/admin/ManageBlogBrands"
@@ -304,9 +309,13 @@ function App() {
                               <Route path="blogs/edit/:id" element={<EditBlog />} />
                               <Route path="blog-categories" element={<BlogCategories />} />
                               <Route path="blog-categories/add" element={<AddBlogCategory />} />
+                              <Route path="blog-categories/edit/:id" element={<EditBlogCategory />} />
                               <Route path="blog-topics" element={<BlogTopics />} />
                               <Route path="blog-topics/add" element={<AddBlogTopic />} />
-                              <Route path="blog-brands" element={<ManageBlogBrands />} />
+                              <Route path="blog-topics/edit/:id" element={<EditBlogTopic />} />
+                              <Route path="blog-brands" element={<BlogBrands />} />
+                              <Route path="blog-brands/add" element={<AddBlogBrand />} />
+                              <Route path="blog-brands/edit/:id" element={<EditBlogBrand />} />
                               <Route path="blog-comments" element={<ManageBlogComments />} />
                               <Route path="blog-rating" element={<BlogRating />} />
                               
