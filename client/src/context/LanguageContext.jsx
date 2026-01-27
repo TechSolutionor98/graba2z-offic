@@ -46,7 +46,12 @@ export const LanguageProvider = ({ children }) => {
   // Detect language from URL on initial load and route changes
   useEffect(() => {
     const path = location.pathname
-    
+
+    // Skip language prefix logic for admin routes
+    if (path.startsWith("/admin") || path.startsWith("/grabiansadmin")) {
+      return
+    }
+
     if (path.startsWith("/ae-ar/") || path === "/ae-ar") {
       setCurrentLanguage(LANGUAGES.AR)
       localStorage.setItem("preferred-language", "ar")
@@ -80,7 +85,7 @@ export const LanguageProvider = ({ children }) => {
     document.documentElement.setAttribute("dir", currentLanguage.dir)
     document.documentElement.setAttribute("lang", currentLanguage.code)
     document.body.setAttribute("dir", currentLanguage.dir)
-    
+
     // Also apply direction to main content containers
     const mainContent = document.getElementById("root")
     if (mainContent) {
@@ -106,11 +111,11 @@ export const LanguageProvider = ({ children }) => {
   const getLocalizedPath = useCallback((path, lang = currentLanguage) => {
     const cleanPath = getPathWithoutLangPrefix(path)
     const prefix = `/${lang.urlPrefix}`
-    
+
     if (cleanPath === "/" || cleanPath === "") {
       return prefix
     }
-    
+
     // Ensure cleanPath starts with / but avoid double slashes
     const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`
     return `${prefix}${normalizedPath}`
@@ -120,17 +125,17 @@ export const LanguageProvider = ({ children }) => {
   const switchLanguage = useCallback((langCode) => {
     const newLang = langCode === "ar" ? LANGUAGES.AR : LANGUAGES.EN
     setCurrentLanguage(newLang)
-    
+
     // Get the current path and switch to the new language
     const currentPath = location.pathname
     const cleanPath = getPathWithoutLangPrefix(currentPath)
     const newPath = getLocalizedPath(cleanPath, newLang)
-    
+
     console.log(`[Language Switch] ${currentPath} -> ${newPath} (lang: ${langCode})`)
-    
+
     // Navigate to the new language path
     navigate(newPath, { replace: true })
-    
+
     // Force page reload to ensure all components re-render with new language
     // This ensures translations are fetched fresh
     window.location.href = newPath
@@ -139,30 +144,30 @@ export const LanguageProvider = ({ children }) => {
   // Translate text function using Helsinki-NLP model
   const translate = useCallback(async (text, targetLang = currentLanguage.code) => {
     if (!text) return text
-    
+
     // Check cache first
     const cacheKey = `${targetLang}:${text}`
     if (translationCache[cacheKey]) {
       return translationCache[cacheKey]
     }
-    
+
     setIsLoading(true)
-    
+
     try {
       let translatedText
-      
+
       if (targetLang === "ar") {
         translatedText = await translateToArabic(text)
       } else {
         translatedText = await translateToEnglish(text)
       }
-      
+
       // Cache the result
       setTranslationCache(prev => ({
         ...prev,
         [cacheKey]: translatedText
       }))
-      
+
       return translatedText
     } catch (error) {
       console.error("Translation error:", error)
