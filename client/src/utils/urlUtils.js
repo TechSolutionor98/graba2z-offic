@@ -93,7 +93,13 @@ export const parseShopURL = (pathname, search) => {
   }
 
   // Parse pathname for category structure
-  const pathParts = pathname.split("/").filter((part) => part)
+  let pathParts = pathname.split("/").filter((part) => part)
+
+  // Skip language prefix if present (e.g., 'ae-en', 'ar', etc.)
+  // Language codes typically follow pattern: 2-letter code or country-language (ae-en, ae-ar)
+  if (pathParts.length > 0 && /^[a-z]{2}(-[a-z]{2})?$/i.test(pathParts[0])) {
+    pathParts = pathParts.slice(1) // Remove the first element (language code)
+  }
 
   if (pathParts.length > 0) {
     // Handle product-category path

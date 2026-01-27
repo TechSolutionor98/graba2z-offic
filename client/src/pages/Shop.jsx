@@ -786,7 +786,8 @@ const Shop = () => {
 
   const fetchCategories = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/api/categories`)
+      // Use the same tree endpoint as Navbar to ensure consistency
+      const { data } = await axios.get(`${API_BASE_URL}/api/categories/tree`)
 
       const validCategories = data.filter((cat) => {
         const isValid =
@@ -797,8 +798,7 @@ const Shop = () => {
           cat.name.trim() !== "" &&
           cat.isActive !== false &&
           !cat.isDeleted &&
-          !cat.name.match(/^[0-9a-fA-F]{24}$/) &&
-          !cat.parentCategory
+          !cat.name.match(/^[0-9a-fA-F]{24}$/)
 
         return isValid
       })

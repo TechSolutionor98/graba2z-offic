@@ -29,7 +29,7 @@ export default function RefundAndReturn() {
             <TranslatedText>Return & Refund & Exchange Policy</TranslatedText>
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            At Grabatoz, powered by Crown Excel General Trading LLC we value your satisfaction and strive to provide a smooth and reliable shopping experience. for any reason if you are not fully satisfied with our products, you can return or exchange your product.
+            At Grabatoz, powered by Crown Excel General Trading LLC, we value your satisfaction and strive to provide a smooth and reliable shopping experience.
           </p>
 
           {/* Language Switch Button - Commented out until Arabic version is created */}
@@ -47,58 +47,56 @@ export default function RefundAndReturn() {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 py-12">
 
-        {/* Return Period */}
+        {/* Return Eligibility */}
         <section className="bg-white rounded-lg mt-5 p-1">
           <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
             <div className="flex justify-center md:justify-start">
               <Shield className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Return Eligibility</TranslatedText></h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Return Eligibility</h2>
           </div>
-
           <div className="space-y-4 text-gray-700">
-            <p>
-              Grabatoz offers ,<strong> 15 days return windows to the date of receipt </strong> of your order to <strong> initiate a return request.</strong>
-            </p>
-
-            <div className="space-y-4 text-gray-700">
-              <p>Oooh plaining for a return, we are sorry to hear but anyways please ensure that:</p>
-              <ol className="list-decimal list-inside space-y-2 ml-4">
-                <li>The product is in original condition, including:</li>
-                <li>The item should be in its original condition, with all tags and labels attached.</li>
-                <li>It must be unused, undamaged, and free from any stains or odors</li>
-                <li>For all electronics and tech items, all accessories and manuals should be included.</li>
-                <li>Any protective seals or labels intact</li>
-                <li>The product has not been damaged due to misuse, mishandling, or unauthorized modification</li>
-                <li>Products that are customized, with cut cables/wires, or missing original components are not eligible for return or exchange.</li>
-              </ol>
-            </div>
-            {/* Image Section */}
-            {/* <div className="rounded-lg overflow-hidden shadow mt-6">
-              <img
-                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                alt="15 Day Return Period"
-                className="w-full h-48 object-cover"
-              />
-            </div> */}
+            <p>Grabatoz offers a <strong>7-day return window</strong> from the date of receipt of your order to initiate a return request.</p>
+            <p>If you are requesting a return, please ensure the following:</p>
+            <ul className="list-disc list-inside space-y-2 ml-4">
+              <li>The product is in its original condition, including all tags and labels.</li>
+              <li>It is unused, undamaged, and free from stains or Odors.</li>
+              <li>For electronics and tech items, all accessories, manuals, and packaging should be included.</li>
+              <li>All protective seals and labels remain intact.</li>
+              <li>The product has not been damaged due to misuse, mishandling, or unauthorized modification.</li>
+              <li>Customized products, items that are used and without any defects, items with cut cables/wires, or products missing original components are not eligible for return or exchange.</li>
+            </ul>
           </div>
         </section>
 
-        {/* Eligibility */}
+        {/* Return & Exchange Options */}
         <section className="bg-white rounded-lg mt-5 p-1">
           <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6">
             <div className="flex justify-center md:justify-start">
               <CheckCircle className="w-8 h-8 text-lime-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left"><TranslatedText>Return Methods</TranslatedText></h2>
+            <h2 className="text-xl font-semibold text-gray-900 text-center md:text-left">Return & Exchange Options</h2>
           </div>
 
           <div className="space-y-4 text-gray-700">
-            <p>Grabatoz have two options for return and exchange product:</p>
-            <ol className="list-inside space-y-2 ml-4">
-              <li><b>1. In Store </b></li>
-              <li><b>2.	Pick-Up from Home</b></li>
-            </ol>
+            <p>Grabatoz offers two convenient options for returning or exchanging products:</p>
+            
+            <div className="space-y-3">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">1. In-Store</h3>
+                <p>Customers may visit any Crown Excel Experience Centre or branch, as listed on our website, to request a return, refund, or exchange. In-store returns, refunds, and exchanges are available at all our physical locations across the UAE.</p>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">2. Home Pick-Up</h3>
+                <p>At Grabatoz, we strive to provide a hassle-free return experience. For added convenience, we offer a Home Pick-Up service. Our dedicated Grabian delivery team or an authorized delivery partner will contact you to schedule a suitable pickup time. The returned item will be collected from your location and transported to our store for inspection and processing.</p>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <p className="font-semibold text-gray-900 mb-1">Please Note:</p>
+              <p>Home Pick-Up service charges will be borne by the customer and may vary based on the product and the pickup location (pin code).</p>
+            </div>
           </div>
         </section>
 
