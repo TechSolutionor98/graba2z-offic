@@ -62,7 +62,8 @@ const Footer = ({ className = "" }) => {
 
   const fetchCategories = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/api/categories`)
+      // Use tree endpoint for consistency with Navbar and Shop
+      const { data } = await axios.get(`${API_BASE_URL}/api/categories/tree`)
       const validCategories = data.filter((cat) => {
         const isValid =
           cat &&
@@ -72,8 +73,7 @@ const Footer = ({ className = "" }) => {
           cat.name.trim() !== "" &&
           cat.isActive !== false &&
           !cat.isDeleted &&
-          !cat.name.match(/^[0-9a-fA-F]{24}$/) && // Not an ID
-          !cat.parentCategory // Only include parent categories
+          !cat.name.match(/^[0-9a-fA-F]{24}$/)
         return isValid
       })
       validCategories.sort((a, b) => a.name.localeCompare(b.name))
@@ -203,20 +203,13 @@ const Footer = ({ className = "" }) => {
                       Gaming Zone
                     </Link>
                   </li>
-                  {categories.slice(0, 7).map((category) => (
+                  {categories
+                    .filter((category) => !category.name.includes('/') || !category.name.toLowerCase().includes('channel'))
+                    .slice(0, 9)
+                    .map((category) => (
                     <li key={category._id}>
                       <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
                         <TranslatedText text={category.name} />
-                      </Link>
-                    </li>
-                  ))}
-                  {subCategories.slice(0, 2).map((subCategory) => (
-                    <li key={`sub-${subCategory._id}`}>
-                      <Link to={generateShopURL({
-                        parentCategory: subCategory.category?.name || '',
-                        subCategory: subCategory.name
-                      })} className="hover:text-lime-400">
-                        <TranslatedText text={subCategory.name} />
                       </Link>
                     </li>
                   ))}
@@ -227,18 +220,14 @@ const Footer = ({ className = "" }) => {
               <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
                 <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>More Categories</TranslatedText></h3>
                 <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
-                  {categories.slice(6, 10).map((category) => (
-                    <li key={category._id}>
-                      <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
-                        <TranslatedText text={category.name} />
-                      </Link>
-                    </li>
-                  ))}
-                  {subCategories.slice(4, 8).map((subCategory) => (
+                  {subCategories
+                    .filter((subCategory) => (subCategory.level === 1 || (!subCategory.level && !subCategory.parentSubcategory)) && (!subCategory.name.includes('/') || !subCategory.name.toLowerCase().includes('channel')))
+                    .slice(0, 8)
+                    .map((subCategory) => (
                     <li key={`sub-${subCategory._id}`}>
                       <Link to={generateShopURL({
                         parentCategory: subCategory.category?.name || '',
-                        subCategory: subCategory.name
+                        subcategory: subCategory.name
                       })} className="hover:text-lime-400">
                         <TranslatedText text={subCategory.name} />
                       </Link>
