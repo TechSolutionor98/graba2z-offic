@@ -74,9 +74,9 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
           <div className="text-center py-12">
             <div className="flex items-center justify-center mb-4">
               <Sparkles className="w-8 h-8 text-lime-400 mr-2" />
-              <span className="text-lime-400 text-lg font-medium">Welcome to our Blog</span>
+              <span className="text-lime-400 text-lg font-medium">Tech Insights & Stories</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Tech Insights & Stories</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Welcome to our Blog</h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Discover the latest in technology, expert reviews, buying guides, and industry insights
             </p>
@@ -95,7 +95,7 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
             <Sparkles className="w-6 h-6 text-lime-400 mr-2" />
             <span className="text-lime-400 text-lg font-semibold">Featured Articles</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Trending Tech Insights</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Welcome to our Blogs</h2>
           <p className="text-gray-300 max-w-2xl mx-auto">Discover our hand-picked featured articles</p>
         </div>
 

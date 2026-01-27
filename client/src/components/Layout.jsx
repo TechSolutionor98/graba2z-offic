@@ -1,6 +1,8 @@
-import { Outlet } from "react-router-dom"
+import { Outlet, useLocation } from "react-router-dom"
 import Navbar from "./Navbar"
 import Footer from "./Footer"
+import BlogFooter from "./BlogFooter"
+import BlogNavbar from "./BlogNavbar"
 
 function WhatsAppButton() {
   return (
@@ -23,10 +25,13 @@ function WhatsAppButton() {
 }
 
 function Layout() {
+  const location = useLocation()
+  const isBlogPage = location.pathname.startsWith('/blogs')
+
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Navbar - Fixed height */}
-      <Navbar />
+      {/* Navbar - Conditional based on page */}
+      {isBlogPage ? <BlogNavbar /> : <Navbar />}
 
       {/* Main Content Area - Grows to fill space */}
       <main className="flex-1 w-full">
@@ -35,8 +40,8 @@ function Layout() {
         </div>
       </main>
 
-      {/* Footer - At bottom */}
-      <Footer />
+      {/* Footer - Conditional based on page */}
+      {isBlogPage ? <BlogFooter /> : <Footer />}
 
       {/* WhatsApp Button */}
       <WhatsAppButton />

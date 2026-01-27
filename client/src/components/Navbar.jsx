@@ -1278,7 +1278,7 @@ const Navbar = () => {
                     onMouseLeave={() => setIsStaticCategoryHovered(false)}
                   >
                     <a
-                      href={getLocalizedPath("/gaming-zone")} // ← Change this to your custom link
+                      href={getLocalizedPath("/gaming-zone/gaming-zone")} // ← Change this to your custom link
                       className={`text-white font-medium whitespace-nowrap text-[clamp(0.7rem,0.9vw,0.875rem)] px-1 py-2 text-center w-full leading-tight ${
                         isStaticCategoryHovered ? "font-semibold" : ""
                       }`}
