@@ -1253,7 +1253,7 @@ const OfferPage = () => {
               <img
                 src={getFullImageUrl(offerPage.heroImage)}
                 alt={offerPage.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full bg-cover"
               />
               <div className="absolute inset-0 flex items-center justify-center">
                 {/* <div className="text-center text-white px-4">
@@ -1280,7 +1280,7 @@ const OfferPage = () => {
                         <img
                           src={getFullImageUrl(cardImage.image)}
                           alt={`Offer ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full bg-cover"
                         />
                       </div>
                     ))}
