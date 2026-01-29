@@ -163,6 +163,20 @@ import CriticalOrders from "./pages/admin/CriticalOrders"
 import PriceAdjustment from "./pages/admin/PriceAdjustment"
 import PriceAdjustmentReports from "./pages/admin/PriceAdjustmentReports"
 
+// Super Admin pages (in admin panel)
+import AdminManagement from "./pages/admin/AdminManagement"
+import ActivityLogs from "./pages/admin/ActivityLogs"
+
+// Super Admin Portal (separate green theme)
+import SuperAdminLogin from "./pages/superadmin/SuperAdminLogin"
+import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard"
+import SuperAdminManagement from "./pages/superadmin/SuperAdminManagement"
+import SuperAdminActivityLogs from "./pages/superadmin/SuperAdminActivityLogs"
+import SuperAdminReports from "./pages/superadmin/SuperAdminReports"
+import SuperAdminSidebar from "./components/superadmin/SuperAdminSidebar"
+import SuperAdminHeader from "./components/superadmin/SuperAdminHeader"
+import SuperAdminRoute from "./components/superadmin/SuperAdminRoute"
+
 function DefaultCanonical() {
   const location = useLocation()
   if (location.pathname !== "/") {
@@ -208,6 +222,42 @@ function App() {
                   {/* Root redirect to default language */}
                   <Route path="/" element={<Navigate to="/ae-en" replace />} />
                   
+                  {/* Super Admin Portal - MUST be before language routes to prevent matching */}
+                  {/* Redirect all language-prefixed super admin URLs to non-prefixed versions */}
+                  <Route path="/ae-en/grabiansuperadmin/*" element={<Navigate to="/grabiansuperadmin/login" replace />} />
+                  <Route path="/ae-ar/grabiansuperadmin/*" element={<Navigate to="/grabiansuperadmin/login" replace />} />
+                  <Route path="/ae-en/superadmin/*" element={<Navigate to="/superadmin/dashboard" replace />} />
+                  <Route path="/ae-ar/superadmin/*" element={<Navigate to="/superadmin/dashboard" replace />} />
+                  
+                  {/* Super Admin Portal Routes (separate green-themed portal) */}
+                  <Route path="/grabiansuperadmin/login" element={<SuperAdminLogin />} />
+                  <Route
+                    path="/superadmin/*"
+                    element={
+                      <SuperAdminRoute>
+                        <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
+                          <SuperAdminSidebar />
+                          <SuperAdminHeader />
+                          <div className="lg:ml-72 pt-20 p-6">
+                            <Routes>
+                              <Route path="dashboard" element={<SuperAdminDashboard />} />
+                              <Route path="admins" element={<SuperAdminManagement />} />
+                              <Route path="admins/add" element={<SuperAdminManagement />} />
+                              <Route path="permissions" element={<SuperAdminManagement />} />
+                              <Route path="activity-logs" element={<SuperAdminActivityLogs />} />
+                              <Route path="activity-logs/login" element={<SuperAdminActivityLogs />} />
+                              <Route path="activity-logs/changes" element={<SuperAdminActivityLogs />} />
+                              <Route path="reports" element={<SuperAdminReports />} />
+                              <Route path="settings" element={<SuperAdminDashboard />} />
+                              <Route path="profile" element={<SuperAdminDashboard />} />
+                              <Route path="*" element={<Navigate to="/superadmin/dashboard" replace />} />
+                            </Routes>
+                          </div>
+                        </div>
+                      </SuperAdminRoute>
+                    }
+                  />
+
                   {/* Admin Routes */}
                   <Route path="/grabiansadmin/login" element={<AdminLogin />} />
                   <Route
@@ -344,6 +394,10 @@ function App() {
                               <Route path="orders/critical" element={<CriticalOrders />} />
 
                               <Route path="orders/create" element={<CreateOrder />} />
+
+                              {/* Super Admin Routes */}
+                              <Route path="admin-management" element={<AdminManagement />} />
+                              <Route path="activity-logs" element={<ActivityLogs />} />
                             </Routes>
                           </div>
                         </div>

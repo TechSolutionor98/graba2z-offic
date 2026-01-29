@@ -29,12 +29,15 @@ import {
   ShoppingBag,
   RefreshCw,
   AlertTriangle,
+  ShieldCheck,
+  Activity,
+  UserCog,
 } from "lucide-react"
 
 const AdminSidebar = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { adminLogout } = useAuth()
+  const { adminLogout, isSuperAdmin, hasPermission } = useAuth()
   const [openDropdowns, setOpenDropdowns] = useState({
     productSystem: false,
     products: false,
@@ -53,8 +56,10 @@ const AdminSidebar = () => {
     subcategories3: false,
     subcategories4: false,
     coupons: false,
-    reviews: false, // Add reviews dropdown
-    stockAdjustment: false, // Added stockAdjustment dropdown state
+    reviews: false,
+    stockAdjustment: false,
+    seoSettings: false,
+    superAdmin: false, // Super Admin dropdown state
     seoSettings: false, // Added seoSettings dropdown state
   })
 
@@ -221,17 +226,20 @@ const AdminSidebar = () => {
       title: "Dashboard",
       icon: LayoutDashboard,
       path: "/admin/dashboard",
+      permission: "dashboard",
     },
     {
       title: "Product System",
       icon: Layers,
       dropdown: "productSystem",
+      permission: "products",
       items: [
         {
           title: "Products",
           icon: Package,
           dropdown: "products",
           section: "products",
+          permission: "products",
           items: [
             { title: "List Products", path: "/admin/products" },
             //{ title: "Add Product", path: "/admin/products/add" },
@@ -243,6 +251,7 @@ const AdminSidebar = () => {
           icon: Tag,
           dropdown: "categories",
           section: "categories",
+          permission: "categories",
           items: [
             { title: "List Categories", path: "/admin/categories" },
             { title: "Add Category", path: "/admin/categories/add" },
@@ -255,6 +264,7 @@ const AdminSidebar = () => {
           icon: Tag,
           dropdown: "subcategories",
           section: "subcategories",
+          permission: "subcategories",
           items: [
             { title: "List Sub Categories", path: "/admin/subcategories" },
             { title: "Add Sub Category", path: "/admin/subcategories/add" },
@@ -266,6 +276,7 @@ const AdminSidebar = () => {
           icon: Tag,
           dropdown: "subcategories2",
           section: "subcategories2",
+          permission: "subcategories",
           items: [
             { title: "List Sub Categories 2", path: "/admin/subcategories-2" },
             { title: "Add Sub Category 2", path: "/admin/subcategories-2/add" },
@@ -276,6 +287,7 @@ const AdminSidebar = () => {
           icon: Tag,
           dropdown: "subcategories3",
           section: "subcategories3",
+          permission: "subcategories",
           items: [
             { title: "List Sub Categories 3", path: "/admin/subcategories-3" },
             { title: "Add Sub Category 3", path: "/admin/subcategories-3/add" },
@@ -286,6 +298,7 @@ const AdminSidebar = () => {
           icon: Tag,
           dropdown: "subcategories4",
           section: "subcategories4",
+          permission: "subcategories",
           items: [
             { title: "List Sub Categories 4", path: "/admin/subcategories-4" },
             { title: "Add Sub Category 4", path: "/admin/subcategories-4/add" },
@@ -296,6 +309,7 @@ const AdminSidebar = () => {
           icon: Tag,
           dropdown: "brands",
           section: "brands",
+          permission: "brands",
           items: [
             { title: "List Brands", path: "/admin/brands" },
             { title: "Add Brand", path: "/admin/brands/add" },
@@ -306,6 +320,7 @@ const AdminSidebar = () => {
           icon: Box,
           dropdown: "volumes",
           section: "volumes",
+          permission: "volumes",
           items: [
             { title: "List Volumes", path: "/admin/volumes" },
             { title: "Add Volume", path: "/admin/volumes/add" },
@@ -316,6 +331,7 @@ const AdminSidebar = () => {
           icon: Shield,
           dropdown: "warranty",
           section: "warranty",
+          permission: "warranty",
           items: [
             { title: "List Warranty", path: "/admin/warranty" },
             { title: "Add Warranty", path: "/admin/warranty/add" },
@@ -326,6 +342,7 @@ const AdminSidebar = () => {
           icon: Palette,
           dropdown: "colors",
           section: "colors",
+          permission: "colors",
           items: [
             { title: "List Colors", path: "/admin/colors" },
             { title: "Add Color", path: "/admin/colors/add" },
@@ -336,6 +353,7 @@ const AdminSidebar = () => {
           icon: Ruler,
           dropdown: "units",
           section: "units",
+          permission: "units",
           items: [
             { title: "List Units", path: "/admin/units" },
             { title: "Add Unit", path: "/admin/units/add" },
@@ -346,6 +364,7 @@ const AdminSidebar = () => {
           icon: Calculator,
           dropdown: "tax",
           section: "tax",
+          permission: "tax",
           items: [
             { title: "List Tax", path: "/admin/tax" },
             { title: "Add Tax", path: "/admin/tax/add" },
@@ -356,6 +375,7 @@ const AdminSidebar = () => {
           icon: Ruler,
           dropdown: "sizes",
           section: "sizes",
+          permission: "sizes",
           items: [
             { title: "List Sizes", path: "/admin/sizes" },
             { title: "Add Size", path: "/admin/sizes/add" },
@@ -367,6 +387,7 @@ const AdminSidebar = () => {
       title: "Stock Adjustment",
       icon: TrendingUp,
       dropdown: "stockAdjustment",
+      permission: "stockAdjustment",
       items: [
         { title: "Price Adjustment", path: "/admin/stock-adjustment/price-adjustment" },
         { title: "Reports", path: "/admin/stock-adjustment/reports" },
@@ -376,6 +397,7 @@ const AdminSidebar = () => {
       title: "Delivery Charges",
       icon: Truck,
       dropdown: "deliveryCharges",
+      permission: "deliveryCharges",
       items: [
         { title: "List Delivery Charges", path: "/admin/delivery-charges" },
         { title: "Add Delivery Charge", path: "/admin/delivery-charges/add" },
@@ -385,11 +407,10 @@ const AdminSidebar = () => {
       title: "Orders",
       icon: ShoppingCart,
       dropdown: "orders",
+      permission: "orders",
       items: [
-        { title: "Create Order", path: "/admin/orders/create" }, // Added Create Order link
+        { title: "Create Order", path: "/admin/orders/create" },
         { title: "New Orders", path: "/admin/orders/new" },
-        // { title: "Online Orders", path: "/admin/orders/online" },
-        // { title: "Received Orders", path: "/admin/orders/received" },
         { title: "Confirmed", path: "/admin/orders/confirmed" },
         { title: "Processing", path: "/admin/orders/processing" },
         { title: "Ready for Shipment", path: "/admin/orders/ready-for-shipment" },
@@ -405,6 +426,7 @@ const AdminSidebar = () => {
       title: "Reviews",
       icon: Star,
       dropdown: "reviews",
+      permission: "reviews",
       items: [
         { title: "All Reviews", path: "/admin/reviews" },
         { title: "Pending Reviews", path: "/admin/reviews/pending" },
@@ -416,21 +438,25 @@ const AdminSidebar = () => {
       title: "Request Callbacks",
       icon: Phone,
       path: "/admin/request-callbacks",
+      permission: "requestCallbacks",
     },
     {
       title: "Bulk Purchase",
       icon: ShoppingBag,
       path: "/admin/bulk-purchase",
+      permission: "bulkPurchase",
     },
     {
       title: "Buyer Protection",
       icon: Shield,
       path: "/admin/buyer-protection",
+      permission: "buyerProtection",
     },
     {
       title: "Blogs",
       icon: BookOpen,
       dropdown: "blogs",
+      permission: "blogs",
       items: [
         { title: "Dashboard", path: "/admin/blog-dashboard" },
         { title: "Blogs", path: "/admin/blogs" },
@@ -444,53 +470,63 @@ const AdminSidebar = () => {
       title: "Users",
       icon: Users,
       path: "/admin/users",
+      permission: "users",
     },
     {
       title: "Banners",
       icon: ImageIcon,
       path: "/admin/banners",
+      permission: "banners",
     },
     {
       title: "Home Sections",
       icon: ImageIcon,
       path: "/admin/home-sections",
+      permission: "homeSections",
     },
     {
       title: "Offer Pages",
       icon: Tag,
       path: "/admin/offer-pages",
+      permission: "offerPages",
     },
     {
       title: "Gaming Zone",
       icon: Tag,
       path: "/admin/gaming-zone",
+      permission: "gamingZone",
     },
     {
       title: "Coupons",
       icon: Percent,
       dropdown: "coupons",
+      permission: "coupons",
       items: [{ title: "All Coupons", path: "/admin/coupons/all" }],
     },
     {
       title: "SEO Settings",
       icon: Cog,
       dropdown: "seoSettings",
+      permission: "seoSettings",
       items: [{ title: "Redirects", path: "/admin/seo-settings/redirects" }],
     },
     {
       title: "Email Templates",
       icon: Settings,
       path: "/admin/email-templates",
+      permission: "emailTemplates",
     },
     {
       title: "Newsletter Subscribers",
       icon: Users,
       path: "/admin/newsletter-subscribers",
+      permission: "newsletter",
     },
     {
       title: "Reset Cache",
       icon: RefreshCw,
       path: "/admin/reset-cache",
+      permission: "cache",
     },
     // {
     //   title: "Settings",
@@ -498,6 +534,61 @@ const AdminSidebar = () => {
     //   path: "/admin/settings",
     // },
   ]
+
+  // Super Admin only menu items
+  const superAdminMenuItems = [
+    {
+      title: "Super Admin",
+      icon: ShieldCheck,
+      dropdown: "superAdmin",
+      superAdminOnly: true,
+      items: [
+        { title: "Admin Management", path: "/admin/admin-management", icon: UserCog },
+        { title: "Activity Logs", path: "/admin/activity-logs", icon: Activity },
+      ],
+    },
+  ]
+
+  // Filter menu items based on permissions
+  const filterMenuItems = (items) => {
+    return items.filter(item => {
+      // Super admin only items
+      if (item.superAdminOnly && !isSuperAdmin) {
+        return false
+      }
+      
+      // If user is super admin, show everything
+      if (isSuperAdmin) {
+        return true
+      }
+      
+      // Check permission for item
+      if (item.permission && !hasPermission(item.permission)) {
+        return false
+      }
+      
+      return true
+    }).map(item => {
+      // Filter nested items
+      if (item.items) {
+        return {
+          ...item,
+          items: filterMenuItems(item.items)
+        }
+      }
+      return item
+    }).filter(item => {
+      // Remove dropdowns with no items
+      if (item.dropdown && item.items && item.items.length === 0) {
+        return false
+      }
+      return true
+    })
+  }
+
+  // Combine and filter menu items
+  const allMenuItems = [...menuItems, ...superAdminMenuItems]
+  const filteredMenuItems = filterMenuItems(allMenuItems)
 
   const renderMenuItem = (item, level = 0) => {
     const paddingLeft = level === 0 ? "px-6" : level === 1 ? "px-8" : "px-12"
@@ -570,7 +661,7 @@ const AdminSidebar = () => {
       </div>
 
       <nav className="mt-6 pb-20 flex-1 overflow-y-auto">
-        {menuItems.map((item, index) => (
+        {filteredMenuItems.map((item, index) => (
           <div key={index}>
             {item.dropdown ? (
               renderMenuItem(item)

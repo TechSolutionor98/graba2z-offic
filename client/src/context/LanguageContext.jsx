@@ -47,8 +47,11 @@ export const LanguageProvider = ({ children }) => {
   useEffect(() => {
     const path = location.pathname
 
-    // Skip language prefix logic for admin routes
-    if (path.startsWith("/admin") || path.startsWith("/grabiansadmin")) {
+    // Skip language prefix logic for admin and super admin routes
+    if (path.startsWith("/admin") || 
+        path.startsWith("/grabiansadmin") ||
+        path.startsWith("/superadmin") ||
+        path.startsWith("/grabiansuperadmin")) {
       return
     }
 

@@ -2,6 +2,7 @@ import express from "express"
 import asyncHandler from "express-async-handler"
 import Blog from "../models/blogModel.js"
 import { protect, admin } from "../middleware/authMiddleware.js"
+import { logActivity } from "../middleware/permissionMiddleware.js"
 
 const router = express.Router()
 
@@ -259,6 +260,20 @@ router.post(
       .populate("topic", "name slug color")
       .populate("brand", "name slug")
 
+    // Log activity
+    if (req.user) {
+      await logActivity({
+        user: req.user,
+        action: "CREATE",
+        module: "BLOGS",
+        description: `Created blog: ${title}`,
+        targetId: createdBlog._id.toString(),
+        targetName: title,
+        newData: { title, slug, status },
+        req,
+      })
+    }
+
     res.status(201).json(populatedBlog)
   }),
 )
@@ -340,6 +355,20 @@ router.put(
       .populate("topic", "name slug color")
       .populate("brand", "name slug logo")
 
+    // Log activity
+    if (req.user) {
+      await logActivity({
+        user: req.user,
+        action: "UPDATE",
+        module: "BLOGS",
+        description: `Updated blog: ${updatedBlog.title}`,
+        targetId: updatedBlog._id.toString(),
+        targetName: updatedBlog.title,
+        newData: { title: updatedBlog.title, status: updatedBlog.status },
+        req,
+      })
+    }
+
     res.json(populatedBlog)
   }),
 )
@@ -387,7 +416,21 @@ router.delete(
       throw new Error("Blog not found")
     }
 
+    const blogTitle = blog.title
     await blog.deleteOne()
+
+    // Log activity
+    if (req.user) {
+      await logActivity({
+        user: req.user,
+        action: "DELETE",
+        module: "BLOGS",
+        description: `Deleted blog: ${blogTitle}`,
+        targetId: req.params.id,
+        targetName: blogTitle,
+        req,
+      })
+    }
 
     res.json({ message: "Blog deleted successfully" })
   }),

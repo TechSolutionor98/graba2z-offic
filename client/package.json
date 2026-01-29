@@ -28,6 +28,8 @@
         "@tiptap/starter-kit": "^2.22.3",
         "autoprefixer": "^10.4.21",
         "axios": "^1.6.7",
+        "jspdf": "^4.0.0",
+        "jspdf-autotable": "^5.0.7",
         "lucide-react": "^0.482.0",
         "ol": "^10.6.1",
         "papaparse": "^5.5.3",

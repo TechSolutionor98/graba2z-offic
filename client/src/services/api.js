@@ -210,6 +210,10 @@ export const adminAPI = {
       method: "POST",
       body: JSON.stringify(credentials),
     }),
+  getProfile: () =>
+    apiRequest("/api/admin/profile", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
   getDashboardStats: () =>
     apiRequest("/api/admin/stats", {
       headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
@@ -240,6 +244,150 @@ export const adminAPI = {
       method: "POST",
       headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
       body: JSON.stringify(orderData),
+    }),
+}
+
+// Super Admin API calls
+export const superAdminAPI = {
+  // Admin management
+  getAdmins: (params = {}) => {
+    const qs = new URLSearchParams(params).toString()
+    return apiRequest(`/api/super-admin/admins${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  getAdminById: (id) =>
+    apiRequest(`/api/super-admin/admins/${id}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  createAdmin: (adminData) =>
+    apiRequest("/api/super-admin/admins", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify(adminData),
+    }),
+  updateAdmin: (id, adminData) =>
+    apiRequest(`/api/super-admin/admins/${id}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify(adminData),
+    }),
+  deleteAdmin: (id) =>
+    apiRequest(`/api/super-admin/admins/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  updateAdminPermissions: (id, permissions) =>
+    apiRequest(`/api/super-admin/admins/${id}/permissions`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify({ permissions }),
+    }),
+
+  // Permissions
+  getPermissionsList: () =>
+    apiRequest("/api/super-admin/permissions", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  getMyPermissions: () =>
+    apiRequest("/api/super-admin/my-permissions", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+
+  // Activity logs
+  getActivityLogs: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+    )
+    const qs = new URLSearchParams(cleanParams).toString()
+    return apiRequest(`/api/super-admin/activity-logs${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  getActivityLogsByUser: (userId, params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+    )
+    const qs = new URLSearchParams(cleanParams).toString()
+    return apiRequest(`/api/super-admin/activity-logs/user/${userId}${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  getActivityStats: () =>
+    apiRequest("/api/super-admin/activity-logs/summary", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  getActivityLogStats: (days = 7) =>
+    apiRequest(`/api/super-admin/activity-logs/stats?days=${days}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  cleanupActivityLogs: (days = 90) =>
+    apiRequest(`/api/super-admin/activity-logs/cleanup?days=${days}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+
+  // Reports
+  getReportOverview: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+    )
+    const qs = new URLSearchParams(cleanParams).toString()
+    return apiRequest(`/api/reports/overview${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  getAdminActivityReport: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+    )
+    const qs = new URLSearchParams(cleanParams).toString()
+    return apiRequest(`/api/reports/admin-activity${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  getModuleActivityReport: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+    )
+    const qs = new URLSearchParams(cleanParams).toString()
+    return apiRequest(`/api/reports/module-activity${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  getOrdersReport: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+    )
+    const qs = new URLSearchParams(cleanParams).toString()
+    return apiRequest(`/api/reports/orders${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  getUsersReport: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+    )
+    const qs = new URLSearchParams(cleanParams).toString()
+    return apiRequest(`/api/reports/users${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  exportActivityReport: (params = {}) => {
+    const qs = new URLSearchParams(params).toString()
+    return apiRequest(`/api/reports/export/activity${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  exportSiteReport: (params = {}) => {
+    const qs = new URLSearchParams(params).toString()
+    return apiRequest(`/api/reports/export/site${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  getReportTypes: () =>
+    apiRequest("/api/reports/types", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
     }),
 }
 
@@ -328,6 +476,7 @@ export default {
   cartAPI,
   wishlistAPI,
   adminAPI,
+  superAdminAPI,
   uploadAPI,
   productsAdminAPI,
   redirectsAPI,

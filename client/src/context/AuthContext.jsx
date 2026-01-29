@@ -4,7 +4,16 @@ import { createContext, useContext, useReducer, useEffect } from "react"
 import { authAPI } from "../services/api"
 import { adminAPI } from "../services/api"
 
-// Initial state
+// Initial state - load permissions from localStorage if available
+const getInitialPermissions = () => {
+  try {
+    const permissions = localStorage.getItem("adminPermissions")
+    return permissions ? JSON.parse(permissions) : {}
+  } catch {
+    return {}
+  }
+}
+
 const initialState = {
   user: null,
   token: localStorage.getItem("token"),
@@ -13,7 +22,9 @@ const initialState = {
   error: null,
   admin: null,
   adminToken: localStorage.getItem("adminToken"),
-  isAdminAuthenticated: false,
+  isAdminAuthenticated: !!localStorage.getItem("adminToken"),
+  isSuperAdmin: localStorage.getItem("isSuperAdmin") === "true",
+  adminPermissions: getInitialPermissions(),
 }
 
 // Action types
@@ -33,6 +44,7 @@ const AUTH_ACTIONS = {
   UPDATE_PROFILE: "UPDATE_PROFILE",
   ADMIN_LOGIN_SUCCESS: "ADMIN_LOGIN_SUCCESS",
   ADMIN_LOGOUT: "ADMIN_LOGOUT",
+  SET_ADMIN_PERMISSIONS: "SET_ADMIN_PERMISSIONS",
 }
 
 // Reducer
@@ -93,6 +105,8 @@ const authReducer = (state, action) => {
         admin: action.payload.admin,
         adminToken: action.payload.token,
         isAdminAuthenticated: true,
+        isSuperAdmin: action.payload.admin?.isSuperAdmin || false,
+        adminPermissions: action.payload.admin?.permissions || {},
         loading: false,
         error: null,
       }
@@ -103,8 +117,17 @@ const authReducer = (state, action) => {
         admin: null,
         adminToken: null,
         isAdminAuthenticated: false,
+        isSuperAdmin: false,
+        adminPermissions: {},
         loading: false,
         error: null,
+      }
+
+    case AUTH_ACTIONS.SET_ADMIN_PERMISSIONS:
+      return {
+        ...state,
+        isSuperAdmin: action.payload.isSuperAdmin || false,
+        adminPermissions: action.payload.permissions || {},
       }
 
     case AUTH_ACTIONS.CLEAR_ERROR:
@@ -271,6 +294,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await adminAPI.login(credentials)
       localStorage.setItem("adminToken", data.token)
+      // Store permissions in localStorage for persistence
+      localStorage.setItem("isSuperAdmin", data.isSuperAdmin ? "true" : "false")
+      localStorage.setItem("adminPermissions", JSON.stringify(data.permissions || {}))
       dispatch({
         type: AUTH_ACTIONS.ADMIN_LOGIN_SUCCESS,
         payload: {
@@ -286,8 +312,33 @@ export const AuthProvider = ({ children }) => {
 
   const adminLogout = () => {
     localStorage.removeItem("adminToken")
+    localStorage.removeItem("isSuperAdmin")
+    localStorage.removeItem("adminPermissions")
     dispatch({ type: AUTH_ACTIONS.ADMIN_LOGOUT })
   }
+
+  // Check if admin has specific permission
+  const hasPermission = (permission) => {
+    // Super admin has all permissions
+    if (state.isSuperAdmin) return true
+    // Check for full access
+    if (state.adminPermissions?.fullAccess) return true
+    // Check specific permission
+    return state.adminPermissions?.[permission] === true
+  }
+
+  // Load admin permissions from localStorage on mount
+  useEffect(() => {
+    const adminToken = localStorage.getItem("adminToken")
+    if (adminToken) {
+      const isSuperAdmin = localStorage.getItem("isSuperAdmin") === "true"
+      const permissions = JSON.parse(localStorage.getItem("adminPermissions") || "{}")
+      dispatch({
+        type: AUTH_ACTIONS.SET_ADMIN_PERMISSIONS,
+        payload: { isSuperAdmin, permissions },
+      })
+    }
+  }, [])
 
   const value = {
     ...state,
@@ -300,6 +351,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateProfile,
     clearError,
+    hasPermission,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
