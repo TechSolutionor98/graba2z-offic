@@ -470,6 +470,7 @@ const BlogPost = () => {
           topicId={blog.topic?._id}
         />
       </div>
+      </div>
     </>
   )
 }
