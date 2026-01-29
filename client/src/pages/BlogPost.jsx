@@ -10,6 +10,7 @@ import axios from "axios"
 import config from "../config/config"
 import Comments from "../components/Comments"
 import RelatedPosts from "../components/RelatedPosts"
+import SEO from "../components/SEO"
 
 const API_BASE_URL = `${config.API_URL}`
 
@@ -166,13 +167,38 @@ const BlogPost = () => {
 
   const deepestCategory = getDeepestCategory(blog)
 
+  // Prepare SEO data
+  const seoTitle = blog.metaTitle || blog.title || "Blog Post"
+  const seoDescription = blog.metaDescription || truncateContent(blog.description, 160)
+  const seoImage = getFullImageUrl(blog.mainImage)
+  const seoCanonicalPath = `/blogs/${blog.slug}`
+  const seoKeywords = blog.tags && blog.tags.length > 0 ? blog.tags.join(", ") : ""
+  
+  // Article structured data for Google
+  const articleData = {
+    author: blog.postedBy || "Graba2z Team",
+    datePublished: blog.createdAt,
+    dateModified: blog.updatedAt || blog.createdAt,
+    tags: blog.tags || []
+  }
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Reading progress bar */}
-      <div
-        className="fixed top-0 left-0 h-1 bg-lime-500 z-50 transition-all duration-150"
-        style={{ width: `${progress}%` }}
+    <>
+      <SEO 
+        title={seoTitle}
+        description={seoDescription}
+        canonicalPath={seoCanonicalPath}
+        image={seoImage}
+        keywords={seoKeywords}
+        article={articleData}
       />
+      
+      <div className="min-h-screen bg-white">
+        {/* Reading progress bar */}
+        <div
+          className="fixed top-0 left-0 h-1 bg-lime-500 z-50 transition-all duration-150"
+          style={{ width: `${progress}%` }}
+        />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumbs */}
@@ -444,7 +470,7 @@ const BlogPost = () => {
           topicId={blog.topic?._id}
         />
       </div>
-    </div>
+    </>
   )
 }
 
