@@ -64,15 +64,22 @@ const Guest = () => {
     setVerificationLoading(true)
     setError("")
     try {
-      await axios.post(`${config.API_URL}/api/request-callback/send-verification`, {
+      const response = await axios.post(`${config.API_URL}/api/request-callback/send-verification`, {
         email: guestInfo.email
       })
       setVerificationSent(true)
       setOriginalEmail(guestInfo.email)
       setError("")
+      console.log('Verification code sent successfully:', response.data)
     } catch (error) {
       console.error("Error sending verification code:", error)
-      setError("Failed to send verification code. Please try again.")
+      // Even if email sending fails, the code might be generated on server
+      // Show a message to check server logs in development
+      if (process.env.NODE_ENV === 'development') {
+        setError("Email sending failed. Check server console for verification code.")
+      } else {
+        setError("Failed to send verification code. Please try again or contact support.")
+      }
     } finally {
       setVerificationLoading(false)
     }

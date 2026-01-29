@@ -107,15 +107,22 @@ const UserOrders = () => {
           return
         }
 
+        console.log("Fetching orders with token:", token ? "Token exists" : "No token")
+        
         const { data } = await axios.get(`${config.API_URL}/api/orders/myorders`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
+        
+        console.log("Orders fetched:", data.length, "orders")
+        console.log("Orders data:", data)
+        
         setOrders(data)
         setLoading(false)
       } catch (error) {
         console.error("Error fetching orders:", error)
+        console.error("Error response:", error.response?.data)
         setError(error.response?.data?.message || "Failed to load your orders. Please try again later.")
         setLoading(false)
       }

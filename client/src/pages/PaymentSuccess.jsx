@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
+import { useLanguage } from "../context/LanguageContext"
 import axios from "axios"
 import config from "../config/config"
 
 const PaymentSuccess = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { getLocalizedPath } = useLanguage()
   const [orderData, setOrderData] = useState(null)
 
   useEffect(() => {
@@ -126,11 +128,11 @@ const PaymentSuccess = () => {
         Thank you for your purchase. Your order has been placed and payment was successful.
       </p>
       <div className="flex gap-4">
-        <button onClick={() => navigate("/")} className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-6 py-3">
+        <button onClick={() => navigate(getLocalizedPath("/"))} className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-6 py-3">
           Go to Home
         </button>
         <button
-          onClick={() => navigate("/orders")}
+          onClick={() => navigate(getLocalizedPath("/orders"))}
           className="bg-gray-200 hover:bg-gray-300 text-lime-700 rounded-lg px-6 py-3"
         >
           View My Orders

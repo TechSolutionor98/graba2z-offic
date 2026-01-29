@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { User, Mail, Phone, LogOut, Trash2, Shield, Settings, Package, Heart, AlertTriangle } from "lucide-react"
 import { useToast } from "../context/ToastContext"
+import { useLanguage } from "../context/LanguageContext"
 import axios from "axios"
 import config from "../config/config"
 
@@ -12,6 +13,7 @@ const Profile = () => {
   const { user, logout, token } = useAuth()
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const { getLocalizedPath } = useLanguage()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showVerifyModal, setShowVerifyModal] = useState(false)
   const [verificationCode, setVerificationCode] = useState("")
@@ -172,7 +174,7 @@ const Profile = () => {
             <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
             <div className="space-y-3">
               <button
-                onClick={() => navigate("/orders")}
+                onClick={() => navigate(getLocalizedPath("/orders"))}
                 className="w-full flex items-center space-x-3 px-4 py-3 bg-gray-50 hover:bg-lime-50 hover:border-lime-300 border-2 border-transparent rounded-lg transition-all group"
               >
                 <Package size={20} className="text-gray-600 group-hover:text-lime-700" />

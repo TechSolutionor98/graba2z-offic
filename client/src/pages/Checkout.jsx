@@ -462,9 +462,9 @@ const Checkout = () => {
         },
       })),
       merchant_url: {
-        success: `${window.location.origin}/payment/success`,
-        failure: `${window.location.origin}/payment/cancel`,
-        cancel: `${window.location.origin}/payment/cancel`,
+        success: `${window.location.origin}${getLocalizedPath("/payment/success")}`,
+        failure: `${window.location.origin}${getLocalizedPath("/payment/cancel")}`,
+        cancel: `${window.location.origin}${getLocalizedPath("/payment/cancel")}`,
         notification: `${config.API_URL}/api/webhooks/tamara`,
       },
     }
@@ -509,7 +509,7 @@ const Checkout = () => {
             discount_amount: "0.00",
             reference_id: item._id,
             image_url: item.image,
-            product_url: `${window.location.origin}/product/${item.slug || item._id}`,
+            product_url: `${window.location.origin}${getLocalizedPath("/product/" + (item.slug || item._id))}`,
             category: item.category || "Electronics",
           })),
         },
@@ -522,9 +522,9 @@ const Checkout = () => {
       lang: "en",
       merchant_code: process.env.REACT_APP_TABBY_MERCHANT_CODE,
       merchant_urls: {
-        success: `${window.location.origin}/orders?success=true`,
-        cancel: `${window.location.origin}/checkout`,
-        failure: `${window.location.origin}/checkout?error=payment_failed`,
+        success: `${window.location.origin}${getLocalizedPath("/orders")}?success=true`,
+        cancel: `${window.location.origin}${getLocalizedPath("/checkout")}`,
+        failure: `${window.location.origin}${getLocalizedPath("/checkout")}?error=payment_failed`,
       },
     }
 
@@ -712,8 +712,8 @@ const Checkout = () => {
           amount: finalTotal,
           currencyCode: "AED",
           orderId: orderId,
-          redirectUrl: `${window.location.origin}/payment/success`,
-          cancelUrl: `${window.location.origin}/payment/cancel`,
+          redirectUrl: `${window.location.origin}${getLocalizedPath("/payment/success")}`,
+          cancelUrl: `${window.location.origin}${getLocalizedPath("/payment/cancel")}`,
         })
         const paymentUrl = response.data?.paymentUrl
         if (paymentUrl) {
@@ -787,9 +787,9 @@ const Checkout = () => {
             },
           })),
           merchant_url: {
-            success: `${window.location.origin}/payment/success`,
-            failure: `${window.location.origin}/payment/cancel`,
-            cancel: `${window.location.origin}/payment/cancel`,
+            success: `${window.location.origin}${getLocalizedPath("/payment/success")}`,
+            failure: `${window.location.origin}${getLocalizedPath("/payment/cancel")}`,
+            cancel: `${window.location.origin}${getLocalizedPath("/payment/cancel")}`,
             notification: `${config.API_URL}/api/webhooks/tamara`,
           },
         }
@@ -972,17 +972,17 @@ const Checkout = () => {
           // Guest: redirect to GuestOrder page
           if (paymentResult && paymentResult.order && paymentResult.order._id) {
             navigate(
-              `/guest-order?success=true&orderId=${paymentResult.order._id}&email=${encodeURIComponent(formData.email)}`,
+              getLocalizedPath(`/guest-order?success=true&orderId=${paymentResult.order._id}&email=${encodeURIComponent(formData.email)}`),
             )
           } else {
-            navigate(`/guest-order?success=true&email=${encodeURIComponent(formData.email)}`)
+            navigate(getLocalizedPath(`/guest-order?success=true&email=${encodeURIComponent(formData.email)}`))
           }
         } else {
           // Logged-in user
           if (paymentResult && paymentResult.order && paymentResult.order._id) {
-            navigate(`/orders?success=true&orderId=${paymentResult.order._id}`)
+            navigate(getLocalizedPath(`/orders?success=true&orderId=${paymentResult.order._id}`))
           } else {
-            navigate(`/orders?success=true`)
+            navigate(getLocalizedPath(`/orders?success=true`))
           }
         }
       } else {
