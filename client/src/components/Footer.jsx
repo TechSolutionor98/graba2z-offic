@@ -299,7 +299,7 @@ const Footer = ({ className = "" }) => {
                     </Link>
                   </li>
                   <li>
-                    <a href="https://blog.grabatoz.ae/" rel="noopener noreferrer" className="hover:text-lime-400">
+                    <a href="/blogs" rel="noopener noreferrer" className="hover:text-lime-400">
                       <TranslatedText>Blog</TranslatedText>
                     </a>
                   </li>
