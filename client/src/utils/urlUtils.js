@@ -16,6 +16,23 @@ export const createSlug = (text) => {
 }
 
 /**
+ * Get the current language prefix from the URL
+ * @returns {string} - Language prefix (e.g., 'ae-en', 'ae-ar') or empty string
+ */
+export const getCurrentLanguagePrefix = () => {
+  if (typeof window === 'undefined') return ''
+  
+  const pathParts = window.location.pathname.split('/').filter(part => part)
+  
+  // Check if first part is a language code (e.g., 'ae-en', 'ae-ar', 'en', 'ar')
+  if (pathParts.length > 0 && /^[a-z]{2}(-[a-z]{2})?$/i.test(pathParts[0])) {
+    return pathParts[0]
+  }
+  
+  return ''
+}
+
+/**
  * Generate SEO-friendly URL for shop page
  * @param {Object} params - URL parameters
  * @param {string} params.parentCategory - Parent category slug or ID
@@ -30,7 +47,11 @@ export const createSlug = (text) => {
 export const generateShopURL = (params = {}) => {
   const { parentCategory, subcategory, subcategory2, subcategory3, subcategory4, brand, search } = params
 
-  let url = "/product-category"
+  // Get the current language prefix
+  const langPrefix = getCurrentLanguagePrefix()
+  const baseUrl = langPrefix ? `/${langPrefix}` : ''
+  
+  let url = `${baseUrl}/product-category`
 
   // Build URL path based on category structure
   if (parentCategory && parentCategory !== "all") {

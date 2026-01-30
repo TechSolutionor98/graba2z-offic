@@ -706,14 +706,19 @@ const Shop = () => {
         (brand) => brand.name === urlParams.brand || createSlug(brand.name) === createSlug(urlParams.brand),
       )
       const newBrands = foundBrand ? [foundBrand._id] : []
-      // Only update if different
-      if (JSON.stringify(newBrands) !== JSON.stringify(selectedBrands)) {
+      // Only update if different to prevent loops
+      const currentBrandsStr = JSON.stringify([...selectedBrands].sort())
+      const newBrandsStr = JSON.stringify([...newBrands].sort())
+      if (currentBrandsStr !== newBrandsStr) {
         setSelectedBrands(newBrands)
       }
-    } else if (selectedBrands.length > 0) {
-      setSelectedBrands([])
+    } else {
+      // Only clear if there's actually something to clear
+      if (selectedBrands.length > 0) {
+        setSelectedBrands([])
+      }
     }
-  }, [brands, location.pathname, location.search])
+  }, [brands, location.pathname, location.search, selectedBrands])
 
   useEffect(() => {
     // Parse search query from URL
@@ -1164,11 +1169,13 @@ const Shop = () => {
   }
 
   const handleBrandChange = (brandId) => {
-    setSelectedBrands((prev) => (prev.includes(brandId) ? prev.filter((b) => b !== brandId) : [...prev, brandId]))
-
+    // Calculate new brand selection FIRST before any state updates
     const newSelectedBrands = selectedBrands.includes(brandId)
       ? selectedBrands.filter((b) => b !== brandId)
       : [...selectedBrands, brandId]
+
+    // Update state
+    setSelectedBrands(newSelectedBrands)
 
     const categoryObj = categories.find((cat) => cat._id === selectedCategory)
     const subcategoryObj =
