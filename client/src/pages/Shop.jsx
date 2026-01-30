@@ -240,7 +240,7 @@ const Shop = () => {
   const [subCategory2Data, setSubCategory2Data] = useState(null)
   const [subCategory3Data, setSubCategory3Data] = useState(null)
   const [subCategory4Data, setSubCategory4Data] = useState(null)
-  const [stockFilters, setStockFilters] = useState({ inStock: false, outOfStock: false, onSale: false })
+  const [stockFilters, setStockFilters] = useState({ inStock: true, outOfStock: false, onSale: false })
   const [minPrice, setMinPrice] = useState(0)
 
   const [showPriceFilter, setShowPriceFilter] = useState(true)
