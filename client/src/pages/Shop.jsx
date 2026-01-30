@@ -1207,6 +1207,10 @@ const Shop = () => {
     })
   }
 
+  const handleAllProductsFilter = () => {
+    setStockFilters({ inStock: false, outOfStock: false, onSale: false })
+  }
+
   const handleSearchChange = (e) => {
     const newSearchQuery = e.target.value
     setSearchQuery(newSearchQuery)
@@ -1867,7 +1871,7 @@ const Shop = () => {
                       id="stock-all-mobile"
                       name="stock-filter-mobile"
                       checked={!stockFilters.inStock && !stockFilters.outOfStock && !stockFilters.onSale}
-                      onChange={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                      onChange={handleAllProductsFilter}
                       className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                     />
                     <label htmlFor="stock-all-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
@@ -2488,7 +2492,7 @@ const Shop = () => {
                       id="stock-all"
                       name="stock-filter"
                       checked={!stockFilters.inStock && !stockFilters.outOfStock && !stockFilters.onSale}
-                      onChange={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                      onChange={handleAllProductsFilter}
                       className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                     />
                     <label htmlFor="stock-all" className="ml-2 text-sm text-gray-700 cursor-pointer">
