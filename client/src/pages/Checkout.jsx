@@ -228,9 +228,11 @@ const Checkout = () => {
 
   // Delivery charge logic (dynamic)
   let deliveryCharge = 0
-  if (selectedDelivery && cartTotal < 500) {
+  // Only charge delivery fee if: 1) Home delivery is selected, 2) Order is below 500 AED
+  if (deliveryType === "home" && selectedDelivery && cartTotal < 500) {
     deliveryCharge = selectedDelivery.charge
   }
+  // Store pickup is always free (deliveryCharge remains 0)
 
   // Tax is included in prices, no separate calculation needed
   const taxAmount = "included"
