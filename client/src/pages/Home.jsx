@@ -904,6 +904,19 @@ const Home = () => {
     setNotifLoading(false)
   }
 
+  // Helper function to get proper banner link with language prefix
+  const getBannerLink = (banner, fallbackUrl = "#") => {
+    if (!banner) return fallbackUrl
+    const link = banner.link || banner.buttonLink || fallbackUrl
+    // If it's an external link or already has language prefix, return as is
+    if (link.startsWith("http://") || link.startsWith("https://") || 
+        link.startsWith("/ae-en/") || link.startsWith("/ae-ar/")) {
+      return link
+    }
+    // Otherwise, add language prefix
+    return getLocalizedPath(link)
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -1045,7 +1058,7 @@ const Home = () => {
               return (
                 <div key={index} className="w-1/3 lg:w-1/3 h-[280px]">
                   {banner ? (
-                    <Link to={banner.link || banner.buttonLink || "#"} aria-label={banner.title || "View products"} className="block h-full">
+                    <Link to={getBannerLink(banner)} aria-label={banner.title || "View products"} className="block h-full">
                       <img
                         src={getFullImageUrl(banner.image)}
                         alt={banner.title || "Banner"}
@@ -1088,7 +1101,7 @@ const Home = () => {
               return (
                 <div key={index} className="h-[105px]">
                   {banner ? (
-                    <Link to={banner.link || banner.buttonLink || "#"} aria-label={banner.title || "View products"} className="block h-full">
+                    <Link to={getBannerLink(banner)} aria-label={banner.title || "View products"} className="block h-full">
                       <img
                         src={getFullImageUrl(banner.image)}
                         alt={banner.title || "Banner"}
@@ -1148,7 +1161,7 @@ const Home = () => {
       {/* Mobile Banner - HP Section (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
         {getBannersForSection("hp-mobile", "home-brand-single").length > 0 ? (
-          <Link to={getBannersForSection("hp-mobile", "home-brand-single")[0].link || brandUrls.HP} aria-label="Browse HP products">
+          <Link to={getBannerLink(getBannersForSection("hp-mobile", "home-brand-single")[0], brandUrls.HP)} aria-label="Browse HP products">
             <img
               src={getFullImageUrl(getBannersForSection("hp-mobile", "home-brand-single")[0].image)}
               alt={getBannersForSection("hp-mobile", "home-brand-single")[0].title || "HP Products Banner Mobile"}
@@ -1182,7 +1195,7 @@ const Home = () => {
             <>
               <div className="w-1/2">
                 {hpBanner ? (
-                  <Link to={hpBanner.link || brandUrls.HP}>
+                  <Link to={getBannerLink(hpBanner, brandUrls.HP)}>
                     <img
                       src={getFullImageUrl(hpBanner.image)}
                       alt={hpBanner.title || "HP Products Banner"}
@@ -1205,7 +1218,7 @@ const Home = () => {
               </div>
               <div className="w-1/2">
                 {dellBanner ? (
-                  <Link to={dellBanner.link || brandUrls.Dell}>
+                  <Link to={getBannerLink(dellBanner, brandUrls.Dell)}>
                     <img
                       src={getFullImageUrl(dellBanner.image)}
                       alt={dellBanner.title || "Dell Products Banner"}
@@ -1370,7 +1383,7 @@ const Home = () => {
       {/* Mobile Banner Asus (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
         {getBannersForSection("asus-mobile", "home-brand-single").length > 0 ? (
-          <Link to={getBannersForSection("asus-mobile", "home-brand-single")[0].link || brandUrls.ASUS} aria-label="Browse ASUS products">
+          <Link to={getBannerLink(getBannersForSection("asus-mobile", "home-brand-single")[0], brandUrls.ASUS)} aria-label="Browse ASUS products">
             <img
               src={getFullImageUrl(getBannersForSection("asus-mobile", "home-brand-single")[0].image)}
               alt={getBannersForSection("asus-mobile", "home-brand-single")[0].title || "ASUS Products Banner Mobile"}
@@ -1403,7 +1416,7 @@ const Home = () => {
             <>
               <div className="w-1/2">
                 {acerBanner ? (
-                  <Link to={acerBanner.link || brandUrls.Acer}>
+                  <Link to={getBannerLink(acerBanner, brandUrls.Acer)}>
                     <img
                       src={getFullImageUrl(acerBanner.image)}
                       alt={acerBanner.title || "Acer Products Banner"}
@@ -1426,7 +1439,7 @@ const Home = () => {
               </div>
               <div className="w-1/2">
                 {asusBanner ? (
-                  <Link to={asusBanner.link || brandUrls.ASUS}>
+                  <Link to={getBannerLink(asusBanner, brandUrls.ASUS)}>
                     <img
                       src={getFullImageUrl(asusBanner.image)}
                       alt={asusBanner.title || "ASUS Products Banner"}
@@ -1593,7 +1606,7 @@ const Home = () => {
       {/* Mobile Banner MSI (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
         {getBannersForSection("msi-mobile", "home-brand-single").length > 0 ? (
-          <Link to={getBannersForSection("msi-mobile", "home-brand-single")[0].link || brandUrls.MSI} aria-label="Browse MSI products">
+          <Link to={getBannerLink(getBannersForSection("msi-mobile", "home-brand-single")[0], brandUrls.MSI)} aria-label="Browse MSI products">
             <img
               src={getFullImageUrl(getBannersForSection("msi-mobile", "home-brand-single")[0].image)}
               alt={getBannersForSection("msi-mobile", "home-brand-single")[0].title || "MSI Products Banner Mobile"}
@@ -1626,7 +1639,7 @@ const Home = () => {
             <>
               <div className="w-1/2">
                 {msiBanner ? (
-                  <Link to={msiBanner.link || brandUrls.MSI}>
+                  <Link to={getBannerLink(msiBanner, brandUrls.MSI)}>
                     <img
                       src={getFullImageUrl(msiBanner.image)}
                       alt={msiBanner.title || "MSI Products Banner"}
@@ -1649,7 +1662,7 @@ const Home = () => {
               </div>
               <div className="w-1/2">
                 {lenovoBanner ? (
-                  <Link to={lenovoBanner.link || brandUrls.Lenovo}>
+                  <Link to={getBannerLink(lenovoBanner, brandUrls.Lenovo)}>
                     <img
                       src={getFullImageUrl(lenovoBanner.image)}
                       alt={lenovoBanner.title || "Lenovo Products Banner"}
@@ -1746,7 +1759,7 @@ const Home = () => {
       {/* Mobile Banner Apple (Dynamic) */}
       <div className="md:hidden rounded-lg shadow-lg mx-3 h-[160px]">
         {getBannersForSection("apple-mobile", "home-brand-single").length > 0 ? (
-          <Link to={getBannersForSection("apple-mobile", "home-brand-single")[0].link || brandUrls.Apple} aria-label="Browse Apple products">
+          <Link to={getBannerLink(getBannersForSection("apple-mobile", "home-brand-single")[0], brandUrls.Apple)} aria-label="Browse Apple products">
             <img
               src={getFullImageUrl(getBannersForSection("apple-mobile", "home-brand-single")[0].image)}
               alt={getBannersForSection("apple-mobile", "home-brand-single")[0].title || "Apple Products Banner Mobile"}
@@ -1779,7 +1792,7 @@ const Home = () => {
             <>
               <div className="w-1/2">
                 {appleBanner ? (
-                  <Link to={appleBanner.link || brandUrls.Apple}>
+                  <Link to={getBannerLink(appleBanner, brandUrls.Apple)}>
                     <img
                       src={getFullImageUrl(appleBanner.image)}
                       alt={appleBanner.title || "Apple Products Banner"}
@@ -1802,7 +1815,7 @@ const Home = () => {
               </div>
               <div className="w-1/2">
                 {samsungBanner ? (
-                  <Link to={samsungBanner.link || brandUrls.Samsung}>
+                  <Link to={getBannerLink(samsungBanner, brandUrls.Samsung)}>
                     <img
                       src={getFullImageUrl(samsungBanner.image)}
                       alt={samsungBanner.title || "Samsung Products Banner"}

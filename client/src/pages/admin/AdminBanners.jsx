@@ -322,7 +322,7 @@ const AdminBanners = () => {
                     value={formData.buttonLink}
                     onChange={(e) => setFormData({ ...formData, buttonLink: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="/shop"
+                    placeholder="shop (without language prefix)"
                   />
                 </div>
 
@@ -372,10 +372,10 @@ const AdminBanners = () => {
                     value={formData.link}
                     onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="/brand/hp or /product-category/laptops"
+                    placeholder="product-category/accessories (without language prefix)"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Where should this banner link to? Examples: /brand/hp, /product-category/laptops, /shop
+                    Enter the path WITHOUT language prefix (ae-en/ae-ar). Examples: brand/hp, product-category/laptops, shop
                   </p>
                 </div>
               )}

@@ -4,8 +4,10 @@ import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Link } from "react-router-dom"
 import { getFullImageUrl } from "../utils/imageUtils"
+import { useLanguage } from "../context/LanguageContext"
 
 const BannerSlider = ({ banners }) => {
+  const { getLocalizedPath } = useLanguage()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
 
@@ -81,7 +83,7 @@ const BannerSlider = ({ banners }) => {
       } else {
         return (
           <Link 
-            to={link} 
+            to={getLocalizedPath(link)} 
             className="absolute inset-0 cover cursor-pointer"
           >
             {content}
