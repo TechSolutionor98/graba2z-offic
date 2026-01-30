@@ -266,6 +266,18 @@ export const superAdminAPI = {
       headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
       body: JSON.stringify(adminData),
     }),
+  checkUserByEmail: (email) =>
+    apiRequest("/api/super-admin/check-user", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify({ email }),
+    }),
+  promoteToAdmin: (userId, data) =>
+    apiRequest(`/api/super-admin/promote-to-admin/${userId}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify(data),
+    }),
   updateAdmin: (id, adminData) =>
     apiRequest(`/api/super-admin/admins/${id}`, {
       method: "PUT",

@@ -46,6 +46,8 @@ const SuperAdminManagement = () => {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [existingUser, setExistingUser] = useState(null)
+  const [checkingEmail, setCheckingEmail] = useState(false)
 
   useEffect(() => {
     fetchAdmins()
@@ -74,8 +76,66 @@ const SuperAdminManagement = () => {
     }
   }
 
+  const checkEmailExists = async (email) => {
+    if (!email || email.length < 3) {
+      setExistingUser(null)
+      return
+    }
+
+    try {
+      setCheckingEmail(true)
+      const response = await superAdminAPI.checkUserByEmail(email)
+      
+      if (response.exists) {
+        const user = response.user
+        // If user is already an admin, show error
+        if (user.isAdmin) {
+          showToast("This user is already an admin", "error")
+          setExistingUser(null)
+        } else {
+          // User exists but is not an admin - show promotion option
+          setExistingUser(user)
+        }
+      } else {
+        setExistingUser(null)
+      }
+    } catch (error) {
+      console.error("Error checking email:", error)
+      setExistingUser(null)
+    } finally {
+      setCheckingEmail(false)
+    }
+  }
+
+  const handlePromoteToAdmin = async (e) => {
+    e.preventDefault()
+    try {
+      setSaving(true)
+      await superAdminAPI.promoteToAdmin(existingUser._id, {
+        isSuperAdmin: formData.isSuperAdmin,
+        permissions: { fullAccess: false },
+      })
+      showToast("User promoted to admin successfully", "success")
+      setShowCreateModal(false)
+      resetForm()
+      setExistingUser(null)
+      fetchAdmins()
+    } catch (error) {
+      showToast(error.response?.data?.message || "Failed to promote user", "error")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleCreateAdmin = async (e) => {
     e.preventDefault()
+    
+    // If existing user found, promote them instead
+    if (existingUser) {
+      handlePromoteToAdmin(e)
+      return
+    }
+
     try {
       setSaving(true)
       await superAdminAPI.createAdmin(formData)
@@ -147,6 +207,7 @@ const SuperAdminManagement = () => {
       isSuperAdmin: false,
     })
     setSelectedAdmin(null)
+    setExistingUser(null)
   }
 
   const openEditModal = (admin) => {
@@ -187,7 +248,10 @@ const SuperAdminManagement = () => {
           <p className="text-slate-600">Manage admin users and their permissions</p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            resetForm()
+            setShowCreateModal(true)
+          }}
           className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-all shadow-lg shadow-green-200"
         >
           <UserPlus className="w-5 h-5" />
@@ -335,57 +399,114 @@ const SuperAdminManagement = () => {
               </div>
             </div>
             <form onSubmit={showEditModal ? handleUpdateAdmin : handleCreateAdmin} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Enter name"
-                    required
-                  />
+              {/* Email Field - Always visible for create, show check functionality */}
+              {!showEditModal && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value })
+                        setExistingUser(null)
+                      }}
+                      onBlur={(e) => checkEmailExists(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Enter email"
+                      required
+                    />
+                    {checkingEmail && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <RefreshCw className="w-5 h-5 text-green-500 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Existing User Alert */}
+                  {existingUser && (
+                    <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                      <div className="flex items-start gap-3">
+                        <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-blue-900">User Already Exists</p>
+                          <p className="text-sm text-blue-700 mt-1">
+                            <strong>{existingUser.name}</strong> is already registered with this email.
+                          </p>
+                          <p className="text-sm text-blue-600 mt-2">
+                            Click "Promote to Admin" to make this user an admin without entering additional details.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Enter email"
-                    required
-                  />
+              )}
+
+              {/* Name Field - Hide if existing user found */}
+              {!existingUser && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Enter name"
+                      required={!existingUser}
+                      disabled={showEditModal}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Password {showEditModal && "(leave blank to keep current)"}
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full pl-10 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Enter password"
-                    required={!showEditModal}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
+              )}
+
+              {/* Email Field - For edit mode */}
+              {showEditModal && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Enter email"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Password Field - Hide if existing user found */}
+              {!existingUser && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Password {showEditModal && "(leave blank to keep current)"}
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full pl-10 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Enter password"
+                      required={!showEditModal && !existingUser}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -414,7 +535,13 @@ const SuperAdminManagement = () => {
                   disabled={saving}
                   className="flex-1 px-4 py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-all disabled:opacity-50"
                 >
-                  {saving ? "Saving..." : showEditModal ? "Update Admin" : "Create Admin"}
+                  {saving 
+                    ? "Saving..." 
+                    : showEditModal 
+                      ? "Update Admin" 
+                      : existingUser 
+                        ? "Promote to Admin" 
+                        : "Create Admin"}
                 </button>
               </div>
             </form>
