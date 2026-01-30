@@ -682,15 +682,13 @@ const Navbar = () => {
 
       if (exactMatch) {
         // Navigate to product details page
-        navigate(`/product/${exactMatch.slug || exactMatch._id}`)
+        navigate(getLocalizedPath(`/product/${encodeURIComponent(exactMatch.slug || exactMatch._id)}`))
         setShowSearchDropdown(false)
-        // Optionally clear search query
-        // setSearchQuery("");
+        setSearchQuery("")
       } else {
         // Navigate to shop page with search results
-        navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
+        navigate(getLocalizedPath(`/shop?search=${encodeURIComponent(searchQuery.trim())}`))
         setShowSearchDropdown(false)
-        // setSearchQuery("") // Optionally clear
       }
     }
   }
@@ -752,7 +750,7 @@ const Navbar = () => {
         <div className="w-full max-w-[1920px] mx-auto space-y-4">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 h-14 xl:h-18 2xl:h-20">
             {/* Logo - Exact Grabatoz Style */}
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to={getLocalizedPath("/")} className="flex items-center space-x-2">
               <div className="w-40 xl:w-44 2xl:w-48 h-auto flex items-center justify-center">
                 <img src="/new-logo.webp" alt="Logo" className="w-full h-full" />
               </div>
@@ -828,7 +826,7 @@ const Navbar = () => {
                         </Link>
                       ))}
                       <Link
-                        to={`/shop?search=${encodeURIComponent(searchQuery.trim())}`}
+                        to={getLocalizedPath(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)}
                         className="block text-center text-lime-600 hover:underline py-2 text-sm font-medium"
                         onClick={() => setShowSearchDropdown(false)}
                       >
@@ -843,7 +841,7 @@ const Navbar = () => {
             {/* Right Side Icons - Exact Grabatoz Style */}
             <div className="flex items-center space-x-2 xl:space-x-3 2xl:space-x-4">
               {/* Wishlist */}
-              <Link to="/wishlist" className="relative p-2 xl:p-2.5 2xl:p-3 border border-black" aria-label="Wishlist">
+              <Link to={getLocalizedPath("/wishlist")} className="relative p-2 xl:p-2.5 2xl:p-3 border border-black" aria-label="Wishlist">
                 <Heart className="w-[18px] h-[18px] xl:w-[19px] xl:h-[19px] 2xl:w-5 2xl:h-5 text-gray-600" />
                 {wishlist.length > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
@@ -870,21 +868,21 @@ const Navbar = () => {
                     {isAuthenticated ? (
                       <>
                         <Link
-                          to="/profile"
+                          to={getLocalizedPath("/profile")}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           My Profile
                         </Link>
                         <Link
-                          to="/orders"
+                          to={getLocalizedPath("/orders")}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           My Orders
                         </Link>
                         <Link
-                          to="/track-order"
+                          to={getLocalizedPath("/track-order")}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setIsProfileOpen(false)}
                         >
@@ -901,21 +899,21 @@ const Navbar = () => {
                     ) : (
                       <>
                         <Link
-                          to="/login"
+                          to={getLocalizedPath("/login")}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           Login
                         </Link>
                         <Link
-                          to="/register"
+                          to={getLocalizedPath("/register")}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           Register
                         </Link>
                         <Link
-                          to="/track-order"
+                          to={getLocalizedPath("/track-order")}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           onClick={() => setIsProfileOpen(false)}
                         >
@@ -928,7 +926,7 @@ const Navbar = () => {
               </div>
 
               {/* Cart */}
-              <Link to="/cart" className="relative p-2 xl:p-2.5 2xl:p-3">
+              <Link to={getLocalizedPath("/cart")} className="relative p-2 xl:p-2.5 2xl:p-3">
                 <ShoppingCart className="w-6 h-6 xl:w-7 xl:h-7 2xl:w-[30px] 2xl:h-[30px] text-gray-600" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
@@ -1329,7 +1327,7 @@ const Navbar = () => {
           </button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to={getLocalizedPath("/")} className="flex items-center">
             <img src="/admin-logo.svg" alt="Logo" className="h-8" />
           </Link>
 
@@ -1353,11 +1351,13 @@ const Navbar = () => {
                     const exactMatch = await findExactProductMatch(searchQuery.trim())
 
                     if (exactMatch) {
-                      navigate(`/product/${exactMatch.slug || exactMatch._id}`)
+                      navigate(getLocalizedPath(`/product/${encodeURIComponent(exactMatch.slug || exactMatch._id)}`))
+                      setSearchQuery("")
                     } else {
-                      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
+                      navigate(getLocalizedPath(`/shop?search=${encodeURIComponent(searchQuery.trim())}`))
                     }
 
+                    setShowSearchDropdown(false)
                     handleMobileSearchClose()
                   }
                 }}
@@ -1429,7 +1429,7 @@ const Navbar = () => {
                       </Link>
                     ))}
                     <Link
-                      to={`/shop?search=${encodeURIComponent(searchQuery.trim())}`}
+                      to={getLocalizedPath(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)}
                       className="block text-center text-lime-600 hover:underline py-2 text-sm font-medium"
                       onClick={() => {
                         setShowSearchDropdown(false)
@@ -1467,7 +1467,7 @@ const Navbar = () => {
                   <button
                     onClick={() => {
                       closeMobileMenu()
-                      navigate('/login')
+                      navigate(getLocalizedPath('/login'))
                     }}
                     className="text-white font-medium hover:text-white/90 transition-colors"
                   >
@@ -1493,7 +1493,7 @@ const Navbar = () => {
               {/* Quick Actions */}
               <div className="mb-6">
                 <Link
-                  to="/orders"
+                  to={getLocalizedPath("/orders")}
                   className="flex items-center py-3 text-gray-700 hover:bg-gray-50 rounded-lg px-2"
                   onClick={closeMobileMenu}
                 >
@@ -1501,7 +1501,7 @@ const Navbar = () => {
                   <strong>My Orders</strong>
                 </Link>
                 <Link
-                  to="/track-order"
+                  to={getLocalizedPath("/track-order")}
                   className="flex items-center py-3 text-gray-700 hover:bg-gray-50 rounded-lg px-2"
                   onClick={closeMobileMenu}
                 >
@@ -1509,7 +1509,7 @@ const Navbar = () => {
                   <strong>Track Order</strong>
                 </Link>
                 <Link
-                  to="/help"
+                  to={getLocalizedPath("/help")}
                   className="flex items-center py-3 text-gray-700 hover:bg-gray-50 rounded-lg px-2"
                   onClick={closeMobileMenu}
                 >
@@ -1535,7 +1535,7 @@ const Navbar = () => {
                     <Grid3X3 size={18} className="text-white" />
                     All Category
                   </h3>
-                  <Link to="/shop" className="text-sm text-white hover:text-white/90" onClick={closeMobileMenu}>
+                  <Link to={getLocalizedPath("/shop")} className="text-sm text-white hover:text-white/90" onClick={closeMobileMenu}>
                     See All
                   </Link>
                 </div>
@@ -1635,19 +1635,19 @@ const Navbar = () => {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
         <div className="flex items-center justify-around py-2">
           {/* Home */}
-          <Link to="/" className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500">
+          <Link to={getLocalizedPath("/")} className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500">
             <Home size={20} />
             <span className="text-xs mt-1">Home</span>
           </Link>
 
           {/* Shop */}
-          <Link to="/shop" className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500">
+          <Link to={getLocalizedPath("/shop")} className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500">
             <Grid3X3 size={20} />
             <span className="text-xs mt-1">Shop</span>
           </Link>
 
           {/* Cart */}
-          <Link to="/cart" className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500 relative">
+          <Link to={getLocalizedPath("/cart")} className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500 relative">
             <ShoppingCart size={20} />
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold hover:text-lime-500">
@@ -1659,7 +1659,7 @@ const Navbar = () => {
 
           {/* Wishlist */}
           <Link
-            to="/wishlist"
+            to={getLocalizedPath("/wishlist")}
             className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500 relative"
             aria-label="Wishlist"
           >
@@ -1674,7 +1674,7 @@ const Navbar = () => {
 
           {/* Account */}
           <Link
-            to={isAuthenticated ? "/profile" : "/login"}
+            to={getLocalizedPath(isAuthenticated ? "/profile" : "/login")}
             className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500"
           >
             <UserCircle size={20} />
