@@ -13,6 +13,7 @@ import { useWishlist } from "../context/WishlistContext"
 import { useLanguage } from "../context/LanguageContext"
 import LanguageSelector from "./LanguageSelector"
 import TranslatedText from "./TranslatedText"
+import { preloadTranslations } from "../LanguageModel/translationService"
 import {
   Search,
   Heart,
@@ -351,6 +352,37 @@ const Navbar = () => {
         window.__navbarCategories = treeData
       }
       setFlatSubCategories(Array.isArray(subsResp.data) ? subsResp.data : [])
+      
+      // Preload translations for all category and subcategory names when in Arabic mode
+      if (currentLanguage.code === 'ar') {
+        const allNames = []
+        
+        // Recursively collect all names from the tree
+        const collectNames = (nodes) => {
+          if (!Array.isArray(nodes)) return
+          for (const node of nodes) {
+            if (node.name) allNames.push(node.name)
+            if (Array.isArray(node.children)) {
+              collectNames(node.children)
+            }
+          }
+        }
+        
+        collectNames(treeData)
+        
+        // Also add flat subcategories
+        const flatSubs = Array.isArray(subsResp.data) ? subsResp.data : []
+        for (const sub of flatSubs) {
+          if (sub.name && !allNames.includes(sub.name)) {
+            allNames.push(sub.name)
+          }
+        }
+        
+        if (allNames.length > 0) {
+          console.log(`[Navbar] Preloading ${allNames.length} category/subcategory translations`)
+          preloadTranslations(allNames, 'ar')
+        }
+      }
     } catch (error) {
       console.error("Error fetching category tree:", error)
     }
@@ -562,6 +594,38 @@ const Navbar = () => {
   useEffect(() => {
     fetchCategoryTree()
   }, [])
+
+  // Preload translations when language changes to Arabic (if categories already loaded)
+  useEffect(() => {
+    if (currentLanguage.code === 'ar' && categories.length > 0) {
+      const allNames = []
+      
+      // Recursively collect all names from the tree
+      const collectNames = (nodes) => {
+        if (!Array.isArray(nodes)) return
+        for (const node of nodes) {
+          if (node.name) allNames.push(node.name)
+          if (Array.isArray(node.children)) {
+            collectNames(node.children)
+          }
+        }
+      }
+      
+      collectNames(categories)
+      
+      // Also add flat subcategories
+      for (const sub of flatSubCategories) {
+        if (sub.name && !allNames.includes(sub.name)) {
+          allNames.push(sub.name)
+        }
+      }
+      
+      if (allNames.length > 0) {
+        console.log(`[Navbar] Language changed to Arabic - preloading ${allNames.length} translations`)
+        preloadTranslations(allNames, 'ar')
+      }
+    }
+  }, [currentLanguage.code, categories, flatSubCategories])
 
   useEffect(() => {
     if (!hoveredCategory) {
