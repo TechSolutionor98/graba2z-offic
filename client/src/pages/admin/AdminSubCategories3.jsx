@@ -96,7 +96,7 @@ const AdminSubCategories3 = () => {
   const fetchSubCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`${config.API_URL}/api/subcategories`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/admin`, {
         headers: { Authorization: `Bearer ${token}` },
         params: { level: 3 }
       })
@@ -124,7 +124,7 @@ const AdminSubCategories3 = () => {
   const fetchLevel1SubCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`${config.API_URL}/api/subcategories`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/admin`, {
         headers: { Authorization: `Bearer ${token}` },
         params: { level: 1 }
       })
@@ -137,7 +137,7 @@ const AdminSubCategories3 = () => {
   const fetchLevel2SubCategories = async () => {
     try {
       const token = localStorage.getItem("adminToken")
-      const response = await axios.get(`${config.API_URL}/api/subcategories`, {
+      const response = await axios.get(`${config.API_URL}/api/subcategories/admin`, {
         headers: { Authorization: `Bearer ${token}` },
         params: { level: 2 }
       })
