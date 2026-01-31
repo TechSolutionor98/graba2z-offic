@@ -484,7 +484,7 @@ const Shop = () => {
       }
 
       if (filteredProducts.length > 0) {
-        const prices = filteredProducts.map((p) => p.price || 0)
+        const prices = filteredProducts.map((p) => p.offerPrice || 0)
         const minProductPrice = Math.min(...prices)
         const filteredMax = Math.max(...prices)
         if (priceRange[0] === 0 && priceRange[1] === 10000) {
@@ -555,7 +555,7 @@ const Shop = () => {
       }
 
       if (filteredProducts.length > 0) {
-        const prices = filteredProducts.map((p) => p.price || 0)
+        const prices = filteredProducts.map((p) => p.offerPrice || 0)
         const minProductPrice = Math.min(...prices)
         const filteredMax = Math.max(...prices)
         if (priceRange[0] === 0 && priceRange[1] === 10000) {
@@ -583,7 +583,7 @@ const Shop = () => {
       try {
         const allProducts = await productCache.getProducts()
         if (allProducts && allProducts.length > 0) {
-          const prices = allProducts.map((p) => p.price || 0)
+          const prices = allProducts.map((p) => p.offerPrice || 0)
           const globalMax = Math.max(...prices)
           setGlobalMaxPrice(globalMax)
           setMaxPrice(globalMax)

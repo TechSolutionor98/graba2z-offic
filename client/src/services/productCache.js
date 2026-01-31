@@ -909,7 +909,8 @@ class ProductCacheService {
     if (filters.priceRange && Array.isArray(filters.priceRange)) {
       const [minPrice, maxPrice] = filters.priceRange
       filteredProducts = filteredProducts.filter((product) => {
-        const price = product.price || 0
+        // Use offerPrice if available, otherwise use price
+        const price = product.offerPrice > 0 ? product.offerPrice : (product.price > 0 ? product.price : 0)
         return price >= minPrice && price <= maxPrice
       })
     }
@@ -960,9 +961,15 @@ class ProductCacheService {
       if (filters.sortBy) {
         switch (filters.sortBy) {
           case "price-low":
-            return (a.price || 0) - (b.price || 0)
+            // Get prices, fallback to Infinity for products without price to push them to the end
+            const priceA = a.offerPrice > 0 ? a.offerPrice : (a.price > 0 ? a.price : Infinity)
+            const priceB = b.offerPrice > 0 ? b.offerPrice : (b.price > 0 ? b.price : Infinity)
+            return priceA - priceB
           case "price-high":
-            return (b.price || 0) - (a.price || 0)
+            // Get prices, fallback to 0 for products without price to push them to the end
+            const priceHighA = a.offerPrice > 0 ? a.offerPrice : (a.price > 0 ? a.price : 0)
+            const priceHighB = b.offerPrice > 0 ? b.offerPrice : (b.price > 0 ? b.price : 0)
+            return priceHighB - priceHighA
           case "name":
             return (a.name || "").localeCompare(b.name || "")
           case "newest":
