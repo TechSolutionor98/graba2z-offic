@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useLanguage } from "../context/LanguageContext"
+import { getCachedTranslation } from "../LanguageModel/translationService"
 
 // Common UI phrases dictionary for accurate translations
 const uiDictionary = {
@@ -495,6 +496,7 @@ const uiDictionary = {
 /**
  * TranslatedText - Component that translates text
  * Uses dictionary for common phrases, uses Model API for dynamic content
+ * OPTIMIZED: Uses batched translation queue for efficient API calls
  */
 const TranslatedText = ({ 
   text, 
@@ -509,42 +511,76 @@ const TranslatedText = ({
   const sourceText = text || (typeof children === 'string' ? children : null)
   const [apiTranslation, setApiTranslation] = useState(null)
   const [isTranslating, setIsTranslating] = useState(false)
+  const mountedRef = useRef(true)
+  const translationRequestedRef = useRef(false)
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
   
   // Check dictionary synchronously - ALWAYS check dictionary first
   const getDictionaryTranslation = () => {
-    if (!sourceText || currentLanguage.code === "en" || skipTranslation) {
+    if (!sourceText || currentLanguage.code === "en" || skipTranslation || useModelOnly) {
       return null
     }
     const translation = uiDictionary[sourceText] || uiDictionary[sourceText.trim()] || null
-    if (translation) {
-      console.log(`[TranslatedText] Dictionary hit: "${sourceText}" -> "${translation}"`)
-    }
     return translation
   }
 
   const dictTranslation = getDictionaryTranslation()
+  
+  // Check if already cached in translation service
+  const getCachedApiTranslation = () => {
+    if (!sourceText || currentLanguage.code === "en" || skipTranslation || dictTranslation) {
+      return null
+    }
+    return getCachedTranslation(sourceText, 'en-ar')
+  }
 
-  // For dynamic content not in dictionary, use API
+  // For dynamic content not in dictionary, use API (batched internally)
   useEffect(() => {
     const fetchTranslation = async () => {
       // Skip if: English, no text, already have dict translation, or skip flag
       if (currentLanguage.code === "en" || !sourceText || skipTranslation || dictTranslation) {
         setApiTranslation(null)
+        translationRequestedRef.current = false
+        return
+      }
+      
+      // Check if already cached
+      const cached = getCachedTranslation(sourceText, 'en-ar')
+      if (cached) {
+        if (mountedRef.current) {
+          setApiTranslation(cached)
+        }
         return
       }
 
-      console.log(`[TranslatedText] API translating: "${sourceText}"`)
+      // Prevent duplicate requests for same text
+      if (translationRequestedRef.current) {
+        return
+      }
+      
+      translationRequestedRef.current = true
       setIsTranslating(true)
+      
       try {
+        // This will be batched automatically by translationService
         const translated = await translate(sourceText, currentLanguage.code)
-        if (translated && translated !== sourceText) {
-          console.log(`[TranslatedText] API result: "${sourceText}" -> "${translated}"`)
+        if (mountedRef.current && translated && translated !== sourceText) {
           setApiTranslation(translated)
         }
       } catch (error) {
         console.error("Translation API error:", error)
       } finally {
-        setIsTranslating(false)
+        if (mountedRef.current) {
+          setIsTranslating(false)
+          translationRequestedRef.current = false
+        }
       }
     }
 
@@ -556,14 +592,15 @@ const TranslatedText = ({
   if (currentLanguage.code === "ar" && !skipTranslation) {
     if (dictTranslation) {
       displayText = dictTranslation
-    } else if (apiTranslation) {
-      displayText = apiTranslation
+    } else {
+      // Check cache first for immediate display
+      const cached = getCachedApiTranslation()
+      if (cached) {
+        displayText = cached
+      } else if (apiTranslation) {
+        displayText = apiTranslation
+      }
     }
-  }
-
-  // Debug: log what we're rendering
-  if (sourceText && currentLanguage.code === "ar") {
-    console.log(`[TranslatedText] Render: source="${sourceText}", display="${displayText}", lang=${currentLanguage.code}`)
   }
 
   // If children is not a string, just render it as-is

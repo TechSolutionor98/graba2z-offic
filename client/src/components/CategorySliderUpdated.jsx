@@ -4,6 +4,8 @@ import { getFullImageUrl } from "../utils/imageUtils";
 import axios from "axios";
 import config from "../config/config";
 import TranslatedText from "./TranslatedText";
+import { useLanguage } from "../context/LanguageContext";
+import { preloadTranslations } from "../LanguageModel/translationService";
 
 const CategorySliderUpdated = ({ onCategoryClick }) => {
   const containerRef = useRef(null);
@@ -15,12 +17,28 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sliderShape, setSliderShape] = useState("circle");
   const [layoutType, setLayoutType] = useState("default");
+  const { currentLanguage } = useLanguage();
 
   // Touch/mouse state
   const startX = useRef(null);
   const isDragging = useRef(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // Preload translations when items change and language is Arabic
+  useEffect(() => {
+    if (currentLanguage.code === 'ar' && allSliderItems.length > 0) {
+      // Extract all names for translation
+      const names = allSliderItems
+        .map(item => item.name)
+        .filter(name => name && typeof name === 'string');
+      
+      if (names.length > 0) {
+        console.log(`[CategorySlider] Preloading ${names.length} category translations`);
+        preloadTranslations(names, 'ar');
+      }
+    }
+  }, [allSliderItems, currentLanguage.code]);
 
   // Fetch categories and settings from slider API
   useEffect(() => {

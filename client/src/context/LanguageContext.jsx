@@ -1,8 +1,13 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { translateToArabic, translateToEnglish } from "../LanguageModel/translationService"
+import { 
+  translateToArabic, 
+  translateToEnglish, 
+  getCachedTranslation,
+  preloadTranslations 
+} from "../LanguageModel/translationService"
 
 // Supported languages
 export const LANGUAGES = {
@@ -144,17 +149,22 @@ export const LanguageProvider = ({ children }) => {
     window.location.href = newPath
   }, [getPathWithoutLangPrefix, getLocalizedPath, location.pathname, navigate])
 
-  // Translate text function using Helsinki-NLP model
+  // Translate text function using Helsinki-NLP model (uses batched queue internally)
   const translate = useCallback(async (text, targetLang = currentLanguage.code) => {
     if (!text) return text
 
-    // Check cache first
+    // Check local cache first (from translationService)
+    const direction = targetLang === 'ar' ? 'en-ar' : 'ar-en';
+    const cached = getCachedTranslation(text, direction);
+    if (cached) {
+      return cached;
+    }
+
+    // Check context cache
     const cacheKey = `${targetLang}:${text}`
     if (translationCache[cacheKey]) {
       return translationCache[cacheKey]
     }
-
-    setIsLoading(true)
 
     try {
       let translatedText
@@ -165,7 +175,7 @@ export const LanguageProvider = ({ children }) => {
         translatedText = await translateToEnglish(text)
       }
 
-      // Cache the result
+      // Cache the result in context
       setTranslationCache(prev => ({
         ...prev,
         [cacheKey]: translatedText
@@ -175,18 +185,20 @@ export const LanguageProvider = ({ children }) => {
     } catch (error) {
       console.error("Translation error:", error)
       return text
-    } finally {
-      setIsLoading(false)
     }
   }, [currentLanguage.code, translationCache])
 
-  // Batch translate function
+  // Batch translate function - optimized to use preloadTranslations
   const translateBatch = useCallback(async (texts, targetLang = currentLanguage.code) => {
-    const results = await Promise.all(
-      texts.map(text => translate(text, targetLang))
-    )
-    return results
-  }, [currentLanguage.code, translate])
+    if (!texts || texts.length === 0) return [];
+    
+    // Use preloadTranslations which batches efficiently
+    await preloadTranslations(texts, targetLang);
+    
+    // All texts should now be cached, retrieve them
+    const direction = targetLang === 'ar' ? 'en-ar' : 'ar-en';
+    return texts.map(text => getCachedTranslation(text, direction) || text);
+  }, [currentLanguage.code])
 
   const value = {
     currentLanguage,

@@ -5,6 +5,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-r
 import axios from "axios"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
+import { useLanguage } from "../context/LanguageContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
 import ProductSchema from "../components/ProductSchema"
 import SEO from "../components/SEO"
@@ -13,6 +14,7 @@ import { generateShopURL, parseShopURL, createSlug } from "../utils/urlUtils"
 import { createMetaDescription, generateSEOTitle } from "../utils/seoHelpers"
 import { getFullImageUrl } from "../utils/imageUtils"
 import TranslatedText from "../components/TranslatedText"
+import { preloadTranslations } from "../LanguageModel/translationService"
 
 import config from "../config/config"
 import "rc-slider/assets/index.css"
@@ -212,6 +214,7 @@ const Shop = () => {
   const location = useLocation()
   const params = useParams()
   const { addToCart } = useCart()
+  const { currentLanguage } = useLanguage()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [brands, setBrands] = useState([])
@@ -270,6 +273,40 @@ const Shop = () => {
   const [delayedLoading, setDelayedLoading] = useState(false)
   const fetchTimeout = useRef()
   const loadingTimeout = useRef()
+
+  // Preload translations for categories, subcategories, and brands when language is Arabic
+  useEffect(() => {
+    if (currentLanguage.code === 'ar') {
+      const textsToTranslate = []
+      
+      // Collect category names
+      if (categories.length > 0) {
+        categories.forEach(cat => {
+          if (cat.name) textsToTranslate.push(cat.name)
+        })
+      }
+      
+      // Collect subcategory names
+      if (subCategories.length > 0) {
+        subCategories.forEach(sub => {
+          if (sub.name) textsToTranslate.push(sub.name)
+        })
+      }
+      
+      // Collect brand names
+      if (brands.length > 0) {
+        brands.forEach(brand => {
+          if (brand.name) textsToTranslate.push(brand.name)
+        })
+      }
+      
+      // Preload all translations in one batch
+      if (textsToTranslate.length > 0) {
+        console.log(`[Shop] Preloading ${textsToTranslate.length} translations`)
+        preloadTranslations(textsToTranslate, 'ar')
+      }
+    }
+  }, [categories, subCategories, brands, currentLanguage.code])
 
   // Progressive search function
   // Subcategory slider handlers
