@@ -1430,7 +1430,7 @@ const AdminProducts = () => {
           ) : (
             <>
               {/* Search and Filters Section */}
-              <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6 max-w-full overflow-hidden">
+              <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6 max-w-full overflow-visible">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Filter & Search Products</h3>
                 
                 {/* First Row: Parent Category, Level 1, Level 2, Level 3 */}
@@ -1665,7 +1665,7 @@ const AdminProducts = () => {
                           </button>
                           
                           {showBulkStatusDropdown && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                            <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                               <div className="py-1">
                                 <button
                                   onClick={() => handleBulkStatusUpdate('active')}
