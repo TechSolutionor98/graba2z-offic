@@ -200,7 +200,7 @@ const Footer = ({ className = "" }) => {
                 <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                   <li>
                     <Link to="/gaming-zone" className="hover:text-lime-400">
-                      Gaming Zone
+                      <TranslatedText>Gaming Zone</TranslatedText>
                     </Link>
                   </li>
                   {categories
