@@ -174,11 +174,10 @@ const Home = () => {
         // Get products from cache or API
         const products = await productCache.getProducts()
 
-        const [categoriesResponse, brandsResponse, bannersResponse, upgradeFeaturesResponse, settingsResponse, sectionsResponse] = await Promise.all([
+        const [categoriesResponse, brandsResponse, bannersResponse, settingsResponse, sectionsResponse] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/categories`),
           axios.get(`${API_BASE_URL}/api/brands`),
           axios.get(`${API_BASE_URL}/api/banners?active=true`),
-          axios.get(`${API_BASE_URL}/api/upgrade-features?active=true`).catch(() => ({ data: [] })),
           axios.get(`${API_BASE_URL}/api/settings`).catch(() => ({
             data: {
               homeSections: {
@@ -196,7 +195,6 @@ const Home = () => {
         const categoriesData = categoriesResponse.data
         const brandsData = brandsResponse.data
         const bannersData = bannersResponse.data
-        const upgradeFeaturesData = upgradeFeaturesResponse.data
         const settingsData = settingsResponse.data
         const sectionsData = sectionsResponse.data
 
@@ -662,7 +660,6 @@ const Home = () => {
         setLenovoProducts(lenovoData)
         setAppleProducts(appleData)
         setSamsungProducts(samsungData)
-        setUpgradeFeatures(upgradeFeaturesData)
         setSettings(settingsData)
         setHomeSections(sectionsData) // Don't pre-sort, let each zone handle its own sorting
         setLoading(false)
@@ -676,7 +673,6 @@ const Home = () => {
         console.log("Final Lenovo Products:", lenovoData)
         console.log("Final Apple Products:", appleData)
         console.log("Final Samsung Products:", samsungData)
-        console.log("Final Upgrade Features:", upgradeFeaturesData)
       } catch (error) {
         console.error("Error fetching data:", error)
         setError("Failed to load data. Please try again later.")
