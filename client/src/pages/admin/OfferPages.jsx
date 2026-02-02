@@ -175,11 +175,12 @@ const OfferPages = () => {
 
   const scrollPages = (direction) => {
     if (scrollContainerRef.current) {
-      const scrollAmount = 300
-      const newScrollPosition = scrollContainerRef.current.scrollLeft + 
+      const container = scrollContainerRef.current
+      const scrollAmount = container.clientWidth * 0.75 // Scroll 75% of visible width
+      const newScrollPosition = container.scrollLeft + 
         (direction === 'left' ? -scrollAmount : scrollAmount)
       
-      scrollContainerRef.current.scrollTo({
+      container.scrollTo({
         left: newScrollPosition,
         behavior: 'smooth'
       })
@@ -418,11 +419,10 @@ const OfferPages = () => {
 
                 <div
                   ref={scrollContainerRef}
-                  className="flex gap-4 overflow-x-hidden scrollbar-hide scroll-smooth px-8"
+                  className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-8"
                   style={{ 
                     scrollbarWidth: 'none', 
-                    msOverflowStyle: 'none',
-                    maxWidth: 'calc(320px * 2.7 + 16px * 2 + 64px)'
+                    msOverflowStyle: 'none'
                   }}
                 >
                   {offerPages.map((page) => (
