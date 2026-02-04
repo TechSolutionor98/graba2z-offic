@@ -8,6 +8,7 @@ import { Helmet } from "react-helmet-async"
 import { ChevronLeft, ChevronRight, ChevronDown, Minus, Plus, X } from "lucide-react"
 import Slider from "rc-slider"
 import "rc-slider/assets/index.css"
+import PriceFilter from "../components/PriceFilter"
 
 const SortDropdown = ({ value, onChange }) => {
   const [open, setOpen] = useState(false)
@@ -133,6 +134,8 @@ const OfferPage = () => {
     if (offerPrice > 0) return offerPrice
     return 0
   }
+
+  // PriceFilter component is used for temp UI state and Apply handling
 
   useEffect(() => {
     fetchOfferPageData()
@@ -738,9 +741,11 @@ const OfferPage = () => {
   // Calculate price range when products load
   useEffect(() => {
     if (products.length > 0) {
-      const prices = products.map(item => Number(item.product?.salePrice)).filter(price => !isNaN(price));
-      const max = prices.length ? Math.max(...prices) : 10000;
-      const min = prices.length ? Math.min(...prices) : 0;
+      const prices = products
+        .map(item => getDisplayPrice(item.product))
+        .filter(price => typeof price === "number" && !isNaN(price) && price > 0)
+      const max = prices.length ? Math.max(...prices) : 10000
+      const min = prices.length ? Math.min(...prices) : 0
       setMaxPrice(max);
       setMinPrice(min);
       setPriceRange([min, max]);
@@ -1021,48 +1026,13 @@ const OfferPage = () => {
                     {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                   </button>
                   {showPriceFilter && (
-                    <div className="mt-4 space-y-4">
-                      <Slider
-                        range
+                    <div className="mt-4">
+                      <PriceFilter
                         min={minPrice}
                         max={maxPrice}
-                        value={priceRange}
-                        onChange={(values) => setPriceRange(values)}
-                        trackStyle={[{ backgroundColor: "#84cc16" }]}
-                        handleStyle={[
-                          { backgroundColor: "#84cc16", borderColor: "#84cc16" },
-                          { backgroundColor: "#84cc16", borderColor: "#84cc16" },
-                        ]}
-                        railStyle={{ backgroundColor: "#e5e7eb" }}
+                        initialRange={priceRange}
+                        onApply={(range) => setPriceRange(range)}
                       />
-                      <div className="flex justify-between mt-4 mb-2 text-xs font-semibold">
-                        <span>MIN</span>
-                        <span>MAX</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          className="w-1/2 border rounded px-2 py-1 text-center focus:border-lime-500 focus:ring-lime-500"
-                          value={priceRange[0]}
-                          min={minPrice}
-                          max={priceRange[1]}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value) || minPrice
-                            setPriceRange([Math.max(minPrice, Math.min(val, priceRange[1])), priceRange[1]])
-                          }}
-                        />
-                        <input
-                          type="number"
-                          className="w-1/2 border rounded px-2 py-1 text-center focus:border-lime-500 focus:ring-lime-500"
-                          value={priceRange[1]}
-                          min={priceRange[0]}
-                          max={maxPrice}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value) || maxPrice
-                            setPriceRange([priceRange[0], Math.min(maxPrice, Math.max(val, priceRange[0]))])
-                          }}
-                        />
-                      </div>
                     </div>
                   )}
                 </div>
@@ -1570,48 +1540,13 @@ const OfferPage = () => {
                     {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                   </button>
                   {showPriceFilter && (
-                    <div className="mt-4 space-y-4">
-                      <Slider
-                        range
+                    <div className="mt-4">
+                      <PriceFilter
                         min={minPrice}
                         max={maxPrice}
-                        value={priceRange}
-                        onChange={(values) => setPriceRange(values)}
-                        trackStyle={[{ backgroundColor: "#84cc16" }]}
-                        handleStyle={[
-                          { backgroundColor: "#84cc16", borderColor: "#84cc16" },
-                          { backgroundColor: "#84cc16", borderColor: "#84cc16" },
-                        ]}
-                        railStyle={{ backgroundColor: "#e5e7eb" }}
+                        initialRange={priceRange}
+                        onApply={(range) => setPriceRange(range)}
                       />
-                      <div className="flex justify-between mt-4 mb-2 text-xs font-semibold">
-                        <span>MIN</span>
-                        <span>MAX</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          className="w-1/2 border rounded px-2 py-1 text-center focus:border-lime-500 focus:ring-lime-500"
-                          value={priceRange[0]}
-                          min={minPrice}
-                          max={priceRange[1]}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value) || minPrice
-                            setPriceRange([Math.max(minPrice, Math.min(val, priceRange[1])), priceRange[1]])
-                          }}
-                        />
-                        <input
-                          type="number"
-                          className="w-1/2 border rounded px-2 py-1 text-center focus:border-lime-500 focus:ring-lime-500"
-                          value={priceRange[1]}
-                          min={priceRange[0]}
-                          max={maxPrice}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value) || maxPrice
-                            setPriceRange([priceRange[0], Math.min(maxPrice, Math.max(val, priceRange[0]))])
-                          }}
-                        />
-                      </div>
                     </div>
                   )}
                 </div>
