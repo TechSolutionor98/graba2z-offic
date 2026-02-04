@@ -123,6 +123,17 @@ const OfferPage = () => {
   const [subCategory3Name, setSubCategory3Name] = useState(null)
   const [subCategory4Name, setSubCategory4Name] = useState(null)
 
+  // Helper to compute the displayed price (same logic as ProductCard)
+  const getDisplayPrice = (product = {}) => {
+    const basePrice = Number(product.price) || 0
+    const offerPrice = Number(product.offerPrice) || 0
+    const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
+    if (hasValidOffer) return offerPrice
+    if (basePrice > 0) return basePrice
+    if (offerPrice > 0) return offerPrice
+    return 0
+  }
+
   useEffect(() => {
     fetchOfferPageData()
   }, [slug])
@@ -247,7 +258,24 @@ const OfferPage = () => {
         
         console.log('After enrichment - Category:', product.category)
         console.log('After enrichment - Brand:', product.brand)
-        
+
+        // Normalize price fields so ProductCard displays the same offer/base prices
+        // Prefer existing `offerPrice`/`price` if present, otherwise map from `salePrice`/`regularPrice`.
+        if (product.offerPrice == null && product.salePrice != null) {
+          product.offerPrice = product.salePrice
+        }
+        if (product.price == null && product.regularPrice != null) {
+          product.price = product.regularPrice
+        }
+
+        // Also check common alternate naming
+        if (product.offerPrice == null && product.sale_price != null) {
+          product.offerPrice = product.sale_price
+        }
+        if (product.price == null && product.regular_price != null) {
+          product.price = product.regular_price
+        }
+
         return { ...item, product }
       })
       
@@ -644,9 +672,14 @@ const OfferPage = () => {
       })
     }
 
-    // Price filter
+    // Price filter (use display price matching ProductCard)
     filtered = filtered.filter(item => {
-      const price = item.product?.salePrice || item.product?.regularPrice || 0
+      const price = getDisplayPrice(item.product)
+      // If price is 0 (no valid price), only exclude when user changed range
+      if (price === 0) {
+        if (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) return false
+        return true
+      }
       return price >= priceRange[0] && price <= priceRange[1]
     })
 
@@ -661,20 +694,27 @@ const OfferPage = () => {
     // Apply sorting
     if (sortBy === "price-low") {
       filtered.sort((a, b) => {
-        const priceA = a.product?.salePrice || a.product?.regularPrice || 0
-        const priceB = b.product?.salePrice || b.product?.regularPrice || 0
+        const priceA = getDisplayPrice(a.product)
+        const priceB = getDisplayPrice(b.product)
+        if (priceA === priceB) return 0
+        // put items with 0 price (no valid price) at the end
+        if (priceA === 0) return 1
+        if (priceB === 0) return -1
         return priceA - priceB
       })
     } else if (sortBy === "price-high") {
       filtered.sort((a, b) => {
-        const priceA = a.product?.salePrice || a.product?.regularPrice || 0
-        const priceB = b.product?.salePrice || b.product?.regularPrice || 0
+        const priceA = getDisplayPrice(a.product)
+        const priceB = getDisplayPrice(b.product)
+        if (priceA === priceB) return 0
+        if (priceA === 0) return 1
+        if (priceB === 0) return -1
         return priceB - priceA
       })
     } else if (sortBy === "name") {
       filtered.sort((a, b) => {
-        const nameA = a.product?.name?.toLowerCase() || ""
-        const nameB = b.product?.name?.toLowerCase() || ""
+        const nameA = typeof a.product?.name === "string" ? a.product.name.toLowerCase() : ""
+        const nameB = typeof b.product?.name === "string" ? b.product.name.toLowerCase() : ""
         return nameA.localeCompare(nameB)
       })
     } else if (sortBy === "newest") {
@@ -698,12 +738,12 @@ const OfferPage = () => {
   // Calculate price range when products load
   useEffect(() => {
     if (products.length > 0) {
-      const prices = products.map(item => item.product?.salePrice || item.product?.regularPrice || 0)
-      const max = Math.max(...prices, 10000)
-      const min = Math.min(...prices, 0)
-      setMaxPrice(max)
-      setMinPrice(min)
-      setPriceRange([min, max])
+      const prices = products.map(item => Number(item.product?.salePrice)).filter(price => !isNaN(price));
+      const max = prices.length ? Math.max(...prices) : 10000;
+      const min = prices.length ? Math.min(...prices) : 0;
+      setMaxPrice(max);
+      setMinPrice(min);
+      setPriceRange([min, max]);
     }
   }, [products])
 
