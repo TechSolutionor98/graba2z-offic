@@ -752,13 +752,27 @@ const OfferPage = () => {
       return price >= priceRange[0] && price <= priceRange[1]
     })
 
-    // Stock filter
-    if (stockFilters.inStock) {
-      filtered = filtered.filter(item => item.product?.countInStock > 0)
+    // Stock filter - keep logic consistent with ProductCard so badge matches filter
+    const getStockBucket = (product) => {
+      const rawStatus = product?.stockStatus
+      const status = rawStatus != null && String(rawStatus).trim() !== ""
+        ? String(rawStatus).trim()
+        : (Number(product?.countInStock) > 0 ? "In Stock" : "Out of Stock")
+
+      const normalized = status.toLowerCase().replace(/\s+/g, "")
+      if (normalized === "outofstock" || normalized === "stockout") return "out"
+      if (normalized === "instock" || normalized === "available" || normalized === "preorder") return "in"
+
+      // Fallback: if status is unknown, rely on countInStock
+      return Number(product?.countInStock) > 0 ? "in" : "out"
     }
-    if (stockFilters.outOfStock) {
-      filtered = filtered.filter(item => item.product?.countInStock === 0)
+
+    if (stockFilters.inStock && !stockFilters.outOfStock) {
+      filtered = filtered.filter(item => getStockBucket(item.product) === "in")
+    } else if (stockFilters.outOfStock && !stockFilters.inStock) {
+      filtered = filtered.filter(item => getStockBucket(item.product) === "out")
     }
+    // All Products: no stock filter applied
 
     // Apply sorting
     if (sortBy === "price-low") {
