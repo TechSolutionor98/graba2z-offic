@@ -307,7 +307,7 @@ const BlogList = () => {
                             <img
                               src={blog.mainImage ? getFullImageUrl(blog.mainImage) : "/placeholder.svg?height=250&width=250"}
                               alt={blog.title}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full bg-cover"
                             />
                           </div>
                           <div className="p-4 flex flex-col overflow-hidden" style={{ height: '160px' }}>
@@ -403,7 +403,7 @@ const BlogList = () => {
                             <img
                               src={getFullImageUrl(blog.mainImage) || "/placeholder.svg"}
                               alt={blog.title}
-                              className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
+                              className="bg-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
                             />
                           </div>
                           

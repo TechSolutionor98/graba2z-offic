@@ -158,7 +158,7 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
                         <img
                           src={getFullImageUrl(blog.mainImage) || "/placeholder.svg?height=300&width=400"}
                           alt={blog.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full bg-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-end">
                           <div className="p-6 w-full">
