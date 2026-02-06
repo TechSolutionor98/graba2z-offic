@@ -78,7 +78,7 @@ const Header = () => {
     const container = navListRef.current
     const allInOne = allInOneRef.current
     const moreBtn = moreBtnRef.current
-    if (!container || !allInOne) return
+    if (!container) return
 
     const containerWidth = container.clientWidth
     if (containerWidth === 0) return
@@ -87,7 +87,7 @@ const Header = () => {
     // Tailwind gap-x-8 => 2rem (32px) on default; read actual just in case
     const gap = parseFloat(styles.columnGap || styles.gap || 0) || 0
 
-    const allInOneWidth = allInOne.offsetWidth
+    const allInOneWidth = allInOne ? allInOne.offsetWidth : 0
     const catWidths = itemRefs.current.map((el) => (el ? el.offsetWidth : 0))
 
     // Reserve space for More button if needed; measure if present, else fallback
@@ -164,9 +164,10 @@ const Header = () => {
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200  -mt-3  sm:pt-2 sticky -top-1 mb-2 z-50">
-      <div className="max-w-7xl mx-auto">
-        {/* Mobile top bar: left categories toggle, centered logo, right search icon */}
-  <div className="md:hidden grid grid-cols-3 items-center py-3 px-2">
+      <div className="w-full">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
+          {/* Mobile top bar: left categories toggle, centered logo, right search icon */}
+  <div className="md:hidden grid grid-cols-3 items-center py-3">
           <div className="pl-1">
             <button
               className="p-2 text-gray-700 hover:text-gray-900"
@@ -220,7 +221,7 @@ const Header = () => {
 
         {/* Mobile search dropdown */}
         {isMobileSearchOpen && (
-          <div className="md:hidden px-2 pb-3">
+          <div className="md:hidden pb-3">
             <form onSubmit={handleSearch} className="w-full">
               <div className="flex items-center bg-white rounded-md overflow-hidden">
                 <input
@@ -296,14 +297,13 @@ const Header = () => {
           </Link>
         </div>
 
-        <div className="bg-lime-500 py-2 -mx-4 sm:-mx-6 lg:-mx-8 hidden md:block">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Desktop categories: centered; show More only when needed */}
+        </div>
+
+        {/* Desktop categories bar */}
+        <div className="hidden md:block bg-lime-500">
+          <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-2">
             <nav className="py-1">
-              <ul
-                ref={navListRef}
-                className="flex w-full items-center justify-center gap-12 whitespace-nowrap overflow-visible relative"
-              >
+              <ul ref={navListRef} className="flex w-full items-center justify-center gap-12 whitespace-nowrap overflow-visible relative">
                 {/* More dropdown (only render when overflow) - on the left */}
                 {overflowExists && (
                   <li className="relative">
@@ -342,8 +342,8 @@ const Header = () => {
                 </li> */}
 
                 {/* Visible categories */}
-                {categories.slice(0, visibleCount ?? categories.length).map((category, idx) => (
-                  <li key={category._id} ref={(el) => (itemRefs.current[idx] = el)}>
+                {categories.slice(0, visibleCount ?? categories.length).map((category) => (
+                  <li key={category._id}>
                     <Link
                       to={`/blogs/${category.randomBlogSlug}`}
                       className="text-white hover:text-lime-100 font-medium"

@@ -278,7 +278,7 @@ const BlogList = () => {
 
         {/* Trending Section */}
         <section className="bg-white py-6 sm:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
             <div className="text-center mb-4 sm:mb-12">
               <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2">TRENDING THIS WEEK</h2>
             </div>
@@ -380,7 +380,7 @@ const BlogList = () => {
 
         {/* Latest Posts Section */}
         <section className="mb-9">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
             <div className="text-center mb-12">
               <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2">LATEST POSTS</h2>
             </div>

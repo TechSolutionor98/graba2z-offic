@@ -70,7 +70,7 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
   if (!featuredBlogs || featuredBlogs.length === 0) {
     return (
       <section className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
           <div className="text-center py-12">
             <div className="flex items-center justify-center mb-4">
               <Sparkles className="w-8 h-8 text-lime-400 mr-2" />
@@ -88,7 +88,7 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
 
   return (
     <section className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
         {/* Section Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-3">

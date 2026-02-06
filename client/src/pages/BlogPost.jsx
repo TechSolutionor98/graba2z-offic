@@ -201,7 +201,7 @@ const BlogPost = () => {
           style={{ width: `${progress}%` }}
         />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8">
         {/* Breadcrumbs */}
         <nav className="text-sm text-gray-600 mb-8">
           <ol className="flex items-center flex-wrap gap-2">
