@@ -2026,6 +2026,16 @@ const OfferPage = () => {
 
             {/* Main Content Area - Categories, Brands, and Products */}
             <div className="flex-1 lg:w-3/4">
+              <div className="flex flex-row justify-between items-center mb-6 relative z-10">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl font-bold text-gray-900">{offerPage?.name}</h1>
+                  <p className="text-gray-600 mt-1">{filteredProducts.length} products found</p>
+                </div>
+                <div className="hidden md:block mt-0 flex-shrink-0 relative z-20">
+                  <SortDropdown value={sortBy} onChange={(e) => setSortBy(e.target.value)} />
+                </div>
+              </div>
+
               {/* Mobile Filter Button */}
               <div className="md:hidden mb-4 flex gap-2">
                 <button
@@ -2181,12 +2191,6 @@ const OfferPage = () => {
               {/* Products Section */}
               {filteredProducts.length > 0 && (
                 <section>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-3xl font-bold text-gray-800">Products</h2>
-                    <div className="hidden md:block">
-                      <SortDropdown value={sortBy} onChange={(e) => setSortBy(e.target.value)} />
-                    </div>
-                  </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     {filteredProducts.map((item, index) => (
                       <ProductCard key={item._id} product={item.product} offerPageName={offerPage?.name} cardIndex={index} />
