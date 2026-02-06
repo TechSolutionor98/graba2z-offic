@@ -219,6 +219,14 @@ const OfferPage = () => {
         }
       })
       
+      // IMPORTANT: Also add ALL subcategories to categoryMap
+      // because product.category field can contain subcategory IDs, not just parent category IDs
+      allSubcategoriesRes.data.forEach(subcategory => {
+        if (subcategory && subcategory._id && !categoryMap[subcategory._id]) {
+          categoryMap[subcategory._id] = subcategory
+        }
+      })
+      
       console.log('Brand Map:', brandMap)
       console.log('Category Map:', categoryMap)
       
@@ -287,11 +295,27 @@ const OfferPage = () => {
       setProducts(enrichedProducts)
       setFilteredProducts(enrichedProducts)
       
-      // Set OFFER-SPECIFIC brands and categories for the SLIDERS ONLY
+      // Set OFFER-SPECIFIC brands for the SLIDERS ONLY
       setSliderBrands(brandsRes.data.filter(item => item.isActive && item.brand))
-      setSliderCategories(categoriesRes.data.filter(item => item.isActive && item.category))
       
-      // Use ALL brands and categories for the SIDEBAR FILTERS (not just offer-specific ones)
+      // Extract unique categories from products for slider (instead of using offer-categories API)
+      const uniqueCategoriesMap = new Map()
+      enrichedProducts.forEach(({ product }) => {
+        const category = product.category
+        if (category && typeof category === 'object' && category._id && category.name) {
+          if (!uniqueCategoriesMap.has(category._id)) {
+            uniqueCategoriesMap.set(category._id, { 
+              category: category, 
+              isActive: true, 
+              _id: category._id 
+            })
+          }
+        }
+      })
+      const categoriesFromProducts = Array.from(uniqueCategoriesMap.values())
+      setSliderCategories(categoriesFromProducts)
+      
+      // Use ALL brands for the SIDEBAR FILTERS (not just offer-specific ones)
       const validBrands = allBrandsRes.data.filter(brand => {
         const isValid =
           brand &&
@@ -304,37 +328,22 @@ const OfferPage = () => {
         return isValid
       })
       
-      const validCategories = allCategoriesRes.data.filter(cat => {
-        const isValid =
-          cat &&
-          typeof cat === "object" &&
-          cat.name &&
-          typeof cat.name === "string" &&
-          cat.name.trim() !== "" &&
-          cat.isActive !== false &&
-          !cat.isDeleted &&
-          !cat.name.match(/^[0-9a-fA-F]{24}$/)
-        return isValid
+      // Filter brands to only show those with products on this offer page
+      const usedBrandIds = new Set()
+      enrichedProducts.forEach(({ product }) => {
+        const brandId = typeof product.brand === 'object' ? product.brand._id : product.brand
+        if (brandId) usedBrandIds.add(brandId)
       })
+      const filteredBrands = validBrands.filter(brand => usedBrandIds.has(brand._id))
       
-      // Process subcategories
-      const validSubcategories = allSubcategoriesRes.data.filter(subCat => {
-        const isValid =
-          subCat &&
-          typeof subCat === "object" &&
-          subCat.name &&
-          typeof subCat.name === "string" &&
-          subCat.name.trim() !== "" &&
-          subCat.isActive !== false &&
-          !subCat.isDeleted &&
-          !subCat.name.match(/^[0-9a-fA-F]{24}$/)
-        return isValid
-      })
+      // Map to match the structure expected by the sidebar
+      setBrands(filteredBrands.map(brand => ({ brand, isActive: true, _id: brand._id })))
       
-      // Map to match the structure expected by the sidebar (with .brand and .category wrappers)
-      setBrands(validBrands.map(brand => ({ brand, isActive: true, _id: brand._id })))
-      setCategories(validCategories.map(category => ({ category, isActive: true, _id: category._id })))
-      setAllSubcategories(validSubcategories)
+      // Use the same categories from products for sidebar
+      setCategories(categoriesFromProducts)
+      
+      // Set empty subcategories since we're only showing main categories from products
+      setAllSubcategories([])
 
       setLoading(false)
     } catch (error) {
@@ -654,23 +663,80 @@ const OfferPage = () => {
     // Category filter
     if (selectedCategory) {
       filtered = filtered.filter(item => {
-        // Check if product matches the category (parent category)
-        if (item.product?.category?._id === selectedCategory || item.product?.category === selectedCategory) {
-          return true
+        const product = item.product
+        
+        // Helper to extract ID from object or string
+        const getId = (field) => {
+          if (!field) return null
+          return typeof field === 'object' ? field._id : field
         }
-        // Check if product matches any subcategory level
-        if (item.product?.subcategory?._id === selectedCategory || item.product?.subcategory === selectedCategory) {
-          return true
+        
+        // Get all category/subcategory IDs from the product
+        const categoryId = getId(product.category)
+        const subcategoryId = getId(product.subcategory)
+        const subcategory2Id = getId(product.subcategory2)
+        const subcategory3Id = getId(product.subcategory3)
+        const subcategory4Id = getId(product.subcategory4)
+        
+        // Check if selected category matches any level
+        if (categoryId === selectedCategory) return true
+        if (subcategoryId === selectedCategory) return true
+        if (subcategory2Id === selectedCategory) return true
+        if (subcategory3Id === selectedCategory) return true
+        if (subcategory4Id === selectedCategory) return true
+        
+        // Also check if the selected category is a parent of any of these
+        // This handles the case where product.category is actually a subcategory object
+        if (product.category && typeof product.category === 'object') {
+          // Check if the category object has parentCategory or parentSubCategory
+          const catObj = product.category
+          if (catObj.category) {
+            const parentCatId = getId(catObj.category)
+            if (parentCatId === selectedCategory) return true
+          }
+          if (catObj.parentSubCategory) {
+            const parentSubId = getId(catObj.parentSubCategory)
+            if (parentSubId === selectedCategory) return true
+          }
         }
-        if (item.product?.subcategory2?._id === selectedCategory || item.product?.subcategory2 === selectedCategory) {
-          return true
+        
+        // Check subcategory hierarchy
+        const checkSubcategoryHierarchy = (subcat) => {
+          if (!subcat || typeof subcat !== 'object') return false
+          
+          // Check parent category
+          if (subcat.category) {
+            const parentCatId = getId(subcat.category)
+            if (parentCatId === selectedCategory) return true
+          }
+          
+          // Check parent subcategory and recurse
+          if (subcat.parentSubCategory) {
+            const parentSubId = getId(subcat.parentSubCategory)
+            if (parentSubId === selectedCategory) return true
+            
+            // Find the parent subcategory object and recurse
+            const parentSubcat = allSubcategories.find(s => s._id === parentSubId)
+            if (parentSubcat && checkSubcategoryHierarchy(parentSubcat)) return true
+          }
+          
+          return false
         }
-        if (item.product?.subcategory3?._id === selectedCategory || item.product?.subcategory3 === selectedCategory) {
-          return true
+        
+        // Check each subcategory level for hierarchy match
+        if (product.subcategory && typeof product.subcategory === 'object') {
+          if (checkSubcategoryHierarchy(product.subcategory)) return true
         }
-        if (item.product?.subcategory4?._id === selectedCategory || item.product?.subcategory4 === selectedCategory) {
-          return true
+        if (product.subcategory2 && typeof product.subcategory2 === 'object') {
+          if (checkSubcategoryHierarchy(product.subcategory2)) return true
         }
+        if (product.subcategory3 && typeof product.subcategory3 === 'object') {
+          if (checkSubcategoryHierarchy(product.subcategory3)) return true
+        }
+        if (product.subcategory4 && typeof product.subcategory4 === 'object') {
+          if (checkSubcategoryHierarchy(product.subcategory4)) return true
+        }
+        
         return false
       })
     }
@@ -1982,7 +2048,7 @@ const OfferPage = () => {
               </div>
 
               {/* Categories Slider - First Line */}
-              {sliderCategories.length > 0 && (
+              {false && sliderCategories.length > 0 && (
                 <section className="mb-8">
                   {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Categories...</h2> */}
                   <div className="relative">
@@ -2042,7 +2108,7 @@ const OfferPage = () => {
               )}
 
               {/* Brands Slider - Second Line */}
-              {sliderBrands.length > 0 && (
+              {false && sliderBrands.length > 0 && (
                 <section className="mb-8">
                   {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Brands...</h2> */}
                   <div className="relative">
