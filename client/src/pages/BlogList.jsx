@@ -302,13 +302,15 @@ const BlogList = () => {
                         key={blog._id}
                         className={`${scrollable ? "flex-none w-full md:w-[calc((100%-24px)/2)] lg:w-[calc((100%-72px)/4)]" : ""}`}
                       >
-                        <Link to={`/blogs/${blog.slug}`} className="block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
-                          <div className="aspect-square relative flex-shrink-0">
-                            <img
-                              src={blog.mainImage ? getFullImageUrl(blog.mainImage) : "/placeholder.svg?height=250&width=250"}
-                              alt={blog.title}
-                              className="w-full h-full bg-cover"
-                            />
+                        <Link to={`/blogs/${blog.slug}`} className="block bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow h-full flex flex-col">
+                          <div className="p-2 flex-shrink-0">
+                            <div className="relative w-full h-36 sm:h-40 overflow-hidden rounded-md bg-gray-100">
+                              <img
+                                src={blog.mainImage ? getFullImageUrl(blog.mainImage) : "/placeholder.svg?height=250&width=250"}
+                                alt={blog.title}
+                                className="block w-full h-full bg-cover"
+                              />
+                            </div>
                           </div>
                           <div className="p-4 flex flex-col overflow-hidden" style={{ height: '160px' }}>
                             {(() => {
