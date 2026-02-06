@@ -11,6 +11,7 @@ import config from "../config/config"
 import Comments from "../components/Comments"
 import RelatedPosts from "../components/RelatedPosts"
 import SEO from "../components/SEO"
+import TipTapRenderer from "../components/TipTapRenderer"
 
 const API_BASE_URL = `${config.API_URL}`
 
@@ -298,10 +299,7 @@ const BlogPost = () => {
 
             {/* Content */}
             <div className="sm:px-8 sm:py-6 px-2 py-2">
-              <div
-                className="prose prose-lg max-w-none text-gray-800 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: contentHtml || blog.description }}
-              />
+              <TipTapRenderer content={contentHtml || blog.description} />
             </div>
 
             {/* Tags */}
