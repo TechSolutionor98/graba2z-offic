@@ -1050,7 +1050,7 @@ const OfferPage = () => {
                       {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Price:</span> ₹{priceRange[0]} - ₹{priceRange[1]}
+                            <span className="font-semibold">Price:</span> AED{priceRange[0]} - AED{priceRange[1]}
                           </span>
                           <button
                             onClick={() => setPriceRange([minPrice, maxPrice])}
@@ -1564,7 +1564,7 @@ const OfferPage = () => {
                       {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Price:</span> ₹{priceRange[0]} - ₹{priceRange[1]}
+                            <span className="font-semibold">Price:</span> AED {priceRange[0]} - AED {priceRange[1]}
                           </span>
                           <button
                             onClick={() => setPriceRange([minPrice, maxPrice])}

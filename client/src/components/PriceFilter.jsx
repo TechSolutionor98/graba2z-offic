@@ -1,12 +1,39 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Slider from "rc-slider"
 import "rc-slider/assets/index.css"
 import TranslatedText from "../components/TranslatedText"
 
 const PriceFilter = ({ min, max, onApply, initialRange }) => {
-  const [range, setRange] = useState(initialRange || [min, max])
+  const normalizeRange = (maybeRange) => {
+    const raw = Array.isArray(maybeRange) && maybeRange.length === 2 ? maybeRange : [min, max]
+
+    let nextMin = Number(raw[0])
+    let nextMax = Number(raw[1])
+
+    if (!Number.isFinite(nextMin)) nextMin = Number(min) || 0
+    if (!Number.isFinite(nextMax)) nextMax = Number(max) || 0
+
+    const minBound = Number(min) || 0
+    const maxBound = Number(max) || 0
+
+    nextMin = Math.max(minBound, Math.min(nextMin, maxBound))
+    nextMax = Math.max(minBound, Math.min(nextMax, maxBound))
+
+    if (nextMin > nextMax) [nextMin, nextMax] = [nextMax, nextMin]
+
+    return [nextMin, nextMax]
+  }
+
+  const [range, setRange] = useState(() => normalizeRange(initialRange))
   const [inputMin, setInputMin] = useState(range[0])
   const [inputMax, setInputMax] = useState(range[1])
+
+  useEffect(() => {
+    const next = normalizeRange(initialRange)
+    setRange(next)
+    setInputMin(next[0])
+    setInputMax(next[1])
+  }, [initialRange, min, max])
 
   const handleSliderChange = (values) => {
     setRange(values)
