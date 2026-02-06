@@ -153,12 +153,13 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
                   }}
                 >
                   <Link to={`/blogs/${blog.slug}`} className="block group/card">
-                    <div className="relative cursor-pointer overflow-hidden rounded-xl shadow-2xl transition-transform duration-300 hover:scale-105">
-                      <div className="aspect-[4/3] relative">
+                    <div className="relative cursor-pointer rounded-xl shadow-2xl bg-white p-2">
+                      <div className="overflow-hidden rounded-lg">
+                        <div className="aspect-[4/3] relative">
                         <img
                           src={getFullImageUrl(blog.mainImage) || "/placeholder.svg?height=300&width=400"}
                           alt={blog.title}
-                          className="w-full h-full bg-cover"
+                          className="block w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-end">
                           <div className="p-6 w-full">
@@ -187,6 +188,7 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
                               </span>
                             </div>
                           </div>
+                        </div>
                         </div>
                       </div>
                     </div>
