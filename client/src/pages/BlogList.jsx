@@ -400,34 +400,36 @@ const BlogList = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
                     {(blogs || []).map((blog) => (
                       <Link key={blog._id} to={`/blogs/${blog.slug}`} className="group">
-                        <article className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full">
-                          <div className="relative h-56 w-full bg-gray-100 overflow-hidden">
-                            <img
-                              src={getFullImageUrl(blog.mainImage) || "/placeholder.svg"}
-                              alt={blog.title}
-                              className="bg-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
-                            />
+                        <article className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col h-full">
+                          <div className="p-2">
+                            <div className="relative h-60 w-full bg-gray-100 overflow-hidden rounded-lg">
+                              <img
+                                src={getFullImageUrl(blog.mainImage) || "/placeholder.svg"}
+                                alt={blog.title}
+                                className="block w-full h-full bg-cover"
+                              />
+                            </div>
                           </div>
                           
-                          <div className="p-6 flex flex-col flex-1">
+                          <div className="p-4 flex flex-col flex-1">
                             {(() => {
                               const deepestCategory = getDeepestCategory(blog)
                               return deepestCategory && (
-                                <span className="inline-block bg-lime-100 text-lime-700 text-xs px-3 py-1 rounded-full mb-3 w-fit">
+                                <span className="inline-block bg-lime-100 text-lime-700 text-xs px-3 py-1 rounded-full mb-1 w-fit">
                                   {deepestCategory.name}
                                 </span>
                               )
                             })()}
                             
-                            <h3 className="text-xl font-bold mb-3 line-clamp-2 group-hover:text-lime-600 transition-colors">
+                            <h3 className="text-xl font-bold mb-1 line-clamp-1 group-hover:text-lime-600 transition-colors">
                               {blog.title}
                             </h3>
                             
-                            <p className="text-gray-600 mb-4 text-sm line-clamp-3 flex-1">
+                            <p className="text-gray-600 mb-2 text-sm line-clamp-3 flex-1">
                               {truncateContent(blog.description, 120)}
                             </p>
                             
-                            <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-100">
+                            <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
                               <div className="flex items-center gap-3">
                                 <span className="flex items-center gap-1">
                                   <User size={14} /> {blog.postedBy || "Admin"}
