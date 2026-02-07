@@ -8,6 +8,13 @@ import { Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react"
 import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
+
+const debugBanners = (...args) => {
+  if (import.meta?.env?.VITE_DEBUG_BANNERS === "true") {
+    console.log("[DEBUG_BANNERS_ADMIN]", ...args)
+  }
+}
+
 const AdminBanners = () => {
   const [banners, setBanners] = useState([])
   const [categories, setCategories] = useState([])
@@ -102,6 +109,15 @@ const AdminBanners = () => {
     e.preventDefault()
     try {
       const token = localStorage.getItem("adminToken")
+
+      debugBanners("submit:start", {
+        editingId: editingBanner?._id,
+        position: formData.position,
+        deviceType: formData.deviceType,
+        buttonLink: formData.buttonLink,
+        link: formData.link,
+        title: formData.title,
+      })
       
       // Auto-map position to section and position for home banners
       let finalPosition = formData.position
@@ -125,6 +141,12 @@ const AdminBanners = () => {
           finalPosition = 'home-category-banner'
         }
       }
+
+      debugBanners("submit:mappedPosition", {
+        selectedPosition: formData.position,
+        finalPosition,
+        finalSection,
+      })
       
       const bannerData = {
         ...formData,
@@ -137,17 +159,48 @@ const AdminBanners = () => {
         category: formData.position === "category" ? formData.category : null,
       }
 
+      debugBanners("submit:payload", {
+        url: editingBanner
+          ? `${config.API_URL}/api/banners/${editingBanner._id}`
+          : `${config.API_URL}/api/banners`,
+        method: editingBanner ? "PUT" : "POST",
+        payload: {
+          position: bannerData.position,
+          section: bannerData.section,
+          deviceType: bannerData.deviceType,
+          buttonLink: bannerData.buttonLink,
+          link: bannerData.link,
+          title: bannerData.title,
+        },
+      })
+
       if (editingBanner) {
-        await axios.put(`${config.API_URL}/api/banners/${editingBanner._id}`, bannerData, {
+        const res = await axios.put(`${config.API_URL}/api/banners/${editingBanner._id}`, bannerData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
+        debugBanners("submit:response", {
+          id: res.data?._id,
+          position: res.data?.position,
+          section: res.data?.section,
+          deviceType: res.data?.deviceType,
+          buttonLink: res.data?.buttonLink,
+          link: res.data?.link,
+        })
       } else {
-        await axios.post(`${config.API_URL}/api/banners`, bannerData, {
+        const res = await axios.post(`${config.API_URL}/api/banners`, bannerData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+        })
+        debugBanners("submit:response", {
+          id: res.data?._id,
+          position: res.data?.position,
+          section: res.data?.section,
+          deviceType: res.data?.deviceType,
+          buttonLink: res.data?.buttonLink,
+          link: res.data?.link,
         })
       }
 
@@ -184,6 +237,16 @@ const AdminBanners = () => {
 
   const handleEdit = (banner) => {
     setEditingBanner(banner)
+
+    debugBanners("edit:open", {
+      id: banner?._id,
+      position: banner?.position,
+      section: banner?.section,
+      deviceType: banner?.deviceType,
+      buttonLink: banner?.buttonLink,
+      link: banner?.link,
+      title: banner?.title,
+    })
     
     // If banner has a section that matches one of our home sections, show that in position dropdown
     let displayPosition = banner.position

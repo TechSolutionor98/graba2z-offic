@@ -6,6 +6,12 @@ import { Link } from "react-router-dom"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { useLanguage } from "../context/LanguageContext"
 
+const debugHeroBanners = (...args) => {
+  if (import.meta?.env?.VITE_DEBUG_BANNERS === "true") {
+    console.log("[DEBUG_BANNERS_HERO]", ...args)
+  }
+}
+
 const BannerSlider = ({ banners }) => {
   const { getLocalizedPath } = useLanguage()
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -47,6 +53,19 @@ const BannerSlider = ({ banners }) => {
 
   const currentBanner = banners[currentSlide]
 
+  useEffect(() => {
+    if (!currentBanner) return
+    debugHeroBanners("slide:current", {
+      index: currentSlide,
+      id: currentBanner._id,
+      title: currentBanner.title,
+      position: currentBanner.position,
+      deviceType: currentBanner.deviceType,
+      buttonLink: currentBanner.buttonLink,
+      link: currentBanner.link,
+    })
+  }, [currentBanner, currentSlide])
+
   // Helper function to render banner content
   const renderBannerContent = () => {
     const content = (
@@ -68,6 +87,14 @@ const BannerSlider = ({ banners }) => {
       const link = currentBanner.buttonLink.trim()
       // Check if it's an external link
       const isExternal = link.startsWith("http://") || link.startsWith("https://")
+
+      debugHeroBanners("slide:computedLink", {
+        id: currentBanner._id,
+        rawButtonLink: currentBanner.buttonLink,
+        computedLink: link,
+        isExternal,
+        localized: isExternal ? link : getLocalizedPath(link),
+      })
       
       if (isExternal) {
         return (
