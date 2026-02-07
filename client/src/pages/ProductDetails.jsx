@@ -2078,8 +2078,10 @@ const ProductDetails = () => {
     )
   }
 
-  const pdTitle = `${product.name} — Grabatoz`
+  // SEO: Use custom SEO fields if provided, otherwise fall back to auto-generated values
+  const pdTitle = product.seoTitle || `${product.name} — Grabatoz`
   const pdDescription =
+    product.seoDescription ||
     (product.shortDescription &&
       String(product.shortDescription)
         .replace(/<[^>]+>/g, "")
@@ -2090,7 +2092,12 @@ const ProductDetails = () => {
         .slice(0, 160)) ||
     `${product.name} available at Grabatoz.`
 
-  const pdCanonicalPath = `/product/${encodeURIComponent(product.slug || product._id)}`
+  const pdCanonicalPath = product.seoCanonicalUrl || `/product/${encodeURIComponent(product.slug || product._id)}`
+  const pdKeywords = product.seoKeywords || (product.tags && product.tags.length > 0 ? product.tags.join(", ") : undefined)
+  const pdRobots = product.seoRobots || "index, follow"
+  const pdOgTitle = product.ogTitle || pdTitle
+  const pdOgDescription = product.ogDescription || pdDescription
+  const pdOgImage = product.ogImage || product.image
 
   const productImages = getCurrentImages()
 
@@ -2145,7 +2152,16 @@ const ProductDetails = () => {
 
   return (
     <div className="bg-white min-h-screen">
-      <SEO title={pdTitle} description={pdDescription} canonicalPath={pdCanonicalPath} image={product.image} />
+      <SEO 
+        title={pdTitle} 
+        description={pdDescription} 
+        canonicalPath={pdCanonicalPath} 
+        image={pdOgImage} 
+        keywords={pdKeywords}
+        noindex={pdRobots.includes("noindex")}
+        ogTitle={pdOgTitle}
+        ogDescription={pdOgDescription}
+      />
       <div className="max-w-8xl mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6 overflow-x-auto">

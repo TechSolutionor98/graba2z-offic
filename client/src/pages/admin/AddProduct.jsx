@@ -57,6 +57,14 @@ const AddProduct = () => {
     description: "",
     stockStatus: "",
     specifications: [],
+    seoTitle: "",
+    seoDescription: "",
+    seoKeywords: "",
+    seoCanonicalUrl: "",
+    seoRobots: "index, follow",
+    ogTitle: "",
+    ogDescription: "",
+    ogImage: "",
   })
 
   // Separate state for price inputs (treated as tax-inclusive per business rule)
@@ -435,6 +443,15 @@ const AddProduct = () => {
         description: formData.description,
         stockStatus: formData.stockStatus,
         specifications: formData.specifications.filter((spec) => spec.key && spec.value),
+        // SEO fields
+        seoTitle: formData.seoTitle || "",
+        seoDescription: formData.seoDescription || "",
+        seoKeywords: formData.seoKeywords || "",
+        seoCanonicalUrl: formData.seoCanonicalUrl || "",
+        seoRobots: formData.seoRobots || "index, follow",
+        ogTitle: formData.ogTitle || "",
+        ogDescription: formData.ogDescription || "",
+        ogImage: formData.ogImage || "",
       }
 
       await axios.post(`${config.API_URL}/api/products`, productData, {
@@ -1241,6 +1258,128 @@ const AddProduct = () => {
                   onChange={handleDescriptionChange}
                   placeholder="Enter detailed product description with images and formatting..."
                 />
+              </div>
+            </div>
+
+            {/* SEO Settings */}
+            <div className="bg-white rounded-lg shadow-sm border border-green-200 p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <h2 className="text-lg font-semibold text-gray-900">SEO Settings</h2>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">For Google Only</span>
+              </div>
+              <p className="text-sm text-gray-500 mb-6">These fields are only used for search engine meta tags. They will NOT be displayed on the product page.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+                  <input
+                    type="text"
+                    name="seoTitle"
+                    value={formData.seoTitle}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Custom title for Google (leave blank to use product name)"
+                    maxLength={70}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">{formData.seoTitle.length}/70 characters</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Robots Meta</label>
+                  <select
+                    name="seoRobots"
+                    value={formData.seoRobots}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="index, follow">Index, Follow (default)</option>
+                    <option value="noindex, follow">No Index, Follow</option>
+                    <option value="index, nofollow">Index, No Follow</option>
+                    <option value="noindex, nofollow">No Index, No Follow</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                  <textarea
+                    name="seoDescription"
+                    value={formData.seoDescription}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Custom meta description for Google (leave blank to auto-generate)"
+                    maxLength={160}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">{formData.seoDescription.length}/160 characters</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Meta Keywords</label>
+                  <input
+                    type="text"
+                    name="seoKeywords"
+                    value={formData.seoKeywords}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="keyword1, keyword2, keyword3"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Comma-separated keywords for search engines</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Canonical URL</label>
+                  <input
+                    type="text"
+                    name="seoCanonicalUrl"
+                    value={formData.seoCanonicalUrl}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="https://example.com/product/my-product (leave blank for default)"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Override the canonical URL if needed</p>
+                </div>
+              </div>
+
+              {/* Open Graph */}
+              <div className="mt-6 pt-6 border-t border-green-200">
+                <h3 className="text-md font-semibold text-gray-800 mb-4">Open Graph (Social Media Sharing)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">OG Title</label>
+                    <input
+                      type="text"
+                      name="ogTitle"
+                      value={formData.ogTitle}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Title for Facebook/Twitter (leave blank to use Meta Title)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">OG Image URL</label>
+                    <input
+                      type="text"
+                      name="ogImage"
+                      value={formData.ogImage}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Image URL for social sharing (leave blank to use product image)"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">OG Description</label>
+                    <textarea
+                      name="ogDescription"
+                      value={formData.ogDescription}
+                      onChange={handleChange}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Description for social sharing (leave blank to use Meta Description)"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

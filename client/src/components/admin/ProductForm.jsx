@@ -62,6 +62,14 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     featured: false,
     hideFromShop: false,
     stockStatus: "In Stock",
+    seoTitle: "",
+    seoDescription: "",
+    seoKeywords: "",
+    seoCanonicalUrl: "",
+    seoRobots: "index, follow",
+    ogTitle: "",
+    ogDescription: "",
+    ogImage: "",
   })
 
   // New states for price calculation
@@ -293,6 +301,14 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           featured: product.featured || false,
           hideFromShop: product.hideFromShop || false,
           stockStatus: product.stockStatus || "In Stock",
+          seoTitle: product.seoTitle || "",
+          seoDescription: product.seoDescription || "",
+          seoKeywords: product.seoKeywords || "",
+          seoCanonicalUrl: product.seoCanonicalUrl || "",
+          seoRobots: product.seoRobots || "index, follow",
+          ogTitle: product.ogTitle || "",
+          ogDescription: product.ogDescription || "",
+          ogImage: product.ogImage || "",
         })
         
         // Set video source type based on existing video URL
@@ -712,6 +728,15 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         selfVariationText: selfVariationText || "", // This product's own variation label
         colorVariations: colorVariations, // Add color variations array
         dosVariations: dosVariations, // Add DOS/Windows variations array
+        // SEO fields
+        seoTitle: formData.seoTitle || "",
+        seoDescription: formData.seoDescription || "",
+        seoKeywords: formData.seoKeywords || "",
+        seoCanonicalUrl: formData.seoCanonicalUrl || "",
+        seoRobots: formData.seoRobots || "index, follow",
+        ogTitle: formData.ogTitle || "",
+        ogDescription: formData.ogDescription || "",
+        ogImage: formData.ogImage || "",
       }
       await onSubmit(productData)
     } catch (error) {
@@ -1659,6 +1684,125 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
             dosVariations={dosVariations}
             onChange={setDosVariations}
           />
+        </div>
+
+        {/* SEO Settings Section */}
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">SEO Settings</h3>
+          <p className="text-sm text-gray-500 mb-6">These fields are only used for search engine meta tags. They will NOT be displayed on the product page.</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
+              <input
+                type="text"
+                name="seoTitle"
+                value={formData.seoTitle}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Custom page title for Google (leave blank to use product name)"
+                maxLength={70}
+              />
+              <p className="text-xs text-gray-400 mt-1">{formData.seoTitle.length}/70 characters</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Robots Meta</label>
+              <select
+                name="seoRobots"
+                value={formData.seoRobots}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="index, follow">Index, Follow (default)</option>
+                <option value="noindex, follow">No Index, Follow</option>
+                <option value="index, nofollow">Index, No Follow</option>
+                <option value="noindex, nofollow">No Index, No Follow</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+              <textarea
+                name="seoDescription"
+                value={formData.seoDescription}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Custom meta description for Google (leave blank to auto-generate from product description)"
+                maxLength={160}
+              />
+              <p className="text-xs text-gray-400 mt-1">{formData.seoDescription.length}/160 characters</p>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Meta Keywords</label>
+              <input
+                type="text"
+                name="seoKeywords"
+                value={formData.seoKeywords}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="keyword1, keyword2, keyword3"
+              />
+              <p className="text-xs text-gray-400 mt-1">Comma-separated keywords for search engines</p>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Canonical URL</label>
+              <input
+                type="text"
+                name="seoCanonicalUrl"
+                value={formData.seoCanonicalUrl}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="https://example.com/product/my-product (leave blank for default)"
+              />
+              <p className="text-xs text-gray-400 mt-1">Override the canonical URL if needed (leave blank to use default product URL)</p>
+            </div>
+          </div>
+
+          {/* Open Graph Settings */}
+          <div className="mt-6 pt-6 border-t border-green-200">
+            <h4 className="text-md font-semibold text-gray-800 mb-4">Open Graph (Social Media Sharing)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">OG Title</label>
+                <input
+                  type="text"
+                  name="ogTitle"
+                  value={formData.ogTitle}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Title for Facebook/Twitter sharing (leave blank to use Meta Title)"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">OG Image URL</label>
+                <input
+                  type="text"
+                  name="ogImage"
+                  value={formData.ogImage}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Image URL for social sharing (leave blank to use product image)"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">OG Description</label>
+                <textarea
+                  name="ogDescription"
+                  value={formData.ogDescription}
+                  onChange={handleInputChange}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Description for social sharing (leave blank to use Meta Description)"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Form Actions */}

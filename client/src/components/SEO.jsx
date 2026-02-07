@@ -22,11 +22,15 @@ function absoluteUrl(urlOrPath) {
  * - image?: string (absolute or relative)
  * - noindex?: boolean
  * - keywords?: string
+ * - ogTitle?: string (custom Open Graph title, falls back to title)
+ * - ogDescription?: string (custom Open Graph description, falls back to description)
  * - article?: object (for blog posts) - { author, datePublished, dateModified, tags }
  */
-export default function SEO({ title, description, canonicalPath, image, noindex = false, keywords, article }) {
+export default function SEO({ title, description, canonicalPath, image, noindex = false, keywords, ogTitle, ogDescription, article }) {
   const canonical = absoluteUrl(canonicalPath || (typeof window !== "undefined" ? window.location.pathname : "/"))
   const ogImage = image ? absoluteUrl(image) : undefined
+  const finalOgTitle = ogTitle || title
+  const finalOgDescription = ogDescription || description
 
   // Build Article structured data (JSON-LD)
   let articleSchema = null
@@ -68,8 +72,8 @@ export default function SEO({ title, description, canonicalPath, image, noindex 
       {noindex && <meta name="robots" content="noindex,nofollow" />}
 
       {/* Open Graph */}
-      {title && <meta property="og:title" content={title} />}
-      {description && <meta property="og:description" content={description} />}
+      {finalOgTitle && <meta property="og:title" content={finalOgTitle} />}
+      {finalOgDescription && <meta property="og:description" content={finalOgDescription} />}
       {canonical && <meta property="og:url" content={canonical} />}
       <meta property="og:type" content={article ? "article" : "website"} />
       {ogImage && <meta property="og:image" content={ogImage} />}
@@ -82,8 +86,8 @@ export default function SEO({ title, description, canonicalPath, image, noindex 
 
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
-      {title && <meta name="twitter:title" content={title} />}
-      {description && <meta name="twitter:description" content={description} />}
+      {finalOgTitle && <meta name="twitter:title" content={finalOgTitle} />}
+      {finalOgDescription && <meta name="twitter:description" content={finalOgDescription} />}
       {ogImage && <meta name="twitter:image" content={ogImage} />}
 
       {/* Structured Data (JSON-LD) */}
