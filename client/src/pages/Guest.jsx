@@ -128,11 +128,12 @@ const Guest = () => {
     return true
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
     if (!validate()) return
     setLoading(true)
+    
     // Save guest info and shipping address to localStorage
     localStorage.setItem("guestInfo", JSON.stringify({
       name: guestInfo.name,
@@ -149,6 +150,28 @@ const Guest = () => {
       email: guestInfo.email,
       phone: guestInfo.phone,
     }))
+    
+    // Register guest as a user in the background (non-blocking)
+    // This creates an account and sends them login credentials via email
+    try {
+      await axios.post(`${config.API_URL}/api/users/register-guest`, {
+        name: guestInfo.name,
+        email: guestInfo.email,
+        phone: guestInfo.phone,
+        address: {
+          address: guestInfo.address,
+          zipCode: guestInfo.zipCode,
+          state: guestInfo.state,
+          city: guestInfo.city,
+          country: guestInfo.country,
+        }
+      })
+      console.log('Guest account created successfully, credentials sent via email')
+    } catch (error) {
+      // Don't block the checkout flow if account creation fails
+      console.error('Failed to create guest account:', error)
+    }
+    
     setLoading(false)
     navigate("/checkout?step=3")
   }
