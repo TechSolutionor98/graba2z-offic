@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { useParams, Link } from "react-router-dom"
 import { Calendar, User, Eye, ArrowLeft, Tag, Share2, ChevronRight, MessageCircle } from "lucide-react"
 import { FaFacebookF, FaLinkedinIn, FaInstagram, FaPinterestP, FaYoutube } from "react-icons/fa"
@@ -24,6 +24,48 @@ const BlogPost = () => {
   const [recent, setRecent] = useState([])
   const [toc, setToc] = useState([])
   const [contentHtml, setContentHtml] = useState("")
+  const schemaContainerRef = useRef(null)
+
+  // Effect to inject and execute custom schema scripts
+  useEffect(() => {
+    if (!blog?.schema || !schemaContainerRef.current) return
+
+    const container = schemaContainerRef.current
+    container.innerHTML = ''
+
+    // Parse the HTML and extract scripts
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = blog.schema
+
+    // Get all script elements
+    const scripts = tempDiv.querySelectorAll('script')
+    
+    scripts.forEach((oldScript) => {
+      const newScript = document.createElement('script')
+      
+      // Copy all attributes
+      Array.from(oldScript.attributes).forEach((attr) => {
+        newScript.setAttribute(attr.name, attr.value)
+      })
+      
+      // Copy script content
+      newScript.textContent = oldScript.textContent
+      
+      // Append to container (this executes inline scripts)
+      container.appendChild(newScript)
+    })
+
+    // Also append non-script content (like noscript tags)
+    const nonScriptNodes = tempDiv.querySelectorAll(':not(script)')
+    nonScriptNodes.forEach((node) => {
+      container.appendChild(node.cloneNode(true))
+    })
+
+    // Cleanup on unmount
+    return () => {
+      container.innerHTML = ''
+    }
+  }, [blog?.schema])
 
   // Helper function to get the deepest selected category level
   const getDeepestCategory = (blog) => {
@@ -193,6 +235,9 @@ const BlogPost = () => {
         keywords={seoKeywords}
         article={articleData}
       />
+
+      {/* Custom Schema Markup - Injected as raw HTML/JS */}
+      <div ref={schemaContainerRef} style={{ display: 'none' }} />
       
       <div className="min-h-screen bg-white">
         {/* Reading progress bar */}

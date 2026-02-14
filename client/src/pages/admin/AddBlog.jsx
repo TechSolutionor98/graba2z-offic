@@ -36,6 +36,7 @@ const AddBlog = () => {
     description: "",
     metaTitle: "",
     metaDescription: "",
+    schema: "",
     tags: [],
   })
 
@@ -187,6 +188,7 @@ const AddBlog = () => {
         description: formData.description.trim(),
         metaTitle: formData.metaTitle.trim(),
         metaDescription: formData.metaDescription.trim(),
+        schema: formData.schema,
         tags: formData.tags,
       }
 
@@ -556,6 +558,30 @@ const AddBlog = () => {
                       ))}
                     </div>
                   )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Schema Markup (JSON-LD)
+                    <span className="text-gray-500 text-xs ml-2">(for Google structured data)</span>
+                  </label>
+                  <textarea
+                    name="schema"
+                    value={formData.schema}
+                    onChange={handleChange}
+                    rows={8}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    placeholder='<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Your Article Title"
+}
+</script>'
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Add custom HTML/JS schema markup for enhanced SEO. Paste your script tags directly - they will be injected into the page head for Google to detect.
+                  </p>
                 </div>
               </div>
             </div>
