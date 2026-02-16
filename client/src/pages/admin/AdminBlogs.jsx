@@ -498,8 +498,16 @@ const AdminBlogs = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredBlogs.map((blog) => {
                       console.log("Rendering blog:", blog) // Debug log
+                      const blogId = blog._id || blog.id
+                      console.log("Blog ID for edit:", blogId) // Debug log for edit button
+                      
+                      if (!blogId) {
+                        console.error("Blog missing ID:", blog)
+                        return null
+                      }
+                      
                       return (
-                        <tr key={blog._id} className="hover:bg-gray-50">
+                        <tr key={blogId} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
                             <div className="flex items-center">
                               {blog.mainImage && (
@@ -551,9 +559,9 @@ const AdminBlogs = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <select
+                              <select
                               value={blog.status}
-                              onChange={(e) => handleStatusChange(blog._id, e.target.value)}
+                              onChange={(e) => handleStatusChange(blogId, e.target.value)}
                               className={`text-xs font-semibold rounded-full px-2 py-1 border-0 ${
                                 blog.status === "published"
                                   ? "bg-green-100 text-green-800"
@@ -602,14 +610,20 @@ const AdminBlogs = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center gap-2">
                               <Link
-                                to={`/admin/blogs/edit/${blog._id}`}
-                                className="text-blue-600 hover:text-blue-900 p-1"
+                                to={`/admin/blogs/edit/${blogId}`}
+                                className="text-blue-600 hover:text-blue-900 p-1 inline-flex items-center justify-center"
+                                onClick={(e) => {
+                                  console.log("Edit button clicked, blogId:", blogId)
+                                  console.log("Navigating to:", `/admin/blogs/edit/${blogId}`)
+                                }}
+                                title="Edit Blog"
                               >
                                 <Edit size={16} />
                               </Link>
                               <button
-                                onClick={() => handleDelete(blog._id)}
+                                onClick={() => handleDelete(blogId)}
                                 className="text-red-600 hover:text-red-900 p-1"
+                                title="Delete Blog"
                               >
                                 <Trash2 size={16} />
                               </button>

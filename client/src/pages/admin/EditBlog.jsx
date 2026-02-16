@@ -50,6 +50,16 @@ const EditBlog = () => {
   const fetchBlogData = async () => {
     try {
       const token = localStorage.getItem("adminToken")
+      
+      if (!id) {
+        console.error("No blog ID provided")
+        showToast("No blog ID provided", "error")
+        navigate("/admin/blogs")
+        return
+      }
+      
+      console.log("Fetching blog with ID:", id) // Debug log
+      
       const response = await axios.get(`${config.API_URL}/api/blogs/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
