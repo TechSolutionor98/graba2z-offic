@@ -2092,7 +2092,7 @@ const ProductDetails = () => {
         .slice(0, 160)) ||
     `${product.name} available at Grabatoz.`
 
-  const pdCanonicalPath = product.seoCanonicalUrl || `/product/${encodeURIComponent(product.slug || product._id)}`
+  const pdCanonicalPath = product.seoCanonicalUrl || getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)
   const pdKeywords = product.seoKeywords || (product.tags && product.tags.length > 0 ? product.tags.join(", ") : undefined)
   const pdRobots = product.seoRobots || "index, follow"
   const pdOgTitle = product.ogTitle || pdTitle

@@ -14,6 +14,63 @@ function absoluteUrl(urlOrPath) {
 }
 
 /**
+ * Parse custom schema markup - extracts JSON from script tags or returns raw JSON
+ * Supports multiple schema blocks in one string
+ * @param {string} schemaMarkup - Raw schema markup (can include <script> tags or just JSON)
+ * @returns {string[]} Array of JSON strings ready for injection
+ */
+function parseCustomSchemas(schemaMarkup) {
+  if (!schemaMarkup || typeof schemaMarkup !== 'string') return []
+  
+  const schemas = []
+  const trimmed = schemaMarkup.trim()
+  
+  // Check if it contains script tags
+  if (trimmed.includes('<script')) {
+    // Extract content from all script tags with type="application/ld+json"
+    const scriptRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+    let match
+    while ((match = scriptRegex.exec(trimmed)) !== null) {
+      const jsonContent = match[1].trim()
+      if (jsonContent) {
+        // Validate it's valid JSON
+        try {
+          JSON.parse(jsonContent)
+          schemas.push(jsonContent)
+        } catch (e) {
+          console.warn('Invalid JSON in custom schema:', e.message)
+        }
+      }
+    }
+  } else {
+    // Assume it's raw JSON (or multiple JSON objects separated by newlines)
+    // Try to parse as single JSON first
+    try {
+      JSON.parse(trimmed)
+      schemas.push(trimmed)
+    } catch (e) {
+      // Try splitting by common patterns (like }{ or }\n{)
+      const jsonBlocks = trimmed.split(/\}\s*\{/).map((block, i, arr) => {
+        if (i === 0) return block + (arr.length > 1 ? '}' : '')
+        if (i === arr.length - 1) return '{' + block
+        return '{' + block + '}'
+      })
+      
+      jsonBlocks.forEach(block => {
+        try {
+          JSON.parse(block)
+          schemas.push(block)
+        } catch (e2) {
+          console.warn('Invalid JSON in custom schema block:', e2.message)
+        }
+      })
+    }
+  }
+  
+  return schemas
+}
+
+/**
  * SEO component
  * props:
  * - title?: string
@@ -25,8 +82,9 @@ function absoluteUrl(urlOrPath) {
  * - ogTitle?: string (custom Open Graph title, falls back to title)
  * - ogDescription?: string (custom Open Graph description, falls back to description)
  * - article?: object (for blog posts) - { author, datePublished, dateModified, tags }
+ * - customSchema?: string (raw JSON-LD schema markup - can include script tags or just JSON)
  */
-export default function SEO({ title, description, canonicalPath, image, noindex = false, keywords, ogTitle, ogDescription, article }) {
+export default function SEO({ title, description, canonicalPath, image, noindex = false, keywords, ogTitle, ogDescription, article, customSchema }) {
   const canonical = absoluteUrl(canonicalPath || (typeof window !== "undefined" ? window.location.pathname : "/"))
   const ogImage = image ? absoluteUrl(image) : undefined
   const finalOgTitle = ogTitle || title
@@ -96,6 +154,13 @@ export default function SEO({ title, description, canonicalPath, image, noindex 
           {JSON.stringify(articleSchema)}
         </script>
       )}
+
+      {/* Custom Schema Markup - Properly injected into head for Google to detect */}
+      {customSchema && parseCustomSchemas(customSchema).map((schemaJson, index) => (
+        <script key={`custom-schema-${index}`} type="application/ld+json">
+          {schemaJson}
+        </script>
+      ))}
     </Helmet>
   )
 }
