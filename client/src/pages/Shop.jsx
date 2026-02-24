@@ -1326,6 +1326,7 @@ const Shop = () => {
 
   const customMetaTitle = activeSubcategoryForSEO?.metaTitle || categoryObj?.metaTitle || ""
   const customMetaDescription = activeSubcategoryForSEO?.metaDescription || categoryObj?.metaDescription || ""
+  const customSchema = activeSubcategoryForSEO?.customSchema || categoryObj?.customSchema || ""
 
   const seoTitle =
     customMetaTitle ||
@@ -1363,7 +1364,7 @@ const Shop = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <SEO title={seoTitle} description={seoDescription} canonicalPath={buildCanonicalPath()} />
+      <SEO title={seoTitle} description={seoDescription} canonicalPath={buildCanonicalPath()} customSchema={customSchema} />
       <ProductSchema products={products} type="list" />
       
       {/* Mobile Filter Modal */}

@@ -1,5 +1,6 @@
 /* new reusable SEO component using react-helmet-async */
 import { Helmet } from "react-helmet-async"
+import { useEffect } from "react"
 
 function absoluteUrl(urlOrPath) {
   // Accept absolute URLs as-is; otherwise prefix with window.location.origin
@@ -13,61 +14,55 @@ function absoluteUrl(urlOrPath) {
   return urlOrPath
 }
 
-/**
- * Parse custom schema markup - extracts JSON from script tags or returns raw JSON
- * Supports multiple schema blocks in one string
- * @param {string} schemaMarkup - Raw schema markup (can include <script> tags or just JSON)
- * @returns {string[]} Array of JSON strings ready for injection
- */
-function parseCustomSchemas(schemaMarkup) {
-  if (!schemaMarkup || typeof schemaMarkup !== 'string') return []
-  
-  const schemas = []
+function parseAndCreateSchemaNodes(schemaMarkup) {
+  if (!schemaMarkup || typeof schemaMarkup !== "string") return []
+
   const trimmed = schemaMarkup.trim()
-  
-  // Check if it contains script tags
-  if (trimmed.includes('<script')) {
-    // Extract content from all script tags with type="application/ld+json"
-    const scriptRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
-    let match
-    while ((match = scriptRegex.exec(trimmed)) !== null) {
-      const jsonContent = match[1].trim()
-      if (jsonContent) {
-        // Validate it's valid JSON
-        try {
-          JSON.parse(jsonContent)
-          schemas.push(jsonContent)
-        } catch (e) {
-          console.warn('Invalid JSON in custom schema:', e.message)
-        }
-      }
-    }
-  } else {
-    // Assume it's raw JSON (or multiple JSON objects separated by newlines)
-    // Try to parse as single JSON first
+  if (!trimmed) return []
+
+  const createdNodes = []
+  const parserContainer = document.createElement("div")
+  parserContainer.innerHTML = trimmed
+  const hasElementNodes = Array.from(parserContainer.childNodes).some((node) => node.nodeType === 1)
+
+  if (!hasElementNodes) {
     try {
       JSON.parse(trimmed)
-      schemas.push(trimmed)
-    } catch (e) {
-      // Try splitting by common patterns (like }{ or }\n{)
-      const jsonBlocks = trimmed.split(/\}\s*\{/).map((block, i, arr) => {
-        if (i === 0) return block + (arr.length > 1 ? '}' : '')
-        if (i === arr.length - 1) return '{' + block
-        return '{' + block + '}'
-      })
-      
-      jsonBlocks.forEach(block => {
-        try {
-          JSON.parse(block)
-          schemas.push(block)
-        } catch (e2) {
-          console.warn('Invalid JSON in custom schema block:', e2.message)
-        }
-      })
+      const ldJsonScript = document.createElement("script")
+      ldJsonScript.type = "application/ld+json"
+      ldJsonScript.text = trimmed
+      ldJsonScript.setAttribute("data-custom-schema", "true")
+      createdNodes.push(ldJsonScript)
+      return createdNodes
+    } catch {
+      return []
     }
   }
-  
-  return schemas
+
+  parserContainer.childNodes.forEach((node) => {
+    if (node.nodeType !== 1) return
+    const element = node
+    const tag = element.tagName.toLowerCase()
+
+    if (tag === "script") {
+      const injectedScript = document.createElement("script")
+      Array.from(element.attributes).forEach((attr) => {
+        injectedScript.setAttribute(attr.name, attr.value)
+      })
+      injectedScript.text = element.textContent || ""
+      injectedScript.setAttribute("data-custom-schema", "true")
+      createdNodes.push(injectedScript)
+      return
+    }
+
+    const clonedElement = element.cloneNode(true)
+    if (clonedElement.setAttribute) {
+      clonedElement.setAttribute("data-custom-schema", "true")
+    }
+    createdNodes.push(clonedElement)
+  })
+
+  return createdNodes
 }
 
 /**
@@ -89,6 +84,18 @@ export default function SEO({ title, description, canonicalPath, image, noindex 
   const ogImage = image ? absoluteUrl(image) : undefined
   const finalOgTitle = ogTitle || title
   const finalOgDescription = ogDescription || description
+
+  useEffect(() => {
+    if (typeof document === "undefined") return undefined
+    if (!customSchema || typeof customSchema !== "string") return undefined
+
+    const nodes = parseAndCreateSchemaNodes(customSchema)
+    nodes.forEach((node) => document.head.appendChild(node))
+
+    return () => {
+      nodes.forEach((node) => node.parentNode?.removeChild(node))
+    }
+  }, [customSchema])
 
   // Build Article structured data (JSON-LD)
   let articleSchema = null
@@ -155,12 +162,6 @@ export default function SEO({ title, description, canonicalPath, image, noindex 
         </script>
       )}
 
-      {/* Custom Schema Markup - Properly injected into head for Google to detect */}
-      {customSchema && parseCustomSchemas(customSchema).map((schemaJson, index) => (
-        <script key={`custom-schema-${index}`} type="application/ld+json">
-          {schemaJson}
-        </script>
-      ))}
     </Helmet>
   )
 }

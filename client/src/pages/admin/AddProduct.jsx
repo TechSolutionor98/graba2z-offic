@@ -62,6 +62,7 @@ const AddProduct = () => {
     seoKeywords: "",
     seoCanonicalUrl: "",
     seoRobots: "index, follow",
+    customSchema: "",
     ogTitle: "",
     ogDescription: "",
     ogImage: "",
@@ -449,6 +450,7 @@ const AddProduct = () => {
         seoKeywords: formData.seoKeywords || "",
         seoCanonicalUrl: formData.seoCanonicalUrl || "",
         seoRobots: formData.seoRobots || "index, follow",
+        customSchema: formData.customSchema || "",
         ogTitle: formData.ogTitle || "",
         ogDescription: formData.ogDescription || "",
         ogImage: formData.ogImage || "",
@@ -1337,6 +1339,23 @@ const AddProduct = () => {
                     placeholder="https://example.com/product/my-product (leave blank for default)"
                   />
                   <p className="text-xs text-gray-400 mt-1">Override the canonical URL if needed</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Custom Schema Markup (HTML/JS)
+                  </label>
+                  <textarea
+                    name="customSchema"
+                    value={formData.customSchema}
+                    onChange={handleChange}
+                    rows={8}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
+                    placeholder={'<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "Product",\n  "name": "Your Product Name"\n}\n</script>'}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Paste JSON-LD script tags (recommended) or custom head HTML/JS. It is injected into page head and not visible to users.
+                  </p>
                 </div>
               </div>
 

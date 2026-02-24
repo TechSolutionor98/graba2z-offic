@@ -67,6 +67,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     seoKeywords: "",
     seoCanonicalUrl: "",
     seoRobots: "index, follow",
+    customSchema: "",
     ogTitle: "",
     ogDescription: "",
     ogImage: "",
@@ -306,6 +307,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           seoKeywords: product.seoKeywords || "",
           seoCanonicalUrl: product.seoCanonicalUrl || "",
           seoRobots: product.seoRobots || "index, follow",
+          customSchema: product.customSchema || "",
           ogTitle: product.ogTitle || "",
           ogDescription: product.ogDescription || "",
           ogImage: product.ogImage || "",
@@ -734,6 +736,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         seoKeywords: formData.seoKeywords || "",
         seoCanonicalUrl: formData.seoCanonicalUrl || "",
         seoRobots: formData.seoRobots || "index, follow",
+        customSchema: formData.customSchema || "",
         ogTitle: formData.ogTitle || "",
         ogDescription: formData.ogDescription || "",
         ogImage: formData.ogImage || "",
@@ -1759,6 +1762,23 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
                 placeholder="https://example.com/product/my-product (leave blank for default)"
               />
               <p className="text-xs text-gray-400 mt-1">Override the canonical URL if needed (leave blank to use default product URL)</p>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Custom Schema Markup (HTML/JS)
+              </label>
+              <textarea
+                name="customSchema"
+                value={formData.customSchema}
+                onChange={handleInputChange}
+                rows={8}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
+                placeholder={'<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "Product",\n  "name": "Your Product Name"\n}\n</script>'}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Paste JSON-LD script tags (recommended) or custom head HTML/JS. It is injected into page head and not visible to users.
+              </p>
             </div>
           </div>
 

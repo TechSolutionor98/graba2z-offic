@@ -2161,6 +2161,7 @@ const ProductDetails = () => {
         noindex={pdRobots.includes("noindex")}
         ogTitle={pdOgTitle}
         ogDescription={pdOgDescription}
+        customSchema={product.customSchema}
       />
       <div className="max-w-8xl mx-auto px-4 py-6">
         {/* Breadcrumb */}

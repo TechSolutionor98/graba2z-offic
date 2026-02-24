@@ -21,6 +21,7 @@ const AddCategory = () => {
     seoContent: "",
     metaTitle: "",
     metaDescription: "",
+    customSchema: "",
     redirectUrl: "",
     image: "",
     isActive: true,
@@ -48,6 +49,7 @@ const AddCategory = () => {
             seoContent: data.seoContent || "",
             metaTitle: data.metaTitle || "",
             metaDescription: data.metaDescription || "",
+            customSchema: data.customSchema || "",
             redirectUrl: data.redirectUrl || "",
             image: data.image || "",
             isActive: data.isActive !== undefined ? data.isActive : true,
@@ -236,6 +238,23 @@ const AddCategory = () => {
                     {formData.metaDescription.length}/300
                   </span>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Custom Schema Markup (HTML/JS)
+                </label>
+                <textarea
+                  name="customSchema"
+                  value={formData.customSchema}
+                  onChange={handleChange}
+                  rows={8}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  placeholder={'<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "CollectionPage",\n  "name": "Category Name"\n}\n</script>'}
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Paste schema script/HTML. It is injected into page head for Google and not shown to users.
+                </p>
               </div>
 
               {/* Redirect URL */}
