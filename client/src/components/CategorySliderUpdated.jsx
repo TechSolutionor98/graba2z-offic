@@ -291,11 +291,17 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
   };
 
   if (loading) {
-    return null;
+    return (
+      <section className="mb-5 bg-white pt-4 min-h-[128px] md:min-h-[176px]">
+        <div className="max-w-8xl lg:px-3">
+          <div className="mx-3 md:mx-4 h-20 md:h-28 rounded-xl bg-gray-100 animate-pulse" />
+        </div>
+      </section>
+    );
   }
 
   if (allSliderItems.length === 0) {
-    return null;
+    return <section className="mb-5 bg-white pt-4 min-h-[128px] md:min-h-[176px]" />;
   }
 
   const visibleCategories = getVisibleCategories();

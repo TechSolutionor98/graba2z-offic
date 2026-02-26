@@ -7,22 +7,13 @@
     <meta name="google-site-verification" content="7L9SSyoDKttO_Mq86f7kYHZoCKnZ76rBW5tZZYyxg1Y" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="preload" as="image" href="/1.svg" fetchpriority="high" />
+    <link
+      rel="preload"
+      as="image"
+      href="https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp"
+      fetchpriority="high"
+    />
     <title>Buy Laptops, Mobiles & Electronics Online in UAE | Grabatoz</title>
-
-    <!-- Google Tag Manager -->
-    <script>
-      (function (w, d, s, l, i) {
-        w[l] = w[l] || []
-        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" })
-        var f = d.getElementsByTagName(s)[0],
-          j = d.createElement(s),
-          dl = l !== "dataLayer" ? "&l=" + l : ""
-        j.async = true
-        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl
-        f.parentNode.insertBefore(j, f)
-      })(window, document, "script", "dataLayer", "GTM-NVQM623J")
-    </script>
-    <!-- End Google Tag Manager -->
 
     <!-- GA/Ads are handled via GTM container to avoid duplicate gtag bootstrap -->
 
@@ -61,6 +52,18 @@
         function loadThirdParty() {
           if (loaded) return
           loaded = true
+
+          // Google Tag Manager
+          ;(function (w, d, s, l, i) {
+            w[l] = w[l] || []
+            w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" })
+            var f = d.getElementsByTagName(s)[0],
+              j = d.createElement(s),
+              dl = l !== "dataLayer" ? "&l=" + l : ""
+            j.async = true
+            j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl
+            f.parentNode.insertBefore(j, f)
+          })(window, document, "script", "dataLayer", "GTM-NVQM623J")
 
           // Meta Pixel
           !(function (f, b, e, v, n, t, s) {

@@ -42,19 +42,17 @@ const BannerSlider = ({ banners }) => {
 
   if (!banners || banners.length === 0) {
     return (
-      <section className="relative bg-gradient-to-r from-gray-900 via-purple-900 to-blue-900 overflow-hidden h-[500px] flex items-center justify-center">
-        <div className="text-white text-center">
-          <h1 className="text-4xl font-bold mb-4">No Banners Available</h1>
-          <p className="text-xl">Please add hero banners from admin panel</p>
-        </div>
+      <section className="relative w-full h-[170px] sm:h-[250px] md:h-[300px] lg:h-[310px] overflow-hidden">
+        <div className="w-full h-full bg-gray-200 animate-pulse" />
       </section>
     )
   }
 
   const currentBanner = banners[currentSlide]
   const currentBannerImage = currentBanner
-    ? getOptimizedImageUrl(currentBanner.image, { width: 1360, height: 400, quality: 68 }) || "/logo.png"
-    : "/logo.png"
+    ? getOptimizedImageUrl(currentBanner.image, { width: 1360, height: 400, quality: 68 }) ||
+      "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp"
+    : "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp"
 
   useEffect(() => {
     if (!currentBanner) return

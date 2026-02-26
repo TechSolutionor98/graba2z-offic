@@ -1404,7 +1404,7 @@ const Navbar = () => {
 
           {/* Logo */}
           <Link to={getLocalizedPath("/")} className="flex items-center">
-            <img src="/admin-logo.svg" alt="Logo" className="h-8" />
+            <img src="/admin-logo.svg" alt="Logo" width="132" height="32" className="h-8 w-auto" />
           </Link>
 
           {/* Search Icon */}

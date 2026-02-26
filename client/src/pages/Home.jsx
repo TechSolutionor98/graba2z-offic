@@ -24,7 +24,6 @@ import {
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import BannerSlider from "../components/BannerSlider"
-import CategorySlider from "../components/CategorySlider"
 import CategorySliderUpdated from "../components/CategorySliderUpdated"
 import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
@@ -39,6 +38,13 @@ import config from "../config/config"
 
 
 const API_BASE_URL = `${config.API_URL}`
+const FALLBACK_HERO_BANNER = {
+  title: "top again 1",
+  image: "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp",
+  buttonLink: "/product-category/electronics-home/projectors",
+  link: "/product-category/electronics-home/projectors",
+  deviceType: "desktop",
+}
 
 const NOTIF_POPUP_KEY = "notif_popup_shown"
 
@@ -538,14 +544,6 @@ const Home = () => {
     return getLocalizedPath(link)
   }
 
-  if (loading && heroBanners.length === 0 && mobileBanners.length === 0) {
-    return (
-      <div className="home-loader-wrap">
-        <div className="home-loader" aria-label="Loading home content" role="status" />
-      </div>
-    )
-  }
-
   if (error) {
     return (
       <div className="text-center py-12">
@@ -642,7 +640,13 @@ const Home = () => {
             )}
             {notifSuccess && (
               <div className="flex flex-col items-center justify-center py-6">
-                <img src="/logo.png" alt="Logo" className="w-14 h-14 rounded-full mb-3 border border-gray-200" />
+                <img
+                  src="/logo.png"
+                  alt="Logo"
+                  width="56"
+                  height="56"
+                  className="w-14 h-14 rounded-full mb-3 border border-gray-200"
+                />
                 <h2 className="text-lg font-bold text-black mb-2">Thank you for subscribing!</h2>
                 <p className="text-gray-600 text-sm">A confirmation email has been sent to {notifEmail}.</p>
               </div>
@@ -651,9 +655,12 @@ const Home = () => {
         </div>
       )}
       <BannerSlider
-        banners={heroBanners.filter(
-          (banner) => banner.deviceType && banner.deviceType.toLowerCase() === deviceType.toLowerCase(),
-        )}
+        banners={(() => {
+          const filtered = heroBanners.filter(
+            (banner) => banner.deviceType && banner.deviceType.toLowerCase() === deviceType.toLowerCase(),
+          )
+          return filtered.length ? filtered : [FALLBACK_HERO_BANNER]
+        })()}
       />
       {/* Categories Section - Admin Controlled Slider */}
       <CategorySliderUpdated onCategoryClick={handleCategoryClick} />

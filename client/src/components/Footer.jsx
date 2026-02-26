@@ -584,13 +584,13 @@ const Footer = ({ className = "" }) => {
         <div className="bg-[#1F1F39] text-white p-6">
           <h3 className="text-xl font-bold text-center mb-4">Shop On The Go</h3>
           <div className="flex justify-center space-x-4 mb-6 ">
-            <img src="/google_play.png" alt="Google Play" className="h-8" />
-            <img src="/app_store.png" alt="App Store" className="h-8" />
+            <img src="/google_play.png" alt="Google Play" width="120" height="32" loading="lazy" decoding="async" className="h-8 w-auto" />
+            <img src="/app_store.png" alt="App Store" width="120" height="32" loading="lazy" decoding="async" className="h-8 w-auto" />
           </div>
 
           {/* Payment Methods */}
           <div className="flex justify-center mb-4">
-            <img src="/1.svg" alt="Payment Methods" fetchPriority="high" loading="eager" className="h-8 w-auto" />
+            <img src="/1.svg" alt="Payment Methods" fetchPriority="high" loading="eager" width="243" height="32" className="h-8 w-auto" />
           </div>
 
           {/* Copyright */}
