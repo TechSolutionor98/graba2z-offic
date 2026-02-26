@@ -269,6 +269,10 @@ const Home = () => {
         const fetchByBrand = (brandId, limit) => (brandId ? fetchProducts({ brand: brandId, limit }) : Promise.resolve([]))
         const fetchByParentCategory = (categoryId, limit) =>
           categoryId ? fetchProducts({ parentCategory: categoryId, limit }) : Promise.resolve([])
+        const fetchNetworking = (limit) =>
+          categoryIdMap.networking
+            ? fetchByParentCategory(categoryIdMap.networking, limit)
+            : fetchProducts({ subcategory: "Networking", limit })
 
         const [
           featured,
@@ -293,7 +297,7 @@ const Home = () => {
           fetchByBrand(brandIdMap.apple, 3),
           fetchByBrand(brandIdMap.samsung, 3),
           fetchByParentCategory(categoryIdMap.accessories, 8),
-          fetchByParentCategory(categoryIdMap.networking, 8),
+          fetchNetworking(8),
         ])
 
         setFeaturedProducts(featured)
