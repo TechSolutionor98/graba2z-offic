@@ -103,7 +103,7 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
       <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
         <Link to={productUrl} className="w-full h-full flex items-center justify-center">
           <img
-            src={getOptimizedImageUrl(product.image, { width: 330, height: 330 }) || "/placeholder.svg"}
+            src={getOptimizedImageUrl(product.image, { width: 220, height: 220, quality: 68 }) || "/placeholder.svg"}
             alt={product.name}
             loading="lazy"
             decoding="async"

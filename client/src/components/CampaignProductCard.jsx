@@ -176,7 +176,7 @@ const CampaignProductCard = ({ product }) => {
       <div className="relative mb-2 flex md:h-[180px] justify-center items-center">
   <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
-            src={getOptimizedImageUrl(product.image, { width: 330, height: 330 }) || "/placeholder.svg?height=120&width=120"}
+            src={getOptimizedImageUrl(product.image, { width: 220, height: 220, quality: 68 }) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             loading="lazy"
             decoding="async"

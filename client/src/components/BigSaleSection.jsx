@@ -52,7 +52,7 @@ const ProductCard = ({ product, isMobile = false }) => {
       <div className="relative mb-2 flex h-[150px] justify-center items-cente">
   <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
-            src={getOptimizedImageUrl(product.image, { width: 330, height: 330 }) || "/placeholder.svg?height=120&width=120"}
+            src={getOptimizedImageUrl(product.image, { width: 220, height: 220, quality: 68 }) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             loading="lazy"
             decoding="async"
@@ -243,14 +243,14 @@ const BigSaleSection = ({ products = [] }) => {
               // Different images for different zoom levels and screen sizes
               backgroundImage: 
                 isZoomedOut
-                  ? "url(discountshado.png)" // Lower payload than discount.png
+                  ? "url(discountshado.webp)" // Lower payload than discount.png
                   : cardsToDisplay === 2 
                     ? "url(resize00.png)" // 150%+ zoom - 2 cards
                     : cardsToDisplay === 3 
                       ? "url()" // 125% zoom - 3 cards
                       : is2XLScreen 
                         ? "url(discount2.png)" // 2xl screens at 100%
-                        : "url(discountshado.png)", // Lower payload than discount.png
+                        : "url(discountshado.webp)", // Lower payload than discount.png
               height: "100%",
               backgroundSize: "cover",
               backgroundPosition: "center",
@@ -275,7 +275,7 @@ const BigSaleSection = ({ products = [] }) => {
               {/* Logo - shown at 125%+ zoom, hidden before that */}
               {isZoomed125Plus && (
                 <img 
-                  src="discountshado.png" 
+                  src="discountshado.webp" 
                   alt="" 
                   className="w-full h-auto object-contain max-h-[400px]"
                 />

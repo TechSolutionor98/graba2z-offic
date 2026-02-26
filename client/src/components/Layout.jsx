@@ -15,8 +15,10 @@ function WhatsAppButton() {
       style={{ transition: 'transform 0.2s' }}
     >
       <img
-        src="/whatsapp.png"
+        src="/whatsapp.webp"
         alt="WhatsApp"
+        width="56"
+        height="56"
         className="w-14 h-14 rounded-full border-2 hover:scale-110"
         style={{ background: '#25D366' }}
       />
