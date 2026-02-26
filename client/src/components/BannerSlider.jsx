@@ -52,6 +52,7 @@ const BannerSlider = ({ banners }) => {
   }
 
   const currentBanner = banners[currentSlide]
+  const currentBannerImage = currentBanner ? getFullImageUrl(currentBanner.image) || "/top 2.png" : "/top 2.png"
 
   useEffect(() => {
     if (!currentBanner) return
@@ -71,9 +72,13 @@ const BannerSlider = ({ banners }) => {
     const content = (
       <>
         <img
-          src={getFullImageUrl(currentBanner.image) || "/placeholder.svg"}
+          src={currentBannerImage}
           alt={currentBanner.title || "Banner"}
-          className="w-full h-full cover"
+          fetchPriority="high"
+          loading="eager"
+          width="1600"
+          height="620"
+          className="block w-full h-full object-cover"
         />
         {/* Optional subtle overlay for better navigation visibility */}
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
