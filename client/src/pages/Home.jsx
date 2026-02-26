@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import axios from "axios"
 import { generateShopURL } from "../utils/urlUtils"
-import { getOptimizedImageUrl } from "../utils/imageUtils"
+import { getFullImageUrl, getOptimizedImageUrl } from "../utils/imageUtils"
 
 import BigSaleSection from "../components/BigSaleSection"
 import {
@@ -45,6 +45,10 @@ const FALLBACK_HERO_BANNER = {
   link: "/product-category/electronics-home/projectors",
   deviceType: "desktop",
 }
+const LIGHT_BANNER_FALLBACK = "lenovo-banner-768x290.jpg"
+const LIGHT_ACCESSORIES_DESKTOP_FALLBACK = "lenovo-banner-768x290.jpg"
+const LIGHT_NETWORKING_DESKTOP_FALLBACK =
+  "https://res.cloudinary.com/dyfhsu5v6/image/upload/f_auto,q_68,w_1311,h_300,c_limit/v1753939592/networking_kr6uvk.png"
 
 const NOTIF_POPUP_KEY = "notif_popup_shown"
 
@@ -544,6 +548,19 @@ const Home = () => {
     return getLocalizedPath(link)
   }
 
+  const handleBannerImageError = (e, bannerImage, finalFallback = LIGHT_BANNER_FALLBACK) => {
+    const img = e.currentTarget
+    if (!img.dataset.retryOriginal && bannerImage) {
+      img.dataset.retryOriginal = "1"
+      img.src = getFullImageUrl(bannerImage)
+      return
+    }
+    if (!img.dataset.retryFallback) {
+      img.dataset.retryFallback = "1"
+      img.src = finalFallback
+    }
+  }
+
   if (error) {
     return (
       <div className="text-center py-12">
@@ -843,19 +860,16 @@ const Home = () => {
                 {hpBanner ? (
                   <Link to={getBannerLink(hpBanner, brandUrls.HP)}>
                     <img
-                      src={getOptimizedImageUrl(hpBanner.image, { width: 740, height: 320, quality: 74 })}
+                      src={getOptimizedImageUrl(hpBanner.image, { width: 652, height: 270, quality: 70 })}
                       alt={hpBanner.title || "HP Products Banner"}
                       className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "hp.png";
-                      }}
+                      onError={(e) => handleBannerImageError(e, hpBanner.image)}
                     />
                   </Link>
                 ) : (
                   <Link to={brandUrls.HP}>
                     <img
-                      src="hp.png"
+                      src={LIGHT_BANNER_FALLBACK}
                       alt="HP Products Banner"
                       className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                     />
@@ -866,19 +880,16 @@ const Home = () => {
                 {dellBanner ? (
                   <Link to={getBannerLink(dellBanner, brandUrls.Dell)}>
                     <img
-                      src={getOptimizedImageUrl(dellBanner.image, { width: 740, height: 320, quality: 74 })}
+                      src={getOptimizedImageUrl(dellBanner.image, { width: 652, height: 270, quality: 70 })}
                       alt={dellBanner.title || "Dell Products Banner"}
                       className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "dell1.png";
-                      }}
+                      onError={(e) => handleBannerImageError(e, dellBanner.image)}
                     />
                   </Link>
                 ) : (
                   <Link to={brandUrls.Dell}>
                     <img
-                      src="dell1.png"
+                      src={LIGHT_BANNER_FALLBACK}
                       alt="Dell Products Banner"
                       className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                     />
@@ -963,7 +974,7 @@ const Home = () => {
         {getBannersForSection("accessories", "home-category-banner").length > 0 ? (
           <Link to={getLocalizedPath(getBannersForSection("accessories", "home-category-banner")[0].link || "/product-category/accessories")}>
             <img
-              src={getOptimizedImageUrl(getBannersForSection("accessories", "home-category-banner")[0].image, { width: 1400, height: 360, quality: 74 })}
+              src={getOptimizedImageUrl(getBannersForSection("accessories", "home-category-banner")[0].image, { width: 1311, height: 300, quality: 68 })}
               alt={getBannersForSection("accessories", "home-category-banner")[0].title || "Accessories Promotion Banner"}
               className="w-full h-full cover rounded-lg"
               onError={(e) => {
@@ -971,7 +982,7 @@ const Home = () => {
                 if (window.innerWidth < 1024) {
                   e.target.src = "12.png";
                 } else {
-                  e.target.src = "acessories (1).png";
+                  e.target.src = LIGHT_ACCESSORIES_DESKTOP_FALLBACK;
                 }
               }}
             />
@@ -984,7 +995,7 @@ const Home = () => {
               className="w-full h-full cover rounded-lg lg:hidden"
             />
             <img
-              src="acessories (1).png"
+              src={LIGHT_ACCESSORIES_DESKTOP_FALLBACK}
               alt="Accessories Promotion Banner Desktop"
               className="w-full h-full cover rounded-lg hidden lg:block"
             />
@@ -1064,19 +1075,16 @@ const Home = () => {
                 {acerBanner ? (
                   <Link to={getBannerLink(acerBanner, brandUrls.Acer)}>
                     <img
-                      src={getOptimizedImageUrl(acerBanner.image, { width: 740, height: 320, quality: 74 })}
+                      src={getOptimizedImageUrl(acerBanner.image, { width: 652, height: 270, quality: 70 })}
                       alt={acerBanner.title || "Acer Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "acer01.png";
-                      }}
+                      onError={(e) => handleBannerImageError(e, acerBanner.image)}
                     />
                   </Link>
                 ) : (
                   <Link to={brandUrls.Acer}>
                     <img
-                      src="acer01.png"
+                      src={LIGHT_BANNER_FALLBACK}
                       alt="Acer Products Banner"
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                     />
@@ -1087,19 +1095,16 @@ const Home = () => {
                 {asusBanner ? (
                   <Link to={getBannerLink(asusBanner, brandUrls.ASUS)}>
                     <img
-                      src={getOptimizedImageUrl(asusBanner.image, { width: 740, height: 320, quality: 74 })}
+                      src={getOptimizedImageUrl(asusBanner.image, { width: 652, height: 270, quality: 70 })}
                       alt={asusBanner.title || "ASUS Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "asus01.png";
-                      }}
+                      onError={(e) => handleBannerImageError(e, asusBanner.image)}
                     />
                   </Link>
                 ) : (
                   <Link to={brandUrls.ASUS}>
                     <img
-                      src="asus01.png"
+                      src={LIGHT_BANNER_FALLBACK}
                       alt="ASUS Products Banner"
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                     />
@@ -1186,7 +1191,7 @@ const Home = () => {
         {getBannersForSection("networking", "home-category-banner").length > 0 ? (
           <Link to={getLocalizedPath(getBannersForSection("networking", "home-category-banner")[0].link || "/product-category/computers/networking")}>
             <img
-              src={getOptimizedImageUrl(getBannersForSection("networking", "home-category-banner")[0].image, { width: 1400, height: 360, quality: 74 })}
+              src={getOptimizedImageUrl(getBannersForSection("networking", "home-category-banner")[0].image, { width: 1311, height: 300, quality: 68 })}
               alt={getBannersForSection("networking", "home-category-banner")[0].title || "Networking Banner"}
               className="w-full h-full cover rounded-lg"
               onError={(e) => {
@@ -1194,7 +1199,7 @@ const Home = () => {
                 if (window.innerWidth < 1024) {
                   e.target.src = "13.png";
                 } else {
-                  e.target.src = "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png";
+                  e.target.src = LIGHT_NETWORKING_DESKTOP_FALLBACK;
                 }
               }}
             />
@@ -1207,7 +1212,7 @@ const Home = () => {
               className="w-full h-full cover rounded-lg lg:hidden"
             />
             <img
-              src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1753939592/networking_kr6uvk.png"
+              src={LIGHT_NETWORKING_DESKTOP_FALLBACK}
               alt="Networking Banner Desktop"
               className="w-full h-full cover rounded-lg hidden lg:block"
             />
@@ -1287,19 +1292,16 @@ const Home = () => {
                 {msiBanner ? (
                   <Link to={getBannerLink(msiBanner, brandUrls.MSI)}>
                     <img
-                      src={getOptimizedImageUrl(msiBanner.image, { width: 740, height: 320, quality: 74 })}
+                      src={getOptimizedImageUrl(msiBanner.image, { width: 652, height: 270, quality: 70 })}
                       alt={msiBanner.title || "MSI Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "msi01.png";
-                      }}
+                      onError={(e) => handleBannerImageError(e, msiBanner.image)}
                     />
                   </Link>
                 ) : (
                   <Link to={brandUrls.MSI}>
                     <img
-                      src="msi01.png"
+                      src={LIGHT_BANNER_FALLBACK}
                       alt="MSI Products Banner"
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                     />
@@ -1310,19 +1312,16 @@ const Home = () => {
                 {lenovoBanner ? (
                   <Link to={getBannerLink(lenovoBanner, brandUrls.Lenovo)}>
                     <img
-                      src={getOptimizedImageUrl(lenovoBanner.image, { width: 740, height: 320, quality: 74 })}
+                      src={getOptimizedImageUrl(lenovoBanner.image, { width: 652, height: 270, quality: 70 })}
                       alt={lenovoBanner.title || "Lenovo Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "lenovo01.png";
-                      }}
+                      onError={(e) => handleBannerImageError(e, lenovoBanner.image)}
                     />
                   </Link>
                 ) : (
                   <Link to={brandUrls.Lenovo}>
                     <img
-                      src="lenovo01.png"
+                      src={LIGHT_BANNER_FALLBACK}
                       alt="Lenovo Products Banner"
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                     />
@@ -1440,19 +1439,16 @@ const Home = () => {
                 {appleBanner ? (
                   <Link to={getBannerLink(appleBanner, brandUrls.Apple)}>
                     <img
-                      src={getOptimizedImageUrl(appleBanner.image, { width: 740, height: 320, quality: 74 })}
+                      src={getOptimizedImageUrl(appleBanner.image, { width: 652, height: 270, quality: 70 })}
                       alt={appleBanner.title || "Apple Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "apple (1).png";
-                      }}
+                      onError={(e) => handleBannerImageError(e, appleBanner.image)}
                     />
                   </Link>
                 ) : (
                   <Link to={brandUrls.Apple}>
                     <img
-                      src="apple (1).png"
+                      src={LIGHT_BANNER_FALLBACK}
                       alt="Apple Products Banner"
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                     />
@@ -1463,19 +1459,16 @@ const Home = () => {
                 {samsungBanner ? (
                   <Link to={getBannerLink(samsungBanner, brandUrls.Samsung)}>
                     <img
-                      src={getOptimizedImageUrl(samsungBanner.image, { width: 740, height: 320, quality: 74 })}
+                      src={getOptimizedImageUrl(samsungBanner.image, { width: 652, height: 270, quality: 70 })}
                       alt={samsungBanner.title || "Samsung Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "samsung01.png";
-                      }}
+                      onError={(e) => handleBannerImageError(e, samsungBanner.image)}
                     />
                   </Link>
                 ) : (
                   <Link to={brandUrls.Samsung}>
                     <img
-                      src="samsung01.png"
+                      src={LIGHT_BANNER_FALLBACK}
                       alt="Samsung Products Banner"
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                     />

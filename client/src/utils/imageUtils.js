@@ -108,7 +108,8 @@ export const getOptimizedImageUrl = (imageUrl, { width, height, quality = "auto"
       const url = new URL(fullUrl, baseOrigin)
       if (width) url.searchParams.set("w", String(width))
       if (height) url.searchParams.set("h", String(height))
-      if (quality !== "auto") url.searchParams.set("q", String(quality))
+      // Force reasonable compression for local uploads even when callers pass "auto".
+      url.searchParams.set("q", quality === "auto" ? "70" : String(quality))
       url.searchParams.set("fmt", "webp")
       return url.toString()
     } catch {
