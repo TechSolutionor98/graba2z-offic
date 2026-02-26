@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import axios from "axios"
 import productCache from "../services/productCache"
 import { generateShopURL } from "../utils/urlUtils"
-import { getFullImageUrl } from "../utils/imageUtils"
+import { getFullImageUrl, getOptimizedImageUrl } from "../utils/imageUtils"
 
 import BigSaleSection from "../components/BigSaleSection"
 import {
@@ -1050,8 +1050,11 @@ const Home = () => {
                   {banner ? (
                     <Link to={getBannerLink(banner)} aria-label={banner.title || "View products"} className="block h-full">
                       <img
-                        src={getFullImageUrl(banner.image)}
+                        src={getFullImageUrl(banner.image) || fallback.image}
                         alt={banner.title || "Banner"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                        loading={index === 0 ? "eager" : "lazy"}
+                        decoding="async"
                         width="1200"
                         height="560"
                         className="block w-full h-full rounded-lg object-cover hover:opacity-90 transition-opacity cursor-pointer"
@@ -1066,6 +1069,8 @@ const Home = () => {
                       <img
                         src={fallback.image}
                         alt={fallback.alt}
+                        loading="lazy"
+                        decoding="async"
                         width="1200"
                         height="560"
                         className="block w-full h-full rounded-lg object-cover hover:opacity-90 transition-opacity cursor-pointer"
@@ -1097,8 +1102,11 @@ const Home = () => {
                   {banner ? (
                     <Link to={getBannerLink(banner)} aria-label={banner.title || "View products"} className="block h-full">
                       <img
-                        src={getFullImageUrl(banner.image)}
+                        src={getFullImageUrl(banner.image) || fallback.image}
                         alt={banner.title || "Banner"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                        loading={index === 0 ? "eager" : "lazy"}
+                        decoding="async"
                         width="800"
                         height="420"
                         className="block w-full h-full rounded-lg object-cover hover:opacity-95 transition-opacity cursor-pointer"
@@ -1113,6 +1121,8 @@ const Home = () => {
                       <img
                         src={fallback.image}
                         alt={fallback.alt}
+                        loading="lazy"
+                        decoding="async"
                         width="800"
                         height="420"
                         className="block w-full h-full rounded-lg object-cover hover:opacity-95 transition-opacity cursor-pointer"
@@ -2042,8 +2052,12 @@ const MobileProductCard = ({ product }) => {
       <div className="relative mb-2 flex h-[170px] justify-center items-center">
         <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
-            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
+            src={getOptimizedImageUrl(product.image, { width: 330, height: 330 }) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
+            width="165"
+            height="165"
             className="w-full h-full object-contain rounded mx-auto"
           />
         </Link>
@@ -2167,8 +2181,12 @@ const DynamicBrandProductCard = ({ product }) => {
       <div className="relative mb-2 flex justify-center items-center" style={{ height: 190 }}>
         <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)} className="w-full h-full flex items-center justify-center">
           <img
-            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
+            src={getOptimizedImageUrl(product.image, { width: 330, height: 330 }) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
+            width="165"
+            height="165"
             className="w-full h-full object-contain bg-white rounded mx-auto mb-4"
             style={{ maxHeight: 165 }}
           />
@@ -2291,8 +2309,12 @@ const AccessoriesProductCard = ({ product }) => {
       <div className="relative mb-2 flex justify-center items-center" style={{ height: 190 }}>
         <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)} className="w-full h-full flex items-center justify-center">
           <img
-            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
+            src={getOptimizedImageUrl(product.image, { width: 330, height: 330 }) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
+            width="165"
+            height="165"
             className="w-full h-full object-contain bg-white rounded mx-auto mb-4"
             style={{ maxHeight: 165 }}
           />

@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Heart, Star, ShoppingBag } from "lucide-reac
 import { Link } from "react-router-dom"
 import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
-import { getFullImageUrl } from "../utils/imageUtils"
+import { getOptimizedImageUrl } from "../utils/imageUtils"
 import TranslatedText from "./TranslatedText"
 import { useLanguage } from "../context/LanguageContext"
 
@@ -52,8 +52,12 @@ const ProductCard = ({ product, isMobile = false }) => {
       <div className="relative mb-2 flex h-[150px] justify-center items-cente">
   <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
-            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
+            src={getOptimizedImageUrl(product.image, { width: 330, height: 330 }) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
+            width="165"
+            height="165"
             className="w-full h-full cover object-contain rounded mx-auto"
           />
         </Link>
@@ -239,14 +243,14 @@ const BigSaleSection = ({ products = [] }) => {
               // Different images for different zoom levels and screen sizes
               backgroundImage: 
                 isZoomedOut
-                  ? "url(discount.png)" // 90%, 80%, 75% zoom out
+                  ? "url(discountshado.png)" // Lower payload than discount.png
                   : cardsToDisplay === 2 
                     ? "url(resize00.png)" // 150%+ zoom - 2 cards
                     : cardsToDisplay === 3 
                       ? "url()" // 125% zoom - 3 cards
                       : is2XLScreen 
                         ? "url(discount2.png)" // 2xl screens at 100%
-                        : "url(discount.png)", // Normal 100% zoom
+                        : "url(discountshado.png)", // Lower payload than discount.png
               height: "100%",
               backgroundSize: "cover",
               backgroundPosition: "center",

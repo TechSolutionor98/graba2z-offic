@@ -81,6 +81,29 @@ export const getFullImageUrl = (imageUrl) => {
 }
 
 /**
+ * Return an optimized image URL for small render slots.
+ * Currently supports Cloudinary transformations and falls back to full URL for other hosts.
+ */
+export const getOptimizedImageUrl = (imageUrl, { width, height, quality = "auto" } = {}) => {
+  const fullUrl = getFullImageUrl(imageUrl)
+  if (!fullUrl) return ""
+
+  if (isCloudinaryUrl(fullUrl)) {
+    const transforms = ["f_auto", `q_${quality}`]
+    if (width) transforms.push(`w_${width}`)
+    if (height) transforms.push(`h_${height}`)
+    transforms.push("c_limit")
+
+    // Inject transformations after /upload/ if not already injected by this helper.
+    if (fullUrl.includes("/upload/") && !fullUrl.includes("/upload/f_auto,")) {
+      return fullUrl.replace("/upload/", `/upload/${transforms.join(",")}/`)
+    }
+  }
+
+  return fullUrl
+}
+
+/**
  * Get multiple image URLs
  */
 export const getFullImageUrls = (imageUrls) => {

@@ -341,17 +341,26 @@ const Navbar = () => {
   // Fetch categories and subcategories from API
   const fetchCategoryTree = async () => {
     try {
-      const [treeResp, subsResp] = await Promise.all([
-        axios.get(`${config.API_URL}/api/categories/tree`),
-        axios.get(`${config.API_URL}/api/subcategories`), // still used for any legacy logic (e.g., other pages)
-      ])
+      const treeResp = await axios.get(`${config.API_URL}/api/categories/tree`)
       const treeData = Array.isArray(treeResp.data) ? treeResp.data : []
       setCategories(treeData)
       // Store categories globally for mobile subcategory component
       if (typeof window !== 'undefined') {
         window.__navbarCategories = treeData
       }
-      setFlatSubCategories(Array.isArray(subsResp.data) ? subsResp.data : [])
+      // Derive flat subcategories from tree to avoid an extra heavy /api/subcategories request.
+      const derivedSubs = []
+      const collectSubcategories = (nodes) => {
+        if (!Array.isArray(nodes)) return
+        for (const node of nodes) {
+          if (node && node._id && node.name) derivedSubs.push(node)
+          if (Array.isArray(node.children)) collectSubcategories(node.children)
+        }
+      }
+      for (const category of treeData) {
+        if (Array.isArray(category.children)) collectSubcategories(category.children)
+      }
+      setFlatSubCategories(derivedSubs)
       
       // Preload translations for all category and subcategory names when in Arabic mode
       if (currentLanguage.code === 'ar') {
@@ -370,9 +379,8 @@ const Navbar = () => {
         
         collectNames(treeData)
         
-        // Also add flat subcategories
-        const flatSubs = Array.isArray(subsResp.data) ? subsResp.data : []
-        for (const sub of flatSubs) {
+        // Also add derived flat subcategories
+        for (const sub of derivedSubs) {
           if (sub.name && !allNames.includes(sub.name)) {
             allNames.push(sub.name)
           }

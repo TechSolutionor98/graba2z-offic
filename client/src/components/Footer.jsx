@@ -78,17 +78,22 @@ const Footer = ({ className = "" }) => {
       })
       validCategories.sort((a, b) => a.name.localeCompare(b.name))
       setCategories(validCategories)
+
+      // Derive a flat subcategory list from the tree to avoid a second heavy API request.
+      const derivedSubs = []
+      const collectSubcategories = (nodes) => {
+        if (!Array.isArray(nodes)) return
+        for (const node of nodes) {
+          if (node && node._id && node.name) derivedSubs.push(node)
+          if (Array.isArray(node.children)) collectSubcategories(node.children)
+        }
+      }
+      for (const category of validCategories) {
+        if (Array.isArray(category.children)) collectSubcategories(category.children)
+      }
+      setSubCategories(derivedSubs)
     } catch (error) {
       console.error("Error fetching categories:", error)
-    }
-  }
-
-  const fetchSubCategories = async () => {
-    try {
-      const { data } = await axios.get(`${API_BASE_URL}/api/subcategories`)
-      setSubCategories(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error("Error fetching subcategories:", error)
     }
   }
 
@@ -98,7 +103,6 @@ const Footer = ({ className = "" }) => {
 
   useEffect(() => {
     fetchCategories()
-    fetchSubCategories()
   }, [])
 
   const toggleSection = (section) => {
@@ -190,7 +194,15 @@ const Footer = ({ className = "" }) => {
                 </div>
 
                 <div className="flex pt-4 lg:pt-6 xl:pt-7 px-0 lg:px-2 space-x-2">
-                  <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757938965/google_pj1cxc.webp" alt="Google Play" className="rounded-lg h-8 lg:h-10 xl:h-12" />
+                  <img
+                    src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757938965/google_pj1cxc.webp"
+                    alt="Google Play"
+                    width="209"
+                    height="48"
+                    loading="lazy"
+                    decoding="async"
+                    className="rounded-lg h-8 lg:h-10 xl:h-12"
+                  />
                 </div>
               </div>
 
