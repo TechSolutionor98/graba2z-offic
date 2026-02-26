@@ -12,6 +12,16 @@ function mapProductToRow(p) {
   const categoryLevel3 = p.subCategory3?.name || p.subCategory3?.toString?.() || '';
   const categoryLevel4 = p.subCategory4?.name || p.subCategory4?.toString?.() || '';
   
+  const taxValue = (() => {
+    if (p.tax === undefined || p.tax === null) return '';
+    if (typeof p.tax === 'number') return p.tax;
+    if (typeof p.tax === 'string') return p.tax;
+    if (typeof p.tax === 'object') {
+      return p.tax.rate ?? p.tax.percentage ?? p.tax.value ?? p.tax.name ?? '';
+    }
+    return '';
+  })();
+
   return {
     _id: p._id || '', // MongoDB ObjectId for tracking updates
     name: p.name || '',
@@ -28,7 +38,7 @@ function mapProductToRow(p) {
     price: p.price ?? '',
     offerPrice: p.offerPrice ?? '',
     discount: p.discount ?? '',
-    tax: p.tax || '',
+    tax: taxValue,
     stockStatus: p.stockStatus || '',
     countInStock: p.countInStock ?? '',
     showStockOut: p.showStockOut ? 'true' : 'false',
