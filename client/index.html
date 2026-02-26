@@ -1,239 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-
-
-
-<meta name="google-site-verification" content="gDHMgegtAvEL0xzDBjNjdXCy7OfBTQ5pvs8K9dPVvzQ"/>
-
-
-
-
-
-
-
-
-
-
-
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-NVQM623J');</script>
-<!-- End Google Tag Manager -->
-
-
-
-<!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17086197165"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'AW-17086197165'); </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-VFS3Y19LDP"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-VFS3Y19LDP');
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- Event snippet for [6c86] Google for WooCommerce purchase action conversion page -->
-<script>
-  gtag('event', 'conversion', {
-      'send_to': 'AW-17086197165/YL8lCN7008oaEK3bqtM_',
-      'value': 0.0,
-      'currency': 'AED',
-      'transaction_id': ''
-  });
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  <!-- Initialize Data Layer -->
-    <script>
-      window.dataLayer = window.dataLayer || [];
-    </script>
-
-
-
-
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-VFS3Y19LDP"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-VFS3Y19LDP');
-</script>
-
-
-
     <meta charset="UTF-8" />
-    <meta name="google-site-verification" content="7L9SSyoDKttO_Mq86f7kYHZoCKnZ76rBW5tZZYyxg1Y" />
-        <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google-site-verification" content="gDHMgegtAvEL0xzDBjNjdXCy7OfBTQ5pvs8K9dPVvzQ" />
+    <meta name="google-site-verification" content="7L9SSyoDKttO_Mq86f7kYHZoCKnZ76rBW5tZZYyxg1Y" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Buy Laptops, Mobiles & Electronics Online in UAE | Grabatoz</title>
-    <!-- Meta description is managed dynamically by react-helmet-async for SEO optimization -->
 
-    <!-- BEGIN Google Customer Reviews Store Widget Code -->
-    <script id='merchantWidgetScript'
-            src="https://www.gstatic.com/shopping/merchant/merchantwidget.js"
-            defer>
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || []
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" })
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l !== "dataLayer" ? "&l=" + l : ""
+        j.async = true
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl
+        f.parentNode.insertBefore(j, f)
+      })(window, document, "script", "dataLayer", "GTM-NVQM623J")
     </script>
-    <script type="text/javascript">
-      merchantWidgetScript.addEventListener('load', function () {
-        merchantwidget.start({
-          // REQUIRED FIELDS
-          merchant_id: 5694261680,
-          
-          // OPTIONAL FIELDS
-          position: 'RIGHT_BOTTOM',
-          region: 'AE'
-        });
-      });
+    <!-- End Google Tag Manager -->
+
+    <!-- Google tag (single load for GA + Ads) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VFS3Y19LDP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || []
+      function gtag() {
+        dataLayer.push(arguments)
+      }
+      gtag("js", new Date())
+      gtag("config", "G-VFS3Y19LDP")
+      gtag("config", "AW-17086197165")
     </script>
-    <!-- END Google Customer Reviews Store Widget Code -->
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
+    <!-- Defer non-critical third-party scripts to reduce early network/caching penalties -->
+    <script>
+      ;(function () {
+        var loaded = false
 
+        function appendScript(src, id) {
+          if (id && document.getElementById(id)) return document.getElementById(id)
+          var script = document.createElement("script")
+          script.async = true
+          script.src = src
+          if (id) script.id = id
+          document.head.appendChild(script)
+          return script
+        }
 
+        function loadThirdParty() {
+          if (loaded) return
+          loaded = true
 
+          // Meta Pixel
+          !(function (f, b, e, v, n, t, s) {
+            if (f.fbq) return
+            n = f.fbq = function () {
+              n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            }
+            if (!f._fbq) f._fbq = n
+            n.push = n
+            n.loaded = true
+            n.version = "2.0"
+            n.queue = []
+            t = b.createElement(e)
+            t.async = true
+            t.src = v
+            s = b.getElementsByTagName(e)[0]
+            s.parentNode.insertBefore(t, s)
+          })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js")
+          window.fbq("init", "1312683447240337")
+          window.fbq("track", "PageView")
 
-   <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  
-  
-<!-- Meta Pixel Code -->
-<script>
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', '1312683447240337');
-  fbq('track', 'PageView');
-  </script>
-  
-  
-  <!-- End Meta Pixel Code -->
+          // ClickCease
+          appendScript("https://www.clickcease.com/monitor/stat.js", "clickcease-script")
 
+          // Microsoft Clarity
+          ;(function (c, l, a, r, i, t, y) {
+            c[a] =
+              c[a] ||
+              function () {
+                ;(c[a].q = c[a].q || []).push(arguments)
+              }
+            t = l.createElement(r)
+            t.async = 1
+            t.src = "https://www.clarity.ms/tag/" + i
+            y = l.getElementsByTagName(r)[0]
+            y.parentNode.insertBefore(t, y)
+          })(window, document, "clarity", "script", "sxs3x2ruvu")
 
+          // Google Customer Reviews Merchant Widget
+          var merchantScript = appendScript(
+            "https://www.gstatic.com/shopping/merchant/merchantwidget.js",
+            "merchantWidgetScript"
+          )
+          merchantScript.addEventListener("load", function () {
+            if (window.merchantwidget && typeof window.merchantwidget.start === "function") {
+              window.merchantwidget.start({
+                merchant_id: 5694261680,
+                position: "RIGHT_BOTTOM",
+                region: "AE",
+              })
+            }
+          })
+        }
 
-  
+        function scheduleLoad() {
+          // Keep non-critical trackers/widgets off the critical path.
+          window.setTimeout(loadThirdParty, 8000)
+        }
+
+        window.addEventListener("load", scheduleLoad, { once: true })
+        ;["pointerdown", "keydown", "touchstart", "scroll"].forEach(function (eventName) {
+          window.addEventListener(eventName, loadThirdParty, { once: true, passive: true })
+        })
+      })()
+    </script>
   </head>
   <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-NVQM623J"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
 
-
-
-
-
-    <!--  ClickCease.com tracking-->
-      <script type='text/javascript'>var script = document.createElement('script');
-      script.async = true; script.type = 'text/javascript';
-      var target = 'https://www.clickcease.com/monitor/stat.js';
-      script.src = target;var elem = document.head;elem.appendChild(script);
-      </script>
-      <noscript>
-      <a href='https://www.clickcease.com' rel='nofollow'><img src='https://monitor.clickcease.com' alt='ClickCease'/></a>
-      </noscript>
-      <!--  ClickCease.com tracking-->
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NVQM623J"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-
-
-
-<script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "sxs3x2ruvu");
-</script>
-
-
-
-
+    <!-- ClickCease noscript fallback -->
+    <noscript>
+      <a href="https://www.clickcease.com" rel="nofollow">
+        <img src="https://monitor.clickcease.com" alt="ClickCease" />
+      </a>
+    </noscript>
 
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
 
-    <!-- BEGIN GCR Language Code -->
+    <!-- GCR Language Code -->
     <script>
-      window.___gcfg = {
-        lang: 'en'
-      };
+      window.___gcfg = { lang: "en" }
     </script>
-    <!-- END GCR Language Code -->
   </body>
 </html>
