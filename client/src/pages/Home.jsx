@@ -174,8 +174,9 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesResponse, brandsResponse, bannersResponse, settingsResponse, sectionsResponse] = await Promise.all([
+        const [categoriesResponse, categoryTreeResponse, brandsResponse, bannersResponse, settingsResponse, sectionsResponse] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/categories`),
+          axios.get(`${API_BASE_URL}/api/categories/tree`).catch(() => ({ data: [] })),
           axios.get(`${API_BASE_URL}/api/brands`),
           axios.get(`${API_BASE_URL}/api/banners?active=true`),
           axios.get(`${API_BASE_URL}/api/settings`).catch(() => ({
@@ -193,6 +194,7 @@ const Home = () => {
         ])
 
         const categoriesData = categoriesResponse.data
+        const categoryTreeData = Array.isArray(categoryTreeResponse.data) ? categoryTreeResponse.data : []
         const brandsData = brandsResponse.data
         const bannersData = bannersResponse.data
         const settingsData = settingsResponse.data
@@ -245,6 +247,21 @@ const Home = () => {
           }
         }
 
+        const findSubCategoryIdByName = (nodes, targetName) => {
+          if (!Array.isArray(nodes)) return null
+          const target = String(targetName || "").trim().toLowerCase()
+          const stack = [...nodes]
+          while (stack.length) {
+            const node = stack.pop()
+            if (!node) continue
+            if (String(node.name || "").trim().toLowerCase() === target && node._id) return node._id
+            if (Array.isArray(node.children) && node.children.length) stack.push(...node.children)
+          }
+          return null
+        }
+
+        const networkingSubCategoryId = findSubCategoryIdByName(categoryTreeData, "Networking")
+
         // Set banner/category/brand state early so LCP hero can render immediately.
         const heroData = bannersData.filter((banner) => banner.position === "hero")
         const promotionalBanners = bannersData.filter((banner) => banner.position === "promotional")
@@ -270,7 +287,9 @@ const Home = () => {
         const fetchByParentCategory = (categoryId, limit) =>
           categoryId ? fetchProducts({ parentCategory: categoryId, limit }) : Promise.resolve([])
         const fetchNetworking = (limit) =>
-          categoryIdMap.networking
+          networkingSubCategoryId
+            ? fetchProducts({ subcategory: networkingSubCategoryId, limit })
+            : categoryIdMap.networking
             ? fetchByParentCategory(categoryIdMap.networking, limit)
             : fetchProducts({ subcategory: "Networking", limit })
 
