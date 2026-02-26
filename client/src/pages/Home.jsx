@@ -1050,7 +1050,7 @@ const Home = () => {
                   {banner ? (
                     <Link to={getBannerLink(banner)} aria-label={banner.title || "View products"} className="block h-full">
                       <img
-                        src={getOptimizedImageUrl(banner.image, { width: 900, height: 420, quality: 74 }) || fallback.image}
+                        src={getOptimizedImageUrl(banner.image, { width: 426, height: 280, quality: 72 }) || fallback.image}
                         alt={banner.title || "Banner"}
                         fetchPriority={index === 0 ? "high" : "auto"}
                         loading={index === 0 ? "eager" : "lazy"}

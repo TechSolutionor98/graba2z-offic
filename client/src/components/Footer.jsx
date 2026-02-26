@@ -9,6 +9,7 @@ import { faYoutube } from "@fortawesome/free-brands-svg-icons"
 import { useState, useEffect } from "react"
 import axios from "axios"
 import { generateShopURL } from "../utils/urlUtils"
+import { getOptimizedImageUrl } from "../utils/imageUtils"
 
 import config from "../config/config"
 import NewsletterModal from "./NewsletterModal";
@@ -195,7 +196,7 @@ const Footer = ({ className = "" }) => {
 
                 <div className="flex pt-4 lg:pt-6 xl:pt-7 px-0 lg:px-2 space-x-2">
                   <img
-                    src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757938965/google_pj1cxc.webp"
+                    src={getOptimizedImageUrl("https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757938965/google_pj1cxc.webp", { width: 420, height: 96, quality: "auto" })}
                     alt="Google Play"
                     width="209"
                     height="48"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getFullImageUrl } from "../utils/imageUtils";
+import { getOptimizedImageUrl } from "../utils/imageUtils";
 import axios from "axios";
 import config from "../config/config";
 import TranslatedText from "./TranslatedText";
@@ -482,11 +482,12 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                         >
                           {item.image ? (
                             <img
-                              src={getFullImageUrl(item.image)}
+                              src={getOptimizedImageUrl(item.image, { width: 128, height: 128, quality: 68 })}
                               alt={item.name}
                               width="176"
                               height="176"
-                              loading="eager"
+                              loading="lazy"
+                              decoding="async"
                               className={layoutClasses.imageSize}
                             />
                           ) : (
@@ -514,11 +515,12 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                         >
                           {item.image ? (
                             <img
-                              src={getFullImageUrl(item.image)}
+                              src={getOptimizedImageUrl(item.image, { width: 128, height: 128, quality: 68 })}
                               alt={item.name}
                               width="176"
                               height="176"
-                              loading="eager"
+                              loading="lazy"
+                              decoding="async"
                               className={`${layoutClasses.imageSize} ${sliderShape === 'circle' ? 'object-cover' : 'bg-cover'}`}
                               style={{...getShapeStyle(), display: 'block'}}
                             />

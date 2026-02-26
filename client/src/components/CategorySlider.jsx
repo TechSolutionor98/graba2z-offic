@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getFullImageUrl } from "../utils/imageUtils";
+import { getOptimizedImageUrl } from "../utils/imageUtils";
 
 const CategorySlider = ({ categories = [], onCategoryClick }) => {
   const containerRef = useRef(null);
@@ -251,11 +251,12 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
                   >
                     {category.image ? (
                       <img
-                        src={getFullImageUrl(category.image)}
+                        src={getOptimizedImageUrl(category.image, { width: 128, height: 128, quality: 68 })}
                         alt={category.name}
                         width="176"
                         height="176"
-                        loading="eager"
+                        loading="lazy"
+                        decoding="async"
                         className="w-16 h-16 md:w-20 md:h-20 lg:w-28 lg:h-28 xl:w-32 xl:h-32 2xl:w-36 2xl:h-36 object-contain"
                       />
                     ) : (
