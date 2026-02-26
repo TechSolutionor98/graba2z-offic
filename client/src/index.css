@@ -120,6 +120,30 @@
   display: none;
 }
 
+.home-loader-wrap {
+  min-height: 24rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-loader {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 6px solid #e5e7eb;
+  border-top-color: #84cc16;
+  border-right-color: #16a34a;
+  animation: home-loader-spin 0.9s linear infinite;
+  box-shadow: 0 0 0 8px rgba(132, 204, 22, 0.12);
+}
+
+@keyframes home-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @layer utilities {
   .animate-blob {
     animation: blob 7s infinite;

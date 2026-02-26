@@ -128,28 +128,6 @@ const Home = () => {
     }
   }, [])
 
-  const bounceStyle = {
-    animation: "bounce 1s infinite",
-  }
-
-  const bounceKeyframes = `
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-30px); }
-  }
-  
-  @keyframes infiniteScroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
-  }
-  `
-  if (typeof document !== "undefined" && !document.getElementById("bounce-keyframes")) {
-    const style = document.createElement("style")
-    style.id = "bounce-keyframes"
-    style.innerHTML = bounceKeyframes
-    document.head.appendChild(style)
-  }
-
   // Helper function to render dynamic section by position
   const renderDynamicSection = (position) => {
     const section = homeSections.find(s => s.isActive && s.order === position)
@@ -915,8 +893,8 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <img src="/load.gif" alt="Loading..." style={{ width: 300, height: 175, ...bounceStyle }} />
+      <div className="home-loader-wrap">
+        <div className="home-loader" aria-label="Loading home content" role="status" />
       </div>
     )
   }
