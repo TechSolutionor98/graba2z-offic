@@ -149,6 +149,7 @@ const BigSaleSection = ({ products = [] }) => {
   const [cardsToDisplay, setCardsToDisplay] = useState(4)
   const [isZoomedOut, setIsZoomedOut] = useState(false)
   const containerRef = useRef(null)
+  const lastComputedRef = useRef("")
   const [itemWidth, setItemWidth] = useState(0)
 
   useEffect(() => {
@@ -207,12 +208,26 @@ const BigSaleSection = ({ products = [] }) => {
       setItemWidth(computed > 0 ? computed : 0)
     }
 
-    computeWidth()
-    window.addEventListener('resize', computeWidth)
-    const timer = setInterval(computeWidth, 500)
+    const computeWidthIfChanged = () => {
+      if (!containerRef.current) return
+      const key = `${containerRef.current.clientWidth}|${window.devicePixelRatio || 1}`
+      if (lastComputedRef.current === key) return
+      lastComputedRef.current = key
+      computeWidth()
+    }
+
+    computeWidthIfChanged()
+    window.addEventListener('resize', computeWidthIfChanged)
+
+    let resizeObserver
+    if (typeof ResizeObserver !== "undefined" && containerRef.current) {
+      resizeObserver = new ResizeObserver(() => computeWidthIfChanged())
+      resizeObserver.observe(containerRef.current)
+    }
+
     return () => {
-      window.removeEventListener('resize', computeWidth)
-      clearInterval(timer)
+      window.removeEventListener('resize', computeWidthIfChanged)
+      if (resizeObserver) resizeObserver.disconnect()
     }
   }, [])
 
