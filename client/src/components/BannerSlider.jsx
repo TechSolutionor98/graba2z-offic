@@ -53,7 +53,7 @@ const BannerSlider = ({ banners }) => {
 
   const currentBanner = banners[currentSlide]
   const currentBannerImage = currentBanner
-    ? getOptimizedImageUrl(currentBanner.image, { width: 1400, height: 450, quality: 76 }) || "/logo.png"
+    ? getOptimizedImageUrl(currentBanner.image, { width: 1360, height: 400, quality: 68 }) || "/logo.png"
     : "/logo.png"
 
   useEffect(() => {

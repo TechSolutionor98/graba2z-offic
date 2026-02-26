@@ -130,7 +130,7 @@ const Footer = ({ className = "" }) => {
               <div className="col-span-1 flex flex-col">
                 {/* Logo and Heading */}
                 <h3 className="text-lg lg:text-xl xl:text-2xl font-bold mb-3 lg:mb-4">
-                  <img src="/logo.png" alt="Logo" className="w-24 lg:w-28 xl:w-32" />
+                  <img src="/logo.png" alt="Logo" width="128" height="44" className="w-24 lg:w-28 xl:w-32 h-auto" />
                 </h3>
                 {/* Text */}
                 <p className="text-xs lg:text-sm text-white mb-3 lg:mb-4">Subscribe to our newsletter</p>
