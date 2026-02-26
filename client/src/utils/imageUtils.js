@@ -28,28 +28,29 @@ export const isCloudinaryUrl = (url) => {
  * - If it's already a full URL (http/https), check if it needs API_URL replacement
  */
 export const getFullImageUrl = (imageUrl) => {
-  if (!imageUrl) return ""
+  if (!imageUrl || !String(imageUrl).trim()) return ""
+  const normalizedUrl = String(imageUrl).trim()
   
   // Handle Cloudinary URLs - return as-is
-  if (isCloudinaryUrl(imageUrl)) {
-    return imageUrl
+  if (isCloudinaryUrl(normalizedUrl)) {
+    return normalizedUrl
   }
   
   // Handle full URLs (http:// or https://)
-  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+  if (normalizedUrl.startsWith("http://") || normalizedUrl.startsWith("https://")) {
     // Check if it's a localhost URL that needs to be replaced
-    if (imageUrl.includes("localhost") || imageUrl.includes("127.0.0.1")) {
+    if (normalizedUrl.includes("localhost") || normalizedUrl.includes("127.0.0.1")) {
       // Extract just the /uploads/... part
-      const uploadsMatch = imageUrl.match(/(\/uploads\/.+)/)
+      const uploadsMatch = normalizedUrl.match(/(\/uploads\/.+)/)
       if (uploadsMatch) {
         return `${config.API_URL}${uploadsMatch[1]}`
       }
     }
     
     // Check if it contains /uploads/ and the hostname doesn't match current API
-    if (imageUrl.includes("/uploads/")) {
+    if (normalizedUrl.includes("/uploads/")) {
       try {
-        const urlObj = new URL(imageUrl)
+        const urlObj = new URL(normalizedUrl)
         const currentApiHost = new URL(config.API_URL).hostname
         
         // If the hostname doesn't match, replace with current API_URL
@@ -63,21 +64,21 @@ export const getFullImageUrl = (imageUrl) => {
     }
     
     // Return other full URLs as-is
-    return imageUrl
+    return normalizedUrl
   }
   
   // Local file path - prepend API URL
-  if (imageUrl.startsWith("/uploads")) {
-    return `${config.API_URL}${imageUrl}`
+  if (normalizedUrl.startsWith("/uploads")) {
+    return `${config.API_URL}${normalizedUrl}`
   }
   
   // Handle case where it might be just "uploads/..." without leading slash
-  if (imageUrl.startsWith("uploads/")) {
-    return `${config.API_URL}/${imageUrl}`
+  if (normalizedUrl.startsWith("uploads/")) {
+    return `${config.API_URL}/${normalizedUrl}`
   }
   
   // Default: return as-is (might be a placeholder or relative path)
-  return imageUrl
+  return normalizedUrl
 }
 
 /**
@@ -97,6 +98,21 @@ export const getOptimizedImageUrl = (imageUrl, { width, height, quality = "auto"
     // Inject transformations after /upload/ if not already injected by this helper.
     if (fullUrl.includes("/upload/") && !fullUrl.includes("/upload/f_auto,")) {
       return fullUrl.replace("/upload/", `/upload/${transforms.join(",")}/`)
+    }
+  }
+
+  // Optimize local API uploads via server-side sharp endpoint query params.
+  if (fullUrl.includes("/uploads/")) {
+    try {
+      const baseOrigin = typeof window !== "undefined" ? window.location.origin : "http://localhost"
+      const url = new URL(fullUrl, baseOrigin)
+      if (width) url.searchParams.set("w", String(width))
+      if (height) url.searchParams.set("h", String(height))
+      if (quality !== "auto") url.searchParams.set("q", String(quality))
+      url.searchParams.set("fmt", "webp")
+      return url.toString()
+    } catch {
+      return fullUrl
     }
   }
 

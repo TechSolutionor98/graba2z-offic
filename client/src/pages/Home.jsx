@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import axios from "axios"
 import productCache from "../services/productCache"
 import { generateShopURL } from "../utils/urlUtils"
-import { getFullImageUrl, getOptimizedImageUrl } from "../utils/imageUtils"
+import { getOptimizedImageUrl } from "../utils/imageUtils"
 
 import BigSaleSection from "../components/BigSaleSection"
 import {
@@ -1035,9 +1035,9 @@ const Home = () => {
           {(() => {
             const banners = getBannersForSection("top-triple", "home-top-triple")
             const fallbacks = [
-              { image: "laptop00.png", link: "product-category/laptops", alt: "Lenovo Banner" },
-              { image: "electronoc resixe.png", link: "/product-category/electronics", alt: "Acer Banner" },
-              { image: "camera (2).png", link: "/product-category/camera", alt: "Asus Banner" }
+              { image: "lenovo-banner-768x290.jpg", link: "product-category/laptops", alt: "Lenovo Banner" },
+              { image: "acer-banner-768x290.jpg", link: "/product-category/electronics", alt: "Acer Banner" },
+              { image: "asus-banner-768x290.jpg", link: "/product-category/camera", alt: "Asus Banner" }
             ]
 
             // Merge banners with fallbacks - show banner if exists, else show fallback
@@ -1050,7 +1050,7 @@ const Home = () => {
                   {banner ? (
                     <Link to={getBannerLink(banner)} aria-label={banner.title || "View products"} className="block h-full">
                       <img
-                        src={getFullImageUrl(banner.image) || fallback.image}
+                        src={getOptimizedImageUrl(banner.image, { width: 900, height: 420, quality: 74 }) || fallback.image}
                         alt={banner.title || "Banner"}
                         fetchPriority={index === 0 ? "high" : "auto"}
                         loading={index === 0 ? "eager" : "lazy"}
@@ -1088,8 +1088,8 @@ const Home = () => {
           {(() => {
             const banners = getBannersForSection("top-mobile", "home-top-triple")
             const fallbacks = [
-              { image: "electronoc resixe.png", link: "/product-category/electronics", alt: "Lenovo Banner" },
-              { image: "camera (2).png", link: "/product-category/camera", alt: "Acer Banner" }
+              { image: "acer-banner-768x290.jpg", link: "/product-category/electronics", alt: "Lenovo Banner" },
+              { image: "asus-banner-768x290.jpg", link: "/product-category/camera", alt: "Acer Banner" }
             ]
 
             // Merge banners with fallbacks
@@ -1102,7 +1102,7 @@ const Home = () => {
                   {banner ? (
                     <Link to={getBannerLink(banner)} aria-label={banner.title || "View products"} className="block h-full">
                       <img
-                        src={getFullImageUrl(banner.image) || fallback.image}
+                        src={getOptimizedImageUrl(banner.image, { width: 700, height: 360, quality: 72 }) || fallback.image}
                         alt={banner.title || "Banner"}
                         fetchPriority={index === 0 ? "high" : "auto"}
                         loading={index === 0 ? "eager" : "lazy"}
@@ -1171,7 +1171,7 @@ const Home = () => {
         {getBannersForSection("hp-mobile", "home-brand-single").length > 0 ? (
           <Link to={getBannerLink(getBannersForSection("hp-mobile", "home-brand-single")[0], brandUrls.HP)} aria-label="Browse HP products">
             <img
-              src={getFullImageUrl(getBannersForSection("hp-mobile", "home-brand-single")[0].image)}
+              src={getOptimizedImageUrl(getBannersForSection("hp-mobile", "home-brand-single")[0].image, { width: 768, height: 320, quality: 72 })}
               alt={getBannersForSection("hp-mobile", "home-brand-single")[0].title || "HP Products Banner Mobile"}
               className="w-full h-full bg-cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
               onError={(e) => {
@@ -1205,7 +1205,7 @@ const Home = () => {
                 {hpBanner ? (
                   <Link to={getBannerLink(hpBanner, brandUrls.HP)}>
                     <img
-                      src={getFullImageUrl(hpBanner.image)}
+                      src={getOptimizedImageUrl(hpBanner.image, { width: 740, height: 320, quality: 74 })}
                       alt={hpBanner.title || "HP Products Banner"}
                       className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => {
@@ -1228,7 +1228,7 @@ const Home = () => {
                 {dellBanner ? (
                   <Link to={getBannerLink(dellBanner, brandUrls.Dell)}>
                     <img
-                      src={getFullImageUrl(dellBanner.image)}
+                      src={getOptimizedImageUrl(dellBanner.image, { width: 740, height: 320, quality: 74 })}
                       alt={dellBanner.title || "Dell Products Banner"}
                       className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => {
@@ -1325,7 +1325,7 @@ const Home = () => {
         {getBannersForSection("accessories", "home-category-banner").length > 0 ? (
           <Link to={getLocalizedPath(getBannersForSection("accessories", "home-category-banner")[0].link || "/product-category/accessories")}>
             <img
-              src={getFullImageUrl(getBannersForSection("accessories", "home-category-banner")[0].image)}
+              src={getOptimizedImageUrl(getBannersForSection("accessories", "home-category-banner")[0].image, { width: 1400, height: 360, quality: 74 })}
               alt={getBannersForSection("accessories", "home-category-banner")[0].title || "Accessories Promotion Banner"}
               className="w-full h-full cover rounded-lg"
               onError={(e) => {
@@ -1393,7 +1393,7 @@ const Home = () => {
         {getBannersForSection("asus-mobile", "home-brand-single").length > 0 ? (
           <Link to={getBannerLink(getBannersForSection("asus-mobile", "home-brand-single")[0], brandUrls.ASUS)} aria-label="Browse ASUS products">
             <img
-              src={getFullImageUrl(getBannersForSection("asus-mobile", "home-brand-single")[0].image)}
+              src={getOptimizedImageUrl(getBannersForSection("asus-mobile", "home-brand-single")[0].image, { width: 768, height: 320, quality: 72 })}
               alt={getBannersForSection("asus-mobile", "home-brand-single")[0].title || "ASUS Products Banner Mobile"}
               className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
               onError={(e) => {
@@ -1426,7 +1426,7 @@ const Home = () => {
                 {acerBanner ? (
                   <Link to={getBannerLink(acerBanner, brandUrls.Acer)}>
                     <img
-                      src={getFullImageUrl(acerBanner.image)}
+                      src={getOptimizedImageUrl(acerBanner.image, { width: 740, height: 320, quality: 74 })}
                       alt={acerBanner.title || "Acer Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => {
@@ -1449,7 +1449,7 @@ const Home = () => {
                 {asusBanner ? (
                   <Link to={getBannerLink(asusBanner, brandUrls.ASUS)}>
                     <img
-                      src={getFullImageUrl(asusBanner.image)}
+                      src={getOptimizedImageUrl(asusBanner.image, { width: 740, height: 320, quality: 74 })}
                       alt={asusBanner.title || "ASUS Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => {
@@ -1548,7 +1548,7 @@ const Home = () => {
         {getBannersForSection("networking", "home-category-banner").length > 0 ? (
           <Link to={getLocalizedPath(getBannersForSection("networking", "home-category-banner")[0].link || "/product-category/computers/networking")}>
             <img
-              src={getFullImageUrl(getBannersForSection("networking", "home-category-banner")[0].image)}
+              src={getOptimizedImageUrl(getBannersForSection("networking", "home-category-banner")[0].image, { width: 1400, height: 360, quality: 74 })}
               alt={getBannersForSection("networking", "home-category-banner")[0].title || "Networking Banner"}
               className="w-full h-full cover rounded-lg"
               onError={(e) => {
@@ -1616,7 +1616,7 @@ const Home = () => {
         {getBannersForSection("msi-mobile", "home-brand-single").length > 0 ? (
           <Link to={getBannerLink(getBannersForSection("msi-mobile", "home-brand-single")[0], brandUrls.MSI)} aria-label="Browse MSI products">
             <img
-              src={getFullImageUrl(getBannersForSection("msi-mobile", "home-brand-single")[0].image)}
+              src={getOptimizedImageUrl(getBannersForSection("msi-mobile", "home-brand-single")[0].image, { width: 768, height: 320, quality: 72 })}
               alt={getBannersForSection("msi-mobile", "home-brand-single")[0].title || "MSI Products Banner Mobile"}
               className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
               onError={(e) => {
@@ -1649,7 +1649,7 @@ const Home = () => {
                 {msiBanner ? (
                   <Link to={getBannerLink(msiBanner, brandUrls.MSI)}>
                     <img
-                      src={getFullImageUrl(msiBanner.image)}
+                      src={getOptimizedImageUrl(msiBanner.image, { width: 740, height: 320, quality: 74 })}
                       alt={msiBanner.title || "MSI Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => {
@@ -1672,7 +1672,7 @@ const Home = () => {
                 {lenovoBanner ? (
                   <Link to={getBannerLink(lenovoBanner, brandUrls.Lenovo)}>
                     <img
-                      src={getFullImageUrl(lenovoBanner.image)}
+                      src={getOptimizedImageUrl(lenovoBanner.image, { width: 740, height: 320, quality: 74 })}
                       alt={lenovoBanner.title || "Lenovo Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => {
@@ -1769,7 +1769,7 @@ const Home = () => {
         {getBannersForSection("apple-mobile", "home-brand-single").length > 0 ? (
           <Link to={getBannerLink(getBannersForSection("apple-mobile", "home-brand-single")[0], brandUrls.Apple)} aria-label="Browse Apple products">
             <img
-              src={getFullImageUrl(getBannersForSection("apple-mobile", "home-brand-single")[0].image)}
+              src={getOptimizedImageUrl(getBannersForSection("apple-mobile", "home-brand-single")[0].image, { width: 768, height: 320, quality: 72 })}
               alt={getBannersForSection("apple-mobile", "home-brand-single")[0].title || "Apple Products Banner Mobile"}
               className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
               onError={(e) => {
@@ -1802,7 +1802,7 @@ const Home = () => {
                 {appleBanner ? (
                   <Link to={getBannerLink(appleBanner, brandUrls.Apple)}>
                     <img
-                      src={getFullImageUrl(appleBanner.image)}
+                      src={getOptimizedImageUrl(appleBanner.image, { width: 740, height: 320, quality: 74 })}
                       alt={appleBanner.title || "Apple Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => {
@@ -1825,7 +1825,7 @@ const Home = () => {
                 {samsungBanner ? (
                   <Link to={getBannerLink(samsungBanner, brandUrls.Samsung)}>
                     <img
-                      src={getFullImageUrl(samsungBanner.image)}
+                      src={getOptimizedImageUrl(samsungBanner.image, { width: 740, height: 320, quality: 74 })}
                       alt={samsungBanner.title || "Samsung Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => {

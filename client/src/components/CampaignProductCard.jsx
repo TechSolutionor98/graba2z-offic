@@ -131,6 +131,7 @@ import { useCart } from "../context/CartContext"
 import { ShoppingBag, Heart, Star } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useLanguage } from "../context/LanguageContext"
+import { getOptimizedImageUrl } from "../utils/imageUtils"
 
 // Helper function to determine status color
 const getStatusColor = (status) => {
@@ -175,8 +176,12 @@ const CampaignProductCard = ({ product }) => {
       <div className="relative mb-2 flex md:h-[180px] justify-center items-center">
   <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
-            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
+            src={getOptimizedImageUrl(product.image, { width: 330, height: 330 }) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
+            width="165"
+            height="165"
             className="w-full h-full cover object-contain rounded mx-auto my-auto"
           />
         </Link>

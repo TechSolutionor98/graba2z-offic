@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Link } from "react-router-dom"
-import { getFullImageUrl } from "../utils/imageUtils"
+import { getOptimizedImageUrl } from "../utils/imageUtils"
 import { useLanguage } from "../context/LanguageContext"
 
 const debugHeroBanners = (...args) => {
@@ -52,7 +52,9 @@ const BannerSlider = ({ banners }) => {
   }
 
   const currentBanner = banners[currentSlide]
-  const currentBannerImage = currentBanner ? getFullImageUrl(currentBanner.image) || "/top 2.png" : "/top 2.png"
+  const currentBannerImage = currentBanner
+    ? getOptimizedImageUrl(currentBanner.image, { width: 1400, height: 450, quality: 76 }) || "/logo.png"
+    : "/logo.png"
 
   useEffect(() => {
     if (!currentBanner) return

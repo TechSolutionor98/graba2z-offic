@@ -5,7 +5,7 @@ import { useCart } from "../context/CartContext"
 import { ShoppingCart, Heart, Star, ShoppingBag } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useToast } from "../context/ToastContext"
-import { getFullImageUrl } from "../utils/imageUtils"
+import { getOptimizedImageUrl } from "../utils/imageUtils"
 import TranslatedText from "./TranslatedText"
 import { useLanguage } from "../context/LanguageContext"
 
@@ -103,8 +103,12 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
       <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
         <Link to={productUrl} className="w-full h-full flex items-center justify-center">
           <img
-            src={getFullImageUrl(product.image) || "/placeholder.svg"}
+            src={getOptimizedImageUrl(product.image, { width: 330, height: 330 }) || "/placeholder.svg"}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
+            width="165"
+            height="165"
             className="w-full h-full object-contain bg-white rounded mx-auto mb-4"
             style={{maxHeight:165}}
           />

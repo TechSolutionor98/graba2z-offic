@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { getFullImageUrl } from "../utils/imageUtils"
+import { getOptimizedImageUrl } from "../utils/imageUtils"
 
 import config from "../config/config"
 import { Link, useNavigate, useLocation } from "react-router-dom"
@@ -824,7 +824,7 @@ const Navbar = () => {
             {/* Logo - Exact Grabatoz Style */}
             <Link to={getLocalizedPath("/")} className="flex items-center space-x-2">
               <div className="w-40 xl:w-44 2xl:w-48 h-auto flex items-center justify-center">
-                <img src="/new-logo.webp" alt="Logo" className="w-full h-full" />
+                <img src="/admin-logo.svg" alt="Logo" width="176" height="60" className="w-full h-full" />
               </div>
             </Link>
 
@@ -887,8 +887,12 @@ const Navbar = () => {
                           onClick={() => setShowSearchDropdown(false)}
                         >
                           <img
-                            src={getFullImageUrl(product.image) || "/placeholder.svg"}
+                            src={getOptimizedImageUrl(product.image, { width: 128, height: 128 }) || "/placeholder.svg"}
                             alt={product.name}
+                            loading="lazy"
+                            decoding="async"
+                            width="64"
+                            height="64"
                             className="w-16 h-16 object-contain rounded"
                           />
                           <div className="flex-1">
@@ -1490,8 +1494,12 @@ const Navbar = () => {
                         }}
                       >
                         <img
-                          src={getFullImageUrl(product.image) || "/placeholder.svg"}
+                          src={getOptimizedImageUrl(product.image, { width: 96, height: 96 }) || "/placeholder.svg"}
                           alt={product.name}
+                          loading="lazy"
+                          decoding="async"
+                          width="48"
+                          height="48"
                           className="w-12 h-12 object-contain rounded flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
