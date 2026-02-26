@@ -345,7 +345,13 @@ const Footer = ({ className = "" }) => {
 
           {/* 2nd Column: Image */}
           <div className="flex-1 flex justify-center min-w-0">
-            <img src="/1.svg" alt="Payment Methods" className="rounded-lg h-6 lg:h-8 xl:h-10 w-auto object-contain" />
+            <img
+              src="/1.svg"
+              alt="Payment Methods"
+              fetchPriority="high"
+              loading="eager"
+              className="rounded-lg h-6 lg:h-8 xl:h-10 w-auto object-contain"
+            />
           </div>
 
           {/* 3rd Column: App Store Images */}
@@ -571,7 +577,7 @@ const Footer = ({ className = "" }) => {
 
           {/* Payment Methods */}
           <div className="flex justify-center mb-4">
-            <img src="/1.svg" alt="Payment Methods" className="h-8 w-auto" />
+            <img src="/1.svg" alt="Payment Methods" fetchPriority="high" loading="eager" className="h-8 w-auto" />
           </div>
 
           {/* Copyright */}
