@@ -32,6 +32,7 @@ import {
   ChevronLeft,
 } from "lucide-react"
 import axios from "axios"
+import { getCategoryTreeCached } from "../services/categoryTreeCache"
 
 // Recursive component for mobile subcategory rendering
 const MobileSubCategoryItem = ({ 
@@ -341,8 +342,7 @@ const Navbar = () => {
   // Fetch categories and subcategories from API
   const fetchCategoryTree = async () => {
     try {
-      const treeResp = await axios.get(`${config.API_URL}/api/categories/tree`)
-      const treeData = Array.isArray(treeResp.data) ? treeResp.data : []
+      const treeData = await getCategoryTreeCached()
       setCategories(treeData)
       // Store categories globally for mobile subcategory component
       if (typeof window !== 'undefined') {

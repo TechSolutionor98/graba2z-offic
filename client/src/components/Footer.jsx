@@ -10,6 +10,7 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import { generateShopURL } from "../utils/urlUtils"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
+import { getCategoryTreeCached } from "../services/categoryTreeCache"
 
 import config from "../config/config"
 import NewsletterModal from "./NewsletterModal";
@@ -63,8 +64,7 @@ const Footer = ({ className = "" }) => {
 
   const fetchCategories = async () => {
     try {
-      // Use tree endpoint for consistency with Navbar and Shop
-      const { data } = await axios.get(`${API_BASE_URL}/api/categories/tree`)
+      const data = await getCategoryTreeCached()
       const validCategories = data.filter((cat) => {
         const isValid =
           cat &&

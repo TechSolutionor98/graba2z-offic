@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import axios from "axios"
-import productCache from "../services/productCache"
 import { generateShopURL } from "../utils/urlUtils"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
 
@@ -165,9 +164,6 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Get products from cache or API
-        const products = await productCache.getProducts()
-
         const [categoriesResponse, brandsResponse, bannersResponse, settingsResponse, sectionsResponse] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/categories`),
           axios.get(`${API_BASE_URL}/api/brands`),
@@ -192,6 +188,120 @@ const Home = () => {
         const settingsData = settingsResponse.data
         const sectionsData = sectionsResponse.data
 
+        // Filter and validate categories - ensure they have proper structure
+        const leanValidCategories = Array.isArray(categoriesData)
+          ? categoriesData.filter((cat) => {
+            const isValid =
+              cat &&
+              typeof cat === "object" &&
+              cat.name &&
+              typeof cat.name === "string" &&
+              cat.name.trim() !== "" &&
+              cat.isActive !== false &&
+              !cat.isDeleted &&
+              !cat.name.match(/^[0-9a-fA-F]{24}$/)
+            return isValid
+          })
+          : []
+
+        // Filter and validate brands - ensure they have proper structure and names
+        const leanValidBrands = Array.isArray(brandsData)
+          ? brandsData.filter((brand) => {
+            const isValid =
+              brand &&
+              typeof brand === "object" &&
+              brand.name &&
+              typeof brand.name === "string" &&
+              brand.name.trim() !== "" &&
+              brand.isActive !== false &&
+              !brand.name.match(/^[0-9a-fA-F]{24}$/) &&
+              brand.logo &&
+              brand.logo.trim() !== ""
+            return isValid
+          })
+          : []
+
+        const brandIdMap = {}
+        for (const brand of leanValidBrands) {
+          if (brand?._id && brand?.name) {
+            brandIdMap[brand.name.toLowerCase()] = brand._id
+          }
+        }
+
+        const categoryIdMap = {}
+        for (const category of leanValidCategories) {
+          if (category?._id && category?.name) {
+            categoryIdMap[category.name.trim().toLowerCase()] = category._id
+          }
+        }
+
+        const fetchProducts = async (params) => {
+          const { data } = await axios.get(`${API_BASE_URL}/api/products`, { params })
+          return Array.isArray(data) ? data : []
+        }
+        const fetchByBrand = (brandId, limit) => (brandId ? fetchProducts({ brand: brandId, limit }) : Promise.resolve([]))
+        const fetchByParentCategory = (categoryId, limit) =>
+          categoryId ? fetchProducts({ parentCategory: categoryId, limit }) : Promise.resolve([])
+
+        const [
+          featured,
+          hpData,
+          dellData,
+          acerData,
+          asusData,
+          msiData,
+          lenovoData,
+          appleData,
+          samsungData,
+          accessoriesData,
+          networkingData,
+        ] = await Promise.all([
+          fetchProducts({ featured: true, limit: 12 }),
+          fetchByBrand(brandIdMap.hp, 3),
+          fetchByBrand(brandIdMap.dell, 3),
+          fetchByBrand(brandIdMap.acer, 3),
+          fetchByBrand(brandIdMap.asus, 3),
+          fetchByBrand(brandIdMap.msi, 3),
+          fetchByBrand(brandIdMap.lenovo, 3),
+          fetchByBrand(brandIdMap.apple, 3),
+          fetchByBrand(brandIdMap.samsung, 3),
+          fetchByParentCategory(categoryIdMap.accessories, 8),
+          fetchByParentCategory(categoryIdMap.networking, 8),
+        ])
+
+        // Filter hero banners
+        const heroData = bannersData.filter((banner) => banner.position === "hero")
+        const promotionalBanners = bannersData.filter((banner) => banner.position === "promotional")
+        const mobileData = bannersData.filter((banner) => banner.position === "mobile")
+        const homeBannersData = bannersData.filter((banner) =>
+          banner.position &&
+          banner.position.startsWith("home-") &&
+          banner.isActive
+        )
+
+        setFeaturedProducts(featured)
+        setCategories(leanValidCategories)
+        setBanners(promotionalBanners)
+        setHeroBanners(heroData)
+        setMobileBanners(mobileData)
+        setHomeBanners(homeBannersData)
+        setBrands(leanValidBrands)
+        setHpProducts(hpData)
+        setDellProducts(dellData)
+        setAccessoriesProducts(accessoriesData)
+        setAcerProducts(acerData)
+        setAsusProducts(asusData)
+        setNetworkingProducts(networkingData)
+        setMsiProducts(msiData)
+        setLenovoProducts(lenovoData)
+        setAppleProducts(appleData)
+        setSamsungProducts(samsungData)
+        setSettings(settingsData)
+        setHomeSections(sectionsData)
+        setLoading(false)
+        return
+
+        if (false) {
         console.log("All Products loaded:", products.length)
         console.log("Categories fetched:", categoriesData)
         console.log("Brands fetched:", brandsData)
@@ -667,6 +777,7 @@ const Home = () => {
         console.log("Final Lenovo Products:", lenovoData)
         console.log("Final Apple Products:", appleData)
         console.log("Final Samsung Products:", samsungData)
+        }
       } catch (error) {
         console.error("Error fetching data:", error)
         setError("Failed to load data. Please try again later.")

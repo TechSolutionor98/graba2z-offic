@@ -1,9 +1,20 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const asyncMainCssPlugin = () => ({
+  name: 'async-main-css',
+  enforce: 'post',
+  transformIndexHtml(html) {
+    return html.replace(
+      /<link rel="stylesheet"([^>]*href="\/assets\/index-[^"]+\.css"[^>]*)>/g,
+      '<link rel="preload" as="style"$1 onload="this.onload=null;this.rel=\'stylesheet\'"><noscript><link rel="stylesheet"$1></noscript>',
+    )
+  },
+})
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), asyncMainCssPlugin()],
   server: {
     port: 3000,
     proxy: {
