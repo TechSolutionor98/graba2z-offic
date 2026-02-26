@@ -24,7 +24,7 @@ const AdminHeader = () => {
   }
 
   return (
-    <header className="h-20 flex items-center  justify-between px-6 ml-64 top-0 right-0 left-64 z-40">
+    <header className="h-20 flex items-center justify-between px-6 ml-64 top-0 right-0 left-64 z-40 bg-white">
       <div className="flex items-center bg-white  px-6 py-3 rounded-lg shadow-sm">
         <h2 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h2>
       </div>

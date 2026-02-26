@@ -19,6 +19,7 @@ import {
   Save,
   Shield,
 } from "lucide-react"
+import { useLocation } from "react-router-dom"
 
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
@@ -384,6 +385,8 @@ const NewOrders = () => {
   const [processingAction, setProcessingAction] = useState(false)
   const [showStatusDropdown, setShowStatusDropdown] = useState({})
   const [showPaymentDropdown, setShowPaymentDropdown] = useState({})
+  const location = useLocation()
+  const [focusOrderId, setFocusOrderId] = useState(location.state?.orderId || null)
 
   // Bulk selection states
   const [selectedOrders, setSelectedOrders] = useState([])
@@ -488,6 +491,18 @@ const orderStatusOptions = [
       const newOrders = data.filter((order) => !order.status || order.status === "New" || order.status === "Pending")
 
       setOrders(newOrders)
+      if (focusOrderId) {
+        const match = newOrders.find((order) => order._id === focusOrderId)
+        if (match) {
+          setSelectedOrder(match)
+          setOrderNotes(match.notes || "")
+          setTrackingId(match.trackingId || "")
+          setEstimatedDelivery(match.estimatedDelivery ? new Date(match.estimatedDelivery).toISOString().split("T")[0] : "")
+          setSellerComments(match.sellerComments || "")
+          setSellerMessage(match.sellerMessage || "")
+        }
+        setFocusOrderId(null)
+      }
       setError(null)
       setLoading(false)
     } catch (error) {

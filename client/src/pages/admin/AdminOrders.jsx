@@ -6,6 +6,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, Mail, ChevronDown, RefreshCw } from "lucide-react"
 import { getFullImageUrl } from "../../utils/imageUtils"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo } from "../../utils/paymentUtils"
+import { useLocation } from "react-router-dom"
 
 import config from "../../config/config"
 const AdminOrders = () => {
@@ -18,6 +19,8 @@ const AdminOrders = () => {
   const [filterStatus, setFilterStatus] = useState("all")
   const [showStatusDropdown, setShowStatusDropdown] = useState({})
   const [showPaymentDropdown, setShowPaymentDropdown] = useState({})
+  const location = useLocation()
+  const [focusOrderId, setFocusOrderId] = useState(location.state?.orderId || null)
 
   const statusOptions = [
     { value: "all", label: "All Orders" },
@@ -73,6 +76,15 @@ const AdminOrders = () => {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (!focusOrderId || orders.length === 0) return
+    const match = orders.find((order) => order._id === focusOrderId)
+    if (match) {
+      setSelectedOrder(match)
+    }
+    setFocusOrderId(null)
+  }, [orders, focusOrderId])
 
   const handleViewOrder = (order) => {
     setSelectedOrder(order)

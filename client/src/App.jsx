@@ -264,7 +264,7 @@ function App() {
                     path="/admin/*"
                     element={
                       <AdminRoute>
-                        <div className="min-h-screen bg-gray-100">
+                        <div className="min-h-screen bg-white">
                           <AdminSidebar />
                           <AdminHeader />
                           <div className=" ">
