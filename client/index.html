@@ -39,9 +39,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
 
     <!-- Defer non-critical third-party scripts to reduce early network/caching penalties -->
     <script>
@@ -115,12 +123,7 @@
           })
         }
 
-        function scheduleLoad() {
-          // Keep non-critical trackers/widgets off the critical path.
-          window.setTimeout(loadThirdParty, 8000)
-        }
-
-        window.addEventListener("load", scheduleLoad, { once: true })
+        // Load third-party trackers/widgets only after real user interaction.
         ;["pointerdown", "keydown", "touchstart", "scroll"].forEach(function (eventName) {
           window.addEventListener(eventName, loadThirdParty, { once: true, passive: true })
         })

@@ -123,8 +123,24 @@ const Home = () => {
   }, [])
 
   useEffect(() => {
-    if (!localStorage.getItem(NOTIF_POPUP_KEY)) {
-      setTimeout(() => setShowNotifPopup(true), 1200)
+    if (localStorage.getItem(NOTIF_POPUP_KEY)) return
+
+    let opened = false
+    const openPopup = () => {
+      if (opened) return
+      opened = true
+      setShowNotifPopup(true)
+    }
+
+    const interactionEvents = ["pointerdown", "keydown", "touchstart", "scroll"]
+    interactionEvents.forEach((eventName) => {
+      window.addEventListener(eventName, openPopup, { once: true, passive: true })
+    })
+
+    return () => {
+      interactionEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, openPopup)
+      })
     }
   }, [])
 
@@ -1036,7 +1052,9 @@ const Home = () => {
                       <img
                         src={getFullImageUrl(banner.image)}
                         alt={banner.title || "Banner"}
-                        className="w-full h-full rounded-lg bg-cover hover:opacity-90 transition-opacity cursor-pointer"
+                        width="1200"
+                        height="560"
+                        className="block w-full h-full rounded-lg object-cover hover:opacity-90 transition-opacity cursor-pointer"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = fallback.image;
@@ -1048,7 +1066,9 @@ const Home = () => {
                       <img
                         src={fallback.image}
                         alt={fallback.alt}
-                        className="w-full h-full rounded-lg bg-cover hover:opacity-90 transition-opacity cursor-pointer"
+                        width="1200"
+                        height="560"
+                        className="block w-full h-full rounded-lg object-cover hover:opacity-90 transition-opacity cursor-pointer"
                       />
                     </Link>
                   )}
@@ -1079,7 +1099,9 @@ const Home = () => {
                       <img
                         src={getFullImageUrl(banner.image)}
                         alt={banner.title || "Banner"}
-                        className="w-full h-full rounded-lg bg-cover hover:opacity-95 transition-opacity cursor-pointer"
+                        width="800"
+                        height="420"
+                        className="block w-full h-full rounded-lg object-cover hover:opacity-95 transition-opacity cursor-pointer"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = fallback.image;
@@ -1091,7 +1113,9 @@ const Home = () => {
                       <img
                         src={fallback.image}
                         alt={fallback.alt}
-                        className="w-full h-full rounded-lg bg-cover hover:opacity-95 transition-opacity cursor-pointer"
+                        width="800"
+                        height="420"
+                        className="block w-full h-full rounded-lg object-cover hover:opacity-95 transition-opacity cursor-pointer"
                       />
                     </Link>
                   )}
