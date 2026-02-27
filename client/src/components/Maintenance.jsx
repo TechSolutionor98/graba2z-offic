@@ -6,7 +6,7 @@ const MaintenancePage = () => {
 
   const handleContactUs = () => {
     // Open WhatsApp with the provided number
-    window.open(`https://wa.me/971508604360`, '_blank');
+    window.open(`https://wa.me/971503289908`, '_blank');
   };
 
   const handleCheckStatus = () => {

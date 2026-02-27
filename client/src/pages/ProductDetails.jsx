@@ -2852,9 +2852,9 @@ const ProductDetails = () => {
               )}
 
               {/* Tabby/Tamara info rows (triggers) */}
-              <div className="space-y-3 mb-4">
+            {/* <div className="space-y-3 mb-4"> */}
                 {/* Tamara row */}
-                <button
+                {/* <button
                   type="button"
                   onClick={() => setShowTamaraModal(true)}
                   className="w-full text-left hover:opacity-90 transition-opacity"
@@ -2875,10 +2875,10 @@ const ProductDetails = () => {
                       tamara
                     </span>
                   </div>
-                </button>
+                </button> */}
 
                 {/* Tabby row */}
-                <button
+                {/* <button
                   type="button"
                   onClick={() => setShowTabbyModal(true)}
                   className="w-full text-left hover:opacity-90 transition-opacity"
@@ -2900,8 +2900,8 @@ const ProductDetails = () => {
                       tabby
                     </span>
                   </div>
-                </button>
-              </div>
+                </button> */}
+              {/* </div> */}
 
               {/* Quantity and Add to Cart */}
               <div className="space-y-4 mb-6">
