@@ -4,6 +4,10 @@
     "framework": "vite",
     "rewrites": [
         {
+            "source": "/sitemap.xml",
+            "destination": "https://api.grabatoz.ae/sitemap.xml"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
