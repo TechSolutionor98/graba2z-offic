@@ -14,6 +14,23 @@ import DosVariationForm from "./DosVariationForm"
 import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
+
+const SEO_TITLE_MAX_WORDS = 80
+
+const countWords = (text = "") => {
+  const normalized = String(text).trim()
+  if (!normalized) return 0
+  return normalized.split(/\s+/).length
+}
+
+const limitWords = (text = "", maxWords = SEO_TITLE_MAX_WORDS) => {
+  const normalized = String(text).trim()
+  if (!normalized) return ""
+  const words = normalized.split(/\s+/)
+  if (words.length <= maxWords) return text
+  return words.slice(0, maxWords).join(" ")
+}
+
 const ProductForm = ({ product, onSubmit, onCancel }) => {
   const [categories, setCategories] = useState([])
   const [brands, setBrands] = useState([])
@@ -476,13 +493,15 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
+    const normalizedValue = name === "seoTitle" ? limitWords(value, SEO_TITLE_MAX_WORDS) : value
+
     if (name === "basePrice") {
       // Handle the new basePrice input
       setBasePrice(value)
     } else {
       setFormData((prev) => ({
         ...prev,
-        [name]: type === "checkbox" ? checked : value,
+        [name]: type === "checkbox" ? checked : normalizedValue,
       }))
     }
 
@@ -1704,9 +1723,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Custom page title for Google (leave blank to use product name)"
-                maxLength={70}
               />
-              <p className="text-xs text-gray-400 mt-1">{formData.seoTitle.length}/70 characters</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {countWords(formData.seoTitle)}/{SEO_TITLE_MAX_WORDS} words
+              </p>
             </div>
 
             <div>
