@@ -171,8 +171,8 @@ function AboutUs() {
                 <LucidePhone className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1"><TranslatedText>Phone</TranslatedText></h3>
-              <a href="tel:+97143540566" className="text-lime-500">
-                +971 4 354 0566
+              <a href="tel:+9710505033860" className="text-lime-500">
+                +971 0505033860
               </a>
             </div>
             

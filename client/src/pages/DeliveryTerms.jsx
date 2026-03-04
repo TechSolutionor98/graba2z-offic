@@ -214,7 +214,7 @@ export default function DeliveryInfo() {
   
               <div className="space-y-2">
                 <h4 className="text-lg font-semibold text-lime-500"><TranslatedText>Customer Service:</TranslatedText></h4>
-                <p className="text-gray-700">📞 Tel: +971 4 354 0566</p>
+                <p className="text-gray-700">📞 Tel: +971 0505033860</p>
                 <p className="text-gray-700">✉️ Email: customercare@grabatoz.ae</p>
                 <p className="text-gray-700">🕒 Customer service hours: Every day from 9:00 AM to 7:00 PM</p>
               </div>

@@ -600,7 +600,8 @@ const Checkout = () => {
           const orderItem = {
             name: item.name,
             image: item.image,
-            price: item.price,
+            // Persist the same effective unit price used for checkout totals.
+            price: getItemPrice(item),
             quantity: item.quantity,
           }
           
@@ -888,7 +889,8 @@ const Checkout = () => {
           const orderItem = {
             name: item.name,
             image: item.image,
-            price: item.price,
+            // Persist the same effective unit price used for checkout totals.
+            price: getItemPrice(item),
             quantity: item.quantity,
           }
           

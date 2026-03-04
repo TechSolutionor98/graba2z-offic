@@ -57,7 +57,7 @@ export default function PrivacyPolicy() {
             poweredBy: "Powered by Crown Excel General Trading LLC",
             poBox: "P.O. Box No: 241975, Dubai, UAE",
             customerService: "Customer Service:",
-            phone: "Tel: +971 4 354 0566",
+            phone: "Tel: +971 0505033860",
             email: "Email: customercare@grabatoz.ae",
             hours: "Customer service hours: Daily from 9:00 AM to 7:00 PM",
           },
@@ -114,7 +114,7 @@ export default function PrivacyPolicy() {
             poweredBy: "شركة Crown Excel General Trading LLC",
             poBox: "صندوق بريد: 241975، دبي",
             customerService: "خدمة العملاء:",
-            phone: "هاتف: +971 4 354 0566",
+            phone: "هاتف: +971 0505033860",
             email: "البريد الإلكتروني: customercare@grabatoz.ae",
             hours: "ساعات خدمة العملاء: يوميًا من 9:00 صباحًا حتى 7:00 مساءً",
           },
@@ -251,8 +251,8 @@ export default function PrivacyPolicy() {
                 <Phone className="w-5 h-5 text-lime-500" />
               </div>
               <h3 className="font-medium mb-1">Phone</h3>
-              <a href="tel:+97143540566" className="text-black">
-                +971 4 354 0566
+              <a href="tel:+9710505033860" className="text-black">
+                +971 0505033860
               </a>
             </div>
 

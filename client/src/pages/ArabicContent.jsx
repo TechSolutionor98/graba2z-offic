@@ -106,7 +106,7 @@ export default function PrivacyPolicyArabic() {
             <h2 className="text-xl font-semibold text-black mb-2">معلومات الاتصال</h2>
             <p>شركة Crown Excel General Trading LLC</p>
             <p>صندوق بريد: 241975، دبي</p>
-            <p>هاتف: +971 4 354 0566</p>
+            <p>هاتف: +971 0505033860</p>
             <p>البريد الإلكتروني: customercare@grabatoz.ae</p>
             <p>ساعات خدمة العملاء: يوميًا من 9:00 صباحًا حتى 7:00 مساءً</p>
           </div>
