@@ -72,24 +72,27 @@ const STORES = [
 ]
 
 const PAYMENT_METHODS = [
-  {
-    id: "tamara",
-    name: "",
-    description: "",
-    iconUrls: [
-      { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764221/tamara_card_lh6vev.webp", size: "big" },
-    ],
-    color: "", // Remove background color
-  },
-  {
-    id: "tabby",
-    name: "",
-    description: "",
-    iconUrls: [
-      { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764220/tabby_card_lpsmhh.webp", size: "big" },
-    ],
-    color: "", // Remove background color
-  },
+  // {
+  //   id: "tamara",
+  //   name: "",
+  //   description: "",
+  //   iconUrls: [
+  //     { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764221/tamara_card_lh6vev.webp", size: "big" },
+  //   ],
+  //   color: "",
+  // },
+
+
+  
+  // {
+  //   id: "tabby",
+  //   name: "",
+  //   description: "",
+  //   iconUrls: [
+  //     { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764220/tabby_card_lpsmhh.webp", size: "big" },
+  //   ],
+  //   color: "",
+  // },
   {
     id: "card",
     name: "",
