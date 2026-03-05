@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Sparkles, ChevronLeft, ChevronRight, Eye, Clock } from 'lucide-react'
-import { getFullImageUrl } from '../utils/imageUtils'
+import { getOptimizedImageUrl } from '../utils/imageUtils'
 
 const BlogHeroSection = ({ featuredBlogs = [] }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -157,8 +157,11 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
                       <div className="overflow-hidden rounded-lg">
                         <div className="aspect-[4/3] relative">
                         <img
-                          src={getFullImageUrl(blog.mainImage) || "/placeholder.svg?height=300&width=400"}
+                          src={getOptimizedImageUrl(blog.mainImage, { width: 900, height: 675, quality: 72 }) || "/placeholder.svg?height=300&width=400"}
                           alt={blog.title}
+                          loading={i < itemsPerView ? "eager" : "lazy"}
+                          decoding="async"
+                          fetchPriority={i === itemsPerView ? "high" : "auto"}
                           className="block w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-end">
