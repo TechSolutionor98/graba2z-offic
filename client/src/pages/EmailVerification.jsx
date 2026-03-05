@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
+import { useLanguage } from "../context/LanguageContext"
 
 const EmailVerification = () => {
   const [code, setCode] = useState(["", "", "", "", "", ""])
@@ -16,8 +17,17 @@ const EmailVerification = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { verifyEmail, resendVerification } = useAuth()
+  const { getLocalizedPath } = useLanguage()
 
-  const email = location.state?.email || ""
+  const queryEmail = new URLSearchParams(location.search).get("email")
+  const storedEmail = sessionStorage.getItem("pendingVerificationEmail")
+  const email = (location.state?.email || queryEmail || storedEmail || "").trim().toLowerCase()
+
+  useEffect(() => {
+    if (email) {
+      sessionStorage.setItem("pendingVerificationEmail", email)
+    }
+  }, [email])
 
   // Countdown timer for resend button
   useEffect(() => {
@@ -108,8 +118,9 @@ const EmailVerification = () => {
       })
 
       setSuccess("Email verified successfully! Redirecting...")
+      sessionStorage.removeItem("pendingVerificationEmail")
       setTimeout(() => {
-        navigate("/", { replace: true })
+        navigate(getLocalizedPath("/"), { replace: true })
       }, 2000)
     } catch (error) {
       setError(error.message || "Verification failed. Please try again.")
@@ -155,7 +166,7 @@ const EmailVerification = () => {
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Email Not Found</h2>
             <p className="mt-2 text-sm text-gray-600">Please register first to verify your email.</p>
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate(getLocalizedPath("/register"))}
               className="mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               Go to Register

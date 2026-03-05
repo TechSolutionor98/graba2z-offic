@@ -83,15 +83,19 @@ const Register = () => {
     setLoading(true)
 
     try {
-      const result = await register({
+      const normalizedEmail = formData.email.trim().toLowerCase()
+      await register({
         name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
+        email: normalizedEmail,
         password: formData.password,
       })
 
+      // Keep email available even if route state is dropped (e.g. redirects/reloads)
+      sessionStorage.setItem("pendingVerificationEmail", normalizedEmail)
+
       // Navigate to email verification page
-      navigate("/verify-email", {
-        state: { email: formData.email.trim().toLowerCase() },
+      navigate(getLocalizedPath(`/verify-email?email=${encodeURIComponent(normalizedEmail)}`), {
+        state: { email: normalizedEmail },
         replace: true,
       })
     } catch (error) {

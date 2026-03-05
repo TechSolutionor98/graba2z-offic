@@ -51,6 +51,8 @@ export const LanguageProvider = ({ children }) => {
   // Detect language from URL on initial load and route changes
   useEffect(() => {
     const path = location.pathname
+    const search = location.search || ""
+    const hash = location.hash || ""
 
     // Skip language prefix logic for admin and super admin routes
     if (path.startsWith("/admin") || 
@@ -78,14 +80,14 @@ export const LanguageProvider = ({ children }) => {
       if (savedLang === "ar") {
         // User prefers Arabic, redirect to Arabic version
         const arabicPath = `/ae-ar${path === "/" ? "" : path}`
-        navigate(arabicPath, { replace: true })
+        navigate(`${arabicPath}${search}${hash}`, { replace: true })
       } else {
         // Default to English - always redirect to /ae-en prefix
         const englishPath = `/ae-en${path === "/" ? "" : path}`
-        navigate(englishPath, { replace: true })
+        navigate(`${englishPath}${search}${hash}`, { replace: true })
       }
     }
-  }, [location.pathname, navigate])
+  }, [location.pathname, location.search, location.hash, navigate])
 
   // Apply direction and lang attributes whenever language changes
   useEffect(() => {
@@ -138,16 +140,19 @@ export const LanguageProvider = ({ children }) => {
     const currentPath = location.pathname
     const cleanPath = getPathWithoutLangPrefix(currentPath)
     const newPath = getLocalizedPath(cleanPath, newLang)
+    const search = location.search || ""
+    const hash = location.hash || ""
+    const destination = `${newPath}${search}${hash}`
 
-    console.log(`[Language Switch] ${currentPath} -> ${newPath} (lang: ${langCode})`)
+    console.log(`[Language Switch] ${currentPath} -> ${destination} (lang: ${langCode})`)
 
     // Navigate to the new language path
-    navigate(newPath, { replace: true })
+    navigate(destination, { replace: true })
 
     // Force page reload to ensure all components re-render with new language
     // This ensures translations are fetched fresh
-    window.location.href = newPath
-  }, [getPathWithoutLangPrefix, getLocalizedPath, location.pathname, navigate])
+    window.location.href = destination
+  }, [getPathWithoutLangPrefix, getLocalizedPath, location.pathname, location.search, location.hash, navigate])
 
   // Translate text function using Helsinki-NLP model (uses batched queue internally)
   const translate = useCallback(async (text, targetLang = currentLanguage.code) => {
