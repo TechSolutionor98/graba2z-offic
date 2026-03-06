@@ -7,6 +7,7 @@ import { Clock, Eye, User, ChevronLeft, ChevronRight } from "lucide-react"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
 import SEO from "../components/SEO"
 import config from "../config/config"
+import { useLanguage } from "../context/LanguageContext"
 
 const BlogHeroSection = lazy(() => import("../components/BlogHeroSection"))
 
@@ -69,6 +70,7 @@ const writeBlogListCache = (data) => {
 }
 
 const BlogList = () => {
+  const { getLocalizedPath } = useLanguage()
   const [searchParams] = useSearchParams()
   const [blogs, setBlogs] = useState([])
   const [featuredBlogs, setFeaturedBlogs] = useState([])
@@ -320,7 +322,7 @@ const BlogList = () => {
                         className={`${scrollable ? "flex-none w-full md:w-[calc((100%-24px)/2)] lg:w-[calc((100%-72px)/4)]" : ""}`}
                       >
                         <Link
-                          to={`/blogs/${blog.slug}`}
+                          to={getLocalizedPath(`/blogs/${blog.slug}`)}
                           className="block bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow h-full flex flex-col"
                         >
                           <div className="p-2 flex-shrink-0">
@@ -417,7 +419,7 @@ const BlogList = () => {
             {visibleBlogs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
                 {visibleBlogs.map((blog, index) => (
-                  <Link key={blog._id} to={`/blogs/${blog.slug}`} className="group">
+                  <Link key={blog._id} to={getLocalizedPath(`/blogs/${blog.slug}`)} className="group">
                     <article className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col h-full">
                       <div className="p-2">
                         <div className="relative h-60 w-full bg-gray-100 overflow-hidden rounded-lg">

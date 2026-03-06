@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Sparkles, ChevronLeft, ChevronRight, Eye, Clock } from 'lucide-react'
 import { getOptimizedImageUrl } from '../utils/imageUtils'
+import { useLanguage } from '../context/LanguageContext'
 
 const BlogHeroSection = ({ featuredBlogs = [] }) => {
+  const { getLocalizedPath } = useLanguage()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [enableTransition, setEnableTransition] = useState(true)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -152,7 +154,7 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
                     width: slideWidthPx ? `${slideWidthPx}px` : `${100 / itemsPerView}%`,
                   }}
                 >
-                  <Link to={`/blogs/${blog.slug}`} className="block group/card">
+                  <Link to={getLocalizedPath(`/blogs/${blog.slug}`)} className="block group/card">
                     <div className="relative cursor-pointer rounded-xl shadow-2xl bg-white p-2">
                       <div className="overflow-hidden rounded-lg">
                         <div className="aspect-[4/3] relative">

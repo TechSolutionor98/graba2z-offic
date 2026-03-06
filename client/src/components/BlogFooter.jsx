@@ -5,10 +5,12 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import config from '../config/config';
 import { getFullImageUrl } from '../utils/imageUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 const API_BASE_URL = `${config.API_URL}`;
 
 const Footer = () => {
+  const { getLocalizedPath } = useLanguage();
   const [editorsPick, setEditorsPick] = useState([]);
   const [randomPosts, setRandomPosts] = useState([]);
   const [popularCategories, setPopularCategories] = useState([]);
@@ -114,7 +116,7 @@ const Footer = () => {
               {editorsPick.slice(0, 3).map((post) => (
                 <Link
                   key={post._id}
-                  to={`/blogs/${post.slug}`}
+                  to={getLocalizedPath(`/blogs/${post.slug}`)}
                   className="flex gap-4 group transition-opacity"
                 >
                   <div className="w-16 h-16 flex-shrink-0">
@@ -147,7 +149,7 @@ const Footer = () => {
               {randomPosts.slice(0, 3).map((post) => (
                 <Link
                   key={post._id}
-                  to={`/blogs/${post.slug}`}
+                  to={getLocalizedPath(`/blogs/${post.slug}`)}
                   className="flex gap-4 group transition-opacity"
                 >
                   <div className="w-16 h-16 flex-shrink-0">
@@ -180,7 +182,7 @@ const Footer = () => {
               {popularCategories.slice(0, 5).map((category) => (
                 <Link 
                   key={category._id} 
-                  to={`/blogs/${category.randomBlogSlug}`}
+                  to={getLocalizedPath(`/blogs/${category.randomBlogSlug}`)}
                   className="flex items-center justify-between group p-2 rounded transition-colors"
                 >
                   <div className="flex items-center gap-2">

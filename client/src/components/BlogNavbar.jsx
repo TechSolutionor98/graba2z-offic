@@ -4,10 +4,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Search, Menu, X, ShoppingBag, LayoutGrid, ChevronRight } from "lucide-react"
 import config from "../config/config"
+import { useLanguage } from "../context/LanguageContext"
 
 const API_BASE_URL = `${config.API_URL}`
 
 const Header = () => {
+  const { getLocalizedPath } = useLanguage()
   const [searchQuery, setSearchQuery] = useState("")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [categories, setCategories] = useState([])
@@ -322,7 +324,7 @@ const Header = () => {
                         {categories.slice(visibleCount ?? 0).map((category) => (
                           <Link
                             key={category._id}
-                            to={`/blogs/${category.randomBlogSlug}`}
+                            to={getLocalizedPath(`/blogs/${category.randomBlogSlug}`)}
                             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                             onClick={() => setIsMoreOpen(false)}
                           >
@@ -345,7 +347,7 @@ const Header = () => {
                 {categories.slice(0, visibleCount ?? categories.length).map((category) => (
                   <li key={category._id}>
                     <Link
-                      to={`/blogs/${category.randomBlogSlug}`}
+                      to={getLocalizedPath(`/blogs/${category.randomBlogSlug}`)}
                       className="text-white hover:text-lime-100 font-medium"
                     >
                       {category.name}
@@ -411,7 +413,7 @@ const Header = () => {
                   {categories.map((category) => (
                     <Link
                       key={category._id}
-                      to={`/blogs/${category.randomBlogSlug}`}
+                      to={getLocalizedPath(`/blogs/${category.randomBlogSlug}`)}
                       onClick={() => setIsMenuOpen(false)}
                       className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 text-gray-800 text-medium font-medium"
                     >

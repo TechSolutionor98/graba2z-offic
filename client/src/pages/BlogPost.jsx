@@ -157,7 +157,7 @@ const BlogPost = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Blog Not Found</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <Link
-            to="/blogs"
+            to={getLocalizedPath("/blogs")}
             className="inline-flex items-center px-4 py-2 bg-lime-500 text-white font-medium rounded-lg hover:bg-lime-600 transition-colors space-x-2"
           >
             <ArrowLeft size={20} />
@@ -213,7 +213,7 @@ const BlogPost = () => {
             </li>
             <li className="text-gray-400">›</li>
             <li>
-              <Link to="/blogs" className="hover:text-lime-600 transition-colors">Blogs</Link>
+              <Link to={getLocalizedPath("/blogs")} className="hover:text-lime-600 transition-colors">Blogs</Link>
             </li>
             {deepestCategory && (
               <>
@@ -260,7 +260,7 @@ const BlogPost = () => {
                         
                         if (categoryBlogs.length > 0) {
                           const randomBlog = categoryBlogs[Math.floor(Math.random() * categoryBlogs.length)];
-                          window.location.href = `/blogs/${randomBlog.slug}`;
+                          window.location.href = getLocalizedPath(`/blogs/${randomBlog.slug}`);
                         }
                       } catch (error) {
                         console.error('Error fetching random blog:', error);
@@ -426,7 +426,7 @@ const BlogPost = () => {
                 <ul className="space-y-3">
                   {recent.map((p) => (
                     <li key={p._id}>
-                      <Link to={`/blogs/${p.slug}`} className="flex gap-3 group">
+                      <Link to={getLocalizedPath(`/blogs/${p.slug}`)} className="flex gap-3 group">
                         <div className="w-16 h-12 rounded overflow-hidden bg-gray-100 flex-shrink-0">
                           {p.mainImage ? (
                             <img 
