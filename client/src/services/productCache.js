@@ -918,6 +918,9 @@ class ProductCacheService {
     // Filter by stock status (supports multiple filters)
     if (filters.stockStatus) {
       const stockFilters = Array.isArray(filters.stockStatus) ? filters.stockStatus : [filters.stockStatus]
+      const normalizeStatus = (status) => String(status || "").trim().toLowerCase()
+      const isExplicitOutOfStock = (product) => normalizeStatus(product?.stockStatus) === "out of stock"
+      const hasPositiveStock = (product) => Number(product?.countInStock || 0) > 0
 
       if (stockFilters.length > 0) {
         filteredProducts = filteredProducts.filter((product) => {
@@ -925,11 +928,11 @@ class ProductCacheService {
           const matches = stockFilters.some((filter) => {
             switch (filter) {
               case "inStock":
-                // Product is in stock if stockStatus is "In Stock" OR countInStock > 0
-                return product.stockStatus === "In Stock" || (product.countInStock || 0) > 0
+                // In-stock means positive quantity AND not explicitly marked out of stock
+                return hasPositiveStock(product) && !isExplicitOutOfStock(product)
               case "outOfStock":
-                // Product is out of stock if stockStatus is "Out of Stock" AND countInStock === 0
-                return product.stockStatus === "Out of Stock" && (product.countInStock || 0) === 0
+                // Out-of-stock if explicit status says so OR quantity is zero/negative
+                return isExplicitOutOfStock(product) || !hasPositiveStock(product)
               case "onSale":
                 // Product is on sale if has discount > 0 OR offerPrice < price
                 return (
@@ -947,13 +950,12 @@ class ProductCacheService {
 
     // Sort products - Always prioritize in-stock products first
     filteredProducts.sort((a, b) => {
-      // Check if products are in stock
-      const aInStock =
-        a.stockStatus === "In Stock" || (!a.stockStatus && a.countInStock > 0)
-      const bInStock =
-        b.stockStatus === "In Stock" || (!b.stockStatus && b.countInStock > 0)
+      const normalizeStatus = (status) => String(status || "").trim().toLowerCase()
+      const aInStock = Number(a?.countInStock || 0) > 0 && normalizeStatus(a?.stockStatus) !== "out of stock"
+      const bInStock = Number(b?.countInStock || 0) > 0 && normalizeStatus(b?.stockStatus) !== "out of stock"
 
-      // In-stock products come first
+      // Check if products are in stock
+      // In-stock products come first (align with backend filter logic)
       if (aInStock && !bInStock) return -1
       if (!aInStock && bInStock) return 1
 

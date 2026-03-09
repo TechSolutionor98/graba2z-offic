@@ -221,6 +221,15 @@ const AdminProducts = () => {
     return `AED ${price.toLocaleString()}`
   }
 
+  const clearStorefrontProductCache = () => {
+    localStorage.removeItem("graba2z_products_cache")
+    sessionStorage.removeItem("graba2z_products_cache")
+    for (let i = 0; i < 20; i += 1) {
+      localStorage.removeItem(`graba2z_products_chunk_${i}`)
+      sessionStorage.removeItem(`graba2z_products_chunk_${i}`)
+    }
+  }
+
   // Get admin token with proper validation
   const getAdminToken = () => {
     const adminToken = localStorage.getItem("adminToken")
@@ -723,6 +732,7 @@ const AdminProducts = () => {
             Authorization: `Bearer ${token}`,
           },
         })
+        clearStorefrontProductCache()
         setProducts(products.filter((product) => product._id !== productId))
         showToast("Product deleted successfully", "success")
       } catch (error) {
@@ -766,6 +776,7 @@ const AdminProducts = () => {
 
       // Refresh the product list to show the duplicated product
       await fetchProducts()
+      clearStorefrontProductCache()
       
       showToast("Product duplicated successfully", "success")
       
@@ -818,6 +829,7 @@ const AdminProducts = () => {
       setProducts(products.map(p => 
         p._id === productId ? { ...p, isActive: newStatus } : p
       ))
+      clearStorefrontProductCache()
 
       showToast(`Product ${newStatus ? 'activated' : 'deactivated'} successfully`, "success")
     } catch (error) {
@@ -863,6 +875,7 @@ const AdminProducts = () => {
       setProducts(products.map(p => 
         p._id === productId ? { ...p, ...updateData } : p
       ))
+      clearStorefrontProductCache()
 
       setOpenActionDropdown(null)
       setOpenStatusSubmenu(false)
@@ -966,6 +979,7 @@ const AdminProducts = () => {
       setSelectedIds(new Set())
       setAllProductIds([])
       await fetchProducts()
+      clearStorefrontProductCache()
     } catch (error) {
       console.error("Failed to update product status:", error)
       showToast(error.response?.data?.message || "Failed to update product status", "error")
@@ -1038,6 +1052,7 @@ const AdminProducts = () => {
       setSelectedIds(new Set())
       setAllProductIds([])
       await fetchProducts()
+      clearStorefrontProductCache()
     } catch (error) {
       console.error("Failed to move products:", error)
       showToast(error.response?.data?.message || "Failed to move products", "error")
@@ -1080,6 +1095,7 @@ const AdminProducts = () => {
       
       // Refresh products
       await fetchProducts()
+      clearStorefrontProductCache()
     } catch (error) {
       console.error("Import failed:", error)
       const errorMessage = error.response?.data?.message || error.message || "Failed to import products"
@@ -1154,6 +1170,7 @@ const AdminProducts = () => {
 
       // Refresh product list
       await fetchProducts()
+      clearStorefrontProductCache()
       setShowForm(false)
       // Determine the affected product id
       const affectedId = editingProduct ? editingProduct._id : response?.data?._id
