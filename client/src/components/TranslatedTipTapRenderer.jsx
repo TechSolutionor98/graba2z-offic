@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useLanguage } from "../context/LanguageContext"
-import config from "../config/config"
+import { batchTranslate } from "../LanguageModel/translationService"
 import './TipTapRenderer.css'
 import './TipTapEditor.css'
 
@@ -17,6 +17,8 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
   const translationCache = useRef({})
   
   useEffect(() => {
+    let isCancelled = false
+
     // If English or no content, use original
     if (!isArabic || !content) {
       setTranslatedContent(content)
@@ -48,9 +50,12 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
         
         let node
         while ((node = walker.nextNode())) {
-          const text = node.textContent.trim()
-          if (text && text.length > 0) {
-            textNodes.push({ node, text })
+          const originalText = node.textContent || ""
+          const text = originalText.trim()
+          if (text) {
+            const leadingSpace = (originalText.match(/^\s*/) || [""])[0]
+            const trailingSpace = (originalText.match(/\s*$/) || [""])[0]
+            textNodes.push({ node, text, leadingSpace, trailingSpace })
           }
         }
         
@@ -59,45 +64,16 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
           return
         }
         
-        // Batch translate - process in chunks to avoid overwhelming the API
-        const CHUNK_SIZE = 5
-        const translatedTexts = []
-        
-        for (let i = 0; i < textNodes.length; i += CHUNK_SIZE) {
-          const chunk = textNodes.slice(i, i + CHUNK_SIZE)
-          const chunkTranslations = await Promise.all(
-            chunk.map(async ({ text }) => {
-              try {
-                const response = await fetch(`${config.TRANSLATION_API_URL}/translate`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    text: text,
-                    source_lang: "eng_Latn",
-                    target_lang: "arb_Arab",
-                  }),
-                })
-                
-                if (response.ok) {
-                  const data = await response.json()
-                  return data.translated_text || text
-                }
-                return text
-              } catch (error) {
-                console.error("Translation chunk error:", error)
-                return text
-              }
-            })
-          )
-          translatedTexts.push(...chunkTranslations)
-        }
+        // Use shared translation service (same model + batching used across the app)
+        const translatedTexts = await batchTranslate(
+          textNodes.map(({ text }) => text),
+          "ar"
+        )
         
         // Replace text nodes with translated text
         textNodes.forEach((item, index) => {
-          if (translatedTexts[index]) {
-            item.node.textContent = translatedTexts[index]
+          if (translatedTexts[index] && item.node) {
+            item.node.textContent = `${item.leadingSpace}${translatedTexts[index]}${item.trailingSpace}`
           }
         })
         
@@ -107,16 +83,25 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
         // Cache the result
         translationCache.current[cacheKey] = translated
         
-        setTranslatedContent(translated)
+        if (!isCancelled) {
+          setTranslatedContent(translated)
+        }
       } catch (error) {
         console.error("TipTap translation error:", error)
-        setTranslatedContent(content)
+        if (!isCancelled) {
+          setTranslatedContent(content)
+        }
       } finally {
-        setIsTranslating(false)
+        if (!isCancelled) {
+          setIsTranslating(false)
+        }
       }
     }
     
     translateHtml()
+    return () => {
+      isCancelled = true
+    }
   }, [content, isArabic, currentLanguage.code])
   
   if (!content) return null

@@ -42,7 +42,6 @@ import { useLanguage } from "../context/LanguageContext"
 import TabbyModal from "../components/payments/TabbyModal"
 import TamaraModal from "../components/payments/TamaraModal"
 import SEO from "../components/SEO"
-import TipTapRenderer from "../components/TipTapRenderer"
 import TranslatedTipTapRenderer from "../components/TranslatedTipTapRenderer"
 import BuyerProtectionSection from "../components/BuyerProtectionSection"
 import TranslatedText from "../components/TranslatedText"
@@ -2844,7 +2843,7 @@ const ProductDetails = () => {
               {product.shortDescription && (
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3"><TranslatedText>Key Features</TranslatedText>:</h3>
-                  <TipTapRenderer 
+                  <TranslatedTipTapRenderer
                     content={product.shortDescription} 
                     className="text-sm line-clamp-5 sm:line-clamp-none"
                   />
