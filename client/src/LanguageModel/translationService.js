@@ -35,6 +35,8 @@ const BATCH_CONFIG = {
   DEBOUNCE_MS: 20,      // Wait briefly to collect nearby requests
   MAX_BATCH_SIZE: 100,   // Max texts per batch request
   MAX_WAIT_MS: 80,       // Force flush quickly for better UI responsiveness
+  MAX_RETRIES_WHEN_LOADING: 20, // Retry when model returns 503 (loading)
+  RETRY_DELAY_MS: 1000, // Retry interval while model is loading
 };
 
 // Track when queue started filling
@@ -75,7 +77,36 @@ const flushQueue = async (direction) => {
 
     if (!response.ok) {
       console.warn(`Batch translation API error: ${response.status}`);
-      // Resolve all with original texts on error
+
+      // If model is loading, retry instead of permanently resolving to original text.
+      if (response.status === 503) {
+        let retryCount = 0;
+
+        callbacks.forEach((cbs, index) => {
+          const text = texts[index];
+          cbs.forEach((cb) => {
+            const attempts = cb.attempts || 0;
+            if (attempts < BATCH_CONFIG.MAX_RETRIES_WHEN_LOADING) {
+              const retryCb = { ...cb, attempts: attempts + 1 };
+              if (queue.has(text)) {
+                queue.get(text).push(retryCb);
+              } else {
+                queue.set(text, [retryCb]);
+              }
+              retryCount += 1;
+            } else {
+              cb.resolve(text);
+            }
+          });
+        });
+
+        if (retryCount > 0) {
+          setTimeout(() => flushQueue(direction), BATCH_CONFIG.RETRY_DELAY_MS);
+        }
+        return;
+      }
+
+      // Resolve all with original texts on other errors
       callbacks.forEach((cbs, index) => {
         cbs.forEach(cb => cb.resolve(texts[index]));
       });
@@ -116,9 +147,9 @@ const queueTranslation = (text, direction) => {
     
     // Add callback to queue (multiple components might request same text)
     if (queue.has(text)) {
-      queue.get(text).push({ resolve, reject });
+      queue.get(text).push({ resolve, reject, attempts: 0 });
     } else {
-      queue.set(text, [{ resolve, reject }]);
+      queue.set(text, [{ resolve, reject, attempts: 0 }]);
     }
     
     // Track when queue started
