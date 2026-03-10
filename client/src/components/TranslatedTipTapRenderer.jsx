@@ -6,6 +6,38 @@ import { batchTranslate } from "../LanguageModel/translationService"
 import './TipTapRenderer.css'
 import './TipTapEditor.css'
 
+const HTML_TRANSLATION_CACHE = new Map()
+const HTML_CACHE_LIMIT = 200
+const SKIP_PARENT_TAGS = new Set(["CODE", "PRE", "KBD", "SAMP", "SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "OPTION"])
+
+const buildCacheKey = (content, languageCode) => {
+  const head = content.slice(0, 120)
+  const tail = content.slice(-120)
+  return `tiptap_${languageCode}_${content.length}_${head}_${tail}`
+}
+
+const setHtmlCache = (key, value) => {
+  if (HTML_TRANSLATION_CACHE.size >= HTML_CACHE_LIMIT) {
+    const firstKey = HTML_TRANSLATION_CACHE.keys().next().value
+    HTML_TRANSLATION_CACHE.delete(firstKey)
+  }
+  HTML_TRANSLATION_CACHE.set(key, value)
+}
+
+const shouldTranslateText = (text) => {
+  if (!text) return false
+  const normalized = text.trim()
+  if (!normalized) return false
+  if (/[\u0600-\u06FF]/.test(normalized)) return false
+  if (/(https?:\/\/|www\.|@)/i.test(normalized)) return false
+  if (!/[A-Za-z]/.test(normalized)) return false
+
+  // Skip model-like tokens such as i3-N305, 8GB, 15.6", etc.
+  if (!normalized.includes(" ") && /\d/.test(normalized)) return false
+
+  return true
+}
+
 /**
  * TranslatedTipTapRenderer Component
  * Renders TipTap content with translation support for Arabic
@@ -14,7 +46,7 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
   const { currentLanguage, isArabic } = useLanguage()
   const [translatedContent, setTranslatedContent] = useState(content)
   const [isTranslating, setIsTranslating] = useState(false)
-  const translationCache = useRef({})
+  const inFlightRef = useRef(new Map())
   
   useEffect(() => {
     let isCancelled = false
@@ -22,13 +54,30 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
     // If English or no content, use original
     if (!isArabic || !content) {
       setTranslatedContent(content)
+      setIsTranslating(false)
       return
     }
     
-    // Create a hash for caching
-    const cacheKey = `tiptap_${content.substring(0, 100)}_${currentLanguage.code}`
-    if (translationCache.current[cacheKey]) {
-      setTranslatedContent(translationCache.current[cacheKey])
+    // Reuse cached full HTML translation first
+    const cacheKey = buildCacheKey(content, currentLanguage.code)
+    if (HTML_TRANSLATION_CACHE.has(cacheKey)) {
+      setTranslatedContent(HTML_TRANSLATION_CACHE.get(cacheKey))
+      setIsTranslating(false)
+      return
+    }
+
+    // Reuse in-flight work for identical content to avoid duplicate translation runs
+    if (inFlightRef.current.has(cacheKey)) {
+      setIsTranslating(true)
+      inFlightRef.current.get(cacheKey).then((translated) => {
+        if (!isCancelled && translated) {
+          setTranslatedContent(translated)
+        }
+      }).finally(() => {
+        if (!isCancelled) {
+          setIsTranslating(false)
+        }
+      })
       return
     }
     
@@ -50,9 +99,14 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
         
         let node
         while ((node = walker.nextNode())) {
+          const parentTag = node.parentElement?.tagName
+          if (parentTag && SKIP_PARENT_TAGS.has(parentTag)) {
+            continue
+          }
+
           const originalText = node.textContent || ""
           const text = originalText.trim()
-          if (text) {
+          if (shouldTranslateText(text)) {
             const leadingSpace = (originalText.match(/^\s*/) || [""])[0]
             const trailingSpace = (originalText.match(/\s*$/) || [""])[0]
             textNodes.push({ node, text, leadingSpace, trailingSpace })
@@ -60,20 +114,25 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
         }
         
         if (textNodes.length === 0) {
+          setHtmlCache(cacheKey, content)
           setTranslatedContent(content)
           return
         }
-        
+
+        // Translate only unique texts to reduce model work and latency
+        const uniqueTexts = Array.from(new Set(textNodes.map(({ text }) => text)))
+
         // Use shared translation service (same model + batching used across the app)
-        const translatedTexts = await batchTranslate(
-          textNodes.map(({ text }) => text),
-          "ar"
+        const translatedUniqueTexts = await batchTranslate(uniqueTexts, "ar")
+        const translatedMap = new Map(
+          uniqueTexts.map((text, index) => [text, translatedUniqueTexts[index] || text])
         )
         
         // Replace text nodes with translated text
-        textNodes.forEach((item, index) => {
-          if (translatedTexts[index] && item.node) {
-            item.node.textContent = `${item.leadingSpace}${translatedTexts[index]}${item.trailingSpace}`
+        textNodes.forEach((item) => {
+          const translatedText = translatedMap.get(item.text)
+          if (translatedText && item.node) {
+            item.node.textContent = `${item.leadingSpace}${translatedText}${item.trailingSpace}`
           }
         })
         
@@ -81,24 +140,30 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
         const translated = doc.body.innerHTML
         
         // Cache the result
-        translationCache.current[cacheKey] = translated
+        setHtmlCache(cacheKey, translated)
         
-        if (!isCancelled) {
-          setTranslatedContent(translated)
-        }
+        return translated
       } catch (error) {
         console.error("TipTap translation error:", error)
-        if (!isCancelled) {
-          setTranslatedContent(content)
-        }
+        return content
       } finally {
         if (!isCancelled) {
           setIsTranslating(false)
         }
       }
     }
-    
-    translateHtml()
+
+    const translationPromise = translateHtml()
+    inFlightRef.current.set(cacheKey, translationPromise)
+
+    translationPromise.then((translated) => {
+      if (!isCancelled && translated) {
+        setTranslatedContent(translated)
+      }
+    }).finally(() => {
+      inFlightRef.current.delete(cacheKey)
+    })
+
     return () => {
       isCancelled = true
     }
