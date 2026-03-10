@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useLanguage } from "../context/LanguageContext"
 import { batchTranslate } from "../LanguageModel/translationService"
 import './TipTapRenderer.css'
 import './TipTapEditor.css'
 
 const HTML_TRANSLATION_CACHE = new Map()
+const HTML_TRANSLATION_IN_FLIGHT = new Map()
 const HTML_CACHE_LIMIT = 200
 const SKIP_PARENT_TAGS = new Set(["CODE", "PRE", "KBD", "SAMP", "SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "OPTION"])
 
@@ -46,7 +47,6 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
   const { currentLanguage, isArabic } = useLanguage()
   const [translatedContent, setTranslatedContent] = useState(content)
   const [isTranslating, setIsTranslating] = useState(false)
-  const inFlightRef = useRef(new Map())
   
   useEffect(() => {
     let isCancelled = false
@@ -67,9 +67,9 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
     }
 
     // Reuse in-flight work for identical content to avoid duplicate translation runs
-    if (inFlightRef.current.has(cacheKey)) {
+    if (HTML_TRANSLATION_IN_FLIGHT.has(cacheKey)) {
       setIsTranslating(true)
-      inFlightRef.current.get(cacheKey).then((translated) => {
+      HTML_TRANSLATION_IN_FLIGHT.get(cacheKey).then((translated) => {
         if (!isCancelled && translated) {
           setTranslatedContent(translated)
         }
@@ -154,14 +154,14 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
     }
 
     const translationPromise = translateHtml()
-    inFlightRef.current.set(cacheKey, translationPromise)
+    HTML_TRANSLATION_IN_FLIGHT.set(cacheKey, translationPromise)
 
     translationPromise.then((translated) => {
       if (!isCancelled && translated) {
         setTranslatedContent(translated)
       }
     }).finally(() => {
-      inFlightRef.current.delete(cacheKey)
+      HTML_TRANSLATION_IN_FLIGHT.delete(cacheKey)
     })
 
     return () => {

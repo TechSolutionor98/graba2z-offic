@@ -45,8 +45,43 @@ import SEO from "../components/SEO"
 import TranslatedTipTapRenderer from "../components/TranslatedTipTapRenderer"
 import BuyerProtectionSection from "../components/BuyerProtectionSection"
 import TranslatedText from "../components/TranslatedText"
+import { preloadTranslations } from "../LanguageModel/translationService"
 
 const WHATSAPP_NUMBER = "971508604360" // Replace with your WhatsApp number
+const TRANSLATION_SKIP_TAGS = new Set(["CODE", "PRE", "KBD", "SAMP", "SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "OPTION"])
+
+const isWorthTranslating = (text) => {
+  if (!text || typeof text !== "string") return false
+  const normalized = text.trim()
+  if (!normalized) return false
+  if (/[\u0600-\u06FF]/.test(normalized)) return false
+  if (!/[A-Za-z]/.test(normalized)) return false
+  if (/(https?:\/\/|www\.|@)/i.test(normalized)) return false
+  if (!normalized.includes(" ") && /\d/.test(normalized)) return false
+  return true
+}
+
+const extractTranslatableTextsFromHtml = (html) => {
+  if (!html || typeof html !== "string") return []
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, "text/html")
+    const walker = document.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, null, false)
+    const texts = []
+    let node
+    while ((node = walker.nextNode())) {
+      const parentTag = node.parentElement?.tagName
+      if (parentTag && TRANSLATION_SKIP_TAGS.has(parentTag)) continue
+      const text = (node.textContent || "").trim()
+      if (isWorthTranslating(text)) {
+        texts.push(text)
+      }
+    }
+    return texts
+  } catch {
+    return []
+  }
+}
 
 const ProductDetails = () => {
   const { slug } = useParams()
@@ -55,7 +90,7 @@ const ProductDetails = () => {
   const { user } = useAuth()
   const { showToast } = useToast()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
   const [product, setProduct] = useState(null)
   const [relatedProducts, setRelatedProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -390,6 +425,41 @@ const ProductDetails = () => {
     }
   }, [product])
 
+  const preloadProductTexts = async (productData) => {
+    if (!isArabic || !productData) return
+
+    const texts = []
+    const pushText = (value) => {
+      if (isWorthTranslating(value)) {
+        texts.push(value.trim())
+      }
+    }
+
+    pushText(productData.name)
+    pushText(productData.brand?.name || productData.brand)
+    pushText(productData.category?.name || productData.category)
+    pushText(productData.warranty)
+
+    if (Array.isArray(productData.specifications)) {
+      productData.specifications.forEach((spec) => {
+        pushText(spec?.key)
+        pushText(spec?.value)
+      })
+    }
+
+    extractTranslatableTextsFromHtml(productData.shortDescription).forEach(pushText)
+    extractTranslatableTextsFromHtml(productData.description).forEach(pushText)
+
+    const uniqueTexts = Array.from(new Set(texts))
+    if (uniqueTexts.length === 0) return
+
+    try {
+      await preloadTranslations(uniqueTexts, "ar")
+    } catch (error) {
+      console.error("Preload product translations error:", error)
+    }
+  }
+
   const fetchProduct = async (rawSlug) => {
     try {
       const attemptSlug = (rawSlug || slug || '').trim()
@@ -423,6 +493,15 @@ const ProductDetails = () => {
       }
       if (!data) throw new Error("Product not found via slug or ID attempts")
       console.log("API response for product:", data)
+
+      // Warm translation cache before first Arabic render to reduce visible delay.
+      if (isArabic) {
+        await Promise.race([
+          preloadProductTexts(data),
+          new Promise((resolve) => setTimeout(resolve, 1200)),
+        ])
+      }
+
       setProduct(data)
       setError(null)
 
@@ -453,6 +532,21 @@ const ProductDetails = () => {
         const allRes = await axios.get(`${config.API_URL}/api/products`)
         filtered = allRes.data.filter((p) => p._id !== product._id)
       }
+
+      if (isArabic && filtered.length > 0) {
+        const relatedTexts = Array.from(
+          new Set(
+            filtered
+              .flatMap((item) => [item?.name, item?.brand?.name, item?.category?.name])
+              .filter((value) => isWorthTranslating(value))
+              .map((value) => value.trim())
+          )
+        )
+        if (relatedTexts.length > 0) {
+          await preloadTranslations(relatedTexts, "ar")
+        }
+      }
+
       setRelatedProducts(filtered)
     } catch (error) {
       console.error("Error fetching related products:", error)
@@ -1675,6 +1769,20 @@ const ProductDetails = () => {
         price: p.price
       }))
     ]);
+
+    if (isArabic && complementaryProducts.length > 0) {
+      const bundleTexts = Array.from(
+        new Set(
+          complementaryProducts
+            .flatMap((item) => [item?.name, item?.brand?.name, item?.category?.name])
+            .filter((value) => isWorthTranslating(value))
+            .map((value) => value.trim())
+        )
+      )
+      if (bundleTexts.length > 0) {
+        await preloadTranslations(bundleTexts, "ar")
+      }
+    }
 
     setFrequentlyBought(complementaryProducts);
 

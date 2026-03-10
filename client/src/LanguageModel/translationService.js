@@ -32,9 +32,9 @@ let debounceTimers = {
 
 // Batch configuration
 const BATCH_CONFIG = {
-  DEBOUNCE_MS: 50,      // Wait 50ms to collect more requests
+  DEBOUNCE_MS: 20,      // Wait briefly to collect nearby requests
   MAX_BATCH_SIZE: 100,   // Max texts per batch request
-  MAX_WAIT_MS: 200,      // Force flush after 200ms even if still collecting
+  MAX_WAIT_MS: 80,       // Force flush quickly for better UI responsiveness
 };
 
 // Track when queue started filling
