@@ -524,6 +524,7 @@ const OfferPages = () => {
                   >
                     Products
                   </button>
+                  {/*
                   <button
                     onClick={() => setActiveTab('brands')}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -544,6 +545,7 @@ const OfferPages = () => {
                   >
                     Categories
                   </button>
+                  */}
                 </div>
               </div>
 
@@ -557,6 +559,7 @@ const OfferPages = () => {
                     <FaPlus /> Add Products
                   </Link>
                 )}
+                {/*
                 {activeTab === 'brands' && (
                   <Link
                     to={`/admin/offer-brands/add?page=${selectedPage.slug}`}
@@ -573,6 +576,7 @@ const OfferPages = () => {
                     <FaPlus /> Add Categories
                   </Link>
                 )}
+                */}
               </div>
 
               {/* Products Tab Content */}

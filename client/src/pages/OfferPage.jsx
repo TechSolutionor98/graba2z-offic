@@ -92,9 +92,8 @@ const OfferPage = () => {
   
   const [error, setError] = useState(null)
   const [filteredProducts, setFilteredProducts] = useState([])
-  const [selectedBrand, setSelectedBrand] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
-  const brandsScrollRef = useRef(null)
+  const brandSliderRef = useRef(null)
   const categoriesScrollRef = useRef(null)
   
   // Filter states from Shop page
@@ -111,6 +110,10 @@ const OfferPage = () => {
   const [allSubcategories, setAllSubcategories] = useState([])
   const [expandedCategories, setExpandedCategories] = useState({})
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  const [brandScrollState, setBrandScrollState] = useState({
+    canScrollPrev: false,
+    canScrollNext: false,
+  })
   
   // State for tracking full hierarchy path
   const [selectedParentCategory, setSelectedParentCategory] = useState(null)
@@ -295,9 +298,6 @@ const OfferPage = () => {
       setProducts(enrichedProducts)
       setFilteredProducts(enrichedProducts)
       
-      // Set OFFER-SPECIFIC brands for the SLIDERS ONLY
-      setSliderBrands(brandsRes.data.filter(item => item.isActive && item.brand))
-      
       // Extract unique categories from products for slider (instead of using offer-categories API)
       const uniqueCategoriesMap = new Map()
       enrichedProducts.forEach(({ product }) => {
@@ -336,8 +336,10 @@ const OfferPage = () => {
       })
       const filteredBrands = validBrands.filter(brand => usedBrandIds.has(brand._id))
       
-      // Map to match the structure expected by the sidebar
-      setBrands(filteredBrands.map(brand => ({ brand, isActive: true, _id: brand._id })))
+      // Use same normalized list for sidebar and top slider
+      const normalizedBrands = filteredBrands.map(brand => ({ brand, isActive: true, _id: brand._id }))
+      setBrands(normalizedBrands)
+      setSliderBrands(normalizedBrands)
       
       // Use the same categories from products for sidebar
       setCategories(categoriesFromProducts)
@@ -373,9 +375,6 @@ const OfferPage = () => {
         return [...prev, brandId]
       }
     })
-    
-    // Toggle the brand for slider active state
-    setSelectedBrand(prev => prev === brandId ? null : brandId)
   }
 
   const handleCategoryClick = (categoryId) => {
@@ -570,7 +569,6 @@ const OfferPage = () => {
 
   const clearAllFilters = () => {
     setSelectedBrands([])
-    setSelectedBrand(null)
     setSelectedCategory(null)
     setSelectedParentCategory(null)
     setSelectedSubCategory1(null)
@@ -585,6 +583,29 @@ const OfferPage = () => {
     setPriceRange([minPrice, maxPrice])
     setStockFilters({ inStock: false, outOfStock: false })
     setBrandSearch("")
+  }
+
+  const updateBrandScrollState = () => {
+    const container = brandSliderRef.current
+    if (!container) return
+
+    const { scrollLeft, scrollWidth, clientWidth } = container
+    setBrandScrollState({
+      canScrollPrev: scrollLeft > 0,
+      canScrollNext: scrollLeft < scrollWidth - clientWidth - 1,
+    })
+  }
+
+  const scrollBrandPrev = () => {
+    if (brandSliderRef.current) {
+      brandSliderRef.current.scrollBy({ left: -300, behavior: "smooth" })
+    }
+  }
+
+  const scrollBrandNext = () => {
+    if (brandSliderRef.current) {
+      brandSliderRef.current.scrollBy({ left: 300, behavior: "smooth" })
+    }
   }
 
   const filteredBrands = brands.filter(item =>
@@ -817,6 +838,12 @@ const OfferPage = () => {
       applyFilters()
     }
   }, [selectedBrands, selectedCategory, priceRange, stockFilters, sortBy, products])
+
+  useEffect(() => {
+    if (brandSliderRef.current) {
+      updateBrandScrollState()
+    }
+  }, [sliderBrands.length])
 
   // Calculate price range when products load
   useEffect(() => {
@@ -2026,16 +2053,6 @@ const OfferPage = () => {
 
             {/* Main Content Area - Categories, Brands, and Products */}
             <div className="flex-1 lg:w-3/4">
-              <div className="flex flex-row justify-between items-center mb-6 relative z-10">
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-2xl font-bold text-gray-900">{offerPage?.name}</h1>
-                  <p className="text-gray-600 mt-1">{filteredProducts.length} products found</p>
-                </div>
-                <div className="hidden md:block mt-0 flex-shrink-0 relative z-20">
-                  <SortDropdown value={sortBy} onChange={(e) => setSortBy(e.target.value)} />
-                </div>
-              </div>
-
               {/* Mobile Filter Button */}
               <div className="md:hidden mb-4 flex gap-2">
                 <button
@@ -2131,20 +2148,25 @@ const OfferPage = () => {
                 </section>
               )}
 
-              {/* Brands Slider - Second Line */}
-              {false && sliderBrands.length > 0 && (
+              {/* Brands Slider */}
+              {sliderBrands.length > 0 && (
                 <section className="mb-8">
-                  {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Brands...</h2> */}
                   <div className="relative">
                     <button
-                      onClick={() => scrollSlider(brandsScrollRef, 'left')}
-                      className="absolute left-0 md:-left-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
+                      onClick={scrollBrandPrev}
+                      className={`absolute left-0 md:-left-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
+                        brandScrollState.canScrollPrev
+                          ? "bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
+                          : "bg-white cursor-default opacity-50"
+                      }`}
+                      disabled={!brandScrollState.canScrollPrev}
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </button>
 
                     <div
-                      ref={brandsScrollRef}
+                      ref={brandSliderRef}
+                      onScroll={updateBrandScrollState}
                       className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-10 md:px-12"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
@@ -2153,7 +2175,7 @@ const OfferPage = () => {
                           key={item._id}
                           onClick={() => handleBrandClick(item.brand._id)}
                           className={`flex-shrink-0 w-32 rounded-lg transition-all flex flex-col items-center p-2 ${
-                            selectedBrand === item.brand._id
+                            selectedBrands.includes(item.brand._id)
                               ? 'bg-lime-100 border-2 border-lime-600'
                               : ''
                           }`}
@@ -2161,7 +2183,7 @@ const OfferPage = () => {
                           <div className="flex-1 flex items-center justify-center w-full mb-2">
                             {item.brand.logo ? (
                               <img
-                                src={item.brand.logo}
+                                src={getFullImageUrl(item.brand.logo)}
                                 alt={item.brand.name}
                                 className="max-h-16 max-w-full object-contain"
                               />
@@ -2177,14 +2199,29 @@ const OfferPage = () => {
                     </div>
 
                     <button
-                      onClick={() => scrollSlider(brandsScrollRef, 'right')}
-                      className="absolute right-0 md:-right-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
+                      onClick={scrollBrandNext}
+                      className={`absolute right-0 md:-right-5 top-1/2 -translate-y-1/2 z-10 shadow-lg rounded-full p-2 transition-colors ${
+                        brandScrollState.canScrollNext
+                          ? "bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
+                          : "bg-white cursor-default opacity-50"
+                      }`}
+                      disabled={!brandScrollState.canScrollNext}
                     >
                       <ChevronRight className="w-6 h-6" />
                     </button>
                   </div>
                 </section>
               )}
+
+              <div className="flex flex-row justify-between items-center mb-6 relative z-10">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl font-bold text-gray-900">{offerPage?.name}</h1>
+                  <p className="text-gray-600 mt-1">{filteredProducts.length} products found</p>
+                </div>
+                <div className="hidden md:block mt-0 flex-shrink-0 relative z-20">
+                  <SortDropdown value={sortBy} onChange={(e) => setSortBy(e.target.value)} />
+                </div>
+              </div>
 
 
 
@@ -2204,11 +2241,7 @@ const OfferPage = () => {
                 <div className="text-center py-12">
                   <p className="text-gray-600 text-lg mb-4">No products match your selected filters.</p>
                   <button
-                    onClick={() => {
-                      setSelectedBrand(null)
-                      setSelectedCategory(null)
-                      setFilteredProducts(products)
-                    }}
+                    onClick={clearAllFilters}
                     className="px-6 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors"
                   >
                     Clear Filters

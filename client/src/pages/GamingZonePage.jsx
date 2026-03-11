@@ -311,14 +311,23 @@ const GamingZonePage = () => {
         setPriceRange([min, max])
       }
 
-      // Extract unique brands from products
-      const uniqueBrands = [...new Set(
-        fetchedProducts
-          .filter(p => p.brand && p.brand.name)
-          .map(p => JSON.stringify({ _id: p.brand._id, name: p.brand.name }))
-      )].map(b => JSON.parse(b))
-      
-      setBrands(uniqueBrands)
+      // Extract unique brands from products and keep logo so brand slider can render images.
+      const brandMap = new Map()
+      fetchedProducts.forEach((product) => {
+        const brand = product?.brand
+        if (!brand || !brand._id || !brand.name) return
+
+        const existing = brandMap.get(brand._id)
+        const logo = brand.logo || brand.image || brand.brandImage || existing?.logo || ""
+
+        brandMap.set(brand._id, {
+          _id: brand._id,
+          name: brand.name,
+          logo,
+        })
+      })
+
+      setBrands(Array.from(brandMap.values()))
 
     } catch (err) {
       console.error("Error fetching gaming zone data:", err)
@@ -1189,37 +1198,38 @@ const GamingZonePage = () => {
                         <button
                           key={brand._id}
                           onClick={() => handleBrandToggle(brand._id)}
-                          className={`flex-shrink-0 w-32 rounded-lg transition-all flex flex-col items-center justify-center p-3 gap-2 ${
+                          className={`flex-shrink-0 w-32 rounded-lg transition-all flex flex-col items-center p-2 ${
                             selectedBrands.includes(brand._id)
                               ? 'bg-lime-100 border-2 border-lime-600'
                               : ''
                           }`}
                         >
-                          {brand.logo ? (
-                            <>
-                              <div className="h-24 flex items-center justify-center">
-                                <img
-                                  src={getFullImageUrl(brand.logo)}
-                                  alt={`${brand.name || "Brand"} Logo`}
-                                  className="max-h-full max-w-full bg-cover"
-                                  loading="lazy"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = "none"
-                                    const btn = e.currentTarget.closest("button")
-                                    const fallback = btn?.querySelector("[data-brand-fallback]")
-                                    if (fallback) fallback.classList.remove("hidden")
-                                  }}
-                                />
-                              </div>
-                              <span className="text-xs font-semibold text-gray-700 text-center line-clamp-2">
+                          <div className="flex-1 flex items-center justify-center w-full mb-2">
+                            {brand.logo ? (
+                              <img
+                                src={getFullImageUrl(brand.logo)}
+                                alt={`${brand.name || "Brand"} Logo`}
+                                className="max-h-16 max-w-full object-contain"
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none"
+                                  const btn = e.currentTarget.closest("button")
+                                  const fallback = btn?.querySelector("[data-brand-fallback]")
+                                  if (fallback) fallback.classList.remove("hidden")
+                                }}
+                              />
+                            ) : (
+                              <span className="text-sm font-semibold text-gray-700 text-center">
                                 {brand.name}
                               </span>
-                            </>
-                          ) : (
-                            <span className="text-sm font-semibold text-gray-700 text-center">
-                              {brand.name}
-                            </span>
-                          )}
+                            )}
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700 text-center line-clamp-2 w-full">
+                            {brand.name}
+                          </span>
+                          {/*
+                            Keep fallback for broken images while preserving compact OfferPage-like sizing.
+                          */}
                           <span data-brand-fallback className="hidden text-sm font-semibold text-gray-700 text-center">
                             {brand.name}
                           </span>
