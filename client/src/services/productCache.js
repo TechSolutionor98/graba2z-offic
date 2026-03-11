@@ -788,8 +788,18 @@ class ProductCacheService {
     if (this.isCacheValid()) {
       const cachedProducts = this.getCachedProducts()
       if (cachedProducts && cachedProducts.length > 0) {
-        // Migration: if cache doesn't include SKU, refresh once
-        if (typeof cachedProducts[0]?.sku === "undefined") {
+        // Migration guard: refresh stale cache shapes once (older cache may miss stock fields).
+        const sample = cachedProducts[0] || {}
+        const hasSku = typeof sample.sku !== "undefined"
+        const hasStockFields = cachedProducts.some((product) => {
+          if (!product || typeof product !== "object") return false
+          return (
+            Object.prototype.hasOwnProperty.call(product, "countInStock") ||
+            Object.prototype.hasOwnProperty.call(product, "stockStatus")
+          )
+        })
+
+        if (!hasSku || !hasStockFields) {
           return await this.fetchAndCacheProducts()
         }
         return cachedProducts
@@ -915,12 +925,33 @@ class ProductCacheService {
       })
     }
 
+    const normalizeStatus = (status) => String(status || "").trim().toLowerCase().replace(/\s+/g, " ")
+    const hasPositiveStock = (product) => Number(product?.countInStock || 0) > 0
+    const isExplicitOutOfStock = (product) => {
+      const status = normalizeStatus(product?.stockStatus)
+      return status === "out of stock" || status === "stock out" || status === "outofstock"
+    }
+    const isExplicitInStock = (product) => {
+      const status = normalizeStatus(product?.stockStatus)
+      return (
+        status === "in stock" ||
+        status === "instock" ||
+        status === "available" ||
+        status === "available product" ||
+        status === "availableproduct" ||
+        status === "pre-order" ||
+        status === "preorder"
+      )
+    }
+    const getStockBucket = (product) => {
+      if (isExplicitOutOfStock(product)) return "out"
+      if (isExplicitInStock(product)) return "in"
+      return hasPositiveStock(product) ? "in" : "out"
+    }
+
     // Filter by stock status (supports multiple filters)
     if (filters.stockStatus) {
       const stockFilters = Array.isArray(filters.stockStatus) ? filters.stockStatus : [filters.stockStatus]
-      const normalizeStatus = (status) => String(status || "").trim().toLowerCase()
-      const isExplicitOutOfStock = (product) => normalizeStatus(product?.stockStatus) === "out of stock"
-      const hasPositiveStock = (product) => Number(product?.countInStock || 0) > 0
 
       if (stockFilters.length > 0) {
         filteredProducts = filteredProducts.filter((product) => {
@@ -928,11 +959,9 @@ class ProductCacheService {
           const matches = stockFilters.some((filter) => {
             switch (filter) {
               case "inStock":
-                // In-stock means positive quantity AND not explicitly marked out of stock
-                return hasPositiveStock(product) && !isExplicitOutOfStock(product)
+                return getStockBucket(product) === "in"
               case "outOfStock":
-                // Out-of-stock if explicit status says so OR quantity is zero/negative
-                return isExplicitOutOfStock(product) || !hasPositiveStock(product)
+                return getStockBucket(product) === "out"
               case "onSale":
                 // Product is on sale if has discount > 0 OR offerPrice < price
                 return (
@@ -950,9 +979,8 @@ class ProductCacheService {
 
     // Sort products - Always prioritize in-stock products first
     filteredProducts.sort((a, b) => {
-      const normalizeStatus = (status) => String(status || "").trim().toLowerCase()
-      const aInStock = Number(a?.countInStock || 0) > 0 && normalizeStatus(a?.stockStatus) !== "out of stock"
-      const bInStock = Number(b?.countInStock || 0) > 0 && normalizeStatus(b?.stockStatus) !== "out of stock"
+      const aInStock = getStockBucket(a) === "in"
+      const bInStock = getStockBucket(b) === "in"
 
       // Check if products are in stock
       // In-stock products come first (align with backend filter logic)
