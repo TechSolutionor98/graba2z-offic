@@ -44,7 +44,6 @@ export const LanguageProvider = ({ children }) => {
     return DEFAULT_LANGUAGE
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [translationCache, setTranslationCache] = useState({})
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -148,10 +147,6 @@ export const LanguageProvider = ({ children }) => {
 
     // Navigate to the new language path
     navigate(destination, { replace: true })
-
-    // Force page reload to ensure all components re-render with new language
-    // This ensures translations are fetched fresh
-    window.location.href = destination
   }, [getPathWithoutLangPrefix, getLocalizedPath, location.pathname, location.search, location.hash, navigate])
 
   // Translate text function using Helsinki-NLP model (uses batched queue internally)
@@ -165,33 +160,16 @@ export const LanguageProvider = ({ children }) => {
       return cached;
     }
 
-    // Check context cache
-    const cacheKey = `${targetLang}:${text}`
-    if (translationCache[cacheKey]) {
-      return translationCache[cacheKey]
-    }
-
     try {
-      let translatedText
-
       if (targetLang === "ar") {
-        translatedText = await translateToArabic(text)
-      } else {
-        translatedText = await translateToEnglish(text)
+        return await translateToArabic(text)
       }
-
-      // Cache the result in context
-      setTranslationCache(prev => ({
-        ...prev,
-        [cacheKey]: translatedText
-      }))
-
-      return translatedText
+      return await translateToEnglish(text)
     } catch (error) {
       console.error("Translation error:", error)
       return text
     }
-  }, [currentLanguage.code, translationCache])
+  }, [currentLanguage.code])
 
   // Batch translate function - optimized to use preloadTranslations
   const translateBatch = useCallback(async (texts, targetLang = currentLanguage.code) => {
