@@ -76,6 +76,7 @@ const AdminProducts = () => {
   // Bulk status dropdown
   const [showBulkStatusDropdown, setShowBulkStatusDropdown] = useState(false)
   const [bulkUpdating, setBulkUpdating] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const bulkStatusDropdownRef = useRef(null)
   
   // Column visibility states
@@ -439,6 +440,8 @@ const AdminProducts = () => {
 
   // Export helpers
   const handleExport = async (scope = "selected") => {
+    if (exporting) return
+
     const filenameBase = [
       "products",
       scope,
@@ -447,32 +450,51 @@ const AdminProducts = () => {
       `p${page}`
     ].filter(Boolean).join('_')
 
-    if (scope === "selected") {
-      if (selectAllMode) {
-        // Export all products with current filters (same as filtered results)
-        handleExportByCurrentFilters()
-      } else {
-        // Export selected products by fetching them by IDs
-        if (selectedIds.size === 0) {
-          showToast('No products selected to export', 'warning')
-          return
-        }
-        
-        showToast(`Fetching ${selectedIds.size} selected products...`, 'info')
-        try {
+    setExporting(true)
+    try {
+      if (scope === "selected") {
+        if (selectAllMode) {
+          // Export all products with current filters (same as filtered results)
+          await handleExportByCurrentFilters()
+        } else {
+          // Export selected products by fetching them by IDs
+          if (selectedIds.size === 0) {
+            showToast('No products selected to export', 'warning')
+            return
+          }
+          
+          showToast(`Fetching ${selectedIds.size} selected products...`, 'info')
           const selectedProducts = await fetchProductsByIds(Array.from(selectedIds))
+          if (!selectedProducts.length) {
+            showToast('No products found for selected IDs', 'warning')
+            return
+          }
           exportProductsToExcel(selectedProducts, `${filenameBase}.xlsx`)
           showToast(`Exported ${selectedProducts.length} products successfully`, 'success')
-        } catch (error) {
-          console.error('Export error:', error)
-          showToast('Failed to export selected products', 'error')
         }
+      } else if (scope === "page") {
+        if (!products.length) {
+          showToast('No products on current page to export', 'warning')
+          return
+        }
+        exportProductsToExcel(products, `${filenameBase}.xlsx`)
+        showToast(`Exported ${products.length} products from current page`, 'success')
+      } else if (scope === "all") {
+        // Fetch all with current filters ignoring pagination
+        showToast('Preparing full export...', 'info')
+        const all = await fetchAllForExport()
+        if (!all.length) {
+          showToast('No products found for current filters', 'warning')
+          return
+        }
+        exportProductsToExcel(all, `${filenameBase}.xlsx`)
+        showToast(`Exported ${all.length} products successfully`, 'success')
       }
-    } else if (scope === "page") {
-      exportProductsToExcel(products, `${filenameBase}.xlsx`)
-    } else if (scope === "all") {
-      // Fetch all with current filters ignoring pagination
-      fetchAllForExport().then(all => exportProductsToExcel(all, `${filenameBase}.xlsx`))
+    } catch (error) {
+      console.error('Export error:', error)
+      showToast('Export failed. Please try again.', 'error')
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -494,7 +516,12 @@ const AdminProducts = () => {
     }
     if (searchTerm.trim()) overrides.search = searchTerm.trim()
     
+    showToast('Preparing export for current filters...', 'info')
     const all = await fetchAllForExport(overrides)
+    if (!all.length) {
+      showToast('No products found for current filters', 'warning')
+      return
+    }
     const fname = [
       'products_filtered',
       filterCategory && filterCategory !== 'all' ? `cat-${filterCategory}` : null,
@@ -507,6 +534,7 @@ const AdminProducts = () => {
       searchTerm ? `search-${searchTerm.replace(/\s+/g, '-')}` : null,
     ].filter(Boolean).join('_') || 'products_current_filters'
     exportProductsToExcel(all, `${fname}.xlsx`)
+    showToast(`Exported ${all.length} products successfully`, 'success')
   }
 
   const getProductCount = async () => {
@@ -1718,9 +1746,12 @@ const AdminProducts = () => {
                         </button>
                         <button
                           onClick={() => handleExport('selected')}
-                          className="inline-flex items-center gap-1 px-4 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+                          disabled={exporting}
+                          className={`inline-flex items-center gap-1 px-4 py-1 text-white rounded-md text-sm ${
+                            exporting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                          }`}
                         >
-                          <Download size={14} /> Export
+                          <Download size={14} /> {exporting ? 'Exporting...' : 'Export'}
                         </button>
                       </div>
                     )}
