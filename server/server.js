@@ -3,12 +3,19 @@ import cors from "cors"
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
-import sharp from "sharp"
 import connectDB, { connectBlogDB } from "./config/db.js"
 import config from "./config/config.js"
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js"
 import cacheService from "./services/cacheService.js"
 import { attachCacheService, autoInvalidateAllCacheOnMutation } from "./middleware/cacheMiddleware.js"
+
+let sharp = null
+try {
+  const sharpModule = await import("sharp")
+  sharp = sharpModule.default
+} catch (error) {
+  console.warn("Sharp not found. Dynamic image optimization is disabled for /uploads.")
+}
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url)
@@ -116,6 +123,8 @@ const uploadsPath = path.join(__dirname, 'uploads');
 // Example: /uploads/products/a.webp?w=330&h=330&q=70&fmt=webp
 app.get('/uploads/*', async (req, res, next) => {
   try {
+    if (!sharp) return next()
+
     const width = Number.parseInt(req.query.w, 10) || 0
     const height = Number.parseInt(req.query.h, 10) || 0
     const quality = Math.min(100, Math.max(1, Number.parseInt(req.query.q, 10) || 72))
