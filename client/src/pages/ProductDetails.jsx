@@ -42,7 +42,7 @@ import { useLanguage } from "../context/LanguageContext"
 import TabbyModal from "../components/payments/TabbyModal"
 import TamaraModal from "../components/payments/TamaraModal"
 import SEO from "../components/SEO"
-import TranslatedTipTapRenderer from "../components/TranslatedTipTapRenderer"
+import TranslatedTipTapRenderer, { preloadTipTapHtmlTranslation } from "../components/TranslatedTipTapRenderer"
 import BuyerProtectionSection from "../components/BuyerProtectionSection"
 import TranslatedText from "../components/TranslatedText"
 import { preloadTranslations } from "../LanguageModel/translationService"
@@ -425,8 +425,9 @@ const ProductDetails = () => {
     }
   }, [product])
 
-  const preloadProductTexts = async (productData) => {
-    if (!isArabic || !productData) return
+  const preloadProductTexts = async (productData, targetLang = "ar", options = {}) => {
+    const { primeHtmlCache = false } = options
+    if (!productData || targetLang !== "ar") return
 
     const texts = []
     const pushText = (value) => {
@@ -451,10 +452,20 @@ const ProductDetails = () => {
     extractTranslatableTextsFromHtml(productData.description).forEach(pushText)
 
     const uniqueTexts = Array.from(new Set(texts))
-    if (uniqueTexts.length === 0) return
 
     try {
-      await preloadTranslations(uniqueTexts, "ar")
+      if (uniqueTexts.length > 0) {
+        await preloadTranslations(uniqueTexts, targetLang)
+      }
+
+      // Prime full HTML cache for TipTap-rendered blocks (short + long description).
+      // This avoids waiting for HTML parsing + translation after language switch.
+      if (primeHtmlCache) {
+        await Promise.allSettled([
+          preloadTipTapHtmlTranslation(productData.shortDescription, targetLang),
+          preloadTipTapHtmlTranslation(productData.description, targetLang),
+        ])
+      }
     } catch (error) {
       console.error("Preload product translations error:", error)
     }
@@ -497,8 +508,8 @@ const ProductDetails = () => {
       // Warm translation cache before first Arabic render to reduce visible delay.
       if (isArabic) {
         await Promise.race([
-          preloadProductTexts(data),
-          new Promise((resolve) => setTimeout(resolve, 1200)),
+          preloadProductTexts(data, "ar", { primeHtmlCache: true }),
+          new Promise((resolve) => setTimeout(resolve, 1800)),
         ])
       }
 
@@ -520,6 +531,41 @@ const ProductDetails = () => {
       setLoading(false)
     }
   }
+
+  // While viewing English product page, pre-warm Arabic description translations in idle time.
+  // This makes EN -> AR switch feel instant for short/long description without blocking initial render.
+  useEffect(() => {
+    if (!product || isArabic) return
+
+    let cancelled = false
+    let idleId = null
+    let timeoutId = null
+
+    const runPrewarm = async () => {
+      if (cancelled) return
+      await preloadProductTexts(product, "ar", { primeHtmlCache: true })
+    }
+
+    if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(() => {
+        runPrewarm()
+      }, { timeout: 1200 })
+    } else {
+      timeoutId = window.setTimeout(() => {
+        runPrewarm()
+      }, 700)
+    }
+
+    return () => {
+      cancelled = true
+      if (idleId !== null && typeof window !== "undefined" && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId)
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId)
+      }
+    }
+  }, [product, isArabic])
 
   const fetchRelatedProducts = async () => {
     setRelatedLoading(true)

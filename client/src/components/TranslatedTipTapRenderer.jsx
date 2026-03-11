@@ -39,6 +39,93 @@ const shouldTranslateText = (text) => {
   return true
 }
 
+const translateTipTapHtml = async (content, languageCode = "ar") => {
+  if (!content || languageCode !== "ar") return content
+
+  const cacheKey = buildCacheKey(content, languageCode)
+  if (HTML_TRANSLATION_CACHE.has(cacheKey)) {
+    return HTML_TRANSLATION_CACHE.get(cacheKey)
+  }
+  if (HTML_TRANSLATION_IN_FLIGHT.has(cacheKey)) {
+    return HTML_TRANSLATION_IN_FLIGHT.get(cacheKey)
+  }
+
+  const translationPromise = (async () => {
+    try {
+      // Parse HTML and extract text nodes
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(content, "text/html")
+
+      // Get all text nodes that need translation
+      const textNodes = []
+      const walker = document.createTreeWalker(
+        doc.body,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+      )
+
+      let node
+      while ((node = walker.nextNode())) {
+        const parentTag = node.parentElement?.tagName
+        if (parentTag && SKIP_PARENT_TAGS.has(parentTag)) {
+          continue
+        }
+
+        const originalText = node.textContent || ""
+        const text = originalText.trim()
+        if (shouldTranslateText(text)) {
+          const leadingSpace = (originalText.match(/^\s*/) || [""])[0]
+          const trailingSpace = (originalText.match(/\s*$/) || [""])[0]
+          textNodes.push({ node, text, leadingSpace, trailingSpace })
+        }
+      }
+
+      if (textNodes.length === 0) {
+        setHtmlCache(cacheKey, content)
+        return content
+      }
+
+      // Translate only unique texts to reduce model work and latency
+      const uniqueTexts = Array.from(new Set(textNodes.map(({ text }) => text)))
+
+      // Use shared translation service (same model + batching used across the app)
+      const translatedUniqueTexts = await batchTranslate(uniqueTexts, "ar")
+      const translatedMap = new Map(
+        uniqueTexts.map((text, index) => [text, translatedUniqueTexts[index] || text])
+      )
+
+      // Replace text nodes with translated text
+      textNodes.forEach((item) => {
+        const translatedText = translatedMap.get(item.text)
+        if (translatedText && item.node) {
+          item.node.textContent = `${item.leadingSpace}${translatedText}${item.trailingSpace}`
+        }
+      })
+
+      const translated = doc.body.innerHTML
+      setHtmlCache(cacheKey, translated)
+      return translated
+    } catch (error) {
+      console.error("TipTap translation error:", error)
+      return content
+    } finally {
+      HTML_TRANSLATION_IN_FLIGHT.delete(cacheKey)
+    }
+  })()
+
+  HTML_TRANSLATION_IN_FLIGHT.set(cacheKey, translationPromise)
+  return translationPromise
+}
+
+export const preloadTipTapHtmlTranslation = async (content, languageCode = "ar") => {
+  try {
+    await translateTipTapHtml(content, languageCode)
+  } catch {
+    // Ignore preloading failures and keep UI responsive.
+  }
+}
+
 /**
  * TranslatedTipTapRenderer Component
  * Renders TipTap content with translation support for Arabic
@@ -58,7 +145,6 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
       return
     }
     
-    // Reuse cached full HTML translation first
     const cacheKey = buildCacheKey(content, currentLanguage.code)
     if (HTML_TRANSLATION_CACHE.has(cacheKey)) {
       setTranslatedContent(HTML_TRANSLATION_CACHE.get(cacheKey))
@@ -66,102 +152,15 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
       return
     }
 
-    // Reuse in-flight work for identical content to avoid duplicate translation runs
-    if (HTML_TRANSLATION_IN_FLIGHT.has(cacheKey)) {
-      setIsTranslating(true)
-      HTML_TRANSLATION_IN_FLIGHT.get(cacheKey).then((translated) => {
-        if (!isCancelled && translated) {
-          setTranslatedContent(translated)
-        }
-      }).finally(() => {
-        if (!isCancelled) {
-          setIsTranslating(false)
-        }
-      })
-      return
-    }
-    
-    const translateHtml = async () => {
-      setIsTranslating(true)
-      try {
-        // Parse HTML and extract text nodes
-        const parser = new DOMParser()
-        const doc = parser.parseFromString(content, "text/html")
-        
-        // Get all text nodes that need translation
-        const textNodes = []
-        const walker = document.createTreeWalker(
-          doc.body,
-          NodeFilter.SHOW_TEXT,
-          null,
-          false
-        )
-        
-        let node
-        while ((node = walker.nextNode())) {
-          const parentTag = node.parentElement?.tagName
-          if (parentTag && SKIP_PARENT_TAGS.has(parentTag)) {
-            continue
-          }
-
-          const originalText = node.textContent || ""
-          const text = originalText.trim()
-          if (shouldTranslateText(text)) {
-            const leadingSpace = (originalText.match(/^\s*/) || [""])[0]
-            const trailingSpace = (originalText.match(/\s*$/) || [""])[0]
-            textNodes.push({ node, text, leadingSpace, trailingSpace })
-          }
-        }
-        
-        if (textNodes.length === 0) {
-          setHtmlCache(cacheKey, content)
-          setTranslatedContent(content)
-          return
-        }
-
-        // Translate only unique texts to reduce model work and latency
-        const uniqueTexts = Array.from(new Set(textNodes.map(({ text }) => text)))
-
-        // Use shared translation service (same model + batching used across the app)
-        const translatedUniqueTexts = await batchTranslate(uniqueTexts, "ar")
-        const translatedMap = new Map(
-          uniqueTexts.map((text, index) => [text, translatedUniqueTexts[index] || text])
-        )
-        
-        // Replace text nodes with translated text
-        textNodes.forEach((item) => {
-          const translatedText = translatedMap.get(item.text)
-          if (translatedText && item.node) {
-            item.node.textContent = `${item.leadingSpace}${translatedText}${item.trailingSpace}`
-          }
-        })
-        
-        // Get the translated HTML
-        const translated = doc.body.innerHTML
-        
-        // Cache the result
-        setHtmlCache(cacheKey, translated)
-        
-        return translated
-      } catch (error) {
-        console.error("TipTap translation error:", error)
-        return content
-      } finally {
-        if (!isCancelled) {
-          setIsTranslating(false)
-        }
-      }
-    }
-
-    const translationPromise = translateHtml()
-    HTML_TRANSLATION_IN_FLIGHT.set(cacheKey, translationPromise)
-
-    translationPromise.then((translated) => {
+    setIsTranslating(true)
+    translateTipTapHtml(content, currentLanguage.code).then((translated) => {
       if (!isCancelled && translated) {
         setTranslatedContent(translated)
       }
     }).finally(() => {
-      HTML_TRANSLATION_IN_FLIGHT.delete(cacheKey)
+      if (!isCancelled) {
+        setIsTranslating(false)
+      }
     })
 
     return () => {
