@@ -65,11 +65,13 @@ const AdminOrders = () => {
       setLoading(true)
       const token = localStorage.getItem('adminToken')
       const { data } = await axios.get(`${config.API_URL}/api/admin/orders`, {
+        params: { includeDeleted: true },
         headers: {
           Authorization: `Bearer ${token}`
         }
       })
-      setOrders(data)
+      const dateWiseOrders = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      setOrders(dateWiseOrders)
       setLoading(false)
     } catch (error) {
       setError("Failed to load orders. Please try again later.")

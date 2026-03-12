@@ -91,7 +91,7 @@ const AdminDashboard = () => {
               </div>
               <div className="flex gap-3">
                 <Link
-                  to="/admin/orders/new"
+                  to="/admin/orders"
                   className="inline-flex items-center gap-2 rounded-full bg-[#1f6f78] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:translate-y-[-1px] hover:bg-[#185a61]"
                 >
                   <ClipboardList className="h-4 w-4" />
@@ -165,7 +165,7 @@ const AdminDashboard = () => {
               <div className="px-6 py-4 border-b border-[#e5e7eb] bg-white">
                 <div className="flex justify-between items-center">
                   <h2 className="text-lg font-semibold text-[#1f2a27]">Recent Orders</h2>
-                  <Link to="/admin/orders/new" className="text-sm font-medium text-[#1f6f78] hover:text-[#185a61]">
+                  <Link to="/admin/orders" className="text-sm font-medium text-[#1f6f78] hover:text-[#185a61]">
                     View all
                   </Link>
                 </div>
@@ -204,7 +204,7 @@ const AdminDashboard = () => {
                         <tr key={order._id} className="hover:bg-gray-50 transition">
                           <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-[#1f6f78]">
-                              <Link to="/admin/orders/new" state={{ orderId: order._id }}>
+                              <Link to="/admin/orders" state={{ orderId: order._id }}>
                                 #{order._id.slice(-6)}
                               </Link>
                             </div>
@@ -261,7 +261,7 @@ const AdminDashboard = () => {
               </div>
               <div className="mt-6 grid gap-4">
                 <Link
-                  to="/admin/orders/new"
+                  to="/admin/orders"
                   className="group flex items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm font-medium text-[#1f2a27] transition hover:-translate-y-0.5 hover:border-[#1f6f78]"
                 >
                   <span className="flex items-center gap-3">

@@ -409,6 +409,7 @@ const AdminSidebar = () => {
       dropdown: "orders",
       permission: "orders",
       items: [
+        { title: "All Orders", path: "/admin/orders" },
         { title: "Create Order", path: "/admin/orders/create" },
         { title: "New Orders", path: "/admin/orders/new" },
         { title: "Confirmed", path: "/admin/orders/confirmed" },
