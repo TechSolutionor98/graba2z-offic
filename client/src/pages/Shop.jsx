@@ -679,7 +679,7 @@ const Shop = () => {
     const level1 = urlParams.subcategory
       ? (parentCategoryId
           ? findLevel1SubcategoryForCategory(parentCategoryId, urlParams.subcategory)
-          : findSubcategoryByUrlPart(urlParams.subcategory))
+          : null)
       : null
     if (urlParams.subcategory) {
       console.log("🔍 Looking for subcategory:", urlParams.subcategory, "Found:", level1?.name, "ID:", level1?._id)
@@ -690,11 +690,11 @@ const Shop = () => {
       setSelectedSubCategories([level1._id])
     } else {
       setSelectedSubCategories([])
-      setCurrentSubCategoryName(urlParams.subcategory || null)
+      setCurrentSubCategoryName(null)
     }
 
-    const level2 = urlParams.subcategory2
-      ? (level1?._id ? findChildSubcategoryByUrlPart(level1._id, urlParams.subcategory2) : findSubcategoryByUrlPart(urlParams.subcategory2))
+    const level2 = urlParams.subcategory2 && level1?._id
+      ? findChildSubcategoryByUrlPart(level1._id, urlParams.subcategory2)
       : null
     if (level2) {
       setSelectedSubCategory2(level2._id)
@@ -703,11 +703,11 @@ const Shop = () => {
     } else {
       setSelectedSubCategory2(null)
       setSubCategory2Data(null)
-      setCurrentSubCategory2Name(urlParams.subcategory2 || null)
+      setCurrentSubCategory2Name(null)
     }
 
-    const level3 = urlParams.subcategory3
-      ? (level2?._id ? findChildSubcategoryByUrlPart(level2._id, urlParams.subcategory3) : findSubcategoryByUrlPart(urlParams.subcategory3))
+    const level3 = urlParams.subcategory3 && level2?._id
+      ? findChildSubcategoryByUrlPart(level2._id, urlParams.subcategory3)
       : null
     if (level3) {
       setSelectedSubCategory3(level3._id)
@@ -716,11 +716,11 @@ const Shop = () => {
     } else {
       setSelectedSubCategory3(null)
       setSubCategory3Data(null)
-      setCurrentSubCategory3Name(urlParams.subcategory3 || null)
+      setCurrentSubCategory3Name(null)
     }
 
-    const level4 = urlParams.subcategory4
-      ? (level3?._id ? findChildSubcategoryByUrlPart(level3._id, urlParams.subcategory4) : findSubcategoryByUrlPart(urlParams.subcategory4))
+    const level4 = urlParams.subcategory4 && level3?._id
+      ? findChildSubcategoryByUrlPart(level3._id, urlParams.subcategory4)
       : null
     if (level4) {
       setSelectedSubCategory4(level4._id)
@@ -729,7 +729,7 @@ const Shop = () => {
     } else {
       setSelectedSubCategory4(null)
       setSubCategory4Data(null)
-      setCurrentSubCategory4Name(urlParams.subcategory4 || null)
+      setCurrentSubCategory4Name(null)
     }
   }, [allSubcategories, categories, location.pathname, location.search])
 
