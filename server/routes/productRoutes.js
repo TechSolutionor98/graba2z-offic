@@ -289,7 +289,7 @@ router.get(
   "/",
   cacheMiddleware('products'),
   asyncHandler(async (req, res) => {
-  const { category, subcategory, subcategory2, subcategory3, subcategory4, parentCategory, featured, search, brand, limit } = req.query
+  const { category, subcategory, parentCategory, featured, search, brand, limit } = req.query
 
     const andConditions = [{ isActive: true }, { hideFromShop: { $ne: true } }]
 
@@ -314,15 +314,6 @@ router.get(
           { subCategory4: subcategory },
         ],
       })
-    }
-    if (subcategory2 && subcategory2.match(/^[0-9a-fA-F]{24}$/)) {
-      andConditions.push({ subCategory2: subcategory2 })
-    }
-    if (subcategory3 && subcategory3.match(/^[0-9a-fA-F]{24}$/)) {
-      andConditions.push({ subCategory3: subcategory3 })
-    }
-    if (subcategory4 && subcategory4.match(/^[0-9a-fA-F]{24}$/)) {
-      andConditions.push({ subCategory4: subcategory4 })
     }
 
     // Search filter
@@ -394,7 +385,7 @@ router.get(
   "/paginated",
   cacheMiddleware('products'),
   asyncHandler(async (req, res) => {
-  const { category, subcategory, subcategory2, subcategory3, subcategory4, parentCategory, featured, search, page = 1, limit = 20, brand } = req.query
+  const { category, subcategory, parentCategory, featured, search, page = 1, limit = 20, brand } = req.query
 
     const andConditions = [{ isActive: true }, { hideFromShop: { $ne: true } }]
 
@@ -414,15 +405,6 @@ router.get(
           { subCategory4: subcategory },
         ],
       })
-    }
-    if (subcategory2 && subcategory2.match(/^[0-9a-fA-F]{24}$/)) {
-      andConditions.push({ subCategory2: subcategory2 })
-    }
-    if (subcategory3 && subcategory3.match(/^[0-9a-fA-F]{24}$/)) {
-      andConditions.push({ subCategory3: subcategory3 })
-    }
-    if (subcategory4 && subcategory4.match(/^[0-9a-fA-F]{24}$/)) {
-      andConditions.push({ subCategory4: subcategory4 })
     }
 
     if (typeof search === "string" && search.trim()) {
