@@ -53,7 +53,7 @@ const AdminOrders = () => {
   const paymentStatusOptions = ["Paid", "Unpaid"]
 
   const formatPrice = (price) => {
-    return `Rs ${price.toLocaleString()}`
+    return `AED ${price.toLocaleString()}`
   }
 
   useEffect(() => {

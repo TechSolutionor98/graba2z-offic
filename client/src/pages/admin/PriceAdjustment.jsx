@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { useToast } from "../../context/ToastContext"
-import { Search, Tag, CheckSquare, Square, TrendingUp, Percent, DollarSign } from "lucide-react"
+import { Search, CheckSquare, Square, TrendingUp, Percent, DollarSign, X } from "lucide-react"
 import { getFullImageUrl } from "../../utils/imageUtils"
 import config from "../../config/config"
 
@@ -12,13 +12,21 @@ const PriceAdjustment = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [subcategories, setSubcategories] = useState([])
+  const [filteredSubcategories, setFilteredSubcategories] = useState([])
+  const [filteredSubcategories2, setFilteredSubcategories2] = useState([])
+  const [filteredSubcategories3, setFilteredSubcategories3] = useState([])
+  const [filteredSubcategories4, setFilteredSubcategories4] = useState([])
   const [brands, setBrands] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterParentCategory, setFilterParentCategory] = useState("all")
-  const [filterSubCategory, setFilterSubCategory] = useState("all")
+  const [filterSubCategory, setFilterSubCategory] = useState("all") // Level 1
+  const [filterSubCategory2, setFilterSubCategory2] = useState("all")
+  const [filterSubCategory3, setFilterSubCategory3] = useState("all")
+  const [filterSubCategory4, setFilterSubCategory4] = useState("all")
   const [filterBrand, setFilterBrand] = useState("all")
+  const [filterStatus, setFilterStatus] = useState("all")
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false)
   const [adjustmentType, setAdjustmentType] = useState("both") // both, base_only, offer_only
@@ -45,14 +53,22 @@ const PriceAdjustment = () => {
 
   useEffect(() => {
     fetchProducts()
-    fetchCategories()
-    fetchBrands()
-  }, [searchTerm, filterParentCategory, filterSubCategory, filterBrand])
+  }, [
+    searchTerm,
+    filterParentCategory,
+    filterSubCategory,
+    filterSubCategory2,
+    filterSubCategory3,
+    filterSubCategory4,
+    filterBrand,
+    filterStatus,
+  ])
 
   useEffect(() => {
-    fetchSubcategories(filterParentCategory)
-    setFilterSubCategory("all")
-  }, [filterParentCategory])
+    fetchCategories()
+    fetchBrands()
+    fetchSubcategories()
+  }, [])
 
   const fetchProducts = async () => {
     try {
@@ -67,8 +83,19 @@ const PriceAdjustment = () => {
       const params = {}
       if (searchTerm.trim() !== "") params.search = searchTerm.trim()
       if (filterParentCategory && filterParentCategory !== "all") params.parentCategory = filterParentCategory
-      if (filterSubCategory && filterSubCategory !== "all") params.subCategory = filterSubCategory
+      if (filterSubCategory && filterSubCategory !== "all") params.category = filterSubCategory
+      if (filterSubCategory2 && filterSubCategory2 !== "all") params.subCategory2 = filterSubCategory2
+      if (filterSubCategory3 && filterSubCategory3 !== "all") params.subCategory3 = filterSubCategory3
+      if (filterSubCategory4 && filterSubCategory4 !== "all") params.subCategory4 = filterSubCategory4
       if (filterBrand && filterBrand !== "all") params.brand = filterBrand
+      if (filterStatus && filterStatus !== "all") {
+        if (filterStatus === "onhold") {
+          params.onHold = true
+        } else {
+          params.isActive = filterStatus === "active"
+          params.onHold = false
+        }
+      }
 
       const { data } = await axios.get(`${config.API_URL}/api/price-adjustment/products`, {
         headers: {
@@ -107,14 +134,14 @@ const PriceAdjustment = () => {
     }
   }
 
-  const fetchSubcategories = async (parentId) => {
+  const fetchSubcategories = async () => {
     try {
-      const params = {}
-      if (parentId && parentId !== "all") params.category = parentId
-      const { data } = await axios.get(`${config.API_URL}/api/subcategories`, { params })
-      setSubcategories(Array.isArray(data) ? data : [])
+      const { data } = await axios.get(`${config.API_URL}/api/subcategories`)
+      const validSubcategories = Array.isArray(data) ? data.filter((sub) => sub && sub.category && sub.category._id) : []
+      setSubcategories(validSubcategories)
     } catch (error) {
       console.error("Failed to load subcategories:", error)
+      setSubcategories([])
     }
   }
 
@@ -126,6 +153,82 @@ const PriceAdjustment = () => {
       console.error("Failed to load brands:", error)
     }
   }
+
+  // Cascading level filters
+  useEffect(() => {
+    if (filterParentCategory === "all") {
+      setFilteredSubcategories(subcategories.filter((sub) => sub.level === 1))
+    } else {
+      setFilteredSubcategories(
+        subcategories.filter((sub) => sub.level === 1 && sub.category && sub.category._id === filterParentCategory),
+      )
+    }
+    setFilterSubCategory("all")
+    setFilterSubCategory2("all")
+    setFilterSubCategory3("all")
+    setFilterSubCategory4("all")
+    setFilteredSubcategories2([])
+    setFilteredSubcategories3([])
+    setFilteredSubcategories4([])
+  }, [filterParentCategory, subcategories])
+
+  useEffect(() => {
+    if (filterSubCategory === "all" || !filterSubCategory) {
+      setFilteredSubcategories2([])
+    } else {
+      setFilteredSubcategories2(
+        subcategories.filter((sub) => {
+          if (sub.level !== 2 || !sub.parentSubCategory) return false
+          const parentId = typeof sub.parentSubCategory === "object" ? sub.parentSubCategory._id : sub.parentSubCategory
+          return parentId === filterSubCategory
+        }),
+      )
+    }
+    setFilterSubCategory2("all")
+    setFilterSubCategory3("all")
+    setFilterSubCategory4("all")
+    setFilteredSubcategories3([])
+    setFilteredSubcategories4([])
+  }, [filterSubCategory, subcategories])
+
+  useEffect(() => {
+    if (filterSubCategory === "all" || !filterSubCategory) {
+      setFilteredSubcategories3([])
+    } else {
+      const parentId = filterSubCategory2 !== "all" && filterSubCategory2 ? filterSubCategory2 : filterSubCategory
+      setFilteredSubcategories3(
+        subcategories.filter((sub) => {
+          if (sub.level !== 3 || !sub.parentSubCategory) return false
+          const subParentId = typeof sub.parentSubCategory === "object" ? sub.parentSubCategory._id : sub.parentSubCategory
+          return subParentId === parentId
+        }),
+      )
+    }
+    setFilterSubCategory3("all")
+    setFilterSubCategory4("all")
+    setFilteredSubcategories4([])
+  }, [filterSubCategory, filterSubCategory2, subcategories])
+
+  useEffect(() => {
+    if (filterSubCategory === "all" || !filterSubCategory) {
+      setFilteredSubcategories4([])
+    } else {
+      let parentId = filterSubCategory
+      if (filterSubCategory3 !== "all" && filterSubCategory3) {
+        parentId = filterSubCategory3
+      } else if (filterSubCategory2 !== "all" && filterSubCategory2) {
+        parentId = filterSubCategory2
+      }
+      setFilteredSubcategories4(
+        subcategories.filter((sub) => {
+          if (sub.level !== 4 || !sub.parentSubCategory) return false
+          const subParentId = typeof sub.parentSubCategory === "object" ? sub.parentSubCategory._id : sub.parentSubCategory
+          return subParentId === parentId
+        }),
+      )
+    }
+    setFilterSubCategory4("all")
+  }, [filterSubCategory, filterSubCategory2, filterSubCategory3, subcategories])
 
   // Selection helpers
   const toggleSelectOne = (id) => {
@@ -290,65 +393,168 @@ const PriceAdjustment = () => {
           )}
 
           {/* Filters */}
-          <div className="mb-6 flex flex-col md:flex-row gap-4">
-            <div className="relative md:w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search name, sku, brands..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+          <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6 max-w-full overflow-visible">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Filter & Search Products</h3>
 
-            <div className="relative md:w-64">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Tag size={18} className="text-gray-400" />
+            <div className="grid grid-cols-5 gap-3 mb-4">
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
+                <select
+                  value={filterParentCategory}
+                  onChange={(e) => setFilterParentCategory(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <select
-                value={filterParentCategory}
-                onChange={(e) => setFilterParentCategory(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Level 1</label>
+                <select
+                  value={filterSubCategory}
+                  onChange={(e) => setFilterSubCategory(e.target.value)}
+                  disabled={filterParentCategory === "all"}
+                  className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                >
+                  <option value="all">{filterParentCategory === "all" ? "Select Parent First" : "All Level 1"}</option>
+                  {filteredSubcategories.map((subcategory) => (
+                    <option key={subcategory._id} value={subcategory._id}>
+                      {subcategory.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Level 2</label>
+                <select
+                  value={filterSubCategory2}
+                  onChange={(e) => setFilterSubCategory2(e.target.value)}
+                  disabled={filterSubCategory === "all" || filteredSubcategories2.length === 0}
+                  className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                >
+                  <option value="all">{filterSubCategory === "all" ? "Select Level 1 First" : filteredSubcategories2.length === 0 ? "No Level 2" : "All Level 2"}</option>
+                  {filteredSubcategories2.map((subcategory) => (
+                    <option key={subcategory._id} value={subcategory._id}>
+                      {subcategory.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Level 3</label>
+                <select
+                  value={filterSubCategory3}
+                  onChange={(e) => setFilterSubCategory3(e.target.value)}
+                  disabled={filterSubCategory === "all" || filteredSubcategories3.length === 0}
+                  className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                >
+                  <option value="all">{filterSubCategory === "all" ? "Select Level 1 First" : filteredSubcategories3.length === 0 ? "No Level 3" : "All Level 3"}</option>
+                  {filteredSubcategories3.map((subcategory) => (
+                    <option key={subcategory._id} value={subcategory._id}>
+                      {subcategory.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Level 4</label>
+                <select
+                  value={filterSubCategory4}
+                  onChange={(e) => setFilterSubCategory4(e.target.value)}
+                  disabled={filterSubCategory === "all" || filteredSubcategories4.length === 0}
+                  className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                >
+                  <option value="all">{filterSubCategory === "all" ? "Select Level 1 First" : filteredSubcategories4.length === 0 ? "No Level 4" : "All Level 4"}</option>
+                  {filteredSubcategories4.map((subcategory) => (
+                    <option key={subcategory._id} value={subcategory._id}>
+                      {subcategory.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div className="relative md:w-64">
-              <select
-                value={filterSubCategory}
-                onChange={(e) => setFilterSubCategory(e.target.value)}
-                className="px-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Subcategories</option>
-                {subcategories.map((subcategory) => (
-                  <option key={subcategory._id} value={subcategory._id}>
-                    {subcategory.name}
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
+                <select
+                  value={filterBrand}
+                  onChange={(e) => setFilterBrand(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                >
+                  <option value="all">All Brands</option>
+                  {brands.map((brand) => (
+                    <option key={brand._id} value={brand._id}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                >
+                  <option value="all">All Products</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="onhold">On Hold</option>
+                </select>
+              </div>
+
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Name, SKU, Brand..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9 pr-2 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="relative md:w-64">
-              <select
-                value={filterBrand}
-                onChange={(e) => setFilterBrand(e.target.value)}
-                className="px-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Brands</option>
-                {brands.map((brand) => (
-                  <option key={brand._id} value={brand._id}>
-                    {brand.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {(searchTerm ||
+              filterParentCategory !== "all" ||
+              filterSubCategory !== "all" ||
+              filterSubCategory2 !== "all" ||
+              filterSubCategory3 !== "all" ||
+              filterSubCategory4 !== "all" ||
+              filterBrand !== "all" ||
+              filterStatus !== "all") && (
+              <div className="flex justify-start mt-4">
+                <button
+                  onClick={() => {
+                    setSearchTerm("")
+                    setFilterParentCategory("all")
+                    setFilterSubCategory("all")
+                    setFilterSubCategory2("all")
+                    setFilterSubCategory3("all")
+                    setFilterSubCategory4("all")
+                    setFilterBrand("all")
+                    setFilterStatus("all")
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
+                >
+                  <X size={16} />
+                  Clear Filters
+                </button>
+              </div>
+            )}
           </div>
 
           {loading ? (
