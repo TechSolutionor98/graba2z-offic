@@ -735,7 +735,7 @@ const Home = () => {
                         decoding="async"
                         width="1200"
                         height="560"
-                        className="block w-full h-full rounded-lg object-cover hover:opacity-90 transition-opacity cursor-pointer"
+                        className="block w-full h-full rounded-lg bg-cover hover:opacity-90 transition-opacity cursor-pointer"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = fallback.image;
@@ -751,7 +751,7 @@ const Home = () => {
                         decoding="async"
                         width="1200"
                         height="560"
-                        className="block w-full h-full rounded-lg object-cover hover:opacity-90 transition-opacity cursor-pointer"
+                        className="block w-full h-full rounded-lg bg-cover hover:opacity-90 transition-opacity cursor-pointer"
                       />
                     </Link>
                   )}
