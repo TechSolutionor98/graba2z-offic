@@ -78,7 +78,7 @@ const BannerSlider = ({ banners }) => {
           loading="eager"
           width="1600"
           height="620"
-          className="block w-full h-full object-cover"
+          className="block w-full h-full bg-cover"
         />
         {/* Optional subtle overlay for better navigation visibility */}
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
