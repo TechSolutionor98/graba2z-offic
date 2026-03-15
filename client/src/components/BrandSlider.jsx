@@ -284,6 +284,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { getOptimizedImageUrl } from "../utils/imageUtils";
+import TranslatedText from "./TranslatedText";
 
 const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
   const [brandIndex, setBrandIndex] = useState(initialIndex);
@@ -448,7 +449,7 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
       <div className="max-w-8xl mx-auto">
         <div className="relative mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 text-center">
-            Featured Brands
+            <TranslatedText>Featured Brands</TranslatedText>
           </h2>
         </div>
         <div className="relative mx-3 md:mx-5">

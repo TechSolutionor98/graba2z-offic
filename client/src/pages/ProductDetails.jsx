@@ -214,16 +214,24 @@ const ProductDetails = () => {
 
   const formatPrice = (price) => {
     const num = Number(price)
-    if (isNaN(num)) return "0.00 AED"
+    if (isNaN(num)) return <><TranslatedText>AED</TranslatedText> 0.00</>
     // Check if number is an integer (no decimal part)
     if (Number.isInteger(num)) {
-      return `${num.toLocaleString()}.00 AED`
+      return (
+        <>
+          <TranslatedText>AED</TranslatedText> {num.toLocaleString()}.00
+        </>
+      )
     }
     // Preserve up to 2 decimal places if backend already has them (e.g., 2078.96)
     const fixed = num.toFixed(2)
     // Remove trailing zeros but keep two if both are needed for .10 style? requirement says keep backend decimals; we keep exactly given decimals if provided.
     // Since backend provided decimals, show them (2 places) without extra .00
-    return `${Number(fixed).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`
+    return (
+      <>
+        <TranslatedText>AED</TranslatedText> {Number(fixed).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </>
+    )
   }
 
   const calculateDiscountedPrice = (price, discountPercent = 25) => {
@@ -716,7 +724,7 @@ const ProductDetails = () => {
               className="w-16 h-16 object-cover rounded-md"
             />
             <div className="flex-1">
-              <h4 className="font-medium text-gray-900"><TranslatedText text={product.name}>{product.name}</TranslatedText></h4>
+              <h4 className="font-medium text-gray-900"><TranslatedText text={product.name} sourceDoc={product} fieldName="name">{product.name}</TranslatedText></h4>
               <p className="text-yellow-600 font-semibold">
                 {formatPrice(product.offerPrice && product.offerPrice > 0 ? product.offerPrice : product.price)}
               </p>
@@ -747,7 +755,7 @@ const ProductDetails = () => {
                   className="w-16 h-16 object-cover rounded-md"
                 />
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900"><TranslatedText text={item.name}>{item.name}</TranslatedText></h4>
+                  <h4 className="font-medium text-gray-900"><TranslatedText text={item.name} sourceDoc={item} fieldName="name">{item.name}</TranslatedText></h4>
                   <div className="flex items-center gap-2">
                     <p className="text-green-600 font-semibold">{formatDiscountedPrice(originalPrice, 25)}</p>
                     <p className="text-sm text-gray-500 line-through">{formatPrice(originalPrice)}</p>
@@ -759,7 +767,7 @@ const ProductDetails = () => {
                   {item.offerPrice && item.offerPrice > 0 && item.offerPrice < item.price && (
                     <p className="text-xs text-gray-500 mt-1">
                       <span className="line-through">{formatPrice(item.price)}</span>
-                      <span className="ml-2 text-blue-600">Already discounted</span>
+                      <span className="ml-2 text-blue-600"><TranslatedText>Already discounted</TranslatedText></span>
                     </p>
                   )}
                 </div>
@@ -2259,18 +2267,30 @@ const ProductDetails = () => {
     // Unified badge style for all stock statuses
     const baseClass =
       "inline-flex items-center justify-center min-h-[32px] px-4 py-1 rounded-md text-sm font-bold leading-none";
+    
+    // Use the stockStatusAr if available, otherwise fallback to TranslatedText dictionary
+    const StockLabel = (
+      <TranslatedText 
+        text={product.stockStatus} 
+        sourceDoc={product} 
+        fieldName="stockStatus"
+      >
+        {product.stockStatus === "PreOrder" ? "Pre-order" : product.stockStatus}
+      </TranslatedText>
+    );
+
     switch (product.stockStatus) {
       case "In Stock":
         return (
-          <span className={baseClass + " bg-lime-500 text-white"}><TranslatedText>In Stock</TranslatedText></span>
+          <span className={baseClass + " bg-lime-500 text-white"}>{StockLabel}</span>
         );
       case "Out of Stock":
         return (
-          <span className={baseClass + " bg-red-500 text-white"}><TranslatedText>Out of Stock</TranslatedText></span>
+          <span className={baseClass + " bg-red-500 text-white"}>{StockLabel}</span>
         );
       case "PreOrder":
         return (
-          <span className={baseClass + " bg-orange-400 text-white"}><TranslatedText>Pre-order</TranslatedText></span>
+          <span className={baseClass + " bg-orange-400 text-white"}>{StockLabel}</span>
         );
       default:
         return null;
@@ -2335,7 +2355,7 @@ const ProductDetails = () => {
                 to={`/shop?parentCategory=${product.parentCategory._id}`}
                 className="hover:text-green-600 whitespace-nowrap"
               >
-                {product.parentCategory.name}
+                <TranslatedText text={product.parentCategory.name} sourceDoc={product.parentCategory} fieldName="name" />
               </Link>
             </>
           )}
@@ -2348,7 +2368,7 @@ const ProductDetails = () => {
                 to={`/shop?category=${product.category._id}`}
                 className="hover:text-green-600 whitespace-nowrap"
               >
-                {product.category.name}
+                <TranslatedText text={product.category.name} sourceDoc={product.category} fieldName="name" />
               </Link>
             </>
           )}
@@ -2361,7 +2381,7 @@ const ProductDetails = () => {
                 to={`/shop?subcategory=${product.subCategory2._id}`}
                 className="hover:text-green-600 whitespace-nowrap"
               >
-                {product.subCategory2.name}
+                <TranslatedText text={product.subCategory2.name} sourceDoc={product.subCategory2} fieldName="name" />
               </Link>
             </>
           )}
@@ -2374,7 +2394,7 @@ const ProductDetails = () => {
                 to={`/shop?subcategory=${product.subCategory3._id}`}
                 className="hover:text-green-600 whitespace-nowrap"
               >
-                {product.subCategory3.name}
+                <TranslatedText text={product.subCategory3.name} sourceDoc={product.subCategory3} fieldName="name" />
               </Link>
             </>
           )}
@@ -2387,13 +2407,15 @@ const ProductDetails = () => {
                 to={`/shop?subcategory=${product.subCategory4._id}`}
                 className="hover:text-green-600 whitespace-nowrap"
               >
-                {product.subCategory4.name}
+                <TranslatedText text={product.subCategory4.name} sourceDoc={product.subCategory4} fieldName="name" />
               </Link>
             </>
           )}
           
           <span>/</span>
-          <span className="text-black block truncate max-w-[120px] sm:max-w-none whitespace-nowrap"><TranslatedText text={product.name}>{product.name}</TranslatedText></span>
+          <span className="text-black block truncate max-w-[120px] sm:max-w-none whitespace-nowrap">
+            <TranslatedText text={product.name} sourceDoc={product} fieldName="name" />
+          </span>
         </nav>
 
         {/* Product Images and Info Grid */}
@@ -2629,19 +2651,30 @@ const ProductDetails = () => {
                   {getStockBadge()}
                   {getDiscountBadge()}
                 </div>
-              </div>
-              <h1 className="text-xl font-bold text-gray-900 mb-4"><TranslatedText text={product.name}>{product.name}</TranslatedText></h1>
+              </div>              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-2">
+                <TranslatedText text={product.name} sourceDoc={product} fieldName="name" />
+              </h1>
 
               {/* Brand and Category */}
               <div className="flex items-center gap-4 mb-4 text-sm">
                 <span className="text-gray-600">
                   <TranslatedText>Brand</TranslatedText>:{" "}
-                  <span className="font-medium text-green-600"><TranslatedText text={product.brand?.name || product.brand || "N/A"}>{product.brand?.name || product.brand || "N/A"}</TranslatedText></span>
+                  <span className="font-medium text-green-600">
+                    <TranslatedText 
+                      text={product.brand?.name || product.brand || "N/A"} 
+                      sourceDoc={product.brand} 
+                      fieldName="name" 
+                    />
+                  </span>
                 </span>
                 <span className="text-gray-600">
                   <TranslatedText>Category</TranslatedText>:{" "}
                   <span className="font-medium text-green-600">
-                    <TranslatedText text={product.category?.name || product.category || "N/A"}>{product.category?.name || product.category || "N/A"}</TranslatedText>
+                    <TranslatedText 
+                      text={product.category?.name || product.category || "N/A"} 
+                      sourceDoc={product.category} 
+                      fieldName="name" 
+                    />
                   </span>
                 </span>
                 <span className="text-gray-600">
@@ -2761,9 +2794,15 @@ const ProductDetails = () => {
                         : "text-orange-600"
                   }`}
                 >
-                  {product.stockStatus === "In Stock" && <TranslatedText>Available in stock</TranslatedText>}
-                  {product.stockStatus === "Out of Stock" && <TranslatedText>Currently out of stock</TranslatedText>}
-                  {product.stockStatus === "PreOrder" && <TranslatedText>Available for pre-order</TranslatedText>}
+                  {product.stockStatus === "In Stock" && (
+                    <TranslatedText sourceDoc={product} fieldName="stockStatus">Available in stock</TranslatedText>
+                  )}
+                  {product.stockStatus === "Out of Stock" && (
+                    <TranslatedText sourceDoc={product} fieldName="stockStatus">Currently out of stock</TranslatedText>
+                  )}
+                  {product.stockStatus === "PreOrder" && (
+                    <TranslatedText sourceDoc={product} fieldName="stockStatus">Available for pre-order</TranslatedText>
+                  )}
                 </div>
               </div>
 
@@ -2968,22 +3007,37 @@ const ProductDetails = () => {
                       // Sort alphabetically by text to maintain consistent order
                       allVariations.sort((a, b) => a.text.localeCompare(b.text))
                       
-                      return allVariations.map((variation) => (
-                        <div key={variation.id} className="relative">
-                          {variation.isCurrent ? (
-                            <div className="px-5 py-2 bg-blue-200 text-gray-700 rounded-lg font-medium text-sm border-2 border-blue-400 cursor-default">
-                              {variation.text}
-                            </div>
-                          ) : (
-                            <Link
-                              to={getLocalizedPath(`/product/${encodeURIComponent(variation.slug)}`)}
-                              className="block px-5 py-2 bg-white text-gray-700 rounded-lg font-medium text-sm border border-gray-400 hover:bg-blue-100 hover:border-blue-400 transition-all duration-200"
-                            >
-                              {variation.text}
-                            </Link>
-                          )}
-                        </div>
-                      ))
+                      return allVariations.map((variation) => {
+                        // Find the original variation object in product.variations to get pre-translated fields
+                        const matchingVar = product.variations?.find(v => 
+                          (v.product?._id || v.product || "").toString() === (variation.id || "").toString()
+                        );
+
+                        return (
+                          <div key={variation.id} className="relative">
+                            {variation.isCurrent ? (
+                              <div className="px-5 py-2 bg-blue-200 text-gray-700 rounded-lg font-medium text-sm border-2 border-blue-400 cursor-default">
+                                <TranslatedText 
+                                  text={variation.text} 
+                                  sourceDoc={product} 
+                                  fieldName="selfVariationText" 
+                                />
+                              </div>
+                            ) : (
+                              <Link
+                                to={getLocalizedPath(`/product/${encodeURIComponent(variation.slug)}`)}
+                                className="block px-5 py-2 bg-white text-gray-700 rounded-lg font-medium text-sm border border-gray-400 hover:bg-blue-100 hover:border-blue-400 transition-all duration-200"
+                              >
+                                <TranslatedText 
+                                  text={variation.text} 
+                                  sourceDoc={matchingVar} 
+                                  fieldName="variationText" 
+                                />
+                              </Link>
+                            )}
+                          </div>
+                        )
+                      })
                     })()}
                   </div>
                   <p className="text-xs text-gray-600 mt-3">
@@ -2997,10 +3051,13 @@ const ProductDetails = () => {
               {product.shortDescription && (
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3"><TranslatedText>Key Features</TranslatedText>:</h3>
-                  <TranslatedTipTapRenderer
-                    content={product.shortDescription} 
-                    className="text-sm line-clamp-5 sm:line-clamp-none"
+                  <div className="prose prose-sm md:prose-base max-w-none text-gray-700 leading-relaxed">
+                  <TranslatedTipTapRenderer 
+                    html={product.description} 
+                    sourceDoc={product} 
+                    fieldName="description"
                   />
+                </div>
                 </div>
               )}
 
@@ -3497,7 +3554,11 @@ const ProductDetails = () => {
     {activeTab === "description" && (
       <div>
         <h3 className="text-lg font-bold mb-4"><TranslatedText>Product Description</TranslatedText></h3>
-        <TranslatedTipTapRenderer content={product.description} />
+        <TranslatedTipTapRenderer 
+          content={product.description} 
+          sourceDoc={product}
+          fieldName="description"
+        />
       </div>
     )}
 

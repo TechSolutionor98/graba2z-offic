@@ -130,7 +130,7 @@ const MobileSubCategoryItem = ({
           className="flex-1"
           onClick={closeMobileMenu}
         >
-          <strong><TranslatedText text={subCategory.name} /></strong>
+          <strong><TranslatedText text={subCategory.name} sourceDoc={subCategory} fieldName="name" /></strong>
         </Link>
         {hasNested && (
           <button
@@ -896,8 +896,12 @@ const Navbar = () => {
                             className="w-16 h-16 object-contain rounded"
                           />
                           <div className="flex-1">
-                            <div className="font-semibold text-gray-900 text-sm line-clamp-2"><TranslatedText text={product.name} /></div>
-                            <div className="text-xs text-gray-500 line-clamp-2"><TranslatedText text={product.description} /></div>
+                            <div className="font-semibold text-gray-900 text-sm line-clamp-2">
+                              <TranslatedText text={product.name} sourceDoc={product} fieldName="name" />
+                            </div>
+                            <div className="text-xs text-gray-500 line-clamp-2">
+                              <TranslatedText text={product.description} sourceDoc={product} fieldName="description" />
+                            </div>
                           </div>
                         </Link>
                       ))}
@@ -1033,6 +1037,14 @@ const Navbar = () => {
                   <ChevronDown className="w-3.5 h-3.5 text-white" />
                 </button>
                 
+                {/* Shop Link */}
+                <Link
+                  to={getLocalizedPath("/shop")}
+                  className="hidden md:inline-flex items-center gap-2 px-3 xl:px-3.5 py-2 rounded-lg text-white hover:bg-white/10 transition text-sm font-semibold whitespace-nowrap"
+                >
+                  <TranslatedText>Shop</TranslatedText>
+                </Link>
+                
                 {/* Desktop Category Dropdown (horizontal cascade) */}
                 {isDesktopCategoryDropdownOpen && (
                   <div
@@ -1058,7 +1070,7 @@ const Navbar = () => {
                                     isActive ? "bg-gray-50" : ""
                                   }`}
                                 >
-                                  <span className="flex-1 pr-2"><TranslatedText text={parentCategory.name} /></span>
+                                  <span className="flex-1 pr-2"><TranslatedText text={parentCategory.name} sourceDoc={parentCategory} fieldName="name" /></span>
                                   {hasChildren && <ChevronRight size={14} className="text-gray-400" />}
                                 </Link>
                               )
@@ -1135,7 +1147,7 @@ const Navbar = () => {
                                           isActive ? "bg-gray-50" : ""
                                         }`}
                                       >
-                                        <span className="flex-1 pr-2"><TranslatedText text={node.name} /></span>
+                                        <span className="flex-1 pr-2"><TranslatedText text={node.name} sourceDoc={node} fieldName="name" /></span>
                                         {hasNested && <ChevronRight size={14} className="text-gray-400" />}
                                       </Link>
                                     )
@@ -1211,7 +1223,7 @@ const Navbar = () => {
                             isActiveCategory ? "font-semibold" : ""
                           }`}
                         >
-                          <TranslatedText text={parentCategory.name} />
+                          <TranslatedText text={parentCategory.name} sourceDoc={parentCategory} fieldName="name" />
                         </Link>
                         {isActiveCategory && (
                           <span className="pointer-events-none absolute bottom-0 left-1 right-1 h-1.5 rounded-full bg-white shadow-sm" />
@@ -1264,7 +1276,7 @@ const Navbar = () => {
                                           className={`block text-red-600 text-xs font-semibold hover:text-red-600 ${MEGA_LABEL_LIMIT_CLASS}`}
                                           onClick={() => resetMegaMenu()}
                                         >
-                                          <TranslatedText text={subCategory.name} />
+                                          <TranslatedText text={subCategory.name} sourceDoc={subCategory} fieldName="name" />
                                         </Link>
                                         <ul className="flex flex-col gap-1 px-1 pb-1 bg-transparent border-none text-left">
                                           {firstColumnLevel2.map((sub2) => {
@@ -1284,7 +1296,7 @@ const Navbar = () => {
                                                   className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
                                                   onClick={() => resetMegaMenu()}
                                                 >
-                                                  <span className="flex-1 break-words leading-snug text-left"><TranslatedText text={sub2.name} /></span>
+                                                  <span className="flex-1 break-words leading-snug text-left"><TranslatedText text={sub2.name} sourceDoc={sub2} fieldName="name" /></span>
                                                 </Link>
                                               </li>
                                             )
@@ -1316,7 +1328,7 @@ const Navbar = () => {
                                                     className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
                                                     onClick={() => resetMegaMenu()}
                                                   >
-                                                    <span className="flex-1 break-words leading-snug text-left"><TranslatedText text={sub2.name} /></span>
+                                                    <span className="flex-1 break-words leading-snug text-left"><TranslatedText text={sub2.name} sourceDoc={sub2} fieldName="name" /></span>
                                                   </Link>
                                                 </li>
                                               )
@@ -1516,7 +1528,7 @@ const Navbar = () => {
                         handleMobileSearchClose()
                       }}
                     >
-                      View all results
+                      <TranslatedText>View all results</TranslatedText>
                     </Link>
                   </div>
                 )}
@@ -1551,7 +1563,7 @@ const Navbar = () => {
                     }}
                     className="text-white font-medium hover:text-white/90 transition-colors"
                   >
-                    Hello, <span className="underline">Sign in</span>
+                    Hello, <span className="underline"><TranslatedText>Sign in</TranslatedText></span>
                   </button>
                 )}
               </div>
@@ -1565,7 +1577,7 @@ const Navbar = () => {
               {/* Language Selector for Mobile */}
               <div className="mb-4 pb-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-600">Language</span>
+                  <span className="text-sm font-medium text-gray-600"><TranslatedText>Language</TranslatedText></span>
                   <LanguageSelector variant="compact" />
                 </div>
               </div>
@@ -1578,7 +1590,7 @@ const Navbar = () => {
                   onClick={closeMobileMenu}
                 >
                   <Package size={20} className="mr-3" />
-                  <strong>My Orders</strong>
+                  <strong><TranslatedText>My Orders</TranslatedText></strong>
                 </Link>
                 <Link
                   to={getLocalizedPath("/track-order")}
@@ -1586,7 +1598,7 @@ const Navbar = () => {
                   onClick={closeMobileMenu}
                 >
                   <Truck size={20} className="mr-3" />
-                  <strong>Track Order</strong>
+                  <strong><TranslatedText>Track Order</TranslatedText></strong>
                 </Link>
                 <Link
                   to={getLocalizedPath("/help")}
@@ -1594,7 +1606,7 @@ const Navbar = () => {
                   onClick={closeMobileMenu}
                 >
                   <HelpCircle size={20} className="mr-3" />
-                  <strong>Help Center</strong>
+                  <strong><TranslatedText>Help Center</TranslatedText></strong>
                 </Link>
                 <a
                   href="https://crownexcel.ae"
@@ -1613,10 +1625,10 @@ const Navbar = () => {
                 <div className="flex items-center justify-between mb-4 bg-lime-500 text-white rounded px-3 py-2">
                   <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
                     <Grid3X3 size={18} className="text-white" />
-                    All Category
+                    <TranslatedText>All Category</TranslatedText>
                   </h3>
                   <Link to={getLocalizedPath("/shop")} className="text-sm text-white hover:text-white/90" onClick={closeMobileMenu}>
-                    See All
+                    <TranslatedText>See All</TranslatedText>
                   </Link>
                 </div>
 
@@ -1717,13 +1729,13 @@ const Navbar = () => {
           {/* Home */}
           <Link to={getLocalizedPath("/")} className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500">
             <Home size={20} />
-            <span className="text-xs mt-1">Home</span>
+            <span className="text-xs mt-1"><TranslatedText>Home</TranslatedText></span>
           </Link>
 
           {/* Shop */}
           <Link to={getLocalizedPath("/shop")} className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500">
             <Grid3X3 size={20} />
-            <span className="text-xs mt-1">Shop</span>
+            <span className="text-xs mt-1"><TranslatedText>Shop</TranslatedText></span>
           </Link>
 
           {/* Cart */}
@@ -1734,7 +1746,7 @@ const Navbar = () => {
                 {cartCount}
               </span>
             )}
-            <span className="text-xs mt-1">Cart</span>
+            <span className="text-xs mt-1"><TranslatedText>Cart</TranslatedText></span>
           </Link>
 
           {/* Wishlist */}
@@ -1749,7 +1761,7 @@ const Navbar = () => {
                 {wishlist.length}
               </span>
             )}
-            <span className="text-xs mt-1">WishList</span>
+            <span className="text-xs mt-1"><TranslatedText>WishList</TranslatedText></span>
           </Link>
 
           {/* Account */}
@@ -1758,7 +1770,7 @@ const Navbar = () => {
             className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500"
           >
             <UserCircle size={20} />
-            <span className="text-xs mt-1">Account</span>
+            <span className="text-xs mt-1"><TranslatedText>Account</TranslatedText></span>
           </Link>
         </div>
       </nav>

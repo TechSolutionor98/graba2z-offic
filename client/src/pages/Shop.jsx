@@ -165,8 +165,8 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
         railStyle={{ backgroundColor: "#e5e7eb" }}
       />
       <div className="flex justify-between mt-4 mb-2 text-xs font-semibold">
-        <span>MIN</span>
-        <span>MAX</span>
+        <span><TranslatedText>MIN</TranslatedText></span>
+        <span><TranslatedText>MAX</TranslatedText></span>
       </div>
       <div className="flex gap-2 mb-4">
         <input
@@ -929,7 +929,7 @@ const Shop = () => {
 
       setSubCategories(validSubCategories)
     } catch (err) {
-      // Handle error silently
+    // Handle error silently
     }
   }
 
@@ -1502,7 +1502,7 @@ const Shop = () => {
                     {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
                       <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                         <span className="text-gray-700">
-                          <span className="font-semibold"><TranslatedText>Price</TranslatedText>:</span> ₹{priceRange[0]} - ₹{priceRange[1]}
+                          <span className="font-semibold"><TranslatedText>Price</TranslatedText>:</span> <TranslatedText>AED</TranslatedText> {priceRange[0]} - <TranslatedText>AED</TranslatedText> {priceRange[1]}
                         </span>
                         <button
                           onClick={() => setPriceRange([minPrice, maxPrice])}

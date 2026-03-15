@@ -4,6 +4,7 @@ import axios from 'axios'
 import config from '../config/config'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getFullImageUrl } from '../utils/imageUtils'
+import TranslatedText from './TranslatedText'
 
 function DynamicSection({ section }) {
   const [cards, setCards] = useState([])
@@ -118,15 +119,15 @@ function BackgroundImageSection({ section, cards, settings }) {
               >
               <div className="relative z-10 flex-grow flex flex-col">
                 <h3 className="text-sm font-bold mb-2 group-hover:text-gray-900 line-clamp-1 text-gray-800">
-                  {card.name}
+                  <TranslatedText text={card.name} sourceDoc={card} fieldName="name" />
                 </h3>
                 {card.details && (
                   <p className="text-xs mb-2 line-clamp-2 text-gray-600">
-                    {card.details}
+                    <TranslatedText text={card.details} sourceDoc={card} fieldName="details" />
                   </p>
                 )}
                 <span className="inline-flex items-center text-xs font-semibold text-blue-600 group-hover:text-blue-700 mt-auto">
-                  Shop Now
+                  <TranslatedText>Shop Now</TranslatedText>
                   <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -164,15 +165,15 @@ function BackgroundImageSection({ section, cards, settings }) {
               >
               <div className="relative z-10 flex-grow flex flex-col">
                 <h3 className="text-lg font-bold mb-2 group-hover:text-gray-900 line-clamp-1 text-gray-800">
-                  {card.name}
+                  <TranslatedText text={card.name} sourceDoc={card} fieldName="name" />
                 </h3>
                 {card.details && (
                   <p className="text-sm mb-3 line-clamp-2 text-gray-600">
-                    {card.details}
+                    <TranslatedText text={card.details} sourceDoc={card} fieldName="details" />
                   </p>
                 )}
                 <span className="inline-flex items-center text-sm font-semibold text-blue-600 group-hover:text-blue-700 mt-auto">
-                  Shop Now
+                  <TranslatedText>Shop Now</TranslatedText>
                   <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -227,11 +228,10 @@ function ArrowSliderSection({ section, cards, settings, currentIndex, setCurrent
   const canGoPrev = currentIndex > 0
   const canGoNext = currentIndex < cards.length - cardsCount
   const visibleCards = cards.slice(currentIndex, currentIndex + cardsCount)
-
   return (
     <>
     <div className="flex items-center justify-between mx-5 mb-2 mt-4">
-      <h2 className="text-2xl font-bold text-start text-gray-800">{section.name}</h2>
+      <h2 className="text-2xl font-bold text-start text-gray-800"><TranslatedText text={section.name} sourceDoc={section} fieldName="name" /></h2>
       {/* Navigation Arrows - Inline with heading */}
       {showArrows && cards.length > cardsCount && (
         <div className="flex gap-2">
@@ -261,7 +261,7 @@ function ArrowSliderSection({ section, cards, settings, currentIndex, setCurrent
       )}
     </div>
     {section.description && (
-      <p className="text-sm text-gray-600 mx-5 mb-4">{section.description}</p>
+      <p className="text-sm text-gray-600 mx-5 mb-4"><TranslatedText text={section.description} sourceDoc={section} fieldName="description" /></p>
     )}
     <section className="py-6 md:py-12" style={{ backgroundColor }}>
       <div className="max-w-[1920px] mx-auto px-2 md:px-4">
@@ -385,15 +385,15 @@ function CardsLeftImageRightSection({ section, cards, settings }) {
                       {/* Text Content - Top Section */}
                       <div className="relative z-10 flex-grow pb-2" style={{ color: card.textColor || '#1f2937' }}>
                         <h3 className="text-sm font-bold mb-2 line-clamp-2">
-                          {card.name}
+                          <TranslatedText text={card.name} sourceDoc={card} fieldName="name" />
                         </h3>
                         {card.details && (
                           <p className="text-xs mb-2 line-clamp-2" style={{ opacity: 0.85 }}>
-                            {card.details}
+                            <TranslatedText text={card.details} sourceDoc={card} fieldName="details" />
                           </p>
                         )}
                         <span className="inline-flex items-center text-xs font-semibold">
-                          Shop Now
+                          <TranslatedText>Shop Now</TranslatedText>
                           <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
@@ -432,7 +432,7 @@ function CardsLeftImageRightSection({ section, cards, settings }) {
                             </p>
                           )}
                           <span className="inline-flex items-center text-xs font-semibold">
-                            Shop Now
+                            <TranslatedText>Shop Now</TranslatedText>
                             <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
@@ -500,15 +500,15 @@ function CardsLeftImageRightSection({ section, cards, settings }) {
                   {/* Text Content - Top Section */}
                   <div className="relative z-10 flex-grow pb-2" style={{ color: cardTextColor }}>
                     <h3 className="text-lg font-bold mb-2 line-clamp-2">
-                      {card.name}
+                      <TranslatedText text={card.name} sourceDoc={card} fieldName="name" />
                     </h3>
                     {card.details && (
                       <p className="text-xs mb-3 line-clamp-3" style={{ opacity: 0.85 }}>
-                        {card.details}
+                        <TranslatedText text={card.details} sourceDoc={card} fieldName="details" />
                       </p>
                     )}
                     <span className="inline-flex items-center text-sm font-semibold">
-                      Shop Now
+                      <TranslatedText>Shop Now</TranslatedText>
                       <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
@@ -632,15 +632,15 @@ function CardsRightImageLeftSection({ section, cards, settings }) {
                       {/* Text Content - Top Section */}
                       <div className="relative z-10 flex-grow pb-2">
                         <h3 className="text-sm font-bold mb-2 group-hover:text-gray-900 line-clamp-2 text-gray-800">
-                          {card.name}
+                          <TranslatedText text={card.name} sourceDoc={card} fieldName="name" />
                         </h3>
                         {card.details && (
                           <p className="text-xs mb-2 line-clamp-2 text-gray-600">
-                            {card.details}
+                            <TranslatedText text={card.details} sourceDoc={card} fieldName="details" />
                           </p>
                         )}
                         <span className="inline-flex items-center text-xs font-semibold text-blue-600">
-                          Shop Now
+                          <TranslatedText>Shop Now</TranslatedText>
                           <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
@@ -671,15 +671,15 @@ function CardsRightImageLeftSection({ section, cards, settings }) {
                         {/* Text Content - Top Section */}
                         <div className="relative z-10 flex-grow pb-2">
                           <h3 className="text-sm font-bold mb-2 group-hover:text-gray-900 line-clamp-2 text-gray-800">
-                            {nextCard.name}
+                            <TranslatedText text={nextCard.name} sourceDoc={nextCard} fieldName="name" />
                           </h3>
                           {nextCard.details && (
                             <p className="text-xs mb-2 line-clamp-2 text-gray-600">
-                              {nextCard.details}
+                              <TranslatedText text={nextCard.details} sourceDoc={nextCard} fieldName="details" />
                             </p>
                           )}
                           <span className="inline-flex items-center text-xs font-semibold text-blue-600">
-                            Shop Now
+                            <TranslatedText>Shop Now</TranslatedText>
                             <svg className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
@@ -754,15 +754,15 @@ function CardsRightImageLeftSection({ section, cards, settings }) {
                   {/* Text Content - Top Section */}
                   <div className="relative z-10 flex-grow pb-2">
                     <h3 className="text-lg font-bold mb-2 group-hover:text-gray-900 line-clamp-2 text-gray-800">
-                      {card.name}
+                      <TranslatedText text={card.name} sourceDoc={card} fieldName="name" />
                     </h3>
                     {card.details && (
                       <p className="text-xs mb-3 line-clamp-3 text-gray-600">
-                        {card.details}
+                        <TranslatedText text={card.details} sourceDoc={card} fieldName="details" />
                       </p>
                     )}
                     <span className="inline-flex items-center text-sm font-semibold text-blue-600">
-                      Shop Now
+                      <TranslatedText>Shop Now</TranslatedText>
                       <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
@@ -947,7 +947,7 @@ function VerticalGridSection({ section, cards, settings }) {
                         </div>
                         <div className="mt-3">
                           <h3 className="text-sm font-semibold text-gray-800 text-center line-clamp-2">
-                            {card.name}
+                            <TranslatedText text={card.name} sourceDoc={card} fieldName="name" />
                           </h3>
                         </div>
                       </Link>
@@ -969,7 +969,7 @@ function VerticalGridSection({ section, cards, settings }) {
                           </div>
                           <div className="mt-3">
                             <h3 className="text-sm font-semibold text-gray-800 text-center line-clamp-2">
-                              {nextCard.name}
+                              <TranslatedText text={nextCard.name} sourceDoc={nextCard} fieldName="name" />
                             </h3>
                           </div>
                         </Link>
@@ -1023,7 +1023,7 @@ function VerticalGridSection({ section, cards, settings }) {
                 {/* Text Below Image */}
                 <div className="mt-3">
                   <h3 className="text-sm font-semibold text-gray-800 text-center line-clamp-2">
-                    {card.name}
+                    <TranslatedText text={card.name} sourceDoc={card} fieldName="name" />
                   </h3>
                 </div>
               </Link>

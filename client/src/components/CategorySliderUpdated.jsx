@@ -507,9 +507,9 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                             const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
                             const name = item.name;
                             if (isMobile && name.length > 14) {
-                              return <TranslatedText text={name.slice(0, 14) + '...'} />;
+                              return <TranslatedText text={name.slice(0, 14) + '...'} sourceDoc={item} fieldName="name" />;
                             }
-                            return <TranslatedText text={name} />;
+                            return <TranslatedText text={name} sourceDoc={item} fieldName="name" />;
                           })()}
                         </span>
                       </>
@@ -545,9 +545,9 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                             const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
                             const name = item.name;
                             if (isMobile && name.length > 14) {
-                              return <TranslatedText text={name.slice(0, 14) + '...'} />;
+                              return <TranslatedText text={name.slice(0, 14) + '...'} sourceDoc={item} fieldName="name" />;
                             }
-                            return <TranslatedText text={name} />;
+                            return <TranslatedText text={name} sourceDoc={item} fieldName="name" />;
                           })()}
                         </span>
                       </>

@@ -73,7 +73,7 @@ const BannerSlider = ({ banners }) => {
       <>
         <img
           src={currentBannerImage}
-          alt={currentBanner.title || "Banner"}
+          alt={currentBanner.title || (isArabic ? "لافتة" : "Banner")}
           fetchPriority="high"
           loading="eager"
           width="1600"

@@ -267,14 +267,7 @@ const CategorySlider = ({ categories = [], onCategoryClick }) => {
                   </div>
 
                   <span className="text-xs md:text-sm font-bold text-gray-700 text-center mt-0.5 md:mt-0.5 lg:mt-0.5 truncate w-full px-1">
-                    {(() => {
-                      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-                      const name = category.name;
-                      if (isMobile && name.length > 14) {
-                        return name.slice(0, 14) + '...';
-                      }
-                      return name;
-                    })()}
+                    <TranslatedText text={category.name} sourceDoc={category} fieldName="name" />
                   </span>
                 </button>
               ))}

@@ -75,24 +75,30 @@ const ProductCard = ({ product, isMobile = false }) => {
       </div>
       <div className="mb-1 flex items-center gap-2 ">
         <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px]  inline-block mr-1`}>
-          <TranslatedText text={stockStatus} />
+          <TranslatedText text={stockStatus} sourceDoc={product} fieldName="stockStatus" />
         </div>
         {discount && (
           <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px]  inline-block"><TranslatedText text={discount} /></div>
         )}
       </div>
   <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
-        <h3 className="text-[11px] font-sm text-gray-900  line-clamp-3 hover:text-blue-600 h-[45px]"><TranslatedText text={product.name} /></h3>
+        <h3 className="text-[11px] font-sm text-gray-900  line-clamp-3 hover:text-blue-600 h-[45px]">
+          <TranslatedText text={product.name} sourceDoc={product} fieldName="name" />
+        </h3>
       </Link>
-      {product.category && <div className="text-[10px] text-yellow-600 "><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      {product.category && (
+        <div className="text-[10px] text-yellow-600 ">
+          <TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={typeof product.category === 'object' ? product.category : product} fieldName={typeof product.category === 'object' ? 'name' : 'categoryName'} />
+        </div>
+      )}
       <div className="text-[10px] text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex items-center gap-2">
         <div className="text-red-600 font-bold text-xs">
-          {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+          {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}<TranslatedText>AED</TranslatedText>
         </div>
         {showOldPrice && (
           <div className="text-gray-400 line-through text-[10px] font-medium">
-            {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+            {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}<TranslatedText>AED</TranslatedText>
           </div>
         )}
       </div>

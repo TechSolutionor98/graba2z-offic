@@ -27,7 +27,11 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
   }
 
   const formatPrice = (price) => {
-    return `AED ${Number(price).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+    return (
+      <>
+        <TranslatedText>AED</TranslatedText> {Number(price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+      </>
+    )
   }
 
   // Use slug if available, otherwise fall back to ID
@@ -62,9 +66,9 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
   let computedDiscount = null
   if (!hasDiscount && hasValidOffer && basePrice > 0 && offerPrice > 0) {
     const pct = Math.round(((basePrice - offerPrice) / basePrice) * 100)
-    if (pct > 0) computedDiscount = `${pct}% Off`
+    if (pct > 0) computedDiscount = <><TranslatedText text={`${pct}%`} /> <TranslatedText>Off</TranslatedText></>
   }
-  const finalDiscountLabel = hasDiscount ? `${Number(product.discount)}% Off` : computedDiscount
+  const finalDiscountLabel = hasDiscount ? <><TranslatedText text={`${Number(product.discount)}%`} /> <TranslatedText>Off</TranslatedText></> : computedDiscount
   
   // Get category name from multiple possible sources - NEVER show IDs
   let categoryName = ""
@@ -142,7 +146,7 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
           <div className={`${stockStatus === "In Stock" ? "bg-green-600" : stockStatus === "PreOrder" ? "bg-yellow-500" : "bg-red-600"} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}>
-            <TranslatedText text={stockStatus} />
+            <TranslatedText text={stockStatus} sourceDoc={product} fieldName="stockStatus" />
           </div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
@@ -154,10 +158,14 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
       
       <Link to={productUrl}>
         <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">
-          <TranslatedText text={product.name} />
+          <TranslatedText text={product.name} sourceDoc={product} fieldName="name" />
         </h3>
       </Link>
-      {categoryName && <div className="text-xs text-yellow-600"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      {categoryName && (
+        <div className="text-xs text-yellow-600">
+          <TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={typeof product.category === 'object' ? product.category : product} fieldName={typeof product.category === 'object' ? 'name' : 'categoryName'} />
+        </div>
+      )}
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">

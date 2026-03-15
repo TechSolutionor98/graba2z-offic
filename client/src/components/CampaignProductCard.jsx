@@ -132,6 +132,7 @@ import { ShoppingBag, Heart, Star } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useLanguage } from "../context/LanguageContext"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
+import TranslatedText from "./TranslatedText"
 
 // Helper function to determine status color
 const getStatusColor = (status) => {
@@ -199,17 +200,19 @@ const CampaignProductCard = ({ product }) => {
       </div>
       <div className="mb-1 flex items-center gap-2 ">
         <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs  inline-block mr-1`}>
-          {stockStatus}
+          <TranslatedText text={stockStatus} sourceDoc={product} fieldName="stockStatus" />
         </div>
         {discount && (
           <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs  inline-block">{discount}</div>
         )}
       </div>
   <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
-        <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">{product.name}</h3>
+        <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]">
+          <TranslatedText text={product.name} sourceDoc={product} fieldName="name">{product.name}</TranslatedText>
+        </h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600 ">Category: {categoryName}</div>}
-      <div className="text-xs text-green-600">Inclusive VAT</div>
+      {product.category && <div className="text-xs text-yellow-600 "><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={product.category} fieldName="name" /></div>}
+      <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex items-center gap-2">
         <div className="text-red-600 font-bold text-sm">
           {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
@@ -250,7 +253,7 @@ const CampaignProductCard = ({ product }) => {
         disabled={stockStatus === "Out of Stock"}
       >
         <ShoppingBag size={12} />
-        Add to Cart
+        <TranslatedText>Add to Cart</TranslatedText>
       </button>
     </div>
   )

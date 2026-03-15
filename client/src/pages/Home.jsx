@@ -1029,12 +1029,12 @@ const Home = () => {
       {/* Accessories Section - Mobile shows 2 products */}
       <section className="py-8 mx-3">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Accessories</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900"><TranslatedText>Accessories</TranslatedText></h2>
           <button
             onClick={() => handleCategoryClick("Accessories")}
             className="text-green-600 hover:text-green-800 font-medium flex items-center"
           >
-            See All Products
+            <TranslatedText>See All Products</TranslatedText>
             <ChevronRight className="ml-1" size={16} />
           </button>
         </div>
@@ -1052,7 +1052,7 @@ const Home = () => {
           </div>
         ) : (
           <div className="text-center py-12 text-gray-500">
-            <p>No accessories products available</p>
+            <p><TranslatedText>No accessories products available</TranslatedText></p>
           </div>
         )}
       </section>
@@ -1146,13 +1146,13 @@ const Home = () => {
           <div className="w-full md:w-1/2 hidden md:block">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-gray-900">Shop Acer</h2>
+                <h2 className="text-xl font-bold text-gray-900"><TranslatedText>Shop Acer</TranslatedText></h2>
               </div>
               <button
                 onClick={() => handleBrandClick("Acer")}
                 className="text-green-600 hover:text-green-800 font-medium flex items-center text-sm"
               >
-                See All
+                <TranslatedText>See All</TranslatedText>
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
@@ -1167,7 +1167,7 @@ const Home = () => {
                   </div>
                 </>
               ) : (
-                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No Acer products available</div>
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500"><TranslatedText>No Acer products available</TranslatedText></div>
               )}
             </div>
           </div>
@@ -1176,13 +1176,13 @@ const Home = () => {
           <div className="w-full md:w-1/2">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-lg md:text-xl font-bold text-gray-900">Shop Asus</h2>
+                <h2 className="text-lg md:text-xl font-bold text-gray-900"><TranslatedText>Shop Asus</TranslatedText></h2>
               </div>
               <button
                 onClick={() => handleBrandClick("ASUS")}
                 className="text-green-600 hover:text-green-800 font-medium flex items-center text-sm"
               >
-                See All
+                <TranslatedText>See All</TranslatedText>
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
@@ -1198,7 +1198,7 @@ const Home = () => {
                 </>
               ) : (
                 <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">
-                  No ASUS products available
+                  <TranslatedText>No ASUS products available</TranslatedText>
                 </div>
               )}
             </div>
@@ -1246,7 +1246,7 @@ const Home = () => {
       {/* Networking Products Section - Mobile shows 2 products */}
       <section className="py-8 mx-3">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Networking</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900"><TranslatedText>Networking</TranslatedText></h2>
           <button
             onClick={() => handleCategoryClick("Networking")}
             className="text-green-600 hover:text-green-800 font-medium flex items-center"
@@ -1269,7 +1269,7 @@ const Home = () => {
           </div>
         ) : (
           <div className="text-center py-12 text-gray-500">
-            <p>No networking products available</p>
+            <p><TranslatedText>No networking products available</TranslatedText></p>
           </div>
         )}
       </section>
@@ -1363,13 +1363,13 @@ const Home = () => {
           <div className="w-full md:w-1/2">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-lg md:text-xl font-bold text-gray-900">Shop MSI</h2>
+                <h2 className="text-lg md:text-xl font-bold text-gray-900"><TranslatedText>Shop MSI</TranslatedText></h2>
               </div>
               <button
                 onClick={() => handleBrandClick("MSI")}
                 className="text-green-600 hover:text-green-800 font-medium flex items-center text-sm"
               >
-                See All
+                <TranslatedText>See All</TranslatedText>
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
@@ -1384,7 +1384,7 @@ const Home = () => {
                   </div>
                 </>
               ) : (
-                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No MSI products available</div>
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500"><TranslatedText>No MSI products available</TranslatedText></div>
               )}
             </div>
           </div>
@@ -1393,13 +1393,13 @@ const Home = () => {
           <div className="w-full md:w-1/2 hidden md:block">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-gray-900">Shop Lenovo</h2>
+                <h2 className="text-xl font-bold text-gray-900"><TranslatedText>Shop Lenovo</TranslatedText></h2>
               </div>
               <button
                 onClick={() => handleBrandClick("Lenovo")}
                 className="text-green-600 hover:text-green-800 font-medium flex items-center text-sm"
               >
-                See All
+                <TranslatedText>See All</TranslatedText>
                 <ChevronRight className="ml-1" size={14} />
               </button>
             </div>
@@ -1414,7 +1414,7 @@ const Home = () => {
                   </div>
                 </>
               ) : (
-                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No Lenovo products available</div>
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500"><TranslatedText>No Lenovo products available</TranslatedText></div>
               )}
             </div>
           </div>
@@ -1512,7 +1512,7 @@ const Home = () => {
           <div className="w-full md:w-1/2">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-lg md:text-xl font-bold text-gray-900">Shop Apple</h2>
+                <h2 className="text-lg md:text-xl font-bold text-gray-900"><TranslatedText>Shop Apple</TranslatedText></h2>
               </div>
               <button
                 onClick={() => handleBrandClick("Apple")}
@@ -1534,7 +1534,7 @@ const Home = () => {
                 </>
               ) : (
                 <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">
-                  No Apple products available
+                  <TranslatedText>No Apple products available</TranslatedText>
                 </div>
               )}
             </div>
@@ -1544,7 +1544,7 @@ const Home = () => {
           <div className="w-full md:w-1/2 hidden md:block">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-gray-900">Shop Samsung</h2>
+                <h2 className="text-xl font-bold text-gray-900"><TranslatedText>Shop Samsung</TranslatedText></h2>
               </div>
               <button
                 onClick={() => handleBrandClick("Samsung")}
@@ -1565,7 +1565,7 @@ const Home = () => {
                   </div>
                 </>
               ) : (
-                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500">No Samsung products available</div>
+                <div className="col-span-2 md:col-span-3 text-center py-8 text-gray-500"><TranslatedText>No Samsung products available</TranslatedText></div>
               )}
             </div>
           </div>
@@ -1580,9 +1580,9 @@ const Home = () => {
         <section className="py-8 md:py-12 bg-gradient-to-br from-blue-50 to-indigo-100 mx-3 rounded-lg my-8">
           <div className="max-w-7xl mx-auto px-4 md:px-6">
             <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Upgrade Features</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4"><TranslatedText>Upgrade Features</TranslatedText></h2>
               <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
-                Discover the latest technology upgrades and premium features available for your devices
+                <TranslatedText>Discover the latest technology upgrades and premium features available for your devices</TranslatedText>
               </p>
             </div>
 
@@ -1728,20 +1728,22 @@ const MobileProductCard = ({ product }) => {
         </button>
       </div>
 
-      <div className="mb-1 flex flex-wrap items-center gap-2">
-        <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-xs inline-block`}>
-          <TranslatedText text={stockStatus} />
-        </div>
+      <div className="flex items-center gap-1.5 mt-auto">
+        <span className={`px-1.5 py-0.5 rounded text-[8px] xl:text-[10px] font-medium text-white ${getStatusColor(stockStatus)}`}>
+          <TranslatedText text={stockStatus} sourceDoc={product} fieldName="stockStatus" />
+        </span>
         {discount && (
-          <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-xs inline-block"><TranslatedText text={discount} /></div>
+          <span className="px-1.5 py-0.5 rounded text-[8px] xl:text-[10px] font-medium text-white bg-red-500">
+            <TranslatedText text={discount} />
+          </span>
         )}
       </div>
 
       <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
-        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px] mb-1"><TranslatedText text={product.name} /></h3>
+        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px] mb-1"><TranslatedText text={product.name} sourceDoc={product} fieldName="name" /></h3>
       </Link>
 
-      {product.category && <div className="text-xs text-yellow-600 mb-1"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      {product.category && <div className="text-xs text-yellow-600 mb-1"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={product.category} fieldName="name" /></div>}
       <div className="text-xs text-green-600 mb-1"><TranslatedText>Inclusive VAT</TranslatedText></div>
 
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0 mb-1">
@@ -1858,7 +1860,7 @@ const DynamicBrandProductCard = ({ product }) => {
         </button>
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
-          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}><TranslatedText text={stockStatus} /></div>
+          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}><TranslatedText text={stockStatus} sourceDoc={product} fieldName="stockStatus" /></div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
               <TranslatedText text={finalDiscountLabel} />
@@ -1868,9 +1870,9 @@ const DynamicBrandProductCard = ({ product }) => {
       </div>
 
       <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
-        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]"><TranslatedText text={product.name} /></h3>
+        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]"><TranslatedText text={product.name} sourceDoc={product} fieldName="name" /></h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      {product.category && <div className="text-xs text-yellow-600"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={product.category} fieldName="name" /></div>}
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
@@ -1986,7 +1988,7 @@ const AccessoriesProductCard = ({ product }) => {
         </button>
         {/* Status & Discount badges overlayed at bottom of image, always inside image area */}
         <div className="absolute inset-x-0 -bottom-2 px-2 flex flex-wrap items-center gap-2 z-10">
-          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}><TranslatedText text={stockStatus} /></div>
+          <div className={`${getStatusColor(stockStatus)} text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm`}><TranslatedText text={stockStatus} sourceDoc={product} fieldName="stockStatus" /></div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
               <TranslatedText text={finalDiscountLabel} />
@@ -1995,9 +1997,9 @@ const AccessoriesProductCard = ({ product }) => {
         </div>
       </div>
       <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
-        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]"><TranslatedText text={product.name} /></h3>
+        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]"><TranslatedText text={product.name} sourceDoc={product} fieldName="name" /></h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} /></div>}
+      {product.category && <div className="text-xs text-yellow-600"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={product.category} fieldName="name" /></div>}
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
@@ -2072,9 +2074,11 @@ const UpgradeFeatureCard = ({ feature }) => {
 
         <div className="flex-1">
           <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-            {feature.title}
+            <TranslatedText text={feature.title} sourceDoc={feature} fieldName="title" />
           </h3>
-          <p className="text-sm text-gray-600 leading-relaxed mb-3">{feature.description}</p>
+          <p className="text-sm text-gray-600 leading-relaxed mb-3">
+            <TranslatedText text={feature.description} sourceDoc={feature} fieldName="description" />
+          </p>
 
           {feature.features && feature.features.length > 0 && (
             <ul className="space-y-1 mb-4">
@@ -2110,7 +2114,7 @@ const UpgradeFeatureCard = ({ feature }) => {
                 className={`inline-block px-2 py-1 md:px-3 md:py-1 text-xs font-medium rounded-full ${feature.badgeColor || "bg-green-100 text-green-800"
                   }`}
               >
-                {feature.badge}
+                <TranslatedText text={feature.badge} sourceDoc={feature} fieldName="badge" />
               </span>
             </div>
           )}

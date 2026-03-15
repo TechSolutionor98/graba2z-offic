@@ -144,9 +144,12 @@ const translateTipTapHtml = async (content, languageCode = "ar") => {
     }
 
     return content
-  })().finally(() => {
+  })().catch((error) => {
+    console.error("TipTap translation error:", error)
+    return content
+  }).finally(() => {
     HTML_TRANSLATION_IN_FLIGHT.delete(cacheKey)
-  })()
+  })
 
   HTML_TRANSLATION_IN_FLIGHT.set(cacheKey, translationPromise)
   return translationPromise
@@ -164,10 +167,30 @@ export const preloadTipTapHtmlTranslation = async (content, languageCode = "ar")
  * TranslatedTipTapRenderer Component
  * Renders TipTap content with translation support for Arabic
  */
-const TranslatedTipTapRenderer = ({ content, className = "" }) => {
+const TranslatedTipTapRenderer = ({ 
+  content, 
+  sourceDoc = null, 
+  fieldName = null, 
+  className = "" 
+}) => {
   const { currentLanguage, isArabic } = useLanguage()
   const [translatedContent, setTranslatedContent] = useState(content)
   const [isTranslating, setIsTranslating] = useState(false)
+
+  // Priority 1: Check if we have a pre-translated field in the document
+  const getPreTranslatedField = () => {
+    if (!isArabic || !sourceDoc || !fieldName) return null;
+    
+    const arField = `${fieldName}Ar`;
+    if (sourceDoc[arField]) return sourceDoc[arField];
+    
+    if (fieldName.endsWith('Ar') && sourceDoc[fieldName]) {
+      return sourceDoc[fieldName];
+    }
+    return null;
+  };
+
+  const dbTranslation = getPreTranslatedField();
   
   useEffect(() => {
     let isCancelled = false
@@ -176,6 +199,13 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
     // If English or no content, use original
     if (!isArabic || !content || targetLanguage !== "ar") {
       setTranslatedContent(content)
+      setIsTranslating(false)
+      return
+    }
+
+    // Use DB translation if available
+    if (dbTranslation) {
+      setTranslatedContent(dbTranslation)
       setIsTranslating(false)
       return
     }
@@ -201,7 +231,7 @@ const TranslatedTipTapRenderer = ({ content, className = "" }) => {
     return () => {
       isCancelled = true
     }
-  }, [content, isArabic, currentLanguage.code])
+  }, [content, isArabic, currentLanguage.code, dbTranslation])
   
   if (!content) return null
   

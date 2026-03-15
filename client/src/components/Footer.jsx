@@ -11,6 +11,7 @@ import axios from "axios"
 import { generateShopURL } from "../utils/urlUtils"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
 import { getCategoryTreeCached } from "../services/categoryTreeCache"
+import { useLanguage } from "../context/LanguageContext"
 
 import config from "../config/config"
 import NewsletterModal from "./NewsletterModal";
@@ -19,6 +20,7 @@ import TranslatedText from "./TranslatedText";
 const API_BASE_URL = `${config.API_URL}`
 
 const Footer = ({ className = "" }) => {
+  const { getLocalizedPath } = useLanguage()
   // State for mobile accordion sections
   const [openSections, setOpenSections] = useState({
     categories: false,
@@ -133,7 +135,7 @@ const Footer = ({ className = "" }) => {
                   <img src="/logo.png" alt="Logo" width="128" height="44" className="w-24 lg:w-28 xl:w-32 h-auto" />
                 </h3>
                 {/* Text */}
-                <p className="text-xs lg:text-sm text-white mb-3 lg:mb-4">Subscribe to our newsletter</p>
+                <p className="text-xs lg:text-sm text-white mb-3 lg:mb-4"><TranslatedText>Subscribe to our newsletter</TranslatedText></p>
 
                 {/* Form */}
                 <form className="mb-3 lg:mb-4 p-1 bg-white rounded-full w-full max-w-[280px]" onSubmit={handleNewsletterSubmit}>
@@ -153,7 +155,7 @@ const Footer = ({ className = "" }) => {
                     {/* Button Div */}
                     <div>
                       <button type="submit" className="h-full bg-lime-500 text-white rounded-full px-2 lg:px-3 xl:px-5 text-xs lg:text-sm whitespace-nowrap">
-                        Subscribe
+                        <TranslatedText>Subscribe</TranslatedText>
                       </button>
                     </div>
                   </div>
@@ -222,7 +224,7 @@ const Footer = ({ className = "" }) => {
                     .map((category) => (
                     <li key={category._id}>
                       <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
-                        <TranslatedText text={category.name} />
+                        <TranslatedText text={category.name} sourceDoc={category} fieldName="name" />
                       </Link>
                     </li>
                   ))}
@@ -242,7 +244,7 @@ const Footer = ({ className = "" }) => {
                         parentCategory: subCategory.category?.name || '',
                         subcategory: subCategory.name
                       })} className="hover:text-lime-400">
-                        <TranslatedText text={subCategory.name} />
+                        <TranslatedText text={subCategory.name} sourceDoc={subCategory} fieldName="name" />
                       </Link>
                     </li>
                   ))}
@@ -302,23 +304,18 @@ const Footer = ({ className = "" }) => {
                 <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>Support</TranslatedText></h3>
                 <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                   <li>
-                    <Link to="/about" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/shop")} className="hover:text-lime-400">
+                      <TranslatedText>Shop</TranslatedText>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to={getLocalizedPath("/about")} className="hover:text-lime-400">
                       <TranslatedText>About Us</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/contact" className="hover:text-lime-400">
-                      <TranslatedText>Contact Us</TranslatedText>
-                    </Link>
-                  </li>
-                  <li>
-                    <a href="/blogs" rel="noopener noreferrer" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/blogs")} rel="noopener noreferrer" className="hover:text-lime-400">
                       <TranslatedText>Blog</TranslatedText>
-                    </a>
-                  </li>
-                  <li>
-                    <Link to="/shop" className="hover:text-lime-400">
-                      <TranslatedText>Shop</TranslatedText>
                     </Link>
                   </li>
                   <li>
@@ -390,10 +387,13 @@ const Footer = ({ className = "" }) => {
           {openSections.categories && (
             <div className="px-4 pb-4">
               <ul className="space-y-3">
-                {categories.map((category) => (
-                  <li key={category._id}>
-                    <Link to={`/shop?parentCategory=${category._id}`} className="text-gray-700 hover:text-orange-500">
-                      <TranslatedText text={category.name} />
+                {categories.map((cat) => (
+                  <li key={cat._id}>
+                    <Link
+                      to={getLocalizedPath(`/shop/${encodeURIComponent(cat.slug || cat.name)}`)}
+                      className="text-gray-700 hover:text-orange-500"
+                    >
+                      <TranslatedText text={cat.name} sourceDoc={cat} fieldName="name" />
                     </Link>
                   </li>
                 ))}
@@ -415,22 +415,22 @@ const Footer = ({ className = "" }) => {
             <div className="px-4 pb-4">
               <ul className="space-y-3">
                 <li>
-                  <Link to="/about" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/about")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>About Us</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/contact")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Contact Us</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <a href="https://blog.grabatoz.ae/" rel="noopener noreferrer" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/blogs")} rel="noopener noreferrer" className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Blog</TranslatedText>
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <Link to="/shop" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/shop")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Shop</TranslatedText>
                   </Link>
                 </li>
@@ -512,7 +512,7 @@ const Footer = ({ className = "" }) => {
             onClick={() => toggleSection("connect")}
             className="w-full flex justify-between items-center p-4 text-left"
           >
-            <span className="text-lg font-semibold text-gray-900">Connect</span>
+            <span className="text-lg font-semibold text-gray-900"><TranslatedText>Connect</TranslatedText></span>
             {openSections.connect ? <Minus size={20} /> : <Plus size={20} />}
           </button>
           {openSections.connect && (
@@ -582,7 +582,7 @@ const Footer = ({ className = "" }) => {
 
         {/* Shop On The Go Section - Always Visible */}
         <div className="bg-[#1F1F39] text-white p-6">
-          <h3 className="text-xl font-bold text-center mb-4">Shop On The Go</h3>
+          <h3 className="text-xl font-bold text-center mb-4"><TranslatedText>Shop On The Go</TranslatedText></h3>
           <div className="flex justify-center space-x-4 mb-6 ">
             <img src="/google_play.png" alt="Google Play" width="120" height="32" loading="lazy" decoding="async" className="h-8 w-auto" />
             <img src="/app_store.png" alt="App Store" width="120" height="32" loading="lazy" decoding="async" className="h-8 w-auto" />

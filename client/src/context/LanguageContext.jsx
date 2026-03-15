@@ -6,8 +6,11 @@ import {
   translateToArabic, 
   translateToEnglish, 
   getCachedTranslation,
-  preloadTranslations 
+  preloadTranslations,
+  warmup,
+  populateTranslationCache
 } from "../LanguageModel/translationService"
+import { uiDictionary } from "../LanguageModel/uiDictionary"
 
 // Supported languages
 export const LANGUAGES = {
@@ -101,6 +104,31 @@ export const LanguageProvider = ({ children }) => {
       mainContent.setAttribute("dir", currentLanguage.dir)
     }
   }, [currentLanguage])
+
+  // Optimize performance: Pre-fill translation cache with UI dictionary
+  // and warmup the translation model in the background
+  useEffect(() => {
+    const initializeLanguageLogic = async () => {
+      // 1. Immediately populate cache with UI Dictionary (Priority 1)
+      // This happens instantly and ensures common UI elements switch instantly
+      Object.entries(uiDictionary).forEach(([text, translation]) => {
+        populateTranslationCache(text, translation, 'en-ar');
+      });
+      
+      // 2. Background warmup for the local translation model (Priority 2)
+      // We don't wait for this to finish, but it makes first dynamic translation faster
+      // and warms up the server-side model if needed
+      if (currentLanguage.code === 'ar') {
+        // Only warmup if we are currently in Arabic or might switch to it
+        // We defer this slightly to not block initial page interactivity
+        setTimeout(() => {
+          warmup().catch(err => console.debug("Model warmup ignored (likely already running or unavailable)"));
+        }, 2000);
+      }
+    };
+
+    initializeLanguageLogic();
+  }, [currentLanguage.code])
 
   // Get the path without language prefix
   const getPathWithoutLangPrefix = useCallback((path) => {

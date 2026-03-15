@@ -7,12 +7,41 @@
  */
 
 import config from '../config/config';
+import { 
+  getAllPersistentTranslations, 
+  savePersistentTranslation,
+  savePersistentTranslationsBatch 
+} from './translationPersistence';
 
 // Translation Model Service URL
 const TRANSLATION_API_URL = config.TRANSLATION_API_URL;
 
 // Cache for translated texts to avoid repeated API calls
 const translationCache = new Map();
+
+/**
+ * Initialize cache from persistent storage
+ */
+const hydrateCache = async () => {
+  try {
+    const saved = await getAllPersistentTranslations();
+    Object.entries(saved).forEach(([key, value]) => {
+      translationCache.set(key, value);
+    });
+    console.log(`[TranslationService] Hydrated cache with ${translationCache.size} entries`);
+  } catch (err) {
+    console.warn('[TranslationService] Hydration failed:', err);
+  }
+};
+
+// Hydrate as soon as possible, but in the background
+if (typeof window !== 'undefined') {
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(() => hydrateCache());
+  } else {
+    setTimeout(hydrateCache, 1000);
+  }
+}
 
 // ============================================
 // BATCH TRANSLATION QUEUE SYSTEM
@@ -117,12 +146,23 @@ const flushQueue = async (direction) => {
     
     if (data.success && data.translations) {
       // Cache and resolve all translations
+      const batchToSave = {};
       texts.forEach((text, index) => {
         const translation = data.translations[index] || text;
-        translationCache.set(`${direction}:${text}`, translation);
+        const cacheKey = `${direction}:${text}`;
+        translationCache.set(cacheKey, translation);
+        batchToSave[cacheKey] = translation;
         callbacks[index].forEach(cb => cb.resolve(translation));
       });
-      console.log(`[TranslationService] Batch complete: ${texts.length} translations cached`);
+      
+      // Save to persistent storage in background
+      if (typeof window !== 'undefined' && window.requestIdleCallback) {
+        window.requestIdleCallback(() => savePersistentTranslationsBatch(batchToSave));
+      } else {
+        savePersistentTranslationsBatch(batchToSave);
+      }
+      
+      console.log(`[TranslationService] Batch complete: ${texts.length} translations cached and saved`);
     } else {
       // Resolve all with original texts
       callbacks.forEach((cbs, index) => {
@@ -311,6 +351,38 @@ export const preloadTranslations = async (texts, targetLang = 'ar') => {
 };
 
 /**
+ * Populate cache with known translations (e.g. from backend)
+ * This allows "instant" switching if the data is already in the API response
+ */
+export const populateTranslationCache = (text, translation, direction = 'en-ar') => {
+  if (!text || !translation) return;
+  const cacheKey = `${direction}:${text}`;
+  
+  if (!translationCache.has(cacheKey)) {
+    translationCache.set(cacheKey, translation);
+    // Persist if it's a new entry
+    if (typeof window !== 'undefined' && window.requestIdleCallback) {
+      window.requestIdleCallback(() => savePersistentTranslation(cacheKey, translation));
+    } else {
+      savePersistentTranslation(cacheKey, translation);
+    }
+  }
+};
+
+/**
+ * Warmup the translation API (pings health endpoint)
+ * This ensures the model is "hot" and ready to respond quickly.
+ */
+export const warmup = async () => {
+  console.log('[TranslationService] Warming up model...');
+  try {
+    await checkHealth();
+  } catch (err) {
+    // Ignore errors
+  }
+};
+
+/**
  * Get translation from cache only (no API call)
  * @param {string} text - Text to look up
  * @param {string} direction - Translation direction ('en-ar' or 'ar-en')
@@ -343,4 +415,6 @@ export default {
   checkHealth,
   preloadTranslations,
   getCachedTranslation,
+  populateTranslationCache,
+  warmup,
 };
