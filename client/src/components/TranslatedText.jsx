@@ -22,7 +22,8 @@ const TranslatedText = ({
   useModelOnly = false // Force use of translation model (skip dictionary)
 }) => {
   const { currentLanguage, translate } = useLanguage()
-  const sourceText = text || (typeof children === 'string' ? children : null)
+  const sourceText = text ?? (typeof children === "string" ? children : null)
+  const sourceTextString = typeof sourceText === "string" ? sourceText : null
   const [apiTranslation, setApiTranslation] = useState(null)
   const [isTranslating, setIsTranslating] = useState(false)
   const mountedRef = useRef(true)
@@ -59,10 +60,10 @@ const TranslatedText = ({
   // 2. Priority 1: Check shared dictionary synchronously (INSTANT)
   const getDictionaryTranslation = () => {
     if (dbTranslation) return null; // Already have DB translation
-    if (!sourceText || currentLanguage.code === "en" || skipTranslation || useModelOnly) {
+    if (!sourceTextString || currentLanguage.code === "en" || skipTranslation || useModelOnly) {
       return null
     }
-    const translation = uiDictionary[sourceText] || uiDictionary[sourceText.trim()] || null
+    const translation = uiDictionary[sourceTextString] || uiDictionary[sourceTextString.trim()] || null
     return translation
   }
 
@@ -71,24 +72,24 @@ const TranslatedText = ({
   // 3. Priority 2: Check if already cached in translation service (INSTANT)
   const getCachedApiTranslation = () => {
     if (dbTranslation || dictTranslation) return null; // Already handled
-    if (!sourceText || currentLanguage.code === "en" || skipTranslation) {
+    if (!sourceTextString || currentLanguage.code === "en" || skipTranslation) {
       return null
     }
-    return getCachedTranslation(sourceText, 'en-ar')
+    return getCachedTranslation(sourceTextString, 'en-ar')
   }
 
   // 4. Priority 3: Dynamic content (BACKGROUND FALLBACK)
   useEffect(() => {
     const fetchTranslation = async () => {
       // Skip if we already have a translation or don't need one
-      if (currentLanguage.code === "en" || !sourceText || skipTranslation || dbTranslation || dictTranslation) {
+      if (currentLanguage.code === "en" || !sourceTextString || skipTranslation || dbTranslation || dictTranslation) {
         setApiTranslation(null)
         translationRequestedRef.current = false
         return
       }
       
       // Check if already cached
-      const cached = getCachedTranslation(sourceText, 'en-ar')
+      const cached = getCachedTranslation(sourceTextString, 'en-ar')
       if (cached) {
         if (mountedRef.current) {
           setApiTranslation(cached)
@@ -106,8 +107,8 @@ const TranslatedText = ({
       
       try {
         // This will be batched automatically by translationService
-        const translated = await translate(sourceText, currentLanguage.code)
-        if (mountedRef.current && translated && translated !== sourceText) {
+        const translated = await translate(sourceTextString, currentLanguage.code)
+        if (mountedRef.current && translated && translated !== sourceTextString) {
           setApiTranslation(translated)
         }
       } catch (error) {
@@ -121,7 +122,7 @@ const TranslatedText = ({
     }
 
     fetchTranslation()
-  }, [sourceText, currentLanguage.code, dbTranslation, dictTranslation, skipTranslation, translate])
+  }, [sourceTextString, currentLanguage.code, dbTranslation, dictTranslation, skipTranslation, translate])
 
   // Determine what to display
   let displayText = sourceText
@@ -141,6 +142,11 @@ const TranslatedText = ({
     }
   }
 
+  const safeDisplayText =
+    typeof displayText === "string" || typeof displayText === "number"
+      ? displayText
+      : (fallback ?? "")
+
   // If children is not a string and no text provided, render children directly
   if (typeof children !== 'string' && !text) {
     return <Component className={className}>{children}</Component>
@@ -148,7 +154,7 @@ const TranslatedText = ({
 
   return (
     <Component className={className} dir={currentLanguage.code === 'ar' ? 'rtl' : 'ltr'}>
-      {displayText}
+      {safeDisplayText}
     </Component>
   )
 }
