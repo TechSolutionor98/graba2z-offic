@@ -9,6 +9,8 @@ import { ArrowLeft } from "lucide-react"
 import axios from "axios"
 
 import config from "../../config/config"
+const REQUEST_TIMEOUT_MS = 30000
+
 const AddBrand = () => {
   const navigate = useNavigate()
   const { id } = useParams() // id for edit mode
@@ -87,6 +89,7 @@ const AddBrand = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          timeout: REQUEST_TIMEOUT_MS,
         })
         showToast("Brand updated successfully!", "success")
       } else {
@@ -95,12 +98,18 @@ const AddBrand = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          timeout: REQUEST_TIMEOUT_MS,
         })
         showToast("Brand added successfully!", "success")
       }
       navigate("/admin/brands")
     } catch (error) {
-      showToast(error.response?.data?.message || "Failed to save brand", "error")
+      const isTimeout = error.code === "ECONNABORTED" || error.response?.status === 504
+      if (isTimeout) {
+        showToast("Request timed out. Please try again in a few seconds.", "error")
+      } else {
+        showToast(error.response?.data?.message || "Failed to save brand", "error")
+      }
     } finally {
       setLoading(false)
     }
