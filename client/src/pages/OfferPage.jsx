@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom"
 import axios from "axios"
 import config from "../config/config"
 import ProductCard from "../components/ProductCard"
+import TranslatedText from "../components/TranslatedText"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { Helmet } from "react-helmet-async"
 import { ChevronLeft, ChevronRight, ChevronDown, Minus, Plus, X } from "lucide-react"
@@ -901,7 +902,7 @@ const OfferPage = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
             <div className="fixed inset-y-0 left-0 w-full max-w-sm bg-white shadow-xl overflow-y-auto">
               <div className="sticky top-0 bg-white border-b z-10 px-4 py-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold">Filters</h2>
+                <h2 className="text-lg font-bold"><TranslatedText>Filters</TranslatedText></h2>
                 <button
                   onClick={() => setIsMobileFilterOpen(false)}
                   className="p-2 hover:bg-gray-100 rounded-full"
@@ -924,12 +925,12 @@ const OfferPage = () => {
                   priceRange[1] !== maxPrice) && (
                   <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
+                      <h3 className="text-sm font-semibold text-gray-900"><TranslatedText>Active Filters</TranslatedText></h3>
                       <button
                         onClick={clearAllFilters}
                         className="text-xs text-red-600 hover:text-red-700 font-medium hover:underline"
                       >
-                        Clear All
+                        <TranslatedText>Clear All</TranslatedText>
                       </button>
                     </div>
                     <div className="space-y-2">
@@ -937,8 +938,8 @@ const OfferPage = () => {
                       {selectedParentCategory && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Category:</span>{" "}
-                            {parentCategoryName || "Selected"}
+                            <span className="font-semibold"><TranslatedText>Category:</TranslatedText></span>{" "}
+                            <TranslatedText text={parentCategoryName || "Selected"} />
                           </span>
                           <button
                             onClick={() => {
@@ -965,7 +966,8 @@ const OfferPage = () => {
                       {selectedSubCategory1 && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Subcategory:</span> {subCategory1Name}
+                            <span className="font-semibold"><TranslatedText>Subcategory:</TranslatedText></span>{" "}
+                            <TranslatedText text={subCategory1Name} />
                           </span>
                           <button
                             onClick={() => {
@@ -992,7 +994,8 @@ const OfferPage = () => {
                       {selectedSubCategory2 && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Level 2:</span> {subCategory2Name}
+                            <span className="font-semibold"><TranslatedText>Level 2:</TranslatedText></span>{" "}
+                            <TranslatedText text={subCategory2Name} />
                           </span>
                           <button
                             onClick={() => {
@@ -1017,7 +1020,8 @@ const OfferPage = () => {
                       {selectedSubCategory3 && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Level 3:</span> {subCategory3Name}
+                            <span className="font-semibold"><TranslatedText>Level 3:</TranslatedText></span>{" "}
+                            <TranslatedText text={subCategory3Name} />
                           </span>
                           <button
                             onClick={() => {
@@ -1040,7 +1044,8 @@ const OfferPage = () => {
                       {selectedSubCategory4 && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Level 4:</span> {subCategory4Name}
+                            <span className="font-semibold"><TranslatedText>Level 4:</TranslatedText></span>{" "}
+                            <TranslatedText text={subCategory4Name} />
                           </span>
                           <button
                             onClick={() => {
@@ -1062,7 +1067,8 @@ const OfferPage = () => {
                         return brandItem ? (
                           <div key={brandId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                             <span className="text-gray-700">
-                              <span className="font-semibold">Brand:</span> {brandItem.brand.name}
+                              <span className="font-semibold"><TranslatedText>Brand:</TranslatedText></span>{" "}
+                              <TranslatedText text={brandItem.brand.name} sourceDoc={brandItem.brand} fieldName="name" />
                             </span>
                             <button
                               onClick={() => handleBrandClick(brandId)}
@@ -1077,7 +1083,7 @@ const OfferPage = () => {
                       {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Price:</span> AED{priceRange[0]} - AED{priceRange[1]}
+                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> AED{priceRange[0]} - AED{priceRange[1]}
                           </span>
                           <button
                             onClick={() => setPriceRange([minPrice, maxPrice])}
@@ -1091,7 +1097,8 @@ const OfferPage = () => {
                       {stockFilters.inStock && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Stock:</span> In Stock
+                            <span className="font-semibold"><TranslatedText>Stock:</TranslatedText></span>{" "}
+                            <TranslatedText>In Stock</TranslatedText>
                           </span>
                           <button
                             onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
@@ -1105,7 +1112,8 @@ const OfferPage = () => {
                       {stockFilters.outOfStock && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Stock:</span> Out of Stock
+                            <span className="font-semibold"><TranslatedText>Stock:</TranslatedText></span>{" "}
+                            <TranslatedText>Out of Stock</TranslatedText>
                           </span>
                           <button
                             onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
@@ -1129,7 +1137,7 @@ const OfferPage = () => {
                         : "text-gray-900"
                     }`}
                   >
-                    Price Range
+                    <TranslatedText>Price Range</TranslatedText>
                     {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                   </button>
                   {showPriceFilter && (
@@ -1153,7 +1161,7 @@ const OfferPage = () => {
                         selectedCategory ? "text-lime-500" : "text-gray-900"
                       }`}
                     >
-                      Categories
+                      <TranslatedText>Categories</TranslatedText>
                       {showCategoryFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                     </button>
                     {showCategoryFilter && (
@@ -1176,7 +1184,7 @@ const OfferPage = () => {
                               {!selectedCategory && <div className="w-2 h-2 rounded-full bg-white"></div>}
                             </div>
                           </div>
-                          <span className="text-sm text-gray-700">All Categories</span>
+                          <span className="text-sm text-gray-700"><TranslatedText>All Categories</TranslatedText></span>
                         </div>
 
                         {/* Hierarchical Category Tree */}
@@ -1213,7 +1221,7 @@ const OfferPage = () => {
                                     </div>
                                   </div>
                                   <span className={`text-sm ${isInPath ? "text-lime-600 font-semibold" : "text-gray-700"}`}>
-                                    {category.name}
+                                    <TranslatedText text={category.name} sourceDoc={category} fieldName="name" />
                                   </span>
                                 </div>
                                 {hasChildren && (
@@ -1248,7 +1256,7 @@ const OfferPage = () => {
                       }`}
                     >
                       <span className="flex items-center gap-2">
-                        Brands
+                        <TranslatedText>Brands</TranslatedText>
                         {selectedBrands.length > 0 && (
                           <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-lime-500 rounded-full">
                             {selectedBrands.length}
@@ -1277,12 +1285,12 @@ const OfferPage = () => {
                                 className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
                               />
                               <label htmlFor={`brand-mobile-${item.brand._id}`} className="ml-2 text-sm text-gray-700 cursor-pointer">
-                                {item.brand.name}
+                                <TranslatedText text={item.brand.name} sourceDoc={item.brand} fieldName="name" />
                               </label>
                             </div>
                           ))}
                           {filteredBrands.length === 0 && (
-                            <p className="text-sm text-gray-500 italic">No brands found</p>
+                            <p className="text-sm text-gray-500 italic"><TranslatedText>No brands found</TranslatedText></p>
                           )}
                         </div>
                       </div>
@@ -1296,7 +1304,7 @@ const OfferPage = () => {
                     stockFilters.inStock || stockFilters.outOfStock
                       ? "text-lime-500"
                       : "text-gray-900"
-                  }`}>Stock Status</div>
+                  }`}><TranslatedText>Stock Status</TranslatedText></div>
                   <div className="space-y-2">
                     <div className="flex items-center">
                       <input
@@ -1308,7 +1316,7 @@ const OfferPage = () => {
                         className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
                       <label htmlFor="stock-all-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                        All Products
+                        <TranslatedText>All Products</TranslatedText>
                       </label>
                     </div>
                     <div className="flex items-center">
@@ -1321,7 +1329,7 @@ const OfferPage = () => {
                         className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
                       <label htmlFor="stock-in-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                        In Stock
+                        <TranslatedText>In Stock</TranslatedText>
                       </label>
                     </div>
                     <div className="flex items-center">
@@ -1334,7 +1342,7 @@ const OfferPage = () => {
                         className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
                       <label htmlFor="stock-out-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                        Out of Stock
+                        <TranslatedText>Out of Stock</TranslatedText>
                       </label>
                     </div>
                   </div>
@@ -1346,7 +1354,7 @@ const OfferPage = () => {
                     onClick={() => setIsMobileFilterOpen(false)}
                     className="w-full px-4 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold"
                   >
-                    Show {filteredProducts.length} Products
+                    <TranslatedText text={`Show ${filteredProducts.length} Products`} />
                   </button>
                   <button
                     onClick={() => {
@@ -1355,7 +1363,7 @@ const OfferPage = () => {
                     }}
                     className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
                   >
-                    Clear All Filters
+                    <TranslatedText>Clear All Filters</TranslatedText>
                   </button>
                 </div>
               </div>
@@ -1438,12 +1446,12 @@ const OfferPage = () => {
                   priceRange[1] !== maxPrice) && (
                   <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
+                      <h3 className="text-sm font-semibold text-gray-900"><TranslatedText>Active Filters</TranslatedText></h3>
                       <button
                         onClick={clearAllFilters}
                         className="text-xs text-red-600 hover:text-red-700 font-medium hover:underline"
                       >
-                        Clear All
+                        <TranslatedText>Clear All</TranslatedText>
                       </button>
                     </div>
                     <div className="space-y-2">
@@ -1451,8 +1459,8 @@ const OfferPage = () => {
                       {selectedParentCategory && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Category:</span>{" "}
-                            {parentCategoryName || "Selected"}
+                            <span className="font-semibold"><TranslatedText>Category:</TranslatedText></span>{" "}
+                            <TranslatedText text={parentCategoryName || "Selected"} />
                           </span>
                           <button
                             onClick={() => {
@@ -1479,7 +1487,8 @@ const OfferPage = () => {
                       {selectedSubCategory1 && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Subcategory:</span> {subCategory1Name}
+                            <span className="font-semibold"><TranslatedText>Subcategory:</TranslatedText></span>{" "}
+                            <TranslatedText text={subCategory1Name} />
                           </span>
                           <button
                             onClick={() => {
@@ -1506,7 +1515,8 @@ const OfferPage = () => {
                       {selectedSubCategory2 && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Level 2:</span> {subCategory2Name}
+                            <span className="font-semibold"><TranslatedText>Level 2:</TranslatedText></span>{" "}
+                            <TranslatedText text={subCategory2Name} />
                           </span>
                           <button
                             onClick={() => {
@@ -1531,7 +1541,8 @@ const OfferPage = () => {
                       {selectedSubCategory3 && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Level 3:</span> {subCategory3Name}
+                            <span className="font-semibold"><TranslatedText>Level 3:</TranslatedText></span>{" "}
+                            <TranslatedText text={subCategory3Name} />
                           </span>
                           <button
                             onClick={() => {
@@ -1554,7 +1565,8 @@ const OfferPage = () => {
                       {selectedSubCategory4 && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Level 4:</span> {subCategory4Name}
+                            <span className="font-semibold"><TranslatedText>Level 4:</TranslatedText></span>{" "}
+                            <TranslatedText text={subCategory4Name} />
                           </span>
                           <button
                             onClick={() => {
@@ -1576,7 +1588,8 @@ const OfferPage = () => {
                         return brandItem ? (
                           <div key={brandId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                             <span className="text-gray-700">
-                              <span className="font-semibold">Brand:</span> {brandItem.brand.name}
+                              <span className="font-semibold"><TranslatedText>Brand:</TranslatedText></span>{" "}
+                              <TranslatedText text={brandItem.brand.name} sourceDoc={brandItem.brand} fieldName="name" />
                             </span>
                             <button
                               onClick={() => handleBrandClick(brandId)}
@@ -1591,7 +1604,7 @@ const OfferPage = () => {
                       {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Price:</span> AED {priceRange[0]} - AED {priceRange[1]}
+                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> AED {priceRange[0]} - AED {priceRange[1]}
                           </span>
                           <button
                             onClick={() => setPriceRange([minPrice, maxPrice])}
@@ -1605,7 +1618,8 @@ const OfferPage = () => {
                       {stockFilters.inStock && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Stock:</span> In Stock
+                            <span className="font-semibold"><TranslatedText>Stock:</TranslatedText></span>{" "}
+                            <TranslatedText>In Stock</TranslatedText>
                           </span>
                           <button
                             onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
@@ -1619,7 +1633,8 @@ const OfferPage = () => {
                       {stockFilters.outOfStock && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Stock:</span> Out of Stock
+                            <span className="font-semibold"><TranslatedText>Stock:</TranslatedText></span>{" "}
+                            <TranslatedText>Out of Stock</TranslatedText>
                           </span>
                           <button
                             onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
@@ -1643,7 +1658,7 @@ const OfferPage = () => {
                         : "text-gray-900"
                     }`}
                   >
-                    Price Range
+                    <TranslatedText>Price Range</TranslatedText>
                     {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                   </button>
                   {showPriceFilter && (
@@ -1667,7 +1682,7 @@ const OfferPage = () => {
                         selectedCategory ? "text-lime-500" : "text-gray-900"
                       }`}
                     >
-                      Categories
+                      <TranslatedText>Categories</TranslatedText>
                       {showCategoryFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                     </button>
                     {showCategoryFilter && (
@@ -1690,7 +1705,7 @@ const OfferPage = () => {
                               {!selectedCategory && <div className="w-2 h-2 rounded-full bg-white"></div>}
                             </div>
                           </div>
-                          <span className="text-sm text-gray-700">All Categories</span>
+                          <span className="text-sm text-gray-700"><TranslatedText>All Categories</TranslatedText></span>
                         </div>
 
                         {/* Hierarchical Category Tree */}
@@ -1727,7 +1742,7 @@ const OfferPage = () => {
                                     </div>
                                   </div>
                                   <span className={`text-sm ${isInPath ? "text-lime-600 font-semibold" : "text-gray-700"}`}>
-                                    {category.name}
+                                    <TranslatedText text={category.name} sourceDoc={category} fieldName="name" />
                                   </span>
                                 </div>
                                 {hasChildren && (
@@ -1775,7 +1790,7 @@ const OfferPage = () => {
                                           </div>
                                         </div>
                                         <span className={`text-sm ${isLevel1InPath ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
-                                          {level1.name}
+                                          <TranslatedText text={level1.name} sourceDoc={level1} fieldName="name" />
                                         </span>
                                       </div>
                                       {hasLevel2 && (
@@ -1823,7 +1838,7 @@ const OfferPage = () => {
                                                 </div>
                                               </div>
                                               <span className={`text-sm ${isLevel2InPath ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
-                                                {level2.name}
+                                              <TranslatedText text={level2.name} sourceDoc={level2} fieldName="name" />
                                               </span>
                                             </div>
                                             {hasLevel3 && (
@@ -1871,7 +1886,7 @@ const OfferPage = () => {
                                                       </div>
                                                     </div>
                                                     <span className={`text-sm ${isLevel3InPath ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
-                                                      {level3.name}
+                                                      <TranslatedText text={level3.name} sourceDoc={level3} fieldName="name" />
                                                     </span>
                                                   </div>
                                                   {hasLevel4 && (
@@ -1914,7 +1929,7 @@ const OfferPage = () => {
                                                           </div>
                                                         </div>
                                                         <span className={`text-sm ${isLevel4InPath ? "text-lime-600 font-semibold" : "text-gray-600"}`}>
-                                                          {level4.name}
+                                                          <TranslatedText text={level4.name} sourceDoc={level4} fieldName="name" />
                                                         </span>
                                                       </div>
                                                     </div>
@@ -1947,7 +1962,7 @@ const OfferPage = () => {
                       }`}
                     >
                       <span className="flex items-center gap-2">
-                        Brands
+                        <TranslatedText>Brands</TranslatedText>
                         {selectedBrands.length > 0 && (
                           <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-lime-500 rounded-full">
                             {selectedBrands.length}
@@ -1976,12 +1991,12 @@ const OfferPage = () => {
                                 className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
                               />
                               <label htmlFor={`brand-${item.brand._id}`} className="ml-2 text-sm text-gray-700 cursor-pointer">
-                                {item.brand.name}
+                                <TranslatedText text={item.brand.name} sourceDoc={item.brand} fieldName="name" />
                               </label>
                             </div>
                           ))}
                           {filteredBrands.length === 0 && (
-                            <p className="text-sm text-gray-500 italic">No brands found</p>
+                            <p className="text-sm text-gray-500 italic"><TranslatedText>No brands found</TranslatedText></p>
                           )}
                         </div>
                       </div>
@@ -1995,7 +2010,7 @@ const OfferPage = () => {
                     stockFilters.inStock || stockFilters.outOfStock
                       ? "text-lime-500"
                       : "text-gray-900"
-                  }`}>Stock Status</div>
+                  }`}><TranslatedText>Stock Status</TranslatedText></div>
                   <div className="space-y-2">
                     <div className="flex items-center">
                       <input
@@ -2007,7 +2022,7 @@ const OfferPage = () => {
                         className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
                       <label htmlFor="stock-all" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                        All Products
+                        <TranslatedText>All Products</TranslatedText>
                       </label>
                     </div>
                     <div className="flex items-center">
@@ -2020,7 +2035,7 @@ const OfferPage = () => {
                         className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
                       <label htmlFor="stock-in" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                        In Stock
+                        <TranslatedText>In Stock</TranslatedText>
                       </label>
                     </div>
                     <div className="flex items-center">
@@ -2033,7 +2048,7 @@ const OfferPage = () => {
                         className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
                       <label htmlFor="stock-out" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                        Out of Stock
+                        <TranslatedText>Out of Stock</TranslatedText>
                       </label>
                     </div>
                   </div>
@@ -2045,7 +2060,7 @@ const OfferPage = () => {
                     onClick={clearAllFilters}
                     className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                   >
-                    Clear All Filters
+                    <TranslatedText>Clear All Filters</TranslatedText>
                   </button>
                 </div>
               </div>
@@ -2062,7 +2077,7 @@ const OfferPage = () => {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                   </svg>
-                  Filters
+                  <TranslatedText>Filters</TranslatedText>
                   {(selectedParentCategory || 
                     selectedSubCategory1 || 
                     selectedSubCategory2 || 

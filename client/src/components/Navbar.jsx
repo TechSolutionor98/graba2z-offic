@@ -1037,14 +1037,6 @@ const Navbar = () => {
                   <ChevronDown className="w-3.5 h-3.5 text-white" />
                 </button>
                 
-                {/* Shop Link */}
-                <Link
-                  to={getLocalizedPath("/shop")}
-                  className="hidden md:inline-flex items-center gap-2 px-3 xl:px-3.5 py-2 rounded-lg text-white hover:bg-white/10 transition text-sm font-semibold whitespace-nowrap"
-                >
-                  <TranslatedText>Shop</TranslatedText>
-                </Link>
-                
                 {/* Desktop Category Dropdown (horizontal cascade) */}
                 {isDesktopCategoryDropdownOpen && (
                   <div
@@ -1730,12 +1722,6 @@ const Navbar = () => {
           <Link to={getLocalizedPath("/")} className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500">
             <Home size={20} />
             <span className="text-xs mt-1"><TranslatedText>Home</TranslatedText></span>
-          </Link>
-
-          {/* Shop */}
-          <Link to={getLocalizedPath("/shop")} className="flex flex-col items-center py-2 px-4 text-gray-600 hover:text-lime-500">
-            <Grid3X3 size={20} />
-            <span className="text-xs mt-1"><TranslatedText>Shop</TranslatedText></span>
           </Link>
 
           {/* Cart */}

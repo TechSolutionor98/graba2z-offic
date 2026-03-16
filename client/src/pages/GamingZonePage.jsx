@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom"
 import axios from "axios"
 import config from "../config/config"
 import ProductCard from "../components/ProductCard"
+import TranslatedText from "../components/TranslatedText"
 import { Helmet } from "react-helmet-async"
 import { ChevronLeft, ChevronRight, ChevronDown, Minus, Plus, X, Filter } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
@@ -136,8 +137,8 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
         railStyle={{ backgroundColor: "#e5e7eb" }}
       />
       <div className="flex justify-between mt-4 mb-2 text-xs font-semibold">
-        <span>MIN</span>
-        <span>MAX</span>
+        <span><TranslatedText>MIN</TranslatedText></span>
+        <span><TranslatedText>MAX</TranslatedText></span>
       </div>
       <div className="flex gap-2 mb-4">
         <input
@@ -174,7 +175,7 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
         className="w-full bg-white border border-lime-500 text-lime-600 rounded py-2 font-semibold hover:bg-lime-50 hover:text-lime-700 hover:border-lime-600 transition"
         onClick={handleApply}
       >
-        Apply
+        <TranslatedText>Apply</TranslatedText>
       </button>
     </div>
   )
@@ -588,12 +589,12 @@ const GamingZonePage = () => {
                   priceRange[1] !== maxPrice) && (
                   <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
+                      <h3 className="text-sm font-semibold text-gray-900"><TranslatedText>Active Filters</TranslatedText></h3>
                       <button
                         onClick={clearAllFilters}
                         className="text-xs text-red-600 hover:text-red-700 font-medium hover:underline"
                       >
-                        Clear All
+                        <TranslatedText>Clear All</TranslatedText>
                       </button>
                     </div>
                     <div className="space-y-2">
@@ -603,7 +604,8 @@ const GamingZonePage = () => {
                         return category ? (
                           <div key={catId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                             <span className="text-gray-700">
-                              <span className="font-semibold">Category:</span> {category.category.name}
+                              <span className="font-semibold"><TranslatedText>Category:</TranslatedText></span>{" "}
+                              <TranslatedText text={category.category.name} sourceDoc={category.category} fieldName="name" />
                             </span>
                             <button
                               onClick={() => handleCategoryToggle(catId)}
@@ -621,7 +623,8 @@ const GamingZonePage = () => {
                         return brand ? (
                           <div key={brandId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                             <span className="text-gray-700">
-                              <span className="font-semibold">Brand:</span> {brand.name}
+                              <span className="font-semibold"><TranslatedText>Brand:</TranslatedText></span>{" "}
+                              <TranslatedText text={brand.name} sourceDoc={brand} fieldName="name" />
                             </span>
                             <button
                               onClick={() => handleBrandToggle(brandId)}
@@ -637,7 +640,8 @@ const GamingZonePage = () => {
                       {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Price:</span> AED {priceRange[0].toLocaleString()} - AED {priceRange[1].toLocaleString()}
+                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span>{" "}
+                            AED {priceRange[0].toLocaleString()} - AED {priceRange[1].toLocaleString()}
                           </span>
                           <button
                             onClick={() => setPriceRange([minPrice, maxPrice])}
@@ -652,7 +656,8 @@ const GamingZonePage = () => {
                       {stockFilters.inStock && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Stock:</span> In Stock
+                            <span className="font-semibold"><TranslatedText>Stock:</TranslatedText></span>{" "}
+                            <TranslatedText>In Stock</TranslatedText>
                           </span>
                           <button
                             onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
@@ -666,7 +671,8 @@ const GamingZonePage = () => {
                       {stockFilters.outOfStock && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold">Stock:</span> Out of Stock
+                            <span className="font-semibold"><TranslatedText>Stock:</TranslatedText></span>{" "}
+                            <TranslatedText>Out of Stock</TranslatedText>
                           </span>
                           <button
                             onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
@@ -690,7 +696,7 @@ const GamingZonePage = () => {
                         : "text-gray-900"
                     }`}
                   >
-                    Price Range
+                    <TranslatedText>Price Range</TranslatedText>
                     {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                   </button>
                   {showPriceFilter && (
@@ -716,7 +722,7 @@ const GamingZonePage = () => {
                           : "text-gray-900"
                       }`}
                     >
-                      Categories
+                      <TranslatedText>Categories</TranslatedText>
                       {showCategoryFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                     </button>
                     {showCategoryFilter && (
@@ -729,7 +735,9 @@ const GamingZonePage = () => {
                               onChange={() => handleCategoryToggle(cat.category._id)}
                               className="w-4 h-4 text-blue-600 rounded"
                             />
-                            <span className="text-sm text-gray-700">{cat.category.name}</span>
+                            <span className="text-sm text-gray-700">
+                              <TranslatedText text={cat.category.name} sourceDoc={cat.category} fieldName="name" />
+                            </span>
                           </label>
                         ))}
                       </div>
@@ -747,7 +755,7 @@ const GamingZonePage = () => {
                       }`}
                     >
                       <span className="flex items-center gap-2">
-                        Brands
+                        <TranslatedText>Brands</TranslatedText>
                         {selectedBrands.length > 0 && (
                           <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-lime-500 rounded-full">
                             {selectedBrands.length}
@@ -774,11 +782,13 @@ const GamingZonePage = () => {
                                 onChange={() => handleBrandToggle(brand._id)}
                                 className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
                               />
-                              <span className="text-sm text-gray-700">{brand.name}</span>
+                              <span className="text-sm text-gray-700">
+                                <TranslatedText text={brand.name} sourceDoc={brand} fieldName="name" />
+                              </span>
                             </label>
                           ))}
                           {filteredBrands.length === 0 && (
-                            <p className="text-sm text-gray-500 italic">No brands found</p>
+                            <p className="text-sm text-gray-500 italic"><TranslatedText>No brands found</TranslatedText></p>
                           )}
                         </div>
                       </div>
@@ -792,7 +802,7 @@ const GamingZonePage = () => {
                     stockFilters.inStock || stockFilters.outOfStock
                       ? "text-lime-500"
                       : "text-gray-900"
-                  }`}>Stock Status</div>
+                  }`}><TranslatedText>Stock Status</TranslatedText></div>
                   <div className="space-y-2">
                     <div className="flex items-center">
                       <input
@@ -804,7 +814,7 @@ const GamingZonePage = () => {
                         className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
                       <label htmlFor="stock-all" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                        All Products
+                        <TranslatedText>All Products</TranslatedText>
                       </label>
                     </div>
                     <div className="flex items-center">
@@ -819,7 +829,7 @@ const GamingZonePage = () => {
                         className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
                       <label htmlFor="stock-in" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                        In Stock
+                        <TranslatedText>In Stock</TranslatedText>
                       </label>
                     </div>
                     <div className="flex items-center">
@@ -834,7 +844,7 @@ const GamingZonePage = () => {
                         className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                       />
                       <label htmlFor="stock-out" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                        Out of Stock
+                        <TranslatedText>Out of Stock</TranslatedText>
                       </label>
                     </div>
                   </div>
@@ -847,7 +857,7 @@ const GamingZonePage = () => {
               <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
                 <div className="fixed inset-y-0 left-0 w-full max-w-sm bg-white shadow-xl overflow-y-auto">
                   <div className="sticky top-0 bg-white border-b z-10 px-4 py-4 flex items-center justify-between">
-                    <h2 className="text-lg font-bold">Filters</h2>
+                    <h2 className="text-lg font-bold"><TranslatedText>Filters</TranslatedText></h2>
                     <button
                       onClick={() => setIsMobileFilterOpen(false)}
                       className="p-2 hover:bg-gray-100 rounded-full"
@@ -866,12 +876,12 @@ const GamingZonePage = () => {
                       priceRange[1] !== maxPrice) && (
                       <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
                         <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
+                          <h3 className="text-sm font-semibold text-gray-900"><TranslatedText>Active Filters</TranslatedText></h3>
                           <button
                             onClick={clearAllFilters}
                             className="text-xs text-red-600 hover:text-red-700 font-medium hover:underline"
                           >
-                            Clear All
+                            <TranslatedText>Clear All</TranslatedText>
                           </button>
                         </div>
                         <div className="space-y-2">
@@ -880,7 +890,8 @@ const GamingZonePage = () => {
                             return category ? (
                               <div key={catId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                                 <span className="text-gray-700">
-                                  <span className="font-semibold">Category:</span> {category.category.name}
+                                  <span className="font-semibold"><TranslatedText>Category:</TranslatedText></span>{" "}
+                                  <TranslatedText text={category.category.name} sourceDoc={category.category} fieldName="name" />
                                 </span>
                                 <button
                                   onClick={() => handleCategoryToggle(catId)}
@@ -896,7 +907,8 @@ const GamingZonePage = () => {
                             return brand ? (
                               <div key={brandId} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                                 <span className="text-gray-700">
-                                  <span className="font-semibold">Brand:</span> {brand.name}
+                                  <span className="font-semibold"><TranslatedText>Brand:</TranslatedText></span>{" "}
+                                  <TranslatedText text={brand.name} sourceDoc={brand} fieldName="name" />
                                 </span>
                                 <button
                                   onClick={() => handleBrandToggle(brandId)}
@@ -910,7 +922,7 @@ const GamingZonePage = () => {
                           {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
                             <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                               <span className="text-gray-700">
-                                <span className="font-semibold">Price:</span> AED{priceRange[0]} - AED{priceRange[1]}
+                                <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> AED{priceRange[0]} - AED{priceRange[1]}
                               </span>
                               <button
                                 onClick={() => setPriceRange([minPrice, maxPrice])}
@@ -923,7 +935,8 @@ const GamingZonePage = () => {
                           {stockFilters.inStock && (
                             <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                               <span className="text-gray-700">
-                                <span className="font-semibold">Stock:</span> In Stock
+                                <span className="font-semibold"><TranslatedText>Stock:</TranslatedText></span>{" "}
+                                <TranslatedText>In Stock</TranslatedText>
                               </span>
                               <button
                                 onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
@@ -936,7 +949,8 @@ const GamingZonePage = () => {
                           {stockFilters.outOfStock && (
                             <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                               <span className="text-gray-700">
-                                <span className="font-semibold">Stock:</span> Out of Stock
+                                <span className="font-semibold"><TranslatedText>Stock:</TranslatedText></span>{" "}
+                                <TranslatedText>Out of Stock</TranslatedText>
                               </span>
                               <button
                                 onClick={() => setStockFilters({ inStock: false, outOfStock: false })}
@@ -962,7 +976,7 @@ const GamingZonePage = () => {
                               : "text-gray-900"
                           }`}
                         >
-                          Price Range
+                          <TranslatedText>Price Range</TranslatedText>
                           {showPriceFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                         </button>
                         {showPriceFilter && (
@@ -988,7 +1002,7 @@ const GamingZonePage = () => {
                                 : "text-gray-900"
                             }`}
                           >
-                            Categories
+                            <TranslatedText>Categories</TranslatedText>
                             {showCategoryFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
                           </button>
                           {showCategoryFilter && (
@@ -1001,7 +1015,9 @@ const GamingZonePage = () => {
                                     onChange={() => handleCategoryToggle(cat.category._id)}
                                     className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
                                   />
-                                  <span className="text-sm text-gray-700">{cat.category.name}</span>
+                                  <span className="text-sm text-gray-700">
+                                    <TranslatedText text={cat.category.name} sourceDoc={cat.category} fieldName="name" />
+                                  </span>
                                 </label>
                               ))}
                             </div>
@@ -1019,7 +1035,7 @@ const GamingZonePage = () => {
                             }`}
                           >
                             <span className="flex items-center gap-2">
-                              Brands
+                              <TranslatedText>Brands</TranslatedText>
                               {selectedBrands.length > 0 && (
                                 <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-lime-500 rounded-full">
                                   {selectedBrands.length}
@@ -1048,12 +1064,12 @@ const GamingZonePage = () => {
                                       className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
                                     />
                                     <label htmlFor={`brand-mobile-${brand._id}`} className="ml-2 text-sm text-gray-700 cursor-pointer">
-                                      {brand.name}
+                                      <TranslatedText text={brand.name} sourceDoc={brand} fieldName="name" />
                                     </label>
                                   </div>
                                 ))}
                                 {filteredBrands.length === 0 && (
-                                  <p className="text-sm text-gray-500 italic">No brands found</p>
+                                  <p className="text-sm text-gray-500 italic"><TranslatedText>No brands found</TranslatedText></p>
                                 )}
                               </div>
                             </div>
@@ -1067,7 +1083,7 @@ const GamingZonePage = () => {
                           stockFilters.inStock || stockFilters.outOfStock
                             ? "text-lime-500"
                             : "text-gray-900"
-                        }`}>Stock Status</div>
+                        }`}><TranslatedText>Stock Status</TranslatedText></div>
                         <div className="space-y-2">
                           <div className="flex items-center">
                             <input
@@ -1079,7 +1095,7 @@ const GamingZonePage = () => {
                               className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                             />
                             <label htmlFor="stock-all-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                              All Products
+                              <TranslatedText>All Products</TranslatedText>
                             </label>
                           </div>
                           <div className="flex items-center">
@@ -1094,7 +1110,7 @@ const GamingZonePage = () => {
                               className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                             />
                             <label htmlFor="stock-in-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                              In Stock
+                              <TranslatedText>In Stock</TranslatedText>
                             </label>
                           </div>
                           <div className="flex items-center">
@@ -1109,7 +1125,7 @@ const GamingZonePage = () => {
                               className="w-4 h-4 text-lime-600 border-gray-300 focus:ring-lime-500"
                             />
                             <label htmlFor="stock-out-mobile" className="ml-2 text-sm text-gray-700 cursor-pointer">
-                              Out of Stock
+                              <TranslatedText>Out of Stock</TranslatedText>
                             </label>
                           </div>
                         </div>
@@ -1121,7 +1137,7 @@ const GamingZonePage = () => {
                           onClick={() => setIsMobileFilterOpen(false)}
                           className="w-full px-4 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold"
                         >
-                          Show {filteredProducts.length} Products
+                          <TranslatedText text={`Show ${filteredProducts.length} Products`} />
                         </button>
                         <button
                           onClick={() => {
@@ -1130,7 +1146,7 @@ const GamingZonePage = () => {
                           }}
                           className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
                         >
-                          Clear All Filters
+                          <TranslatedText>Clear All Filters</TranslatedText>
                         </button>
                       </div>
                     </div>
@@ -1153,7 +1169,7 @@ const GamingZonePage = () => {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                   </svg>
-                  Filters
+                  <TranslatedText>Filters</TranslatedText>
                   {(selectedCategories.length > 0 || 
                     selectedBrands.length > 0 || 
                     stockFilters.inStock || 
