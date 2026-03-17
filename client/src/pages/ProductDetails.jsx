@@ -2655,7 +2655,7 @@ const ProductDetails = () => {
                   {getStockBadge()}
                   {getDiscountBadge()}
                 </div>
-              </div>              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-2">
+              </div>              <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 leading-tight mb-2">
                 <TranslatedText text={product.name} sourceDoc={product} fieldName="name" />
               </h1>
 
