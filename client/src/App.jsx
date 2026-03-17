@@ -20,7 +20,6 @@ import Home from "./pages/Home"
 import NotFound from "./pages/NotFound"
 
 const Shop = lazy(() => import("./pages/Shop"))
-const ShopLanding = lazy(() => import("./pages/ShopLanding"))
 const ProductDetails = lazy(() => import("./pages/ProductDetails"))
 const Cart = lazy(() => import("./pages/Cart"))
 const Checkout = lazy(() => import("./pages/Checkout"))
@@ -164,7 +163,7 @@ function App() {
                     }
                   >
                     <Route index element={<Home />} />
-                    <Route path="shop" element={<ShopLanding />} />
+                    <Route path="shop" element={<Shop />} />
                     <Route path="shop/:parentCategory" element={<Shop />} />
                     <Route path="shop/:parentCategory/:subcategory" element={<Shop />} />
                     <Route path="shop/:parentCategory/:subcategory/:subcategory2" element={<Shop />} />
@@ -261,7 +260,7 @@ function App() {
                     }
                   >
                     <Route index element={<Home />} />
-                    <Route path="shop" element={<ShopLanding />} />
+                    <Route path="shop" element={<Shop />} />
                     <Route path="shop/:parentCategory" element={<Shop />} />
                     <Route path="shop/:parentCategory/:subcategory" element={<Shop />} />
                     <Route path="shop/:parentCategory/:subcategory/:subcategory2" element={<Shop />} />
@@ -358,7 +357,7 @@ function App() {
                     }
                   >
                     <Route index element={<Home />} />
-                    <Route path="shop" element={<ShopLanding />} />
+                    <Route path="shop" element={<Shop />} />
                     <Route path="shop/:parentCategory" element={<Shop />} />
                     <Route path="shop/:parentCategory/:subcategory" element={<Shop />} />
                     <Route path="shop/:parentCategory/:subcategory/:subcategory2" element={<Shop />} />

@@ -269,7 +269,7 @@ const Shop = () => {
     canScrollNext: false
   })
 
-  const [productsToShow, setProductsToShow] = useState(20)
+  const [productsToShow, setProductsToShow] = useState(15)
   const [delayedLoading, setDelayedLoading] = useState(false)
   const fetchTimeout = useRef()
   const loadingTimeout = useRef()
@@ -785,7 +785,7 @@ const Shop = () => {
   }, [subCategories])
 
   useEffect(() => {
-    setProductsToShow(20)
+    setProductsToShow(15)
   }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, products.length])
 
   // Update subcategory slider scroll state on mount and when content changes
@@ -1972,7 +1972,7 @@ const Shop = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-1/4 hidden md:block">
             {/* <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6 sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide"> */}
-             <div className="bg-white rounded-lg p-6 space-y-6 sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide">
+      <div className="bg-white rounded-lg p-6 space-y-6 sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto scrollbar-hide">
               {showBreadcrumb && (
                 <div className="bg-lime-50 border border-lime-200 rounded-lg p-4 mb-4">
                   <p className="text-sm font-semibold text-lime-900"><TranslatedText>Current Path</TranslatedText>:</p>
@@ -2897,7 +2897,7 @@ const Shop = () => {
                 {productsToShow < products.length && (
                   <div className="flex justify-center mt-8">
                     <button
-                      onClick={() => setProductsToShow((prev) => prev + 20)}
+                      onClick={() => setProductsToShow((prev) => prev + 15)}
                       className="px-6 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition-colors font-semibold"
                     >
                       <TranslatedText>Load More</TranslatedText>
