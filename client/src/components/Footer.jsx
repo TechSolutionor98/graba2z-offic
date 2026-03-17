@@ -7,17 +7,13 @@ import { faPinterest } from "@fortawesome/free-brands-svg-icons"
 import { faTiktok } from "@fortawesome/free-brands-svg-icons"
 import { faYoutube } from "@fortawesome/free-brands-svg-icons"
 import { useState, useEffect } from "react"
-import axios from "axios"
 import { generateShopURL } from "../utils/urlUtils"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
 import { getCategoryTreeCached } from "../services/categoryTreeCache"
 import { useLanguage } from "../context/LanguageContext"
 
-import config from "../config/config"
 import NewsletterModal from "./NewsletterModal";
 import TranslatedText from "./TranslatedText";
-
-const API_BASE_URL = `${config.API_URL}`
 
 const Footer = ({ className = "" }) => {
   const { getLocalizedPath } = useLanguage()
@@ -84,24 +80,30 @@ const Footer = ({ className = "" }) => {
 
       // Derive a flat subcategory list from the tree to avoid a second heavy API request.
       const derivedSubs = []
-      const collectSubcategories = (nodes) => {
+      const collectSubcategories = (nodes, parentCategoryName = "", parentCategoryId = null) => {
         if (!Array.isArray(nodes)) return
         for (const node of nodes) {
-          if (node && node._id && node.name) derivedSubs.push(node)
-          if (Array.isArray(node.children)) collectSubcategories(node.children)
+          if (node && node._id && node.name) {
+            derivedSubs.push({
+              ...node,
+              _footerParentCategoryName: parentCategoryName || "",
+              _footerParentCategoryId: parentCategoryId || null,
+            })
+          }
+          if (Array.isArray(node.children)) {
+            collectSubcategories(node.children, parentCategoryName, parentCategoryId)
+          }
         }
       }
       for (const category of validCategories) {
-        if (Array.isArray(category.children)) collectSubcategories(category.children)
+        if (Array.isArray(category.children)) {
+          collectSubcategories(category.children, category.name, category._id)
+        }
       }
       setSubCategories(derivedSubs)
     } catch (error) {
       console.error("Error fetching categories:", error)
     }
-  }
-
-  const getSubCategoriesForCategory = (categoryId) => {
-    return subCategories.filter((sub) => sub.category?._id === categoryId)
   }
 
   useEffect(() => {
@@ -236,12 +238,19 @@ const Footer = ({ className = "" }) => {
                 <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>More Categories</TranslatedText></h3>
                 <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                   {subCategories
-                    .filter((subCategory) => (subCategory.level === 1 || (!subCategory.level && !subCategory.parentSubcategory)) && (!subCategory.name.includes('/') || !subCategory.name.toLowerCase().includes('channel')))
+                    .filter((subCategory) => {
+                      const level = Number(subCategory.level || 1)
+                      const hasParentCategory = !!subCategory._footerParentCategoryName
+                      const isTopLevelSubcategory = level === 1 || !subCategory.parentSubCategory
+                      const isAllowedName =
+                        !subCategory.name.includes("/") || !subCategory.name.toLowerCase().includes("channel")
+                      return hasParentCategory && isTopLevelSubcategory && isAllowedName
+                    })
                     .slice(0, 8)
                     .map((subCategory) => (
                     <li key={`sub-${subCategory._id}`}>
                       <Link to={generateShopURL({
-                        parentCategory: subCategory.category?.name || '',
+                        parentCategory: subCategory._footerParentCategoryName,
                         subcategory: subCategory.name
                       })} className="hover:text-lime-400">
                         <TranslatedText text={subCategory.name} sourceDoc={subCategory} fieldName="name" />
