@@ -207,6 +207,14 @@ const AdminCategorySlider = () => {
         e.target.value = '' // Clear the input
         return
       }
+
+      // Validate max size (10MB)
+      const maxSizeBytes = 10 * 1024 * 1024
+      if (file.size > maxSizeBytes) {
+        showToast("Image is too large. Maximum size is 10MB.", "error")
+        e.target.value = ""
+        return
+      }
       
       setSelectedImage(file)
       // Create preview
@@ -221,31 +229,72 @@ const AdminCategorySlider = () => {
   const uploadImage = async () => {
     if (!selectedImage) return null
 
-    const formData = new FormData()
-    formData.append("image", selectedImage)
-
     try {
       setUploadingImage(true)
       const token = localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
-      
-      const response = await fetch(`${config.API_URL}/api/upload/single`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data.url || data.path // Returns the image path
-      } else {
-        showToast("Failed to upload image", "error")
+      if (!token) {
+        showToast("No authentication token found. Please login.", "error")
         return null
       }
+
+      // Prefer the WebP-only endpoint first; fallback to generic single upload.
+      const uploadEndpoints = [
+        `${config.API_URL}/api/upload/product-image`,
+        `${config.API_URL}/api/upload/single`,
+      ]
+
+      let lastError = "Upload failed"
+
+      for (const endpoint of uploadEndpoints) {
+        const formData = new FormData()
+        formData.append("image", selectedImage)
+        let timeout = null
+
+        try {
+          const controller = new AbortController()
+          timeout = setTimeout(() => controller.abort(), 45000)
+
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+            signal: controller.signal,
+          })
+
+          clearTimeout(timeout)
+
+          let data = null
+          try {
+            data = await response.json()
+          } catch {
+            data = null
+          }
+
+          if (response.ok) {
+            return data?.url || data?.path || null
+          }
+
+          lastError = data?.message || `Upload failed (${response.status})`
+          console.error(`Upload failed at ${endpoint}:`, lastError)
+        } catch (err) {
+          if (err?.name === "AbortError") {
+            lastError = "Upload timed out. Please try again or use a smaller image."
+          } else {
+            lastError = err?.message || "Network error during upload"
+          }
+          console.error(`Upload error at ${endpoint}:`, err)
+        } finally {
+          if (timeout) clearTimeout(timeout)
+        }
+      }
+
+      showToast(lastError, "error")
+      return null
     } catch (err) {
       console.error("Error uploading image:", err)
-      showToast("Error uploading image", "error")
+      showToast(err?.message || "Error uploading image", "error")
       return null
     } finally {
       setUploadingImage(false)
