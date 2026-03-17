@@ -2259,6 +2259,10 @@ const ProductDetails = () => {
   const pdOgTitle = product.ogTitle || pdTitle
   const pdOgDescription = product.ogDescription || pdDescription
   const pdOgImage = product.ogImage || product.image
+  const hasShortDescription = typeof product.shortDescription === "string" && product.shortDescription.trim().length > 0
+  const hasDescription = typeof product.description === "string" && product.description.trim().length > 0
+  const keyFeaturesContent = hasShortDescription ? product.shortDescription : hasDescription ? product.description : ""
+  const keyFeaturesFieldName = hasShortDescription ? "shortDescription" : "description"
 
   const productImages = getCurrentImages()
 
@@ -3048,14 +3052,14 @@ const ProductDetails = () => {
 
 
                   {/* Key Features */}
-              {product.shortDescription && (
+              {keyFeaturesContent && (
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3"><TranslatedText>Key Features</TranslatedText>:</h3>
                   <div className="prose prose-sm md:prose-base max-w-none text-gray-700 leading-relaxed">
                   <TranslatedTipTapRenderer 
-                    html={product.description} 
+                    content={keyFeaturesContent}
                     sourceDoc={product} 
-                    fieldName="description"
+                    fieldName={keyFeaturesFieldName}
                   />
                 </div>
                 </div>
