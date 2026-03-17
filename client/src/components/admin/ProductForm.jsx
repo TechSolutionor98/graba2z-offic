@@ -714,6 +714,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
 
       const productData = {
         ...formData,
+        sku: String(formData.sku ?? "").trim() || undefined,
+        barcode: String(formData.barcode ?? "").trim() || undefined,
+        gtin: String(formData.gtin ?? "").trim() || undefined,
         parentCategory: formData.parentCategory,
         category: formData.category,
         subCategory: formData.category || null,

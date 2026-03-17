@@ -470,7 +470,7 @@ const Checkout = () => {
         success: `${window.location.origin}${getLocalizedPath("/payment/success")}`,
         failure: `${window.location.origin}${getLocalizedPath("/payment/cancel")}`,
         cancel: `${window.location.origin}${getLocalizedPath("/payment/cancel")}`,
-        notification: `${config.API_URL}/api/webhooks/tamara`,
+        notification: `${config.API_URL}/api/payment/tamara/webhook`,
       },
     }
 
@@ -718,6 +718,7 @@ const Checkout = () => {
           amount: finalTotal,
           currencyCode: "AED",
           orderId: orderId,
+          paymentMethod: selectedPaymentMethod,
           redirectUrl: `${window.location.origin}${getLocalizedPath("/payment/success")}`,
           cancelUrl: `${window.location.origin}${getLocalizedPath("/payment/cancel")}`,
         })
@@ -793,10 +794,10 @@ const Checkout = () => {
             },
           })),
           merchant_url: {
-            success: `${window.location.origin}${getLocalizedPath("/payment/success")}`,
-            failure: `${window.location.origin}${getLocalizedPath("/payment/cancel")}`,
-            cancel: `${window.location.origin}${getLocalizedPath("/payment/cancel")}`,
-            notification: `${config.API_URL}/api/webhooks/tamara`,
+            success: `${window.location.origin}${getLocalizedPath("/payment/success")}?orderId=${orderId}&payment_method=tamara&amount=${finalTotal}`,
+            failure: `${window.location.origin}${getLocalizedPath("/payment/cancel")}?orderId=${orderId}&payment_method=tamara`,
+            cancel: `${window.location.origin}${getLocalizedPath("/payment/cancel")}?orderId=${orderId}&payment_method=tamara`,
+            notification: `${config.API_URL}/api/payment/tamara/webhook`,
           },
         }
 
