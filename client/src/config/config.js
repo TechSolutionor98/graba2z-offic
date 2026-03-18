@@ -6,11 +6,13 @@ const resolveApiUrl = () => {
   const isLocalHost =
     typeof window !== "undefined" && ["localhost", "127.0.0.1"].includes(window.location.hostname)
 
-  // Prefer local API when developing locally
+  // Respect explicit env override first (works on localhost too).
+  if (envUrl && /^https?:\/\//i.test(envUrl)) return envUrl.replace(/\/$/, "")
+
+  // Default local API during localhost development.
   if (isLocalHost) return "http://localhost:5000"
 
-  // Otherwise use env if valid, or fall back to the public API
-  if (envUrl && /^https?:\/\//i.test(envUrl)) return envUrl.replace(/\/$/, "")
+  // Production fallback.
   return "https://api.grabatoz.ae"
 }
 
@@ -20,11 +22,13 @@ const resolveTranslationApiUrl = () => {
   const isLocalHost =
     typeof window !== "undefined" && ["localhost", "127.0.0.1"].includes(window.location.hostname)
 
-  // Prefer local translation API when developing locally
+  // Respect explicit env override first (works on localhost too).
+  if (envUrl && /^https?:\/\//i.test(envUrl)) return envUrl.replace(/\/$/, "")
+
+  // Default local translation API during localhost development.
   if (isLocalHost) return "http://localhost:5001"
 
-  // Otherwise use env if valid, or fall back to the production API
-  if (envUrl && /^https?:\/\//i.test(envUrl)) return envUrl.replace(/\/$/, "")
+  // Production fallback.
   return "https://langaimodel.grabatoz.ae" // Production translation API on VPS
 }
 

@@ -211,6 +211,32 @@ const Home = () => {
           promotionalBanners = Array.isArray(bannerGroups.promotional) ? bannerGroups.promotional : []
           mobileData = Array.isArray(bannerGroups.mobile) ? bannerGroups.mobile : []
           homeBannersData = Array.isArray(bannerGroups.home) ? bannerGroups.home : []
+
+          const needsBannerHydration =
+            homeBannersData.length === 0 ||
+            homeBannersData.some(
+              (banner) =>
+                !String(banner?.section || "").trim() || !String(banner?.deviceType || "").trim(),
+            )
+
+          if (needsBannerHydration) {
+            try {
+              const { data: activeBannersRaw } = await axios.get(`${API_BASE_URL}/api/banners?active=true`)
+              const activeBanners = Array.isArray(activeBannersRaw) ? activeBannersRaw : []
+
+              if (activeBanners.length > 0) {
+                heroData = activeBanners.filter((banner) => banner.position === "hero")
+                promotionalBanners = activeBanners.filter((banner) => banner.position === "promotional")
+                mobileData = activeBanners.filter((banner) => banner.position === "mobile")
+                homeBannersData = activeBanners.filter(
+                  (banner) => banner.position && banner.position.startsWith("home-") && banner.isActive,
+                )
+              }
+            } catch (bannerHydrationError) {
+              console.warn("Banner hydration fallback failed:", bannerHydrationError)
+            }
+          }
+
           settingsData = homePayload.settings || defaultSettings
           sectionsData = Array.isArray(homePayload.homeSections) ? homePayload.homeSections : []
           featured = Array.isArray(homePayload.featuredProducts) ? homePayload.featuredProducts : []
@@ -557,10 +583,19 @@ const Home = () => {
 
   // Helper function to get banners for a specific section and device type
   const getBannersForSection = (section, position = null) => {
+    const normalize = (value) => String(value || "").trim().toLowerCase()
+    const targetSection = normalize(section)
+    const targetPosition = normalize(position)
+    const targetDevice = normalize(deviceType)
+
     return homeBanners.filter((banner) => {
-      const matchesSection = section ? banner.section === section : true
-      const matchesPosition = position ? banner.position === position : true
-      const matchesDevice = banner.deviceType ? banner.deviceType.toLowerCase() === deviceType.toLowerCase() : true
+      const bannerSection = normalize(banner.section)
+      const bannerPosition = normalize(banner.position)
+      const bannerDevice = normalize(banner.deviceType)
+
+      const matchesSection = section ? bannerSection === targetSection : true
+      const matchesPosition = position ? bannerPosition === targetPosition : true
+      const matchesDevice = bannerDevice ? bannerDevice === targetDevice : true
       return matchesSection && matchesPosition && matchesDevice
     })
   }
