@@ -139,6 +139,44 @@ const OfferPage = () => {
     return 0
   }
 
+  const isValidBrand = (brand) => {
+    return (
+      brand &&
+      typeof brand === "object" &&
+      brand._id &&
+      typeof brand.name === "string" &&
+      brand.name.trim() !== "" &&
+      brand.isActive !== false &&
+      !brand.name.match(/^[0-9a-fA-F]{24}$/)
+    )
+  }
+
+  const normalizeOfferProduct = (item) => {
+    const product = { ...(item?.product || {}) }
+
+    // Keep legacy and current subcategory field names in sync for existing filters/UI.
+    product.subcategory = product.subcategory ?? product.subCategory ?? null
+    product.subcategory2 = product.subcategory2 ?? product.subCategory2 ?? null
+    product.subcategory3 = product.subcategory3 ?? product.subCategory3 ?? null
+    product.subcategory4 = product.subcategory4 ?? product.subCategory4 ?? null
+
+    // Normalize price fields so ProductCard displays the same offer/base prices.
+    if (product.offerPrice == null && product.salePrice != null) {
+      product.offerPrice = product.salePrice
+    }
+    if (product.price == null && product.regularPrice != null) {
+      product.price = product.regularPrice
+    }
+    if (product.offerPrice == null && product.sale_price != null) {
+      product.offerPrice = product.sale_price
+    }
+    if (product.price == null && product.regular_price != null) {
+      product.price = product.regular_price
+    }
+
+    return { ...item, product }
+  }
+
   // PriceFilter component is used for temp UI state and Apply handling
 
   useEffect(() => {
@@ -150,8 +188,10 @@ const OfferPage = () => {
       setLoading(true)
       setError(null)
 
-      // Fetch offer page details by slug
-      const pageResponse = await axios.get(`${config.API_URL}/api/offer-pages/slug/${slug}`)
+      const [pageResponse, productsRes] = await Promise.all([
+        axios.get(`${config.API_URL}/api/offer-pages/slug/${slug}`),
+        axios.get(`${config.API_URL}/api/offer-products/page/${slug}`),
+      ])
       const pageData = pageResponse.data
 
       if (!pageData.isActive) {
@@ -162,118 +202,15 @@ const OfferPage = () => {
 
       setOfferPage(pageData)
 
-      // Fetch associated products, brands, and categories in parallel
-      // Also fetch ALL categories and brands to ensure complete data
-      const [productsRes, brandsRes, categoriesRes, allCategoriesRes, allBrandsRes, allSubcategoriesRes] = await Promise.all([
-        axios.get(`${config.API_URL}/api/offer-products/page/${slug}`),
-        axios.get(`${config.API_URL}/api/offer-brands/page/${slug}`),
-        axios.get(`${config.API_URL}/api/offer-categories/page/${slug}`),
-        axios.get(`${config.API_URL}/api/categories`),
-        axios.get(`${config.API_URL}/api/brands`),
-        axios.get(`${config.API_URL}/api/subcategories`)
-      ])
-
-
       // Filter only active items and ensure product data exists
       const activeProducts = productsRes.data.filter(item => {
         return item.isActive && item.product && item.product._id
       })
-      
-      
-      // Create lookup maps for brands and categories from ALL data
-      const brandMap = {}
-      const categoryMap = {}
-      
-      // First add from offer-specific brands
-      brandsRes.data.forEach(item => {
-        if (item.brand && item.brand._id) {
-          brandMap[item.brand._id] = item.brand
-        }
-      })
-      
-      // Then add from all brands (won't override existing)
-      allBrandsRes.data.forEach(brand => {
-        if (brand && brand._id && !brandMap[brand._id]) {
-          brandMap[brand._id] = brand
-        }
-      })
-      
-      // First add from offer-specific categories
-      categoriesRes.data.forEach(item => {
-        if (item.category && item.category._id) {
-          categoryMap[item.category._id] = item.category
-        }
-      })
-      
-      // Then add from all categories (this ensures we have complete data)
-      allCategoriesRes.data.forEach(category => {
-        if (category && category._id && !categoryMap[category._id]) {
-          categoryMap[category._id] = category
-        }
-      })
-      
-      // IMPORTANT: Also add ALL subcategories to categoryMap
-      // because product.category field can contain subcategory IDs, not just parent category IDs
-      allSubcategoriesRes.data.forEach(subcategory => {
-        if (subcategory && subcategory._id && !categoryMap[subcategory._id]) {
-          categoryMap[subcategory._id] = subcategory
-        }
-      })
-      
-      
-      // Enrich products with full brand and category objects
-      const enrichedProducts = activeProducts.map(item => {
-        const product = { ...item.product }
-        
-        
-        // Replace brand ID with full brand object if needed
-        if (product.brand && typeof product.brand === 'string') {
-          if (brandMap[product.brand]) {
-            product.brand = brandMap[product.brand]
-          }
-        }
-        
-        // Replace category ID with full category object if needed
-        if (product.category && typeof product.category === 'string') {
-          if (categoryMap[product.category]) {
-            product.category = categoryMap[product.category]
-          }
-        }
-        
-        // Also check subcategory, parentCategory, etc.
-        if (product.subcategory && typeof product.subcategory === 'string' && categoryMap[product.subcategory]) {
-          product.subcategory = categoryMap[product.subcategory]
-        }
-        
-        if (product.parentCategory && typeof product.parentCategory === 'string' && categoryMap[product.parentCategory]) {
-          product.parentCategory = categoryMap[product.parentCategory]
-        }
-        
+      const enrichedProducts = activeProducts.map(normalizeOfferProduct)
 
-        // Normalize price fields so ProductCard displays the same offer/base prices
-        // Prefer existing `offerPrice`/`price` if present, otherwise map from `salePrice`/`regularPrice`.
-        if (product.offerPrice == null && product.salePrice != null) {
-          product.offerPrice = product.salePrice
-        }
-        if (product.price == null && product.regularPrice != null) {
-          product.price = product.regularPrice
-        }
-
-        // Also check common alternate naming
-        if (product.offerPrice == null && product.sale_price != null) {
-          product.offerPrice = product.sale_price
-        }
-        if (product.price == null && product.regular_price != null) {
-          product.price = product.regular_price
-        }
-
-        return { ...item, product }
-      })
-      
-      
       setProducts(enrichedProducts)
       setFilteredProducts(enrichedProducts)
-      
+
       // Extract unique categories from products for slider (instead of using offer-categories API)
       const uniqueCategoriesMap = new Map()
       enrichedProducts.forEach(({ product }) => {
@@ -290,37 +227,29 @@ const OfferPage = () => {
       })
       const categoriesFromProducts = Array.from(uniqueCategoriesMap.values())
       setSliderCategories(categoriesFromProducts)
-      
-      // Use ALL brands for the SIDEBAR FILTERS (not just offer-specific ones)
-      const validBrands = allBrandsRes.data.filter(brand => {
-        const isValid =
-          brand &&
-          typeof brand === "object" &&
-          brand.name &&
-          typeof brand.name === "string" &&
-          brand.name.trim() !== "" &&
-          brand.isActive !== false &&
-          !brand.name.match(/^[0-9a-fA-F]{24}$/)
-        return isValid
-      })
-      
-      // Filter brands to only show those with products on this offer page
-      const usedBrandIds = new Set()
+
+      // Build the filter and slider brands directly from the offer products payload.
+      const uniqueBrandsMap = new Map()
       enrichedProducts.forEach(({ product }) => {
-        const brandId = typeof product.brand === 'object' ? product.brand._id : product.brand
-        if (brandId) usedBrandIds.add(brandId)
+        const brand = product.brand
+        if (isValidBrand(brand) && !uniqueBrandsMap.has(brand._id)) {
+          uniqueBrandsMap.set(brand._id, brand)
+        }
       })
-      const filteredBrands = validBrands.filter(brand => usedBrandIds.has(brand._id))
-      
+
       // Use same normalized list for sidebar and top slider
-      const normalizedBrands = filteredBrands.map(brand => ({ brand, isActive: true, _id: brand._id }))
+      const normalizedBrands = Array.from(uniqueBrandsMap.values()).map(brand => ({
+        brand,
+        isActive: true,
+        _id: brand._id,
+      }))
       setBrands(normalizedBrands)
       setSliderBrands(normalizedBrands)
-      
+
       // Use the same categories from products for sidebar
       setCategories(categoriesFromProducts)
-      
-      // Set empty subcategories since we're only showing main categories from products
+
+      // Keep subcategory tree empty here so the current category UI remains unchanged.
       setAllSubcategories([])
 
       setLoading(false)
