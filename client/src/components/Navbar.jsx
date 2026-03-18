@@ -1356,7 +1356,7 @@ const Navbar = () => {
                     onMouseLeave={() => setIsStaticCategoryHovered(false)}
                   >
                     <a
-                      href={getLocalizedPath("/gaming-zone/gaming")} // ← Change this to your custom link
+                      href={getLocalizedPath("/offers/gaming-zone")} // ← Change this to your custom link
                       className={`text-white font-medium whitespace-nowrap text-[clamp(0.7rem,0.9vw,0.875rem)] px-1 py-2 text-center w-full leading-tight ${
                         isStaticCategoryHovered ? "font-semibold" : ""
                       }`}
@@ -1381,8 +1381,8 @@ const Navbar = () => {
 
               {/* Crown Excel Button */}
               <a
-                href="https://crownexcel.ae"
-                target="_blank"
+                href="https://www.grabatoz.ae/ae-en/offers/crownyx"
+                target=""
                 rel="noopener noreferrer"
                 className="hidden md:inline-flex items-center gap-1.5 pl-3 pr-3 xl:pr-4 2xl:pr-8 py-2 h-full self-stretch bg-[#2b3497] text-white  border-white transition text-sm font-medium whitespace-nowrap -mr-2 xl:-mr-4 2xl:-mr-8"
                 aria-label="Crown Excel"
