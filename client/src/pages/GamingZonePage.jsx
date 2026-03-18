@@ -250,13 +250,6 @@ const GamingZonePage = () => {
         `${config.API_URL}/api/gaming-zone-categories/page/${slug}`
       )
       const activeCategories = categoriesResponse.data.filter(cat => cat.isActive)
-      console.log('\n🎮 Gaming Zone Categories from Admin:')
-      console.log('Total categories:', activeCategories.length)
-      activeCategories.forEach((cat, index) => {
-        console.log(`\n  ${index + 1}. ${cat.category?.name}`)
-        console.log('     ID:', cat.category?._id)
-        console.log('     Full structure:', cat.category)
-      })
       setGamingZoneCategories(activeCategories)
 
       // Fetch all products for this gaming zone (no pagination)
@@ -264,39 +257,8 @@ const GamingZonePage = () => {
         `${config.API_URL}/api/gaming-zone-pages/slug/${slug}/products?page=1&limit=10000`
       )
 
-      console.log('\n🌐 API Response:', productsResponse.data)
-      
       const fetchedProducts = productsResponse.data.products || []
-      console.log('\n🎮 Gaming Zone Products Loaded:', fetchedProducts.length)
-      
-      if (fetchedProducts.length === 0) {
-        console.error('⚠️ WARNING: API returned 0 products!')
-        console.log('API URL called:', `${config.API_URL}/api/gaming-zone-pages/slug/${slug}/products?page=1&limit=10000`)
-        console.log('Full API response:', productsResponse.data)
-        console.log('\n❌ PROBLEM: The backend is not returning any products for this gaming zone.')
-        console.log('Possible causes:')
-        console.log('1. Products are not linked to this gaming zone in the database')
-        console.log('2. The gaming zone categories don\'t match any product categories')
-        console.log('3. The backend API logic needs to be checked')
-        console.log('\nCategories configured for this gaming zone:')
-        activeCategories.forEach(cat => {
-          console.log(`  - ${cat.category?.name} (ID: ${cat.category?._id})`)
-        })
-      }
-      
-      // Log sample products to understand structure
-      if (fetchedProducts.length > 0) {
-        console.log('\n📦 Sample Product Structures:')
-        fetchedProducts.slice(0, 3).forEach((product, index) => {
-          console.log(`\n  Product ${index + 1}: ${product.name}`)
-          console.log('    Parent Category:', product.parentCategory?.name, '|', product.parentCategory?._id)
-          console.log('    Category (L1):', product.category?.name, '|', product.category?._id)
-          console.log('    SubCategory2 (L2):', product.subCategory2?.name, '|', product.subCategory2?._id)
-          console.log('    SubCategory3 (L3):', product.subCategory3?.name, '|', product.subCategory3?._id)
-          console.log('    SubCategory4 (L4):', product.subCategory4?.name, '|', product.subCategory4?._id)
-        })
-      }
-      
+
       setAllProducts(fetchedProducts)
       setProducts(fetchedProducts)
       setFilteredProducts(fetchedProducts)
@@ -341,20 +303,9 @@ const GamingZonePage = () => {
   const applyFiltersAndSort = () => {
     let filtered = [...allProducts]
 
-    console.log('\n🎮 ===== GAMING ZONE FILTER DEBUG =====')
-    console.log('📊 Total products available:', allProducts.length)
-    console.log('🎯 Selected categories:', selectedCategories)
-    console.log('🏷️ Selected brands:', selectedBrands)
-    console.log('💰 Price range:', priceRange, '(min:', minPrice, 'max:', maxPrice, ')')
-    console.log('📦 Stock filters:', stockFilters)
-    
     // Filter by selected categories
     if (selectedCategories.length > 0) {
-      console.log('\n🔍 APPLYING CATEGORY FILTER...')
-      
-      const beforeCount = filtered.length
-      
-      filtered = filtered.filter((product, index) => {
+      filtered = filtered.filter((product) => {
         // Helper function to get ID from field (handles both object and string)
         const getId = (field) => {
           if (!field) return null
@@ -378,48 +329,28 @@ const GamingZonePage = () => {
         const match = selectedCategories.some(selectedCatId => 
           productCategoryIds.includes(selectedCatId)
         )
-
-        // Debug first 3 products in detail
-        if (index < 3) {
-          console.log(`\n  📦 Product ${index + 1}: "${product.name}"`)
-          console.log('     Product category IDs:', productCategoryIds)
-          console.log('     Match:', match ? '✅ YES' : '❌ NO')
-        }
-        
         return match
       })
-      
-      console.log(`\n  ✅ Category filter: ${beforeCount} → ${filtered.length} products`)
-    } else {
-      console.log('\n⚠️ No categories selected - showing all products')
     }
 
     // Filter by selected brands
     if (selectedBrands.length > 0) {
-      const beforeCount = filtered.length
       filtered = filtered.filter(product =>
         selectedBrands.includes(product.brand?._id)
       )
-      console.log(`  ✅ Brand filter: ${beforeCount} → ${filtered.length} products`)
     }
 
     // Filter by price range
-    const beforePriceCount = filtered.length
     filtered = filtered.filter(product => {
       const price = product.price || 0
       return price >= priceRange[0] && price <= priceRange[1]
     })
-    console.log(`  ✅ Price filter: ${beforePriceCount} → ${filtered.length} products`)
 
     // Filter by stock status
     if (stockFilters.inStock && !stockFilters.outOfStock) {
-      const beforeCount = filtered.length
       filtered = filtered.filter(p => p.stockStatus !== "Out of Stock")
-      console.log(`  ✅ Stock filter (In Stock): ${beforeCount} → ${filtered.length} products`)
     } else if (!stockFilters.inStock && stockFilters.outOfStock) {
-      const beforeCount = filtered.length
       filtered = filtered.filter(p => p.stockStatus === "Out of Stock")
-      console.log(`  ✅ Stock filter (Out of Stock): ${beforeCount} → ${filtered.length} products`)
     }
 
     // Apply sorting
@@ -437,9 +368,6 @@ const GamingZonePage = () => {
       default:
         filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     }
-
-    console.log(`\n🎉 FINAL RESULT: ${filtered.length} products after all filters\n`)
-    console.log('=====================================\n')
 
     setFilteredProducts(filtered)
     setTotalProducts(filtered.length)
@@ -1312,3 +1240,4 @@ const GamingZonePage = () => {
 }
 
 export default GamingZonePage
+

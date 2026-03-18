@@ -173,23 +173,12 @@ const OfferPage = () => {
         axios.get(`${config.API_URL}/api/subcategories`)
       ])
 
-      console.log('Offer Page Data:', pageData)
-      console.log('Card Images:', pageData.cardImages)
-      console.log('Card Images Length:', pageData.cardImages?.length)
-      console.log('Card Images Detail:', JSON.stringify(pageData.cardImages, null, 2))
-      console.log('Offer Products Response:', productsRes.data)
-      console.log('Offer Brands Response:', brandsRes.data)
-      console.log('Offer Categories Response:', categoriesRes.data)
-      console.log('All Categories:', allCategoriesRes.data)
-      console.log('All Brands:', allBrandsRes.data)
 
       // Filter only active items and ensure product data exists
       const activeProducts = productsRes.data.filter(item => {
-        console.log('Product Item:', item)
         return item.isActive && item.product && item.product._id
       })
       
-      console.log('Filtered Active Products:', activeProducts)
       
       // Create lookup maps for brands and categories from ALL data
       const brandMap = {}
@@ -231,24 +220,16 @@ const OfferPage = () => {
         }
       })
       
-      console.log('Brand Map:', brandMap)
-      console.log('Category Map:', categoryMap)
       
       // Enrich products with full brand and category objects
       const enrichedProducts = activeProducts.map(item => {
         const product = { ...item.product }
         
-        console.log('Before enrichment - Product:', product.name)
-        console.log('Category before:', product.category)
-        console.log('Brand before:', product.brand)
         
         // Replace brand ID with full brand object if needed
         if (product.brand && typeof product.brand === 'string') {
           if (brandMap[product.brand]) {
             product.brand = brandMap[product.brand]
-            console.log('Brand enriched to:', product.brand)
-          } else {
-            console.warn('Brand ID not found in map:', product.brand)
           }
         }
         
@@ -256,9 +237,6 @@ const OfferPage = () => {
         if (product.category && typeof product.category === 'string') {
           if (categoryMap[product.category]) {
             product.category = categoryMap[product.category]
-            console.log('Category enriched to:', product.category)
-          } else {
-            console.warn('Category ID not found in map:', product.category)
           }
         }
         
@@ -271,8 +249,6 @@ const OfferPage = () => {
           product.parentCategory = categoryMap[product.parentCategory]
         }
         
-        console.log('After enrichment - Category:', product.category)
-        console.log('After enrichment - Brand:', product.brand)
 
         // Normalize price fields so ProductCard displays the same offer/base prices
         // Prefer existing `offerPrice`/`price` if present, otherwise map from `salePrice`/`regularPrice`.
@@ -294,7 +270,6 @@ const OfferPage = () => {
         return { ...item, product }
       })
       
-      console.log('Enriched Products:', enrichedProducts)
       
       setProducts(enrichedProducts)
       setFilteredProducts(enrichedProducts)

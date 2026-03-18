@@ -32,7 +32,7 @@ import BrandSlider from "../components/BrandSlider"
 import SEO from "../components/SEO"
 import DynamicSection from "../components/DynamicSection"
 import TranslatedText from "../components/TranslatedText"
-
+import { getCategoryTreeCached } from "../services/categoryTreeCache"
 
 import config from "../config/config"
 
@@ -160,12 +160,6 @@ const Home = () => {
       // Create a unique key that includes settings to force re-render when settings change
       const settingsKey = section.settings ? JSON.stringify(section.settings) : 'no-settings'
       const uniqueKey = `${section._id}-${section.sectionType}-${settingsKey}`
-      console.log(`🔴 CLIENT RENDER: Rendering section at position ${position}:`, {
-        name: section.name,
-        sectionType: section.sectionType,
-        settings: section.settings,
-        uniqueKey: uniqueKey
-      })
       return <DynamicSection key={uniqueKey} section={section} />
     }
     return null
@@ -174,63 +168,113 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesResponse, categoryTreeResponse, brandsResponse, bannersResponse, settingsResponse, sectionsResponse] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/categories`),
-          axios.get(`${API_BASE_URL}/api/categories/tree`).catch(() => ({ data: [] })),
-          axios.get(`${API_BASE_URL}/api/brands`),
-          axios.get(`${API_BASE_URL}/api/banners?active=true`),
-          axios.get(`${API_BASE_URL}/api/settings`).catch(() => ({
-            data: {
-              homeSections: {
-                categoryCards: true,
-                brandsCards: true,
-                productsCards: true,
-                flashSaleCards: true,
-                limitedSaleCards: true
-              }
-            }
-          })),
-          axios.get(`${API_BASE_URL}/api/home-sections/active`).catch(() => ({ data: [] })),
+        const [homepageResponse, categoryTreeData] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/homepage`).catch(() => null),
+          getCategoryTreeCached().catch(() => []),
         ])
 
-        const categoriesData = categoriesResponse.data
-        const categoryTreeData = Array.isArray(categoryTreeResponse.data) ? categoryTreeResponse.data : []
-        const brandsData = brandsResponse.data
-        const bannersData = bannersResponse.data
-        const settingsData = settingsResponse.data
-        const sectionsData = sectionsResponse.data
+        const defaultSettings = {
+          homeSections: {
+            categoryCards: true,
+            brandsCards: true,
+            productsCards: true,
+            flashSaleCards: true,
+            limitedSaleCards: true,
+          },
+        }
 
-        // Filter and validate categories - ensure they have proper structure
+        const homePayload = homepageResponse?.data?.success ? homepageResponse.data.data : null
+
+        let categoriesData = []
+        let brandsData = []
+        let heroData = []
+        let promotionalBanners = []
+        let mobileData = []
+        let homeBannersData = []
+        let settingsData = defaultSettings
+        let sectionsData = []
+        let featured = []
+        let hpData = []
+        let dellData = []
+        let acerData = []
+        let asusData = []
+        let msiData = []
+        let lenovoData = []
+        let appleData = []
+        let samsungData = []
+
+        if (homePayload) {
+          categoriesData = Array.isArray(homePayload.categories) ? homePayload.categories : []
+          brandsData = Array.isArray(homePayload.brands) ? homePayload.brands : []
+          const bannerGroups = homePayload.banners || {}
+          heroData = Array.isArray(bannerGroups.hero) ? bannerGroups.hero : []
+          promotionalBanners = Array.isArray(bannerGroups.promotional) ? bannerGroups.promotional : []
+          mobileData = Array.isArray(bannerGroups.mobile) ? bannerGroups.mobile : []
+          homeBannersData = Array.isArray(bannerGroups.home) ? bannerGroups.home : []
+          settingsData = homePayload.settings || defaultSettings
+          sectionsData = Array.isArray(homePayload.homeSections) ? homePayload.homeSections : []
+          featured = Array.isArray(homePayload.featuredProducts) ? homePayload.featuredProducts : []
+
+          const byBrand = homePayload.brandProducts || {}
+          hpData = Array.isArray(byBrand.hp) ? byBrand.hp : []
+          dellData = Array.isArray(byBrand.dell) ? byBrand.dell : []
+          acerData = Array.isArray(byBrand.acer) ? byBrand.acer : []
+          asusData = Array.isArray(byBrand.asus) ? byBrand.asus : []
+          msiData = Array.isArray(byBrand.msi) ? byBrand.msi : []
+          lenovoData = Array.isArray(byBrand.lenovo) ? byBrand.lenovo : []
+          appleData = Array.isArray(byBrand.apple) ? byBrand.apple : []
+          samsungData = Array.isArray(byBrand.samsung) ? byBrand.samsung : []
+        } else {
+          const [categoriesResponse, brandsResponse, bannersResponse, settingsResponse, sectionsResponse] = await Promise.all([
+            axios.get(`${API_BASE_URL}/api/categories`),
+            axios.get(`${API_BASE_URL}/api/brands`),
+            axios.get(`${API_BASE_URL}/api/banners?active=true`),
+            axios.get(`${API_BASE_URL}/api/settings`).catch(() => ({ data: defaultSettings })),
+            axios.get(`${API_BASE_URL}/api/home-sections/active`).catch(() => ({ data: [] })),
+          ])
+
+          categoriesData = categoriesResponse.data
+          brandsData = brandsResponse.data
+          const bannersData = bannersResponse.data
+          settingsData = settingsResponse.data
+          sectionsData = sectionsResponse.data
+          heroData = bannersData.filter((banner) => banner.position === "hero")
+          promotionalBanners = bannersData.filter((banner) => banner.position === "promotional")
+          mobileData = bannersData.filter((banner) => banner.position === "mobile")
+          homeBannersData = bannersData.filter(
+            (banner) => banner.position && banner.position.startsWith("home-") && banner.isActive,
+          )
+        }
+
         const leanValidCategories = Array.isArray(categoriesData)
           ? categoriesData.filter((cat) => {
-            const isValid =
-              cat &&
-              typeof cat === "object" &&
-              cat.name &&
-              typeof cat.name === "string" &&
-              cat.name.trim() !== "" &&
-              cat.isActive !== false &&
-              !cat.isDeleted &&
-              !cat.name.match(/^[0-9a-fA-F]{24}$/)
-            return isValid
-          })
+              const isValid =
+                cat &&
+                typeof cat === "object" &&
+                cat.name &&
+                typeof cat.name === "string" &&
+                cat.name.trim() !== "" &&
+                cat.isActive !== false &&
+                !cat.isDeleted &&
+                !cat.name.match(/^[0-9a-fA-F]{24}$/)
+              return isValid
+            })
           : []
 
-        // Filter and validate brands - ensure they have proper structure and names
         const leanValidBrands = Array.isArray(brandsData)
           ? brandsData.filter((brand) => {
-            const isValid =
-              brand &&
-              typeof brand === "object" &&
-              brand.name &&
-              typeof brand.name === "string" &&
-              brand.name.trim() !== "" &&
-              brand.isActive !== false &&
-              !brand.name.match(/^[0-9a-fA-F]{24}$/) &&
-              brand.logo &&
-              brand.logo.trim() !== ""
-            return isValid
-          })
+              const isValid =
+                brand &&
+                typeof brand === "object" &&
+                brand.name &&
+                typeof brand.name === "string" &&
+                brand.name.trim() !== "" &&
+                brand.isActive !== false &&
+                !brand.name.match(/^[0-9a-fA-F]{24}$/) &&
+                brand.logo &&
+                brand.logo.trim() !== ""
+              return isValid
+            })
           : []
 
         const brandIdMap = {}
@@ -262,14 +306,6 @@ const Home = () => {
 
         const networkingSubCategoryId = findSubCategoryIdByName(categoryTreeData, "Networking")
 
-        // Set banner/category/brand state early so LCP hero can render immediately.
-        const heroData = bannersData.filter((banner) => banner.position === "hero")
-        const promotionalBanners = bannersData.filter((banner) => banner.position === "promotional")
-        const mobileData = bannersData.filter((banner) => banner.position === "mobile")
-        const homeBannersData = bannersData.filter(
-          (banner) => banner.position && banner.position.startsWith("home-") && banner.isActive,
-        )
-
         setCategories(leanValidCategories)
         setBanners(promotionalBanners)
         setHeroBanners(heroData)
@@ -283,6 +319,7 @@ const Home = () => {
           const { data } = await axios.get(`${API_BASE_URL}/api/products`, { params })
           return Array.isArray(data) ? data : []
         }
+
         const fetchByBrand = (brandId, limit) => (brandId ? fetchProducts({ brand: brandId, limit }) : Promise.resolve([]))
         const fetchByParentCategory = (categoryId, limit) =>
           categoryId ? fetchProducts({ parentCategory: categoryId, limit }) : Promise.resolve([])
@@ -291,45 +328,45 @@ const Home = () => {
             ? fetchProducts({ subcategory: networkingSubCategoryId, limit })
             : categoryIdMap.networking
             ? fetchByParentCategory(categoryIdMap.networking, limit)
-            : fetchProducts({ subcategory: "Networking", limit })
+            : Promise.resolve([])
 
         const [
-          featured,
-          hpData,
-          dellData,
-          acerData,
-          asusData,
-          msiData,
-          lenovoData,
-          appleData,
-          samsungData,
+          featuredFallback,
+          hpFallback,
+          dellFallback,
+          acerFallback,
+          asusFallback,
+          msiFallback,
+          lenovoFallback,
+          appleFallback,
+          samsungFallback,
           accessoriesData,
           networkingData,
         ] = await Promise.all([
-          fetchProducts({ featured: true, limit: 12 }),
-          fetchByBrand(brandIdMap.hp, 3),
-          fetchByBrand(brandIdMap.dell, 3),
-          fetchByBrand(brandIdMap.acer, 3),
-          fetchByBrand(brandIdMap.asus, 3),
-          fetchByBrand(brandIdMap.msi, 3),
-          fetchByBrand(brandIdMap.lenovo, 3),
-          fetchByBrand(brandIdMap.apple, 3),
-          fetchByBrand(brandIdMap.samsung, 3),
+          featured.length > 0 ? Promise.resolve(featured) : fetchProducts({ featured: true, limit: 12 }),
+          hpData.length > 0 ? Promise.resolve(hpData) : fetchByBrand(brandIdMap.hp, 3),
+          dellData.length > 0 ? Promise.resolve(dellData) : fetchByBrand(brandIdMap.dell, 3),
+          acerData.length > 0 ? Promise.resolve(acerData) : fetchByBrand(brandIdMap.acer, 3),
+          asusData.length > 0 ? Promise.resolve(asusData) : fetchByBrand(brandIdMap.asus, 3),
+          msiData.length > 0 ? Promise.resolve(msiData) : fetchByBrand(brandIdMap.msi, 3),
+          lenovoData.length > 0 ? Promise.resolve(lenovoData) : fetchByBrand(brandIdMap.lenovo, 3),
+          appleData.length > 0 ? Promise.resolve(appleData) : fetchByBrand(brandIdMap.apple, 3),
+          samsungData.length > 0 ? Promise.resolve(samsungData) : fetchByBrand(brandIdMap.samsung, 3),
           fetchByParentCategory(categoryIdMap.accessories, 8),
           fetchNetworking(8),
         ])
 
-        setFeaturedProducts(featured)
-        setHpProducts(hpData)
-        setDellProducts(dellData)
+        setFeaturedProducts(featuredFallback)
+        setHpProducts(hpFallback)
+        setDellProducts(dellFallback)
         setAccessoriesProducts(accessoriesData)
-        setAcerProducts(acerData)
-        setAsusProducts(asusData)
+        setAcerProducts(acerFallback)
+        setAsusProducts(asusFallback)
         setNetworkingProducts(networkingData)
-        setMsiProducts(msiData)
-        setLenovoProducts(lenovoData)
-        setAppleProducts(appleData)
-        setSamsungProducts(samsungData)
+        setMsiProducts(msiFallback)
+        setLenovoProducts(lenovoFallback)
+        setAppleProducts(appleFallback)
+        setSamsungProducts(samsungFallback)
         setLoading(false)
       } catch (error) {
         console.error("Error fetching data:", error)
@@ -2132,5 +2169,6 @@ const getStatusColor = (status) => {
 }
 
 export default Home
+
 
 

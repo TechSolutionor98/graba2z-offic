@@ -273,6 +273,7 @@ const Shop = () => {
   const [delayedLoading, setDelayedLoading] = useState(false)
   const fetchTimeout = useRef()
   const loadingTimeout = useRef()
+  const allProductsRef = useRef([])
 
   // Preload translations for categories, subcategories, and brands when language is Arabic
   useEffect(() => {
@@ -357,84 +358,86 @@ const Shop = () => {
     }
   }
 
-  const performProgressiveSearch = async (searchTerm) => {
+  const performProgressiveSearch = async (searchTerm, productsSource = null) => {
     if (!searchTerm || searchTerm.trim() === "") {
       setActualSearchQuery("")
       return []
+    }
+
+    let allProducts = Array.isArray(productsSource) ? productsSource : allProductsRef.current
+    if (!Array.isArray(allProducts) || allProducts.length === 0) {
+      try {
+        allProducts = await productCache.getProducts()
+        allProductsRef.current = allProducts || []
+      } catch (err) {
+        console.error("Error loading products for search:", err)
+        return []
+      }
+    }
+
+    if (allProducts.length === 0) {
+      return []
+    }
+
+    const stockStatusFilters = []
+    if (stockFilters.inStock) stockStatusFilters.push("inStock")
+    if (stockFilters.outOfStock) stockStatusFilters.push("outOfStock")
+    if (stockFilters.onSale) stockStatusFilters.push("onSale")
+
+    // Build the non-search filtered list once, then only apply text matching progressively.
+    // This avoids repeatedly sorting/filtering the full product array on every candidate term.
+    const baseFilters = {
+      parent_category: selectedCategory !== "all" ? selectedCategory : null,
+      category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
+      subcategory2: selectedSubCategory2,
+      subcategory3: selectedSubCategory3,
+      subcategory4: selectedSubCategory4,
+      brand: selectedBrands.length > 0 ? selectedBrands : null,
+      search: null,
+      priceRange: priceRange,
+      stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
+      sortBy: sortBy,
+    }
+
+    const baseFilteredProducts = productCache.filterProducts(allProducts, baseFilters)
+    if (!baseFilteredProducts.length) {
+      setActualSearchQuery(searchTerm)
+      return []
+    }
+
+    const matchesSearchTerm = (product, term) => {
+      const searchTermNormalized = String(term || "").toLowerCase().trim()
+      if (!searchTermNormalized) return true
+      const name = (product?.name || "").toLowerCase()
+      const description = (product?.description || "").toLowerCase()
+      const brandName = (product?.brand?.name || "").toLowerCase()
+      const sku = (product?.sku || "").toLowerCase()
+      return (
+        name.includes(searchTermNormalized) ||
+        description.includes(searchTermNormalized) ||
+        brandName.includes(searchTermNormalized) ||
+        sku.includes(searchTermNormalized)
+      )
     }
 
     const words = searchTerm.trim().split(/\s+/)
 
     for (let i = words.length; i > 0; i--) {
       const currentSearchTerm = words.slice(0, i).join(" ")
-
-      try {
-        const allProducts = await productCache.getProducts()
-        if (!allProducts || allProducts.length === 0) {
-          continue
-        }
-
-        const stockStatusFilters = []
-        if (stockFilters.inStock) stockStatusFilters.push("inStock")
-        if (stockFilters.outOfStock) stockStatusFilters.push("outOfStock")
-        if (stockFilters.onSale) stockStatusFilters.push("onSale")
-
-        const filters = {
-          parent_category: selectedCategory !== "all" ? selectedCategory : null,
-          category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
-          subcategory2: selectedSubCategory2,
-          subcategory3: selectedSubCategory3,
-          subcategory4: selectedSubCategory4,
-          brand: selectedBrands.length > 0 ? selectedBrands : null,
-          search: currentSearchTerm,
-          priceRange: priceRange,
-          stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
-          sortBy: sortBy,
-        }
-
-        const filteredProducts = productCache.filterProducts(allProducts, filters)
-
-        if (filteredProducts.length > 0) {
-          setActualSearchQuery(currentSearchTerm)
-          return filteredProducts
-        }
-      } catch (err) {
-        console.error("Error in progressive search:", err)
+      const filteredProducts = baseFilteredProducts.filter((product) => matchesSearchTerm(product, currentSearchTerm))
+      if (filteredProducts.length > 0) {
+        setActualSearchQuery(currentSearchTerm)
+        return filteredProducts
       }
     }
 
     const trimmed = searchTerm.trim()
     for (let len = trimmed.length - 1; len >= 3; len--) {
       const currentSearchTerm = trimmed.slice(0, len)
-      try {
-        const allProducts = await productCache.getProducts()
-        if (!allProducts || allProducts.length === 0) continue
-
-        const stockStatusFilters = []
-        if (stockFilters.inStock) stockStatusFilters.push("inStock")
-        if (stockFilters.outOfStock) stockStatusFilters.push("outOfStock")
-        if (stockFilters.onSale) stockStatusFilters.push("onSale")
-
-        const filters = {
-          parent_category: selectedCategory !== "all" ? selectedCategory : null,
-          category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
-          subcategory2: selectedSubCategory2,
-          subcategory3: selectedSubCategory3,
-          subcategory4: selectedSubCategory4,
-          brand: selectedBrands.length > 0 ? selectedBrands : null,
-          search: currentSearchTerm,
-          priceRange: priceRange,
-          stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
-          sortBy: sortBy,
-        }
-
-        const filteredProducts = productCache.filterProducts(allProducts, filters)
-        if (filteredProducts.length > 0) {
-          setActualSearchQuery(currentSearchTerm)
-          return filteredProducts
-        }
-      } catch (err) {
-        console.error("Error in char-trim search:", err)
+      const filteredProducts = baseFilteredProducts.filter((product) => matchesSearchTerm(product, currentSearchTerm))
+      if (filteredProducts.length > 0) {
+        setActualSearchQuery(currentSearchTerm)
+        return filteredProducts
       }
     }
 
@@ -448,6 +451,7 @@ const Shop = () => {
       setError(null)
 
       const allProducts = await productCache.getProducts()
+      allProductsRef.current = allProducts || []
 
       if (!allProducts || allProducts.length === 0) {
         setError("No products available")
@@ -458,7 +462,7 @@ const Shop = () => {
       let filteredProducts = []
 
       if (searchQuery && searchQuery.trim() !== "") {
-        filteredProducts = await performProgressiveSearch(searchQuery)
+        filteredProducts = await performProgressiveSearch(searchQuery, allProducts)
       } else {
         setActualSearchQuery("")
 
@@ -503,7 +507,12 @@ const Shop = () => {
 
   const filterProductsFromCache = async () => {
     try {
-      const allProducts = await productCache.getProducts()
+      let allProducts = allProductsRef.current
+      if (!Array.isArray(allProducts) || allProducts.length === 0) {
+        allProducts = await productCache.getProducts()
+        allProductsRef.current = allProducts || []
+      }
+
       if (!allProducts || allProducts.length === 0) {
         await loadAndFilterProducts()
         return
@@ -512,7 +521,7 @@ const Shop = () => {
       let filteredProducts = []
 
       if (searchQuery && searchQuery.trim() !== "") {
-        filteredProducts = await performProgressiveSearch(searchQuery)
+        filteredProducts = await performProgressiveSearch(searchQuery, allProducts)
       } else {
         setActualSearchQuery("")
 
@@ -534,24 +543,7 @@ const Shop = () => {
           sortBy: sortBy,
         }
 
-        console.log("🔍 Active Filters:", {
-          parentCategory: filters.parent_category ? `✅ ${selectedCategory}` : "❌",
-          level1: filters.category ? `✅ ${selectedSubCategories[0]}` : "❌", 
-          level1Name: currentSubCategoryName || "none",
-          level2: filters.subcategory2 ? `✅ ${selectedSubCategory2}` : "❌",
-          level3: filters.subcategory3 ? `✅ ${selectedSubCategory3}` : "❌",
-          level4: filters.subcategory4 ? `✅ ${selectedSubCategory4}` : "❌",
-          brands: filters.brand ? `✅ (${filters.brand.length})` : "❌",
-          priceRange: `${filters.priceRange[0]} - ${filters.priceRange[1]}`,
-          stockStatus: filters.stockStatus ? `✅ (${filters.stockStatus.join(", ")})` : "❌",
-        })
-        console.log("📌 Selected States:", {
-          selectedCategory,
-          selectedSubCategories,
-          allSubcategoriesLoaded: allSubcategories.length,
-        })
         filteredProducts = productCache.filterProducts(allProducts, filters)
-        console.log(`📊 Results: ${filteredProducts.length} products (from ${allProducts.length} total)`)
       }
 
       if (filteredProducts.length > 0) {
@@ -581,7 +573,11 @@ const Shop = () => {
   useEffect(() => {
     const computeGlobalMax = async () => {
       try {
-        const allProducts = await productCache.getProducts()
+        let allProducts = allProductsRef.current
+        if (!Array.isArray(allProducts) || allProducts.length === 0) {
+          allProducts = await productCache.getProducts()
+          allProductsRef.current = allProducts || []
+        }
         if (allProducts && allProducts.length > 0) {
           const prices = allProducts.map((p) => p.offerPrice || 0)
           const globalMax = Math.max(...prices)
@@ -2946,3 +2942,4 @@ const Shop = () => {
 }
 
 export default Shop
+
