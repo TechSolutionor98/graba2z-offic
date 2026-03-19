@@ -12,6 +12,39 @@ const PaymentSuccess = () => {
   const { getLocalizedPath } = useLanguage()
   const [orderData, setOrderData] = useState(null)
 
+  const shouldVerifyNgeniusPayment = (paymentMethod) => {
+    const normalized = String(paymentMethod || "").toLowerCase()
+    return ["card", "tabby", "online_payment"].includes(normalized)
+  }
+
+  const syncNgeniusPaymentStatus = async (orderId, paymentMethod) => {
+    if (!orderId || !shouldVerifyNgeniusPayment(paymentMethod)) return
+
+    const maxAttempts = 3
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const { data } = await axios.post(`${config.API_URL}/api/payment/ngenius/verify/${orderId}`)
+        const normalizedStatus = String(data?.status || "").toUpperCase()
+        const isFinalState = data?.isPaid || ["FAILED", "DECLINED", "CANCELED", "CANCELLED", "EXPIRED"].includes(normalizedStatus)
+
+        console.log(`[PaymentSuccess] N-Genius sync attempt ${attempt}:`, {
+          status: data?.status,
+          isPaid: data?.isPaid,
+        })
+
+        if (isFinalState) {
+          return
+        }
+      } catch (error) {
+        console.error(`[PaymentSuccess] N-Genius sync attempt ${attempt} failed:`, error.response?.data || error.message)
+      }
+
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+      }
+    }
+  }
+
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search)
     const orderId = urlParams.get("orderId") || urlParams.get("order_id")
@@ -52,6 +85,7 @@ const PaymentSuccess = () => {
 
       // Fetch order details for Google Customer Reviews
       fetchOrderDetails(orderId)
+      syncNgeniusPaymentStatus(orderId, paymentMethod).finally(() => fetchOrderDetails(orderId))
     }
   }, [location])
 
