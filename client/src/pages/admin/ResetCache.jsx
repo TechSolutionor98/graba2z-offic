@@ -84,9 +84,9 @@ const ResetCache = () => {
               Reset Cache
             </h1>
             <p className="text-gray-600 mt-2">
-              Force all users to receive fresh content by resetting the cache version.
-              When you make changes to your website, users may see old cached versions.
-              Clicking "Reset Cache" will force all browsers to load the latest version.
+              Force all users to receive fresh content by resetting browser cache version
+              and flushing server-side API cache. When you make changes to your website,
+              users may see old cached versions until this reset runs.
             </p>
           </div>
 
@@ -118,7 +118,8 @@ const ResetCache = () => {
                   <h3 className="font-medium text-yellow-800">What happens when you reset?</h3>
                   <ul className="text-sm text-yellow-700 mt-2 space-y-1">
                     <li>• All users will get a fresh version of the website on their next visit</li>
-                    <li>• Cached product data, images, and settings will be refreshed</li>
+                    <li>• Server-side API cache is flushed immediately</li>
+                    <li>• Cached product data, images, and settings are refreshed</li>
                     <li>• Any UI/styling changes will be visible immediately</li>
                   </ul>
                   <h3 className="font-medium text-green-800 mt-3">What is preserved?</h3>
