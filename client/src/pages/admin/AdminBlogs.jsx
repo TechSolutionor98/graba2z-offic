@@ -4,29 +4,46 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
-import { Plus, Search, Filter, Edit, Trash2, Eye, Calendar, User, Tag } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Eye, Calendar, User, Tag, ChevronLeft, ChevronRight } from "lucide-react"
 import axios from "axios"
 import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 
+const BLOGS_PER_PAGE = 10
+
 const AdminBlogs = () => {
   const { showToast } = useToast()
   const [blogs, setBlogs] = useState([])
+  const [stats, setStats] = useState(null)
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
   const [topics, setTopics] = useState([])
   const [brands, setBrands] = useState([])
   const [loading, setLoading] = useState(true)
+  const [tableLoading, setTableLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState({
+    current: 1,
+    total: 1,
+    hasNext: false,
+    hasPrev: false,
+    totalBlogs: 0,
+  })
 
   useEffect(() => {
-    fetchAllData()
+    fetchReferenceData()
+    fetchStats()
   }, [])
 
-  const fetchAllData = async () => {
+  useEffect(() => {
+    fetchBlogs()
+  }, [currentPage, searchTerm, statusFilter, categoryFilter])
+
+  async function fetchReferenceData() {
     try {
       const token = localStorage.getItem("adminToken")
       if (!token) {
@@ -36,53 +53,26 @@ const AdminBlogs = () => {
 
       const headers = { Authorization: `Bearer ${token}` }
 
-      console.log("Fetching all data...") // Debug log
-
-      // Fetch all data in parallel
-      const [blogsRes, categoriesRes, subCategoriesRes, topicsRes, brandsRes] = await Promise.allSettled([
-        axios.get(`${config.API_URL}/api/blogs`, { headers }),
-        axios.get(`${config.API_URL}/api/categories`, { headers }),
+      const [categoriesRes, subCategoriesRes, topicsRes, brandsRes] = await Promise.allSettled([
+        axios.get(`${config.API_URL}/api/blog-categories`, { headers }),
         axios.get(`${config.API_URL}/api/subcategories`, { headers }),
         axios.get(`${config.API_URL}/api/blog-topics`, { headers }),
-        axios.get(`${config.API_URL}/api/brands`, { headers }),
+        axios.get(`${config.API_URL}/api/blog-brands`, { headers }),
       ])
-
-      // Process blogs - blogs should now come directly as an array with populated fields
-      if (blogsRes.status === "fulfilled") {
-        const blogData = blogsRes.value.data
-        console.log("Raw blogs response:", blogData) // Debug log
-
-        let processedBlogs = []
-        if (Array.isArray(blogData)) {
-          processedBlogs = blogData
-        } else if (blogData && Array.isArray(blogData.blogs)) {
-          processedBlogs = blogData.blogs
-        } else if (blogData && blogData.data && Array.isArray(blogData.data)) {
-          processedBlogs = blogData.data
-        }
-
-        console.log("Processed blogs:", processedBlogs) // Debug log
-        setBlogs(processedBlogs)
-      } else {
-        console.error("Failed to fetch blogs:", blogsRes.reason)
-        setBlogs([])
-      }
 
       // Process categories
       if (categoriesRes.status === "fulfilled") {
         const categoryData = categoriesRes.value.data
-        console.log("Raw categories response:", categoryData) // Debug log
 
         let processedCategories = []
         if (Array.isArray(categoryData)) {
           processedCategories = categoryData
-        } else if (categoryData && Array.isArray(categoryData.categories)) {
-          processedCategories = categoryData.categories
+        } else if (categoryData && Array.isArray(categoryData.blogCategories)) {
+          processedCategories = categoryData.blogCategories
         } else if (categoryData && categoryData.data && Array.isArray(categoryData.data)) {
           processedCategories = categoryData.data
         }
 
-        console.log("Processed categories:", processedCategories) // Debug log
         setCategories(processedCategories)
       } else {
         console.error("Failed to fetch categories:", categoriesRes.reason)
@@ -92,7 +82,6 @@ const AdminBlogs = () => {
       // Process subcategories
       if (subCategoriesRes.status === "fulfilled") {
         const subCategoryData = subCategoriesRes.value.data
-        console.log("Raw subcategories response:", subCategoryData) // Debug log
 
         let processedSubCategories = []
         if (Array.isArray(subCategoryData)) {
@@ -103,7 +92,6 @@ const AdminBlogs = () => {
           processedSubCategories = subCategoryData.data
         }
 
-        console.log("Processed subcategories:", processedSubCategories) // Debug log
         setSubCategories(processedSubCategories)
       } else {
         console.error("Failed to fetch subcategories:", subCategoriesRes.reason)
@@ -113,7 +101,6 @@ const AdminBlogs = () => {
       // Process topics
       if (topicsRes.status === "fulfilled") {
         const topicData = topicsRes.value.data
-        console.log("Raw topics response:", topicData) // Debug log
 
         let processedTopics = []
         if (Array.isArray(topicData)) {
@@ -124,7 +111,6 @@ const AdminBlogs = () => {
           processedTopics = topicData.data
         }
 
-        console.log("Processed topics:", processedTopics) // Debug log
         setTopics(processedTopics)
       } else {
         console.error("Failed to fetch topics:", topicsRes.reason)
@@ -134,28 +120,99 @@ const AdminBlogs = () => {
       // Process brands
       if (brandsRes.status === "fulfilled") {
         const brandData = brandsRes.value.data
-        console.log("Raw brands response:", brandData) // Debug log
 
         let processedBrands = []
         if (Array.isArray(brandData)) {
           processedBrands = brandData
-        } else if (brandData && Array.isArray(brandData.brands)) {
-          processedBrands = brandData.brands
+        } else if (brandData && Array.isArray(brandData.blogBrands)) {
+          processedBrands = brandData.blogBrands
         } else if (brandData && brandData.data && Array.isArray(brandData.data)) {
           processedBrands = brandData.data
         }
 
-        console.log("Processed brands:", processedBrands) // Debug log
         setBrands(processedBrands)
       } else {
         console.error("Failed to fetch brands:", brandsRes.reason)
         setBrands([])
       }
     } catch (error) {
-      console.error("Error fetching data:", error)
-      showToast("Failed to fetch data", "error")
+      console.error("Error fetching reference data:", error)
+      showToast("Failed to fetch blog filters", "error")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function fetchStats() {
+    try {
+      const token = localStorage.getItem("adminToken")
+      if (!token) {
+        return
+      }
+
+      const { data } = await axios.get(`${config.API_URL}/api/blog-dashboard/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      setStats(data)
+    } catch (error) {
+      console.error("Error fetching blog stats:", error)
+    }
+  }
+
+  async function fetchBlogs() {
+    try {
+      const token = localStorage.getItem("adminToken")
+      if (!token) {
+        showToast("Please login as admin first", "error")
+        return
+      }
+
+      setTableLoading(true)
+
+      const { data } = await axios.get(`${config.API_URL}/api/blogs`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          page: currentPage,
+          limit: BLOGS_PER_PAGE,
+          search: searchTerm || undefined,
+          status: statusFilter,
+          category: categoryFilter,
+          sort: "-createdAt",
+        },
+      })
+
+      const processedBlogs = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.blogs)
+          ? data.blogs
+          : Array.isArray(data?.data)
+            ? data.data
+            : []
+
+      setBlogs(processedBlogs)
+      setPagination(
+        data?.pagination || {
+          current: 1,
+          total: 1,
+          hasNext: false,
+          hasPrev: false,
+          totalBlogs: processedBlogs.length,
+        },
+      )
+    } catch (error) {
+      console.error("Error fetching blogs:", error)
+      setBlogs([])
+      setPagination({
+        current: 1,
+        total: 1,
+        hasNext: false,
+        hasPrev: false,
+        totalBlogs: 0,
+      })
+      showToast("Failed to fetch blogs", "error")
+    } finally {
+      setTableLoading(false)
     }
   }
 
@@ -253,7 +310,13 @@ const AdminBlogs = () => {
           headers: { Authorization: `Bearer ${token}` },
         })
         showToast("Blog deleted successfully!", "success")
-        fetchAllData()
+        const isLastItemOnPage = blogs.length === 1 && currentPage > 1
+        if (isLastItemOnPage) {
+          setCurrentPage((prev) => prev - 1)
+        } else {
+          fetchBlogs()
+        }
+        fetchStats()
       } catch (error) {
         console.error("Error deleting blog:", error)
         showToast("Failed to delete blog", "error")
@@ -272,34 +335,13 @@ const AdminBlogs = () => {
         },
       )
       showToast("Blog status updated successfully!", "success")
-      fetchAllData()
+      fetchBlogs()
+      fetchStats()
     } catch (error) {
       console.error("Error updating blog status:", error)
       showToast("Failed to update blog status", "error")
     }
   }
-
-  const filteredBlogs = Array.isArray(blogs)
-    ? blogs.filter((blog) => {
-        const matchesSearch =
-          blog.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          blog.blogName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          blog.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          false
-        const matchesStatus = statusFilter === "all" || blog.status === statusFilter
-
-        // Updated category matching to handle both populated and non-populated data
-        const blogCategoryId =
-          blog.blogCategory && typeof blog.blogCategory === "object"
-            ? blog.blogCategory._id
-            : blog.blogCategory || (blog.mainCategory && typeof blog.mainCategory === "object"
-            ? blog.mainCategory._id
-            : blog.mainCategory)
-        const matchesCategory = categoryFilter === "all" || blogCategoryId === categoryFilter
-
-        return matchesSearch && matchesStatus && matchesCategory
-      })
-    : []
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -307,6 +349,26 @@ const AdminBlogs = () => {
       month: "short",
       day: "numeric",
     })
+  }
+
+  const totalPages = pagination.total || 1
+  const totalBlogsCount = pagination.totalBlogs || 0
+  const pageStart = totalBlogsCount === 0 ? 0 : (currentPage - 1) * BLOGS_PER_PAGE + 1
+  const pageEnd = Math.min(currentPage * BLOGS_PER_PAGE, totalBlogsCount)
+
+  const handleSearchChange = (value) => {
+    setCurrentPage(1)
+    setSearchTerm(value)
+  }
+
+  const handleStatusFilterChange = (value) => {
+    setCurrentPage(1)
+    setStatusFilter(value)
+  }
+
+  const handleCategoryFilterChange = (value) => {
+    setCurrentPage(1)
+    setCategoryFilter(value)
   }
 
   if (loading) {
@@ -324,19 +386,24 @@ const AdminBlogs = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100">
       <AdminSidebar />
       <div className="flex-1 ml-64 overflow-auto">
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Blogs</h1>
-              <p className="text-gray-600 mt-2">Manage your blog posts and content</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900">Blogs</h1>
+                <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+                  {stats?.overview?.totalBlogs || totalBlogsCount} total posts
+                </span>
+              </div>
+              <p className="mt-2 text-gray-600">Manage your blog posts and content</p>
             </div>
             <Link
               to="/admin/blogs/add"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-white transition-colors hover:bg-blue-700 sm:w-auto"
             >
               <Plus size={20} />
               Add New Blog
@@ -344,12 +411,12 @@ const AdminBlogs = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Blogs</p>
-                  <p className="text-3xl font-bold text-gray-900">{blogs.length}</p>
+                  <p className="text-3xl font-bold text-gray-900">{stats?.overview?.totalBlogs || totalBlogsCount}</p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-full">
                   <Tag className="w-6 h-6 text-blue-600" />
@@ -362,7 +429,7 @@ const AdminBlogs = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Published</p>
                   <p className="text-3xl font-bold text-green-600">
-                    {blogs.filter((blog) => blog.status === "published").length}
+                    {stats?.overview?.publishedBlogs || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">
@@ -376,7 +443,7 @@ const AdminBlogs = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Drafts</p>
                   <p className="text-3xl font-bold text-yellow-600">
-                    {blogs.filter((blog) => blog.status === "draft").length}
+                    {stats?.overview?.draftBlogs || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-yellow-100 rounded-full">
@@ -390,7 +457,7 @@ const AdminBlogs = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Views</p>
                   <p className="text-3xl font-bold text-purple-600">
-                    {blogs.reduce((total, blog) => total + (blog.views || 0), 0)}
+                    {stats?.overview?.totalViews || 0}
                   </p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-full">
@@ -402,37 +469,36 @@ const AdminBlogs = () => {
 
           {/* Filters */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_220px_220px]">
+              <div>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     type="text"
                     placeholder="Search blogs..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Filter size={20} className="text-gray-400" />
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="published">Published</option>
-                    <option value="draft">Draft</option>
-                    <option value="archived">Archived</option>
-                  </select>
-                </div>
+              <div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => handleStatusFilterChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Status</option>
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+              <div>
                 <select
                   value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => handleCategoryFilterChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All Categories</option>
                   {categories.map((category) => (
@@ -447,7 +513,14 @@ const AdminBlogs = () => {
 
           {/* Blogs List */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {filteredBlogs.length === 0 ? (
+            {tableLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                  <p className="mt-3 text-sm text-gray-500">Loading blogs...</p>
+                </div>
+              </div>
+            ) : blogs.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <Tag size={48} className="mx-auto" />
@@ -457,7 +530,7 @@ const AdminBlogs = () => {
                   {searchTerm ? "Try adjusting your search terms" : "Get started by creating your first blog post"}
                 </p>
                 <Link
-                  to="/admin/add-blog"
+                  to="/admin/blogs/add"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Plus size={16} />
@@ -496,16 +569,14 @@ const AdminBlogs = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredBlogs.map((blog) => {
-                      console.log("Rendering blog:", blog) // Debug log
+                    {blogs.map((blog) => {
                       const blogId = blog._id || blog.id
-                      console.log("Blog ID for edit:", blogId) // Debug log for edit button
-                      
+
                       if (!blogId) {
                         console.error("Blog missing ID:", blog)
                         return null
                       }
-                      
+
                       return (
                         <tr key={blogId} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
@@ -612,10 +683,6 @@ const AdminBlogs = () => {
                               <Link
                                 to={`/admin/blogs/edit/${blogId}`}
                                 className="text-blue-600 hover:text-blue-900 p-1 inline-flex items-center justify-center"
-                                onClick={(e) => {
-                                  console.log("Edit button clicked, blogId:", blogId)
-                                  console.log("Navigating to:", `/admin/blogs/edit/${blogId}`)
-                                }}
                                 title="Edit Blog"
                               >
                                 <Edit size={16} />
@@ -634,6 +701,64 @@ const AdminBlogs = () => {
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {!tableLoading && totalPages > 1 && (
+              <div className="flex flex-col gap-4 border-t border-gray-200 bg-gray-50 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing <span className="font-semibold text-gray-900">{pageStart}</span> to{" "}
+                  <span className="font-semibold text-gray-900">{pageEnd}</span> of{" "}
+                  <span className="font-semibold text-gray-900">{totalBlogsCount}</span> blogs
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <ChevronLeft size={16} />
+                    Previous
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, index) => index + 1)
+                    .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                    .reduce((acc, page, index, pages) => {
+                      if (index > 0 && page - pages[index - 1] > 1) {
+                        acc.push(
+                          <span key={`ellipsis-${page}`} className="px-2 text-sm text-gray-400">
+                            ...
+                          </span>,
+                        )
+                      }
+
+                      acc.push(
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`min-w-[40px] rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                            currentPage === page
+                              ? "border-blue-600 bg-blue-600 text-white"
+                              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {page}
+                        </button>,
+                      )
+
+                      return acc
+                    }, [])}
+
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Next
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
               </div>
             )}
           </div>

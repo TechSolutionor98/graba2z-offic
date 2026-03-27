@@ -323,6 +323,11 @@ const Footer = ({ className = "" }) => {
                     </Link>
                   </li>
                   <li>
+                    <Link to={getLocalizedPath("/contact")} className="hover:text-lime-400">
+                      <TranslatedText>Contact Us</TranslatedText>
+                    </Link>
+                  </li>
+                  <li>
                     <Link to={getLocalizedPath("/blogs")} rel="noopener noreferrer" className="hover:text-lime-400">
                       <TranslatedText>Blog</TranslatedText>
                     </Link>
