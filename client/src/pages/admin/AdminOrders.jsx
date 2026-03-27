@@ -6,6 +6,8 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, Mail, ChevronDown, RefreshCw } from "lucide-react"
 import { getFullImageUrl } from "../../utils/imageUtils"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo } from "../../utils/paymentUtils"
+import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
+import { resolveOrderItemSalePrice } from "../../utils/orderPricing"
 import { useLocation } from "react-router-dom"
 
 import config from "../../config/config"
@@ -242,6 +244,8 @@ const AdminOrders = () => {
     style.innerHTML = bounceKeyframes
     document.head.appendChild(style)
   }
+
+  const selectedTotals = getInvoiceBreakdown(selectedOrder || {})
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -549,31 +553,37 @@ const AdminOrders = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {selectedOrder.orderItems.map((item) => (
-                        <tr key={item._id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 flex-shrink-0">
-                                <img
-                                  src={getFullImageUrl(item.image) || "/placeholder.svg?height=40&width=40"}
-                                  alt={item.name}
-                                  className="h-10 w-10 rounded-md object-cover"
-                                />
+                      {selectedOrder.orderItems.map((item, index) => {
+                        const unitPrice = resolveOrderItemSalePrice(item)
+                        const quantity = Number(item.quantity) || 1
+                        const lineTotal = unitPrice * quantity
+
+                        return (
+                          <tr key={item._id || `${item.name}-${index}`}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="h-10 w-10 flex-shrink-0">
+                                  <img
+                                    src={getFullImageUrl(item.image) || "/placeholder.svg?height=40&width=40"}
+                                    alt={item.name}
+                                    className="h-10 w-10 rounded-md object-cover"
+                                  />
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                                </div>
                               </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {formatPrice(item.price)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.quantity}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {formatPrice(item.price * item.quantity)}
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {formatPrice(unitPrice)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quantity}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                              {formatPrice(lineTotal)}
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -618,15 +628,15 @@ const AdminOrders = () => {
                   <div className="bg-gray-50 p-4 rounded-md">
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-gray-600">Subtotal</span>
-                      <span className="text-gray-900">{formatPrice(selectedOrder.itemsPrice)}</span>
+                      <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-gray-600">Shipping</span>
-                      <span className="text-gray-900">{formatPrice(selectedOrder.shippingPrice)}</span>
+                      <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b font-medium">
                       <span className="text-gray-900">Total</span>
-                      <span className="text-blue-600">{formatPrice(selectedOrder.totalPrice)}</span>
+                      <span className="text-blue-600">{formatPrice(selectedTotals.total)}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-gray-600">Payment Method</span>
