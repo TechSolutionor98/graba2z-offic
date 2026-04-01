@@ -32,12 +32,16 @@ import BrandSlider from "../components/BrandSlider"
 import SEO from "../components/SEO"
 import DynamicSection from "../components/DynamicSection"
 import TranslatedText from "../components/TranslatedText"
-import { getCategoryTreeCached } from "../services/categoryTreeCache"
 
 import config from "../config/config"
 
 
 const API_BASE_URL = `${config.API_URL}`
+const MOBILE_STATIC_HERO = {
+  title: "Grabatoz mobile hero",
+  image: "/mobile-home-hero.jpg",
+  link: "/product-category/electronics-home/projectors",
+}
 const FALLBACK_HERO_BANNER = {
   title: "top again 1",
   image: "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp",
@@ -65,6 +69,26 @@ const NEWSLETTER_OPTIONS = [
   { label: "Promotions", value: "promotions", icon: <Tag className="inline mr-2 w-4 h-4" /> },
   { label: "Events", value: "events", icon: <Calendar className="inline mr-2 w-4 h-4" /> },
 ]
+
+const MOBILE_RESERVED_HEIGHTS = {
+  dynamicAboveFold: 260,
+  featuredProducts: 430,
+  deferredSection: 220,
+}
+
+const runWhenIdle = (callback, timeout = 1200) => {
+  if (typeof window === "undefined") return () => {}
+  if ("requestIdleCallback" in window) {
+    const id = window.requestIdleCallback(callback, { timeout })
+    return () => window.cancelIdleCallback(id)
+  }
+  const id = window.setTimeout(callback, Math.min(timeout, 900))
+  return () => window.clearTimeout(id)
+}
+
+const MobileReservedSkeleton = ({ height = MOBILE_RESERVED_HEIGHTS.deferredSection, className = "" }) => (
+  <div className={`md:hidden mx-3 rounded-2xl bg-gray-100 animate-pulse ${className}`} style={{ height }} />
+)
 
 const getMobileHeroCardImageProps = (image, fallbackSrc = "") =>
   getResponsiveImageProps(image, {
@@ -95,6 +119,33 @@ const getCategoryBannerProps = (image, fallbackSrc = "") =>
     sizes: "(max-width: 1023px) calc(100vw - 1.5rem), 1311px",
     fallbackSrc,
   })
+
+const StaticMobileHero = ({ getLocalizedPath }) => (
+  <section className="relative w-full h-[170px] overflow-hidden md:hidden">
+    <Link to={getLocalizedPath(MOBILE_STATIC_HERO.link)} aria-label={MOBILE_STATIC_HERO.title} className="absolute inset-0">
+      <img
+        src={MOBILE_STATIC_HERO.image}
+        alt={MOBILE_STATIC_HERO.title}
+        fetchPriority="high"
+        loading="eager"
+        decoding="async"
+        width="720"
+        height="277"
+        className="block w-full h-full object-cover"
+      />
+    </Link>
+  </section>
+)
+
+const MobileDeferredContentPlaceholder = () => (
+  <div className="md:hidden space-y-4 mt-4">
+    <MobileReservedSkeleton height={160} />
+    <MobileReservedSkeleton height={280} />
+    <MobileReservedSkeleton height={160} />
+    <MobileReservedSkeleton height={280} />
+    <MobileReservedSkeleton height={220} />
+  </div>
+)
 
 const Home = () => {
   const { getLocalizedPath } = useLanguage()
@@ -151,6 +202,33 @@ const Home = () => {
     }),
     [],
   )
+  const [showDynamicMobileHero, setShowDynamicMobileHero] = useState(false)
+  const [showDeferredMobileContent, setShowDeferredMobileContent] = useState(false)
+  const isMobileViewport = deviceType === "Mobile"
+  const shouldRenderDeferredMobileContent = !isMobileViewport || showDeferredMobileContent
+  const filteredHeroBanners = useMemo(
+    () =>
+      heroBanners.filter(
+        (banner) => banner.deviceType && banner.deviceType.toLowerCase() === deviceType.toLowerCase(),
+      ),
+    [heroBanners, deviceType],
+  )
+  const homeBannersByKey = useMemo(() => {
+    const normalize = (value) => String(value || "").trim().toLowerCase()
+    const targetDevice = normalize(deviceType)
+    const bannerMap = new Map()
+
+    homeBanners.forEach((banner) => {
+      const bannerDevice = normalize(banner.deviceType)
+      if (bannerDevice && bannerDevice !== targetDevice) return
+      const key = `${normalize(banner.section)}::${normalize(banner.position)}`
+      const current = bannerMap.get(key) || []
+      current.push(banner)
+      bannerMap.set(key, current)
+    })
+
+    return bannerMap
+  }, [homeBanners, deviceType])
 
   // Notification popup state
   const [showNotifPopup, setShowNotifPopup] = useState(false)
@@ -168,6 +246,38 @@ const Home = () => {
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
+
+  useEffect(() => {
+    if (!isMobileViewport) {
+      setShowDynamicMobileHero(true)
+      setShowDeferredMobileContent(true)
+      return
+    }
+
+    setShowDynamicMobileHero(false)
+    setShowDeferredMobileContent(false)
+
+    const cleanupHeroIdle = runWhenIdle(() => setShowDynamicMobileHero(true), 700)
+    const cleanupDeferredIdle = runWhenIdle(() => setShowDeferredMobileContent(true), 1600)
+
+    const revealDeferredContent = () => setShowDeferredMobileContent(true)
+    const revealHeroAndDeferred = () => {
+      setShowDynamicMobileHero(true)
+      setShowDeferredMobileContent(true)
+    }
+
+    window.addEventListener("scroll", revealDeferredContent, { once: true, passive: true })
+    window.addEventListener("pointerdown", revealHeroAndDeferred, { once: true, passive: true })
+    window.addEventListener("touchstart", revealHeroAndDeferred, { once: true, passive: true })
+
+    return () => {
+      cleanupHeroIdle()
+      cleanupDeferredIdle()
+      window.removeEventListener("scroll", revealDeferredContent)
+      window.removeEventListener("pointerdown", revealHeroAndDeferred)
+      window.removeEventListener("touchstart", revealHeroAndDeferred)
+    }
+  }, [isMobileViewport])
 
   useEffect(() => {
     if (localStorage.getItem(NOTIF_POPUP_KEY)) return
@@ -192,13 +302,23 @@ const Home = () => {
   }, [])
 
   // Helper function to render dynamic section by position
-  const renderDynamicSection = (position) => {
+  const renderDynamicSection = (position, options = {}) => {
     const section = homeSections.find(s => s.isActive && s.order === position)
     if (section) {
       // Create a unique key that includes settings to force re-render when settings change
       const settingsKey = section.settings ? JSON.stringify(section.settings) : 'no-settings'
       const uniqueKey = `${section._id}-${section.sectionType}-${settingsKey}`
-      return <DynamicSection key={uniqueKey} section={section} />
+      return (
+        <DynamicSection
+          key={uniqueKey}
+          section={section}
+          reserveMobileLayout={options.reserveMobileLayout}
+          mobileReservedHeight={options.mobileReservedHeight}
+        />
+      )
+    }
+    if (options.reserveMobileLayout && isMobileViewport) {
+      return <MobileReservedSkeleton height={options.mobileReservedHeight || MOBILE_RESERVED_HEIGHTS.dynamicAboveFold} />
     }
     return null
   }
@@ -206,10 +326,7 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [homepageResponse, categoryTreeData] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/homepage`).catch(() => null),
-          getCategoryTreeCached().catch(() => []),
-        ])
+        const homepageResponse = await axios.get(`${API_BASE_URL}/api/homepage`).catch(() => null)
 
         const defaultSettings = {
           homeSections: {
@@ -355,21 +472,6 @@ const Home = () => {
           }
         }
 
-        const findSubCategoryIdByName = (nodes, targetName) => {
-          if (!Array.isArray(nodes)) return null
-          const target = String(targetName || "").trim().toLowerCase()
-          const stack = [...nodes]
-          while (stack.length) {
-            const node = stack.pop()
-            if (!node) continue
-            if (String(node.name || "").trim().toLowerCase() === target && node._id) return node._id
-            if (Array.isArray(node.children) && node.children.length) stack.push(...node.children)
-          }
-          return null
-        }
-
-        const networkingSubCategoryId = findSubCategoryIdByName(categoryTreeData, "Networking")
-
         setCategories(leanValidCategories)
         setBanners(promotionalBanners)
         setHeroBanners(heroData)
@@ -388,11 +490,7 @@ const Home = () => {
         const fetchByParentCategory = (categoryId, limit) =>
           categoryId ? fetchProducts({ parentCategory: categoryId, limit }) : Promise.resolve([])
         const fetchNetworking = (limit) =>
-          networkingSubCategoryId
-            ? fetchProducts({ subcategory: networkingSubCategoryId, limit })
-            : categoryIdMap.networking
-            ? fetchByParentCategory(categoryIdMap.networking, limit)
-            : Promise.resolve([])
+          categoryIdMap.networking ? fetchByParentCategory(categoryIdMap.networking, limit) : Promise.resolve([])
 
         const [
           featuredFallback,
@@ -622,20 +720,7 @@ const Home = () => {
   // Helper function to get banners for a specific section and device type
   const getBannersForSection = (section, position = null) => {
     const normalize = (value) => String(value || "").trim().toLowerCase()
-    const targetSection = normalize(section)
-    const targetPosition = normalize(position)
-    const targetDevice = normalize(deviceType)
-
-    return homeBanners.filter((banner) => {
-      const bannerSection = normalize(banner.section)
-      const bannerPosition = normalize(banner.position)
-      const bannerDevice = normalize(banner.deviceType)
-
-      const matchesSection = section ? bannerSection === targetSection : true
-      const matchesPosition = position ? bannerPosition === targetPosition : true
-      const matchesDevice = bannerDevice ? bannerDevice === targetDevice : true
-      return matchesSection && matchesPosition && matchesDevice
-    })
+    return homeBannersByKey.get(`${normalize(section)}::${normalize(position)}`) || []
   }
 
   const handleNotifDeny = () => {
@@ -804,14 +889,15 @@ const Home = () => {
           </div>
         </div>
       )}
-      <BannerSlider
-        banners={(() => {
-          const filtered = heroBanners.filter(
-            (banner) => banner.deviceType && banner.deviceType.toLowerCase() === deviceType.toLowerCase(),
-          )
-          return filtered.length ? filtered : [FALLBACK_HERO_BANNER]
-        })()}
-      />
+      {isMobileViewport ? (
+        showDynamicMobileHero && filteredHeroBanners.length > 0 ? (
+          <BannerSlider banners={filteredHeroBanners} />
+        ) : (
+          <StaticMobileHero getLocalizedPath={getLocalizedPath} />
+        )
+      ) : (
+        <BannerSlider banners={filteredHeroBanners.length ? filteredHeroBanners : [FALLBACK_HERO_BANNER]} />
+      )}
       {/* Categories Section - Admin Controlled Slider */}
       <CategorySliderUpdated onCategoryClick={handleCategoryClick} />
 
@@ -819,7 +905,7 @@ const Home = () => {
       {/* Three Cards Section - Dynamic Banners */}
       <div className="m-3">
         {/* Desktop & Tablet - Grid Layout */}
-        <div className="hidden md:flex justify-between gap-4">
+        {!isMobileViewport && <div className="hidden md:flex justify-between gap-4">
           {(() => {
             const banners = getBannersForSection("top-triple", "home-top-triple")
             const fallbacks = [
@@ -869,7 +955,7 @@ const Home = () => {
               )
             })
           })()}
-        </div>
+        </div>}
 
         {/* Mobile - Simple Grid */}
         <div className="md:hidden grid grid-cols-2 gap-3">
@@ -934,10 +1020,13 @@ const Home = () => {
       </div> */}
 
       {/* Dynamic Section Position 1 */}
-      {renderDynamicSection(1)}
+      {renderDynamicSection(1, {
+        reserveMobileLayout: true,
+        mobileReservedHeight: MOBILE_RESERVED_HEIGHTS.dynamicAboveFold,
+      })}
 
       {/* Big Sale Section - Handles both mobile and desktop views */}
-      <BigSaleSection products={featuredProducts} />
+      {!isMobileViewport && <BigSaleSection products={featuredProducts} />}
 
       {/* Featured Products Section - Mobile Grid */}
       <section className="py-6 mx-3 md:hidden">
@@ -946,17 +1035,31 @@ const Home = () => {
           <button className="text-green-600 hover:text-green-800 font-medium text-sm">View All</button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          {featuredProducts.slice(0, 4).map((product, index) => (
-            <MobileProductCard key={product._id} product={product} index={index} />
-          ))}
-        </div>
+        {loading && featuredProducts.length === 0 ? (
+          <div
+            className="grid grid-cols-2 gap-3"
+            style={{ minHeight: `${MOBILE_RESERVED_HEIGHTS.featuredProducts}px` }}
+          >
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-[206px] rounded-xl bg-gray-100 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {featuredProducts.slice(0, 4).map((product, index) => (
+              <MobileProductCard key={product._id} product={product} index={index} />
+            ))}
+          </div>
+        )}
       </section>
 
 
 
       {/* Dynamic Section Position 2 */}
-      {renderDynamicSection(2)}
+      {renderDynamicSection(2, {
+        reserveMobileLayout: true,
+        mobileReservedHeight: MOBILE_RESERVED_HEIGHTS.dynamicAboveFold,
+      })}
 
 
 
@@ -997,6 +1100,8 @@ const Home = () => {
       </div>
 
 
+      {shouldRenderDeferredMobileContent ? (
+        <>
       {/* Desktop Banner - HP and Dell (Dynamic) */}
       <div className="hidden md:flex gap-2 mx-3 h-[270px]">
         {(() => {
@@ -1826,6 +1931,10 @@ const Home = () => {
           </div>
         </div>
       </section>
+        </>
+      ) : (
+        <MobileDeferredContentPlaceholder />
+      )}
 
       <style>{`
         @keyframes fadeInUp {

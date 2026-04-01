@@ -6,16 +6,38 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getFullImageUrl } from '../utils/imageUtils'
 import TranslatedText from './TranslatedText'
 
-function DynamicSection({ section }) {
+const MOBILE_SECTION_HEIGHTS = {
+  'background-image': 300,
+  'arrow-slider': 250,
+  'cards-left-image-right': 320,
+  'cards-right-image-left': 320,
+  'simple-cards': 250,
+  'vertical-grid': 320,
+}
+
+function DynamicSection({ section, reserveMobileLayout = false, mobileReservedHeight }) {
   const [cards, setCards] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false,
+  )
 
   useEffect(() => {
     if (section?.slug) {
       fetchSectionCards()
     }
   }, [section?.slug])
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileViewport(window.innerWidth < 768)
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const fetchSectionCards = async () => {
     try {
@@ -29,6 +51,17 @@ function DynamicSection({ section }) {
   }
 
   if (loading) {
+    if (reserveMobileLayout && isMobileViewport) {
+      const reservedHeight =
+        mobileReservedHeight ||
+        MOBILE_SECTION_HEIGHTS[section?.sectionType] ||
+        MOBILE_SECTION_HEIGHTS['simple-cards']
+
+      return (
+        <section className="md:hidden mx-3 my-4 rounded-2xl bg-gray-100 animate-pulse" style={{ height: reservedHeight }} />
+      )
+    }
+
     return (
       <section className="py-12">
         <div className="max-w-[1920px] mx-auto px-4">

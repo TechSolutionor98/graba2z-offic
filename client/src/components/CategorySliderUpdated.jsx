@@ -17,6 +17,10 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sliderShape, setSliderShape] = useState("circle");
   const [layoutType, setLayoutType] = useState("default");
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
+  const [itemWidth, setItemWidth] = useState(0);
   const { currentLanguage } = useLanguage();
 
   // Touch/mouse state
@@ -27,7 +31,7 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
 
   // Preload translations when items change and language is Arabic
   useEffect(() => {
-    if (currentLanguage.code === 'ar' && allSliderItems.length > 0) {
+    if (!isMobileViewport && currentLanguage.code === 'ar' && allSliderItems.length > 0) {
       // Extract all names for translation
       const names = allSliderItems
         .map(item => item.name)
@@ -38,29 +42,25 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
         preloadTranslations(names, 'ar');
       }
     }
-  }, [allSliderItems, currentLanguage.code]);
+  }, [allSliderItems, currentLanguage.code, isMobileViewport]);
 
   // Fetch categories and settings from slider API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch slider categories
-        const sliderRes = await axios.get(`${config.API_URL}/api/categories/slider`);
+
+        const [sliderRes, customRes, settingsRes] = await Promise.all([
+          axios.get(`${config.API_URL}/api/categories/slider`),
+          axios.get(`${config.API_URL}/api/custom-slider-items/active`).catch((customErr) => {
+            console.log("No custom slider items or error fetching them:", customErr);
+            return { data: [] };
+          }),
+          axios.get(`${config.API_URL}/api/settings`),
+        ]);
+
         const sliderData = sliderRes.data || [];
-        
-        // Fetch custom slider items (admin-created promotional items)
-        let customSliderItems = [];
-        try {
-          const customRes = await axios.get(`${config.API_URL}/api/custom-slider-items/active`);
-          customSliderItems = customRes.data || [];
-        } catch (customErr) {
-          console.log("No custom slider items or error fetching them:", customErr);
-        }
-        
-        // Fetch settings for shape
-        const settingsRes = await axios.get(`${config.API_URL}/api/settings`);
+        const customSliderItems = customRes.data || [];
         const settingsData = settingsRes.data || {};
         setSliderShape(settingsData.categorySliderShape || "circle");
         setLayoutType(settingsData.categorySliderLayoutType || "default");
@@ -123,6 +123,7 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
   useEffect(() => {
     const updateVisible = () => {
       const width = window.innerWidth;
+      setIsMobileViewport(width < 768);
       
       if (width >= 1536) {
         if (width >= 2300) {
@@ -156,6 +157,27 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
   }, []);
 
   useEffect(() => {
+    const updateItemWidth = () => {
+      const containerWidth = containerRef.current?.offsetWidth || 0;
+      setItemWidth(containerWidth > 0 ? containerWidth / visibleCount : 0);
+    };
+
+    updateItemWidth();
+
+    let observer;
+    if (containerRef.current && typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(updateItemWidth);
+      observer.observe(containerRef.current);
+    }
+
+    window.addEventListener("resize", updateItemWidth);
+    return () => {
+      if (observer) observer.disconnect();
+      window.removeEventListener("resize", updateItemWidth);
+    };
+  }, [visibleCount]);
+
+  useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -182,15 +204,9 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
     );
   };
 
-  const getItemWidth = () => {
-    if (!containerRef.current) return 0;
-    const containerWidth = containerRef.current.offsetWidth;
-    return containerWidth / visibleCount;
-  };
-
   const animateAndSetIndex = (direction) => {
     setIsAnimating(true);
-    const offset = direction === 'next' ? -getItemWidth() : getItemWidth();
+    const offset = direction === 'next' ? -itemWidth : itemWidth;
     setDragOffset(offset);
     setTimeout(() => {
       setIsAnimating(false);
@@ -211,7 +227,7 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
     if (!isDragging.current || startX.current === null) return;
     const touch = e.touches[0];
     const diff = touch.clientX - startX.current;
-    const maxDrag = getItemWidth();
+    const maxDrag = itemWidth || 0;
     const limitedDiff = Math.max(Math.min(diff, maxDrag), -maxDrag);
     setDragOffset(limitedDiff);
   };
@@ -220,7 +236,7 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
     if (!isDragging.current || startX.current === null) return;
     const touch = e.changedTouches[0];
     const diff = touch.clientX - startX.current;
-    const threshold = getItemWidth() / 3;
+    const threshold = (itemWidth || 0) / 3;
     if (diff < -threshold) {
       animateAndSetIndex('next');
     } else if (diff > threshold) {
@@ -243,13 +259,15 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
   const handleMouseMove = (e) => {
     if (!isDragging.current || startX.current === null) return;
     const diff = e.clientX - startX.current;
-    setDragOffset(diff);
+    const maxDrag = itemWidth || 0;
+    const limitedDiff = Math.max(Math.min(diff, maxDrag), -maxDrag);
+    setDragOffset(limitedDiff);
   };
 
   const handleMouseUp = (e) => {
     if (!isDragging.current || startX.current === null) return;
     const diff = e.clientX - startX.current;
-    const threshold = getItemWidth() / 3;
+    const threshold = (itemWidth || 0) / 3;
     if (diff < -threshold) {
       animateAndSetIndex('next');
     } else if (diff > threshold) {
@@ -503,14 +521,7 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                           )}
                         </div>
                         <span className={layoutClasses.textClass}>
-                          {(() => {
-                            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-                            const name = item.name;
-                            if (isMobile && name.length > 14) {
-                              return <TranslatedText text={name.slice(0, 14) + '...'} sourceDoc={item} fieldName="name" />;
-                            }
-                            return <TranslatedText text={name} sourceDoc={item} fieldName="name" />;
-                          })()}
+                          <TranslatedText text={item.name} sourceDoc={item} fieldName="name" />
                         </span>
                       </>
                     ) : (
@@ -541,14 +552,7 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                         </div>
 
                         <span className={layoutClasses.textClass}>
-                          {(() => {
-                            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-                            const name = item.name;
-                            if (isMobile && name.length > 14) {
-                              return <TranslatedText text={name.slice(0, 14) + '...'} sourceDoc={item} fieldName="name" />;
-                            }
-                            return <TranslatedText text={name} sourceDoc={item} fieldName="name" />;
-                          })()}
+                          <TranslatedText text={item.name} sourceDoc={item} fieldName="name" />
                         </span>
                       </>
                     )}

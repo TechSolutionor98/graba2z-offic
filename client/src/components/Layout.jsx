@@ -1,8 +1,10 @@
+import { Suspense, lazy, useEffect, useState } from "react"
 import { Outlet, useLocation } from "react-router-dom"
 import Navbar from "./Navbar"
-import Footer from "./Footer"
-import BlogFooter from "./BlogFooter"
 import BlogNavbar from "./BlogNavbar"
+
+const Footer = lazy(() => import("./Footer"))
+const BlogFooter = lazy(() => import("./BlogFooter"))
 
 function WhatsAppButton() {
   return (
@@ -28,9 +30,46 @@ function WhatsAppButton() {
 
 function Layout() {
   const location = useLocation()
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false,
+  )
+  const [showDeferredChrome, setShowDeferredChrome] = useState(false)
   // Check if current path is a blog page (with or without language prefix)
   // Matches: /blogs, /blogs/slug, /ae-en/blogs, /ae-en/blogs/slug, /ar/blogs, etc.
   const isBlogPage = location.pathname.match(/^\/([a-z]{2}(-[a-z]{2})?\/)?blogs(\/|$)/i)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileViewport(window.innerWidth < 768)
+    }
+
+    handleResize()
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  useEffect(() => {
+    if (!isMobileViewport) {
+      setShowDeferredChrome(true)
+      return
+    }
+
+    setShowDeferredChrome(false)
+
+    const revealChrome = () => setShowDeferredChrome(true)
+    const idleId = window.setTimeout(revealChrome, 1400)
+
+    window.addEventListener("scroll", revealChrome, { once: true, passive: true })
+    window.addEventListener("pointerdown", revealChrome, { once: true, passive: true })
+    window.addEventListener("touchstart", revealChrome, { once: true, passive: true })
+
+    return () => {
+      window.clearTimeout(idleId)
+      window.removeEventListener("scroll", revealChrome)
+      window.removeEventListener("pointerdown", revealChrome)
+      window.removeEventListener("touchstart", revealChrome)
+    }
+  }, [isMobileViewport])
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -45,10 +84,14 @@ function Layout() {
       </main>
 
       {/* Footer - Conditional based on page */}
-      {isBlogPage ? <BlogFooter /> : <Footer />}
+      {showDeferredChrome && (
+        <Suspense fallback={null}>
+          {isBlogPage ? <BlogFooter /> : <Footer />}
+        </Suspense>
+      )}
 
       {/* WhatsApp Button */}
-      <WhatsAppButton />
+      {showDeferredChrome && <WhatsAppButton />}
     </div>
   )
 }

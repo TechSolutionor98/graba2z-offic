@@ -200,6 +200,9 @@ const Navbar = () => {
   const [expandedMobileCategory, setExpandedMobileCategory] = useState(null)
   const [expandedMobileSubCategories, setExpandedMobileSubCategories] = useState([])
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false,
+  )
   const [isDesktopCategoryDropdownOpen, setIsDesktopCategoryDropdownOpen] = useState(false)
   const [desktopCascadeIds, setDesktopCascadeIds] = useState([]) // [parentId, level1Id, level2Id, ...]
   const profileRef = useRef(null)
@@ -338,10 +341,21 @@ const Navbar = () => {
     el.scrollBy({ left: offset, behavior: "smooth" })
   }
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileViewport(window.innerWidth < 768)
+    }
+
+    handleResize()
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
 
   // Fetch categories and subcategories from API
-  const fetchCategoryTree = async () => {
+  const fetchCategoryTree = async ({ preloadLanguage = !isMobileViewport } = {}) => {
     try {
+      if (categories.length > 0) return categories
       const treeData = await getCategoryTreeCached()
       setCategories(treeData)
       // Store categories globally for mobile subcategory component
@@ -363,7 +377,7 @@ const Navbar = () => {
       setFlatSubCategories(derivedSubs)
       
       // Preload translations for all category and subcategory names when in Arabic mode
-      if (currentLanguage.code === 'ar') {
+      if (preloadLanguage && currentLanguage.code === 'ar') {
         const allNames = []
         
         // Recursively collect all names from the tree
@@ -391,8 +405,11 @@ const Navbar = () => {
           preloadTranslations(allNames, 'ar')
         }
       }
+
+      return treeData
     } catch (error) {
       console.error("Error fetching category tree:", error)
+      return []
     }
   }
 
@@ -490,6 +507,10 @@ const Navbar = () => {
 
   // Instant search effect with progressive fallback (words → characters)
   useEffect(() => {
+    if (isMobileViewport && !isMobileSearchOpen) {
+      return
+    }
+
     const q = searchQuery.trim()
     if (q.length === 0) {
       setSearchResults([])
@@ -580,7 +601,7 @@ const Navbar = () => {
       cancelled = true
       clearTimeout(timeout)
     }
-  }, [searchQuery])
+  }, [isMobileSearchOpen, isMobileViewport, searchQuery])
 
   // Hide dropdown on outside click
   useEffect(() => {
@@ -600,11 +621,14 @@ const Navbar = () => {
   }, [])
 
   useEffect(() => {
-    fetchCategoryTree()
-  }, [])
+    if (!isMobileViewport) {
+      fetchCategoryTree()
+    }
+  }, [isMobileViewport])
 
   // Preload translations when language changes to Arabic (if categories already loaded)
   useEffect(() => {
+    if (isMobileViewport) return
     if (currentLanguage.code === 'ar' && categories.length > 0) {
       const allNames = []
       
@@ -633,9 +657,10 @@ const Navbar = () => {
         preloadTranslations(allNames, 'ar')
       }
     }
-  }, [currentLanguage.code, categories, flatSubCategories])
+  }, [categories, currentLanguage.code, flatSubCategories, isMobileViewport])
 
   useEffect(() => {
+    if (isMobileViewport) return
     if (!hoveredCategory) {
       setMegaScrollState({ canScrollLeft: false, canScrollRight: false })
       return
@@ -650,7 +675,7 @@ const Navbar = () => {
       cancelAnimationFrame(rafId)
       window.removeEventListener("resize", handleResize)
     }
-  }, [hoveredCategory])
+  }, [hoveredCategory, isMobileViewport])
 
   const updateCategoryScrollState = () => {
     const el = categoryScrollRef.current
@@ -668,6 +693,7 @@ const Navbar = () => {
   }
 
   useEffect(() => {
+    if (isMobileViewport) return
     updateCategoryScrollState()
 
     const el = categoryScrollRef.current
@@ -687,7 +713,7 @@ const Navbar = () => {
       window.removeEventListener("resize", updateCategoryScrollState)
       cancelAnimationFrame(rafId)
     }
-  }, [categories])
+  }, [categories, isMobileViewport])
 
   // Close profile dropdown on outside click (desktop only)
   useEffect(() => {
@@ -766,8 +792,12 @@ const Navbar = () => {
   }
 
   const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
+    const nextIsOpen = !isMobileMenuOpen
+    setIsMobileMenuOpen(nextIsOpen)
     setExpandedMobileCategory(null) // Reset expanded category when menu closes
+    if (nextIsOpen && categories.length === 0) {
+      fetchCategoryTree({ preloadLanguage: true })
+    }
   }
 
   const closeMobileMenu = () => {
