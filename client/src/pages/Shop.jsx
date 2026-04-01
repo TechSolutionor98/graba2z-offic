@@ -106,6 +106,13 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
   const [inputMin, setInputMin] = useState(range[0])
   const [inputMax, setInputMax] = useState(range[1])
 
+  useEffect(() => {
+    const nextRange = initialRange || [min, max]
+    setRange(nextRange)
+    setInputMin(nextRange[0])
+    setInputMax(nextRange[1])
+  }, [initialRange, max, min])
+
   const handleSliderChange = (values) => {
     setRange(values)
     setInputMin(values[0])
@@ -227,7 +234,6 @@ const Shop = () => {
   const [selectedBrands, setSelectedBrands] = useState([])
   const [priceRange, setPriceRange] = useState([0, 10000])
   const [maxPrice, setMaxPrice] = useState(10000)
-  const [globalMaxPrice, setGlobalMaxPrice] = useState(null)
   const [sortBy, setSortBy] = useState("newest")
   const [brandSearch, setBrandSearch] = useState("")
   const [subCategories, setSubCategories] = useState([])
@@ -274,6 +280,61 @@ const Shop = () => {
   const fetchTimeout = useRef()
   const loadingTimeout = useRef()
   const allProductsRef = useRef([])
+
+  const getEffectiveProductPrice = (product) => {
+    const offerPrice = Number(product?.offerPrice) || 0
+    const regularPrice = Number(product?.price) || 0
+    return offerPrice > 0 ? offerPrice : regularPrice
+  }
+
+  const getActiveStockStatusFilters = () => {
+    const activeFilters = []
+    if (stockFilters.inStock) activeFilters.push("inStock")
+    if (stockFilters.outOfStock) activeFilters.push("outOfStock")
+    if (stockFilters.onSale) activeFilters.push("onSale")
+    return activeFilters
+  }
+
+  const buildProductFilters = (includePriceRange = true) => {
+    const stockStatusFilters = getActiveStockStatusFilters()
+
+    return {
+      parent_category: selectedCategory !== "all" ? selectedCategory : null,
+      category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
+      subcategory2: selectedSubCategory2,
+      subcategory3: selectedSubCategory3,
+      subcategory4: selectedSubCategory4,
+      brand: selectedBrands.length > 0 ? selectedBrands : null,
+      search: null,
+      priceRange: includePriceRange ? priceRange : null,
+      stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
+      sortBy,
+    }
+  }
+
+  const syncAvailablePriceBounds = (availableProducts) => {
+    if (!Array.isArray(availableProducts) || availableProducts.length === 0) return
+
+    const prices = availableProducts
+      .map((product) => getEffectiveProductPrice(product))
+      .filter((price) => Number.isFinite(price) && price > 0)
+
+    if (!prices.length) return
+
+    const nextMinPrice = Math.min(...prices)
+    const nextMaxPrice = Math.max(...prices)
+    const hasExplicitPriceFilter = priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+
+    setMinPrice(nextMinPrice)
+    setMaxPrice(nextMaxPrice)
+
+    if (
+      (!hasExplicitPriceFilter || priceRange[0] < nextMinPrice || priceRange[1] > nextMaxPrice) &&
+      (priceRange[0] !== nextMinPrice || priceRange[1] !== nextMaxPrice)
+    ) {
+      setPriceRange([nextMinPrice, nextMaxPrice])
+    }
+  }
 
   // Preload translations for categories, subcategories, and brands when language is Arabic
   useEffect(() => {
@@ -358,7 +419,7 @@ const Shop = () => {
     }
   }
 
-  const performProgressiveSearch = async (searchTerm, productsSource = null) => {
+  const performProgressiveSearch = async (searchTerm, productsSource = null, includePriceRange = true) => {
     if (!searchTerm || searchTerm.trim() === "") {
       setActualSearchQuery("")
       return []
@@ -379,25 +440,9 @@ const Shop = () => {
       return []
     }
 
-    const stockStatusFilters = []
-    if (stockFilters.inStock) stockStatusFilters.push("inStock")
-    if (stockFilters.outOfStock) stockStatusFilters.push("outOfStock")
-    if (stockFilters.onSale) stockStatusFilters.push("onSale")
-
     // Build the non-search filtered list once, then only apply text matching progressively.
     // This avoids repeatedly sorting/filtering the full product array on every candidate term.
-    const baseFilters = {
-      parent_category: selectedCategory !== "all" ? selectedCategory : null,
-      category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
-      subcategory2: selectedSubCategory2,
-      subcategory3: selectedSubCategory3,
-      subcategory4: selectedSubCategory4,
-      brand: selectedBrands.length > 0 ? selectedBrands : null,
-      search: null,
-      priceRange: priceRange,
-      stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
-      sortBy: sortBy,
-    }
+    const baseFilters = buildProductFilters(includePriceRange)
 
     const baseFilteredProducts = productCache.filterProducts(allProducts, baseFilters)
     if (!baseFilteredProducts.length) {
@@ -462,39 +507,14 @@ const Shop = () => {
       let filteredProducts = []
 
       if (searchQuery && searchQuery.trim() !== "") {
-        filteredProducts = await performProgressiveSearch(searchQuery, allProducts)
+        const availableProducts = await performProgressiveSearch(searchQuery, allProducts, false)
+        syncAvailablePriceBounds(availableProducts)
+        filteredProducts = await performProgressiveSearch(searchQuery, allProducts, true)
       } else {
         setActualSearchQuery("")
-
-        const stockStatusFilters = []
-        if (stockFilters.inStock) stockStatusFilters.push("inStock")
-        if (stockFilters.outOfStock) stockStatusFilters.push("outOfStock")
-        if (stockFilters.onSale) stockStatusFilters.push("onSale")
-
-        const filters = {
-          parent_category: selectedCategory !== "all" ? selectedCategory : null,
-          category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
-          subcategory2: selectedSubCategory2,
-          subcategory3: selectedSubCategory3,
-          subcategory4: selectedSubCategory4,
-          brand: selectedBrands.length > 0 ? selectedBrands : null,
-          search: null,
-          priceRange: priceRange,
-          stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
-          sortBy: sortBy,
-        }
-
-        filteredProducts = productCache.filterProducts(allProducts, filters)
-      }
-
-      if (filteredProducts.length > 0) {
-        const prices = filteredProducts.map((p) => p.offerPrice || 0)
-        const minProductPrice = Math.min(...prices)
-        const filteredMax = Math.max(...prices)
-        if (priceRange[0] === 0 && priceRange[1] === 10000) {
-          setPriceRange([minProductPrice, globalMaxPrice != null ? globalMaxPrice : filteredMax])
-        }
-        setMinPrice(minProductPrice)
+        const availableProducts = productCache.filterProducts(allProducts, buildProductFilters(false))
+        syncAvailablePriceBounds(availableProducts)
+        filteredProducts = productCache.filterProducts(allProducts, buildProductFilters(true))
       }
 
       setProducts(filteredProducts)
@@ -521,39 +541,14 @@ const Shop = () => {
       let filteredProducts = []
 
       if (searchQuery && searchQuery.trim() !== "") {
-        filteredProducts = await performProgressiveSearch(searchQuery, allProducts)
+        const availableProducts = await performProgressiveSearch(searchQuery, allProducts, false)
+        syncAvailablePriceBounds(availableProducts)
+        filteredProducts = await performProgressiveSearch(searchQuery, allProducts, true)
       } else {
         setActualSearchQuery("")
-
-        const stockStatusFilters = []
-        if (stockFilters.inStock) stockStatusFilters.push("inStock")
-        if (stockFilters.outOfStock) stockStatusFilters.push("outOfStock")
-        if (stockFilters.onSale) stockStatusFilters.push("onSale")
-
-        const filters = {
-          parent_category: selectedCategory !== "all" ? selectedCategory : null,
-          category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
-          subcategory2: selectedSubCategory2,
-          subcategory3: selectedSubCategory3,
-          subcategory4: selectedSubCategory4,
-          brand: selectedBrands.length > 0 ? selectedBrands : null,
-          search: null,
-          priceRange: priceRange,
-          stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
-          sortBy: sortBy,
-        }
-
-        filteredProducts = productCache.filterProducts(allProducts, filters)
-      }
-
-      if (filteredProducts.length > 0) {
-        const prices = filteredProducts.map((p) => p.offerPrice || 0)
-        const minProductPrice = Math.min(...prices)
-        const filteredMax = Math.max(...prices)
-        if (priceRange[0] === 0 && priceRange[1] === 10000) {
-          setPriceRange([minProductPrice, globalMaxPrice != null ? globalMaxPrice : filteredMax])
-        }
-        setMinPrice(minProductPrice)
+        const availableProducts = productCache.filterProducts(allProducts, buildProductFilters(false))
+        syncAvailablePriceBounds(availableProducts)
+        filteredProducts = productCache.filterProducts(allProducts, buildProductFilters(true))
       }
 
       setProducts(filteredProducts)
@@ -568,30 +563,6 @@ const Shop = () => {
     fetchBanners()
     fetchAllSubcategories()
     loadAndFilterProducts()
-  }, [])
-
-  useEffect(() => {
-    const computeGlobalMax = async () => {
-      try {
-        let allProducts = allProductsRef.current
-        if (!Array.isArray(allProducts) || allProducts.length === 0) {
-          allProducts = await productCache.getProducts()
-          allProductsRef.current = allProducts || []
-        }
-        if (allProducts && allProducts.length > 0) {
-          const prices = allProducts.map((p) => p.offerPrice || 0)
-          const globalMax = Math.max(...prices)
-          setGlobalMaxPrice(globalMax)
-          setMaxPrice(globalMax)
-          if (priceRange[0] === 0 && priceRange[1] === 10000) {
-            setPriceRange([0, globalMax])
-          }
-        }
-      } catch (e) {
-        // ignore; keep fallback maxPrice
-      }
-    }
-    computeGlobalMax()
   }, [])
 
   useEffect(() => {
@@ -1274,7 +1245,7 @@ const Shop = () => {
     setSelectedCategory("all")
     setSelectedBrands([])
     setSelectedSubCategories([])
-    setPriceRange([0, maxPrice])
+    setPriceRange([minPrice, maxPrice])
     setSearchQuery("")
     setActualSearchQuery("")
     setStockFilters({ inStock: false, outOfStock: false, onSale: false })
