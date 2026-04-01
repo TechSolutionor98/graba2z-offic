@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Link } from "react-router-dom"
-import { getOptimizedImageUrl } from "../utils/imageUtils"
+import { getResponsiveImageProps } from "../utils/imageUtils"
 import { useLanguage } from "../context/LanguageContext"
 
 const debugHeroBanners = (...args) => {
@@ -50,9 +50,19 @@ const BannerSlider = ({ banners }) => {
 
   const currentBanner = banners[currentSlide]
   const currentBannerImage = currentBanner
-    ? getOptimizedImageUrl(currentBanner.image, { width: 1360, height: 400, quality: 68 }) ||
-      "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp"
-    : "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp"
+    ? getResponsiveImageProps(currentBanner.image, {
+        widths: [480, 720, 960, 1360],
+        baseWidth: 1360,
+        baseHeight: 400,
+        quality: 68,
+        sizes: "100vw",
+        fallbackSrc: "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp",
+      })
+    : {
+        src: "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp",
+        srcSet: undefined,
+        sizes: "100vw",
+      }
 
   useEffect(() => {
     if (!currentBanner) return
@@ -72,8 +82,10 @@ const BannerSlider = ({ banners }) => {
     const content = (
       <>
         <img
-          src={currentBannerImage}
-          alt={currentBanner.title || (isArabic ? "لافتة" : "Banner")}
+          src={currentBannerImage.src}
+          srcSet={currentBannerImage.srcSet}
+          sizes={currentBannerImage.sizes}
+          alt={currentBanner?.title || "Banner"}
           fetchPriority="high"
           loading="eager"
           width="1600"

@@ -121,6 +121,46 @@ export const getOptimizedImageUrl = (imageUrl, { width, height, quality = "auto"
 }
 
 /**
+ * Build responsive src/srcSet props for optimized images when the host supports resizing.
+ */
+export const getResponsiveImageProps = (
+  imageUrl,
+  { widths = [], baseWidth, baseHeight, quality = "auto", sizes, fallbackSrc = "" } = {},
+) => {
+  const requestedWidths = [...new Set(widths.map((value) => Number(value)).filter(Boolean))].sort((a, b) => a - b)
+
+  const getVariantHeight = (width) => {
+    if (!baseHeight) return undefined
+    if (baseWidth) {
+      return Math.max(1, Math.round((width * baseHeight) / baseWidth))
+    }
+    return baseHeight
+  }
+
+  const variants = requestedWidths
+    .map((width) => ({
+      width,
+      url: getOptimizedImageUrl(imageUrl, {
+        width,
+        height: getVariantHeight(width),
+        quality,
+      }),
+    }))
+    .filter((variant) => variant.url)
+
+  const uniqueUrls = [...new Set(variants.map((variant) => variant.url))]
+  const largestVariant = variants[variants.length - 1]
+  const src = largestVariant?.url || getOptimizedImageUrl(imageUrl, { width: baseWidth, height: baseHeight, quality }) || fallbackSrc
+
+  return {
+    src,
+    srcSet:
+      uniqueUrls.length > 1 ? variants.map((variant) => `${variant.url} ${variant.width}w`).join(", ") : undefined,
+    sizes,
+  }
+}
+
+/**
  * Get multiple image URLs
  */
 export const getFullImageUrls = (imageUrls) => {
