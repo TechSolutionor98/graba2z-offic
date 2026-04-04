@@ -1459,7 +1459,8 @@ const Home = () => {
       {/* Dynamic Section Position 5 */}
       {renderDynamicSection(5)}
 
-      {/* Networking Banner - Dynamic */}
+      {/* Networking section hidden by request - keep commented, do not remove */}
+      {/*
       <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
         {getBannersForSection("networking", "home-category-banner").length > 0 ? (
           <Link to={getLocalizedPath(getBannersForSection("networking", "home-category-banner")[0].link || "/product-category/computers/networking")}>
@@ -1501,8 +1502,9 @@ const Home = () => {
           </Link>
         )}
       </div>
+      */}
 
-      {/* Networking Products Section - Mobile shows 2 products */}
+      {/*
       <section className="py-8 mx-3">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900"><TranslatedText>Networking</TranslatedText></h2>
@@ -1532,6 +1534,7 @@ const Home = () => {
           </div>
         )}
       </section>
+      */}
 
       {/* Dynamic Section Position 6 */}
       {renderDynamicSection(6)}
