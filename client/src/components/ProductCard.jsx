@@ -9,15 +9,11 @@ import { getOptimizedImageUrl } from "../utils/imageUtils"
 import TranslatedText from "./TranslatedText"
 import { useLanguage } from "../context/LanguageContext"
 
-const ProductCard = ({ product, offerPageName, cardIndex }) => {
+const ProductCard = ({ product, offerPageName }) => {
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const { showToast } = useToast()
   const { getLocalizedPath } = useLanguage()
-
-  // Offer badge color rotation
-  const offerBadgeColors = ['#fee2e2', '#dcfce7', '#ecfccb', '#ffd900', '#f37021', '#dbb27c']
-  const badgeColor = offerBadgeColors[(cardIndex || 0) % offerBadgeColors.length]
 
   const handleAddToCart = (e) => {
     e.preventDefault()
@@ -137,8 +133,8 @@ const ProductCard = ({ product, offerPageName, cardIndex }) => {
         {/* Offer Page Name badge at top-left */}
         {offerPageName && (
           <div 
-            className="absolute top-2 left-2 text-gray-800 px-2 py-1 rounded text-[10px] font-medium shadow-sm z-10"
-            style={{ backgroundColor: badgeColor }}
+            className="absolute top-2 left-2 text-black px-2 py-1 rounded text-[10px] font-medium shadow-sm z-10"
+            style={{ backgroundColor: "#ffd900" }}
           >
             {offerPageName}
           </div>
