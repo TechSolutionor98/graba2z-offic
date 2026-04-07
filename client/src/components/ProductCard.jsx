@@ -59,12 +59,13 @@ const ProductCard = ({ product, offerPageName }) => {
   const numReviews = Number(product.numReviews) || 0
 
   // Compute final discount label
-  let computedDiscount = null
-  if (!hasDiscount && hasValidOffer && basePrice > 0 && offerPrice > 0) {
+  let finalDiscountLabel = null
+  if (hasDiscount) {
+    finalDiscountLabel = `${Number(product.discount)}% Off`
+  } else if (hasValidOffer && basePrice > 0 && offerPrice > 0) {
     const pct = Math.round(((basePrice - offerPrice) / basePrice) * 100)
-    if (pct > 0) computedDiscount = <><TranslatedText text={`${pct}%`} /> <TranslatedText>Off</TranslatedText></>
+    if (pct > 0) finalDiscountLabel = `${pct}% Off`
   }
-  const finalDiscountLabel = hasDiscount ? <><TranslatedText text={`${Number(product.discount)}%`} /> <TranslatedText>Off</TranslatedText></> : computedDiscount
   
   // Get category name from multiple possible sources - NEVER show IDs
   let categoryName = ""
@@ -146,7 +147,7 @@ const ProductCard = ({ product, offerPageName }) => {
           </div>
           {finalDiscountLabel && (
             <div className="bg-yellow-400 text-white px-1 py-0.5 rounded text-[10px] font-medium shadow-sm">
-              <TranslatedText text={finalDiscountLabel} />
+              <TranslatedText text={finalDiscountLabel}>{finalDiscountLabel}</TranslatedText>
             </div>
           )}
         </div>
