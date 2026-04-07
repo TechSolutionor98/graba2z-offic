@@ -214,12 +214,12 @@ const ProductDetails = () => {
 
   const formatPrice = (price) => {
     const num = Number(price)
-    if (isNaN(num)) return <><TranslatedText>AED</TranslatedText> 0.00</>
+    if (isNaN(num)) return <>AED 0.00</>
     // Check if number is an integer (no decimal part)
     if (Number.isInteger(num)) {
       return (
         <>
-          <TranslatedText>AED</TranslatedText> {num.toLocaleString()}.00
+          AED {num.toLocaleString()}.00
         </>
       )
     }
@@ -229,7 +229,7 @@ const ProductDetails = () => {
     // Since backend provided decimals, show them (2 places) without extra .00
     return (
       <>
-        <TranslatedText>AED</TranslatedText> {Number(fixed).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        AED {Number(fixed).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </>
     )
   }
