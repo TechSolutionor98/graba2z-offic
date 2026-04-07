@@ -212,25 +212,20 @@ const ProductDetails = () => {
   const [couponError, setCouponError] = useState(null)
   const [couponCopied, setCouponCopied] = useState(null)
 
-  const formatPrice = (price) => {
+  const formatPriceValue = (price) => {
     const num = Number(price)
-    if (isNaN(num)) return <>AED 0.00</>
-    // Check if number is an integer (no decimal part)
-    if (Number.isInteger(num)) {
-      return (
-        <>
-          AED {num.toLocaleString()}.00
-        </>
-      )
-    }
-    // Preserve up to 2 decimal places if backend already has them (e.g., 2078.96)
-    const fixed = num.toFixed(2)
-    // Remove trailing zeros but keep two if both are needed for .10 style? requirement says keep backend decimals; we keep exactly given decimals if provided.
-    // Since backend provided decimals, show them (2 places) without extra .00
+    const safeNumber = Number.isFinite(num) ? num : 0
+    return `AED ${safeNumber.toLocaleString("en-AE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`
+  }
+
+  const formatPrice = (price) => {
     return (
-      <>
-        AED {Number(fixed).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-      </>
+      <span lang="en" dir="ltr">
+        {formatPriceValue(price)}
+      </span>
     )
   }
 
@@ -360,8 +355,7 @@ const ProductDetails = () => {
     
     return basePrice
   }
-  const formatPerMonth = (n) =>
-    `AED ${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo`
+  const formatPerMonth = (n) => `${formatPriceValue(n)}/mo`
 
   const getRatingDistribution = () => {
     return reviewStats.ratingDistribution

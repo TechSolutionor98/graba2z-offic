@@ -23,10 +23,12 @@ const ProductCard = ({ product, offerPageName }) => {
   }
 
   const formatPrice = (price) => {
+    const normalizedPrice = Number(price)
+    const safePrice = Number.isFinite(normalizedPrice) ? normalizedPrice : 0
     return (
-      <>
-        <TranslatedText>AED</TranslatedText> {Number(price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-      </>
+      <span lang="en" dir="ltr">
+        AED {safePrice.toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </span>
     )
   }
 
