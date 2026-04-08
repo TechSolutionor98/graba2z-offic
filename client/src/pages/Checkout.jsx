@@ -19,6 +19,7 @@ import '../styles/phoneInput.css'
 
 import config from "../config/config"
 const UAE_STATES = ["Abu Dhabi", "Ajman", "Al Ain", "Dubai", "Fujairah", "Ras Al Khaimah", "Sharjah", "Umm al-Qaywain"]
+const COD_FEE_AMOUNT = 10
 
 const STORES = [
   {
@@ -240,7 +241,8 @@ const Checkout = () => {
   // Tax is included in prices, no separate calculation needed
   const taxAmount = "included"
 
-  const finalTotal = cartTotal + deliveryCharge - couponDiscount
+  const codFee = selectedPaymentMethod === "cod" ? COD_FEE_AMOUNT : 0
+  const finalTotal = cartTotal + deliveryCharge + codFee - couponDiscount
 
   const formatPrice = (price) => {
     return `AED ${price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
@@ -829,12 +831,14 @@ const Checkout = () => {
 
     // Track add payment info event
     if (cartItems.length > 0) {
+      const codFeeForMethod = paymentMethod === "cod" ? COD_FEE_AMOUNT : 0
+      const trackedTotal = cartTotal + deliveryCharge + codFeeForMethod - couponDiscount
       window.dataLayer = window.dataLayer || []
       window.dataLayer.push({
         event: "add_payment_info",
         ecommerce: {
           currency: "AED",
-          value: finalTotal,
+          value: trackedTotal,
           payment_type: actualPaymentMethod, // Use the actual payment method for tracking
           items: cartItems.map((item) => ({
             item_id: item._id,
@@ -1626,7 +1630,10 @@ const Checkout = () => {
                         <span className="font-semibold text-yellow-800"><TranslatedText>Cash on Delivery</TranslatedText></span>
                       </div>
                       <p className="text-sm text-yellow-700">
-                        <TranslatedText>You will pay in cash when your order is delivered to your address. Please have the exact amount ready.</TranslatedText>
+                        <TranslatedText>An additional 10 AED will be charged for Cash on Delivery (COD) as a cash handling fee..</TranslatedText>
+                      </p>
+                      <p className="text-sm font-semibold text-yellow-800 mt-2" lang="en" dir="ltr">
+                        COD Fee (Non-Refundable) AED 10.00
                       </p>
                     </div>
                   )}
@@ -1804,6 +1811,13 @@ const Checkout = () => {
                   <span className="text-gray-600"><TranslatedText>Shipping</TranslatedText></span>
                   <span className="text-black">{deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}</span>
                 </div>
+
+                {selectedPaymentMethod === "cod" && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600" lang="en" dir="ltr">COD Fee (Non-Refundable)</span>
+                    <span className="text-black" lang="en" dir="ltr">AED 10.00</span>
+                  </div>
+                )}
 
                 {/* Protection Plans Section */}
                 {protectionItems.length > 0 && (

@@ -32,10 +32,10 @@ export default function DeliveryInfo() {
                 <p className="font-medium text-lime-500">Below AED 500</p>
                 <p className="text-gray-700">will be charges AED 20.00 delivery charges</p>
                 <p className="text-gray-700">
-                  if COD (Cash on Delivery) then COD Handling Fee: AED 5.00 will be applicable (Non-refundable)
+                  if COD (Cash on Delivery) then COD Handling Fee: AED 10.00 will be applicable (Non-refundable)
                 </p>
                 <p className="text-gray-700">
-                  AED 20 Delivery Charges +5 COD handling Fee total payable on delivery AED 25.00
+                  AED 20 Delivery Charges +10 COD handling Fee total payable on delivery AED 30.00
                 </p>
               </div>
   
@@ -43,7 +43,7 @@ export default function DeliveryInfo() {
                 <p className="font-medium text-lime-500">AED 500 or Above</p>
                 <p className="text-gray-700">Eligible for FREE delivery</p>
                 <p className="text-gray-700">
-                  if COD (Cash on Delivery) then COD Handling Fee: AED 5.00 (Non-refundable) applicable only.
+                  if COD (Cash on Delivery) then COD Handling Fee: AED 10.00 (Non-refundable) applicable only.
                 </p>
               </div>
             </div>
@@ -63,7 +63,7 @@ export default function DeliveryInfo() {
                 · For bulk orders or international deliveries, please refer to our Bulk Delivery Section or contact
                 Customer Care through the available support channels.
               </p>
-              <p>· COD Handling Fee: AED 5.00 (Non-refundable)</p>
+              <p>· COD Handling Fee: AED 10.00 (Non-refundable)</p>
               <p>· Delivery Schedule: No deliveries on Sundays or UAE Public Holidays</p>
               <p>· Rates mentioned are per order</p>
             </div>
