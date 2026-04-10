@@ -1,4 +1,3 @@
 User-agent: *
 Disallow:
-Sitemap: https://www.grabatoz.ae/ae-ar/robots.txt
-Sitemap: https://www.grabatoz.ae/ae-en/sitemap.xml
+Sitemap: https://www.grabatoz.ae/sitemap.xml
