@@ -8,7 +8,6 @@ import { faTiktok } from "@fortawesome/free-brands-svg-icons"
 import { faYoutube } from "@fortawesome/free-brands-svg-icons"
 import { useState, useEffect } from "react"
 import { generateShopURL } from "../utils/urlUtils"
-import { getOptimizedImageUrl } from "../utils/imageUtils"
 import { getCategoryTreeCached } from "../services/categoryTreeCache"
 import { useLanguage } from "../context/LanguageContext"
 
@@ -29,6 +28,8 @@ const Footer = ({ className = "" }) => {
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
   const [subCategories, setSubCategories] = useState([])
   const [columnCount, setColumnCount] = useState(5)
+  const googlePlayLink = "https://play.google.com/store/apps/details?id=ae.grabatoz1.grabatoz1"
+  const appStoreLink = "https://www.apple.com/app-store/"
 
   // Update column count based on screen width and zoom level
   useEffect(() => {
@@ -198,16 +199,43 @@ const Footer = ({ className = "" }) => {
 
                 </div>
 
-                <div className="flex pt-4 lg:pt-6 xl:pt-7 px-0 lg:px-2 space-x-2">
-                  <img
-                    src={getOptimizedImageUrl("https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757938965/google_pj1cxc.webp", { width: 420, height: 96, quality: "auto" })}
-                    alt="Google Play"
-                    width="209"
-                    height="48"
-                    loading="lazy"
-                    decoding="async"
-                    className="rounded-lg h-8 lg:h-10 xl:h-12"
-                  />
+                <div className="flex items-center pt-4 lg:pt-6 xl:pt-7 px-0 lg:px-2">
+                  <div className="flex items-center gap-1.5 bg-white rounded-lg p-1">
+                    <a
+                      href={googlePlayLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Download from Google Play"
+                      className="inline-flex"
+                    >
+                      <img
+                        src="/google_play.png"
+                        alt="Google Play"
+                        width="88"
+                        height="26"
+                        loading="lazy"
+                        decoding="async"
+                        className="h-5 lg:h-6 xl:h-7 w-auto"
+                      />
+                    </a>
+                    <a
+                      href={appStoreLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Download from App Store"
+                      className="inline-flex"
+                    >
+                      <img
+                        src="/app_store.png"
+                        alt="App Store"
+                        width="88"
+                        height="26"
+                        loading="lazy"
+                        decoding="async"
+                        className="h-5 lg:h-6 xl:h-7 w-auto"
+                      />
+                    </a>
+                  </div>
                 </div>
               </div>
 
@@ -598,8 +626,12 @@ const Footer = ({ className = "" }) => {
         <div className="bg-[#1F1F39] text-white p-6">
           <h3 className="text-xl font-bold text-center mb-4"><TranslatedText>Shop On The Go</TranslatedText></h3>
           <div className="flex justify-center space-x-4 mb-6 ">
-            <img src="/google_play.png" alt="Google Play" width="120" height="32" loading="lazy" decoding="async" className="h-8 w-auto" />
-            <img src="/app_store.png" alt="App Store" width="120" height="32" loading="lazy" decoding="async" className="h-8 w-auto" />
+            <a href={googlePlayLink} target="_blank" rel="noopener noreferrer" aria-label="Download from Google Play" className="inline-flex">
+              <img src="/google_play.png" alt="Google Play" width="120" height="32" loading="lazy" decoding="async" className="h-8 w-auto" />
+            </a>
+            <a href={appStoreLink} target="_blank" rel="noopener noreferrer" aria-label="Download from App Store" className="inline-flex">
+              <img src="/app_store.png" alt="App Store" width="120" height="32" loading="lazy" decoding="async" className="h-8 w-auto" />
+            </a>
           </div>
 
           {/* Payment Methods */}
