@@ -28,6 +28,29 @@ const ALL_COLUMNS = [
   { id: 'action', label: 'Action', default: true, alwaysVisible: true },
 ]
 
+const STOCK_STATUS_OPTIONS = [
+  { value: "In Stock", label: "In Stock" },
+  { value: "Out of Stock", label: "Out of Stock" },
+  { value: "PreOrder", label: "Pre Order" },
+]
+
+const normalizeStockStatus = (status) => {
+  const normalized = String(status || "").trim().toLowerCase().replace(/[-\s]+/g, " ")
+  if (normalized === "out of stock" || normalized === "outofstock") return "Out of Stock"
+  if (normalized === "preorder" || normalized === "pre order") return "PreOrder"
+  return "In Stock"
+}
+
+const stockStatusLabel = (status) => (normalizeStockStatus(status) === "PreOrder" ? "Pre Order" : normalizeStockStatus(status))
+
+const normalizeStockStatusFilterValue = (status) => {
+  const normalized = String(status || "").trim().toLowerCase().replace(/[-\s]+/g, " ")
+  if (normalized === "in stock" || normalized === "instock") return "In Stock"
+  if (normalized === "out of stock" || normalized === "outofstock") return "Out of Stock"
+  if (normalized === "preorder" || normalized === "pre order") return "PreOrder"
+  return null
+}
+
 const AdminProducts = () => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
@@ -42,7 +65,7 @@ const AdminProducts = () => {
   const [filterSubcategory3, setFilterSubcategory3] = useState("all")
   const [filterSubcategory4, setFilterSubcategory4] = useState("all")
   const [filterBrand, setFilterBrand] = useState("all")
-  const [filterStatus, setFilterStatus] = useState("all") // New filter for active/inactive
+  const [filterStatus, setFilterStatus] = useState("all")
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const PRODUCTS_PER_PAGE = 20
@@ -72,6 +95,8 @@ const AdminProducts = () => {
   const [openActionDropdown, setOpenActionDropdown] = useState(null)
   const [openStatusSubmenu, setOpenStatusSubmenu] = useState(false)
   const actionDropdownRef = useRef(null)
+  const latestFetchRequestRef = useRef(0)
+  const statusPaginationCacheRef = useRef({ key: "", products: [] })
   
   // Bulk status dropdown
   const [showBulkStatusDropdown, setShowBulkStatusDropdown] = useState(false)
@@ -101,6 +126,118 @@ const AdminProducts = () => {
   const [canScrollRight, setCanScrollRight] = useState(false)
 
   // Save column visibility to localStorage
+  const resolveStockStatusFilter = (statusValue = filterStatus) => {
+    if (!statusValue || statusValue === "all") return null
+    return normalizeStockStatusFilterValue(statusValue)
+  }
+
+  const buildAdminStatusQueryParams = (statusValue = filterStatus) => {
+    const params = {}
+    const normalizedStockStatus = resolveStockStatusFilter(statusValue)
+
+    if (normalizedStockStatus) {
+      params.stockStatus = normalizedStockStatus
+      params.status = normalizedStockStatus
+    }
+
+    return params
+  }
+
+  const buildAdminQueryParams = (statusValue = filterStatus) => {
+    const params = {}
+    if (searchTerm.trim() !== "") params.search = searchTerm.trim()
+    if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
+    if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
+    if (filterSubcategory2 && filterSubcategory2 !== "all") params.subCategory2 = filterSubcategory2
+    if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
+    if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
+    if (filterBrand && filterBrand !== "all") params.brand = filterBrand
+
+    Object.assign(params, buildAdminStatusQueryParams(statusValue))
+
+    return params
+  }
+
+  const normalizeProductStatus = (product) => {
+    const rawStatus = String(product?.stockStatus || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[-\s]+/g, " ")
+
+    if (rawStatus === "preorder" || rawStatus === "pre order") return "PreOrder"
+    if (rawStatus === "out of stock" || rawStatus === "stock out" || rawStatus === "outofstock") return "Out of Stock"
+    if (rawStatus === "in stock" || rawStatus === "instock" || rawStatus === "available" || rawStatus === "available product") return "In Stock"
+
+    const countInStock = Number(product?.countInStock || 0)
+    return countInStock > 0 ? "In Stock" : "Out of Stock"
+  }
+
+  const applyStockStatusFilter = (list, statusValue = filterStatus) => {
+    const normalizedStatus = resolveStockStatusFilter(statusValue)
+    if (!normalizedStatus) return list
+    return list.filter((item) => normalizeProductStatus(item) === normalizedStatus)
+  }
+
+  const fetchAllAdminProducts = async (token, params = {}) => {
+    const mergedParams = { ...params }
+    delete mergedParams.page
+    delete mergedParams.limit
+
+    let allProducts = []
+    let currentPage = 1
+
+    while (true) {
+      const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { ...mergedParams, limit: 1000, page: currentPage },
+      })
+
+      const batch = data.products || []
+      allProducts = allProducts.concat(batch)
+
+      if (!data.totalCount || allProducts.length >= data.totalCount || batch.length === 0) break
+      currentPage += 1
+    }
+
+    return allProducts
+  }
+
+  const buildStatusPaginationCacheKey = (statusValue = filterStatus) => {
+    const normalizedStatus = resolveStockStatusFilter(statusValue) || "all"
+    return [
+      normalizedStatus,
+      searchTerm.trim(),
+      filterCategory || "all",
+      filterSubcategory || "all",
+      filterSubcategory2 || "all",
+      filterSubcategory3 || "all",
+      filterSubcategory4 || "all",
+      filterBrand || "all",
+    ].join("|")
+  }
+
+  const invalidateStatusPaginationCache = () => {
+    statusPaginationCacheRef.current = { key: "", products: [] }
+  }
+
+  const getStatusFilteredProductsForPagination = async (token, statusValue = filterStatus) => {
+    const cacheKey = buildStatusPaginationCacheKey(statusValue)
+    if (statusPaginationCacheRef.current.key === cacheKey) {
+      return statusPaginationCacheRef.current.products
+    }
+
+    const paramsWithoutStatus = buildAdminQueryParams("all")
+    const allProducts = await fetchAllAdminProducts(token, paramsWithoutStatus)
+    const filteredProducts = applyStockStatusFilter(allProducts, statusValue)
+
+    statusPaginationCacheRef.current = {
+      key: cacheKey,
+      products: filteredProducts,
+    }
+
+    return filteredProducts
+  }
+
   useEffect(() => {
     localStorage.setItem('adminProductsColumns', JSON.stringify(visibleColumns))
   }, [visibleColumns])
@@ -183,41 +320,6 @@ const AdminProducts = () => {
     return selectAllMode ? allProductIds.length : selectedIds.size
   }, [selectedIds, selectAllMode, allProductIds])
 
-  // Get count of products for current category/subcategory filter
-  const fetchFilteredCount = async () => {
-    try {
-      const token = getAdminToken()
-      if (!token) return
-
-      const params = {}
-      if (filterCategory && filterCategory !== "all") {
-        params.parentCategory = filterCategory
-      }
-      if (filterSubcategory && filterSubcategory !== "all") {
-        params.category = filterSubcategory
-      }
-      if (filterSubcategory2 && filterSubcategory2 !== "all") {
-        params.subCategory2 = filterSubcategory2
-      }
-      if (filterSubcategory3 && filterSubcategory3 !== "all") {
-        params.subCategory3 = filterSubcategory3
-      }
-      if (filterSubcategory4 && filterSubcategory4 !== "all") {
-        params.subCategory4 = filterSubcategory4
-      }
-      
-      const { data } = await axios.get(`${config.API_URL}/api/products/admin/count`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params
-      })
-      
-      setCategoryProductCount(data.totalCount || 0)
-    } catch (error) {
-      console.error("Failed to fetch product count:", error)
-      setCategoryProductCount(0)
-    }
-  }
-
   const formatPrice = (price) => {
     return `AED ${price.toLocaleString()}`
   }
@@ -254,10 +356,14 @@ const AdminProducts = () => {
 
   useEffect(() => {
     fetchProducts()
-    fetchCategories()
   }, [page, searchTerm, filterCategory, filterSubcategory, filterSubcategory2, filterSubcategory3, filterSubcategory4, filterBrand, filterStatus])
 
   useEffect(() => {
+    setPage(1)
+  }, [searchTerm, filterCategory, filterSubcategory, filterSubcategory2, filterSubcategory3, filterSubcategory4, filterBrand, filterStatus])
+
+  useEffect(() => {
+    fetchCategories()
     fetchBrands()
     fetchSubcategories()
   }, [])
@@ -292,7 +398,6 @@ const AdminProducts = () => {
     setFilteredSubcategories2([])
     setFilteredSubcategories3([])
     setFilteredSubcategories4([])
-    fetchFilteredCount()
   }, [filterCategory, subcategories])
 
   // Level 2: Filter based on level 1 selection
@@ -312,7 +417,6 @@ const AdminProducts = () => {
     setFilterSubcategory4("all")
     setFilteredSubcategories3([])
     setFilteredSubcategories4([])
-    fetchFilteredCount()
   }, [filterSubcategory, subcategories])
 
   // Level 3: Filter based on level 1 OR level 2 selection
@@ -332,7 +436,6 @@ const AdminProducts = () => {
     setFilterSubcategory3("all")
     setFilterSubcategory4("all")
     setFilteredSubcategories4([])
-    fetchFilteredCount()
   }, [filterSubcategory, filterSubcategory2, subcategories])
 
   // Level 4: Filter based on level 2 OR level 3 selection
@@ -354,13 +457,7 @@ const AdminProducts = () => {
       }))
     }
     setFilterSubcategory4("all")
-    fetchFilteredCount()
   }, [filterSubcategory, filterSubcategory2, filterSubcategory3, subcategories])
-
-  // Update count when any subcategory level changes
-  useEffect(() => {
-    fetchFilteredCount()
-  }, [filterSubcategory4])
 
   // Selection helpers
   const toggleSelectOne = (id) => {
@@ -506,14 +603,7 @@ const AdminProducts = () => {
     if (filterSubcategory3 && filterSubcategory3 !== 'all') overrides.subCategory3 = filterSubcategory3
     if (filterSubcategory4 && filterSubcategory4 !== 'all') overrides.subCategory4 = filterSubcategory4
     if (filterBrand && filterBrand !== 'all') overrides.brand = filterBrand
-    if (filterStatus && filterStatus !== 'all') {
-      if (filterStatus === 'onhold') {
-        overrides.onHold = true
-      } else {
-        overrides.isActive = filterStatus === 'active'
-        overrides.onHold = false
-      }
-    }
+    Object.assign(overrides, buildAdminStatusQueryParams(filterStatus))
     if (searchTerm.trim()) overrides.search = searchTerm.trim()
     
     showToast('Preparing export for current filters...', 'info')
@@ -530,39 +620,33 @@ const AdminProducts = () => {
       filterSubcategory3 && filterSubcategory3 !== 'all' ? `sub3-${filterSubcategory3}` : null,
       filterSubcategory4 && filterSubcategory4 !== 'all' ? `sub4-${filterSubcategory4}` : null,
       filterBrand && filterBrand !== 'all' ? `brand-${filterBrand}` : null,
-      filterStatus && filterStatus !== 'all' ? `status-${filterStatus}` : null,
+      filterStatus && filterStatus !== 'all' ? `status-${String(filterStatus).replace(/\s+/g, "-")}` : null,
       searchTerm ? `search-${searchTerm.replace(/\s+/g, '-')}` : null,
     ].filter(Boolean).join('_') || 'products_current_filters'
     exportProductsToExcel(all, `${fname}.xlsx`)
     showToast(`Exported ${all.length} products successfully`, 'success')
   }
 
-  const getProductCount = async () => {
-    const token = getAdminToken()
+  const getProductCount = async (options = {}) => {
+    const token = options.token || getAdminToken()
     if (!token) return 0
     try {
-      const params = {}
-      if (searchTerm.trim() !== "") params.search = searchTerm.trim()
-      if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
-      if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
-      if (filterSubcategory2 && filterSubcategory2 !== "all") params.subCategory2 = filterSubcategory2
-      if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
-      if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
-      if (filterBrand && filterBrand !== "all") params.brand = filterBrand
-      if (filterStatus && filterStatus !== "all") {
-        if (filterStatus === 'onhold') {
-          params.onHold = true
-        } else {
-          params.isActive = filterStatus === "active"
-          params.onHold = false
-        }
+      const statusValue = Object.prototype.hasOwnProperty.call(options, "statusValue")
+        ? options.statusValue
+        : filterStatus
+      const queryParams = options.queryParams || buildAdminQueryParams(statusValue)
+      const normalizedStatus = resolveStockStatusFilter(statusValue)
+
+      if (normalizedStatus) {
+        const filteredProducts = await getStatusFilteredProductsForPagination(token, statusValue)
+        return filteredProducts.length
       }
-      
+
       const { data } = await axios.get(`${config.API_URL}/api/products/admin/count`, {
         headers: { Authorization: `Bearer ${token}` },
-        params
+        params: queryParams,
       })
-      
+
       return data.totalCount || 0
     } catch (e) {
       console.error('Get product count error', e)
@@ -575,37 +659,12 @@ const AdminProducts = () => {
     const token = getAdminToken()
     if (!token) return []
     try {
-      const params = { limit: 1000, page: 1 }
-      if (searchTerm.trim() !== "") params.search = searchTerm.trim()
-      if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
-      if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
-      if (filterSubcategory2 && filterSubcategory2 !== "all") params.subCategory2 = filterSubcategory2
-      if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
-      if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
-      if (filterBrand && filterBrand !== "all") params.brand = filterBrand
-      if (filterStatus && filterStatus !== "all") {
-        if (filterStatus === 'onhold') {
-          params.onHold = true
-        } else {
-          params.isActive = filterStatus === "active"
-          params.onHold = false
-        }
+      const params = {
+        ...buildAdminQueryParams(filterStatus),
+        ...overrides,
       }
-      Object.assign(params, overrides)
-      // We may need to loop if more than 1000
-      let all = []
-      let currentPage = 1
-      while (true) {
-        const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { ...params, page: currentPage }
-        })
-        const batch = data.products || []
-        all = all.concat(batch)
-        if (!data.totalCount || all.length >= data.totalCount || batch.length === 0) break
-        currentPage += 1
-      }
-      return all
+
+      return await fetchAllAdminProducts(token, params)
     } catch (e) {
       console.error('Export fetchAll error', e)
       showToast('Failed to fetch all products for export', 'error')
@@ -644,6 +703,7 @@ const AdminProducts = () => {
   }
 
   const fetchProducts = async () => {
+    const requestId = ++latestFetchRequestRef.current
     try {
       setLoading(true)
       const token = getAdminToken()
@@ -653,35 +713,57 @@ const AdminProducts = () => {
         return
       }
 
-      // Build query params for search, category, subcategory, brand, pagination
-      const params = { limit: PRODUCTS_PER_PAGE, page }
-      if (searchTerm.trim() !== "") params.search = searchTerm.trim()
-      if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
-      if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
-      if (filterSubcategory2 && filterSubcategory2 !== "all") params.subCategory2 = filterSubcategory2
-      if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
-      if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
-      if (filterBrand && filterBrand !== "all") params.brand = filterBrand
-      if (filterStatus && filterStatus !== "all") {
-        if (filterStatus === 'onhold') {
-          params.onHold = true
-        } else {
-          params.isActive = filterStatus === "active"
-          params.onHold = false
+      const queryParams = buildAdminQueryParams(filterStatus)
+      const normalizedStatus = resolveStockStatusFilter(filterStatus)
+
+      if (normalizedStatus) {
+        const filteredProducts = await getStatusFilteredProductsForPagination(token, filterStatus)
+        if (requestId !== latestFetchRequestRef.current) return
+
+        const totalCount = filteredProducts.length
+        const computedPages = Math.max(1, Math.ceil(totalCount / PRODUCTS_PER_PAGE))
+        const safePage = Math.min(Math.max(1, page), computedPages)
+        const startIndex = (safePage - 1) * PRODUCTS_PER_PAGE
+        const pageProducts = filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE)
+
+        setProducts(pageProducts)
+        setCategoryProductCount(totalCount)
+        setTotalPages(computedPages)
+
+        if (safePage !== page) {
+          setPage(safePage)
         }
+
+        if (requestId !== latestFetchRequestRef.current) return
+        setLoading(false)
+        return
       }
 
-      const { data, headers } = await axios.get(`${config.API_URL}/api/products/admin`, {
+      const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        params,
+        params: { ...queryParams, limit: PRODUCTS_PER_PAGE, page },
       })
+
+      if (requestId !== latestFetchRequestRef.current) return
       setProducts(data.products || [])
       const totalCount = data.totalCount || 0
-      setTotalPages(Math.ceil(totalCount / PRODUCTS_PER_PAGE) || 1)
+
+      if (requestId !== latestFetchRequestRef.current) return
+      setCategoryProductCount(totalCount)
+
+      const computedPages = Math.max(1, Math.ceil(totalCount / PRODUCTS_PER_PAGE))
+      setTotalPages(computedPages)
+
+      if (page > computedPages) {
+        setPage(computedPages)
+      }
+
+      if (requestId !== latestFetchRequestRef.current) return
       setLoading(false)
     } catch (error) {
+      if (requestId !== latestFetchRequestRef.current) return
       console.error("Failed to load products:", error)
       if (error.response?.status === 401) {
         setError("Authentication failed. Please login again.")
@@ -760,6 +842,7 @@ const AdminProducts = () => {
             Authorization: `Bearer ${token}`,
           },
         })
+        invalidateStatusPaginationCache()
         clearStorefrontProductCache()
         setProducts(products.filter((product) => product._id !== productId))
         showToast("Product deleted successfully", "success")
@@ -803,6 +886,7 @@ const AdminProducts = () => {
       )
 
       // Refresh the product list to show the duplicated product
+      invalidateStatusPaginationCache()
       await fetchProducts()
       clearStorefrontProductCache()
       
@@ -854,6 +938,7 @@ const AdminProducts = () => {
       )
 
       // Update the product in the local state
+      invalidateStatusPaginationCache()
       setProducts(products.map(p => 
         p._id === productId ? { ...p, isActive: newStatus } : p
       ))
@@ -866,7 +951,7 @@ const AdminProducts = () => {
     }
   }
 
-  // Update product status (Active, Inactive, On Hold)
+  // Update product stock status (In Stock, Out of Stock, Pre Order)
   const handleUpdateProductStatus = async (productId, statusType) => {
     try {
       const token = getAdminToken()
@@ -875,31 +960,15 @@ const AdminProducts = () => {
         return
       }
 
-      let updateData = {}
-      let statusMessage = ""
-
-      switch (statusType) {
-        case 'active':
-          updateData = { isActive: true, onHold: false }
-          statusMessage = "activated"
-          break
-        case 'inactive':
-          updateData = { isActive: false, onHold: false }
-          statusMessage = "deactivated"
-          break
-        case 'onhold':
-          updateData = { isActive: false, onHold: true }
-          statusMessage = "put on hold"
-          break
-        default:
-          return
-      }
+      const normalizedStatus = normalizeStockStatus(statusType)
+      const updateData = { stockStatus: normalizedStatus }
 
       await axios.put(`${config.API_URL}/api/products/${productId}`, updateData, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
       // Update local state
+      invalidateStatusPaginationCache()
       setProducts(products.map(p => 
         p._id === productId ? { ...p, ...updateData } : p
       ))
@@ -907,7 +976,7 @@ const AdminProducts = () => {
 
       setOpenActionDropdown(null)
       setOpenStatusSubmenu(false)
-      showToast(`Product ${statusMessage} successfully`, "success")
+      showToast(`Product stock set to ${stockStatusLabel(normalizedStatus)} successfully`, "success")
     } catch (error) {
       console.error("Failed to update product status:", error)
       showToast("Failed to update product status", "error")
@@ -929,30 +998,8 @@ const AdminProducts = () => {
       // Get product IDs to update
       let productIds
       if (selectAllMode) {
-        // If all products are selected, fetch all IDs with current filters
-        const params = {}
-        if (searchTerm.trim() !== "") params.search = searchTerm.trim()
-        if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
-        if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
-        if (filterSubcategory2 && filterSubcategory2 !== "all") params.subCategory2 = filterSubcategory2
-        if (filterSubcategory3 && filterSubcategory3 !== "all") params.subCategory3 = filterSubcategory3
-        if (filterSubcategory4 && filterSubcategory4 !== "all") params.subCategory4 = filterSubcategory4
-        if (filterBrand && filterBrand !== "all") params.brand = filterBrand
-        if (filterStatus && filterStatus !== "all") {
-          if (filterStatus === 'onhold') {
-            params.onHold = true
-          } else {
-            params.isActive = filterStatus === "active"
-            params.onHold = false
-          }
-        }
-
-        const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { ...params, limit: 10000, page: 1 }
-        })
-        
-        productIds = data.products.map(p => p._id)
+        const allProducts = await fetchAllAdminProducts(token, buildAdminQueryParams(filterStatus))
+        productIds = allProducts.map((p) => p._id)
       } else {
         productIds = Array.from(selectedIds)
       }
@@ -963,27 +1010,9 @@ const AdminProducts = () => {
         return
       }
 
-      // Determine update data based on status type
-      let updateData = {}
-      let statusMessage = ""
-
-      switch (statusType) {
-        case 'active':
-          updateData = { isActive: true, onHold: false }
-          statusMessage = "activated"
-          break
-        case 'inactive':
-          updateData = { isActive: false, onHold: false }
-          statusMessage = "deactivated"
-          break
-        case 'onhold':
-          updateData = { isActive: false, onHold: true }
-          statusMessage = "put on hold (hidden from shop)"
-          break
-        default:
-          setBulkUpdating(false)
-          return
-      }
+      // Determine update data based on stock status
+      const normalizedStatus = normalizeStockStatus(statusType)
+      const updateData = { stockStatus: normalizedStatus }
 
       // Make bulk update request
       await axios.put(
@@ -1000,12 +1029,13 @@ const AdminProducts = () => {
         }
       )
 
-      showToast(`Successfully ${statusMessage} ${productIds.length} product(s)`, "success")
+      showToast(`Successfully set ${productIds.length} product(s) to ${stockStatusLabel(normalizedStatus)}`, "success")
       
       // Clear selection and refresh products
       setSelectAllMode(false)
       setSelectedIds(new Set())
       setAllProductIds([])
+      invalidateStatusPaginationCache()
       await fetchProducts()
       clearStorefrontProductCache()
     } catch (error) {
@@ -1028,27 +1058,8 @@ const AdminProducts = () => {
       // Get product IDs to move
       let productIds
       if (selectAllMode) {
-        // If all products are selected, fetch all IDs with current filters
-        const params = {}
-        if (searchTerm.trim() !== "") params.search = searchTerm.trim()
-        if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
-        if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
-        if (filterBrand && filterBrand !== "all") params.brand = filterBrand
-        if (filterStatus && filterStatus !== "all") {
-          if (filterStatus === 'onhold') {
-            params.onHold = true
-          } else {
-            params.isActive = filterStatus === "active"
-            params.onHold = false
-          }
-        }
-
-        const { data } = await axios.get(`${config.API_URL}/api/products/admin`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { ...params, limit: 10000, page: 1 }
-        })
-        
-        productIds = data.products.map(p => p._id)
+        const allProducts = await fetchAllAdminProducts(token, buildAdminQueryParams(filterStatus))
+        productIds = allProducts.map((p) => p._id)
       } else {
         productIds = Array.from(selectedIds)
       }
@@ -1079,6 +1090,7 @@ const AdminProducts = () => {
       setSelectAllMode(false)
       setSelectedIds(new Set())
       setAllProductIds([])
+      invalidateStatusPaginationCache()
       await fetchProducts()
       clearStorefrontProductCache()
     } catch (error) {
@@ -1122,6 +1134,7 @@ const AdminProducts = () => {
       showToast(data.message, "success")
       
       // Refresh products
+      invalidateStatusPaginationCache()
       await fetchProducts()
       clearStorefrontProductCache()
     } catch (error) {
@@ -1197,6 +1210,7 @@ const AdminProducts = () => {
       console.log("✅ Product saved successfully:", response.data)
 
       // Refresh product list
+      invalidateStatusPaginationCache()
       await fetchProducts()
       clearStorefrontProductCache()
       setShowForm(false)
@@ -1273,14 +1287,6 @@ const AdminProducts = () => {
     
     return 'N/A';
   };
-
-  // Update: Only filter on frontend for search by name, brand, or exact SKU (case-insensitive)
-  // Remove filteredProducts and use products directly in rendering
-
-  // Add useEffect to refetch products when filters change
-  useEffect(() => {
-    fetchProducts();
-  }, [searchTerm, filterCategory, filterSubcategory, filterBrand, filterStatus]);
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -1598,9 +1604,11 @@ const AdminProducts = () => {
                       className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     >
                       <option value="all">All Products</option>
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                      <option value="onhold">On Hold</option>
+                      {STOCK_STATUS_OPTIONS.map((statusOption) => (
+                        <option key={`stock-${statusOption.value}`} value={statusOption.value}>
+                          {statusOption.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -1730,25 +1738,25 @@ const AdminProducts = () => {
                             <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                               <div className="py-1">
                                 <button
-                                  onClick={() => handleBulkStatusUpdate('active')}
+                                  onClick={() => handleBulkStatusUpdate("In Stock")}
                                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 flex items-center gap-2"
                                 >
                                   <Play size={14} className="text-green-600" />
-                                  Set Active
+                                  Set In Stock
                                 </button>
                                 <button
-                                  onClick={() => handleBulkStatusUpdate('inactive')}
+                                  onClick={() => handleBulkStatusUpdate("Out of Stock")}
                                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 flex items-center gap-2"
                                 >
                                   <Pause size={14} className="text-red-600" />
-                                  Set Inactive
+                                  Set Out of Stock
                                 </button>
                                 <button
-                                  onClick={() => handleBulkStatusUpdate('onhold')}
+                                  onClick={() => handleBulkStatusUpdate("PreOrder")}
                                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-700 flex items-center gap-2"
                                 >
                                   <EyeOff size={14} className="text-yellow-600" />
-                                  Hide from Shop
+                                  Set Pre Order
                                 </button>
                               </div>
                             </div>
@@ -1982,6 +1990,7 @@ const AdminProducts = () => {
                       <tbody className="bg-white divide-y divide-gray-200">
                         {products.length > 0 ? (
                           products.map((product) => {
+                            const currentStockStatus = normalizeStockStatus(product.stockStatus)
                             return (
                               <tr
                                 key={product._id}
@@ -2086,23 +2095,23 @@ const AdminProducts = () => {
                                       {/* Row 1: Status Icons */}
                                       <div className="flex items-center gap-1">
                                         <button
-                                          onClick={() => handleUpdateProductStatus(product._id, 'active')}
-                                          className={`p-1 rounded hover:bg-green-100 transition-colors ${product.isActive && !product.onHold ? 'bg-green-100 text-green-600' : 'text-gray-400 hover:text-green-600'}`}
-                                          title="Set Active"
+                                          onClick={() => handleUpdateProductStatus(product._id, "In Stock")}
+                                          className={`p-1 rounded hover:bg-green-100 transition-colors ${currentStockStatus === "In Stock" ? "bg-green-100 text-green-600" : "text-gray-400 hover:text-green-600"}`}
+                                          title="Set In Stock"
                                         >
                                           <Eye size={15} />
                                         </button>
                                         <button
-                                          onClick={() => handleUpdateProductStatus(product._id, 'inactive')}
-                                          className={`p-1 rounded hover:bg-red-100 transition-colors ${!product.isActive && !product.onHold ? 'bg-red-100 text-red-600' : 'text-gray-400 hover:text-red-600'}`}
-                                          title="Set Inactive"
+                                          onClick={() => handleUpdateProductStatus(product._id, "Out of Stock")}
+                                          className={`p-1 rounded hover:bg-red-100 transition-colors ${currentStockStatus === "Out of Stock" ? "bg-red-100 text-red-600" : "text-gray-400 hover:text-red-600"}`}
+                                          title="Set Out of Stock"
                                         >
                                           <EyeOff size={15} />
                                         </button>
                                         <button
-                                          onClick={() => handleUpdateProductStatus(product._id, 'onhold')}
-                                          className={`p-1 rounded hover:bg-yellow-100 transition-colors ${product.onHold ? 'bg-yellow-100 text-yellow-600' : 'text-gray-400 hover:text-yellow-600'}`}
-                                          title="Hide from Shop"
+                                          onClick={() => handleUpdateProductStatus(product._id, "PreOrder")}
+                                          className={`p-1 rounded hover:bg-yellow-100 transition-colors ${currentStockStatus === "PreOrder" ? "bg-yellow-100 text-yellow-600" : "text-gray-400 hover:text-yellow-600"}`}
+                                          title="Set Pre Order"
                                         >
                                           <Pause size={15} />
                                         </button>
