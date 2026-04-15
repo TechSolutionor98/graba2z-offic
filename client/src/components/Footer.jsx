@@ -200,13 +200,13 @@ const Footer = ({ className = "" }) => {
                 </div>
 
                 <div className="flex items-center pt-4 lg:pt-6 xl:pt-7 px-0 lg:px-2">
-                  <div className="flex items-center gap-1.5 bg-white rounded-lg p-1">
+                  <div className="flex items-center gap-2">
                     <a
                       href={googlePlayLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Download from Google Play"
-                      className="inline-flex"
+                      className="inline-flex items-center justify-center bg-white rounded-lg p-1.5 shadow-sm transition-transform hover:scale-[1.02]"
                     >
                       <img
                         src="/google_play.png"
@@ -223,7 +223,7 @@ const Footer = ({ className = "" }) => {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Download from App Store"
-                      className="inline-flex"
+                      className="inline-flex items-center justify-center bg-white rounded-lg p-1.5 shadow-sm transition-transform hover:scale-[1.02]"
                     >
                       <img
                         src="/app_store.png"
@@ -626,10 +626,22 @@ const Footer = ({ className = "" }) => {
         <div className="bg-[#1F1F39] text-white p-6">
           <h3 className="text-xl font-bold text-center mb-4"><TranslatedText>Shop On The Go</TranslatedText></h3>
           <div className="flex justify-center space-x-4 mb-6 ">
-            <a href={googlePlayLink} target="_blank" rel="noopener noreferrer" aria-label="Download from Google Play" className="inline-flex">
+            <a
+              href={googlePlayLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Download from Google Play"
+              className="inline-flex items-center justify-center bg-white rounded-lg p-1.5 shadow-sm"
+            >
               <img src="/google_play.png" alt="Google Play" width="120" height="32" loading="lazy" decoding="async" className="h-8 w-auto" />
             </a>
-            <a href={appStoreLink} target="_blank" rel="noopener noreferrer" aria-label="Download from App Store" className="inline-flex">
+            <a
+              href={appStoreLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Download from App Store"
+              className="inline-flex items-center justify-center bg-white rounded-lg p-1.5 shadow-sm"
+            >
               <img src="/app_store.png" alt="App Store" width="120" height="32" loading="lazy" decoding="async" className="h-8 w-auto" />
             </a>
           </div>
