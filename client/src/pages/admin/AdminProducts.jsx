@@ -90,6 +90,15 @@ const AdminProducts = () => {
   const [importFile, setImportFile] = useState(null)
   const [importing, setImporting] = useState(false)
   const [importResults, setImportResults] = useState(null)
+  const [actionConfirmDialog, setActionConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "Confirm",
+    cancelText: "Cancel",
+    type: "info",
+    onConfirm: null,
+  })
   
   // Action dropdown states
   const [openActionDropdown, setOpenActionDropdown] = useState(null)
@@ -827,36 +836,63 @@ const AdminProducts = () => {
     setShowForm(true)
   }
 
-  const handleDelete = async (productId) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      try {
-        const token = getAdminToken()
+  const findProductById = (productId) => products.find((p) => p._id === productId)
 
-        if (!token) {
-          setError("Authentication required. Please login again.")
-          return
-        }
+  const formatConfirmProductName = (name) => {
+    const productName = String(name || "This product").trim()
+    if (productName.length <= 90) return productName
+    return `${productName.slice(0, 90)}...`
+  }
 
-        await axios.delete(`${config.API_URL}/api/products/${productId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        invalidateStatusPaginationCache()
-        clearStorefrontProductCache()
-        setProducts(products.filter((product) => product._id !== productId))
-        showToast("Product deleted successfully", "success")
-      } catch (error) {
-        console.error("Failed to delete product:", error)
-        if (error.response?.status === 401) {
-          setError("Authentication failed. Please login again.")
-          window.location.href = "/grabiansadmin/login"
-        } else {
-          setError("Failed to delete product. Please try again.")
-          showToast("Failed to delete product", "error")
-        }
+  const closeActionConfirmDialog = () => {
+    setActionConfirmDialog((prev) => ({
+      ...prev,
+      isOpen: false,
+      onConfirm: null,
+    }))
+  }
+
+  const deleteProductById = async (productId) => {
+    try {
+      const token = getAdminToken()
+
+      if (!token) {
+        setError("Authentication required. Please login again.")
+        return
+      }
+
+      await axios.delete(`${config.API_URL}/api/products/${productId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      invalidateStatusPaginationCache()
+      clearStorefrontProductCache()
+      setProducts((prevProducts) => prevProducts.filter((product) => product._id !== productId))
+      showToast("Product deleted successfully", "success")
+    } catch (error) {
+      console.error("Failed to delete product:", error)
+      if (error.response?.status === 401) {
+        setError("Authentication failed. Please login again.")
+        window.location.href = "/grabiansadmin/login"
+      } else {
+        setError("Failed to delete product. Please try again.")
+        showToast("Failed to delete product", "error")
       }
     }
+  }
+
+  const handleDelete = (productId) => {
+    const productName = formatConfirmProductName(findProductById(productId)?.name)
+    setActionConfirmDialog({
+      isOpen: true,
+      title: "Delete Product",
+      message: `"${productName}"\n\nThis action cannot be undone.`,
+      confirmText: "Yes, Delete",
+      cancelText: "Cancel",
+      type: "danger",
+      onConfirm: () => deleteProductById(productId),
+    })
   }
 
   const handleDuplicate = (productId) => {
@@ -912,6 +948,23 @@ const AdminProducts = () => {
         showToast(error.response?.data?.message || "Failed to duplicate product", "error")
       }
     }
+  }
+
+  const handleConfirmProductStatusUpdate = (productId, statusType) => {
+    const normalizedStatus = normalizeStockStatus(statusType)
+    const nextStatusLabel = stockStatusLabel(normalizedStatus)
+    const product = findProductById(productId)
+    const productName = formatConfirmProductName(product?.name)
+
+    setActionConfirmDialog({
+      isOpen: true,
+      title: "Update Stock Status",
+      message: `"${productName}"\n\nSet stock status to "${nextStatusLabel}"?`,
+      confirmText: `Yes, Set ${nextStatusLabel}`,
+      cancelText: "Cancel",
+      type: normalizedStatus === "Out of Stock" ? "warning" : "info",
+      onConfirm: () => handleUpdateProductStatus(productId, normalizedStatus),
+    })
   }
 
   const handleToggleStatus = async (productId) => {
@@ -1305,6 +1358,18 @@ const AdminProducts = () => {
         confirmText="Yes, Duplicate"
         cancelText="Cancel"
         type="success"
+      />
+
+      {/* Product Action Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={actionConfirmDialog.isOpen}
+        onClose={closeActionConfirmDialog}
+        onConfirm={actionConfirmDialog.onConfirm || (() => {})}
+        title={actionConfirmDialog.title}
+        message={actionConfirmDialog.message}
+        confirmText={actionConfirmDialog.confirmText}
+        cancelText={actionConfirmDialog.cancelText}
+        type={actionConfirmDialog.type}
       />
 
       {/* Import Dialog */}
@@ -2095,21 +2160,21 @@ const AdminProducts = () => {
                                       {/* Row 1: Status Icons */}
                                       <div className="flex items-center gap-1">
                                         <button
-                                          onClick={() => handleUpdateProductStatus(product._id, "In Stock")}
+                                          onClick={() => handleConfirmProductStatusUpdate(product._id, "In Stock")}
                                           className={`p-1 rounded hover:bg-green-100 transition-colors ${currentStockStatus === "In Stock" ? "bg-green-100 text-green-600" : "text-gray-400 hover:text-green-600"}`}
                                           title="Set In Stock"
                                         >
                                           <Eye size={15} />
                                         </button>
                                         <button
-                                          onClick={() => handleUpdateProductStatus(product._id, "Out of Stock")}
+                                          onClick={() => handleConfirmProductStatusUpdate(product._id, "Out of Stock")}
                                           className={`p-1 rounded hover:bg-red-100 transition-colors ${currentStockStatus === "Out of Stock" ? "bg-red-100 text-red-600" : "text-gray-400 hover:text-red-600"}`}
                                           title="Set Out of Stock"
                                         >
                                           <EyeOff size={15} />
                                         </button>
                                         <button
-                                          onClick={() => handleUpdateProductStatus(product._id, "PreOrder")}
+                                          onClick={() => handleConfirmProductStatusUpdate(product._id, "PreOrder")}
                                           className={`p-1 rounded hover:bg-yellow-100 transition-colors ${currentStockStatus === "PreOrder" ? "bg-yellow-100 text-yellow-600" : "text-gray-400 hover:text-yellow-600"}`}
                                           title="Set Pre Order"
                                         >
