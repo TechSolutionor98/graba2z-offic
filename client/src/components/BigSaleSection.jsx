@@ -6,6 +6,7 @@ import { Link } from "react-router-dom"
 import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
+import { resolveProductCategoryInfo } from "../utils/productCategory"
 import TranslatedText from "./TranslatedText"
 import { useLanguage } from "../context/LanguageContext"
 
@@ -36,7 +37,8 @@ const ProductCard = ({ product, isMobile = false }) => {
   // Fix rating and reviews display
   const rating = Number(product.rating) || 0
   const numReviews = Number(product.numReviews) || 0
-  const categoryName = product.category?.name || ""
+  const { name: categoryName, sourceDoc: categorySourceDoc, fieldName: categoryFieldName } =
+    resolveProductCategoryInfo(product)
 
   const cardClasses = isMobile
     ? "bg-white rounded-lg p-4 shadow-md relative h-full flex flex-col"
@@ -86,9 +88,14 @@ const ProductCard = ({ product, isMobile = false }) => {
           <TranslatedText text={product.name} sourceDoc={product} fieldName="name" />
         </h3>
       </Link>
-      {product.category && (
+      {categoryName && (
         <div className="text-[10px] text-yellow-600 ">
-          <TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={typeof product.category === 'object' ? product.category : product} fieldName={typeof product.category === 'object' ? 'name' : 'categoryName'} />
+          <TranslatedText>Category</TranslatedText>:{" "}
+          {categorySourceDoc && categoryFieldName ? (
+            <TranslatedText text={categoryName} sourceDoc={categorySourceDoc} fieldName={categoryFieldName} />
+          ) : (
+            <TranslatedText text={categoryName}>{categoryName}</TranslatedText>
+          )}
         </div>
       )}
       <div className="text-[10px] text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>

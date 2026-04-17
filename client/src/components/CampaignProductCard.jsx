@@ -132,6 +132,7 @@ import { ShoppingBag, Heart, Star } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useLanguage } from "../context/LanguageContext"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
+import { resolveProductCategoryInfo } from "../utils/productCategory"
 import TranslatedText from "./TranslatedText"
 
 // Helper function to determine status color
@@ -170,7 +171,8 @@ const CampaignProductCard = ({ product }) => {
   // Fix rating and reviews display
   const rating = Number(product.rating) || 0
   const numReviews = Number(product.numReviews) || 0
-  const categoryName = product.category?.name || ""
+  const { name: categoryName, sourceDoc: categorySourceDoc, fieldName: categoryFieldName } =
+    resolveProductCategoryInfo(product)
 
   return (
     <div className="border p-2 h-auto md:h-[400px] flex flex-col justify-between bg-white w-full md:w-[210px]">
@@ -211,7 +213,16 @@ const CampaignProductCard = ({ product }) => {
           <TranslatedText text={product.name} sourceDoc={product} fieldName="name">{product.name}</TranslatedText>
         </h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600 "><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={product.category} fieldName="name" /></div>}
+      {categoryName && (
+        <div className="text-xs text-yellow-600 ">
+          <TranslatedText>Category</TranslatedText>:{" "}
+          {categorySourceDoc && categoryFieldName ? (
+            <TranslatedText text={categoryName} sourceDoc={categorySourceDoc} fieldName={categoryFieldName} />
+          ) : (
+            <TranslatedText text={categoryName}>{categoryName}</TranslatedText>
+          )}
+        </div>
+      )}
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex items-center gap-2">
         <div className="text-red-600 font-bold text-sm">

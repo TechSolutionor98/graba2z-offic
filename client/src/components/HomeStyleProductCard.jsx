@@ -139,6 +139,7 @@ import { useCart } from "../context/CartContext"
 import { useToast } from "../context/ToastContext"
 import { useLanguage } from "../context/LanguageContext"
 import { getImageUrl } from "../utils/imageUtils"
+import { resolveProductCategoryInfo } from "../utils/productCategory"
 import TranslatedText from "./TranslatedText"
 
 const getStatusColor = (status) => {
@@ -177,7 +178,8 @@ const HomeStyleProductCard = ({ product }) => {
   // Fix rating and reviews display
   const rating = Number(product.rating) || 0
   const numReviews = Number(product.numReviews) || 0
-  const categoryName = product.category?.name || "Unknown"
+  const { name: categoryName, sourceDoc: categorySourceDoc, fieldName: categoryFieldName } =
+    resolveProductCategoryInfo(product)
 
   // Debug product reviews
   console.log("HomeStyleProductCard - Product:", product.name, "Rating:", rating, "NumReviews:", numReviews)
@@ -218,7 +220,16 @@ const HomeStyleProductCard = ({ product }) => {
   <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
         <h3 className="text-xs font-sm text-gray-900  line-clamp-4 hover:text-blue-600 h-[65px]"><TranslatedText text={product.name} sourceDoc={product} fieldName="name" /></h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600 "><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={product.category} fieldName="name" /></div>}
+      {categoryName && (
+        <div className="text-xs text-yellow-600 ">
+          <TranslatedText>Category</TranslatedText>:{" "}
+          {categorySourceDoc && categoryFieldName ? (
+            <TranslatedText text={categoryName} sourceDoc={categorySourceDoc} fieldName={categoryFieldName} />
+          ) : (
+            <TranslatedText text={categoryName}>{categoryName}</TranslatedText>
+          )}
+        </div>
+      )}
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
         <div className="text-red-600 font-bold text-sm">

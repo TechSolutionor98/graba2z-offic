@@ -6,6 +6,7 @@ import { ShoppingCart, Heart, Star, ShoppingBag } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useToast } from "../context/ToastContext"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
+import { resolveProductCategoryInfo } from "../utils/productCategory"
 import TranslatedText from "./TranslatedText"
 import { useLanguage } from "../context/LanguageContext"
 
@@ -69,37 +70,8 @@ const ProductCard = ({ product, offerPageName }) => {
     if (pct > 0) finalDiscountLabel = `${pct}% Off`
   }
   
-  // Get category name from multiple possible sources - NEVER show IDs
-  let categoryName = ""
-  if (product.category) {
-    // Only extract name if it's an object, ignore if it's just an ID string
-    if (typeof product.category === "object") {
-      if (product.category.displayName) {
-        categoryName = product.category.displayName
-      } else if (product.category.name) {
-        categoryName = product.category.name
-      }
-    }
-  }
-  // Try subcategory if no category name found
-  if (!categoryName && product.subcategory) {
-    if (typeof product.subcategory === "object") {
-      categoryName = product.subcategory.displayName || product.subcategory.name || ""
-    }
-  }
-  // Try parent category if no category name found
-  if (!categoryName && product.parentCategory) {
-    if (typeof product.parentCategory === "object") {
-      categoryName = product.parentCategory.displayName || product.parentCategory.name || ""
-    }
-  }
-  // Fallback to brand if no category found
-  if (!categoryName && product.brand) {
-    // Only extract name if it's an object, ignore if it's just an ID string
-    if (typeof product.brand === "object" && product.brand.name) {
-      categoryName = product.brand.name
-    }
-  }
+  const { name: categoryName, sourceDoc: categorySourceDoc, fieldName: categoryFieldName } =
+    resolveProductCategoryInfo(product)
 
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
@@ -162,7 +134,12 @@ const ProductCard = ({ product, offerPageName }) => {
       </Link>
       {categoryName && (
         <div className="text-xs text-yellow-600">
-          <TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={typeof product.category === 'object' ? product.category : product} fieldName={typeof product.category === 'object' ? 'name' : 'categoryName'} />
+          <TranslatedText>Category</TranslatedText>:{" "}
+          {categorySourceDoc && categoryFieldName ? (
+            <TranslatedText text={categoryName} sourceDoc={categorySourceDoc} fieldName={categoryFieldName} />
+          ) : (
+            <TranslatedText text={categoryName}>{categoryName}</TranslatedText>
+          )}
         </div>
       )}
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import axios from "axios"
 import { generateShopURL } from "../utils/urlUtils"
 import { getFullImageUrl, getOptimizedImageUrl, getResponsiveImageProps } from "../utils/imageUtils"
+import { resolveProductCategoryInfo } from "../utils/productCategory"
 
 import BigSaleSection from "../components/BigSaleSection"
 import {
@@ -63,6 +64,7 @@ const FALLBACK_TOP_ELECTRONICS_MOBILE = "acer-banner-mobile.webp"
 const FALLBACK_TOP_CAMERA_MOBILE = "asus-banner-mobile.webp"
 
 const NOTIF_POPUP_KEY = "notif_popup_shown"
+const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/
 
 const NEWSLETTER_OPTIONS = [
   { label: "Updates", value: "all", icon: <Bell className="inline mr-2 w-4 h-4" /> },
@@ -465,6 +467,68 @@ const Home = () => {
           }
         }
 
+        const categoryById = new Map(
+          leanValidCategories
+            .filter((category) => category?._id)
+            .map((category) => [String(category._id), category]),
+        )
+
+        const hydrateParentCategoryFromCategoryList = (products = []) =>
+          (Array.isArray(products) ? products : []).map((product) => {
+            if (!product || typeof product !== "object") return product
+
+            if (typeof product.parentCategory === "string" && categoryById.has(product.parentCategory)) {
+              return {
+                ...product,
+                parentCategory: categoryById.get(product.parentCategory),
+              }
+            }
+
+            return product
+          })
+
+        const hasDisplayableCategoryValue = (value) => {
+          if (!value) return false
+
+          if (typeof value === "string") {
+            const normalized = value.trim()
+            return normalized.length > 0 && !OBJECT_ID_REGEX.test(normalized)
+          }
+
+          if (typeof value === "object") {
+            const nameCandidate =
+              value.displayName || value.name || value.title || value.label || value.categoryName || ""
+            const normalized = String(nameCandidate).trim()
+            return normalized.length > 0 && !OBJECT_ID_REGEX.test(normalized)
+          }
+
+          return false
+        }
+
+        const hasCategoryDetails = (product) => {
+          if (!product || typeof product !== "object") return false
+
+          const candidates = [
+            product.category,
+            product.subCategory,
+            product.subcategory,
+            product.subCategory2,
+            product.subCategory3,
+            product.subCategory4,
+            product.parentCategory,
+            product.categoryName,
+            product.subCategoryName,
+            product.parentCategoryName,
+          ]
+
+          return candidates.some(hasDisplayableCategoryValue)
+        }
+
+        const shouldRefetchForCategoryIntegrity = (products = []) => {
+          if (!Array.isArray(products) || products.length === 0) return true
+          return products.some((product) => !hasCategoryDetails(product))
+        }
+
         const categoryIdMap = {}
         for (const category of leanValidCategories) {
           if (category?._id && category?.name) {
@@ -491,6 +555,15 @@ const Home = () => {
           categoryId ? fetchProducts({ parentCategory: categoryId, limit }) : Promise.resolve([])
         const fetchNetworking = (limit) =>
           categoryIdMap.networking ? fetchByParentCategory(categoryIdMap.networking, limit) : Promise.resolve([])
+        const resolveSectionProducts = async (preloadedProducts, fallbackFetcher) => {
+          const hydratedPreloaded = hydrateParentCategoryFromCategoryList(preloadedProducts)
+          if (!shouldRefetchForCategoryIntegrity(hydratedPreloaded)) {
+            return hydratedPreloaded
+          }
+
+          const fetchedProducts = await fallbackFetcher()
+          return hydrateParentCategoryFromCategoryList(fetchedProducts)
+        }
 
         const [
           featuredFallback,
@@ -505,30 +578,30 @@ const Home = () => {
           accessoriesData,
           networkingData,
         ] = await Promise.all([
-          featured.length > 0 ? Promise.resolve(featured) : fetchProducts({ featured: true, limit: 12 }),
-          hpData.length > 0 ? Promise.resolve(hpData) : fetchByBrand(brandIdMap.hp, 3),
-          dellData.length > 0 ? Promise.resolve(dellData) : fetchByBrand(brandIdMap.dell, 3),
-          acerData.length > 0 ? Promise.resolve(acerData) : fetchByBrand(brandIdMap.acer, 3),
-          asusData.length > 0 ? Promise.resolve(asusData) : fetchByBrand(brandIdMap.asus, 3),
-          msiData.length > 0 ? Promise.resolve(msiData) : fetchByBrand(brandIdMap.msi, 3),
-          lenovoData.length > 0 ? Promise.resolve(lenovoData) : fetchByBrand(brandIdMap.lenovo, 3),
-          appleData.length > 0 ? Promise.resolve(appleData) : fetchByBrand(brandIdMap.apple, 3),
-          samsungData.length > 0 ? Promise.resolve(samsungData) : fetchByBrand(brandIdMap.samsung, 3),
+          resolveSectionProducts(featured, () => fetchProducts({ featured: true, limit: 12 })),
+          resolveSectionProducts(hpData, () => fetchByBrand(brandIdMap.hp, 3)),
+          resolveSectionProducts(dellData, () => fetchByBrand(brandIdMap.dell, 3)),
+          resolveSectionProducts(acerData, () => fetchByBrand(brandIdMap.acer, 3)),
+          resolveSectionProducts(asusData, () => fetchByBrand(brandIdMap.asus, 3)),
+          resolveSectionProducts(msiData, () => fetchByBrand(brandIdMap.msi, 3)),
+          resolveSectionProducts(lenovoData, () => fetchByBrand(brandIdMap.lenovo, 3)),
+          resolveSectionProducts(appleData, () => fetchByBrand(brandIdMap.apple, 3)),
+          resolveSectionProducts(samsungData, () => fetchByBrand(brandIdMap.samsung, 3)),
           fetchByParentCategory(categoryIdMap.accessories, 8),
           fetchNetworking(8),
         ])
 
-        setFeaturedProducts(featuredFallback)
-        setHpProducts(hpFallback)
-        setDellProducts(dellFallback)
-        setAccessoriesProducts(accessoriesData)
-        setAcerProducts(acerFallback)
-        setAsusProducts(asusFallback)
-        setNetworkingProducts(networkingData)
-        setMsiProducts(msiFallback)
-        setLenovoProducts(lenovoFallback)
-        setAppleProducts(appleFallback)
-        setSamsungProducts(samsungFallback)
+        setFeaturedProducts(hydrateParentCategoryFromCategoryList(featuredFallback))
+        setHpProducts(hydrateParentCategoryFromCategoryList(hpFallback))
+        setDellProducts(hydrateParentCategoryFromCategoryList(dellFallback))
+        setAccessoriesProducts(hydrateParentCategoryFromCategoryList(accessoriesData))
+        setAcerProducts(hydrateParentCategoryFromCategoryList(acerFallback))
+        setAsusProducts(hydrateParentCategoryFromCategoryList(asusFallback))
+        setNetworkingProducts(hydrateParentCategoryFromCategoryList(networkingData))
+        setMsiProducts(hydrateParentCategoryFromCategoryList(msiFallback))
+        setLenovoProducts(hydrateParentCategoryFromCategoryList(lenovoFallback))
+        setAppleProducts(hydrateParentCategoryFromCategoryList(appleFallback))
+        setSamsungProducts(hydrateParentCategoryFromCategoryList(samsungFallback))
         setLoading(false)
       } catch (error) {
         console.error("Error fetching data:", error)
@@ -1988,8 +2061,8 @@ const MobileProductCard = ({ product }) => {
   const rating = Number(product.rating) || 0
   const numReviews = Number(product.numReviews) || 0
 
-  // Get category and brand names safely
-  const categoryName = product.category?.name || "Unknown"
+  const { name: categoryName, sourceDoc: categorySourceDoc, fieldName: categoryFieldName } =
+    resolveProductCategoryInfo(product)
 
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
@@ -2033,7 +2106,16 @@ const MobileProductCard = ({ product }) => {
         <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px] mb-1"><TranslatedText text={product.name} sourceDoc={product} fieldName="name" /></h3>
       </Link>
 
-      {product.category && <div className="text-xs text-yellow-600 mb-1"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={product.category} fieldName="name" /></div>}
+      {categoryName && (
+        <div className="text-xs text-yellow-600 mb-1">
+          <TranslatedText>Category</TranslatedText>:{" "}
+          {categorySourceDoc && categoryFieldName ? (
+            <TranslatedText text={categoryName} sourceDoc={categorySourceDoc} fieldName={categoryFieldName} />
+          ) : (
+            <TranslatedText text={categoryName}>{categoryName}</TranslatedText>
+          )}
+        </div>
+      )}
       <div className="text-xs text-green-600 mb-1"><TranslatedText>Inclusive VAT</TranslatedText></div>
 
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0 mb-1">
@@ -2119,8 +2201,8 @@ const DynamicBrandProductCard = ({ product }) => {
   const rating = Number(product.rating) || 0
   const numReviews = Number(product.numReviews) || 0
 
-  // Get category and brand names safely
-  const categoryName = product.category?.name || "Unknown"
+  const { name: categoryName, sourceDoc: categorySourceDoc, fieldName: categoryFieldName } =
+    resolveProductCategoryInfo(product)
 
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
@@ -2162,7 +2244,16 @@ const DynamicBrandProductCard = ({ product }) => {
       <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
         <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]"><TranslatedText text={product.name} sourceDoc={product} fieldName="name" /></h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={product.category} fieldName="name" /></div>}
+      {categoryName && (
+        <div className="text-xs text-yellow-600">
+          <TranslatedText>Category</TranslatedText>:{" "}
+          {categorySourceDoc && categoryFieldName ? (
+            <TranslatedText text={categoryName} sourceDoc={categorySourceDoc} fieldName={categoryFieldName} />
+          ) : (
+            <TranslatedText text={categoryName}>{categoryName}</TranslatedText>
+          )}
+        </div>
+      )}
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
@@ -2247,8 +2338,8 @@ const AccessoriesProductCard = ({ product }) => {
   const rating = Number(product.rating) || 0
   const numReviews = Number(product.numReviews) || 0
 
-  // Get category and brand names safely
-  const categoryName = product.category?.name || "Unknown"
+  const { name: categoryName, sourceDoc: categorySourceDoc, fieldName: categoryFieldName } =
+    resolveProductCategoryInfo(product)
 
   return (
     <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
@@ -2289,7 +2380,16 @@ const AccessoriesProductCard = ({ product }) => {
       <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
         <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]"><TranslatedText text={product.name} sourceDoc={product} fieldName="name" /></h3>
       </Link>
-      {product.category && <div className="text-xs text-yellow-600"><TranslatedText>Category</TranslatedText>: <TranslatedText text={categoryName} sourceDoc={product.category} fieldName="name" /></div>}
+      {categoryName && (
+        <div className="text-xs text-yellow-600">
+          <TranslatedText>Category</TranslatedText>:{" "}
+          {categorySourceDoc && categoryFieldName ? (
+            <TranslatedText text={categoryName} sourceDoc={categorySourceDoc} fieldName={categoryFieldName} />
+          ) : (
+            <TranslatedText text={categoryName}>{categoryName}</TranslatedText>
+          )}
+        </div>
+      )}
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
