@@ -187,6 +187,22 @@ const AdminProducts = () => {
     return list.filter((item) => normalizeProductStatus(item) === normalizedStatus)
   }
 
+  const getProductRowClassName = (product, isEdited = false) => {
+    const normalizedStatus = normalizeProductStatus(product)
+
+    const statusClasses = {
+      "In Stock": "bg-green-50 hover:bg-green-100",
+      "Out of Stock": "bg-red-50 hover:bg-red-100",
+      PreOrder: "bg-blue-50 hover:bg-blue-100",
+    }
+
+    return [
+      "transition-colors",
+      statusClasses[normalizedStatus] || "bg-white hover:bg-gray-50",
+      isEdited ? "ring-2 ring-lime-500 animate-pulse" : "",
+    ].filter(Boolean).join(" ")
+  }
+
   const fetchAllAdminProducts = async (token, params = {}) => {
     const mergedParams = { ...params }
     delete mergedParams.page
@@ -2056,15 +2072,12 @@ const AdminProducts = () => {
                         {products.length > 0 ? (
                           products.map((product) => {
                             const currentStockStatus = normalizeStockStatus(product.stockStatus)
+                            const isEditedProduct = justEditedId === product._id
                             return (
                               <tr
                                 key={product._id}
                                 id={`product-row-${product._id}`}
-                className={`hover:bg-gray-50 transition-colors ${
-                                  justEditedId === product._id
-                  ? "bg-lime-100 ring-2 ring-lime-500 animate-pulse"
-                                    : ""
-                                }`}
+                                className={getProductRowClassName(product, isEditedProduct)}
                               >
                                 {isColumnVisible('select') && (
                                 <td className="px-2 py-4 whitespace-nowrap">
