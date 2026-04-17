@@ -70,25 +70,31 @@ const MobileSubCategoryItem = ({
   const nestedChildren = getChildSubCategories(subCategory._id)
   const hasNested = nestedChildren && nestedChildren.length > 0
   const isExpanded = Array.isArray(expandedId) ? expandedId.includes(subCategory._id) : expandedId === subCategory._id
+
+  const getNodeIdentifier = (nodeOrValue) => {
+    if (!nodeOrValue) return null
+    if (typeof nodeOrValue === "string") return nodeOrValue
+    return nodeOrValue.slug || nodeOrValue.name || nodeOrValue._id || null
+  }
   
   // Build the URL params based on level
   const buildUrlParams = () => {
-    const params = { parentCategory: parentCategory.name }
-    const chain = [...parentChain, subCategory.name]
+    const params = { parentCategory: getNodeIdentifier(parentCategory) }
+    const chain = [...parentChain, getNodeIdentifier(subCategory)]
     
-    if (level === 1) params.subcategory = subCategory.name
+    if (level === 1) params.subcategory = chain[0]
     else if (level === 2) {
       params.subcategory = chain[0]
-      params.subcategory2 = subCategory.name
+      params.subcategory2 = chain[1]
     } else if (level === 3) {
       params.subcategory = chain[0]
       params.subcategory2 = chain[1]
-      params.subcategory3 = subCategory.name
+      params.subcategory3 = chain[2]
     } else if (level === 4) {
       params.subcategory = chain[0]
       params.subcategory2 = chain[1]
       params.subcategory3 = chain[2]
-      params.subcategory4 = subCategory.name
+      params.subcategory4 = chain[3]
     }
     
     return params
@@ -164,7 +170,7 @@ const MobileSubCategoryItem = ({
               expandedId={expandedId}
               onToggle={onToggle}
               closeMobileMenu={closeMobileMenu}
-              parentChain={[...parentChain, subCategory.name]}
+              parentChain={[...parentChain, getNodeIdentifier(subCategory)]}
             />
           ))}
         </div>
@@ -441,6 +447,12 @@ const Navbar = () => {
       }
     }
     return []
+  }
+
+  const getNodeIdentifier = (nodeOrValue) => {
+    if (!nodeOrValue) return null
+    if (typeof nodeOrValue === "string") return nodeOrValue
+    return nodeOrValue.slug || nodeOrValue.name || nodeOrValue._id || null
   }
 
   const toggleMobileCategory = (categoryId) => {
@@ -1085,7 +1097,7 @@ const Navbar = () => {
                               return (
                                 <Link
                                   key={parentCategory._id}
-                                  to={generateShopURL({ parentCategory: parentCategory.name })}
+                                  to={generateShopURL({ parentCategory: getNodeIdentifier(parentCategory) })}
                                   onMouseEnter={() => setDesktopCascadeIds([parentCategory._id])}
                                   onClick={closeDesktopCategoryDropdown}
                                   className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-semibold text-gray-800 hover:bg-gray-100 transition ${
@@ -1108,7 +1120,7 @@ const Navbar = () => {
                           if (!parent) return null
 
                           const buildParams = (chain) => {
-                            const params = { parentCategory: parent.name }
+                            const params = { parentCategory: getNodeIdentifier(parent) }
                             const keys = ["subcategory", "subcategory2", "subcategory3", "subcategory4"]
                             for (let i = 0; i < Math.min(chain.length, keys.length); i++) {
                               params[keys[i]] = chain[i]
@@ -1116,7 +1128,7 @@ const Navbar = () => {
                             return params
                           }
 
-                          const getNameById = (id) => {
+                          const getIdentifierById = (id) => {
                             if (!id) return ""
                             const stack = [...categories]
                             const visited = new Set()
@@ -1124,7 +1136,7 @@ const Navbar = () => {
                               const node = stack.pop()
                               if (!node || visited.has(node._id)) continue
                               visited.add(node._id)
-                              if (node._id === id) return node.name || ""
+                              if (node._id === id) return getNodeIdentifier(node) || ""
                               if (Array.isArray(node.children) && node.children.length) {
                                 stack.push(...node.children)
                               }
@@ -1150,9 +1162,9 @@ const Navbar = () => {
                                     const isActive = desktopCascadeIds[levelIndex] === node._id
                                     const chainPrefix = desktopCascadeIds
                                       .slice(1, levelIndex)
-                                      .map(getNameById)
+                                      .map(getIdentifierById)
                                       .filter(Boolean)
-                                    const params = buildParams([...chainPrefix, node.name])
+                                    const params = buildParams([...chainPrefix, getNodeIdentifier(node)])
                                     return (
                                       <Link
                                         key={node._id}
@@ -1240,7 +1252,7 @@ const Navbar = () => {
                         }}
                       >
                         <Link
-                          to={generateShopURL({ parentCategory: parentCategory.name })}
+                          to={generateShopURL({ parentCategory: getNodeIdentifier(parentCategory) })}
                           className={`text-white font-medium whitespace-nowrap text-[clamp(0.7rem,0.9vw,0.875rem)] px-1 py-2 text-center w-full leading-tight ${
                             isActiveCategory ? "font-semibold" : ""
                           }`}
@@ -1294,7 +1306,10 @@ const Navbar = () => {
                                       {/* Main Column - First Level-2 items */}
                                       <div className="w-[150px] flex-shrink-0 flex flex-col gap-3">
                                         <Link
-                                          to={generateShopURL({ parentCategory: parentCategory.name, subcategory: subCategory.name })}
+                                          to={generateShopURL({
+                                            parentCategory: getNodeIdentifier(parentCategory),
+                                            subcategory: getNodeIdentifier(subCategory),
+                                          })}
                                           className={`block text-red-600 text-xs font-semibold hover:text-red-600 ${MEGA_LABEL_LIMIT_CLASS}`}
                                           onClick={() => resetMegaMenu()}
                                         >
@@ -1311,9 +1326,9 @@ const Navbar = () => {
                                               >
                                                 <Link
                                                   to={generateShopURL({
-                                                    parentCategory: parentCategory.name,
-                                                    subcategory: subCategory.name,
-                                                    subcategory2: sub2.name,
+                                                    parentCategory: getNodeIdentifier(parentCategory),
+                                                    subcategory: getNodeIdentifier(subCategory),
+                                                    subcategory2: getNodeIdentifier(sub2),
                                                   })}
                                                   className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
                                                   onClick={() => resetMegaMenu()}
@@ -1343,9 +1358,9 @@ const Navbar = () => {
                                                 >
                                                   <Link
                                                     to={generateShopURL({
-                                                      parentCategory: parentCategory.name,
-                                                      subcategory: subCategory.name,
-                                                      subcategory2: sub2.name,
+                                                      parentCategory: getNodeIdentifier(parentCategory),
+                                                      subcategory: getNodeIdentifier(subCategory),
+                                                      subcategory2: getNodeIdentifier(sub2),
                                                     })}
                                                     className={`block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug ${MEGA_LABEL_LIMIT_CLASS}`}
                                                     onClick={() => resetMegaMenu()}
@@ -1683,7 +1698,7 @@ const Navbar = () => {
                         {/* Parent Category Item */}
                         <div className="flex items-center justify-between py-3 px-2 text-gray-700 hover:bg-gray-50 rounded-lg">
                           <Link
-                            to={generateShopURL({ parentCategory: parentCategory.name })}
+                            to={generateShopURL({ parentCategory: getNodeIdentifier(parentCategory) })}
                             className="flex items-center flex-1"
                             onClick={closeMobileMenu}
                           >

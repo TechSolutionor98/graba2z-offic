@@ -643,13 +643,27 @@ const Shop = () => {
     )
     const parentCategoryId = foundCategory ? foundCategory._id : null
 
-    const level1 = urlParams.subcategory
-      ? (parentCategoryId
-          ? findLevel1SubcategoryForCategory(parentCategoryId, urlParams.subcategory)
-          : null)
-      : null
-    if (urlParams.subcategory) {
-      console.log("🔍 Looking for subcategory:", urlParams.subcategory, "Found:", level1?.name, "ID:", level1?._id)
+    const pathParts = [
+      urlParams.subcategory,
+      urlParams.subcategory2,
+      urlParams.subcategory3,
+      urlParams.subcategory4,
+    ]
+    const resolvedPath = parentCategoryId ? resolveSubcategoryPath(parentCategoryId, pathParts) : []
+    const level1 = resolvedPath[0] || null
+    const level2 = resolvedPath[1] || null
+    const level3 = resolvedPath[2] || null
+    const level4 = resolvedPath[3] || null
+
+    if (pathParts.some(Boolean)) {
+      console.log("[Shop] URL category resolution:", {
+        pathParts,
+        resolvedPath: resolvedPath.map((item) => ({
+          _id: item?._id,
+          name: item?.name,
+          slug: item?.slug,
+        })),
+      })
     }
 
     if (level1) {
@@ -660,9 +674,6 @@ const Shop = () => {
       setCurrentSubCategoryName(null)
     }
 
-    const level2 = urlParams.subcategory2 && level1?._id
-      ? findChildSubcategoryByUrlPart(level1._id, urlParams.subcategory2)
-      : null
     if (level2) {
       setSelectedSubCategory2(level2._id)
       setSubCategory2Data(level2)
@@ -673,9 +684,6 @@ const Shop = () => {
       setCurrentSubCategory2Name(null)
     }
 
-    const level3 = urlParams.subcategory3 && level2?._id
-      ? findChildSubcategoryByUrlPart(level2._id, urlParams.subcategory3)
-      : null
     if (level3) {
       setSelectedSubCategory3(level3._id)
       setSubCategory3Data(level3)
@@ -686,9 +694,6 @@ const Shop = () => {
       setCurrentSubCategory3Name(null)
     }
 
-    const level4 = urlParams.subcategory4 && level3?._id
-      ? findChildSubcategoryByUrlPart(level3._id, urlParams.subcategory4)
-      : null
     if (level4) {
       setSelectedSubCategory4(level4._id)
       setSubCategory4Data(level4)
@@ -912,46 +917,152 @@ const Shop = () => {
   // Apply search filter on available brands
   const filteredBrands = availableBrands.filter((brand) => brand.name.toLowerCase().includes(brandSearch.toLowerCase()))
 
+  const normalizeRefId = (value) => {
+    if (value == null) return null
+    const resolved = typeof value === "object" ? value?._id : value
+    if (resolved == null) return null
+    const id = String(resolved).trim()
+    if (!id) return null
+    const lowered = id.toLowerCase()
+    if (lowered === "null" || lowered === "undefined" || lowered === "none" || lowered === "n/a" || lowered === "na" || lowered === "-") {
+      return null
+    }
+    return id
+  }
+
   const getSubcategoryCategoryId = (sub) => {
     if (!sub) return null
-    return typeof sub.category === "object" ? sub.category?._id : sub.category
+    return normalizeRefId(sub.category)
   }
 
   const getSubcategoryParentId = (sub) => {
     if (!sub) return null
-    return typeof sub.parentSubCategory === "object" ? sub.parentSubCategory?._id : sub.parentSubCategory
+    return normalizeRefId(sub.parentSubCategory)
   }
 
-  const findLevel1SubcategoryForCategory = (categoryId, urlPart) => {
-    if (!categoryId || !urlPart) return null
-    const normalized = createSlug(String(urlPart))
-    return allSubcategories.find((sub) => {
-      const subCategoryId = getSubcategoryCategoryId(sub)
-      const parentId = getSubcategoryParentId(sub)
-      if (subCategoryId !== categoryId) return false
-      if (parentId) return false
-      return createSlug(sub.slug || "") === normalized || createSlug(sub.name || "") === normalized
-    })
+  const getUrlIdentifier = (item) => {
+    if (!item) return null
+    return item.slug || item.name || item._id || null
   }
 
-  const findSubcategoryByUrlPart = (urlPart) => {
-    if (!urlPart) return null
-    const normalized = createSlug(String(urlPart))
+  const findBestMatchingSubcategory = (subcategories, urlPart) => {
+    if (!Array.isArray(subcategories) || subcategories.length === 0 || !urlPart) return null
+    const rawUrlPart = String(urlPart)
+    const normalized = createSlug(rawUrlPart)
+    const normalizedRef = normalizeRefId(rawUrlPart)
     return (
-      allSubcategories.find((sub) => sub._id === urlPart) ||
-      allSubcategories.find((sub) => createSlug(sub.slug || "") === normalized) ||
-      allSubcategories.find((sub) => createSlug(sub.name || "") === normalized)
+      subcategories.find((sub) => normalizeRefId(sub?._id) === normalizedRef) ||
+      subcategories.find((sub) => createSlug(sub?.slug || "") === normalized) ||
+      subcategories.find((sub) => createSlug(sub?.name || "") === normalized) ||
+      null
     )
   }
 
-  const findChildSubcategoryByUrlPart = (parentSubCategoryId, urlPart) => {
-    if (!parentSubCategoryId || !urlPart) return null
-    const normalized = createSlug(String(urlPart))
-    return allSubcategories.find((sub) => {
-      const parentId = typeof sub.parentSubCategory === "object" ? sub.parentSubCategory?._id : sub.parentSubCategory
-      if (!parentId || parentId !== parentSubCategoryId) return false
-      return createSlug(sub.slug || "") === normalized || createSlug(sub.name || "") === normalized
-    })
+  const getSubcategoryById = (id) => {
+    const normalizedId = normalizeRefId(id)
+    if (!normalizedId) return null
+    return allSubcategories.find((sub) => normalizeRefId(sub?._id) === normalizedId) || null
+  }
+
+  const getUrlMatchScore = (sub, urlPart) => {
+    if (!sub || !urlPart) return 0
+    const rawUrlPart = String(urlPart)
+    const normalized = createSlug(rawUrlPart)
+    const normalizedRef = normalizeRefId(rawUrlPart)
+    if (normalizeRefId(sub?._id) === normalizedRef) return 3
+    if (createSlug(sub?.slug || "") === normalized) return 2
+    if (createSlug(sub?.name || "") === normalized) return 1
+    return 0
+  }
+
+  const getSubcategoryDepth = (sub) => {
+    if (!sub) return Number.MAX_SAFE_INTEGER
+    let depth = 1
+    let current = sub
+    const visited = new Set()
+    while (current) {
+      const parentId = getSubcategoryParentId(current)
+      if (!parentId || visited.has(parentId)) break
+      visited.add(parentId)
+      const parent = getSubcategoryById(parentId)
+      if (!parent) break
+      depth += 1
+      current = parent
+    }
+    return depth
+  }
+
+  const getSubcategoryAncestry = (sub) => {
+    if (!sub) return []
+    const ancestry = []
+    let current = sub
+    const visited = new Set()
+    while (current) {
+      ancestry.unshift(current)
+      const parentId = getSubcategoryParentId(current)
+      if (!parentId || visited.has(parentId)) break
+      visited.add(parentId)
+      current = getSubcategoryById(parentId)
+    }
+    return ancestry
+  }
+
+  const resolveSubcategoryPath = (categoryId, parts = []) => {
+    const normalizedCategoryId = normalizeRefId(categoryId)
+    const normalizedParts = parts.filter(Boolean)
+    if (!normalizedCategoryId || normalizedParts.length === 0) return []
+
+    const categoryScopedSubs = allSubcategories.filter(
+      (sub) => getSubcategoryCategoryId(sub) === normalizedCategoryId
+    )
+    if (categoryScopedSubs.length === 0) return []
+
+    const firstPart = normalizedParts[0]
+    const firstCandidates = categoryScopedSubs
+      .filter((sub) => getUrlMatchScore(sub, firstPart) > 0)
+      .sort((a, b) => {
+        const scoreDiff = getUrlMatchScore(b, firstPart) - getUrlMatchScore(a, firstPart)
+        if (scoreDiff !== 0) return scoreDiff
+        return getSubcategoryDepth(a) - getSubcategoryDepth(b)
+      })
+
+    if (firstCandidates.length === 0) return []
+
+    let bestChain = []
+
+    for (const startNode of firstCandidates) {
+      const chain = [startNode]
+      let current = startNode
+
+      for (let i = 1; i < normalizedParts.length; i++) {
+        const part = normalizedParts[i]
+        const currentId = normalizeRefId(current?._id)
+        const children = categoryScopedSubs.filter((sub) => getSubcategoryParentId(sub) === currentId)
+        const next = findBestMatchingSubcategory(children, part)
+        if (!next) break
+        chain.push(next)
+        current = next
+      }
+
+      if (chain.length > bestChain.length) {
+        bestChain = chain
+      }
+      if (chain.length === normalizedParts.length) {
+        bestChain = chain
+        break
+      }
+    }
+
+    if (bestChain.length === 0) return []
+
+    const ancestry = getSubcategoryAncestry(bestChain[0])
+    const combined = [...ancestry]
+    for (const node of bestChain.slice(1)) {
+      const nodeId = normalizeRefId(node?._id)
+      const alreadyIncluded = combined.some((item) => normalizeRefId(item?._id) === nodeId)
+      if (!alreadyIncluded) combined.push(node)
+    }
+    return combined.slice(0, 4)
   }
 
   // Helper function to get children of a category/subcategory
@@ -1005,10 +1116,10 @@ const Shop = () => {
     setCurrentSubCategory4Name(null)
 
     const categoryObj = categories.find((cat) => cat._id === categoryId)
-    const categoryName = categoryObj ? categoryObj.name : categoryId
+    const categoryIdentifier = categoryObj ? getUrlIdentifier(categoryObj) : categoryId
 
     const url = generateShopURL({
-      parentCategory: categoryId !== "all" ? categoryName : null,
+      parentCategory: categoryId !== "all" ? categoryIdentifier : null,
       brand: selectedBrands.length > 0 ? brands.find((b) => b._id === selectedBrands[0])?.name : null,
       search: searchQuery || null,
     })
@@ -1126,18 +1237,28 @@ const Shop = () => {
 
     // Update URL with full hierarchy (up to level 4) so deep links work consistently
     const categoryObj = categories.find((cat) => cat._id === hierarchy.parentCategory)
-    const level1Name = hierarchy.level1 ? allSubcategories.find((s) => s._id === hierarchy.level1)?.name : null
-    const level2Name = hierarchy.level2 ? allSubcategories.find((s) => s._id === hierarchy.level2)?.name : null
-    const level3Name = hierarchy.level3 ? allSubcategories.find((s) => s._id === hierarchy.level3)?.name : null
-    const level4Name = hierarchy.level4 ? allSubcategories.find((s) => s._id === hierarchy.level4)?.name : null
+    const level1Identifier = hierarchy.level1
+      ? getUrlIdentifier(allSubcategories.find((s) => s._id === hierarchy.level1))
+      : null
+    const level2Identifier = hierarchy.level2
+      ? getUrlIdentifier(allSubcategories.find((s) => s._id === hierarchy.level2))
+      : null
+    const level3Identifier = hierarchy.level3
+      ? getUrlIdentifier(allSubcategories.find((s) => s._id === hierarchy.level3))
+      : null
+    const level4Identifier = hierarchy.level4
+      ? getUrlIdentifier(allSubcategories.find((s) => s._id === hierarchy.level4))
+      : null
 
     const url = generateShopURL({
       parentCategory:
-        hierarchy.parentCategory && hierarchy.parentCategory !== "all" ? categoryObj?.name || hierarchy.parentCategory : null,
-      subcategory: level1Name,
-      subcategory2: level2Name,
-      subcategory3: level3Name,
-      subcategory4: level4Name,
+        hierarchy.parentCategory && hierarchy.parentCategory !== "all"
+          ? getUrlIdentifier(categoryObj) || hierarchy.parentCategory
+          : null,
+      subcategory: level1Identifier,
+      subcategory2: level2Identifier,
+      subcategory3: level3Identifier,
+      subcategory4: level4Identifier,
       brand: selectedBrands.length > 0 ? brands.find((b) => b._id === selectedBrands[0])?.name : null,
       search: searchQuery || null,
     })
@@ -1158,12 +1279,12 @@ const Shop = () => {
     const categoryObj = categories.find((cat) => cat._id === parentId)
     const subcategoryObj = subCategories.find((sub) => sub._id === subCatId)
 
-    const categoryName = categoryObj ? categoryObj.name : parentId
-    const subcategoryName = subcategoryObj ? subcategoryObj.name : subCatId
+    const categoryIdentifier = categoryObj ? getUrlIdentifier(categoryObj) : parentId
+    const subcategoryIdentifier = subcategoryObj ? getUrlIdentifier(subcategoryObj) : subCatId
 
     const url = generateShopURL({
-      parentCategory: parentId !== "all" ? categoryName : null,
-      subcategory: subcategoryName,
+      parentCategory: parentId !== "all" ? categoryIdentifier : null,
+      subcategory: subcategoryIdentifier,
       brand: selectedBrands.length > 0 ? brands.find((b) => b._id === selectedBrands[0])?.name : null,
       search: searchQuery || null,
     })
@@ -1191,11 +1312,11 @@ const Shop = () => {
     const subcategory4Obj = selectedSubCategory4 ? allSubcategories.find((sub) => sub._id === selectedSubCategory4) : null
 
     const url = generateShopURL({
-      parentCategory: selectedCategory !== "all" ? categoryObj?.name || selectedCategory : null,
-      subcategory: subcategoryObj?.name || selectedSubCategories[0] || null,
-      subcategory2: subcategory2Obj?.name || null,
-      subcategory3: subcategory3Obj?.name || null,
-      subcategory4: subcategory4Obj?.name || null,
+      parentCategory: selectedCategory !== "all" ? getUrlIdentifier(categoryObj) || selectedCategory : null,
+      subcategory: getUrlIdentifier(subcategoryObj) || selectedSubCategories[0] || null,
+      subcategory2: getUrlIdentifier(subcategory2Obj) || null,
+      subcategory3: getUrlIdentifier(subcategory3Obj) || null,
+      subcategory4: getUrlIdentifier(subcategory4Obj) || null,
       brand: newSelectedBrands.length > 0 ? brands.find((b) => b._id === newSelectedBrands[0])?.name : null,
       search: searchQuery || null,
     })
@@ -1229,11 +1350,11 @@ const Shop = () => {
     const subcategory4Obj = selectedSubCategory4 ? allSubcategories.find((sub) => sub._id === selectedSubCategory4) : null
 
     const url = generateShopURL({
-      parentCategory: selectedCategory !== "all" ? categoryObj?.name || selectedCategory : null,
-      subcategory: subcategoryObj?.name || selectedSubCategories[0] || null,
-      subcategory2: subcategory2Obj?.name || null,
-      subcategory3: subcategory3Obj?.name || null,
-      subcategory4: subcategory4Obj?.name || null,
+      parentCategory: selectedCategory !== "all" ? getUrlIdentifier(categoryObj) || selectedCategory : null,
+      subcategory: getUrlIdentifier(subcategoryObj) || selectedSubCategories[0] || null,
+      subcategory2: getUrlIdentifier(subcategory2Obj) || null,
+      subcategory3: getUrlIdentifier(subcategory3Obj) || null,
+      subcategory4: getUrlIdentifier(subcategory4Obj) || null,
       brand: selectedBrands.length > 0 ? brands.find((b) => b._id === selectedBrands[0])?.name : null,
       search: newSearchQuery || null,
     })

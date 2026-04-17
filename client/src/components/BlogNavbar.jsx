@@ -1,140 +1,118 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { Search, Menu, X, ShoppingBag, LayoutGrid, ChevronRight } from "lucide-react"
+import { Search, Menu, X, ShoppingBag, LayoutGrid, ChevronRight, ChevronDown } from "lucide-react"
 import config from "../config/config"
 import { useLanguage } from "../context/LanguageContext"
+import { getCategoryTreeCached } from "../services/categoryTreeCache"
+import { generateShopURL } from "../utils/urlUtils"
 
 const API_BASE_URL = `${config.API_URL}`
 
 const Header = () => {
   const { getLocalizedPath } = useLanguage()
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [categories, setCategories] = useState([])
-  const [visibleCount, setVisibleCount] = useState(null) // number of categories (excluding "All in one") visible in the centered row
-  const [isMoreOpen, setIsMoreOpen] = useState(false)
   const [showLogo, setShowLogo] = useState(true)
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
+  const [blogCategories, setBlogCategories] = useState([])
+  const [shopCategories, setShopCategories] = useState([])
+  const [isBlogDropdownOpen, setIsBlogDropdownOpen] = useState(false)
+  const [isAllCategoriesDropdownOpen, setIsAllCategoriesDropdownOpen] = useState(false)
+  const [desktopCascadeIds, setDesktopCascadeIds] = useState([])
+  const [hoveredCategory, setHoveredCategory] = useState(null)
+  const [activeCategoryRect, setActiveCategoryRect] = useState(null)
+  const [expandedMobileNodes, setExpandedMobileNodes] = useState({})
 
-  const navListRef = useRef(null)
-  const allInOneRef = useRef(null)
-  const moreBtnRef = useRef(null)
-  const itemRefs = useRef([]) // per-category refs for measuring widths
-  const navigate = useNavigate()
+  const blogDropdownRef = useRef(null)
+  const allCategoriesDropdownRef = useRef(null)
+  const categoryTimeoutRef = useRef(null)
+  const categoryOpenTimeoutRef = useRef(null)
+
+  const CATEGORY_OPEN_DELAY = 220
 
   useEffect(() => {
-    fetchCategories()
+    fetchNavbarData()
   }, [])
 
-  // Ensure refs array length matches categories
   useEffect(() => {
-    itemRefs.current = categories.map((_, i) => itemRefs.current[i] || null)
-  }, [categories])
+    if (!isBlogDropdownOpen) return
+    const handleOutsideClick = (event) => {
+      if (!blogDropdownRef.current?.contains(event.target)) {
+        setIsBlogDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleOutsideClick)
+    return () => document.removeEventListener("mousedown", handleOutsideClick)
+  }, [isBlogDropdownOpen])
 
-  const fetchCategories = async () => {
+  useEffect(() => {
+    if (!isAllCategoriesDropdownOpen) return
+    const handleOutsideClick = (event) => {
+      if (!allCategoriesDropdownRef.current?.contains(event.target)) {
+        setIsAllCategoriesDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleOutsideClick)
+    return () => document.removeEventListener("mousedown", handleOutsideClick)
+  }, [isAllCategoriesDropdownOpen])
+
+  useEffect(() => {
+    return () => {
+      if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current)
+      if (categoryOpenTimeoutRef.current) clearTimeout(categoryOpenTimeoutRef.current)
+    }
+  }, [])
+
+  const fetchNavbarData = async () => {
     try {
-      // Fetch all published blogs to determine which categories are used
-      const blogsResponse = await fetch(`${API_BASE_URL}/api/blogs?status=published`)
+      const [blogsResponse, categoriesResponse, categoryTree] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/blogs?status=published`),
+        fetch(`${API_BASE_URL}/api/blog-categories`),
+        getCategoryTreeCached(),
+      ])
+
       const blogsData = await blogsResponse.json()
-      const blogs = blogsData.blogs || blogsData || []
-      
-      // Group blogs by category ID and get a random blog slug for each
+      const blogCategoriesData = await categoriesResponse.json()
+      const blogs = Array.isArray(blogsData?.blogs) ? blogsData.blogs : Array.isArray(blogsData) ? blogsData : []
+      const allBlogCategories = Array.isArray(blogCategoriesData?.blogCategories)
+        ? blogCategoriesData.blogCategories
+        : Array.isArray(blogCategoriesData)
+          ? blogCategoriesData
+          : []
+
       const categoryBlogs = {}
-      blogs.forEach(blog => {
-        // Get the deepest category (priority: blogCategory > subCategory4 > 3 > 2 > 1 > mainCategory)
-        const categoryId = blog.blogCategory?._id || blog.subCategory4?._id || blog.subCategory3?._id || 
-                          blog.subCategory2?._id || blog.subCategory1?._id || 
-                          blog.mainCategory?._id
+      blogs.forEach((blog) => {
+        const categoryId =
+          blog.blogCategory?._id ||
+          blog.subCategory4?._id ||
+          blog.subCategory3?._id ||
+          blog.subCategory2?._id ||
+          blog.subCategory1?._id ||
+          blog.mainCategory?._id
+
         if (categoryId && blog.slug) {
-          if (!categoryBlogs[categoryId]) {
-            categoryBlogs[categoryId] = []
-          }
+          if (!categoryBlogs[categoryId]) categoryBlogs[categoryId] = []
           categoryBlogs[categoryId].push(blog.slug)
         }
       })
-      
-      // Fetch blog-specific categories
-      const categoriesRes = await fetch(`${API_BASE_URL}/api/blog-categories`)
-      const allCategories = await categoriesRes.json()
-      
-      // Use only blog categories
-      const combined = allCategories
-      const usedCategories = combined
-        .filter(cat => categoryBlogs[cat._id])
-        .map(cat => {
-          const slugs = categoryBlogs[cat._id]
+
+      const usedBlogCategories = allBlogCategories
+        .filter((category) => categoryBlogs[category._id]?.length)
+        .map((category) => {
+          const slugs = categoryBlogs[category._id]
           const randomSlug = slugs[Math.floor(Math.random() * slugs.length)]
-          return { ...cat, randomBlogSlug: randomSlug }
+          return { ...category, randomBlogSlug: randomSlug }
         })
-      
-      setCategories(usedCategories)
+
+      setBlogCategories(usedBlogCategories)
+      setShopCategories(Array.isArray(categoryTree) ? categoryTree : [])
     } catch (error) {
-      console.error("Error fetching categories:", error)
+      console.error("Error fetching blog navbar data:", error)
     }
   }
-
-  // Calculate how many categories fit; show More only when needed
-  const recalcLayout = () => {
-    const container = navListRef.current
-    const allInOne = allInOneRef.current
-    const moreBtn = moreBtnRef.current
-    if (!container) return
-
-    const containerWidth = container.clientWidth
-    if (containerWidth === 0) return
-
-    const styles = getComputedStyle(container)
-    // Tailwind gap-x-8 => 2rem (32px) on default; read actual just in case
-    const gap = parseFloat(styles.columnGap || styles.gap || 0) || 0
-
-    const allInOneWidth = allInOne ? allInOne.offsetWidth : 0
-    const catWidths = itemRefs.current.map((el) => (el ? el.offsetWidth : 0))
-
-    // Reserve space for More button if needed; measure if present, else fallback
-    const moreWidth = moreBtn ? moreBtn.offsetWidth : 56 // approx width fallback
-
-    // First try to fit everything without More: All + (gap+eachCat)
-    let total = allInOneWidth
-    for (let i = 0; i < catWidths.length; i++) {
-      total += gap + catWidths[i]
-    }
-    if (total <= containerWidth) {
-      setVisibleCount(catWidths.length)
-      return
-    }
-
-    // Need More button; place More on the left, then All in one, then categories
-    let width = moreWidth + gap + allInOneWidth
-    let count = 0
-    for (let i = 0; i < catWidths.length; i++) {
-      const nextWidth = width + gap + catWidths[i]
-      if (nextWidth <= containerWidth) {
-        width += gap + catWidths[i]
-        count++
-      } else {
-        break
-      }
-    }
-    setVisibleCount(count)
-  }
-  // Recalculate on load, resize, and when categories or query changes
-  useLayoutEffect(() => {
-    const observer = new ResizeObserver(() => {
-      recalcLayout()
-    })
-    if (navListRef.current) observer.observe(navListRef.current)
-    // Also listen to window resize for safety
-    const onResize = () => recalcLayout()
-    window.addEventListener("resize", onResize)
-    // Initial calc after paint
-    requestAnimationFrame(recalcLayout)
-    return () => {
-      observer.disconnect()
-      window.removeEventListener("resize", onResize)
-    }
-  }, [categories])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -144,289 +122,667 @@ const Header = () => {
     }
   }
 
-  const overflowExists = useMemo(() => {
-    if (visibleCount === null) return false
-    return visibleCount < categories.length
-  }, [visibleCount, categories.length])
+  const toggleMobileNode = (nodeId) => {
+    setExpandedMobileNodes((prev) => ({ ...prev, [nodeId]: !prev[nodeId] }))
+  }
 
-  // Close More when clicking outside
-  useEffect(() => {
-    if (!isMoreOpen) return
-    const onDocClick = (e) => {
-      const btn = moreBtnRef.current
-      const list = navListRef.current
-      if (!btn || !list) return
-      if (!btn.contains(e.target) && !list.contains(e.target)) {
-        setIsMoreOpen(false)
+  const toggleDesktopCategoryDropdown = () => {
+    setIsAllCategoriesDropdownOpen((prev) => {
+      const next = !prev
+      if (next) setDesktopCascadeIds([])
+      return next
+    })
+    setHoveredCategory(null)
+    setActiveCategoryRect(null)
+  }
+
+  const closeDesktopCategoryDropdown = () => {
+    setIsAllCategoriesDropdownOpen(false)
+    setDesktopCascadeIds([])
+  }
+
+  const resetMegaMenu = () => {
+    setHoveredCategory(null)
+    setActiveCategoryRect(null)
+  }
+
+  const getSubCategoriesForCategory = (categoryId) => {
+    const category = shopCategories.find((item) => item._id === categoryId)
+    if (!category || !Array.isArray(category.children)) return []
+    return category.children.filter((child) => !child.level || child.level === 1)
+  }
+
+  const getChildSubCategories = (parentNodeId) => {
+    const stack = []
+    for (const category of shopCategories) {
+      if (Array.isArray(category.children)) stack.push(...category.children)
+    }
+    const visited = new Set()
+    while (stack.length) {
+      const node = stack.pop()
+      if (!node || visited.has(node._id)) continue
+      visited.add(node._id)
+      if (node._id === parentNodeId) {
+        return Array.isArray(node.children) ? node.children : []
+      }
+      if (Array.isArray(node.children) && node.children.length) {
+        stack.push(...node.children)
       }
     }
-    document.addEventListener("mousedown", onDocClick)
-    return () => document.removeEventListener("mousedown", onDocClick)
-  }, [isMoreOpen])
+    return []
+  }
+
+  const getNodeIdentifier = (nodeOrValue) => {
+    if (!nodeOrValue) return null
+    if (typeof nodeOrValue === "string") return nodeOrValue
+    return nodeOrValue.slug || nodeOrValue.name || nodeOrValue._id || null
+  }
+
+  const buildShopLink = (parentNodeOrIdentifier, subcategoryChain = []) => {
+    const params = { parentCategory: getNodeIdentifier(parentNodeOrIdentifier) }
+    if (subcategoryChain[0]) params.subcategory = subcategoryChain[0]
+    if (subcategoryChain[1]) params.subcategory2 = subcategoryChain[1]
+    if (subcategoryChain[2]) params.subcategory3 = subcategoryChain[2]
+    if (subcategoryChain[3]) params.subcategory4 = subcategoryChain[3]
+    return generateShopURL(params)
+  }
+
+  const getCategoryDropdownStyle = (rect) => {
+    if (!rect) return {}
+    const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1920
+
+    let horizontalPadding = 16
+    if (viewportWidth >= 1536) {
+      horizontalPadding = 48
+    } else if (viewportWidth >= 1280) {
+      horizontalPadding = 40
+    } else if (viewportWidth >= 1024) {
+      horizontalPadding = 32
+    } else if (viewportWidth >= 640) {
+      horizontalPadding = 24
+    }
+
+    const maxContainerWidth = 1700
+    const containerWidth = Math.min(viewportWidth, maxContainerWidth)
+    const containerOffset = viewportWidth > maxContainerWidth ? (viewportWidth - maxContainerWidth) / 2 : 0
+    const dropdownWidth = containerWidth - horizontalPadding * 2
+    const dropdownLeft = containerOffset + horizontalPadding
+    const dropdownTop = rect.bottom + 2
+
+    return {
+      left: `${dropdownLeft}px`,
+      top: `${dropdownTop}px`,
+      width: `${dropdownWidth}px`,
+      height: "400px",
+    }
+  }
+
+  const renderNestedNodes = (nodes, parentNodeOrIdentifier, chain = [], level = 1) => {
+    if (!Array.isArray(nodes) || nodes.length === 0) return null
+
+    return (
+      <div className={`space-y-1 ${level > 1 ? "ml-3 border-l border-gray-100 pl-2" : ""}`}>
+        {nodes.map((node, index) => {
+          const nextChain = [...chain, getNodeIdentifier(node)]
+          const hasChildren = Array.isArray(node.children) && node.children.length > 0
+          const fallbackId = `${node.name || "node"}-${nextChain.join("-")}-${index}`
+          const nodeId = node._id || fallbackId
+          const isExpanded = Boolean(expandedMobileNodes[nodeId])
+
+          return (
+            <div key={nodeId}>
+              <div
+                className={`flex items-center justify-between gap-2 rounded-md px-3 py-2 hover:bg-gray-50 ${
+                  level <= 1 ? "text-sm" : "text-xs"
+                }`}
+              >
+                <Link
+                  to={buildShopLink(parentNodeOrIdentifier, nextChain)}
+                  onClick={() => {
+                    setIsMenuOpen(false)
+                  }}
+                  className="flex-1 font-medium text-gray-800"
+                >
+                  {node.name}
+                </Link>
+                {hasChildren && (
+                  <button
+                    type="button"
+                    aria-label={isExpanded ? "Collapse category" : "Expand category"}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      toggleMobileNode(nodeId)
+                    }}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-lime-500 text-white hover:bg-lime-600"
+                  >
+                    {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                  </button>
+                )}
+              </div>
+
+              {hasChildren && isExpanded && renderNestedNodes(node.children, parentNodeOrIdentifier, nextChain, level + 1)}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const renderRootCategories = () => {
+    if (!Array.isArray(shopCategories) || shopCategories.length === 0) {
+      return <div className="px-3 py-2 text-sm text-gray-500">No categories found</div>
+    }
+
+    return shopCategories.map((parentCategory, index) => {
+      const hasChildren = Array.isArray(parentCategory.children) && parentCategory.children.length > 0
+      const nodeId = parentCategory._id || `root-${parentCategory.name}-${index}`
+      const isExpanded = Boolean(expandedMobileNodes[nodeId])
+
+      return (
+        <div key={nodeId}>
+          <div className="flex items-center justify-between gap-2 rounded-md px-3 py-2 hover:bg-gray-50">
+            <Link
+              to={buildShopLink(parentCategory)}
+              onClick={() => {
+                setIsMenuOpen(false)
+              }}
+              className="flex-1 text-sm font-semibold text-gray-900"
+            >
+              {parentCategory.name}
+            </Link>
+            {hasChildren && (
+              <button
+                type="button"
+                aria-label={isExpanded ? "Collapse category" : "Expand category"}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  toggleMobileNode(nodeId)
+                }}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-lime-500 text-white hover:bg-lime-600"
+              >
+                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </button>
+            )}
+          </div>
+
+          {hasChildren && isExpanded && renderNestedNodes(parentCategory.children, parentCategory)}
+        </div>
+      )
+    })
+  }
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200  -mt-3  sm:pt-2 sticky -top-1 mb-2 z-50">
+    <header className="bg-white shadow-sm border-b border-gray-200 -mt-3 sm:pt-2 sticky -top-1 mb-2 z-50">
       <div className="w-full">
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
-          {/* Mobile top bar: left categories toggle, centered logo, right search icon */}
-  <div className="md:hidden grid grid-cols-3 items-center py-3">
-          <div className="pl-1">
-            <button
-              className="p-2 text-gray-700 hover:text-gray-900"
-              aria-label="Toggle categories"
-              onClick={() => {
-                setIsMenuOpen((v) => !v)
-                setIsMobileSearchOpen(false)
-              }}
-            >
-              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
+          <div className="md:hidden grid grid-cols-3 items-center py-3">
+            <div className="pl-1">
+              <button
+                className="p-2 text-gray-700 hover:text-gray-900"
+                aria-label="Toggle categories"
+                onClick={() => {
+                  setIsMenuOpen((v) => !v)
+                  setIsMobileSearchOpen(false)
+                }}
+              >
+                {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+            </div>
+            <div className="flex items-center justify-center">
+              <Link to="/" className="inline-flex items-center">
+                {showLogo ? (
+                  <img
+                    src="/admin-logo.svg"
+                    alt="GrabaZz logo"
+                    className="h-8 w-auto object-contain"
+                    onError={() => setShowLogo(false)}
+                  />
+                ) : (
+                  <span className="text-lg font-bold text-gray-900">GrabaZz</span>
+                )}
+              </Link>
+            </div>
+            <div className="flex items-center justify-end pr-1 gap-1">
+              {!isMobileSearchOpen && (
+                <button
+                  className="p-2 text-gray-700 hover:text-gray-900"
+                  aria-label="Search"
+                  onClick={() => {
+                    setIsMobileSearchOpen(true)
+                    setIsMenuOpen(false)
+                  }}
+                >
+                  <Search size={22} />
+                </button>
+              )}
+              <Link to="https://www.grabatoz.ae/" target="_blank" aria-label="Shop Now" className="p-2 text-gray-700 hover:text-gray-900">
+                <ShoppingBag size={20} />
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center justify-center">
-            <Link to="/" className="inline-flex items-center">
+
+          {isMobileSearchOpen && (
+            <div className="md:hidden pb-3">
+              <form onSubmit={handleSearch} className="w-full">
+                <div className="flex items-center bg-white rounded-md overflow-hidden">
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 h-10 px-3 outline-none border border-lime-300"
+                    autoFocus
+                  />
+                  <div className="flex items-center h-10 mr-1 text-white">
+                    <button type="submit" aria-label="Search" className="h-10 w-10 flex items-center justify-center bg-lime-500 hover:bg-lime-600/90">
+                      <Search size={22} />
+                    </button>
+                    <span aria-hidden className="h-6 w-px" />
+                    <button
+                      type="button"
+                      aria-label="Close search"
+                      onClick={() => setIsMobileSearchOpen(false)}
+                      className="h-10 w-10 flex items-center justify-center text-gray-500 hover:text-gray-700 ml-1"
+                    >
+                      <X size={28} />
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          )}
+
+          <div className="hidden md:grid grid-cols-[auto,auto,minmax(0,1fr),auto] items-center my-3 gap-4 min-h-[56px]">
+            <Link to="/" className="flex items-center space-x-2 justify-self-start">
               {showLogo ? (
                 <img
                   src="/admin-logo.svg"
                   alt="GrabaZz logo"
-                  className="h-8 w-auto object-contain"
+                  className="h-14 w-auto object-contain"
                   onError={() => setShowLogo(false)}
                 />
               ) : (
-                <span className="text-lg font-bold text-gray-900">GrabaZz</span>
+                <h1 className="text-xl font-bold text-gray-900">GrabaZz</h1>
               )}
             </Link>
-          </div>
-          <div className="flex items-center justify-end pr-1 gap-1">
-           
-            {!isMobileSearchOpen && (
-              <button
-                className="p-2 text-gray-700 hover:text-gray-900"
-                aria-label="Search"
-                onClick={() => {
-                  setIsMobileSearchOpen(true)
-                  setIsMenuOpen(false)
-                }}
-              >
-                <Search size={22} />
-              </button>
-            )}
-             <Link
-              to="https://www.grabatoz.ae/"
-              target="_blank"
-              aria-label="Shop Now"
-              className="p-2 text-gray-700 hover:text-gray-900"
-            >
-              <ShoppingBag size={20} />
-            </Link>
-          </div>
-        </div>
 
-        {/* Mobile search dropdown */}
-        {isMobileSearchOpen && (
-          <div className="md:hidden pb-3">
-            <form onSubmit={handleSearch} className="w-full">
-              <div className="flex items-center bg-white rounded-md overflow-hidden">
+            <div className="relative flex items-center justify-center px-2" ref={blogDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsBlogDropdownOpen((v) => !v)}
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-md border border-gray-300 text-gray-700 text-center hover:border-lime-500 hover:text-lime-600"
+              >
+                <span className="text-sm font-medium">Topics</span>
+                <ChevronDown size={16} className={isBlogDropdownOpen ? "rotate-180 transition-transform" : "transition-transform"} />
+              </button>
+
+              {isBlogDropdownOpen && (
+                <div className="absolute left-0 top-full mt-2 min-w-56 max-h-96 overflow-y-auto rounded-md bg-white py-2 shadow-lg ring-1 ring-black/10 z-40">
+                  <Link
+                    to={getLocalizedPath("/blogs")}
+                    className="block px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                    onClick={() => setIsBlogDropdownOpen(false)}
+                  >
+                    All Blogs
+                  </Link>
+                  {blogCategories.map((category) => (
+                    <Link
+                      key={category._id}
+                      to={getLocalizedPath(`/blogs/${category.randomBlogSlug}`)}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      onClick={() => setIsBlogDropdownOpen(false)}
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={handleSearch} className="w-full max-w-[620px] justify-self-start">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
                   placeholder="Search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 h-10 px-3 outline-none border border-lime-300"
-                  autoFocus
+                  className="w-full h-12 px-4 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-lime-500 focus:border-lime-500"
                 />
-                <div className="flex items-center h-10 mr-1  text-white">
-                  <button
-                    type="submit"
-                    aria-label="Search"
-                    className="h-10 w-10 flex items-center justify-center bg-lime-500 hover:bg-lime-600/90"
-                  >
-                    <Search size={22} />
-                  </button>
-                  <span aria-hidden className="h-6 w-px" />
-                  <button
-                    type="button"
-                    aria-label="Close search"
-                    onClick={() => setIsMobileSearchOpen(false)}
-                    className="h-10 w-10 flex items-center justify-center text-gray-500 hover:text-gray-700 ml-1"
-                  >
-                    <X size={28} />
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  aria-label="Search"
+                  className="h-12 w-14 bg-lime-500 text-white flex items-center justify-center hover:bg-lime-600 transition-colors"
+                >
+                  <Search size={16} />
+                </button>
               </div>
             </form>
+
+            <Link
+              to="https://www.grabatoz.ae/"
+              target="_blank"
+              className="hidden md:flex items-center space-x-2 px-6 py-2 border hover:border-2 border-gray-300 hover:border-lime-300 text-black hover:bg-lime-500 hover:text-white transition-colors font-medium justify-self-end"
+            >
+              <ShoppingBag size={18} />
+              <span>Shop Now</span>
+            </Link>
           </div>
-        )}
-
-        {/* Desktop/Laptop header row (unchanged) */}
-        <div className="hidden md:flex items-center justify-between my-3">
-          <Link to="/" className="flex items-center space-x-2">
-            {showLogo ? (
-              <img
-                src="/admin-logo.svg"
-                alt="GrabaZz logo"
-                className="h-14 w-auto object-contain"
-                onError={() => setShowLogo(false)}
-              />
-            ) : (
-              <h1 className="text-xl font-bold text-gray-900">GrabaZz</h1>
-            )}
-          </Link>
-          <form onSubmit={handleSearch} className="flex-1 max-w-lg mx-8">
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-12 px-4 border border-gray-300  focus:outline-none focus:ring-1 focus:ring-lime-500 focus:border-lime-500"
-              />
-              <button
-                type="submit"
-                aria-label="Search"
-                className="h-12 w-14 bg-lime-500 text-white  flex items-center justify-center hover:bg-lime-600 transition-colors"
-              >
-                <Search size={16} />
-              </button>
-            </div>
-          </form>
-          <Link
-            to="https://www.grabatoz.ae/"
-            target="_blank"
-            className="hidden md:flex items-center space-x-2 px-6 py-2 border hover:border-2 border-gray-300 hover:border-lime-300 text-black hover:bg-lime-500 hover:text-white transition-colors font-medium"
-          >
-            <ShoppingBag size={18} />
-            <span>Shop Now</span>
-          </Link>
         </div>
 
-        </div>
-
-        {/* Desktop categories bar */}
         <div className="hidden md:block bg-lime-500">
           <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-2">
-            <nav className="py-1">
-              <ul ref={navListRef} className="flex w-full items-center justify-center gap-12 whitespace-nowrap overflow-visible relative">
-                {/* More dropdown (only render when overflow) - on the left */}
-                {overflowExists && (
-                  <li className="relative">
-                    <button
-                      ref={moreBtnRef}
-                      type="button"
-                      onClick={() => setIsMoreOpen((v) => !v)}
-                      className="inline-flex items-center font-medium text-white hover:text-lime-100 transition-colors px-0 py-0"
-                      aria-haspopup="menu"
-                      aria-expanded={isMoreOpen}
-                    >
-                      <span>More</span>
-                    </button>
-                    {isMoreOpen && (
-                      <div className="absolute left-0 top-full mt-2 min-w-44 rounded-md bg-white py-2 shadow-lg ring-1 ring-black/10 z-20">
-                        {categories.slice(visibleCount ?? 0).map((category) => (
-                          <Link
-                            key={category._id}
-                            to={getLocalizedPath(`/blogs/${category.randomBlogSlug}`)}
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                            onClick={() => setIsMoreOpen(false)}
-                          >
-                            {category.name}
-                          </Link>
-                        ))}
+            <div className="relative flex items-center gap-6">
+              <div className="relative flex-shrink-0" ref={allCategoriesDropdownRef}>
+                <button
+                  type="button"
+                  onClick={toggleDesktopCategoryDropdown}
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-md border border-white/50 text-white font-semibold hover:bg-lime-600"
+                >
+                  <span>All Categories</span>
+                  <ChevronDown
+                    size={16}
+                    className={isAllCategoriesDropdownOpen ? "rotate-180 transition-transform" : "transition-transform"}
+                  />
+                </button>
+
+                {isAllCategoriesDropdownOpen && (
+                  <div
+                    className="absolute left-0 top-full mt-2 bg-white shadow-2xl rounded-lg z-[70] border border-gray-200 overflow-hidden max-w-[calc(100vw-32px)]"
+                    onMouseLeave={() => setDesktopCascadeIds([])}
+                  >
+                    <div className="flex max-h-[calc(100vh-160px)] overflow-x-auto hide-scrollbar">
+                      <div className="flex min-w-max">
+                        <div className="w-64 border-r border-gray-100 overflow-y-auto">
+                          <div className="p-2">
+                            {shopCategories.map((parentCategory) => {
+                              const level1 = getSubCategoriesForCategory(parentCategory._id)
+                              const hasChildren = level1.length > 0
+                              const isActive = desktopCascadeIds[0] === parentCategory._id
+                              return (
+                                <Link
+                                  key={parentCategory._id}
+                                  to={buildShopLink(parentCategory)}
+                                  onMouseEnter={() => setDesktopCascadeIds([parentCategory._id])}
+                                  onClick={closeDesktopCategoryDropdown}
+                                  className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-semibold text-gray-800 hover:bg-gray-100 transition ${
+                                    isActive ? "bg-gray-50" : ""
+                                  }`}
+                                >
+                                  <span className="flex-1 pr-2">{parentCategory.name}</span>
+                                  {hasChildren && <ChevronRight size={14} className="text-gray-400" />}
+                                </Link>
+                              )
+                            })}
+                          </div>
+                        </div>
+
+                        {(() => {
+                          const columns = []
+                          const activeParentId = desktopCascadeIds[0]
+                          if (!activeParentId) return null
+                          const parentCategory = shopCategories.find((item) => item._id === activeParentId)
+                          if (!parentCategory) return null
+
+                          const buildParams = (chain) => {
+                            const params = { parentCategory: getNodeIdentifier(parentCategory) }
+                            const keys = ["subcategory", "subcategory2", "subcategory3", "subcategory4"]
+                            for (let i = 0; i < Math.min(chain.length, keys.length); i++) {
+                              params[keys[i]] = chain[i]
+                            }
+                            return params
+                          }
+
+                          const getIdentifierById = (id) => {
+                            if (!id) return ""
+                            const stack = [...shopCategories]
+                            const visited = new Set()
+                            while (stack.length) {
+                              const node = stack.pop()
+                              if (!node || visited.has(node._id)) continue
+                              visited.add(node._id)
+                              if (node._id === id) return getNodeIdentifier(node) || ""
+                              if (Array.isArray(node.children) && node.children.length) {
+                                stack.push(...node.children)
+                              }
+                            }
+                            return ""
+                          }
+
+                          const getItemsForLevel = (levelIndex) => {
+                            if (levelIndex === 1) return getSubCategoriesForCategory(activeParentId)
+                            const prevSelectedId = desktopCascadeIds[levelIndex - 1]
+                            if (!prevSelectedId) return []
+                            return getChildSubCategories(prevSelectedId)
+                          }
+
+                          for (let levelIndex = 1; levelIndex < 10; levelIndex++) {
+                            const items = getItemsForLevel(levelIndex)
+                            if (!Array.isArray(items) || items.length === 0) break
+
+                            columns.push(
+                              <div key={`col-${levelIndex}`} className="w-64 border-r border-gray-100 last:border-r-0 overflow-y-auto">
+                                <div className="p-2">
+                                  {items.map((node) => {
+                                    const hasNested = Array.isArray(node.children) && node.children.length > 0
+                                    const isActive = desktopCascadeIds[levelIndex] === node._id
+                                    const chainPrefix = desktopCascadeIds
+                                      .slice(1, levelIndex)
+                                      .map(getIdentifierById)
+                                      .filter(Boolean)
+
+                                    return (
+                                      <Link
+                                        key={node._id}
+                                        to={generateShopURL(buildParams([...chainPrefix, getNodeIdentifier(node)]))}
+                                        onMouseEnter={() => {
+                                          setDesktopCascadeIds((prev) => {
+                                            const next = prev.slice(0, levelIndex)
+                                            next[levelIndex] = node._id
+                                            return next
+                                          })
+                                        }}
+                                        onClick={closeDesktopCategoryDropdown}
+                                        className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition ${
+                                          isActive ? "bg-gray-50" : ""
+                                        }`}
+                                      >
+                                        <span className="flex-1 pr-2">{node.name}</span>
+                                        {hasNested && <ChevronRight size={14} className="text-gray-400" />}
+                                      </Link>
+                                    )
+                                  })}
+                                </div>
+                              </div>,
+                            )
+                          }
+
+                          return columns
+                        })()}
                       </div>
-                    )}
-                  </li>
+                    </div>
+                  </div>
                 )}
+              </div>
 
-                {/* All in one always visible */}
-                {/* <li ref={allInOneRef}>
-                  <Link to="/" className="text-white hover:text-lime-100 font-medium">
-                    All in one
-                  </Link>
-                </li> */}
+              <nav className="flex-1 overflow-x-auto hide-scrollbar [scrollbar-width:none]">
+                <ul className="flex items-center gap-8 whitespace-nowrap pr-2">
+                  {shopCategories.map((category, index) => {
+                    const categorySubCategories = getSubCategoriesForCategory(category._id)
+                    const isActiveCategory = hoveredCategory === category._id
 
-                {/* Visible categories */}
-                {categories.slice(0, visibleCount ?? categories.length).map((category) => (
-                  <li key={category._id}>
-                    <Link
-                      to={getLocalizedPath(`/blogs/${category.randomBlogSlug}`)}
-                      className="text-white hover:text-lime-100 font-medium"
-                    >
-                      {category.name}
-                    </Link>
-                  </li>
-                ))}
+                    return (
+                      <li
+                        key={category._id || `desktop-cat-${category.name}-${index}`}
+                        className="relative flex items-center h-full flex-shrink-0"
+                        onMouseEnter={(event) => {
+                          if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current)
+                          if (categoryOpenTimeoutRef.current) clearTimeout(categoryOpenTimeoutRef.current)
+                          setIsAllCategoriesDropdownOpen(false)
+                          setDesktopCascadeIds([])
 
-                {/* Offscreen measuring container */}
-                <li className="absolute -left-[9999px] top-auto" aria-hidden="true">
-                  {categories.map((category, idx) => (
-                    <span
-                      key={`measure-${category._id}`}
-                      ref={(el) => (itemRefs.current[idx] = el)}
-                      className="inline-block font-medium"
-                    >
-                      {category.name}
-                    </span>
-                  ))}
-                </li>
-              </ul>
-            </nav>
+                          const target = event.currentTarget
+                          categoryOpenTimeoutRef.current = setTimeout(() => {
+                            setHoveredCategory(category._id)
+                            const rect = target.getBoundingClientRect()
+                            setActiveCategoryRect({
+                              top: rect.top,
+                              bottom: rect.bottom,
+                              left: rect.left,
+                              right: rect.right,
+                              width: rect.width,
+                            })
+                            categoryOpenTimeoutRef.current = null
+                          }, CATEGORY_OPEN_DELAY)
+                        }}
+                        onMouseLeave={() => {
+                          if (categoryOpenTimeoutRef.current) {
+                            clearTimeout(categoryOpenTimeoutRef.current)
+                            categoryOpenTimeoutRef.current = null
+                          }
+                          categoryTimeoutRef.current = setTimeout(() => {
+                            resetMegaMenu()
+                          }, 320)
+                        }}
+                      >
+                        <Link
+                          to={buildShopLink(category)}
+                          onClick={resetMegaMenu}
+                          className={`text-white hover:text-lime-100 font-medium text-sm py-2 ${
+                            isActiveCategory ? "font-semibold" : ""
+                          }`}
+                        >
+                          {category.name}
+                        </Link>
+                        {isActiveCategory && (
+                          <span className="pointer-events-none absolute bottom-0 left-0 right-0 h-1 rounded-full bg-white shadow-sm" />
+                        )}
+
+                        {isActiveCategory && categorySubCategories.length > 0 && (
+                          <div
+                            className="fixed bg-white mt-1 shadow-2xl rounded-lg p-5 z-[60] border border-gray-100 overflow-y-auto"
+                            role="menu"
+                            aria-label={`${category.name} menu`}
+                            style={{ ...getCategoryDropdownStyle(activeCategoryRect), maxWidth: "calc(100vw - 32px)" }}
+                            onMouseEnter={() => {
+                              if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current)
+                            }}
+                            onMouseLeave={() => {
+                              categoryTimeoutRef.current = setTimeout(() => {
+                                resetMegaMenu()
+                              }, 220)
+                            }}
+                          >
+                            <div className="flex flex-nowrap items-start gap-4 overflow-x-auto hide-scrollbar px-2 py-2">
+                              {categorySubCategories.map((subCategory) => {
+                                const level2Subs = getChildSubCategories(subCategory._id)
+                                const level2ItemsPerColumn = 14
+                                const firstColumnLevel2 = level2Subs.slice(0, level2ItemsPerColumn)
+                                const moreLevel2Items = level2Subs.slice(level2ItemsPerColumn)
+                                const hasMoreLevel2 = moreLevel2Items.length > 0
+
+                                return (
+                                  <div key={subCategory._id} className="contents">
+                                    <div className="w-[160px] flex-shrink-0 flex flex-col gap-3">
+                                      <Link
+                                        to={buildShopLink(category, [getNodeIdentifier(subCategory)])}
+                                        className="block text-red-600 text-xs font-semibold hover:text-red-600"
+                                        onClick={resetMegaMenu}
+                                      >
+                                        {subCategory.name}
+                                      </Link>
+                                      <ul className="flex flex-col gap-1 px-1 pb-1 text-left">
+                                        {firstColumnLevel2.map((sub2) => (
+                                          <li key={sub2._id}>
+                                            <Link
+                                              to={buildShopLink(category, [getNodeIdentifier(subCategory), getNodeIdentifier(sub2)])}
+                                              className="block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug"
+                                              onClick={resetMegaMenu}
+                                            >
+                                              {sub2.name}
+                                            </Link>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+
+                                    {hasMoreLevel2 && (
+                                      <div className="w-[160px] flex-shrink-0 flex flex-col gap-3">
+                                        <div className="block text-lime-600 text-xs font-bold uppercase tracking-wide">More</div>
+                                        <ul className="flex flex-col gap-1 px-1 pb-1 text-left">
+                                          {moreLevel2Items.map((sub2) => (
+                                            <li key={sub2._id}>
+                                              <Link
+                                                to={buildShopLink(category, [getNodeIdentifier(subCategory), getNodeIdentifier(sub2)])}
+                                                className="block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug"
+                                                onClick={resetMegaMenu}
+                                              >
+                                                {sub2.name}
+                                              </Link>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </nav>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Categories Drawer */}
         {isMenuOpen && (
           <div className="md:hidden fixed inset-0 z-50">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-black/40"
-              onClick={() => setIsMenuOpen(false)}
-              aria-hidden="true"
-            />
-            {/* Drawer */}
+            <div className="absolute inset-0 bg-black/40" onClick={() => setIsMenuOpen(false)} aria-hidden="true" />
+
             <nav className="absolute top-0 left-0 h-full w-80 max-w-[85vw] bg-white shadow-xl flex flex-col">
-              {/* Drawer Header: first bar styled exactly like the screenshot */}
-              <div className="">
-                <div className="flex items-center justify-between bg-lime-500 text-white h-12 w-full px-3">
-                  <button
-                    onClick={() => {
-                      navigate("/")
-                      setIsMenuOpen(false)
-                    }}
-                    className="flex items-center gap-2">
-                    <LayoutGrid size={18} />
-                    <span className="font-xl text-lg">All Categories</span>
-                  </button>
-                  <button
-                    onClick={() => setIsMenuOpen(false)}
-                    aria-label="Close categories"
-                    className="text-white">
-                    <X size={22} />
-                  </button>
-                </div>
+              <div className="flex items-center justify-between bg-lime-500 text-white h-12 w-full px-3">
+                <button
+                  onClick={() => {
+                    navigate("/")
+                    setIsMenuOpen(false)
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <LayoutGrid size={18} />
+                  <span className="font-xl text-lg">All Categories</span>
+                </button>
+                <button onClick={() => setIsMenuOpen(false)} aria-label="Close categories" className="text-white">
+                  <X size={22} />
+                </button>
               </div>
 
-              {/* Items */}
-              <div className="flex-1 overflow-y-auto">
-                {/* All in one row intentionally omitted here; styled as header above */}
-
-                {/* Categories list */}
-                <div className="py-1">
-                  {categories.map((category) => (
+              <div className="border-b border-gray-200 p-3">
+                <div className="text-sm font-semibold text-gray-800 mb-2">Blog Categories</div>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  <Link to={getLocalizedPath("/blogs")} onClick={() => setIsMenuOpen(false)} className="block text-sm px-2 py-1.5 rounded hover:bg-gray-50">
+                    All Blogs
+                  </Link>
+                  {blogCategories.map((category) => (
                     <Link
                       key={category._id}
                       to={getLocalizedPath(`/blogs/${category.randomBlogSlug}`)}
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 text-gray-800 text-medium font-medium"
+                      className="block text-sm px-2 py-1.5 rounded hover:bg-gray-50"
                     >
-                      <span>{category.name}</span>
-                      <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-lime-500 text-white">
-                        <ChevronRight size={18} />
-                      </span>
+                      {category.name}
                     </Link>
                   ))}
                 </div>
               </div>
 
-              {/* Footer CTA removed as requested */}
+              <div className="flex-1 overflow-y-auto p-2">
+                <div className="space-y-1">{renderRootCategories()}</div>
+              </div>
             </nav>
           </div>
         )}

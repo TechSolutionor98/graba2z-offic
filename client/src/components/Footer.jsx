@@ -81,7 +81,7 @@ const Footer = ({ className = "" }) => {
 
       // Derive a flat subcategory list from the tree to avoid a second heavy API request.
       const derivedSubs = []
-      const collectSubcategories = (nodes, parentCategoryName = "", parentCategoryId = null) => {
+      const collectSubcategories = (nodes, parentCategoryName = "", parentCategoryId = null, parentCategorySlug = "") => {
         if (!Array.isArray(nodes)) return
         for (const node of nodes) {
           if (node && node._id && node.name) {
@@ -89,16 +89,17 @@ const Footer = ({ className = "" }) => {
               ...node,
               _footerParentCategoryName: parentCategoryName || "",
               _footerParentCategoryId: parentCategoryId || null,
+              _footerParentCategorySlug: parentCategorySlug || "",
             })
           }
           if (Array.isArray(node.children)) {
-            collectSubcategories(node.children, parentCategoryName, parentCategoryId)
+            collectSubcategories(node.children, parentCategoryName, parentCategoryId, parentCategorySlug)
           }
         }
       }
       for (const category of validCategories) {
         if (Array.isArray(category.children)) {
-          collectSubcategories(category.children, category.name, category._id)
+          collectSubcategories(category.children, category.name, category._id, category.slug || category.name)
         }
       }
       setSubCategories(derivedSubs)
@@ -253,7 +254,7 @@ const Footer = ({ className = "" }) => {
                     .slice(0, 9)
                     .map((category) => (
                     <li key={category._id}>
-                      <Link to={generateShopURL({ parentCategory: category.name })} className="hover:text-lime-400">
+                      <Link to={generateShopURL({ parentCategory: category.slug || category.name })} className="hover:text-lime-400">
                         <TranslatedText text={category.name} sourceDoc={category} fieldName="name" />
                       </Link>
                     </li>
@@ -278,8 +279,8 @@ const Footer = ({ className = "" }) => {
                     .map((subCategory) => (
                     <li key={`sub-${subCategory._id}`}>
                       <Link to={generateShopURL({
-                        parentCategory: subCategory._footerParentCategoryName,
-                        subcategory: subCategory.name
+                        parentCategory: subCategory._footerParentCategorySlug || subCategory._footerParentCategoryName,
+                        subcategory: subCategory.slug || subCategory.name
                       })} className="hover:text-lime-400">
                         <TranslatedText text={subCategory.name} sourceDoc={subCategory} fieldName="name" />
                       </Link>

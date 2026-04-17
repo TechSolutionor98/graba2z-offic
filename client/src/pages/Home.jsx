@@ -603,12 +603,18 @@ const Home = () => {
   }, [brandCurrentIndex, brands.length])
 
   const handleCategoryClick = (categoryOrItem) => {
+    const getNodeIdentifier = (nodeOrValue) => {
+      if (!nodeOrValue) return null
+      if (typeof nodeOrValue === "string") return nodeOrValue
+      return nodeOrValue.slug || nodeOrValue.name || nodeOrValue._id || null
+    }
+
     // Handle if called with string (legacy compatibility) or object (new format)
     if (typeof categoryOrItem === 'string') {
       // Legacy: string name passed
       const category = categories.find((cat) => cat.name === categoryOrItem)
       if (category && category.name) {
-        navigate(generateShopURL({ parentCategory: category.name }))
+        navigate(generateShopURL({ parentCategory: getNodeIdentifier(category) }))
       } else {
         navigate(`/shop`)
       }
@@ -627,16 +633,16 @@ const Home = () => {
         if (parentCategory) {
           // Navigate with both parent category and subcategory
           navigate(generateShopURL({
-            parentCategory: parentCategory.name,
-            subcategory: item.name
+            parentCategory: getNodeIdentifier(parentCategory),
+            subcategory: getNodeIdentifier(item)
           }))
         } else {
           // Fallback: just navigate to the subcategory name
-          navigate(generateShopURL({ subcategory: item.name }))
+          navigate(generateShopURL({ subcategory: getNodeIdentifier(item) }))
         }
       } else {
         // This is a main category
-        navigate(generateShopURL({ parentCategory: item.name }))
+        navigate(generateShopURL({ parentCategory: getNodeIdentifier(item) }))
       }
     }
   }
