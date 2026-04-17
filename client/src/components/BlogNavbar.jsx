@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { Search, Menu, X, ShoppingBag, LayoutGrid, ChevronRight, ChevronDown } from "lucide-react"
+import { Search, Menu, X, ShoppingBag, LayoutGrid, ChevronRight, ChevronDown, ChevronLeft } from "lucide-react"
 import config from "../config/config"
 import { useLanguage } from "../context/LanguageContext"
 import { getCategoryTreeCached } from "../services/categoryTreeCache"
@@ -25,6 +25,11 @@ const Header = () => {
   const [hoveredCategory, setHoveredCategory] = useState(null)
   const [activeCategoryRect, setActiveCategoryRect] = useState(null)
   const [expandedMobileNodes, setExpandedMobileNodes] = useState({})
+  const categoryScrollRef = useRef(null)
+  const [categoryScrollState, setCategoryScrollState] = useState({
+    canScrollPrev: false,
+    canScrollNext: false,
+  })
 
   const blogDropdownRef = useRef(null)
   const allCategoriesDropdownRef = useRef(null)
@@ -65,6 +70,63 @@ const Header = () => {
       if (categoryOpenTimeoutRef.current) clearTimeout(categoryOpenTimeoutRef.current)
     }
   }, [])
+
+  const updateCategoryScrollState = () => {
+    const el = categoryScrollRef.current
+    if (!el) return
+
+    const maxScrollLeft = Math.max(0, el.scrollWidth - el.clientWidth)
+    const epsilon = 2
+    const canScrollPrev = el.scrollLeft > epsilon
+    const canScrollNext = el.scrollLeft < maxScrollLeft - epsilon
+
+    setCategoryScrollState((prev) => {
+      if (prev.canScrollPrev === canScrollPrev && prev.canScrollNext === canScrollNext) return prev
+      return { canScrollPrev, canScrollNext }
+    })
+  }
+
+  useEffect(() => {
+    updateCategoryScrollState()
+
+    const el = categoryScrollRef.current
+    if (!el) return
+
+    let resizeObserver
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => updateCategoryScrollState())
+      resizeObserver.observe(el)
+    }
+
+    window.addEventListener("resize", updateCategoryScrollState)
+    const rafId = requestAnimationFrame(updateCategoryScrollState)
+
+    return () => {
+      if (resizeObserver) resizeObserver.disconnect()
+      window.removeEventListener("resize", updateCategoryScrollState)
+      cancelAnimationFrame(rafId)
+    }
+  }, [shopCategories])
+
+  const scrollPrev = () => {
+    if (!categoryScrollState.canScrollPrev) return
+    const el = categoryScrollRef.current
+    if (!el) return
+    const amount = Math.max(180, Math.round(el.clientWidth * 0.7))
+    el.scrollBy({ left: -amount, behavior: "smooth" })
+    resetMegaMenu()
+    requestAnimationFrame(updateCategoryScrollState)
+  }
+
+  const scrollNext = () => {
+    if (!categoryScrollState.canScrollNext) return
+    const el = categoryScrollRef.current
+    if (!el) return
+    const amount = Math.max(180, Math.round(el.clientWidth * 0.7))
+    el.scrollBy({ left: amount, behavior: "smooth" })
+    resetMegaMenu()
+    requestAnimationFrame(updateCategoryScrollState)
+  }
 
   const fetchNavbarData = async () => {
     try {
@@ -472,13 +534,13 @@ const Header = () => {
         </div>
 
         <div className="hidden md:block bg-lime-500">
-          <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-2">
-            <div className="relative flex items-center gap-6">
+          <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
+            <div className="grid grid-cols-[auto,auto,1fr,auto] items-center h-10 xl:h-11 2xl:h-12 gap-2 xl:gap-2.5 2xl:gap-3">
               <div className="relative flex-shrink-0" ref={allCategoriesDropdownRef}>
                 <button
                   type="button"
                   onClick={toggleDesktopCategoryDropdown}
-                  className="inline-flex items-center gap-2 h-10 px-4 rounded-md border border-white/50 text-white font-semibold hover:bg-lime-600"
+                  className="hidden md:inline-flex items-center gap-2 px-3 xl:px-3.5 py-2 rounded-lg text-white transition text-sm font-semibold whitespace-nowrap shadow-sm hover:bg-lime-600"
                 >
                   <span>All Categories</span>
                   <ChevronDown
@@ -606,8 +668,18 @@ const Header = () => {
                 )}
               </div>
 
-              <nav className="flex-1 overflow-x-auto hide-scrollbar [scrollbar-width:none]">
-                <ul className="flex items-center gap-8 whitespace-nowrap pr-2">
+              <button
+                type="button"
+                onClick={scrollPrev}
+                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full bg-white text-lime-500 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={!categoryScrollState.canScrollPrev}
+                aria-label="Previous categories"
+              >
+                <ChevronLeft className="w-4 h-4 xl:w-[17px] xl:h-[17px] 2xl:w-[18px] 2xl:h-[18px]" />
+              </button>
+
+              <nav ref={categoryScrollRef} onScroll={updateCategoryScrollState} className="flex-1 overflow-x-auto hide-scrollbar [scrollbar-width:none] scroll-smooth">
+                <ul className="flex items-center gap-4 px-2 whitespace-nowrap pr-2">
                   {shopCategories.map((category, index) => {
                     const categorySubCategories = getSubCategoriesForCategory(category._id)
                     const isActiveCategory = hoveredCategory === category._id
@@ -736,6 +808,16 @@ const Header = () => {
                   })}
                 </ul>
               </nav>
+
+              <button
+                type="button"
+                onClick={scrollNext}
+                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full bg-white text-lime-500 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={!categoryScrollState.canScrollNext}
+                aria-label="Next categories"
+              >
+                <ChevronRight className="w-4 h-4 xl:w-[17px] xl:h-[17px] 2xl:w-[18px] 2xl:h-[18px]" />
+              </button>
             </div>
           </div>
         </div>
