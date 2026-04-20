@@ -32,6 +32,7 @@ const EditSubCategory = () => {
 
   const [formData, setFormData] = useState({
     name: "",
+    slug: "",
     description: "",
     seoContent: "",
     metaTitle: "",
@@ -239,6 +240,7 @@ const EditSubCategory = () => {
       
       setFormData({
         name: subCategoryData.name || "",
+        slug: subCategoryData.slug || "",
         description: subCategoryData.description || "",
         seoContent: subCategoryData.seoContent || "",
         metaTitle: subCategoryData.metaTitle || "",
@@ -393,6 +395,24 @@ const EditSubCategory = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter subcategory name..."
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Slug <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="subcategory-slug"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    URL part for this subcategory, for example <code>cable</code>
+                  </p>
                 </div>
 
                 <div>

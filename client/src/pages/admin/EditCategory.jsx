@@ -15,6 +15,7 @@ const EditCategory = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    slug: "",
     description: "",
     seoContent: "",
     metaTitle: "",
@@ -40,6 +41,7 @@ const EditCategory = () => {
         .then((data) => {
           setFormData({
             name: data.name || "",
+            slug: data.slug || "",
             description: data.description || "",
             seoContent: data.seoContent || "",
             metaTitle: data.metaTitle || "",
@@ -139,6 +141,23 @@ const EditCategory = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Slug <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="category-slug"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    URL part for this category, for example <code>cable</code>
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Sort Order</label>
