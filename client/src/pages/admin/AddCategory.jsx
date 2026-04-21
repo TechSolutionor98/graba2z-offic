@@ -10,6 +10,14 @@ import { ArrowLeft } from "lucide-react"
 import axios from "axios"
 
 import config from "../../config/config"
+
+const generateSlug = (value = "") =>
+  String(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+
 const AddCategory = () => {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -46,7 +54,7 @@ const AddCategory = () => {
         .then((data) => {
           setFormData({
             name: data.name || "",
-            slug: data.slug || "",
+            slug: generateSlug(data.name || data.slug || ""),
             description: data.description || "",
             seoContent: data.seoContent || "",
             metaTitle: data.metaTitle || "",
@@ -67,6 +75,15 @@ const AddCategory = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
+    if (name === "name") {
+      setFormData((prev) => ({
+        ...prev,
+        name: value,
+        slug: generateSlug(value),
+      }))
+      return
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -92,8 +109,12 @@ const AddCategory = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem("adminToken")
+      const submitData = {
+        ...formData,
+        slug: generateSlug(formData.name),
+      }
       if (isEdit) {
-        await axios.put(`${config.API_URL}/api/categories/${id}`, formData, {
+        await axios.put(`${config.API_URL}/api/categories/${id}`, submitData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -101,7 +122,7 @@ const AddCategory = () => {
         })
         showToast("Category updated successfully!", "success")
       } else {
-        await axios.post(`${config.API_URL}/api/categories`, formData, {
+        await axios.post(`${config.API_URL}/api/categories`, submitData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -165,13 +186,13 @@ const AddCategory = () => {
                     type="text"
                     name="slug"
                     value={formData.slug}
-                    onChange={handleChange}
+                    readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="category-slug"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    URL part for this category, for example <code>cable</code>
+                    Auto-generated from category name (read-only)
                   </p>
                 </div>
 

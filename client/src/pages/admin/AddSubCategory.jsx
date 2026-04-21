@@ -10,6 +10,14 @@ import { ArrowLeft } from "lucide-react"
 import axios from "axios"
 
 import config from "../../config/config"
+
+const generateSlug = (value = "") =>
+  String(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+
 const AddSubCategory = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -182,6 +190,15 @@ const AddSubCategory = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
+
+    if (name === "name") {
+      setFormData((prev) => ({
+        ...prev,
+        name: value,
+        slug: generateSlug(value),
+      }))
+      return
+    }
     
     // If category changes, clear all dependent fields
     if (name === "category") {
@@ -238,10 +255,12 @@ const AddSubCategory = () => {
 
     try {
       const token = localStorage.getItem("adminToken")
+      const generatedSlug = generateSlug(formData.name)
       
       // Prepare submission data
       const submitData = {
         ...formData,
+        slug: generatedSlug,
         level: level,
         parentSubCategory: level > 1 ? formData.parentSubCategory : undefined
       }
@@ -322,13 +341,13 @@ const AddSubCategory = () => {
                     type="text"
                     name="slug"
                     value={formData.slug}
-                    onChange={handleChange}
+                    readOnly
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="subcategory-slug"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    URL part for this subcategory, for example <code>cable</code>
+                    Auto-generated from sub category name (read-only)
                   </p>
                 </div>
 

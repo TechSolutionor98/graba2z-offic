@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import axios from "axios";
 import config from "../../config/config";
 
-const normalizeSlugInput = (value = "") =>
+const generateSlug = (value = "") =>
   String(value)
     .toLowerCase()
     .trim()
@@ -247,7 +247,7 @@ const EditSubCategory = () => {
       
       setFormData({
         name: subCategoryData.name || "",
-        slug: subCategoryData.slug || "",
+        slug: generateSlug(subCategoryData.name || subCategoryData.slug || ""),
         description: subCategoryData.description || "",
         seoContent: subCategoryData.seoContent || "",
         metaTitle: subCategoryData.metaTitle || "",
@@ -272,6 +272,15 @@ const EditSubCategory = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+
+    if (name === "name") {
+      setFormData((prev) => ({
+        ...prev,
+        name: value,
+        slug: generateSlug(value),
+      }));
+      return;
+    }
     
     // If category changes, clear all dependent fields
     if (name === "category") {
@@ -327,7 +336,7 @@ const EditSubCategory = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("adminToken");
-      const normalizedSlug = normalizeSlugInput(formData.slug);
+      const normalizedSlug = generateSlug(formData.name);
       
       // Prepare submission data
       const submitData = {
@@ -355,7 +364,7 @@ const EditSubCategory = () => {
         },
       });
 
-      const savedSlug = normalizeSlugInput(response?.data?.slug || "");
+      const savedSlug = generateSlug(response?.data?.slug || "");
       if (normalizedSlug && savedSlug && normalizedSlug !== savedSlug) {
         showToast(
           `Slug save mismatch. Sent "${normalizedSlug}" but server kept "${savedSlug}". Backend deployment likely outdated.`,
@@ -439,13 +448,13 @@ const EditSubCategory = () => {
                     type="text"
                     name="slug"
                     value={formData.slug}
-                    onChange={handleChange}
+                    readOnly
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="subcategory-slug"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    URL part for this subcategory, for example <code>cable</code>
+                    Auto-generated from sub category name (read-only)
                   </p>
                 </div>
 
