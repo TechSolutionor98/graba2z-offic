@@ -319,7 +319,8 @@ const Home = () => {
         />
       )
     }
-    if (options.reserveMobileLayout && isMobileViewport) {
+    // Reserve layout only during initial loading to avoid permanent blank placeholders
+    if (options.reserveMobileLayout && isMobileViewport && loading) {
       return <MobileReservedSkeleton height={options.mobileReservedHeight || MOBILE_RESERVED_HEIGHTS.dynamicAboveFold} />
     }
     return null
