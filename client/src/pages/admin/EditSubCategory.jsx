@@ -8,6 +8,13 @@ import { ArrowLeft } from "lucide-react";
 import axios from "axios";
 import config from "../../config/config";
 
+const normalizeSlugInput = (value = "") =>
+  String(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 const EditSubCategory = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -320,20 +327,44 @@ const EditSubCategory = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("adminToken");
+      const normalizedSlug = normalizeSlugInput(formData.slug);
       
       // Prepare submission data
       const submitData = {
-        ...formData,
+        name: formData.name,
+        slug: normalizedSlug,
+        description: formData.description,
+        seoContent: formData.seoContent,
+        metaTitle: formData.metaTitle,
+        metaDescription: formData.metaDescription,
+        customSchema: formData.customSchema,
+        redirectUrl: formData.redirectUrl,
+        image: formData.image,
+        category: formData.category,
+        isActive: formData.isActive,
+        sortOrder: formData.sortOrder,
         level: level,
+        showInSlider: formData.showInSlider,
         parentSubCategory: level > 1 ? formData.parentSubCategory : undefined
       }
 
-      await axios.put(`${config.API_URL}/api/subcategories/${id}`, submitData, {
+      const response = await axios.put(`${config.API_URL}/api/subcategories/${id}`, submitData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
+
+      const savedSlug = normalizeSlugInput(response?.data?.slug || "");
+      if (normalizedSlug && savedSlug && normalizedSlug !== savedSlug) {
+        showToast(
+          `Slug save mismatch. Sent "${normalizedSlug}" but server kept "${savedSlug}". Backend deployment likely outdated.`,
+          "error",
+        );
+        setLoading(false);
+        return;
+      }
+
       showToast("Subcategory updated successfully!", "success");
       
       // Navigate to appropriate list page
@@ -342,8 +373,11 @@ const EditSubCategory = () => {
       else if (level === 2) navigate("/admin/subcategories-2")
       else navigate("/admin/subcategories")
     } catch (error) {
+      const statusCode = error?.response?.status;
+      const serverMessage = error?.response?.data?.message;
       showToast(
-        error.response?.data?.message || "Failed to update subcategory", "error"
+        serverMessage || (statusCode ? `Failed to update subcategory (${statusCode})` : "Failed to update subcategory"),
+        "error"
       );
     } finally {
       setLoading(false);
