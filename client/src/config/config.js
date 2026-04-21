@@ -1,10 +1,12 @@
-// Central app configuration (live-only behavior)
+// Central app configuration
 const resolveApiUrl = () => {
   const envUrl = (import.meta.env?.VITE_API_URL || "").trim()
 
   if (envUrl && /^https?:\/\//i.test(envUrl)) return envUrl.replace(/\/$/, "")
 
-  // Live fallback.
+  // Local fallback for development, live fallback for production.
+  if (import.meta.env?.DEV) return "http://localhost:5000"
+
   return "https://api.grabatoz.ae"
 }
 
