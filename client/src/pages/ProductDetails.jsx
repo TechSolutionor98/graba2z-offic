@@ -47,7 +47,7 @@ import BuyerProtectionSection from "../components/BuyerProtectionSection"
 import TranslatedText from "../components/TranslatedText"
 import { preloadTranslations } from "../LanguageModel/translationService"
 
-const WHATSAPP_NUMBER = "971508604360" // Replace with your WhatsApp number
+const WHATSAPP_NUMBER = "971505033860" // Replace with your WhatsApp number
 const TRANSLATION_SKIP_TAGS = new Set(["CODE", "PRE", "KBD", "SAMP", "SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "OPTION"])
 
 const isWorthTranslating = (text) => {
