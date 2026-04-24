@@ -8,6 +8,7 @@ import ImageUpload from "../../components/ImageUpload"
 import TipTapEditor from "../../components/TipTapEditor"
 import { ArrowLeft, Plus, X } from "lucide-react"
 import axios from "axios"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 import config from "../../config/config"
 
@@ -347,31 +348,77 @@ const AddProduct = () => {
     }))
   }
 
-  const handleImageUpload = (imageUrl) => {
-    setFormData((prev) => ({
-      ...prev,
-      image: imageUrl,
-    }))
+  const normalizeImageUrl = (item) => {
+    if (!item) return ""
+    if (typeof item === "string") return item.trim()
+    if (typeof item === "object") {
+      const candidate = item.url || item.path || ""
+      return candidate ? String(candidate).trim() : ""
+    }
+    return ""
   }
 
-  const handleGalleryImageUpload = (imageUrl, index) => {
+  const dedupeImageUrls = (items) => {
+    const seen = new Set()
+    const output = []
+    ;(Array.isArray(items) ? items : [items]).forEach((item) => {
+      const url = normalizeImageUrl(item)
+      if (!url || seen.has(url)) return
+      seen.add(url)
+      output.push(url)
+    })
+    return output
+  }
+
+  const handleBulkProductImagesUpload = (uploaded) => {
     setFormData((prev) => {
-      const newGalleryImages = [...prev.galleryImages]
-      newGalleryImages[index] = imageUrl
+      const uploadedUrls = dedupeImageUrls(uploaded)
+      if (uploadedUrls.length === 0) return prev
+
+      const existingUrls = dedupeImageUrls([prev.image, ...(prev.galleryImages || [])])
+      const merged = dedupeImageUrls([...existingUrls, ...uploadedUrls])
+      const mainImage = prev.image && merged.includes(prev.image) ? prev.image : merged[0]
+
       return {
         ...prev,
-        galleryImages: newGalleryImages,
+        image: mainImage || "",
+        galleryImages: merged.filter((url) => url !== mainImage),
       }
     })
   }
 
-  const removeGalleryImage = (index) => {
+  const handleSetMainImage = (selectedUrl) => {
     setFormData((prev) => {
-      const newGalleryImages = [...prev.galleryImages]
-      newGalleryImages.splice(index, 1)
+      const allImages = dedupeImageUrls([prev.image, ...(prev.galleryImages || [])])
+      if (!allImages.includes(selectedUrl)) return prev
       return {
         ...prev,
-        galleryImages: newGalleryImages,
+        image: selectedUrl,
+        galleryImages: allImages.filter((url) => url !== selectedUrl),
+      }
+    })
+  }
+
+  const handleRemoveSelectedImage = (selectedUrl) => {
+    setFormData((prev) => {
+      const allImages = dedupeImageUrls([prev.image, ...(prev.galleryImages || [])])
+      const remaining = allImages.filter((url) => url !== selectedUrl)
+
+      if (remaining.length === 0) {
+        return {
+          ...prev,
+          image: "",
+          galleryImages: [],
+        }
+      }
+
+      const nextMain = selectedUrl === prev.image ? remaining[0] : prev.image
+      const mainImage = remaining.includes(nextMain) ? nextMain : remaining[0]
+
+      return {
+        ...prev,
+        image: mainImage,
+        galleryImages: remaining.filter((url) => url !== mainImage),
       }
     })
   }
@@ -490,6 +537,8 @@ const AddProduct = () => {
       setLoading(false)
     }
   }
+
+  const selectedProductImages = dedupeImageUrls([formData.image, ...(formData.galleryImages || [])])
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -831,49 +880,72 @@ const AddProduct = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Product Images</h2>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Main Image <span className="text-red-500">*</span>
-                </label>
+              <div className="space-y-4 mb-6">
                 <ImageUpload
-                  onImageUpload={handleImageUpload}
-                  currentImage={formData.image}
-                  label="Upload Main Image"
+                  onImageUpload={handleBulkProductImagesUpload}
+                  label="Upload Product Images (Select Multiple) *"
+                  multiple={true}
                   isProduct={true}
                 />
-              </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Gallery Images</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {formData.galleryImages.map((img, index) => (
-                    <div key={index} className="relative">
-                      <ImageUpload
-                        onImageUpload={(url) => handleGalleryImageUpload(url, index)}
-                        currentImage={img}
-                        label={`Upload Gallery Image ${index + 1}`}
-                        isProduct={true}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeGalleryImage(index)}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        title="Remove Image"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ))}
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, galleryImages: [...prev.galleryImages, ""] }))}
-                      className="w-full h-20 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg text-gray-400 hover:text-blue-600 hover:border-blue-400 transition-colors"
-                    >
-                      <Plus size={24} />
-                      <span className="ml-2">Add Image</span>
-                    </button>
+                <div className="rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-gray-800">
+                      Selected Images ({selectedProductImages.length})
+                    </h4>
+                    {formData.image && (
+                      <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-700">Main image selected</span>
+                    )}
                   </div>
+
+                  {selectedProductImages.length === 0 ? (
+                    <p className="text-sm text-gray-500">
+                      Upload multiple images above, then choose one as main image.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                      {selectedProductImages.map((img, index) => (
+                        <div key={`${img}-${index}`} className="border rounded-lg p-2 bg-gray-50">
+                          <img
+                            src={getFullImageUrl(img) || "/placeholder.svg"}
+                            alt={`Product ${index + 1}`}
+                            className="h-24 w-full object-cover rounded mb-2"
+                          />
+                          <div className="flex items-center justify-between mb-2">
+                            <span
+                              className={`text-[11px] px-2 py-0.5 rounded ${
+                                formData.image === img
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-blue-100 text-blue-700"
+                              }`}
+                            >
+                              {formData.image === img ? "Main" : "Gallery"}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSelectedImage(img)}
+                              className="text-red-500 hover:text-red-700"
+                              title="Remove image"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleSetMainImage(img)}
+                            disabled={formData.image === img}
+                            className={`w-full text-xs px-2 py-1 rounded ${
+                              formData.image === img
+                                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                : "bg-blue-600 text-white hover:bg-blue-700"
+                            }`}
+                          >
+                            {formData.image === img ? "Selected Main" : "Set as Main"}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
