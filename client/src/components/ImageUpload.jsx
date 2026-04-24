@@ -9,6 +9,7 @@ import { getFullImageUrl } from "../utils/imageUtils"
 
 const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", multiple = false, isBanner = false, isProduct = false }) => {
   const [uploading, setUploading] = useState(false)
+  const [uploadCount, setUploadCount] = useState(0)
   const [dragActive, setDragActive] = useState(false)
 
   const handleFileUpload = async (files) => {
@@ -26,6 +27,7 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
     console.log("📤 Starting file upload...")
     console.log("📁 Files to upload:", files.length)
 
+    setUploadCount(files.length || 0)
     setUploading(true)
     try {
       const token = localStorage.getItem("adminToken")
@@ -90,6 +92,7 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
       alert(`Upload failed: ${errorMessage}`)
     } finally {
       setUploading(false)
+      setUploadCount(0)
     }
   }
 
@@ -121,6 +124,20 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
 
   return (
     <div className="space-y-2">
+      {uploading && (
+        <div className="fixed inset-0 z-[1200] bg-black/45 backdrop-blur-[1px] flex items-center justify-center px-4">
+          <div className="bg-white rounded-xl shadow-xl border border-gray-200 px-6 py-5 flex flex-col items-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-blue-600"></div>
+            <p className="mt-3 text-sm font-semibold text-gray-800">
+              Uploading {uploadCount > 1 ? `${uploadCount} images` : "image"}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Please wait while files are uploaded{isProduct ? " and converted to WebP" : ""}.
+            </p>
+          </div>
+        </div>
+      )}
+
       <label className="block text-sm font-medium text-gray-700">{label}</label>
 
       {/* Current Image Preview */}
