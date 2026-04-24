@@ -284,7 +284,8 @@ const DosVariationForm = ({ dosVariations = [], onChange }) => {
                     </label>
                     <ImageUpload
                       onImageUpload={(url) => updateDosVariation(index, "image", url)}
-                      existingImage={variation.image}
+                      currentImage={variation.image}
+                      isProduct={true}
                     />
                   </div>
 
@@ -298,7 +299,8 @@ const DosVariationForm = ({ dosVariations = [], onChange }) => {
                         <div key={imgIndex} className="relative">
                           <ImageUpload
                             onImageUpload={(url) => handleGalleryImageUpload(index, url, imgIndex)}
-                            existingImage={img}
+                            currentImage={img}
+                            isProduct={true}
                           />
                           <button
                             type="button"
@@ -312,7 +314,8 @@ const DosVariationForm = ({ dosVariations = [], onChange }) => {
                       {(!variation.galleryImages || variation.galleryImages.length < 6) && (
                         <ImageUpload
                           onImageUpload={(url) => handleGalleryImageUpload(index, url)}
-                          existingImage=""
+                          currentImage=""
+                          isProduct={true}
                         />
                       )}
                     </div>

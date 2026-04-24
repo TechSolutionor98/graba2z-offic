@@ -839,6 +839,7 @@ const AddProduct = () => {
                   onImageUpload={handleImageUpload}
                   currentImage={formData.image}
                   label="Upload Main Image"
+                  isProduct={true}
                 />
               </div>
 
@@ -851,6 +852,7 @@ const AddProduct = () => {
                         onImageUpload={(url) => handleGalleryImageUpload(url, index)}
                         currentImage={img}
                         label={`Upload Gallery Image ${index + 1}`}
+                        isProduct={true}
                       />
                       <button
                         type="button"

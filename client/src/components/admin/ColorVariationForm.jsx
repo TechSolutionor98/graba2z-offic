@@ -277,7 +277,8 @@ const ColorVariationForm = ({ colorVariations = [], onChange }) => {
                     </label>
                     <ImageUpload
                       onImageUpload={(url) => updateColorVariation(index, "image", url)}
-                      existingImage={variation.image}
+                      currentImage={variation.image}
+                      isProduct={true}
                     />
                   </div>
 
@@ -291,7 +292,8 @@ const ColorVariationForm = ({ colorVariations = [], onChange }) => {
                         <div key={imgIndex} className="relative">
                           <ImageUpload
                             onImageUpload={(url) => handleGalleryImageUpload(index, url, imgIndex)}
-                            existingImage={img}
+                            currentImage={img}
+                            isProduct={true}
                           />
                           <button
                             type="button"
@@ -305,7 +307,8 @@ const ColorVariationForm = ({ colorVariations = [], onChange }) => {
                       {(!variation.galleryImages || variation.galleryImages.length < 6) && (
                         <ImageUpload
                           onImageUpload={(url) => handleGalleryImageUpload(index, url)}
-                          existingImage=""
+                          currentImage=""
+                          isProduct={true}
                         />
                       )}
                     </div>

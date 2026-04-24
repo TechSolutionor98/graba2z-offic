@@ -14,8 +14,8 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
   const handleFileUpload = async (files) => {
     if (!files || files.length === 0) return
 
-    // Validate file type for product/banner images (WebP only)
-    if (isProduct || isBanner) {
+    // Keep banner uploads WebP-only; product uploads are auto-converted on server.
+    if (isBanner) {
       const invalidFiles = Array.from(files).filter(file => file.type !== "image/webp")
       if (invalidFiles.length > 0) {
         alert("Only WebP images are allowed. Please convert your images to WebP format.")
@@ -158,7 +158,7 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
         <input
           type="file"
           multiple={multiple}
-          accept={(isProduct || isBanner) ? "image/webp" : "image/*"}
+          accept={isBanner ? "image/webp" : "image/*"}
           onChange={handleChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           disabled={uploading}
@@ -185,7 +185,11 @@ const ImageUpload = ({ onImageUpload, currentImage, label = "Upload Image", mult
                   drop
                 </p>
                 <p className="text-xs text-gray-500">
-                  {(isProduct || isBanner) ? "WebP only, up to 10MB" : "PNG, JPG, GIF, WebP up to 10MB"}
+                  {isBanner
+                    ? "WebP only, up to 10MB"
+                    : isProduct
+                      ? "PNG, JPG, JPEG, GIF, WebP up to 10MB (auto-converted to WebP)"
+                      : "PNG, JPG, GIF, WebP up to 10MB"}
                 </p>
               </div>
             </>

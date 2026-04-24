@@ -1126,14 +1126,14 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
             <ImageUpload 
               onImageUpload={handleImageUpload} 
               currentImage={formData.image} 
-              label="Main Product Image (WebP only) *" 
+              label="Main Product Image (Auto-converts to WebP) *" 
               isProduct={true}
             />
           </div>
 
           {/* Gallery Images */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Gallery Images (WebP only)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Gallery Images (Auto-convert to WebP)</label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {formData.galleryImages.map((img, index) => (
                 <div key={index} className="relative">
