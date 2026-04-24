@@ -618,6 +618,7 @@ const AddBulkProducts = () => {
   const [saveResult, setSaveResult] = useState(null)
   const [fileType, setFileType] = useState("")
   const [importResults, setImportResults] = useState(null)
+  const [showAllInvalidRows, setShowAllInvalidRows] = useState(false)
 
   // Helper to get admin token
   const getAdminToken = () => localStorage.getItem("adminToken")
@@ -630,6 +631,7 @@ const AddBulkProducts = () => {
     setInvalidRows([])
     setSaveResult(null)
     setImportResults(null)
+    setShowAllInvalidRows(false)
 
     if (!file) return
 
@@ -808,7 +810,7 @@ const AddBulkProducts = () => {
         tags: "smartphone,samsung,5g,flagship",
         description: "The Samsung Galaxy S24 Ultra features a stunning 6.8-inch display",
         shortDescription: "Flagship smartphone with 200MP camera and S Pen",
-        specifications: "Display: 6.8 inch AMOLED, RAM: 12GB, Storage: 256GB, Camera: 200MP",
+        specifications: "Display: 6.8 inch AMOLED; RAM: 12GB; Storage: 256GB; Camera: 200MP",
         details: "Includes: Phone, USB-C Cable, SIM Ejector Tool, Quick Start Guide",
       },
     ]
@@ -846,7 +848,7 @@ const AddBulkProducts = () => {
         tags: "smartphone,samsung,5g,flagship",
         description: "The Samsung Galaxy S24 Ultra features a stunning 6.8-inch display, powerful Snapdragon processor, advanced AI camera system with 200MP main sensor, and S Pen support. Perfect for productivity and creativity.",
         shortDescription: "Flagship smartphone with 200MP camera and S Pen",
-        specifications: "Display: 6.8 inch AMOLED, RAM: 12GB, Storage: 256GB, Camera: 200MP",
+        specifications: "Display: 6.8 inch AMOLED; RAM: 12GB; Storage: 256GB; Camera: 200MP",
         details: "Includes: Phone, USB-C Cable, SIM Ejector Tool, Quick Start Guide",
       },
       {
@@ -877,7 +879,7 @@ const AddBulkProducts = () => {
         tags: "laptop,apple,macbook,m2,portable",
         description: "The new MacBook Air with M2 chip delivers incredible performance in a thin and light design. Features a stunning Liquid Retina display, all-day battery life, and silent fanless operation.",
         shortDescription: "Ultra-portable laptop with M2 chip and all-day battery",
-        specifications: "Display: 13.6 inch Liquid Retina, Chip: Apple M2, RAM: 8GB, Storage: 256GB SSD",
+        specifications: "Display: 13.6 inch Liquid Retina; Chip: Apple M2; RAM: 8GB; Storage: 256GB SSD",
         details: "Includes: MacBook Air, USB-C Power Adapter, USB-C to MagSafe Cable",
       },
       {
@@ -908,7 +910,7 @@ const AddBulkProducts = () => {
         tags: "headphones,sony,wireless,noise-cancelling,bluetooth",
         description: "Industry-leading noise cancellation with two processors controlling 8 microphones. Up to 30-hour battery life with quick charging. Premium sound quality with LDAC and DSEE Extreme.",
         shortDescription: "Premium wireless headphones with industry-leading noise cancellation",
-        specifications: "Battery: 30 hours, Connectivity: Bluetooth 5.2, Driver: 30mm, Weight: 250g",
+        specifications: "Battery: 30 hours; Connectivity: Bluetooth 5.2; Driver: 30mm; Weight: 250g",
         details: "Includes: Headphones, Carrying Case, USB-C Cable, Audio Cable, Adapter",
       },
       {
@@ -939,7 +941,7 @@ const AddBulkProducts = () => {
         tags: "tv,oled,4k,smart-tv,lg,gaming",
         description: "Experience perfect blacks and infinite contrast with self-lit OLED pixels. Features α9 Gen6 AI Processor, Dolby Vision IQ, and support for NVIDIA G-SYNC and AMD FreeSync Premium for gaming.",
         shortDescription: "55-inch OLED 4K Smart TV with AI processor and gaming features",
-        specifications: "Display: 55 inch OLED 4K, HDR: Dolby Vision IQ/HDR10/HLG, Refresh Rate: 120Hz, Smart OS: webOS",
+        specifications: "Display: 55 inch OLED 4K; HDR: Dolby Vision IQ/HDR10/HLG; Refresh Rate: 120Hz; Smart OS: webOS",
         details: "Includes: TV, Remote Control, Power Cable, Stand, Wall Mount Compatible",
       },
       {
@@ -970,7 +972,7 @@ const AddBulkProducts = () => {
         tags: "gaming,playstation,ps5,console,sony",
         description: "Experience lightning-fast loading with an ultra-high speed SSD, deeper immersion with support for haptic feedback, adaptive triggers, and 3D Audio. Play thousands of PS4 and PS5 games.",
         shortDescription: "Next-gen gaming console with ultra-high speed SSD",
-        specifications: "CPU: AMD Zen 2, GPU: AMD RDNA 2, RAM: 16GB GDDR6, Storage: 825GB SSD, Resolution: Up to 8K",
+        specifications: "CPU: AMD Zen 2; GPU: AMD RDNA 2; RAM: 16GB GDDR6; Storage: 825GB SSD; Resolution: Up to 8K",
         details: "Includes: PS5 Console, DualSense Controller, HDMI Cable, Power Cable, USB Cable, Stand",
       },
     ]
@@ -1055,6 +1057,7 @@ const AddBulkProducts = () => {
             <li>• <strong>category_level_2/3/4</strong>: Optional deeper levels (will be auto-created & linked)</li>
             <li>• Any missing categories/brands/tax/unit will be created automatically</li>
             <li>• Required fields: name, parent_category, price (category_level_1 recommended)</li>
+            <li>• <strong>specifications</strong> format: <code>Brand: CROWNYX; Model: Aegis GripStand Pro; Color: Black</code></li>
             <li>• Stock Status: "In Stock" | "Out of Stock" | "PreOrder" (defaults to In Stock)</li>
             <li>• Boolean fields: use "true" or "false"</li>
           </ul>
@@ -1180,8 +1183,8 @@ const AddBulkProducts = () => {
         {/* CSV Preview Results */}
 
         {(previewProducts.length > 0 || invalidRows.length > 0) && (
-          <div className="mb-4">
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+      <div className="mb-4">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
               <h3 className="font-semibold mb-2">Import Summary:</h3>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
                 <div className="bg-white p-2 rounded shadow-sm text-center">
@@ -1214,13 +1217,28 @@ const AddBulkProducts = () => {
                 <div className="mt-3">
                   <h4 className="font-medium text-red-600 mb-2">Invalid Rows:</h4>
                   <div className="max-h-32 overflow-y-auto">
-                    {invalidRows.slice(0, 5).map((row, i) => (
+                    {(showAllInvalidRows ? invalidRows : invalidRows.slice(0, 5)).map((row, i) => (
                       <div key={i} className="text-sm text-red-600">
                         Row {row.row}: {row.reason}
                       </div>
                     ))}
-                    {invalidRows.length > 5 && (
-                      <div className="text-sm text-red-600">...and {invalidRows.length - 5} more</div>
+                    {invalidRows.length > 5 && !showAllInvalidRows && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllInvalidRows(true)}
+                        className="text-sm text-red-700 underline hover:text-red-800"
+                      >
+                        ...and {invalidRows.length - 5} more (show all)
+                      </button>
+                    )}
+                    {invalidRows.length > 5 && showAllInvalidRows && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllInvalidRows(false)}
+                        className="text-sm text-red-700 underline hover:text-red-800"
+                      >
+                        Show less
+                      </button>
                     )}
                   </div>
                 </div>
