@@ -535,7 +535,7 @@ const Header = () => {
 
         <div className="hidden md:block bg-lime-500">
           <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
-            <div className="grid grid-cols-[auto,auto,1fr,auto] items-center h-10 xl:h-11 2xl:h-12 gap-2 xl:gap-2.5 2xl:gap-3">
+            <div className="grid grid-cols-[auto,auto,1fr,auto,auto] items-center h-10 xl:h-11 2xl:h-12 gap-2 xl:gap-2.5 2xl:gap-3">
               <div className="relative flex-shrink-0" ref={allCategoriesDropdownRef}>
                 <button
                   type="button"
@@ -806,6 +806,16 @@ const Header = () => {
                       </li>
                     )
                   })}
+                  <li className="relative flex items-center h-full flex-shrink-0 group">
+                    <Link
+                      to={getLocalizedPath("/offers/gaming-zone")}
+                      onClick={resetMegaMenu}
+                      className="text-white hover:text-lime-100 font-medium text-sm py-2 whitespace-nowrap group-hover:font-semibold"
+                    >
+                      Gaming Zone
+                    </Link>
+                    <span className="pointer-events-none absolute bottom-0 left-0 right-0 h-1 rounded-full bg-white shadow-sm opacity-0 transition-opacity group-hover:opacity-100" />
+                  </li>
                 </ul>
               </nav>
 
@@ -818,6 +828,15 @@ const Header = () => {
               >
                 <ChevronRight className="w-4 h-4 xl:w-[17px] xl:h-[17px] 2xl:w-[18px] 2xl:h-[18px]" />
               </button>
+
+              <a
+                href="/offers/crownyx"
+                rel="noopener noreferrer"
+                className="hidden md:inline-flex items-center gap-1.5 pl-3 pr-3 xl:pr-4 2xl:pr-8 py-2 h-full self-stretch bg-[#2b3497] text-white border-white transition text-sm font-medium whitespace-nowrap -mr-2 xl:-mr-4 2xl:-mr-8"
+                aria-label="CROWNYX"
+              >
+                <span className="text-xs xl:text-sm">CROWNYX</span>
+              </a>
             </div>
           </div>
         </div>
