@@ -619,9 +619,15 @@ const AddBulkProducts = () => {
   const [fileType, setFileType] = useState("")
   const [importResults, setImportResults] = useState(null)
   const [showAllInvalidRows, setShowAllInvalidRows] = useState(false)
+  const [bulkImageFiles, setBulkImageFiles] = useState([])
 
   // Helper to get admin token
   const getAdminToken = () => localStorage.getItem("adminToken")
+
+  const handleBulkImagesSelection = (e) => {
+    const files = Array.from(e.target.files || [])
+    setBulkImageFiles(files)
+  }
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0]
@@ -654,6 +660,9 @@ const AddBulkProducts = () => {
         const token = getAdminToken()
         const formData = new FormData()
         formData.append("file", file)
+        bulkImageFiles.forEach((imageFile) => {
+          formData.append("images", imageFile)
+        })
 
         const res = await fetch(`${config.API_URL}/api/products/bulk-import-with-id`, {
           method: "POST",
@@ -812,6 +821,7 @@ const AddBulkProducts = () => {
         shortDescription: "Flagship smartphone with 200MP camera and S Pen",
         specifications: "Display: 6.8 inch AMOLED; RAM: 12GB; Storage: 256GB; Camera: 200MP",
         details: "Includes: Phone, USB-C Cable, SIM Ejector Tool, Quick Start Guide",
+        images: "s24-front.jpg,s24-back.jpg,s24-side.jpg",
       },
     ]
     exportProductsToExcel(sampleData, "products_excel_template.xlsx")
@@ -850,6 +860,7 @@ const AddBulkProducts = () => {
         shortDescription: "Flagship smartphone with 200MP camera and S Pen",
         specifications: "Display: 6.8 inch AMOLED; RAM: 12GB; Storage: 256GB; Camera: 200MP",
         details: "Includes: Phone, USB-C Cable, SIM Ejector Tool, Quick Start Guide",
+        images: "s24-front.jpg,s24-back.jpg,s24-side.jpg",
       },
       {
         name: "Apple MacBook Air M2 13-inch 8GB 256GB",
@@ -881,6 +892,7 @@ const AddBulkProducts = () => {
         shortDescription: "Ultra-portable laptop with M2 chip and all-day battery",
         specifications: "Display: 13.6 inch Liquid Retina; Chip: Apple M2; RAM: 8GB; Storage: 256GB SSD",
         details: "Includes: MacBook Air, USB-C Power Adapter, USB-C to MagSafe Cable",
+        images: "mba-front.jpg,mba-side.jpg,mba-keyboard.jpg",
       },
       {
         name: "Sony WH-1000XM5 Wireless Headphones",
@@ -912,6 +924,7 @@ const AddBulkProducts = () => {
         shortDescription: "Premium wireless headphones with industry-leading noise cancellation",
         specifications: "Battery: 30 hours; Connectivity: Bluetooth 5.2; Driver: 30mm; Weight: 250g",
         details: "Includes: Headphones, Carrying Case, USB-C Cable, Audio Cable, Adapter",
+        images: "sony-wh-main.jpg,sony-wh-angle.jpg,sony-wh-case.jpg",
       },
       {
         name: "LG 55-inch OLED C3 4K Smart TV",
@@ -943,6 +956,7 @@ const AddBulkProducts = () => {
         shortDescription: "55-inch OLED 4K Smart TV with AI processor and gaming features",
         specifications: "Display: 55 inch OLED 4K; HDR: Dolby Vision IQ/HDR10/HLG; Refresh Rate: 120Hz; Smart OS: webOS",
         details: "Includes: TV, Remote Control, Power Cable, Stand, Wall Mount Compatible",
+        images: "lg-c3-front.jpg,lg-c3-remote.jpg,lg-c3-side.jpg",
       },
       {
         name: "PlayStation 5 Console (Disc Edition)",
@@ -974,6 +988,7 @@ const AddBulkProducts = () => {
         shortDescription: "Next-gen gaming console with ultra-high speed SSD",
         specifications: "CPU: AMD Zen 2; GPU: AMD RDNA 2; RAM: 16GB GDDR6; Storage: 825GB SSD; Resolution: Up to 8K",
         details: "Includes: PS5 Console, DualSense Controller, HDMI Cable, Power Cable, USB Cable, Stand",
+        images: "ps5-main.jpg,ps5-controller.jpg,ps5-back.jpg",
       },
     ]
 
@@ -1049,7 +1064,7 @@ const AddBulkProducts = () => {
         </div>
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-yellow-800 mb-2">CSV Format Guidelines:</h3>
+          <h3 className="font-semibold text-yellow-800 mb-2">Bulk File Guidelines:</h3>
           <ul className="text-sm text-yellow-700 space-y-1">
             <li>• Use CSV headers: name, slug(optional), sku(optional), parent_category, category_level_1, category_level_2, category_level_3, category_level_4, brand, price, offerPrice(optional), tax(optional), stockStatus(optional), showStockOut, canPurchase, refundable, maxPurchaseQty, lowStockWarning, unit, weight, tags, description, discount(optional), specifications(optional), details(optional), shortDescription(optional), barcode(optional)</li>
             <li>• <strong>parent_category</strong>: Main category (Level 0) shown in navbar (e.g., "Electronics")</li>
@@ -1057,13 +1072,19 @@ const AddBulkProducts = () => {
             <li>• <strong>category_level_2/3/4</strong>: Optional deeper levels (will be auto-created & linked)</li>
             <li>• Any missing categories/brands/tax/unit will be created automatically</li>
             <li>• Required fields: name, parent_category, price (category_level_1 recommended)</li>
+            <li>• <strong>Excel only:</strong> Optional <code>images</code> column supports comma-separated file names (example: <code>s24-front.jpg,s24-back.jpg</code>). First image becomes main image, remaining go to gallery</li>
+            <li>• Select bulk product images before choosing Excel file so they can be uploaded and mapped automatically</li>
             <li>• <strong>specifications</strong> format: <code>Brand: CROWNYX; Model: Aegis GripStand Pro; Color: Black</code></li>
             <li>• Stock Status: "In Stock" | "Out of Stock" | "PreOrder" (defaults to In Stock)</li>
             <li>• Boolean fields: use "true" or "false"</li>
           </ul>
         </div>
 
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-wrap gap-4 mb-6">
+          <label className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded cursor-pointer inline-flex items-center gap-2">
+            🖼️ Select Product Images (Optional)
+            <input type="file" accept="image/*" multiple onChange={handleBulkImagesSelection} className="hidden" />
+          </label>
           <label className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded cursor-pointer inline-flex items-center gap-2">
             📊 Import Excel File (with Update Support)
             <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
@@ -1079,6 +1100,9 @@ const AddBulkProducts = () => {
             Download CSV Sample
           </button>
           {fileName && <span className="text-gray-600 ml-2 flex items-center">📄 {fileName}</span>}
+          {bulkImageFiles.length > 0 && (
+            <span className="text-gray-600 ml-2 flex items-center">🖼️ {bulkImageFiles.length} image(s) selected</span>
+          )}
         </div>
 
         {error && (
@@ -1112,6 +1136,12 @@ const AddBulkProducts = () => {
                 <div className="text-sm text-red-600 mt-1">Failed</div>
               </div>
             </div>
+
+            {importResults.uploadedImages > 0 && (
+              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 mb-4 text-indigo-700 text-sm">
+                Uploaded Images: <strong>{importResults.uploadedImages}</strong>
+              </div>
+            )}
 
             {importResults.errors && importResults.errors.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">

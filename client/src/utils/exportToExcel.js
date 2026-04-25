@@ -1,6 +1,14 @@
 // Lightweight Excel export using SheetJS (xlsx)
 import * as XLSX from 'xlsx';
 
+function toImageName(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const withoutQuery = raw.split('?')[0];
+  const parts = withoutQuery.split('/');
+  return parts[parts.length - 1] || '';
+}
+
 // Map product object to a flat row for Excel matching bulk upload template format
 function mapProductToRow(p) {
   const brandName = p.brand?.name || p.brand?.toString?.() || '';
@@ -21,6 +29,20 @@ function mapProductToRow(p) {
     }
     return '';
   })();
+  
+  const templateImages =
+    typeof p.images === 'string'
+      ? p.images
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : [];
+
+  const allImages = templateImages.length > 0
+    ? templateImages
+    : [p.image, ...(Array.isArray(p.galleryImages) ? p.galleryImages : [])]
+        .map(toImageName)
+        .filter(Boolean);
 
   return {
     _id: p._id || '', // MongoDB ObjectId for tracking updates
@@ -53,6 +75,7 @@ function mapProductToRow(p) {
     shortDescription: p.shortDescription || '',
     specifications: p.specifications || '',
     details: p.details || '',
+    images: allImages.join(','),
   };
 }
 
