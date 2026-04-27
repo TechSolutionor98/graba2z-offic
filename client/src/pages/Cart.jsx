@@ -640,7 +640,7 @@ const Cart = () => {
                 )}
 
                 {/* Delivery Options */}
-                {cartTotals.totalCurrentPrice <= 500 && (
+                {cartTotals.totalCurrentPrice <= 150 && (
                   <div className="mb-2">
                     <span className="text-gray-600 block mb-1"><TranslatedText>Delivery Options</TranslatedText></span>
                     {deliveryOptions.length > 0 ? (
@@ -752,15 +752,15 @@ const Cart = () => {
               </div>
 
               {/* Free shipping message */}
-              {cartTotals.totalCurrentPrice < 500 && cartTotals.totalCurrentPrice > 0 && (
+              {cartTotals.totalCurrentPrice < 150 && cartTotals.totalCurrentPrice > 0 && (
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-700">
-                  <TranslatedText>You are just</TranslatedText> {formatPrice(500 - cartTotals.totalCurrentPrice)} <TranslatedText>away from free shipping. Shop more to get free and express delivery.</TranslatedText>
+                  <TranslatedText>You are just</TranslatedText> {formatPrice(150 - cartTotals.totalCurrentPrice)} <TranslatedText>away from free shipping. Shop more to get free and express delivery.</TranslatedText>
                   </p>
                 </div>
               )}
 
-              {cartTotals.totalCurrentPrice >= 500 && (
+              {cartTotals.totalCurrentPrice >= 150 && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-700 font-medium">
                     🎉 <TranslatedText>You qualify for free shipping!</TranslatedText>

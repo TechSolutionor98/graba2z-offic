@@ -232,8 +232,8 @@ const Checkout = () => {
 
   // Delivery charge logic (dynamic)
   let deliveryCharge = 0
-  // Only charge delivery fee if: 1) Home delivery is selected, 2) Order is below 500 AED
-  if (deliveryType === "home" && selectedDelivery && cartTotal < 500) {
+  // Only charge delivery fee if: 1) Home delivery is selected, 2) Order is below 150 AED
+  if (deliveryType === "home" && selectedDelivery && cartTotal < 150) {
     deliveryCharge = selectedDelivery.charge
   }
   // Store pickup is always free (deliveryCharge remains 0)
@@ -1905,15 +1905,15 @@ const Checkout = () => {
                 </div>
 
                 {/* Free shipping message */}
-                {cartTotal < 500 && cartTotal > 0 && (
+                {cartTotal < 150 && cartTotal > 0 && (
                   <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-700">
-                      <TranslatedText>Purchase for</TranslatedText> {formatPrice(500 - cartTotal)} <TranslatedText>or more to enable free shipping</TranslatedText>
+                      <TranslatedText>Purchase for</TranslatedText> {formatPrice(150 - cartTotal)} <TranslatedText>or more to enable free shipping</TranslatedText>
                     </p>
                   </div>
                 )}
 
-                {cartTotal >= 500 && (
+                {cartTotal >= 150 && (
                   <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
                     <span className="text-lg">🎉</span>
                     <p className="text-sm text-green-700 font-medium"><TranslatedText>You qualify for free shipping!</TranslatedText></p>
