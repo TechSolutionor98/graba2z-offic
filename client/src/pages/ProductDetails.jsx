@@ -33,6 +33,7 @@ import {
 } from "lucide-react"
 import { productsAPI } from "../services/api.js"
 import { trackProductView } from "../utils/gtmTracking"
+import { generateShopURL } from "../utils/urlUtils"
 
 import config from "../config/config"
 import ProductSchema from "../components/ProductSchema"
@@ -2350,7 +2351,7 @@ const ProductDetails = () => {
             <>
               <span>/</span>
               <Link
-                to={`/shop?parentCategory=${product.parentCategory._id}`}
+                to={getLocalizedPath(generateShopURL({ parentCategory: product.parentCategory.slug || product.parentCategory._id }))}
                 className="hover:text-green-600 whitespace-nowrap"
               >
                 <TranslatedText text={product.parentCategory.name} sourceDoc={product.parentCategory} fieldName="name" />
@@ -2363,7 +2364,10 @@ const ProductDetails = () => {
             <>
               <span>/</span>
               <Link
-                to={`/shop?category=${product.category._id}`}
+                to={getLocalizedPath(generateShopURL({ 
+                  parentCategory: product.parentCategory?.slug || product.parentCategory?._id || "all", 
+                  subcategory: product.category.slug || product.category._id 
+                }))}
                 className="hover:text-green-600 whitespace-nowrap"
               >
                 <TranslatedText text={product.category.name} sourceDoc={product.category} fieldName="name" />
@@ -2376,7 +2380,11 @@ const ProductDetails = () => {
             <>
               <span>/</span>
               <Link
-                to={`/shop?subcategory=${product.subCategory2._id}`}
+                to={getLocalizedPath(generateShopURL({ 
+                  parentCategory: product.parentCategory?.slug || product.parentCategory?._id || "all", 
+                  subcategory: product.category?.slug || product.category?._id,
+                  subcategory2: product.subCategory2.slug || product.subCategory2._id 
+                }))}
                 className="hover:text-green-600 whitespace-nowrap"
               >
                 <TranslatedText text={product.subCategory2.name} sourceDoc={product.subCategory2} fieldName="name" />
@@ -2389,7 +2397,12 @@ const ProductDetails = () => {
             <>
               <span>/</span>
               <Link
-                to={`/shop?subcategory=${product.subCategory3._id}`}
+                to={getLocalizedPath(generateShopURL({ 
+                  parentCategory: product.parentCategory?.slug || product.parentCategory?._id || "all", 
+                  subcategory: product.category?.slug || product.category?._id,
+                  subcategory2: product.subCategory2?.slug || product.subCategory2?._id,
+                  subcategory3: product.subCategory3.slug || product.subCategory3._id 
+                }))}
                 className="hover:text-green-600 whitespace-nowrap"
               >
                 <TranslatedText text={product.subCategory3.name} sourceDoc={product.subCategory3} fieldName="name" />
@@ -2402,7 +2415,13 @@ const ProductDetails = () => {
             <>
               <span>/</span>
               <Link
-                to={`/shop?subcategory=${product.subCategory4._id}`}
+                to={getLocalizedPath(generateShopURL({ 
+                  parentCategory: product.parentCategory?.slug || product.parentCategory?._id || "all", 
+                  subcategory: product.category?.slug || product.category?._id,
+                  subcategory2: product.subCategory2?.slug || product.subCategory2?._id,
+                  subcategory3: product.subCategory3?.slug || product.subCategory3?._id,
+                  subcategory4: product.subCategory4.slug || product.subCategory4._id 
+                }))}
                 className="hover:text-green-600 whitespace-nowrap"
               >
                 <TranslatedText text={product.subCategory4.name} sourceDoc={product.subCategory4} fieldName="name" />
