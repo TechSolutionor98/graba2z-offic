@@ -3,18 +3,32 @@ import Slider from "rc-slider"
 import "rc-slider/assets/index.css"
 import TranslatedText from "../components/TranslatedText"
 
-const PriceFilter = ({ min, max, onApply, initialRange }) => {
+const INFINITY_SYMBOL = "\u221E"
+const NUMERIC_INPUT_PATTERN = /^\d*\.?\d*$/
+
+const PriceFilter = ({ min, max, onApply, initialRange, isApplied = false }) => {
+  const minBound = Number.isFinite(Number(min)) ? Number(min) : 0
+  const rawMaxBound = Number.isFinite(Number(max)) ? Number(max) : minBound
+  const maxBound = rawMaxBound >= minBound ? rawMaxBound : minBound
+  const appliedMinFromProps =
+    Array.isArray(initialRange) && initialRange.length === 2 && Number.isFinite(Number(initialRange[0]))
+      ? Number(initialRange[0])
+      : 0
+  const appliedMaxFromProps =
+    Array.isArray(initialRange) && initialRange.length === 2 && Number.isFinite(Number(initialRange[1]))
+      ? Number(initialRange[1])
+      : Number.POSITIVE_INFINITY
+  const hasInfiniteUpperBound =
+    Array.isArray(initialRange) && initialRange.length === 2 && !Number.isFinite(Number(initialRange[1]))
+
   const normalizeRange = (maybeRange) => {
-    const raw = Array.isArray(maybeRange) && maybeRange.length === 2 ? maybeRange : [min, max]
+    const raw = Array.isArray(maybeRange) && maybeRange.length === 2 ? maybeRange : [minBound, maxBound]
 
     let nextMin = Number(raw[0])
     let nextMax = Number(raw[1])
 
-    if (!Number.isFinite(nextMin)) nextMin = Number(min) || 0
-    if (!Number.isFinite(nextMax)) nextMax = Number(max) || 0
-
-    const minBound = Number(min) || 0
-    const maxBound = Number(max) || 0
+    if (!Number.isFinite(nextMin)) nextMin = minBound
+    if (!Number.isFinite(nextMax)) nextMax = maxBound
 
     nextMin = Math.max(minBound, Math.min(nextMin, maxBound))
     nextMax = Math.max(minBound, Math.min(nextMax, maxBound))
@@ -25,30 +39,48 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
   }
 
   const [range, setRange] = useState(() => normalizeRange(initialRange))
-  const [inputMin, setInputMin] = useState(range[0])
-  const [inputMax, setInputMax] = useState(range[1])
+  const [inputMin, setInputMin] = useState("0")
+  const [inputMax, setInputMax] = useState(INFINITY_SYMBOL)
 
   useEffect(() => {
     const next = normalizeRange(initialRange)
     setRange(next)
-    setInputMin(next[0])
-    setInputMax(next[1])
-  }, [initialRange, min, max])
+
+    if (isApplied) {
+      setInputMin(String(appliedMinFromProps))
+      setInputMax(hasInfiniteUpperBound ? INFINITY_SYMBOL : String(appliedMaxFromProps))
+      return
+    }
+
+    setInputMin("0")
+    setInputMax(INFINITY_SYMBOL)
+  }, [initialRange, isApplied, minBound, maxBound, hasInfiniteUpperBound, appliedMinFromProps, appliedMaxFromProps])
 
   const handleSliderChange = (values) => {
     setRange(values)
-    setInputMin(values[0])
-    setInputMax(values[1])
+    setInputMin(String(values[0]))
+    setInputMax(String(values[1]))
   }
 
   const handleInputMin = (e) => {
     const value = e.target.value
     if (value === "") {
       setInputMin("")
-    } else if (!isNaN(value)) {
+      return
+    }
+
+    if (NUMERIC_INPUT_PATTERN.test(value)) {
+      setInputMin(value)
+
       const numericValue = Number(value)
-      setInputMin(numericValue)
-      setRange([numericValue, range[1]])
+      if (!Number.isFinite(numericValue)) {
+        return
+      }
+
+      const clampedValue = Math.max(minBound, Math.min(numericValue, maxBound))
+      if (clampedValue <= range[1]) {
+        setRange([clampedValue, range[1]])
+      }
     }
   }
 
@@ -56,29 +88,53 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
     const value = e.target.value
     if (value === "") {
       setInputMax("")
-    } else if (!isNaN(value)) {
+      return
+    }
+
+    if (value === INFINITY_SYMBOL) {
+      setInputMax(INFINITY_SYMBOL)
+      setRange([range[0], maxBound])
+      return
+    }
+
+    if (NUMERIC_INPUT_PATTERN.test(value)) {
+      setInputMax(value)
+
       const numericValue = Number(value)
-      setInputMax(numericValue)
-      setRange([range[0], numericValue])
+      if (!Number.isFinite(numericValue)) {
+        return
+      }
+
+      const clampedValue = Math.max(minBound, Math.min(numericValue, maxBound))
+      if (clampedValue >= range[0]) {
+        setRange([range[0], clampedValue])
+      }
     }
   }
 
   const handleMinFocus = () => setInputMin("")
-  const handleMaxFocus = () => setInputMax("")
+  const handleMaxFocus = () => setInputMax((prev) => (prev === INFINITY_SYMBOL ? "" : prev))
 
   const handleApply = (e) => {
     if (e && e.preventDefault) e.preventDefault()
-    const minValue = inputMin === "" ? 0 : Number(inputMin)
-    const maxValue = inputMax === "" ? max : Number(inputMax)
-    onApply([minValue, maxValue])
+    const parsedMin = inputMin === "" ? 0 : Number(inputMin)
+    const normalizedMin = Number.isFinite(parsedMin) ? Math.max(0, parsedMin) : 0
+
+    const parsedMax =
+      inputMax === "" || inputMax === INFINITY_SYMBOL ? Number.POSITIVE_INFINITY : Number(inputMax)
+    const normalizedMax = Number.isFinite(parsedMax)
+      ? Math.max(normalizedMin, parsedMax)
+      : Number.POSITIVE_INFINITY
+
+    onApply([normalizedMin, normalizedMax])
   }
 
   return (
     <div className="">
       <Slider
         range
-        min={min}
-        max={max}
+        min={minBound}
+        max={maxBound}
         value={range}
         onChange={handleSliderChange}
         trackStyle={[{ backgroundColor: "#84cc16" }]}
@@ -94,27 +150,27 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
       </div>
       <div className="flex gap-2 mb-4">
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           className="w-1/2 border rounded px-2 py-1 text-center focus:border-lime-500 focus:ring-lime-500"
           value={inputMin}
-          min={min}
-          max={inputMax}
           onChange={handleInputMin}
           onFocus={handleMinFocus}
           onBlur={() => {
-            if (inputMin === "") setInputMin(0)
+            if (inputMin === "") setInputMin(isApplied ? String(appliedMinFromProps) : "0")
           }}
         />
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           className="w-1/2 border rounded px-2 py-1 text-center focus:border-lime-500 focus:ring-lime-500"
           value={inputMax}
-          min={inputMin}
-          max={max}
           onChange={handleInputMax}
           onFocus={handleMaxFocus}
           onBlur={() => {
-            if (inputMax === "") setInputMax(max)
+            if (inputMax === "") {
+              setInputMax(isApplied ? (hasInfiniteUpperBound ? INFINITY_SYMBOL : String(appliedMaxFromProps)) : INFINITY_SYMBOL)
+            }
           }}
         />
       </div>

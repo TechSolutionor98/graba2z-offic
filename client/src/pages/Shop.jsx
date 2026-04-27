@@ -21,6 +21,9 @@ import "rc-slider/assets/index.css"
 import Slider from "rc-slider"
 
 const API_BASE_URL = `${config.API_URL}`
+const DEFAULT_PRICE_RANGE = [0, Number.POSITIVE_INFINITY]
+const INFINITY_SYMBOL = "∞"
+const NUMERIC_INPUT_PATTERN = /^\d*\.?\d*$/
 
 const bounceStyle = {
   animation: "bounce 1s infinite",
@@ -101,32 +104,70 @@ const SortDropdown = ({ value, onChange }) => {
   )
 }
 
-const PriceFilter = ({ min, max, onApply, initialRange }) => {
-  const [range, setRange] = useState(initialRange || [min, max])
-  const [inputMin, setInputMin] = useState(range[0])
-  const [inputMax, setInputMax] = useState(range[1])
+const PriceFilter = ({ min, max, onApply, initialRange, isApplied }) => {
+  const minBound = Number.isFinite(Number(min)) ? Number(min) : 0
+  const rawMaxBound = Number.isFinite(Number(max)) ? Number(max) : minBound
+  const maxBound = rawMaxBound >= minBound ? rawMaxBound : minBound
+
+  const normalizeSliderRange = (maybeRange) => {
+    const source = Array.isArray(maybeRange) && maybeRange.length === 2 ? maybeRange : [minBound, maxBound]
+    let nextMin = Number(source[0])
+    let nextMax = Number(source[1])
+
+    if (!Number.isFinite(nextMin)) nextMin = minBound
+    if (!Number.isFinite(nextMax)) nextMax = maxBound
+
+    nextMin = Math.max(minBound, Math.min(nextMin, maxBound))
+    nextMax = Math.max(minBound, Math.min(nextMax, maxBound))
+
+    if (nextMin > nextMax) {
+      ;[nextMin, nextMax] = [nextMax, nextMin]
+    }
+
+    return [nextMin, nextMax]
+  }
+
+  const [range, setRange] = useState(() => normalizeSliderRange(initialRange))
+  const [inputMin, setInputMin] = useState("0")
+  const [inputMax, setInputMax] = useState(INFINITY_SYMBOL)
 
   useEffect(() => {
-    const nextRange = initialRange || [min, max]
+    const nextRange = normalizeSliderRange(initialRange)
     setRange(nextRange)
-    setInputMin(nextRange[0])
-    setInputMax(nextRange[1])
-  }, [initialRange, max, min])
+
+    if (isApplied) {
+      setInputMin(String(nextRange[0]))
+      setInputMax(String(nextRange[1]))
+      return
+    }
+
+    setInputMin("0")
+    setInputMax(INFINITY_SYMBOL)
+  }, [initialRange, isApplied, maxBound, minBound])
 
   const handleSliderChange = (values) => {
     setRange(values)
-    setInputMin(values[0])
-    setInputMax(values[1])
+    setInputMin(String(values[0]))
+    setInputMax(String(values[1]))
   }
 
   const handleInputMin = (e) => {
     const value = e.target.value
     if (value === "") {
       setInputMin("")
-    } else if (!isNaN(value)) {
+      return
+    }
+
+    if (NUMERIC_INPUT_PATTERN.test(value)) {
       const numericValue = Number(value)
-      setInputMin(numericValue)
-      setRange([numericValue, range[1]])
+      if (!Number.isFinite(numericValue)) {
+        setInputMin(value)
+        return
+      }
+
+      const clampedValue = Math.max(minBound, Math.min(numericValue, range[1]))
+      setInputMin(String(clampedValue))
+      setRange([clampedValue, range[1]])
     }
   }
 
@@ -134,34 +175,57 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
     const value = e.target.value
     if (value === "") {
       setInputMax("")
-    } else if (!isNaN(value)) {
+      return
+    }
+
+    if (value === INFINITY_SYMBOL) {
+      setInputMax(INFINITY_SYMBOL)
+      setRange([range[0], maxBound])
+      return
+    }
+
+    if (NUMERIC_INPUT_PATTERN.test(value)) {
       const numericValue = Number(value)
-      setInputMax(numericValue)
-      setRange([range[0], numericValue])
+      if (!Number.isFinite(numericValue)) {
+        setInputMax(value)
+        return
+      }
+
+      const clampedValue = Math.max(range[0], Math.min(numericValue, maxBound))
+      setInputMax(String(clampedValue))
+      setRange([range[0], clampedValue])
     }
   }
 
-  const handleMinFocus = (e) => {
+  const handleMinFocus = () => {
     setInputMin("")
   }
 
-  const handleMaxFocus = (e) => {
-    setInputMax("")
+  const handleMaxFocus = () => {
+    setInputMax((prev) => (prev === INFINITY_SYMBOL ? "" : prev))
   }
 
   const handleApply = (e) => {
     if (e && e.preventDefault) e.preventDefault()
-    const minValue = inputMin === "" ? 0 : Number(inputMin)
-    const maxValue = inputMax === "" ? max : Number(inputMax)
-    onApply([minValue, maxValue])
+
+    const parsedMin = inputMin === "" ? 0 : Number(inputMin)
+    const normalizedMin = Number.isFinite(parsedMin) ? Math.max(0, parsedMin) : 0
+
+    const parsedMax =
+      inputMax === "" || inputMax === INFINITY_SYMBOL ? Number.POSITIVE_INFINITY : Number(inputMax)
+    const normalizedMax = Number.isFinite(parsedMax)
+      ? Math.max(normalizedMin, parsedMax)
+      : Number.POSITIVE_INFINITY
+
+    onApply([normalizedMin, normalizedMax])
   }
 
   return (
     <div className="">
       <Slider
         range
-        min={min}
-        max={max}
+        min={minBound}
+        max={maxBound}
         value={range}
         onChange={handleSliderChange}
         trackStyle={[{ backgroundColor: "#84cc16" }]}
@@ -177,30 +241,28 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
       </div>
       <div className="flex gap-2 mb-4">
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           className="w-1/2 border rounded px-2 py-1 text-center focus:border-lime-500 focus:ring-lime-500"
           value={inputMin}
-          min={min}
-          max={inputMax}
           onChange={handleInputMin}
           onFocus={handleMinFocus}
           onBlur={() => {
             if (inputMin === "") {
-              setInputMin(0)
+              setInputMin(isApplied ? String(range[0]) : "0")
             }
           }}
         />
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           className="w-1/2 border rounded px-2 py-1 text-center focus:border-lime-500 focus:ring-lime-500"
           value={inputMax}
-          min={inputMin}
-          max={max}
           onChange={handleInputMax}
           onFocus={handleMaxFocus}
           onBlur={() => {
             if (inputMax === "") {
-              setInputMax(max)
+              setInputMax(isApplied ? String(range[1]) : INFINITY_SYMBOL)
             }
           }}
         />
@@ -232,7 +294,7 @@ const Shop = () => {
   const [actualSearchQuery, setActualSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedBrands, setSelectedBrands] = useState([])
-  const [priceRange, setPriceRange] = useState([0, 10000])
+  const [priceRange, setPriceRange] = useState(DEFAULT_PRICE_RANGE)
   const [maxPrice, setMaxPrice] = useState(10000)
   const [sortBy, setSortBy] = useState("newest")
   const [brandSearch, setBrandSearch] = useState("")
@@ -251,6 +313,7 @@ const Shop = () => {
   const [subCategory4Data, setSubCategory4Data] = useState(null)
   const [stockFilters, setStockFilters] = useState({ inStock: true, outOfStock: false, onSale: false })
   const [minPrice, setMinPrice] = useState(0)
+  const [isPriceFilterApplied, setIsPriceFilterApplied] = useState(false)
 
   const [showPriceFilter, setShowPriceFilter] = useState(true)
   const [showCategoryFilter, setShowCategoryFilter] = useState(false)
@@ -306,7 +369,7 @@ const Shop = () => {
       subcategory4: selectedSubCategory4,
       brand: selectedBrands.length > 0 ? selectedBrands : null,
       search: null,
-      priceRange: includePriceRange ? priceRange : null,
+      priceRange: includePriceRange && isPriceFilterApplied ? priceRange : null,
       stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
       sortBy,
     }
@@ -323,17 +386,28 @@ const Shop = () => {
 
     const nextMinPrice = Math.min(...prices)
     const nextMaxPrice = Math.max(...prices)
-    const hasExplicitPriceFilter = priceRange[0] !== minPrice || priceRange[1] !== maxPrice
 
     setMinPrice(nextMinPrice)
     setMaxPrice(nextMaxPrice)
+  }
 
-    if (
-      (!hasExplicitPriceFilter || priceRange[0] < nextMinPrice || priceRange[1] > nextMaxPrice) &&
-      (priceRange[0] !== nextMinPrice || priceRange[1] !== nextMaxPrice)
-    ) {
-      setPriceRange([nextMinPrice, nextMaxPrice])
-    }
+  const handlePriceApply = (range) => {
+    const inputMin = Number(range?.[0])
+    const inputMax = Number(range?.[1])
+
+    const nextMin = Number.isFinite(inputMin) ? Math.max(0, inputMin) : 0
+    const nextMax = Number.isFinite(inputMax) ? Math.max(nextMin, inputMax) : Number.POSITIVE_INFINITY
+
+    const nextRange = [nextMin, nextMax]
+    const isDefaultRange = nextMin === DEFAULT_PRICE_RANGE[0] && !Number.isFinite(nextMax)
+
+    setPriceRange(nextRange)
+    setIsPriceFilterApplied(!isDefaultRange)
+  }
+
+  const resetPriceFilter = () => {
+    setPriceRange(DEFAULT_PRICE_RANGE)
+    setIsPriceFilterApplied(false)
   }
 
   // Preload translations for categories, subcategories, and brands when language is Arabic
@@ -1366,7 +1440,7 @@ const Shop = () => {
     setSelectedCategory("all")
     setSelectedBrands([])
     setSelectedSubCategories([])
-    setPriceRange([minPrice, maxPrice])
+    resetPriceFilter()
     setSearchQuery("")
     setActualSearchQuery("")
     setStockFilters({ inStock: false, outOfStock: false, onSale: false })
@@ -1393,6 +1467,7 @@ const Shop = () => {
   }
 
   const selectedSubCategoryObj = subCategories.find((sub) => sub._id === selectedSubCategories[0])
+  const formattedAppliedMaxPrice = Number.isFinite(priceRange[1]) ? priceRange[1] : INFINITY_SYMBOL
 
   const handleSortChange = (e) => {
     setSortBy(e.target.value)
@@ -1480,8 +1555,7 @@ const Shop = () => {
                 stockFilters.inStock || 
                 stockFilters.outOfStock || 
                 stockFilters.onSale ||
-                priceRange[0] !== minPrice || 
-                priceRange[1] !== maxPrice) && (
+                isPriceFilterApplied) && (
                 <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-gray-900"><TranslatedText>Active Filters</TranslatedText></h3>
@@ -1587,13 +1661,13 @@ const Shop = () => {
                         </div>
                       ) : null
                     })}
-                    {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
+                    {(isPriceFilterApplied) && (
                       <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                         <span className="text-gray-700">
-                          <span className="font-semibold"><TranslatedText>Price</TranslatedText>:</span> <TranslatedText>AED</TranslatedText> {priceRange[0]} - <TranslatedText>AED</TranslatedText> {priceRange[1]}
+                          <span className="font-semibold"><TranslatedText>Price</TranslatedText>:</span> <TranslatedText>AED</TranslatedText> {priceRange[0]} - <TranslatedText>AED</TranslatedText> {formattedAppliedMaxPrice}
                         </span>
                         <button
-                          onClick={() => setPriceRange([minPrice, maxPrice])}
+                          onClick={resetPriceFilter}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -1648,7 +1722,7 @@ const Shop = () => {
                 <button
                   onClick={() => setShowPriceFilter(!showPriceFilter)}
                   className={`flex items-center justify-between w-full text-left font-medium ${
-                    priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+                    isPriceFilterApplied
                       ? "text-lime-500"
                       : "text-gray-900"
                   }`}
@@ -1662,7 +1736,8 @@ const Shop = () => {
                       min={minPrice}
                       max={maxPrice}
                       initialRange={priceRange}
-                      onApply={(range) => setPriceRange(range)}
+                      isApplied={isPriceFilterApplied}
+                      onApply={handlePriceApply}
                     />
                   </div>
                 )}
@@ -2078,8 +2153,7 @@ const Shop = () => {
                 stockFilters.inStock || 
                 stockFilters.outOfStock || 
                 stockFilters.onSale ||
-                priceRange[0] !== minPrice || 
-                priceRange[1] !== maxPrice) && (
+                isPriceFilterApplied) && (
                 <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-gray-900"><TranslatedText>Active Filters</TranslatedText></h3>
@@ -2198,13 +2272,13 @@ const Shop = () => {
                     })}
 
                     {/* Price Range Filter */}
-                    {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
+                    {(isPriceFilterApplied) && (
                       <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                         <span className="text-gray-700">
-                          <span className="font-semibold"><TranslatedText>Price</TranslatedText>:</span> AED {priceRange[0]} - AED {priceRange[1]}
+                          <span className="font-semibold"><TranslatedText>Price</TranslatedText>:</span> AED {priceRange[0]} - AED {formattedAppliedMaxPrice}
                         </span>
                         <button
-                          onClick={() => setPriceRange([minPrice, maxPrice])}
+                          onClick={resetPriceFilter}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -2262,7 +2336,7 @@ const Shop = () => {
                 <button
                   onClick={() => setShowPriceFilter(!showPriceFilter)}
                   className={`flex items-center justify-between w-full text-left font-medium ${
-                    priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+                    isPriceFilterApplied
                       ? "text-lime-500"
                       : "text-gray-900"
                   }`}
@@ -2276,7 +2350,8 @@ const Shop = () => {
                       min={minPrice}
                       max={maxPrice}
                       initialRange={priceRange}
-                      onApply={(range) => setPriceRange(range)}
+                      isApplied={isPriceFilterApplied}
+                      onApply={handlePriceApply}
                     />
                   </div>
                 )}
@@ -2683,12 +2758,11 @@ const Shop = () => {
                   stockFilters.inStock || 
                   stockFilters.outOfStock || 
                   stockFilters.onSale ||
-                  priceRange[0] !== minPrice || 
-                  priceRange[1] !== maxPrice) && (
+                  isPriceFilterApplied) && (
                   <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold bg-white text-lime-600 rounded-full">
                     {[selectedCategory !== "all", selectedSubCategories.length > 0, selectedBrands.length, 
                       stockFilters.inStock || stockFilters.outOfStock || stockFilters.onSale,
-                      priceRange[0] !== minPrice || priceRange[1] !== maxPrice].filter(Boolean).length}
+                      isPriceFilterApplied].filter(Boolean).length}
                   </span>
                 )}
               </button>
