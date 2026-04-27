@@ -1650,9 +1650,7 @@ const Navbar = () => {
                   <strong><TranslatedText>Help Center</TranslatedText></strong>
                 </Link>
                 <a
-                  href="https://crownexcel.ae"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="https://www.grabatoz.ae/ae-en/offers/crownyx"
                   className="flex items-center py-3 text-gray-700 hover:bg-gray-50 rounded-lg px-2"
                   onClick={closeMobileMenu}
                 >
