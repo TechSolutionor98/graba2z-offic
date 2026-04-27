@@ -127,9 +127,6 @@ const Cart = () => {
     removeBundleFromCart(bundleId)
   }
 
-  // Delivery charge (free if cartTotal > 500)
-  const deliveryCharge = selectedDelivery ? (cartTotal > 500 ? 0 : selectedDelivery.charge) : 0
-
   // Tax is included in prices, no separate calculation needed
   const taxAmount = 0
 
@@ -306,6 +303,9 @@ const Cart = () => {
   
   // Calculate protection items total
   const protectionTotal = protectionItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  
+  // Delivery charge (free if cartTotals.totalCurrentPrice >= 150)
+  const deliveryCharge = selectedDelivery ? (cartTotals.totalCurrentPrice >= 150 ? 0 : selectedDelivery.charge) : 0
   
   const totalWithDeliveryTaxCoupon = cartTotals.totalCurrentPrice + protectionTotal + deliveryCharge + taxAmount - couponDiscount
 

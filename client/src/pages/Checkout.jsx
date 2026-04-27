@@ -230,19 +230,8 @@ const Checkout = () => {
   const [couponLoading, setCouponLoading] = useState(false)
   const [couponError, setCouponError] = useState("")
 
-  // Delivery charge logic (dynamic)
-  let deliveryCharge = 0
-  // Only charge delivery fee if: 1) Home delivery is selected, 2) Order is below 150 AED
-  if (deliveryType === "home" && selectedDelivery && cartTotal < 150) {
-    deliveryCharge = selectedDelivery.charge
-  }
-  // Store pickup is always free (deliveryCharge remains 0)
-
   // Tax is included in prices, no separate calculation needed
   const taxAmount = "included"
-
-  const codFee = selectedPaymentMethod === "cod" ? COD_FEE_AMOUNT : 0
-  const finalTotal = cartTotal + deliveryCharge + codFee - couponDiscount
 
   const formatPrice = (price) => {
     return `AED ${price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
@@ -310,6 +299,17 @@ const Checkout = () => {
 
   // Calculate protection items total
   const protectionTotal = protectionItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+
+  // Delivery charge logic (dynamic)
+  let deliveryCharge = 0
+  // Only charge delivery fee if: 1) Home delivery is selected, 2) Order is below 150 AED
+  if (deliveryType === "home" && selectedDelivery && cartTotals.totalOfferPrice < 150) {
+    deliveryCharge = selectedDelivery.charge
+  }
+  // Store pickup is always free (deliveryCharge remains 0)
+
+  const codFee = selectedPaymentMethod === "cod" ? COD_FEE_AMOUNT : 0
+  const finalTotal = cartTotals.totalOfferPrice + protectionTotal + deliveryCharge + codFee - couponDiscount
 
   // Coupon logic
   const handleApplyCoupon = async () => {
@@ -1905,15 +1905,15 @@ const Checkout = () => {
                 </div>
 
                 {/* Free shipping message */}
-                {cartTotal < 150 && cartTotal > 0 && (
-                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                {cartTotals.totalOfferPrice < 150 && cartTotals.totalOfferPrice > 0 && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-700">
-                      <TranslatedText>Purchase for</TranslatedText> {formatPrice(150 - cartTotal)} <TranslatedText>or more to enable free shipping</TranslatedText>
+                      <TranslatedText>You are just</TranslatedText> {formatPrice(150 - cartTotals.totalOfferPrice)} <TranslatedText>away from free shipping. Shop more to get free delivery.</TranslatedText>
                     </p>
                   </div>
                 )}
 
-                {cartTotal >= 150 && (
+                {cartTotals.totalOfferPrice >= 150 && (
                   <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
                     <span className="text-lg">🎉</span>
                     <p className="text-sm text-green-700 font-medium"><TranslatedText>You qualify for free shipping!</TranslatedText></p>
