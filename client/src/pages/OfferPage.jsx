@@ -11,6 +11,9 @@ import Slider from "rc-slider"
 import "rc-slider/assets/index.css"
 import PriceFilter from "../components/PriceFilter"
 
+const DEFAULT_PRICE_RANGE = [0, Number.POSITIVE_INFINITY]
+const INFINITY_SYMBOL = "∞"
+
 const SortDropdown = ({ value, onChange }) => {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
@@ -98,9 +101,10 @@ const OfferPage = () => {
   const categoriesScrollRef = useRef(null)
   
   // Filter states from Shop page
-  const [priceRange, setPriceRange] = useState([0, 100000])
+  const [priceRange, setPriceRange] = useState(DEFAULT_PRICE_RANGE)
   const [maxPrice, setMaxPrice] = useState(100000)
   const [minPrice, setMinPrice] = useState(0)
+  const [isPriceFilterApplied, setIsPriceFilterApplied] = useState(false)
   const [selectedBrands, setSelectedBrands] = useState([])
   const [stockFilters, setStockFilters] = useState({ inStock: false, outOfStock: false })
   const [brandSearch, setBrandSearch] = useState("")
@@ -472,6 +476,25 @@ const OfferPage = () => {
     })
   }
 
+  const handlePriceApply = (range) => {
+    const inputMin = Number(range?.[0])
+    const inputMax = Number(range?.[1])
+
+    const nextMin = Number.isFinite(inputMin) ? Math.max(0, inputMin) : 0
+    const nextMax = Number.isFinite(inputMax) ? Math.max(nextMin, inputMax) : Number.POSITIVE_INFINITY
+
+    const nextRange = [nextMin, nextMax]
+    const isDefaultRange = nextMin === DEFAULT_PRICE_RANGE[0] && !Number.isFinite(nextMax)
+
+    setPriceRange(nextRange)
+    setIsPriceFilterApplied(!isDefaultRange)
+  }
+
+  const resetPriceFilter = () => {
+    setPriceRange(DEFAULT_PRICE_RANGE)
+    setIsPriceFilterApplied(false)
+  }
+
   const clearAllFilters = () => {
     setSelectedBrands([])
     setSelectedCategory(null)
@@ -485,7 +508,7 @@ const OfferPage = () => {
     setSubCategory2Name(null)
     setSubCategory3Name(null)
     setSubCategory4Name(null)
-    setPriceRange([minPrice, maxPrice])
+    resetPriceFilter()
     setStockFilters({ inStock: false, outOfStock: false })
     setBrandSearch("")
   }
@@ -670,10 +693,11 @@ const OfferPage = () => {
     // Price filter (use display price matching ProductCard)
     filtered = filtered.filter(item => {
       const price = getDisplayPrice(item.product)
-      // If price is 0 (no valid price), only exclude when user changed range
+      if (!isPriceFilterApplied) return true
+
+      // If price is 0 (no valid price), exclude only when price filter is explicitly applied
       if (price === 0) {
-        if (priceRange[0] !== minPrice || priceRange[1] !== maxPrice) return false
-        return true
+        return false
       }
       return price >= priceRange[0] && price <= priceRange[1]
     })
@@ -742,7 +766,7 @@ const OfferPage = () => {
     if (products.length > 0) {
       applyFilters()
     }
-  }, [selectedBrands, selectedCategory, priceRange, stockFilters, sortBy, products])
+  }, [selectedBrands, selectedCategory, priceRange, isPriceFilterApplied, stockFilters, sortBy, products])
 
   useEffect(() => {
     if (brandSliderRef.current) {
@@ -760,7 +784,6 @@ const OfferPage = () => {
       const min = prices.length ? Math.min(...prices) : 0
       setMaxPrice(max);
       setMinPrice(min);
-      setPriceRange([min, max]);
     }
   }, [products])
 
@@ -791,6 +814,8 @@ const OfferPage = () => {
       </div>
     )
   }
+
+  const formattedAppliedMaxPrice = Number.isFinite(priceRange[1]) ? priceRange[1] : INFINITY_SYMBOL
 
   return (
     <>
@@ -825,8 +850,7 @@ const OfferPage = () => {
                   selectedBrands.length > 0 || 
                   stockFilters.inStock || 
                   stockFilters.outOfStock ||
-                  priceRange[0] !== minPrice || 
-                  priceRange[1] !== maxPrice) && (
+                  isPriceFilterApplied) && (
                   <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-semibold text-gray-900"><TranslatedText>Active Filters</TranslatedText></h3>
@@ -984,13 +1008,13 @@ const OfferPage = () => {
                         ) : null
                       })}
 
-                      {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
+                      {(isPriceFilterApplied) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> AED{priceRange[0]} - AED{priceRange[1]}
+                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> AED{priceRange[0]} - AED{formattedAppliedMaxPrice}
                           </span>
                           <button
-                            onClick={() => setPriceRange([minPrice, maxPrice])}
+                            onClick={resetPriceFilter}
                             className="text-red-500 hover:text-red-700 ml-2"
                           >
                             ×
@@ -1036,7 +1060,7 @@ const OfferPage = () => {
                   <button
                     onClick={() => setShowPriceFilter(!showPriceFilter)}
                     className={`flex items-center justify-between w-full text-left font-medium ${
-                      priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+                      isPriceFilterApplied
                         ? "text-lime-500"
                         : "text-gray-900"
                     }`}
@@ -1050,7 +1074,8 @@ const OfferPage = () => {
                         min={minPrice}
                         max={maxPrice}
                         initialRange={priceRange}
-                        onApply={(range) => setPriceRange(range)}
+                        isApplied={isPriceFilterApplied}
+                        onApply={handlePriceApply}
                       />
                     </div>
                   )}
@@ -1346,8 +1371,7 @@ const OfferPage = () => {
                   selectedBrands.length > 0 || 
                   stockFilters.inStock || 
                   stockFilters.outOfStock ||
-                  priceRange[0] !== minPrice || 
-                  priceRange[1] !== maxPrice) && (
+                  isPriceFilterApplied) && (
                   <div className="border border-lime-200 rounded-lg p-4 bg-lime-50">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-semibold text-gray-900"><TranslatedText>Active Filters</TranslatedText></h3>
@@ -1505,13 +1529,13 @@ const OfferPage = () => {
                         ) : null
                       })}
 
-                      {(priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
+                      {(isPriceFilterApplied) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> AED {priceRange[0]} - AED {priceRange[1]}
+                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> AED {priceRange[0]} - AED {formattedAppliedMaxPrice}
                           </span>
                           <button
-                            onClick={() => setPriceRange([minPrice, maxPrice])}
+                            onClick={resetPriceFilter}
                             className="text-red-500 hover:text-red-700 ml-2"
                           >
                             ×
@@ -1557,7 +1581,7 @@ const OfferPage = () => {
                   <button
                     onClick={() => setShowPriceFilter(!showPriceFilter)}
                     className={`flex items-center justify-between w-full text-left font-medium ${
-                      priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+                      isPriceFilterApplied
                         ? "text-lime-500"
                         : "text-gray-900"
                     }`}
@@ -1571,7 +1595,8 @@ const OfferPage = () => {
                         min={minPrice}
                         max={maxPrice}
                         initialRange={priceRange}
-                        onApply={(range) => setPriceRange(range)}
+                        isApplied={isPriceFilterApplied}
+                        onApply={handlePriceApply}
                       />
                     </div>
                   )}
@@ -1990,14 +2015,13 @@ const OfferPage = () => {
                     selectedBrands.length > 0 || 
                     stockFilters.inStock || 
                     stockFilters.outOfStock ||
-                    priceRange[0] !== minPrice || 
-                    priceRange[1] !== maxPrice) && (
+                    isPriceFilterApplied) && (
                     <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold bg-white text-lime-600 rounded-full">
                       {[
                         selectedParentCategory || selectedSubCategory1 || selectedSubCategory2 || selectedSubCategory3 || selectedSubCategory4,
                         selectedBrands.length,
                         stockFilters.inStock || stockFilters.outOfStock,
-                        priceRange[0] !== minPrice || priceRange[1] !== maxPrice
+                        isPriceFilterApplied
                       ].filter(Boolean).length}
                     </span>
                   )}
