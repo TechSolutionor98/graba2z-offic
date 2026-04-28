@@ -1966,7 +1966,7 @@ const Home = () => {
 
       {/* Core Service Section - Responsive: Desktop(4 in row), Mobile(2x2 grid) */}
       <section className="py-8 md:py-10 bg-white mt-2">
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <h2 className="text-lg lg:text-xl xl:text-2xl font-bold text-center text-gray-900 mb-6 lg:mb-8 xl:mb-12">
             <TranslatedText>Core Service Aspects</TranslatedText>
           </h2>
