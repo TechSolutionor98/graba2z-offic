@@ -22,8 +22,11 @@ import Slider from "rc-slider"
 
 const API_BASE_URL = `${config.API_URL}`
 const DEFAULT_PRICE_RANGE = [0, Number.POSITIVE_INFINITY]
+const PRICE_FILTER_MIN = 0
+const PRICE_FILTER_MAX = 20000
+const PRICE_FILTER_STEP = 1
 const INFINITY_SYMBOL = "∞"
-const NUMERIC_INPUT_PATTERN = /^\d*\.?\d*$/
+const NUMERIC_INPUT_PATTERN = /^\d*$/
 
 const bounceStyle = {
   animation: "bounce 1s infinite",
@@ -108,6 +111,16 @@ const PriceFilter = ({ min, max, onApply, initialRange, isApplied }) => {
   const minBound = Number.isFinite(Number(min)) ? Number(min) : 0
   const rawMaxBound = Number.isFinite(Number(max)) ? Number(max) : minBound
   const maxBound = rawMaxBound >= minBound ? rawMaxBound : minBound
+  const appliedMinFromProps =
+    Array.isArray(initialRange) && initialRange.length === 2 && Number.isFinite(Number(initialRange[0]))
+      ? Number(initialRange[0])
+      : 0
+  const appliedMaxFromProps =
+    Array.isArray(initialRange) && initialRange.length === 2 && Number.isFinite(Number(initialRange[1]))
+      ? Number(initialRange[1])
+      : Number.POSITIVE_INFINITY
+  const hasInfiniteUpperBound =
+    Array.isArray(initialRange) && initialRange.length === 2 && !Number.isFinite(Number(initialRange[1]))
 
   const normalizeSliderRange = (maybeRange) => {
     const source = Array.isArray(maybeRange) && maybeRange.length === 2 ? maybeRange : [minBound, maxBound]
@@ -130,25 +143,36 @@ const PriceFilter = ({ min, max, onApply, initialRange, isApplied }) => {
   const [range, setRange] = useState(() => normalizeSliderRange(initialRange))
   const [inputMin, setInputMin] = useState("0")
   const [inputMax, setInputMax] = useState(INFINITY_SYMBOL)
+  const isUserAdjustingSliderRef = useRef(false)
 
   useEffect(() => {
     const nextRange = normalizeSliderRange(initialRange)
     setRange(nextRange)
 
     if (isApplied) {
-      setInputMin(String(nextRange[0]))
-      setInputMax(String(nextRange[1]))
+      setInputMin(String(appliedMinFromProps))
+      setInputMax(hasInfiniteUpperBound ? INFINITY_SYMBOL : String(appliedMaxFromProps))
       return
     }
 
     setInputMin("0")
     setInputMax(INFINITY_SYMBOL)
-  }, [initialRange, isApplied, maxBound, minBound])
+  }, [initialRange, isApplied, maxBound, minBound, appliedMinFromProps, appliedMaxFromProps, hasInfiniteUpperBound])
 
   const handleSliderChange = (values) => {
     setRange(values)
+    if (!isUserAdjustingSliderRef.current) return
+
     setInputMin(String(values[0]))
     setInputMax(String(values[1]))
+  }
+
+  const handleSliderStart = () => {
+    isUserAdjustingSliderRef.current = true
+  }
+
+  const handleSliderEnd = () => {
+    isUserAdjustingSliderRef.current = false
   }
 
   const handleInputMin = (e) => {
@@ -161,7 +185,6 @@ const PriceFilter = ({ min, max, onApply, initialRange, isApplied }) => {
     if (NUMERIC_INPUT_PATTERN.test(value)) {
       const numericValue = Number(value)
       if (!Number.isFinite(numericValue)) {
-        setInputMin(value)
         return
       }
 
@@ -187,7 +210,6 @@ const PriceFilter = ({ min, max, onApply, initialRange, isApplied }) => {
     if (NUMERIC_INPUT_PATTERN.test(value)) {
       const numericValue = Number(value)
       if (!Number.isFinite(numericValue)) {
-        setInputMax(value)
         return
       }
 
@@ -208,13 +230,15 @@ const PriceFilter = ({ min, max, onApply, initialRange, isApplied }) => {
   const handleApply = (e) => {
     if (e && e.preventDefault) e.preventDefault()
 
-    const parsedMin = inputMin === "" ? 0 : Number(inputMin)
-    const normalizedMin = Number.isFinite(parsedMin) ? Math.max(0, parsedMin) : 0
+    const parsedMin = inputMin === "" ? minBound : Number(inputMin)
+    const normalizedMin = Number.isFinite(parsedMin)
+      ? Math.max(minBound, Math.min(parsedMin, maxBound))
+      : minBound
 
     const parsedMax =
       inputMax === "" || inputMax === INFINITY_SYMBOL ? Number.POSITIVE_INFINITY : Number(inputMax)
     const normalizedMax = Number.isFinite(parsedMax)
-      ? Math.max(normalizedMin, parsedMax)
+      ? Math.max(normalizedMin, Math.min(parsedMax, maxBound))
       : Number.POSITIVE_INFINITY
 
     onApply([normalizedMin, normalizedMax])
@@ -226,8 +250,11 @@ const PriceFilter = ({ min, max, onApply, initialRange, isApplied }) => {
         range
         min={minBound}
         max={maxBound}
+        step={PRICE_FILTER_STEP}
         value={range}
         onChange={handleSliderChange}
+        onBeforeChange={handleSliderStart}
+        onChangeComplete={handleSliderEnd}
         trackStyle={[{ backgroundColor: "#84cc16" }]}
         handleStyle={[
           { backgroundColor: "#84cc16", borderColor: "#84cc16" },
@@ -249,7 +276,7 @@ const PriceFilter = ({ min, max, onApply, initialRange, isApplied }) => {
           onFocus={handleMinFocus}
           onBlur={() => {
             if (inputMin === "") {
-              setInputMin(isApplied ? String(range[0]) : "0")
+              setInputMin(isApplied ? String(appliedMinFromProps) : "0")
             }
           }}
         />
@@ -262,7 +289,7 @@ const PriceFilter = ({ min, max, onApply, initialRange, isApplied }) => {
           onFocus={handleMaxFocus}
           onBlur={() => {
             if (inputMax === "") {
-              setInputMax(isApplied ? String(range[1]) : INFINITY_SYMBOL)
+              setInputMax(isApplied ? (hasInfiniteUpperBound ? INFINITY_SYMBOL : String(appliedMaxFromProps)) : INFINITY_SYMBOL)
             }
           }}
         />
@@ -295,7 +322,7 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedBrands, setSelectedBrands] = useState([])
   const [priceRange, setPriceRange] = useState(DEFAULT_PRICE_RANGE)
-  const [maxPrice, setMaxPrice] = useState(10000)
+  const [maxPrice, setMaxPrice] = useState(PRICE_FILTER_MAX)
   const [sortBy, setSortBy] = useState("newest")
   const [brandSearch, setBrandSearch] = useState("")
   const [subCategories, setSubCategories] = useState([])
@@ -312,8 +339,9 @@ const Shop = () => {
   const [subCategory3Data, setSubCategory3Data] = useState(null)
   const [subCategory4Data, setSubCategory4Data] = useState(null)
   const [stockFilters, setStockFilters] = useState({ inStock: true, outOfStock: false, onSale: false })
-  const [minPrice, setMinPrice] = useState(0)
+  const [minPrice, setMinPrice] = useState(PRICE_FILTER_MIN)
   const [isPriceFilterApplied, setIsPriceFilterApplied] = useState(false)
+  const [priceFilterApplyCount, setPriceFilterApplyCount] = useState(0)
 
   const [showPriceFilter, setShowPriceFilter] = useState(true)
   const [showCategoryFilter, setShowCategoryFilter] = useState(false)
@@ -375,20 +403,9 @@ const Shop = () => {
     }
   }
 
-  const syncAvailablePriceBounds = (availableProducts) => {
-    if (!Array.isArray(availableProducts) || availableProducts.length === 0) return
-
-    const prices = availableProducts
-      .map((product) => getEffectiveProductPrice(product))
-      .filter((price) => Number.isFinite(price) && price > 0)
-
-    if (!prices.length) return
-
-    const nextMinPrice = Math.min(...prices)
-    const nextMaxPrice = Math.max(...prices)
-
-    setMinPrice(nextMinPrice)
-    setMaxPrice(nextMaxPrice)
+  const syncAvailablePriceBounds = () => {
+    setMinPrice(PRICE_FILTER_MIN)
+    setMaxPrice(PRICE_FILTER_MAX)
   }
 
   const handlePriceApply = (range) => {
@@ -403,11 +420,13 @@ const Shop = () => {
 
     setPriceRange(nextRange)
     setIsPriceFilterApplied(!isDefaultRange)
+    setPriceFilterApplyCount((count) => count + 1)
   }
 
   const resetPriceFilter = () => {
     setPriceRange(DEFAULT_PRICE_RANGE)
     setIsPriceFilterApplied(false)
+    setPriceFilterApplyCount((count) => count + 1)
   }
 
   // Preload translations for categories, subcategories, and brands when language is Arabic
@@ -652,7 +671,7 @@ const Shop = () => {
     selectedCategory,
     selectedBrands,
     searchQuery,
-    priceRange,
+    priceFilterApplyCount,
     selectedSubCategories,
     selectedSubCategory2,
     selectedSubCategory3,
@@ -832,7 +851,7 @@ const Shop = () => {
 
   useEffect(() => {
     setProductsToShow(15)
-  }, [selectedCategory, selectedBrands, searchQuery, priceRange, selectedSubCategories, stockFilters, products.length])
+  }, [selectedCategory, selectedBrands, searchQuery, priceFilterApplyCount, selectedSubCategories, stockFilters, products.length])
 
   // Update subcategory slider scroll state on mount and when content changes
   useEffect(() => {
@@ -3108,4 +3127,3 @@ const Shop = () => {
 }
 
 export default Shop
-
