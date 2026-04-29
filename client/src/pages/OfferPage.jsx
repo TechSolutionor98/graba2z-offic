@@ -12,6 +12,8 @@ import "rc-slider/assets/index.css"
 import PriceFilter from "../components/PriceFilter"
 
 const DEFAULT_PRICE_RANGE = [0, Number.POSITIVE_INFINITY]
+const PRICE_FILTER_MIN = 0
+const PRICE_FILTER_MAX = 20000
 const INFINITY_SYMBOL = "∞"
 
 const SortDropdown = ({ value, onChange }) => {
@@ -102,9 +104,10 @@ const OfferPage = () => {
   
   // Filter states from Shop page
   const [priceRange, setPriceRange] = useState(DEFAULT_PRICE_RANGE)
-  const [maxPrice, setMaxPrice] = useState(100000)
-  const [minPrice, setMinPrice] = useState(0)
+  const [maxPrice, setMaxPrice] = useState(PRICE_FILTER_MAX)
+  const [minPrice, setMinPrice] = useState(PRICE_FILTER_MIN)
   const [isPriceFilterApplied, setIsPriceFilterApplied] = useState(false)
+  const [priceFilterApplyCount, setPriceFilterApplyCount] = useState(0)
   const [selectedBrands, setSelectedBrands] = useState([])
   const [stockFilters, setStockFilters] = useState({ inStock: false, outOfStock: false })
   const [brandSearch, setBrandSearch] = useState("")
@@ -480,19 +483,25 @@ const OfferPage = () => {
     const inputMin = Number(range?.[0])
     const inputMax = Number(range?.[1])
 
-    const nextMin = Number.isFinite(inputMin) ? Math.max(0, inputMin) : 0
-    const nextMax = Number.isFinite(inputMax) ? Math.max(nextMin, inputMax) : Number.POSITIVE_INFINITY
+    const nextMin = Number.isFinite(inputMin)
+      ? Math.max(PRICE_FILTER_MIN, Math.min(inputMin, PRICE_FILTER_MAX))
+      : PRICE_FILTER_MIN
+    const nextMax = Number.isFinite(inputMax)
+      ? Math.max(nextMin, Math.min(inputMax, PRICE_FILTER_MAX))
+      : Number.POSITIVE_INFINITY
 
     const nextRange = [nextMin, nextMax]
     const isDefaultRange = nextMin === DEFAULT_PRICE_RANGE[0] && !Number.isFinite(nextMax)
 
     setPriceRange(nextRange)
     setIsPriceFilterApplied(!isDefaultRange)
+    setPriceFilterApplyCount((count) => count + 1)
   }
 
   const resetPriceFilter = () => {
     setPriceRange(DEFAULT_PRICE_RANGE)
     setIsPriceFilterApplied(false)
+    setPriceFilterApplyCount((count) => count + 1)
   }
 
   const clearAllFilters = () => {
@@ -766,7 +775,7 @@ const OfferPage = () => {
     if (products.length > 0) {
       applyFilters()
     }
-  }, [selectedBrands, selectedCategory, priceRange, isPriceFilterApplied, stockFilters, sortBy, products])
+  }, [selectedBrands, selectedCategory, priceFilterApplyCount, stockFilters, sortBy, products])
 
   useEffect(() => {
     if (brandSliderRef.current) {
@@ -774,17 +783,10 @@ const OfferPage = () => {
     }
   }, [sliderBrands.length])
 
-  // Calculate price range when products load
+  // Keep offer price controls on the same fixed range as Shop.
   useEffect(() => {
-    if (products.length > 0) {
-      const prices = products
-        .map(item => getDisplayPrice(item.product))
-        .filter(price => typeof price === "number" && !isNaN(price) && price > 0)
-      const max = prices.length ? Math.max(...prices) : 10000
-      const min = prices.length ? Math.min(...prices) : 0
-      setMaxPrice(max);
-      setMinPrice(min);
-    }
+    setMinPrice(PRICE_FILTER_MIN)
+    setMaxPrice(PRICE_FILTER_MAX)
   }, [products])
 
   if (loading) {
