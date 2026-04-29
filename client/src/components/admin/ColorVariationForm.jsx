@@ -42,23 +42,53 @@ const ColorVariationForm = ({ colorVariations = [], onChange }) => {
     onChange(updated)
   }
 
-  const handleGalleryImageUpload = (index, imageUrl, imgIndex) => {
+  const handleMultipleImagesUpload = (index, newUrls) => {
     const updated = [...colorVariations]
-    const galleryImages = [...(updated[index].galleryImages || [])]
+    let currentMain = updated[index].image
+    let currentGallery = [...(updated[index].galleryImages || [])]
     
-    if (imgIndex !== undefined) {
-      galleryImages[imgIndex] = imageUrl
+    // If no main image exists, set the first new image as main
+    if (!currentMain && newUrls.length > 0) {
+      currentMain = newUrls[0]
+      currentGallery = [...currentGallery, ...newUrls.slice(1)]
     } else {
-      galleryImages.push(imageUrl)
+      currentGallery = [...currentGallery, ...newUrls]
     }
     
-    updated[index].galleryImages = galleryImages
+    updated[index].image = currentMain
+    updated[index].galleryImages = currentGallery
     onChange(updated)
   }
 
-  const removeGalleryImage = (colorIndex, imgIndex) => {
+  const setMainImage = (colorIndex, newMainUrl) => {
     const updated = [...colorVariations]
-    updated[colorIndex].galleryImages = updated[colorIndex].galleryImages.filter((_, i) => i !== imgIndex)
+    const oldMain = updated[colorIndex].image
+    let gallery = [...(updated[colorIndex].galleryImages || [])]
+    
+    // Remove newMainUrl from gallery
+    gallery = gallery.filter(url => url !== newMainUrl)
+    // Add oldMain to gallery if it exists
+    if (oldMain) {
+      gallery.push(oldMain)
+    }
+    
+    updated[colorIndex].image = newMainUrl
+    updated[colorIndex].galleryImages = gallery
+    onChange(updated)
+  }
+
+  const removeImage = (colorIndex, urlToRemove) => {
+    const updated = [...colorVariations]
+    if (updated[colorIndex].image === urlToRemove) {
+      updated[colorIndex].image = ""
+      // If there are gallery images, make the first one the new main image
+      if (updated[colorIndex].galleryImages && updated[colorIndex].galleryImages.length > 0) {
+        updated[colorIndex].image = updated[colorIndex].galleryImages[0]
+        updated[colorIndex].galleryImages = updated[colorIndex].galleryImages.slice(1)
+      }
+    } else {
+      updated[colorIndex].galleryImages = updated[colorIndex].galleryImages.filter(url => url !== urlToRemove)
+    }
     onChange(updated)
   }
 
@@ -270,48 +300,87 @@ const ColorVariationForm = ({ colorVariations = [], onChange }) => {
                     </div>
                   </div>
 
-                  {/* Main Image */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Main Product Image <span className="text-red-500">*</span>
-                    </label>
-                    <ImageUpload
-                      onImageUpload={(url) => updateColorVariation(index, "image", url)}
-                      currentImage={variation.image}
-                      isProduct={true}
-                    />
-                  </div>
-
-                  {/* Gallery Images */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Gallery Images (Optional)
-                    </label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {(variation.galleryImages || []).map((img, imgIndex) => (
-                        <div key={imgIndex} className="relative">
-                          <ImageUpload
-                            onImageUpload={(url) => handleGalleryImageUpload(index, url, imgIndex)}
-                            currentImage={img}
-                            isProduct={true}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeGalleryImage(index, imgIndex)}
-                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                      {(!variation.galleryImages || variation.galleryImages.length < 6) && (
-                        <ImageUpload
-                          onImageUpload={(url) => handleGalleryImageUpload(index, url)}
-                          currentImage=""
-                          isProduct={true}
-                        />
-                      )}
+                  {/* Images Section */}
+                  <div className="pt-4 border-t border-purple-100">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Product Images <span className="text-red-500">*</span>
+                        </label>
+                        <p className="text-xs text-gray-500 mt-1">Upload multiple images at once. Select one as the main image.</p>
+                      </div>
                     </div>
+
+                    <ImageUpload
+                      onImageUpload={(urls) => handleMultipleImagesUpload(index, urls)}
+                      multiple={true}
+                      isProduct={true}
+                      label="Drop multiple images here or click to upload"
+                    />
+
+                    {/* Image Grid */}
+                    {(variation.image || (variation.galleryImages && variation.galleryImages.length > 0)) && (
+                      <div className="mt-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Uploaded Images (Click 'Star' to set as Main)
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                          
+                          {/* Main Image */}
+                          {variation.image && (
+                            <div className="relative group rounded-lg overflow-hidden border-2 border-purple-500 shadow-sm aspect-square bg-white">
+                              <div className="absolute top-0 left-0 w-full bg-purple-500 text-white text-[10px] font-bold px-2 py-1 text-center z-10">
+                                MAIN IMAGE
+                              </div>
+                              <img 
+                                src={getFullImageUrl(variation.image)} 
+                                alt="Main" 
+                                className="w-full h-full object-contain p-2 mt-4"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeImage(index, variation.image)}
+                                className="absolute top-6 right-1 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                title="Remove Image"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Gallery Images */}
+                          {(variation.galleryImages || []).map((img, imgIndex) => (
+                            <div key={`gallery-${imgIndex}`} className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm aspect-square bg-white hover:border-purple-300 transition-colors">
+                              <img 
+                                src={getFullImageUrl(img)} 
+                                alt={`Gallery ${imgIndex + 1}`} 
+                                className="w-full h-full object-contain p-2"
+                              />
+                              
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
+                                <button
+                                  type="button"
+                                  onClick={() => setMainImage(index, img)}
+                                  className="px-3 py-1.5 bg-white text-purple-600 text-xs font-semibold rounded shadow hover:bg-purple-50 transition-colors"
+                                  title="Set as Main Image"
+                                >
+                                  Make Main
+                                </button>
+                              </div>
+                              
+                              <button
+                                type="button"
+                                onClick={() => removeImage(index, img)}
+                                className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                title="Remove Image"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
