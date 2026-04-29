@@ -4,7 +4,20 @@ import { X, Search, Plus, Check } from "lucide-react"
 import { getFullImageUrl } from "../../utils/imageUtils"
 import config from "../../config/config"
 
-const ProductVariationModal = ({ isOpen, onClose, onSelectProducts, selectedVariations = [], currentProductId, currentProductName = "", currentSelfVariationText = "" }) => {
+const ProductVariationModal = ({
+  isOpen,
+  onClose,
+  onSelectProducts,
+  selectedVariations = [],
+  currentProductId,
+  currentProductName = "",
+  currentSelfVariationText = "",
+  modalTitle = "Select Product Variations",
+  selfTextLabel = "Variation label",
+  selfTextHelp = "This is how THIS product will appear in the variation selector when customers view any linked product.",
+  selectedItemsLabel = "variations",
+  selectedItemsTip = "Products are auto-linked bidirectionally.",
+}) => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -189,7 +202,7 @@ const ProductVariationModal = ({ isOpen, onClose, onSelectProducts, selectedVari
       <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header - Fixed */}
         <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
-          <h2 className="text-xl font-bold text-gray-900">Select Product Variations</h2>
+          <h2 className="text-xl font-bold text-gray-900">{modalTitle}</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -204,7 +217,7 @@ const ProductVariationModal = ({ isOpen, onClose, onSelectProducts, selectedVari
           {currentProductName && (
             <div className="p-4 border-b bg-green-50">
               <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Variation label for <span className="text-green-600 font-bold">{currentProductName}</span>:
+                {selfTextLabel} for <span className="text-green-600 font-bold">{currentProductName}</span>:
               </label>
               <input
                 type="text"
@@ -214,7 +227,7 @@ const ProductVariationModal = ({ isOpen, onClose, onSelectProducts, selectedVari
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm font-medium"
               />
               <p className="text-xs text-gray-600 mt-1">
-                <strong>Important:</strong> This is how THIS product will appear in the variation selector when customers view any linked product.
+                <strong>Important:</strong> {selfTextHelp}
               </p>
             </div>
           )}
@@ -286,7 +299,7 @@ const ProductVariationModal = ({ isOpen, onClose, onSelectProducts, selectedVari
             <div className="p-4 border-b bg-blue-50">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700">
-                  {selectedProducts.length} product{selectedProducts.length !== 1 ? 's' : ''} selected as variations
+                  {selectedProducts.length} product{selectedProducts.length !== 1 ? 's' : ''} selected as {selectedItemsLabel}
                 </span>
                 <button
                   onClick={() => setSelectedProducts([])}
@@ -330,7 +343,7 @@ const ProductVariationModal = ({ isOpen, onClose, onSelectProducts, selectedVari
                 ))}
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                <strong>Tip:</strong> Products are auto-linked bidirectionally.
+                <strong>Tip:</strong> {selectedItemsTip}
               </p>
             </div>
           )}

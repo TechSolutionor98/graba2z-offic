@@ -3063,6 +3063,94 @@ const ProductDetails = () => {
                 </div>
               )}
 
+              {/* Available Models */}
+              {product.availableModels && product.availableModels.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-bold text-gray-900 mb-3 flex items-center">
+                    <span className="text-blue-600 mr-2"></span>
+                    <TranslatedText>Available Models</TranslatedText>:
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {(() => {
+                      const allModels = []
+
+                      const currentModelText = product.selfAvailableModelText
+                      if (currentModelText) {
+                        allModels.push({
+                          id: product._id,
+                          text: currentModelText,
+                          slug: product.slug,
+                          isCurrent: true,
+                        })
+                      }
+
+                      product.availableModels
+                        .filter((model) => {
+                          const modelProduct = model.product
+                          if (!modelProduct) return false
+                          const modelText =
+                            (typeof modelProduct === "object" && modelProduct.selfAvailableModelText) ||
+                            model.variationText ||
+                            ""
+                          return modelText.trim() !== ""
+                        })
+                        .forEach((model) => {
+                          const modelProduct = model.product
+                          const modelId = typeof modelProduct === "object" ? modelProduct._id : modelProduct
+                          const modelSlug = typeof modelProduct === "object" ? modelProduct.slug : null
+                          const modelText =
+                            (typeof modelProduct === "object" && modelProduct.selfAvailableModelText) ||
+                            model.variationText ||
+                            ""
+
+                          allModels.push({
+                            id: modelId,
+                            text: modelText,
+                            slug: modelSlug || modelId,
+                            isCurrent: false,
+                          })
+                        })
+
+                      allModels.sort((a, b) => a.text.localeCompare(b.text))
+
+                      return allModels.map((model) => {
+                        const matchingModel = product.availableModels?.find(
+                          (item) => (item.product?._id || item.product || "").toString() === (model.id || "").toString()
+                        )
+
+                        return (
+                          <div key={model.id} className="relative">
+                            {model.isCurrent ? (
+                              <div className="px-5 py-2 bg-blue-200 text-gray-700 rounded-lg font-medium text-sm border-2 border-blue-400 cursor-default">
+                                <TranslatedText
+                                  text={model.text}
+                                  sourceDoc={product}
+                                  fieldName="selfAvailableModelText"
+                                />
+                              </div>
+                            ) : (
+                              <Link
+                                to={getLocalizedPath(`/product/${encodeURIComponent(model.slug)}`)}
+                                className="block px-5 py-2 bg-white text-gray-700 rounded-lg font-medium text-sm border border-gray-400 hover:bg-blue-100 hover:border-blue-400 transition-all duration-200"
+                              >
+                                <TranslatedText
+                                  text={model.text}
+                                  sourceDoc={matchingModel}
+                                  fieldName="variationText"
+                                />
+                              </Link>
+                            )}
+                          </div>
+                        )
+                      })
+                    })()}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-3">
+                    <TranslatedText>Click on any model to view its details</TranslatedText>
+                  </p>
+                </div>
+              )}
+
 
                   {/* Key Features */}
               {keyFeaturesContent && (
@@ -4310,4 +4398,3 @@ const ProductDetails = () => {
 }
 
 export default ProductDetails
-

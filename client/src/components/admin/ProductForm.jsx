@@ -103,6 +103,11 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   const [selectedVariations, setSelectedVariations] = useState([])
   const [reverseVariationText, setReverseVariationText] = useState("") // Deprecated, kept for backward compatibility
   const [selfVariationText, setSelfVariationText] = useState("") // This product's own variation label
+
+  // Available Models
+  const [showAvailableModelsModal, setShowAvailableModelsModal] = useState(false)
+  const [availableModels, setAvailableModels] = useState([])
+  const [selfAvailableModelText, setSelfAvailableModelText] = useState("")
   
   // Color Variations
   const [colorVariations, setColorVariations] = useState([])
@@ -198,9 +203,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       setBasePrice(product.price ? String(product.price) : "")
       setOriginalOfferPrice(product.offerPrice ? String(product.offerPrice) : "")
       
-      // Initialize variations if they exist - handle both old and new structure
-      if (product.variations && product.variations.length > 0) {
-        const formattedVariations = product.variations.map(v => {
+      const formatLinkedProducts = (items = []) =>
+        items.map(v => {
           // New structure: { product: {...}, variationText: "..." }
           if (v.product) {
             return {
@@ -211,12 +215,22 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           // Old structure: direct product reference
           return v
         })
+
+      // Initialize variations if they exist - handle both old and new structure
+      if (product.variations && product.variations.length > 0) {
+        const formattedVariations = formatLinkedProducts(product.variations)
         setSelectedVariations(formattedVariations)
         setReverseVariationText(product.reverseVariationText || "")
       }
       
       // Set self variation text (this product's own label in variation selectors)
       setSelfVariationText(product.selfVariationText || product.reverseVariationText || "")
+
+      // Initialize available models if they exist
+      if (product.availableModels && product.availableModels.length > 0) {
+        setAvailableModels(formatLinkedProducts(product.availableModels))
+      }
+      setSelfAvailableModelText(product.selfAvailableModelText || "")
       
       // Set color variations if they exist
       if (product.colorVariations && product.colorVariations.length > 0) {
@@ -796,6 +810,11 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         })), // Add variation IDs with text
         reverseVariationText: selfVariationText || "", // Backward compatibility
         selfVariationText: selfVariationText || "", // This product's own variation label
+        availableModels: availableModels.map(v => ({
+          product: v._id,
+          variationText: v.variationText || "",
+        })),
+        selfAvailableModelText: selfAvailableModelText || "",
         colorVariations: colorVariations, // Add color variations array
         dosVariations: dosVariations, // Add DOS/Windows variations array
         // SEO fields
@@ -1767,6 +1786,122 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           )}
         </div>
 
+        {/* Available Models Section */}
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Available Models</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Link this product with other available models customers can compare or select
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAvailableModelsModal(true)}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+            >
+              <Plus size={18} className="mr-2" />
+              {availableModels.length > 0 ? 'Manage Models' : 'Add Model'}
+            </button>
+          </div>
+
+          <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              This Product's Available Model Label
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., 16GB RAM, 512GB SSD, Black Color"
+              value={selfAvailableModelText}
+              onChange={(e) => setSelfAvailableModelText(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm font-medium"
+            />
+            <p className="text-xs text-gray-600 mt-2">
+              <strong>Important:</strong> This label will identify this product inside the Available Models group.
+            </p>
+          </div>
+
+          {availableModels.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {availableModels.map((model) => (
+                <div
+                  key={model._id}
+                  className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setAvailableModels(prev => prev.filter(v => v._id !== model._id))}
+                    className="absolute top-2 right-2 p-1 text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
+                    title="Remove Model"
+                  >
+                    <X size={16} />
+                  </button>
+
+                  <div className="flex items-start space-x-3">
+                    <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                      <img
+                        src={getFullImageUrl(model.image) || "/placeholder.svg"}
+                        alt={model.name}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
+                        {model.name}
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-1">
+                        SKU: {model.sku || "N/A"}
+                      </p>
+                      <div className="mt-2">
+                        <span className="text-sm font-bold text-gray-900">
+                          {model.offerPrice > 0
+                            ? `${Number(model.offerPrice || 0).toFixed(2)} AED`
+                            : `${Number(model.price || 0).toFixed(2)} AED`
+                          }
+                        </span>
+                      </div>
+                      {model.variationText && (
+                        <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                          <p className="text-xs text-blue-700 font-medium">
+                            {model.variationText}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-300">
+              <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <Plus size={24} className="text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No available models added yet</h3>
+              <p className="text-gray-500 mb-6">
+                Add available models to help customers compare related product options
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowAvailableModelsModal(true)}
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+              >
+                <Plus size={18} className="mr-2" />
+                Add First Model
+              </button>
+            </div>
+          )}
+
+          {availableModels.length > 0 && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800">
+                <strong>{availableModels.length}</strong> model
+                {availableModels.length !== 1 ? "s" : ""} added
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Color Variations Section */}
         <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-200">
           <ColorVariationForm
@@ -1952,6 +2087,25 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         currentProductId={product?._id}
         currentProductName={formData.name}
         currentSelfVariationText={selfVariationText}
+      />
+
+      {/* Available Models Modal */}
+      <ProductVariationModal
+        isOpen={showAvailableModelsModal}
+        onClose={() => setShowAvailableModelsModal(false)}
+        onSelectProducts={(products, selfText) => {
+          setAvailableModels(products)
+          setSelfAvailableModelText(selfText || "")
+        }}
+        selectedVariations={availableModels}
+        currentProductId={product?._id}
+        currentProductName={formData.name}
+        currentSelfVariationText={selfAvailableModelText}
+        modalTitle="Select Available Models"
+        selfTextLabel="Available model label"
+        selfTextHelp="This is how THIS product will be labeled inside the Available Models group."
+        selectedItemsLabel="available models"
+        selectedItemsTip="Selected models will be saved with this product."
       />
     </div>
   )
