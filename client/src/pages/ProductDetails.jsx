@@ -10,6 +10,7 @@ import { getFullImageUrl } from "../utils/imageUtils"
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 import '../styles/phoneInput.css'
+import { Helmet } from "react-helmet-async"
 import {
   Star,
   Minus,
@@ -356,6 +357,18 @@ const ProductDetails = () => {
     
     return basePrice
   }
+
+  const toMerchantPriceContent = (price) => {
+    const numericPrice = Number(price)
+    return Number.isFinite(numericPrice) && numericPrice > 0 ? numericPrice.toFixed(2) : ""
+  }
+
+  const getMerchantAvailabilityUrl = () => {
+    if (product?.stockStatus === "PreOrder") return "https://schema.org/PreOrder"
+    if (product?.stockStatus === "Out of Stock") return "https://schema.org/OutOfStock"
+    return "https://schema.org/InStock"
+  }
+
   const formatPerMonth = (n) => `${formatPriceValue(n)}/mo`
 
   const getRatingDistribution = () => {
@@ -2260,6 +2273,9 @@ const ProductDetails = () => {
   const keyFeaturesFieldName = hasShortDescription ? "shortDescription" : "description"
 
   const productImages = getCurrentImages()
+  const merchantPrice = getEffectivePrice()
+  const merchantPriceContent = toMerchantPriceContent(merchantPrice)
+  const merchantAvailabilityUrl = getMerchantAvailabilityUrl()
 
   // Helper function to get stock badge
   const getStockBadge = () => {
@@ -2323,7 +2339,7 @@ const ProductDetails = () => {
   } // end getDiscountBadge
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen" itemScope itemType="https://schema.org/Product">
       <SEO 
         title={pdTitle} 
         description={pdDescription} 
@@ -2335,6 +2351,18 @@ const ProductDetails = () => {
         ogDescription={pdOgDescription}
         customSchema={product.customSchema}
       />
+      {merchantPriceContent && (
+        <Helmet prioritizeSeoTags>
+          <meta property="product:price:amount" content={merchantPriceContent} />
+          <meta property="product:price:currency" content="AED" />
+          <meta name="product:price:amount" content={merchantPriceContent} />
+          <meta name="product:price:currency" content="AED" />
+        </Helmet>
+      )}
+      <meta itemProp="name" content={product.name || ""} />
+      {product.sku && <meta itemProp="sku" content={product.sku} />}
+      {pdDescription && <meta itemProp="description" content={pdDescription} />}
+      {product.image && <meta itemProp="image" content={getFullImageUrl(product.image) || product.image} />}
       <div className="max-w-8xl mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6 overflow-x-auto">
@@ -2762,7 +2790,7 @@ const ProductDetails = () => {
               </div>
 
               {/* Price */}
-              <div className="mb-6">
+              <div className="mb-6" itemProp="offers" itemScope itemType="https://schema.org/Offer">
                 {(() => {
                   const currentColor = getCurrentColor()
                   let basePrice = 0
@@ -2778,10 +2806,18 @@ const ProductDetails = () => {
                   
                   const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
                   const priceToShow = getEffectivePrice()
+                  const priceContent = toMerchantPriceContent(priceToShow)
                   const discount = hasValidOffer ? Math.round(((basePrice - offerPrice) / basePrice) * 100) : 0
 
                   return (
                     <>
+                      {priceContent && (
+                        <>
+                          <meta itemProp="price" content={priceContent} />
+                          <meta itemProp="priceCurrency" content="AED" />
+                          <link itemProp="availability" href={merchantAvailabilityUrl} />
+                        </>
+                      )}
                       <div className="flex items-center space-x-3 mb-2">
                         <div className="text-3xl font-bold text-red-600">{formatPrice(priceToShow)}</div>
                         {hasValidOffer && (
@@ -3841,7 +3877,7 @@ const ProductDetails = () => {
       </div>
 
       {/* ADD ONLY THIS LINE */}
-      <ProductSchema product={product} />
+      <ProductSchema product={product} price={merchantPrice} />
 
       {/* Video Modal */}
       {showVideoModal && product?.video && (

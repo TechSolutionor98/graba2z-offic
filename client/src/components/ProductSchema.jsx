@@ -1,96 +1,99 @@
-import { useEffect } from 'react';
+const getAbsoluteUrl = (url) => {
+  if (!url) return null
+  if (/^https?:\/\//i.test(url)) return url
 
-const ProductSchema = ({ product }) => {
-  useEffect(() => {
-    if (!product) return;
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://www.grabatoz.ae"
+  return `${origin}${url.startsWith("/") ? url : `/${url}`}`
+}
 
-    // Remove any existing dynamic schema
-    const existingSchema = document.querySelector('script[data-dynamic-schema="true"]');
-    if (existingSchema) {
-      existingSchema.remove();
-    }
+const getProductUrl = (product) => {
+  if (typeof window !== "undefined") return window.location.href
+  const slug = product?.slug || product?._id || ""
+  return slug ? `https://www.grabatoz.ae/product/${slug}` : "https://www.grabatoz.ae"
+}
 
-    const toAbsoluteUrl = (url) => {
-      if (!url) return null
-      if (/^https?:\/\//i.test(url)) return url
-      return `${window.location.origin}${url.startsWith("/") ? url : `/${url}`}`
-    }
+const getOfferAvailability = (product) => {
+  if (product?.stockStatus === "PreOrder") return "https://schema.org/PreOrder"
+  if (product?.stockStatus === "Out of Stock") return "https://schema.org/OutOfStock"
+  return "https://schema.org/InStock"
+}
 
-    const basePrice = Number(product.price) || 0
-    const offerPrice = Number(product.offerPrice) || 0
-    const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
-    const effectivePrice = hasValidOffer ? offerPrice : (basePrice > 0 ? basePrice : offerPrice)
-    const stockCount = Number.parseInt(product.countInStock ?? product.stock ?? 0, 10) || 0
-    const stockStatus = product.stockStatus || ""
-    const availability = stockStatus === "PreOrder"
-      ? "https://schema.org/PreOrder"
-      : (stockStatus === "Out of Stock" || stockCount <= 0)
-        ? "https://schema.org/OutOfStock"
-        : "https://schema.org/InStock"
-    const oneYearFromNow = new Date()
-    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+const getEffectiveProductPrice = (product, selectedPrice) => {
+  const selected = Number(selectedPrice)
+  if (Number.isFinite(selected) && selected > 0) return selected
 
-    // Create clean schema with proper structure
-    const schema = {
-      "@context": "https://schema.org/",
-      "@type": "Product",
-      "name": product.name || product.title || "Product",
-      "image": [toAbsoluteUrl(product.image || product.thumbnail)].filter(Boolean),
-      "description": product.description ? product.description.replace(/<[^>]*>/g, '') : '', // Remove HTML tags
-      "url": window.location.href,
-      "sku": product.sku || product._id,
-      "category": typeof product.category === 'string' ? product.category : product.category?.name,
-      "brand": {
-        "@type": "Brand",
-        "name": typeof product.brand === 'string' ? product.brand : product.brand?.name || "Generic"
-      },
-      "manufacturer": {
-        "@type": "Organization", 
-        "name": typeof product.brand === 'string' ? product.brand : product.brand?.name || "Generic"
-      },
-      "offers": {
-        "@type": "Offer",
-        "price": effectivePrice.toFixed(2),
+  const basePrice = Number(product?.price) || 0
+  const offerPrice = Number(product?.offerPrice) || 0
+  const hasValidOffer = offerPrice > 0 && basePrice > 0 && offerPrice < basePrice
+  return hasValidOffer ? offerPrice : (basePrice > 0 ? basePrice : offerPrice)
+}
+
+const ProductSchema = ({ product, price }) => {
+  if (!product) return null
+
+  const effectivePrice = getEffectiveProductPrice(product, price)
+  if (!Number.isFinite(effectivePrice) || effectivePrice <= 0) return null
+
+  const oneYearFromNow = new Date()
+  oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+
+  const productUrl = getProductUrl(product)
+  const brandName = typeof product.brand === "string" ? product.brand : product.brand?.name || "Generic"
+  const cleanDescription = product.description ? product.description.replace(/<[^>]*>/g, "") : ""
+  const priceValue = Number(effectivePrice.toFixed(2))
+
+  const schema = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": product.name || product.title || "Product",
+    "image": [getAbsoluteUrl(product.image || product.thumbnail)].filter(Boolean),
+    "description": cleanDescription,
+    "url": productUrl,
+    "sku": product.sku || product._id,
+    "category": typeof product.category === "string" ? product.category : product.category?.name,
+    "brand": {
+      "@type": "Brand",
+      "name": brandName,
+    },
+    "manufacturer": {
+      "@type": "Organization",
+      "name": brandName,
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": priceValue,
+      "priceCurrency": "AED",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": priceValue,
         "priceCurrency": "AED",
-        "priceValidUntil": oneYearFromNow.toISOString().slice(0, 10),
-        "itemCondition": "https://schema.org/NewCondition",
-        "availability": availability,
-        "url": window.location.href,
-        "seller": {
-          "@type": "Organization",
-          "name": "Grab AtoZ"
-        }
-      }
-    };
+      },
+      "priceValidUntil": oneYearFromNow.toISOString().slice(0, 10),
+      "itemCondition": "https://schema.org/NewCondition",
+      "availability": getOfferAvailability(product),
+      "url": productUrl,
+      "seller": {
+        "@type": "Organization",
+        "name": "Grab AtoZ",
+      },
+    },
+  }
 
-    // Add rating if exists
-    if (product.rating && product.rating > 0) {
-      schema.aggregateRating = {
-        "@type": "AggregateRating",
-        "ratingValue": product.rating.toString(),
-        "bestRating": "5",
-        "worstRating": "1", 
-        "ratingCount": (product.numReviews || product.reviewCount || 1).toString()
-      };
+  if (product.rating && product.rating > 0) {
+    schema.aggregateRating = {
+      "@type": "AggregateRating",
+      "ratingValue": product.rating.toString(),
+      "bestRating": "5",
+      "worstRating": "1",
+      "ratingCount": (product.numReviews || product.reviewCount || 1).toString(),
     }
+  }
 
-    // Inject schema
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.setAttribute('data-dynamic-schema', 'true');
-    script.innerHTML = JSON.stringify(schema, null, 2);
-    document.head.appendChild(script);
-
-    // Cleanup
-    return () => {
-      const schemaToRemove = document.querySelector('script[data-dynamic-schema="true"]');
-      if (schemaToRemove) {
-        schemaToRemove.remove();
-      }
-    };
-  }, [product]);
-
-  return null;
-};
+  return (
+    <script type="application/ld+json" data-dynamic-schema="true">
+      {JSON.stringify(schema).replace(/</g, "\\u003c")}
+    </script>
+  )
+}
 
 export default ProductSchema;
