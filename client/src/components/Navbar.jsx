@@ -239,7 +239,7 @@ const Navbar = () => {
   const CATEGORY_DROPDOWN_MARGIN = 16
   const CATEGORY_DROPDOWN_GAP = 6
   const MAX_CATEGORY_DROPDOWN_WIDTH = 1320
-  const DESKTOP_MAX_CONTAINER_WIDTH = 1500
+  const DESKTOP_MAX_CONTAINER_WIDTH = 1360
 
   // Decide direction based on available space rather than midpoint
   const MIN_PANEL_WIDTH = 260 // px (matches min-w[240] + padding/margins)
@@ -296,7 +296,7 @@ const Navbar = () => {
       horizontalPadding = 32 // xl:px-8 (8 * 4 = 32px)
     }
     
-    // The navbar container has max-w-[1500px] and is centered
+    // The navbar container has max-w-[1360px] and is centered
     const maxContainerWidth = DESKTOP_MAX_CONTAINER_WIDTH
     const containerWidth = Math.min(viewportWidth, maxContainerWidth)
     
@@ -862,7 +862,7 @@ const Navbar = () => {
     <>
       {/* Desktop Navbar - Hidden on Mobile */}
       <header className="hidden md:block bg-white shadow-sm sticky top-0 pt-4 z-50 w-full">
-        <div className="w-full max-w-[1500px] mx-auto space-y-4">
+        <div className="w-full max-w-[1360px] mx-auto space-y-4">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 h-14 xl:h-18 2xl:h-20">
             {/* Logo - Exact Grabatoz Style */}
             <Link to={getLocalizedPath("/")} className="flex items-center space-x-2">
@@ -1813,5 +1813,3 @@ const Navbar = () => {
 }
 
 export default Navbar
-
-
