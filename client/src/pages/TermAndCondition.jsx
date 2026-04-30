@@ -62,7 +62,19 @@ export default function TermsAndConditions() {
                   Welcome to Grabatoz.ae, a service provided by Crown Excel General Trading LLC, United Arab Emirates. By accessing or using Grabatoz.ae or any associated services, you acknowledge and agree to the terms and conditions outlined below. These terms apply to all users of the site, including without limitation vendors, customers, merchants, and/or contributors of content.
                 </p>
                 <p>
-                  All products and services displayed on Grabatoz.ae constitute an "invitation to offer." Your order represents an "offer," which is subject to acceptance by Grabatoz. Upon placing an order, you will receive an email confirming receipt of your order. This confirmation does not signify our acceptance. Our acceptance takes place only upon dispatch of the product(s) ordered.
+                  All products and services displayed on Grabatoz.ae constitute an “invitation to offer.” Your order represents an “offer” to purchase, which is subject to acceptance by Grabatoz.
+                </p>
+                <p>
+                  Upon placing an order, you will receive an email confirming receipt of your order. This confirmation does not signify acceptance of your order. Acceptance will only occur once the product(s) have been confirmed and dispatched by Grabatoz.
+                </p>
+                <p>
+                  You will receive confirmation emails at each stage of the order process. Once your order is confirmed, we will proceed with order preparation and delivery.
+                </p>
+                <p>
+                  However, Grabatoz reserves the right to cancel any order at its sole discretion at any time prior to dispatch and delivery. In such cases, if payment has already been received, the applicable refund will be processed to the customer.
+                </p>
+                <p>
+                  For further clarification or assistance regarding orders and payments, our customer support team is available to assist you.
                 </p>
               </div>
             </div>
