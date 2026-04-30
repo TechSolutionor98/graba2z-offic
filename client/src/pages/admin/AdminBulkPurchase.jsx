@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import { apiRequest } from "../../services/api"
+import { downloadCsv } from "../../utils/csvExport";
 
 const STATUS_OPTIONS = ['pending', 'contacted', 'done', 'spam'];
 
@@ -92,6 +93,35 @@ const AdminBulkPurchase = () => {
     setSelectedRequest(null);
   };
 
+  const handleDownloadCsv = () => {
+    downloadCsv({
+      rows: requests,
+      columns: [
+        { header: "Name", accessor: (row) => row.name || "N/A" },
+        { header: "Company", accessor: (row) => row.company || "N/A" },
+        { header: "Email", accessor: (row) => row.email || "N/A" },
+        { header: "Phone", accessor: (row) => row.phone || "N/A" },
+        { header: "Note", accessor: (row) => row.note || "" },
+        { header: "Status", accessor: (row) => row.status || "N/A" },
+        { header: "Registered User", accessor: (row) => (row.userId ? "Yes" : "No") },
+        {
+          header: "Created At",
+          accessor: (row) =>
+            row.createdAt
+              ? new Date(row.createdAt).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "N/A",
+        },
+      ],
+      filename: "bulk-purchase-inquiries.csv",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <AdminSidebar />
@@ -101,15 +131,27 @@ const AdminBulkPurchase = () => {
             <h1 className="text-2xl font-bold">Bulk Purchase Inquiries</h1>
             <p className="text-gray-600 text-sm mt-1">Manage B2B bulk purchase requests from customers</p>
           </div>
-          <button
-            onClick={fetchRequests}
-            className="px-4 py-2 bg-lime-500 text-white rounded hover:bg-lime-600 flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleDownloadCsv}
+              disabled={requests.length === 0}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 16V4m0 12l-4-4m4 4l4-4M4 20h16" />
+              </svg>
+              Download CSV
+            </button>
+            <button
+              onClick={fetchRequests}
+              className="px-4 py-2 bg-lime-500 text-white rounded hover:bg-lime-600 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
+          </div>
         </div>
 
         {/* Statistics Cards */}

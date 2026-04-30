@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { adminAPI } from "../../services/api"
 import AdminSidebar from "../../components/admin/AdminSidebar"
-import { Search, Mail, Calendar, User, Shield } from "lucide-react"
+import { Search, Mail, Calendar, User, Shield, Download } from "lucide-react"
+import { downloadCsv } from "../../utils/csvExport"
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([])
@@ -33,6 +34,24 @@ const AdminUsers = () => {
       user.email.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
+  const handleDownloadCsv = () => {
+    downloadCsv({
+      rows: users,
+      columns: [
+        { header: "User ID", accessor: (row) => row._id || "" },
+        { header: "Name", accessor: (row) => row.name || "N/A" },
+        { header: "Email", accessor: (row) => row.email || "N/A" },
+        { header: "Role", accessor: (row) => (row.isAdmin ? "Admin" : "Customer") },
+        {
+          header: "Joined Date",
+          accessor: (row) => (row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "N/A"),
+        },
+        { header: "Status", accessor: () => "Active" },
+      ],
+      filename: "users-management.csv",
+    })
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <AdminSidebar />
@@ -40,6 +59,14 @@ const AdminUsers = () => {
       <div className="ml-64 p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Users Management</h1>
+          <button
+            onClick={handleDownloadCsv}
+            disabled={users.length === 0}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <Download size={16} />
+            Download CSV
+          </button>
         </div>
 
         {error && <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-md">{error}</div>}
