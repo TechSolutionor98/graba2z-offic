@@ -6,6 +6,28 @@ import { getFullImageUrl } from "../../utils/imageUtils"
 const ColorVariationForm = ({ colorVariations = [], onChange }) => {
   const [expandedIndex, setExpandedIndex] = useState(null)
 
+  const normalizeImageUrl = (item) => {
+    if (!item) return ""
+    if (typeof item === "string") return item.trim()
+    if (typeof item === "object") {
+      const candidate = item.url || item.path || ""
+      return candidate ? String(candidate).trim() : ""
+    }
+    return ""
+  }
+
+  const dedupeImageUrls = (items) => {
+    const seen = new Set()
+    const output = []
+    ;(Array.isArray(items) ? items : [items]).forEach((item) => {
+      const url = normalizeImageUrl(item)
+      if (!url || seen.has(url)) return
+      seen.add(url)
+      output.push(url)
+    })
+    return output
+  }
+
   const colorOptions = [
     "Black", "White", "Silver", "Gray", "Gold", "Rose Gold",
     "Red", "Blue", "Green", "Purple", "Pink", "Orange",
@@ -44,15 +66,16 @@ const ColorVariationForm = ({ colorVariations = [], onChange }) => {
 
   const handleMultipleImagesUpload = (index, newUrls) => {
     const updated = [...colorVariations]
-    let currentMain = updated[index].image
-    let currentGallery = [...(updated[index].galleryImages || [])]
+    const normalizedNewUrls = dedupeImageUrls(newUrls)
+    let currentMain = normalizeImageUrl(updated[index].image)
+    let currentGallery = dedupeImageUrls(updated[index].galleryImages || [])
     
     // If no main image exists, set the first new image as main
-    if (!currentMain && newUrls.length > 0) {
-      currentMain = newUrls[0]
-      currentGallery = [...currentGallery, ...newUrls.slice(1)]
+    if (!currentMain && normalizedNewUrls.length > 0) {
+      currentMain = normalizedNewUrls[0]
+      currentGallery = dedupeImageUrls([...currentGallery, ...normalizedNewUrls.slice(1)])
     } else {
-      currentGallery = [...currentGallery, ...newUrls]
+      currentGallery = dedupeImageUrls([...currentGallery, ...normalizedNewUrls])
     }
     
     updated[index].image = currentMain
@@ -62,24 +85,32 @@ const ColorVariationForm = ({ colorVariations = [], onChange }) => {
 
   const setMainImage = (colorIndex, newMainUrl) => {
     const updated = [...colorVariations]
-    const oldMain = updated[colorIndex].image
-    let gallery = [...(updated[colorIndex].galleryImages || [])]
+    const selectedMain = normalizeImageUrl(newMainUrl)
+    if (!selectedMain) return
+    const oldMain = normalizeImageUrl(updated[colorIndex].image)
+    let gallery = dedupeImageUrls(updated[colorIndex].galleryImages || [])
     
     // Remove newMainUrl from gallery
-    gallery = gallery.filter(url => url !== newMainUrl)
+    gallery = gallery.filter(url => url !== selectedMain)
     // Add oldMain to gallery if it exists
     if (oldMain) {
       gallery.push(oldMain)
     }
     
-    updated[colorIndex].image = newMainUrl
-    updated[colorIndex].galleryImages = gallery
+    updated[colorIndex].image = selectedMain
+    updated[colorIndex].galleryImages = dedupeImageUrls(gallery)
     onChange(updated)
   }
 
   const removeImage = (colorIndex, urlToRemove) => {
     const updated = [...colorVariations]
-    if (updated[colorIndex].image === urlToRemove) {
+    const targetUrl = normalizeImageUrl(urlToRemove)
+    if (!targetUrl) return
+
+    updated[colorIndex].image = normalizeImageUrl(updated[colorIndex].image)
+    updated[colorIndex].galleryImages = dedupeImageUrls(updated[colorIndex].galleryImages || [])
+
+    if (updated[colorIndex].image === targetUrl) {
       updated[colorIndex].image = ""
       // If there are gallery images, make the first one the new main image
       if (updated[colorIndex].galleryImages && updated[colorIndex].galleryImages.length > 0) {
@@ -87,7 +118,7 @@ const ColorVariationForm = ({ colorVariations = [], onChange }) => {
         updated[colorIndex].galleryImages = updated[colorIndex].galleryImages.slice(1)
       }
     } else {
-      updated[colorIndex].galleryImages = updated[colorIndex].galleryImages.filter(url => url !== urlToRemove)
+      updated[colorIndex].galleryImages = updated[colorIndex].galleryImages.filter(url => url !== targetUrl)
     }
     onChange(updated)
   }
