@@ -371,6 +371,7 @@ const Shop = () => {
   const fetchTimeout = useRef()
   const loadingTimeout = useRef()
   const allProductsRef = useRef([])
+  const filterRunIdRef = useRef(0)
 
   const findCategoryByUrlIdentifier = (identifier) => {
     if (!identifier || identifier === "all") return null
@@ -609,8 +610,18 @@ const Shop = () => {
     }
   }
 
-  const performProgressiveSearch = async (searchTerm, productsSource = null, includePriceRange = true) => {
+  const performProgressiveSearch = async (
+    searchTerm,
+    productsSource = null,
+    includePriceRange = true,
+    precomputedFilters = null,
+    runId = null,
+  ) => {
+    const isStaleRun = () => runId != null && runId !== filterRunIdRef.current
+
+    if (isStaleRun()) return []
     if (!searchTerm || searchTerm.trim() === "") {
+      if (isStaleRun()) return []
       setActualSearchQuery("")
       return []
     }
@@ -619,6 +630,7 @@ const Shop = () => {
     if (!Array.isArray(allProducts) || allProducts.length === 0) {
       try {
         allProducts = await productCache.getProducts()
+        if (isStaleRun()) return []
         allProductsRef.current = allProducts || []
       } catch (err) {
         console.error("Error loading products for search:", err)
@@ -632,10 +644,11 @@ const Shop = () => {
 
     // Build the non-search filtered list once, then only apply text matching progressively.
     // This avoids repeatedly sorting/filtering the full product array on every candidate term.
-    const baseFilters = buildProductFilters(includePriceRange)
+    const baseFilters = precomputedFilters || buildProductFilters(includePriceRange)
 
     const baseFilteredProducts = productCache.filterProducts(allProducts, baseFilters)
     if (!baseFilteredProducts.length) {
+      if (isStaleRun()) return []
       setActualSearchQuery(searchTerm)
       return []
     }
@@ -661,6 +674,7 @@ const Shop = () => {
       const currentSearchTerm = words.slice(0, i).join(" ")
       const filteredProducts = baseFilteredProducts.filter((product) => matchesSearchTerm(product, currentSearchTerm))
       if (filteredProducts.length > 0) {
+        if (isStaleRun()) return []
         setActualSearchQuery(currentSearchTerm)
         return filteredProducts
       }
@@ -671,79 +685,130 @@ const Shop = () => {
       const currentSearchTerm = trimmed.slice(0, len)
       const filteredProducts = baseFilteredProducts.filter((product) => matchesSearchTerm(product, currentSearchTerm))
       if (filteredProducts.length > 0) {
+        if (isStaleRun()) return []
         setActualSearchQuery(currentSearchTerm)
         return filteredProducts
       }
     }
 
+    if (isStaleRun()) return []
     setActualSearchQuery(searchTerm)
     return []
   }
 
-  const loadAndFilterProducts = async () => {
+  const loadAndFilterProducts = async (existingRunId = null) => {
+    const runId = existingRunId || ++filterRunIdRef.current
+    const isStaleRun = () => runId !== filterRunIdRef.current
+
     try {
+      if (isStaleRun()) return
       setLoading(true)
       setError(null)
 
       const allProducts = await productCache.getProducts()
+      if (isStaleRun()) return
       allProductsRef.current = allProducts || []
 
       if (!allProducts || allProducts.length === 0) {
+        if (isStaleRun()) return
         setError("No products available")
         setLoading(false)
         return
       }
 
+      const filtersWithoutPrice = buildProductFilters(false)
+      const filtersWithPrice = buildProductFilters(true)
       let filteredProducts = []
 
       if (searchQuery && searchQuery.trim() !== "") {
-        const availableProducts = await performProgressiveSearch(searchQuery, allProducts, false)
+        const availableProducts = await performProgressiveSearch(
+          searchQuery,
+          allProducts,
+          false,
+          filtersWithoutPrice,
+          runId,
+        )
+        if (isStaleRun()) return
         syncAvailablePriceBounds(availableProducts)
-        filteredProducts = await performProgressiveSearch(searchQuery, allProducts, true)
+        filteredProducts = await performProgressiveSearch(
+          searchQuery,
+          allProducts,
+          true,
+          filtersWithPrice,
+          runId,
+        )
+        if (isStaleRun()) return
       } else {
+        if (isStaleRun()) return
         setActualSearchQuery("")
-        const availableProducts = productCache.filterProducts(allProducts, buildProductFilters(false))
+        const availableProducts = productCache.filterProducts(allProducts, filtersWithoutPrice)
         syncAvailablePriceBounds(availableProducts)
-        filteredProducts = productCache.filterProducts(allProducts, buildProductFilters(true))
+        filteredProducts = productCache.filterProducts(allProducts, filtersWithPrice)
       }
 
+      if (isStaleRun()) return
       setProducts(filteredProducts)
+      if (isStaleRun()) return
       setLoading(false)
     } catch (err) {
+      if (isStaleRun()) return
       setError("Error loading products")
       setLoading(false)
     }
   }
 
   const filterProductsFromCache = async () => {
+    const runId = ++filterRunIdRef.current
+    const isStaleRun = () => runId !== filterRunIdRef.current
+
     try {
       let allProducts = allProductsRef.current
       if (!Array.isArray(allProducts) || allProducts.length === 0) {
         allProducts = await productCache.getProducts()
+        if (isStaleRun()) return
         allProductsRef.current = allProducts || []
       }
 
       if (!allProducts || allProducts.length === 0) {
-        await loadAndFilterProducts()
+        await loadAndFilterProducts(runId)
         return
       }
 
+      const filtersWithoutPrice = buildProductFilters(false)
+      const filtersWithPrice = buildProductFilters(true)
       let filteredProducts = []
 
       if (searchQuery && searchQuery.trim() !== "") {
-        const availableProducts = await performProgressiveSearch(searchQuery, allProducts, false)
+        const availableProducts = await performProgressiveSearch(
+          searchQuery,
+          allProducts,
+          false,
+          filtersWithoutPrice,
+          runId,
+        )
+        if (isStaleRun()) return
         syncAvailablePriceBounds(availableProducts)
-        filteredProducts = await performProgressiveSearch(searchQuery, allProducts, true)
+        filteredProducts = await performProgressiveSearch(
+          searchQuery,
+          allProducts,
+          true,
+          filtersWithPrice,
+          runId,
+        )
+        if (isStaleRun()) return
       } else {
+        if (isStaleRun()) return
         setActualSearchQuery("")
-        const availableProducts = productCache.filterProducts(allProducts, buildProductFilters(false))
+        const availableProducts = productCache.filterProducts(allProducts, filtersWithoutPrice)
         syncAvailablePriceBounds(availableProducts)
-        filteredProducts = productCache.filterProducts(allProducts, buildProductFilters(true))
+        filteredProducts = productCache.filterProducts(allProducts, filtersWithPrice)
       }
 
+      if (isStaleRun()) return
       setProducts(filteredProducts)
     } catch (err) {
-      await loadAndFilterProducts()
+      if (isStaleRun()) return
+      await loadAndFilterProducts(runId)
     }
   }
 
