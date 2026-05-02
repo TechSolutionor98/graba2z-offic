@@ -440,16 +440,51 @@ const Shop = () => {
     const stockStatusFilters = getActiveStockStatusFilters()
     const urlParams = parseShopURL(location.pathname, location.search)
     const urlCategory = findCategoryByUrlIdentifier(urlParams.parentCategory)
-    const urlLevel1 = findSubcategoryByUrlIdentifier(urlParams.subcategory)
-    const urlLevel2 = findSubcategoryByUrlIdentifier(urlParams.subcategory2)
-    const urlLevel3 = findSubcategoryByUrlIdentifier(urlParams.subcategory3)
-    const urlLevel4 = findSubcategoryByUrlIdentifier(urlParams.subcategory4)
+    const hasUrlParent = Boolean(urlParams.parentCategory && urlParams.parentCategory !== "all")
+    const hasUrlLevel1 = Boolean(urlParams.subcategory)
+    const hasUrlLevel2 = Boolean(urlParams.subcategory2)
+    const hasUrlLevel3 = Boolean(urlParams.subcategory3)
+    const hasUrlLevel4 = Boolean(urlParams.subcategory4)
 
-    const resolvedParentCategory = selectedCategory !== "all" ? selectedCategory : (urlCategory?._id || null)
-    const resolvedLevel1 = selectedSubCategories.length > 0 ? selectedSubCategories[0] : (urlLevel1?._id || null)
-    const resolvedLevel2 = selectedSubCategory2 || urlLevel2?._id || null
-    const resolvedLevel3 = selectedSubCategory3 || urlLevel3?._id || null
-    const resolvedLevel4 = selectedSubCategory4 || urlLevel4?._id || null
+    const pathParts = [urlParams.subcategory, urlParams.subcategory2, urlParams.subcategory3, urlParams.subcategory4]
+    let resolvedPath = []
+    let resolvedParentCategoryFromPath = urlCategory?._id || null
+
+    if (pathParts.some(Boolean) && allSubcategories.length > 0) {
+      if (resolvedParentCategoryFromPath) {
+        resolvedPath = resolveSubcategoryPath(resolvedParentCategoryFromPath, pathParts)
+      }
+
+      if (!resolvedParentCategoryFromPath || resolvedPath.length === 0) {
+        const fallbackParts = [urlParams.parentCategory, ...pathParts].filter(Boolean)
+        const fallbackResolvedPath = resolveSubcategoryPathFromAny(fallbackParts)
+        if (fallbackResolvedPath.length > 0) {
+          resolvedPath = fallbackResolvedPath
+          resolvedParentCategoryFromPath = getSubcategoryCategoryId(fallbackResolvedPath[0]) || resolvedParentCategoryFromPath
+        }
+      }
+    }
+
+    const resolvedParentCategory = hasUrlParent
+      ? resolvedParentCategoryFromPath || urlParams.parentCategory
+      : selectedCategory !== "all"
+        ? selectedCategory
+        : null
+
+    const resolvedLevel1 = hasUrlLevel1
+      ? resolvedPath[0]?._id || urlParams.subcategory
+      : selectedSubCategories.length > 0
+        ? selectedSubCategories[0]
+        : null
+    const resolvedLevel2 = hasUrlLevel2
+      ? resolvedPath[1]?._id || urlParams.subcategory2
+      : selectedSubCategory2 || null
+    const resolvedLevel3 = hasUrlLevel3
+      ? resolvedPath[2]?._id || urlParams.subcategory3
+      : selectedSubCategory3 || null
+    const resolvedLevel4 = hasUrlLevel4
+      ? resolvedPath[3]?._id || urlParams.subcategory4
+      : selectedSubCategory4 || null
 
     return {
       parent_category: resolvedParentCategory,
@@ -730,6 +765,8 @@ const Shop = () => {
       clearTimeout(fetchTimeout.current)
     }
   }, [
+    location.pathname,
+    location.search,
     selectedCategory,
     selectedBrands,
     searchQuery,
