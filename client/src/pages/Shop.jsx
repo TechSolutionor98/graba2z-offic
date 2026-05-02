@@ -372,6 +372,56 @@ const Shop = () => {
   const loadingTimeout = useRef()
   const allProductsRef = useRef([])
 
+  const findCategoryByUrlIdentifier = (identifier) => {
+    if (!identifier || identifier === "all") return null
+
+    const rawIdentifier = String(identifier).trim()
+    if (!rawIdentifier) return null
+    const normalizedIdentifier = createSlug(rawIdentifier)
+
+    return (
+      categories.find((cat) => {
+        if (!cat) return false
+        const categoryId = String(cat._id || "").trim()
+        const categorySlug = String(cat.slug || "").trim()
+        const categoryName = String(cat.name || "").trim()
+
+        return (
+          categoryId === rawIdentifier ||
+          categorySlug === rawIdentifier ||
+          createSlug(categoryId) === normalizedIdentifier ||
+          createSlug(categorySlug) === normalizedIdentifier ||
+          createSlug(categoryName) === normalizedIdentifier
+        )
+      }) || null
+    )
+  }
+
+  const findSubcategoryByUrlIdentifier = (identifier, subcategoryPool = allSubcategories) => {
+    if (!identifier) return null
+
+    const rawIdentifier = String(identifier).trim()
+    if (!rawIdentifier) return null
+    const normalizedIdentifier = createSlug(rawIdentifier)
+
+    return (
+      subcategoryPool.find((sub) => {
+        if (!sub) return false
+        const subId = String(sub._id || "").trim()
+        const subSlug = String(sub.slug || "").trim()
+        const subName = String(sub.name || "").trim()
+
+        return (
+          subId === rawIdentifier ||
+          subSlug === rawIdentifier ||
+          createSlug(subId) === normalizedIdentifier ||
+          createSlug(subSlug) === normalizedIdentifier ||
+          createSlug(subName) === normalizedIdentifier
+        )
+      }) || null
+    )
+  }
+
   const getEffectiveProductPrice = (product) => {
     const offerPrice = Number(product?.offerPrice) || 0
     const regularPrice = Number(product?.price) || 0
@@ -685,12 +735,7 @@ const Shop = () => {
     if (categories.length === 0) return
     
     const urlParams = parseShopURL(location.pathname, location.search)
-    const foundCategory = categories.find(
-      (cat) =>
-        cat._id === urlParams.parentCategory ||
-        cat.slug === urlParams.parentCategory ||
-        createSlug(cat.name) === urlParams.parentCategory,
-    )
+    const foundCategory = findCategoryByUrlIdentifier(urlParams.parentCategory)
     const newCategory = foundCategory ? foundCategory._id : "all"
     
     // Only update if different to prevent loops
@@ -728,13 +773,8 @@ const Shop = () => {
       allSubcategoriesCount: allSubcategories.length 
     })
 
-    const foundCategory = categories.find(
-      (cat) =>
-        cat._id === urlParams.parentCategory ||
-        cat.slug === urlParams.parentCategory ||
-        createSlug(cat.name) === urlParams.parentCategory,
-    )
-    const parentCategoryId = foundCategory ? foundCategory._id : null
+    const foundCategory = findCategoryByUrlIdentifier(urlParams.parentCategory)
+    let parentCategoryId = foundCategory ? foundCategory._id : null
 
     const pathParts = [
       urlParams.subcategory,
@@ -742,7 +782,27 @@ const Shop = () => {
       urlParams.subcategory3,
       urlParams.subcategory4,
     ]
-    const resolvedPath = parentCategoryId ? resolveSubcategoryPath(parentCategoryId, pathParts) : []
+    let resolvedPath = parentCategoryId ? resolveSubcategoryPath(parentCategoryId, pathParts) : []
+
+    if (pathParts.some(Boolean) && (!parentCategoryId || resolvedPath.length === 0)) {
+      const fallbackParts = [urlParams.parentCategory, ...pathParts].filter(Boolean)
+      const fallbackResolvedPath = resolveSubcategoryPathFromAny(fallbackParts)
+
+      if (fallbackResolvedPath.length > 0) {
+        resolvedPath = fallbackResolvedPath
+        parentCategoryId = getSubcategoryCategoryId(fallbackResolvedPath[0]) || parentCategoryId
+      } else if (!parentCategoryId && urlParams.parentCategory) {
+        const possibleLevel1 = findSubcategoryByUrlIdentifier(urlParams.parentCategory)
+        if (possibleLevel1) {
+          resolvedPath = [possibleLevel1]
+          parentCategoryId = getSubcategoryCategoryId(possibleLevel1) || parentCategoryId
+        }
+      }
+    }
+
+    if (parentCategoryId && selectedCategory !== parentCategoryId) {
+      setSelectedCategory(parentCategoryId)
+    }
     const level1 = resolvedPath[0] || null
     const level2 = resolvedPath[1] || null
     const level3 = resolvedPath[2] || null
@@ -1035,7 +1095,7 @@ const Shop = () => {
 
   const getUrlIdentifier = (item) => {
     if (!item) return null
-    return item.slug || item.name || item._id || null
+    return item.slug || item._id || item.name || null
   }
 
   const findBestMatchingSubcategory = (subcategories, urlPart) => {
@@ -1131,6 +1191,59 @@ const Shop = () => {
         const part = normalizedParts[i]
         const currentId = normalizeRefId(current?._id)
         const children = categoryScopedSubs.filter((sub) => getSubcategoryParentId(sub) === currentId)
+        const next = findBestMatchingSubcategory(children, part)
+        if (!next) break
+        chain.push(next)
+        current = next
+      }
+
+      if (chain.length > bestChain.length) {
+        bestChain = chain
+      }
+      if (chain.length === normalizedParts.length) {
+        bestChain = chain
+        break
+      }
+    }
+
+    if (bestChain.length === 0) return []
+
+    const ancestry = getSubcategoryAncestry(bestChain[0])
+    const combined = [...ancestry]
+    for (const node of bestChain.slice(1)) {
+      const nodeId = normalizeRefId(node?._id)
+      const alreadyIncluded = combined.some((item) => normalizeRefId(item?._id) === nodeId)
+      if (!alreadyIncluded) combined.push(node)
+    }
+    return combined.slice(0, 4)
+  }
+
+  const resolveSubcategoryPathFromAny = (parts = []) => {
+    const normalizedParts = parts.filter(Boolean)
+    if (normalizedParts.length === 0) return []
+    if (!Array.isArray(allSubcategories) || allSubcategories.length === 0) return []
+
+    const firstPart = normalizedParts[0]
+    const firstCandidates = allSubcategories
+      .filter((sub) => getUrlMatchScore(sub, firstPart) > 0)
+      .sort((a, b) => {
+        const scoreDiff = getUrlMatchScore(b, firstPart) - getUrlMatchScore(a, firstPart)
+        if (scoreDiff !== 0) return scoreDiff
+        return getSubcategoryDepth(a) - getSubcategoryDepth(b)
+      })
+
+    if (firstCandidates.length === 0) return []
+
+    let bestChain = []
+
+    for (const startNode of firstCandidates) {
+      const chain = [startNode]
+      let current = startNode
+
+      for (let i = 1; i < normalizedParts.length; i++) {
+        const part = normalizedParts[i]
+        const currentId = normalizeRefId(current?._id)
+        const children = allSubcategories.filter((sub) => getSubcategoryParentId(sub) === currentId)
         const next = findBestMatchingSubcategory(children, part)
         if (!next) break
         chain.push(next)

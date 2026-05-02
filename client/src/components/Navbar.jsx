@@ -74,7 +74,7 @@ const MobileSubCategoryItem = ({
   const getNodeIdentifier = (nodeOrValue) => {
     if (!nodeOrValue) return null
     if (typeof nodeOrValue === "string") return nodeOrValue
-    return nodeOrValue.slug || nodeOrValue.name || nodeOrValue._id || null
+    return nodeOrValue.slug || nodeOrValue._id || nodeOrValue.name || null
   }
   
   // Build the URL params based on level
@@ -453,7 +453,7 @@ const Navbar = () => {
   const getNodeIdentifier = (nodeOrValue) => {
     if (!nodeOrValue) return null
     if (typeof nodeOrValue === "string") return nodeOrValue
-    return nodeOrValue.slug || nodeOrValue.name || nodeOrValue._id || null
+    return nodeOrValue.slug || nodeOrValue._id || nodeOrValue.name || null
   }
 
   const toggleMobileCategory = (categoryId) => {
