@@ -699,10 +699,11 @@ const Shop = () => {
   const loadAndFilterProducts = async (existingRunId = null) => {
     const runId = existingRunId || ++filterRunIdRef.current
     const isStaleRun = () => runId !== filterRunIdRef.current
+    const shouldManageLoading = existingRunId == null
 
     try {
       if (isStaleRun()) return
-      setLoading(true)
+      if (shouldManageLoading) setLoading(true)
       setError(null)
 
       const allProducts = await productCache.getProducts()
@@ -712,7 +713,6 @@ const Shop = () => {
       if (!allProducts || allProducts.length === 0) {
         if (isStaleRun()) return
         setError("No products available")
-        setLoading(false)
         return
       }
 
@@ -748,12 +748,13 @@ const Shop = () => {
 
       if (isStaleRun()) return
       setProducts(filteredProducts)
-      if (isStaleRun()) return
-      setLoading(false)
     } catch (err) {
       if (isStaleRun()) return
       setError("Error loading products")
-      setLoading(false)
+    } finally {
+      if (shouldManageLoading && !isStaleRun()) {
+        setLoading(false)
+      }
     }
   }
 
@@ -762,6 +763,7 @@ const Shop = () => {
     const isStaleRun = () => runId !== filterRunIdRef.current
 
     try {
+      setLoading(true)
       let allProducts = allProductsRef.current
       if (!Array.isArray(allProducts) || allProducts.length === 0) {
         allProducts = await productCache.getProducts()
@@ -809,6 +811,10 @@ const Shop = () => {
     } catch (err) {
       if (isStaleRun()) return
       await loadAndFilterProducts(runId)
+    } finally {
+      if (!isStaleRun()) {
+        setLoading(false)
+      }
     }
   }
 
