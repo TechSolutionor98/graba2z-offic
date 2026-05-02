@@ -438,13 +438,25 @@ const Shop = () => {
 
   const buildProductFilters = (includePriceRange = true) => {
     const stockStatusFilters = getActiveStockStatusFilters()
+    const urlParams = parseShopURL(location.pathname, location.search)
+    const urlCategory = findCategoryByUrlIdentifier(urlParams.parentCategory)
+    const urlLevel1 = findSubcategoryByUrlIdentifier(urlParams.subcategory)
+    const urlLevel2 = findSubcategoryByUrlIdentifier(urlParams.subcategory2)
+    const urlLevel3 = findSubcategoryByUrlIdentifier(urlParams.subcategory3)
+    const urlLevel4 = findSubcategoryByUrlIdentifier(urlParams.subcategory4)
+
+    const resolvedParentCategory = selectedCategory !== "all" ? selectedCategory : (urlCategory?._id || null)
+    const resolvedLevel1 = selectedSubCategories.length > 0 ? selectedSubCategories[0] : (urlLevel1?._id || null)
+    const resolvedLevel2 = selectedSubCategory2 || urlLevel2?._id || null
+    const resolvedLevel3 = selectedSubCategory3 || urlLevel3?._id || null
+    const resolvedLevel4 = selectedSubCategory4 || urlLevel4?._id || null
 
     return {
-      parent_category: selectedCategory !== "all" ? selectedCategory : null,
-      category: selectedSubCategories.length > 0 ? selectedSubCategories[0] : null,
-      subcategory2: selectedSubCategory2,
-      subcategory3: selectedSubCategory3,
-      subcategory4: selectedSubCategory4,
+      parent_category: resolvedParentCategory,
+      category: resolvedLevel1,
+      subcategory2: resolvedLevel2,
+      subcategory3: resolvedLevel3,
+      subcategory4: resolvedLevel4,
       brand: selectedBrands.length > 0 ? selectedBrands : null,
       search: null,
       priceRange: includePriceRange && isPriceFilterApplied ? priceRange : null,
