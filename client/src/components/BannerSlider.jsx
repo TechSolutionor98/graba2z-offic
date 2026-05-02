@@ -17,6 +17,26 @@ const BannerSlider = ({ banners }) => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
 
+  const resolveBannerLink = (banner) => {
+    if (!banner) return { href: getLocalizedPath("/shop"), isExternal: false }
+
+    const rawLink = String(banner.link || "").trim()
+    const rawButtonLink = String(banner.buttonLink || "").trim()
+    const chosen = rawLink || rawButtonLink || "/shop"
+
+    const isExternal = chosen.startsWith("http://") || chosen.startsWith("https://")
+    if (isExternal) {
+      return { href: chosen, isExternal: true }
+    }
+
+    if (chosen.startsWith("/ae-en/") || chosen.startsWith("/ae-ar/")) {
+      return { href: chosen, isExternal: false }
+    }
+
+    const normalizedPath = chosen.startsWith("/") ? chosen : `/${chosen}`
+    return { href: getLocalizedPath(normalizedPath), isExternal: false }
+  }
+
   // Auto-slide every 5 seconds
   useEffect(() => {
     if (!isAutoPlaying || banners.length <= 1) return
@@ -97,50 +117,33 @@ const BannerSlider = ({ banners }) => {
       </>
     )
 
-    // Check if banner has a valid link
-    const hasValidLink = currentBanner.buttonLink && currentBanner.buttonLink.trim() !== ""
+    const resolved = resolveBannerLink(currentBanner)
 
-    if (hasValidLink) {
-      const link = currentBanner.buttonLink.trim()
-      // Check if it's an external link
-      const isExternal = link.startsWith("http://") || link.startsWith("https://")
+    debugHeroBanners("slide:computedLink", {
+      id: currentBanner._id,
+      rawLink: currentBanner.link,
+      rawButtonLink: currentBanner.buttonLink,
+      computedLink: resolved.href,
+      isExternal: resolved.isExternal,
+    })
 
-      debugHeroBanners("slide:computedLink", {
-        id: currentBanner._id,
-        rawButtonLink: currentBanner.buttonLink,
-        computedLink: link,
-        isExternal,
-        localized: isExternal ? link : getLocalizedPath(link),
-      })
-      
-      if (isExternal) {
-        return (
-          <a 
-            href={link} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="absolute inset-0 cover cursor-pointer"
-          >
-            {content}
-          </a>
-        )
-      } else {
-        return (
-          <Link 
-            to={getLocalizedPath(link)} 
-            className="absolute inset-0 cover cursor-pointer"
-          >
-            {content}
-          </Link>
-        )
-      }
+    if (resolved.isExternal) {
+      return (
+        <a
+          href={resolved.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute inset-0 cover cursor-pointer"
+        >
+          {content}
+        </a>
+      )
     }
 
-    // No link, just render the content
     return (
-      <div className="absolute inset-0 cover">
+      <Link to={resolved.href} className="absolute inset-0 cover cursor-pointer">
         {content}
-      </div>
+      </Link>
     )
   }
 
