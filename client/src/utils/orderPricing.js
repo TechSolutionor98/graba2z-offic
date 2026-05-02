@@ -75,3 +75,7 @@ export const deriveBaseDiscount = (baseSubtotal, offerSubtotal) => {
   const discount = resolvedBaseSubtotal - resolvedOfferSubtotal
   return discount > 0 ? discount : 0
 }
+
+export const isProtectionItem = (item = {}) => {
+  return Boolean(item?.isProtection || item?.protectionData || item?.protectionFor)
+}

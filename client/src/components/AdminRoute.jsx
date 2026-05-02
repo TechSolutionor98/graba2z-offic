@@ -37,6 +37,7 @@ const routePermissions = {
   "/admin/orders/deleted": "orders",
   "/admin/orders/critical": "orders",
   "/admin/orders/create": "orders",
+  "/admin/orders/quotations": "orders",
   "/admin/users": "users",
   "/admin/reviews": "reviews",
   "/admin/blogs": "blogs",

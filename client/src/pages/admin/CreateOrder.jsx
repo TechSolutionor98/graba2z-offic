@@ -2,13 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { adminAPI, categoriesAPI, apiRequest, productsAdminAPI } from "../../services/api"
-import { Search, User, Package, Percent, Plus, Minus, Trash2, Save } from "lucide-react"
+import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 const currency = (n) => `AED ${(Number(n) || 0).toLocaleString()}`
 
 export default function CreateOrder() {
   const navigate = useNavigate()
+
+  const [mode, setMode] = useState("order")
+  const [sendCustomerEmail, setSendCustomerEmail] = useState(false)
 
   // Users
   const [userQuery, setUserQuery] = useState("")
@@ -35,15 +38,20 @@ export default function CreateOrder() {
   const [filters, setFilters] = useState({
     parentCategory: "",
     subcategory: "",
-    brand: "", // use brand name in search, backend admin route matches brand name within search
+    brand: "",
   })
   const [productResults, setProductResults] = useState([])
 
   // Order items and pricing
   const [items, setItems] = useState([])
   const [shippingPrice, setShippingPrice] = useState(0)
-  const [taxRate, setTaxRate] = useState(0) // % (optional, default 0)
-  const [discountAmount, setDiscountAmount] = useState(0) // special discount
+  const [taxRate, setTaxRate] = useState(0)
+  const [discountAmount, setDiscountAmount] = useState(0)
+
+  // Custom line item
+  const [customName, setCustomName] = useState("")
+  const [customPrice, setCustomPrice] = useState("")
+  const [customQuantity, setCustomQuantity] = useState(1)
 
   const itemsPrice = useMemo(
     () => items.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 0), 0),
@@ -58,7 +66,6 @@ export default function CreateOrder() {
     [itemsPrice, shippingPrice, taxPrice, discountAmount],
   )
 
-  // Debounced user search
   useEffect(() => {
     const t = setTimeout(async () => {
       try {
@@ -69,13 +76,12 @@ export default function CreateOrder() {
         const data = await adminAPI.getUsers({ search: userQuery.trim() })
         setUsers(Array.isArray(data) ? data : [])
       } catch (e) {
-        console.error("[v0] user search error:", e)
+        console.error("[create-document] user search error:", e)
       }
     }, 300)
     return () => clearTimeout(t)
   }, [userQuery])
 
-  // Load filters data
   useEffect(() => {
     const load = async () => {
       try {
@@ -88,28 +94,25 @@ export default function CreateOrder() {
         setSubcategories(subs || [])
         setBrands(brandsRes || [])
       } catch (e) {
-        console.error("[v0] load filters error:", e)
+        console.error("[create-document] load filters error:", e)
       }
     }
     load()
   }, [])
 
-  // Debounced product search
   useEffect(() => {
     const t = setTimeout(async () => {
       try {
         const params = {}
-        if (productQuery?.trim()) params.search = productQuery.trim() // name/sku/brand
+        if (productQuery?.trim()) params.search = productQuery.trim()
         if (filters.parentCategory) params.parentCategory = filters.parentCategory
         if (filters.subcategory) params.subcategory = filters.subcategory
-        // admin route doesn't support brand id filter directly; pass brand name into search
         if (filters.brand) {
           const brandObj = brands.find((b) => b._id === filters.brand)
           if (brandObj?.name) {
             params.search = params.search ? `${params.search} ${brandObj.name}` : brandObj.name
           }
         }
-        // Skip if no filters and no query
         if (!params.search && !params.parentCategory && !params.subcategory) {
           setProductResults([])
           return
@@ -117,7 +120,7 @@ export default function CreateOrder() {
         const data = await productsAdminAPI.search({ ...params, limit: 20, page: 1 })
         setProductResults(data?.products || [])
       } catch (e) {
-        console.error("[v0] product search error:", e)
+        console.error("[create-document] product search error:", e)
       }
     }, 300)
     return () => clearTimeout(t)
@@ -140,39 +143,70 @@ export default function CreateOrder() {
 
   const addProduct = (p) => {
     const price = Number(p.offerPrice || p.price || 0)
-    const existing = items.find((it) => it.product === p._id)
+    const existing = items.find((it) => it.key === p._id)
     if (existing) {
-      setItems((prev) => prev.map((it) => (it.product === p._id ? { ...it, quantity: (it.quantity || 0) + 1 } : it)))
+      setItems((prev) => prev.map((it) => (it.key === p._id ? { ...it, quantity: (it.quantity || 0) + 1 } : it)))
     } else {
       setItems((prev) => [
         ...prev,
         {
+          key: p._id,
           product: p._id,
           name: p.name,
-          image: p.image || "",
+          image: p.image || "/placeholder.svg",
           price,
           quantity: 1,
           sku: p.sku,
+          isCustom: false,
         },
       ])
     }
   }
 
-  const updateQty = (productId, delta) => {
+  const addCustomItem = () => {
+    const name = customName.trim()
+    const price = Number(customPrice)
+    const quantity = Number(customQuantity)
+
+    if (!name || Number.isNaN(price) || price <= 0 || Number.isNaN(quantity) || quantity <= 0) {
+      alert("Please enter valid custom item name, price, and quantity")
+      return
+    }
+
+    const key = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    setItems((prev) => [
+      ...prev,
+      {
+        key,
+        product: null,
+        name,
+        image: "/placeholder.svg",
+        price,
+        quantity,
+        sku: "CUSTOM",
+        isCustom: true,
+      },
+    ])
+
+    setCustomName("")
+    setCustomPrice("")
+    setCustomQuantity(1)
+  }
+
+  const updateQty = (itemKey, delta) => {
     setItems((prev) =>
       prev
-        .map((it) => (it.product === productId ? { ...it, quantity: Math.max(1, (it.quantity || 1) + delta) } : it))
+        .map((it) => (it.key === itemKey ? { ...it, quantity: Math.max(1, (it.quantity || 1) + delta) } : it))
         .filter((it) => (it.quantity || 1) > 0),
     )
   }
 
-  const removeItem = (productId) => setItems((prev) => prev.filter((it) => it.product !== productId))
+  const removeItem = (itemKey) => setItems((prev) => prev.filter((it) => it.key !== itemKey))
 
   const canSubmit = items.length > 0 && shipping.name && shipping.email && shipping.phone && shipping.address
 
   const handleCreate = async () => {
     try {
-      // Optionally update user profile
       if (updateUserProfile && selectedUser?._id) {
         await adminAPI.updateUser(selectedUser._id, {
           name: shipping.name,
@@ -189,12 +223,14 @@ export default function CreateOrder() {
 
       const payload = {
         userId: selectedUser?._id || null,
+        documentType: mode,
+        sendCustomerEmail,
         orderItems: items.map((it) => ({
           name: it.name,
           quantity: Number(it.quantity) || 1,
-          image: it.image || "",
+          image: it.image || "/placeholder.svg",
           price: Number(it.price) || 0,
-          product: it.product,
+          product: it.product || undefined,
         })),
         deliveryType: "home",
         shippingAddress: {
@@ -209,7 +245,7 @@ export default function CreateOrder() {
         itemsPrice: Number(itemsPrice.toFixed(2)),
         shippingPrice: Number((Number(shippingPrice) || 0).toFixed(2)),
         taxPrice: Number(taxPrice.toFixed(2)),
-        discountAmount: Number((Number(discountAmount) || 0).toFixed(2)), // special discount
+        discountAmount: Number((Number(discountAmount) || 0).toFixed(2)),
         totalPrice: Number(totalPrice.toFixed(2)),
         paymentMethod: "Cash on Delivery",
         customerNotes: "",
@@ -217,20 +253,41 @@ export default function CreateOrder() {
       }
 
       const created = await adminAPI.createOrder(payload)
-      // Success: navigate to new orders list
-      alert(`Order created successfully. #${created?._id?.slice?.(-6) || ""}`)
-      navigate("/admin/orders/new")
+      const label = mode === "quotation" ? "Quotation" : "Order"
+      alert(`${label} created successfully. #${created?._id?.slice?.(-6) || ""}`)
+      if (mode === "quotation") {
+        navigate("/admin/orders/quotations")
+      } else {
+        navigate("/admin/orders/new")
+      }
     } catch (e) {
-      console.error("[v0] create order error:", e)
-      alert(e?.message || "Failed to create order")
+      console.error("[create-document] create error:", e)
+      alert(e?.message || "Failed to create document")
     }
   }
 
   return (
     <div className="ml-64 p-6">
-      <h1 className="text-2xl font-bold mb-4">Create Order</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">Create Order / Create Quotation</h1>
+        <div className="inline-flex rounded-md border overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setMode("order")}
+            className={`px-4 py-2 text-sm ${mode === "order" ? "bg-lime-600 text-white" : "bg-white text-gray-700"}`}
+          >
+            Create Order
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("quotation")}
+            className={`px-4 py-2 text-sm ${mode === "quotation" ? "bg-blue-600 text-white" : "bg-white text-gray-700"}`}
+          >
+            Create Quotation
+          </button>
+        </div>
+      </div>
 
-      {/* User selection and shipping info */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -317,10 +374,18 @@ export default function CreateOrder() {
               />
               Update user profile with above details
             </label>
+
+            <label className="flex items-center gap-2 text-sm mt-2">
+              <input
+                type="checkbox"
+                checked={sendCustomerEmail}
+                onChange={(e) => setSendCustomerEmail(e.target.checked)}
+              />
+              Email Manually Set
+            </label>
           </div>
         </div>
 
-        {/* Product search and filters */}
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center gap-2 mb-3">
             <Package size={18} />
@@ -403,10 +468,50 @@ export default function CreateOrder() {
               ))}
             </div>
           )}
+
+          <div className="mt-4 border-t pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText size={16} />
+              <h3 className="font-semibold text-sm">Custom Line Item</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+              <input
+                type="text"
+                placeholder="Product Name"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                className="border rounded px-2 py-2 md:col-span-2"
+              />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Price"
+                value={customPrice}
+                onChange={(e) => setCustomPrice(e.target.value)}
+                className="border rounded px-2 py-2"
+              />
+              <input
+                type="number"
+                min="1"
+                step="1"
+                placeholder="Qty"
+                value={customQuantity}
+                onChange={(e) => setCustomQuantity(e.target.value)}
+                className="border rounded px-2 py-2"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={addCustomItem}
+              className="mt-2 inline-flex items-center gap-1 bg-blue-600 text-white text-sm px-3 py-1 rounded"
+            >
+              <Plus size={14} /> Add Custom Product
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Items and totals */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-lg shadow p-4">
           <h2 className="font-semibold mb-3">Items</h2>
@@ -426,22 +531,19 @@ export default function CreateOrder() {
                 </thead>
                 <tbody>
                   {items.map((it) => (
-                    <tr key={it.product} className="border-b">
+                    <tr key={it.key} className="border-b">
                       <td className="py-2">
                         <div className="font-medium">{it.name}</div>
                         <div className="text-xs text-gray-500">SKU: {it.sku || "-"}</div>
+                        {it.isCustom && <div className="text-xs text-blue-600">Custom Item</div>}
                       </td>
                       <td className="py-2">
                         <div className="flex items-center justify-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => updateQty(it.product, -1)}
-                            className="p-1 border rounded"
-                          >
+                          <button type="button" onClick={() => updateQty(it.key, -1)} className="p-1 border rounded">
                             <Minus size={14} />
                           </button>
                           <span className="w-8 text-center">{it.quantity}</span>
-                          <button type="button" onClick={() => updateQty(it.product, 1)} className="p-1 border rounded">
+                          <button type="button" onClick={() => updateQty(it.key, 1)} className="p-1 border rounded">
                             <Plus size={14} />
                           </button>
                         </div>
@@ -451,7 +553,7 @@ export default function CreateOrder() {
                       <td className="py-2 text-right">
                         <button
                           type="button"
-                          onClick={() => removeItem(it.product)}
+                          onClick={() => removeItem(it.key)}
                           className="p-1 text-red-600 hover:text-red-700"
                           title="Remove item"
                         >
@@ -530,10 +632,10 @@ export default function CreateOrder() {
             className={`mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded text-white ${
               canSubmit ? "bg-lime-600 hover:bg-lime-700" : "bg-gray-400 cursor-not-allowed"
             }`}
-            title={!canSubmit ? "Add at least one item and fill shipping details" : "Create order"}
+            title={!canSubmit ? "Add at least one item and fill shipping details" : `Create ${mode}`}
           >
             <Save size={16} />
-            Create Order
+            {mode === "quotation" ? "Create Quotation" : "Create Order"}
           </button>
 
           {discountAmount > 0 && (

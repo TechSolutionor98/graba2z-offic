@@ -95,6 +95,7 @@ import PriceAdjustment from "../pages/admin/PriceAdjustment"
 import PriceAdjustmentReports from "../pages/admin/PriceAdjustmentReports"
 import ProcessingOrders from "../pages/admin/ProcessingOrders"
 import ReadyForShipment from "../pages/admin/ReadyForShipment"
+import RecentQuotation from "../pages/admin/RecentQuotation"
 import ReceivedOrders from "../pages/admin/ReceivedOrders"
 import Rejected from "../pages/admin/Rejected"
 import ResetCache from "../pages/admin/ResetCache"
@@ -229,6 +230,7 @@ const AdminPortal = () => {
             <Route path="orders/critical" element={<CriticalOrders />} />
 
             <Route path="orders/create" element={<CreateOrder />} />
+            <Route path="orders/quotations" element={<RecentQuotation />} />
 
             <Route path="admin-management" element={<AdminManagement />} />
             <Route path="activity-logs" element={<ActivityLogs />} />

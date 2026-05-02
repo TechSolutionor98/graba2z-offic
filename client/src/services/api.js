@@ -239,11 +239,23 @@ export const adminAPI = {
     apiRequest("/api/admin/orders/recent", {
       headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
     }),
+  getQuotations: (params = {}) => {
+    const qs = new URLSearchParams(params).toString()
+    return apiRequest(`/api/admin/quotations${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
   createOrder: (orderData) =>
     apiRequest("/api/admin/orders", {
       method: "POST",
       headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
       body: JSON.stringify(orderData),
+    }),
+  convertQuotation: (id, payload = {}) =>
+    apiRequest(`/api/admin/quotations/${id}/convert`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify(payload),
     }),
 }
 

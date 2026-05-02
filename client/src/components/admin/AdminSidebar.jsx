@@ -58,6 +58,7 @@ const AdminSidebar = () => {
     coupons: false,
     reviews: false,
     stockAdjustment: false,
+    createOrderQuotation: false,
     seoSettings: false,
     superAdmin: false, // Super Admin dropdown state
     seoSettings: false, // Added seoSettings dropdown state
@@ -104,7 +105,9 @@ const AdminSidebar = () => {
 
     // Orders dropdown - open if any order-related route is active
     if (
-      path.includes("/admin/orders") ||
+      (path.includes("/admin/orders") &&
+        !path.includes("/admin/orders/create") &&
+        !path.includes("/admin/orders/quotations")) ||
       path.includes("/admin/orders/new") ||
       path.includes("/admin/orders/online") ||
       path.includes("/admin/orders/received") ||
@@ -116,9 +119,14 @@ const AdminSidebar = () => {
       path.includes("/admin/orders/on-hold") ||
       path.includes("/admin/orders/cancelled") ||
       path.includes("/admin/orders/deleted") ||
-      path.includes("/admin/orders/create") // Added Create Order route
+      path.includes("/admin/orders/create") ||
+      path.includes("/admin/orders/quotations")
     ) {
       newOpenDropdowns.orders = true
+    }
+
+    if (path.includes("/admin/orders/create") || path.includes("/admin/orders/quotations")) {
+      newOpenDropdowns.createOrderQuotation = true
     }
 
     // Blogs dropdown - open if any blog-related route is active
@@ -404,13 +412,22 @@ const AdminSidebar = () => {
       ],
     },
     {
+      title: "Order/Quotation",
+      icon: ShoppingCart,
+      dropdown: "createOrderQuotation",
+      permission: "orders",
+      items: [
+        { title: "Create Order/Quotation", path: "/admin/orders/create" },
+        { title: "Recent Quotation", path: "/admin/orders/quotations" },
+      ],
+    },
+    {
       title: "Orders",
       icon: ShoppingCart,
       dropdown: "orders",
       permission: "orders",
       items: [
         { title: "All Orders", path: "/admin/orders" },
-        { title: "Create Order", path: "/admin/orders/create" },
         { title: "New Orders", path: "/admin/orders/new" },
         { title: "Confirmed", path: "/admin/orders/confirmed" },
         { title: "Processing", path: "/admin/orders/processing" },
