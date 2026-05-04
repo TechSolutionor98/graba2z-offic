@@ -19,7 +19,7 @@ import '../styles/phoneInput.css'
 
 import config from "../config/config"
 const UAE_STATES = ["Abu Dhabi", "Ajman", "Al Ain", "Dubai", "Fujairah", "Ras Al Khaimah", "Sharjah", "Umm al-Qaywain"]
-const COD_FEE_AMOUNT = 10
+const COD_FEE_AMOUNT = 5
 const FREE_DELIVERY_THRESHOLD_AED = 95
 
 const STORES = [
@@ -1631,10 +1631,10 @@ const Checkout = () => {
                         <span className="font-semibold text-yellow-800"><TranslatedText>Cash on Delivery</TranslatedText></span>
                       </div>
                       <p className="text-sm text-yellow-700">
-                        <TranslatedText>An additional 10 AED will be charged for Cash on Delivery (COD) as a cash handling fee..</TranslatedText>
+                        <TranslatedText>An additional 5 AED will be charged for Cash on Delivery (COD) as a cash handling fee..</TranslatedText>
                       </p>
                       <p className="text-sm font-semibold text-yellow-800 mt-2" lang="en" dir="ltr">
-                        COD Fee (Non-Refundable) AED 10.00
+                        COD Fee (Non-Refundable) AED 5.00
                       </p>
                     </div>
                   )}
@@ -1816,7 +1816,7 @@ const Checkout = () => {
                 {selectedPaymentMethod === "cod" && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600" lang="en" dir="ltr">COD Fee (Non-Refundable)</span>
-                    <span className="text-black" lang="en" dir="ltr">AED 10.00</span>
+                    <span className="text-black" lang="en" dir="ltr">AED 5.00</span>
                   </div>
                 )}
 
