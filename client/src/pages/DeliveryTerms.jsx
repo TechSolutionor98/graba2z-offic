@@ -29,7 +29,7 @@ export default function DeliveryInfo() {
   
             <div className="space-y-4">
               <div className="bg-white p-4 rounded border border-lime-200">
-                <p className="font-medium text-lime-500">Below AED 500</p>
+                <p className="font-medium text-lime-500">Below AED 95</p>
                 <p className="text-gray-700">will be charges AED 20.00 delivery charges</p>
                 <p className="text-gray-700">
                   if COD (Cash on Delivery) then COD Handling Fee: AED 10.00 will be applicable (Non-refundable)
@@ -40,7 +40,7 @@ export default function DeliveryInfo() {
               </div>
   
               <div className="bg-white p-4 rounded border border-lime-200">
-                <p className="font-medium text-lime-500">AED 500 or Above</p>
+                <p className="font-medium text-lime-500">AED 95 or Above</p>
                 <p className="text-gray-700">Eligible for FREE delivery</p>
                 <p className="text-gray-700">
                   if COD (Cash on Delivery) then COD Handling Fee: AED 10.00 (Non-refundable) applicable only.
@@ -55,7 +55,7 @@ export default function DeliveryInfo() {
   
             <div className="mt-6 space-y-2 text-sm text-gray-600">
               <p>
-                · Free Shipping is applicable on a single order (one order ID) with a value of AED 500 or more, excluding
+                · Free Shipping is applicable on a single order (one order ID) with a value of AED 95 or more, excluding
                 any applied voucher or discount codes.
               </p>
               <p>· Offer is valid for UAE customers only.</p>
