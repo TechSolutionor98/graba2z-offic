@@ -3514,27 +3514,21 @@ const ProductDetails = () => {
                 <h4 className="font-bold text-white p-2 rounded-lg bg-red-600 text-center text-md mb-3">
                   <TranslatedText>Payment Methods</TranslatedText> :{" "}
                 </h4>
-                <div className=" ml-8 items-center space-x-2 flex-wrap gap-2">
-                  <div className="px-2 py-1 rounded flex items-center ">
-                    <img
-                      src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757919726/1st_logo_v8x2hc.webp"
-                      alt="master"
-                      className="w-auto"
-                    />
-                  </div>
-                  <div className="px-2 py-1 rounded flex items-center ">
+                <div className="ml-8 flex flex-col items-center gap-2">
+                  <div className="px-2 py-1 rounded flex items-center">
                     <img
                       src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757937381/2nd_logo_x6jzhz.webp"
                       alt="visa"
                       className="w-auto"
                     />
                   </div>
-                  <div className="px-2 py-1 rounded flex items-center ">
+                  <div className="px-2 py-1 -ml-12 rounded flex items-center gap-2">
                     <img
                       src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757937401/3rd_logo_fmwdkp.webp"
                       alt="tamara"
-                      className="w-auto"
+                      className="h-16 w-auto"
                     />
+                    <img src="/visa.png" alt="visa" width="64" height="24" className="h-11 -ml-7 w-auto" />
                   </div>
                 </div>
 
