@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import axios from "axios"
 import { generateShopURL } from "../utils/urlUtils"
-import { getFullImageUrl, getOptimizedImageUrl, getResponsiveImageProps } from "../utils/imageUtils"
+import { getFullImageUrl } from "../utils/imageUtils"
 import { resolveProductCategoryInfo } from "../utils/productCategory"
 
 import BigSaleSection from "../components/BigSaleSection"
@@ -92,35 +92,20 @@ const MobileReservedSkeleton = ({ height = MOBILE_RESERVED_HEIGHTS.deferredSecti
   <div className={`md:hidden mx-3 rounded-2xl bg-gray-100 animate-pulse ${className}`} style={{ height }} />
 )
 
+const getHomeImageProps = (image, fallbackSrc = "", sizes = undefined) => ({
+  src: getFullImageUrl(image) || fallbackSrc,
+  srcSet: undefined,
+  sizes,
+})
+
 const getMobileHeroCardImageProps = (image, fallbackSrc = "") =>
-  getResponsiveImageProps(image, {
-    widths: [180, 260, 360, 520],
-    baseWidth: 520,
-    baseHeight: 197,
-    quality: 70,
-    sizes: "(max-width: 767px) calc(50vw - 1rem), 260px",
-    fallbackSrc,
-  })
+  getHomeImageProps(image, fallbackSrc, "(max-width: 767px) calc(50vw - 1rem), 260px")
 
 const getMobileSingleBannerProps = (image, fallbackSrc = "") =>
-  getResponsiveImageProps(image, {
-    widths: [360, 540, 720],
-    baseWidth: 720,
-    baseHeight: 272,
-    quality: 70,
-    sizes: "(max-width: 767px) calc(100vw - 1.5rem), 360px",
-    fallbackSrc,
-  })
+  getHomeImageProps(image, fallbackSrc, "(max-width: 767px) calc(100vw - 1.5rem), 360px")
 
 const getCategoryBannerProps = (image, fallbackSrc = "") =>
-  getResponsiveImageProps(image, {
-    widths: [360, 540, 720, 1024, 1311],
-    baseWidth: 1311,
-    baseHeight: 300,
-    quality: 68,
-    sizes: "(max-width: 1023px) calc(100vw - 1.5rem), 1311px",
-    fallbackSrc,
-  })
+  getHomeImageProps(image, fallbackSrc, "(max-width: 1023px) calc(100vw - 1.5rem), 1311px")
 
 const StaticMobileHero = ({ getLocalizedPath }) => (
   <section className="relative w-full h-[170px] overflow-hidden md:hidden">
@@ -1004,7 +989,7 @@ const Home = () => {
                   {banner ? (
                     <Link to={getBannerLink(banner)} aria-label={banner.title || "View products"} className="block h-full">
                       <img
-                        src={getOptimizedImageUrl(banner.image, { width: 426, height: 280, quality: 72 }) || fallback.image}
+                        src={getFullImageUrl(banner.image) || fallback.image}
                         alt={banner.title || "Banner"}
                         fetchPriority={index === 0 ? "high" : "auto"}
                         loading={index === 0 ? "eager" : "lazy"}
@@ -1195,7 +1180,7 @@ const Home = () => {
                 {hpBanner ? (
                   <Link to={getBannerLink(hpBanner, brandUrls.HP)}>
                     <img
-                      src={getOptimizedImageUrl(hpBanner.image, { width: 652, height: 270, quality: 70 })}
+                      src={getFullImageUrl(hpBanner.image)}
                       alt={hpBanner.title || "HP Products Banner"}
                       className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => handleBannerImageError(e, hpBanner.image)}
@@ -1215,7 +1200,7 @@ const Home = () => {
                 {dellBanner ? (
                   <Link to={getBannerLink(dellBanner, brandUrls.Dell)}>
                     <img
-                      src={getOptimizedImageUrl(dellBanner.image, { width: 652, height: 270, quality: 70 })}
+                      src={getFullImageUrl(dellBanner.image)}
                       alt={dellBanner.title || "Dell Products Banner"}
                       className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => handleBannerImageError(e, dellBanner.image)}
@@ -1428,7 +1413,7 @@ const Home = () => {
                 {acerBanner ? (
                   <Link to={getBannerLink(acerBanner, brandUrls.Acer)}>
                     <img
-                      src={getOptimizedImageUrl(acerBanner.image, { width: 652, height: 270, quality: 70 })}
+                      src={getFullImageUrl(acerBanner.image)}
                       alt={acerBanner.title || "Acer Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => handleBannerImageError(e, acerBanner.image)}
@@ -1448,7 +1433,7 @@ const Home = () => {
                 {asusBanner ? (
                   <Link to={getBannerLink(asusBanner, brandUrls.ASUS)}>
                     <img
-                      src={getOptimizedImageUrl(asusBanner.image, { width: 652, height: 270, quality: 70 })}
+                      src={getFullImageUrl(asusBanner.image)}
                       alt={asusBanner.title || "ASUS Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => handleBannerImageError(e, asusBanner.image)}
@@ -1666,7 +1651,7 @@ const Home = () => {
                 {msiBanner ? (
                   <Link to={getBannerLink(msiBanner, brandUrls.MSI)}>
                     <img
-                      src={getOptimizedImageUrl(msiBanner.image, { width: 652, height: 270, quality: 70 })}
+                      src={getFullImageUrl(msiBanner.image)}
                       alt={msiBanner.title || "MSI Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => handleBannerImageError(e, msiBanner.image)}
@@ -1686,7 +1671,7 @@ const Home = () => {
                 {lenovoBanner ? (
                   <Link to={getBannerLink(lenovoBanner, brandUrls.Lenovo)}>
                     <img
-                      src={getOptimizedImageUrl(lenovoBanner.image, { width: 652, height: 270, quality: 70 })}
+                      src={getFullImageUrl(lenovoBanner.image)}
                       alt={lenovoBanner.title || "Lenovo Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => handleBannerImageError(e, lenovoBanner.image)}
@@ -1822,7 +1807,7 @@ const Home = () => {
                 {appleBanner ? (
                   <Link to={getBannerLink(appleBanner, brandUrls.Apple)}>
                     <img
-                      src={getOptimizedImageUrl(appleBanner.image, { width: 652, height: 270, quality: 70 })}
+                      src={getFullImageUrl(appleBanner.image)}
                       alt={appleBanner.title || "Apple Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => handleBannerImageError(e, appleBanner.image)}
@@ -1842,7 +1827,7 @@ const Home = () => {
                 {samsungBanner ? (
                   <Link to={getBannerLink(samsungBanner, brandUrls.Samsung)}>
                     <img
-                      src={getOptimizedImageUrl(samsungBanner.image, { width: 652, height: 270, quality: 70 })}
+                      src={getFullImageUrl(samsungBanner.image)}
                       alt={samsungBanner.title || "Samsung Products Banner"}
                       className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
                       onError={(e) => handleBannerImageError(e, samsungBanner.image)}
@@ -2070,7 +2055,7 @@ const MobileProductCard = ({ product }) => {
       <div className="relative mb-2 flex h-[170px] justify-center items-center">
         <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
-            src={getOptimizedImageUrl(product.image, { width: 220, height: 220, quality: 68 }) || "/placeholder.svg?height=120&width=120"}
+            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             loading="lazy"
             decoding="async"
@@ -2210,7 +2195,7 @@ const DynamicBrandProductCard = ({ product }) => {
       <div className="relative mb-2 flex justify-center items-center" style={{ height: 190 }}>
         <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)} className="w-full h-full flex items-center justify-center">
           <img
-            src={getOptimizedImageUrl(product.image, { width: 220, height: 220, quality: 68 }) || "/placeholder.svg?height=120&width=120"}
+            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             loading="lazy"
             decoding="async"
@@ -2347,7 +2332,7 @@ const AccessoriesProductCard = ({ product }) => {
       <div className="relative mb-2 flex justify-center items-center" style={{ height: 190 }}>
         <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)} className="w-full h-full flex items-center justify-center">
           <img
-            src={getOptimizedImageUrl(product.image, { width: 220, height: 220, quality: 68 }) || "/placeholder.svg?height=120&width=120"}
+            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             loading="lazy"
             decoding="async"

@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Heart, Star, ShoppingBag } from "lucide-reac
 import { Link } from "react-router-dom"
 import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
-import { getOptimizedImageUrl } from "../utils/imageUtils"
+import { getFullImageUrl } from "../utils/imageUtils"
 import { resolveProductCategoryInfo } from "../utils/productCategory"
 import TranslatedText from "./TranslatedText"
 import { useLanguage } from "../context/LanguageContext"
@@ -54,7 +54,7 @@ const ProductCard = ({ product, isMobile = false }) => {
       <div className="relative mb-2 flex h-[150px] justify-center items-cente">
   <Link to={getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)}>
           <img
-            src={getOptimizedImageUrl(product.image, { width: 220, height: 220, quality: 68 }) || "/placeholder.svg?height=120&width=120"}
+            src={getFullImageUrl(product.image) || "/placeholder.svg?height=120&width=120"}
             alt={product.name}
             loading="lazy"
             decoding="async"

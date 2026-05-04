@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getOptimizedImageUrl } from "../utils/imageUtils";
+import { getFullImageUrl } from "../utils/imageUtils";
 import axios from "axios";
 import config from "../config/config";
 import TranslatedText from "./TranslatedText";
@@ -506,7 +506,7 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                         >
                           {item.image ? (
                             <img
-                              src={getOptimizedImageUrl(item.image, { width: 128, height: 128, quality: 68 })}
+                              src={getFullImageUrl(item.image)}
                               alt={item.name}
                               width="176"
                               height="176"
@@ -532,7 +532,7 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                         >
                           {item.image ? (
                             <img
-                              src={getOptimizedImageUrl(item.image, { width: 128, height: 128, quality: 68 })}
+                              src={getFullImageUrl(item.image)}
                               alt={item.name}
                               width="176"
                               height="176"

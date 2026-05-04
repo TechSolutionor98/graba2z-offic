@@ -283,7 +283,7 @@
 
 
 import React, { useState, useEffect, useRef } from "react";
-import { getOptimizedImageUrl } from "../utils/imageUtils";
+import { getFullImageUrl } from "../utils/imageUtils";
 import TranslatedText from "./TranslatedText";
 
 const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
@@ -499,7 +499,7 @@ const BrandSlider = ({ brands = [], onBrandClick, initialIndex = 0 }) => {
                   >
                     <div className="w-22 h-22 md:w-26 md:h-26 lg:w-40 lg:h-40 overflow-hidden flex items-center justify-center">
                       <img
-                        src={getOptimizedImageUrl(brand.logo, { width: 200, height: 190, quality: 70 }) || "/placeholder.svg"}
+                        src={getFullImageUrl(brand.logo) || "/placeholder.svg"}
                         alt={brand.name}
                         width="160"
                         height="154"
