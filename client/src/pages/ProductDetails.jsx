@@ -912,9 +912,6 @@ const ProductDetails = () => {
         }
         addToCart(protectionItem, 1)
       })
-      showToast(`Product and ${selectedProtections.length} protection plan(s) added to cart!`, "success")
-    } else {
-      showToast("Product added to cart!", "success")
     }
   }
 
