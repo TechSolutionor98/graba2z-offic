@@ -3,12 +3,32 @@
 import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Link } from "react-router-dom"
-import { getResponsiveImageProps } from "../utils/imageUtils"
+import { getFullImageUrl } from "../utils/imageUtils"
 import { useLanguage } from "../context/LanguageContext"
 
 const debugHeroBanners = (...args) => {
   if (import.meta?.env?.VITE_DEBUG_BANNERS === "true") {
     console.log("[DEBUG_BANNERS_HERO]", ...args)
+  }
+}
+
+const normalizeBannerDisplayUrl = (imageUrl) => {
+  const fullUrl = getFullImageUrl(imageUrl)
+  if (!fullUrl) return ""
+
+  // Remove image-resizing query params if an optimized URL was stored previously.
+  try {
+    const urlObj = new URL(fullUrl)
+    ;["w", "h", "q", "fmt"].forEach((param) => urlObj.searchParams.delete(param))
+    let normalized = urlObj.toString()
+
+    // Strip Cloudinary transformation segment like /upload/f_auto,q_68,w_1360/
+    if (normalized.includes("res.cloudinary.com") && normalized.includes("/upload/")) {
+      normalized = normalized.replace(/\/upload\/(?:[a-z]{1,4}_[^/]+\/)+(?=(?:v\d+\/|[^/]+))/i, "/upload/")
+    }
+    return normalized
+  } catch {
+    return fullUrl
   }
 }
 
@@ -70,19 +90,9 @@ const BannerSlider = ({ banners }) => {
 
   const currentBanner = banners[currentSlide]
   const currentBannerImage = currentBanner
-    ? getResponsiveImageProps(currentBanner.image, {
-        widths: [480, 720, 960, 1360],
-        baseWidth: 1360,
-        baseHeight: 400,
-        quality: 68,
-        sizes: "100vw",
-        fallbackSrc: "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp",
-      })
-    : {
-        src: "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp",
-        srcSet: undefined,
-        sizes: "100vw",
-      }
+    ? normalizeBannerDisplayUrl(currentBanner.image) ||
+      "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp"
+    : "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp"
 
   useEffect(() => {
     if (!currentBanner) return
@@ -102,9 +112,7 @@ const BannerSlider = ({ banners }) => {
     const content = (
       <>
         <img
-          src={currentBannerImage.src}
-          srcSet={currentBannerImage.srcSet}
-          sizes={currentBannerImage.sizes}
+          src={currentBannerImage}
           alt={currentBanner?.title || "Banner"}
           fetchPriority="high"
           loading="eager"
