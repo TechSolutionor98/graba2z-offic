@@ -1074,7 +1074,7 @@ const AddBulkProducts = () => {
             <li>• Required fields: name, parent_category, price (category_level_1 recommended)</li>
             <li>• <strong>Excel only:</strong> Optional <code>images</code> column supports comma-separated file names (example: <code>s24-front.jpg,s24-back.jpg</code>). First image becomes main image, remaining go to gallery</li>
             <li>• Select bulk product images before choosing Excel file so they can be uploaded and mapped automatically</li>
-            <li>• <strong>specifications</strong> format: <code>Brand: CROWNYX; Model: Aegis GripStand Pro; Color: Black</code></li>
+            <li>• <strong>specifications</strong> format: <code>Brand: CROWNYX, Model: Aegis GripStand Pro, Color: Black</code> (comma-separated; semicolon/new line also supported)</li>
             <li>• Stock Status: "In Stock" | "Out of Stock" | "PreOrder" (defaults to In Stock)</li>
             <li>• Boolean fields: use "true" or "false"</li>
           </ul>
