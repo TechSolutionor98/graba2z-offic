@@ -3382,7 +3382,7 @@ const ProductDetails = () => {
               <div className="bg-yellow-50 rounded-lg p-4">
                 <h4 className="font-bold text-gray-900 text-md mb-2 flex items-center">🎯 <TranslatedText>Get My Coupon</TranslatedText></h4>
                 <p className="text-sm text-gray-700 mb-3">
-                  <TranslatedText>Free shipping when you spend AED95 & above. Unlimited destinations in Dubai and Abu Dhabi</TranslatedText>
+                  <TranslatedText>Free shipping when you spend AED95 & above. Unlimited destination with in UAE</TranslatedText>
                 </p>
                 <button
                   className="w-full bg-yellow-400 text-black py-2 px-4 rounded font-bold text-sm hover:bg-yellow-500 transition-colors"
@@ -3402,7 +3402,7 @@ const ProductDetails = () => {
                   <div>
                     <h4 className="font-bold text-gray-900 text-sm"><TranslatedText>Express Delivery</TranslatedText></h4>
                     <p className="text-xs text-gray-700">
-                      <TranslatedText>Free shipping when you spend AED95 & above. Unlimited destinations in Dubai and Abu Dhabi</TranslatedText>
+                      <TranslatedText>Free shipping when you spend AED95 & above. Unlimited destination with in UAE</TranslatedText>
                     </p>
                   </div>
                 </div>

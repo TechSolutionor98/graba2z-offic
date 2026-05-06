@@ -83,6 +83,7 @@ export const uiDictionary = {
   "Payment Methods": "طرق الدفع",
   "Get My Coupon": "احصل على كوبوني",
   "Free shipping when you spend AED500 & above. Unlimited destinations in Dubai and Abu Dhabi": "شحن مجاني عند إنفاق 500 درهم وأكثر. وجهات غير محدودة في دبي وأبوظبي",
+  "Free shipping when you spend AED95 & above. Unlimited destination with in UAE": "شحن مجاني عند إنفاق 95 درهم وأكثر. وجهة غير محدودة داخل الإمارات",
   "Get Coupons": "احصل على الكوبونات",
   "Express Delivery": "التوصيل السريع",
   "Delivery & Returns Policy": "سياسة التوصيل والإرجاع",
