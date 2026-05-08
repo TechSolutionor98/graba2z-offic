@@ -509,12 +509,6 @@ const AdminSidebar = () => {
       permission: "offerPages",
     },
     {
-      title: "Gaming Zone",
-      icon: Tag,
-      path: "/admin/gaming-zone",
-      permission: "gamingZone",
-    },
-    {
       title: "Coupons",
       icon: Percent,
       dropdown: "coupons",

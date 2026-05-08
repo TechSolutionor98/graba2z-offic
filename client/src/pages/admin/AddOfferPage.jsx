@@ -17,6 +17,9 @@ const AddOfferPage = () => {
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
+    metaTitle: "",
+    metaDescription: "",
+    canonicalUrl: "",
     heroImage: "",
     cardImages: [],
     isActive: true,
@@ -43,6 +46,9 @@ const AddOfferPage = () => {
       setFormData({
         name: data.name || "",
         slug: data.slug || "",
+        metaTitle: data.metaTitle || "",
+        metaDescription: data.metaDescription || "",
+        canonicalUrl: data.canonicalUrl || "",
         heroImage: data.heroImage || "",
         cardImages: data.cardImages || [],
         isActive: data.isActive !== undefined ? data.isActive : true,
@@ -238,6 +244,58 @@ const AddOfferPage = () => {
                       Active (visible to users)
                     </span>
                   </label>
+                </div>
+              </div>
+
+              {/* SEO Settings */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900 border-b pb-2">
+                  SEO Settings
+                </h2>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Meta Title
+                  </label>
+                  <input
+                    type="text"
+                    name="metaTitle"
+                    value={formData.metaTitle}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="SEO title for search engines"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Meta Description
+                  </label>
+                  <textarea
+                    name="metaDescription"
+                    value={formData.metaDescription}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="SEO description for search engines"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Canonical URL
+                  </label>
+                  <input
+                    type="url"
+                    name="canonicalUrl"
+                    value={formData.canonicalUrl}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={`https://www.grabatoz.ae/ae-en/offers/${formData.slug || "your-slug"}`}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Leave empty to auto-use the current page URL.
+                  </p>
                 </div>
               </div>
 

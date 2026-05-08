@@ -858,7 +858,7 @@ const Home = () => {
       <SEO
         title="Buy Laptops, Mobiles & Electronics Online in UAE | Grabatoz"
         description="Discover the best deals on laptops, desktops, mobiles, and gaming products in UAE. Grabatoz is your trusted electronics shop in Dubai."
-        canonicalPath="/"
+        canonicalPath="/ae-en"
       />
 
       {/* Notification/Newsletter Popup */}

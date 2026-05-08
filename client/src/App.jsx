@@ -64,7 +64,7 @@ function DefaultCanonical() {
   if (location.pathname !== "/") {
     return null
   }
-  const href = typeof window !== "undefined" ? `${window.location.origin.replace(/\/+$/, "")}/` : "/"
+  const href = typeof window !== "undefined" ? `${window.location.origin.replace(/\/+$/, "")}/ae-en` : "/ae-en"
   return (
     <Helmet prioritizeSeoTags>
       {/* Default Site Title can be adjusted by SEO team */}
@@ -77,6 +77,7 @@ function DefaultCanonical() {
 function RouteCanonical() {
   const location = useLocation()
   if (location.pathname === "/") return null
+  if (location.pathname.includes("/offers/") || location.pathname.includes("/gaming-zone/")) return null
   const href =
     typeof window !== "undefined"
       ? `${window.location.origin.replace(/\/+$/, "")}${location.pathname}`

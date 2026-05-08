@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useLocation } from "react-router-dom"
 import axios from "axios"
 import config from "../config/config"
 import ProductCard from "../components/ProductCard"
@@ -86,6 +86,7 @@ const SortDropdown = ({ value, onChange }) => {
 
 const OfferPage = () => {
   const { slug } = useParams()
+  const location = useLocation()
   const [loading, setLoading] = useState(true)
   const [offerPage, setOfferPage] = useState(null)
   const [products, setProducts] = useState([])
@@ -818,13 +819,20 @@ const OfferPage = () => {
   }
 
   const formattedAppliedMaxPrice = Number.isFinite(priceRange[1]) ? priceRange[1] : INFINITY_SYMBOL
+  const canonicalUrl =
+    offerPage?.canonicalUrl ||
+    (typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : `/offers/${slug || ""}`)
+  const metaDescription =
+    offerPage?.metaDescription || `Browse ${offerPage?.name || "this offer"} products`
 
   return (
     <>
       <Helmet>
         <title>{offerPage.metaTitle || offerPage.name}</title>
-        <meta name="description" content={offerPage.metaDescription || offerPage.description} />
-        <link rel="canonical" href={`${window.location.origin}/offers/${slug}`} />
+        <meta name="description" content={metaDescription} />
+        <link rel="canonical" href={canonicalUrl} />
       </Helmet>
 
       <div className="min-h-screen bg-white">

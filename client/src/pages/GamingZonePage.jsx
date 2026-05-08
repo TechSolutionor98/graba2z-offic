@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useLocation } from "react-router-dom"
 import axios from "axios"
 import config from "../config/config"
 import ProductCard from "../components/ProductCard"
@@ -183,6 +183,7 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
 
 const GamingZonePage = () => {
   const { slug } = useParams()
+  const location = useLocation()
   const [loading, setLoading] = useState(true)
   const [gamingZonePage, setGamingZonePage] = useState(null)
   const [products, setProducts] = useState([])
@@ -462,11 +463,20 @@ const GamingZonePage = () => {
     )
   }
 
+  const canonicalUrl =
+    gamingZonePage?.canonicalUrl ||
+    (typeof window !== "undefined"
+      ? `${window.location.origin}${location.pathname}`
+      : `/gaming-zone/${slug || ""}`)
+  const metaDescription =
+    gamingZonePage?.metaDescription || `Browse ${gamingZonePage?.name || "gaming zone"} products`
+
   return (
     <>
       <Helmet>
-        <title>{gamingZonePage?.name || "Gaming Zone"} - Graba2z</title>
-        <meta name="description" content={`Browse ${gamingZonePage?.name} products`} />
+        <title>{gamingZonePage?.metaTitle || `${gamingZonePage?.name || "Gaming Zone"} - Graba2z`}</title>
+        <meta name="description" content={metaDescription} />
+        <link rel="canonical" href={canonicalUrl} />
       </Helmet>
 
       <div className="min-h-screen bg-white">
