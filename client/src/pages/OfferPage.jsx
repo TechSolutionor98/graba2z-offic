@@ -5,7 +5,7 @@ import config from "../config/config"
 import ProductCard from "../components/ProductCard"
 import TranslatedText from "../components/TranslatedText"
 import { getFullImageUrl } from "../utils/imageUtils"
-import { Helmet } from "react-helmet-async"
+import SEO from "../components/SEO"
 import { ChevronLeft, ChevronRight, ChevronDown, Minus, Plus, X } from "lucide-react"
 import Slider from "rc-slider"
 import "rc-slider/assets/index.css"
@@ -820,20 +820,34 @@ const OfferPage = () => {
 
   const formattedAppliedMaxPrice = Number.isFinite(priceRange[1]) ? priceRange[1] : INFINITY_SYMBOL
   const canonicalUrl =
+    offerPage?.seoCanonicalUrl ||
     offerPage?.canonicalUrl ||
     (typeof window !== "undefined"
       ? `${window.location.origin}${location.pathname}`
       : `/offers/${slug || ""}`)
   const metaDescription =
-    offerPage?.metaDescription || `Browse ${offerPage?.name || "this offer"} products`
+    offerPage?.seoDescription || offerPage?.metaDescription || `Browse ${offerPage?.name || "this offer"} products`
+  const seoTitle = offerPage?.seoTitle || offerPage?.metaTitle || offerPage?.name
+  const seoKeywords = offerPage?.seoKeywords || ""
+  const seoRobots = offerPage?.seoRobots || "index, follow"
+  const ogTitle = offerPage?.ogTitle || ""
+  const ogDescription = offerPage?.ogDescription || ""
+  const ogImage = offerPage?.ogImage || getFullImageUrl(offerPage?.heroImage || "")
+  const customSchema = offerPage?.customSchema || ""
 
   return (
     <>
-      <Helmet>
-        <title>{offerPage.metaTitle || offerPage.name}</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-      </Helmet>
+      <SEO
+        title={seoTitle}
+        description={metaDescription}
+        canonicalPath={canonicalUrl}
+        keywords={seoKeywords}
+        robots={seoRobots}
+        ogTitle={ogTitle}
+        ogDescription={ogDescription}
+        ogImage={ogImage}
+        customSchema={customSchema}
+      />
 
       <div className="min-h-screen bg-white">
         {/* Mobile Filter Modal */}

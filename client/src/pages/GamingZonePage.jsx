@@ -4,7 +4,7 @@ import axios from "axios"
 import config from "../config/config"
 import ProductCard from "../components/ProductCard"
 import TranslatedText from "../components/TranslatedText"
-import { Helmet } from "react-helmet-async"
+import SEO from "../components/SEO"
 import { ChevronLeft, ChevronRight, ChevronDown, Minus, Plus, X, Filter } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
 import Slider from "rc-slider"
@@ -464,20 +464,34 @@ const GamingZonePage = () => {
   }
 
   const canonicalUrl =
+    gamingZonePage?.seoCanonicalUrl ||
     gamingZonePage?.canonicalUrl ||
     (typeof window !== "undefined"
       ? `${window.location.origin}${location.pathname}`
       : `/gaming-zone/${slug || ""}`)
   const metaDescription =
-    gamingZonePage?.metaDescription || `Browse ${gamingZonePage?.name || "gaming zone"} products`
+    gamingZonePage?.seoDescription || gamingZonePage?.metaDescription || `Browse ${gamingZonePage?.name || "gaming zone"} products`
+  const seoTitle = gamingZonePage?.seoTitle || gamingZonePage?.metaTitle || `${gamingZonePage?.name || "Gaming Zone"} - Graba2z`
+  const seoKeywords = gamingZonePage?.seoKeywords || ""
+  const seoRobots = gamingZonePage?.seoRobots || "index, follow"
+  const ogTitle = gamingZonePage?.ogTitle || ""
+  const ogDescription = gamingZonePage?.ogDescription || ""
+  const ogImage = gamingZonePage?.ogImage || getFullImageUrl(gamingZonePage?.heroImage || "")
+  const customSchema = gamingZonePage?.customSchema || ""
 
   return (
     <>
-      <Helmet>
-        <title>{gamingZonePage?.metaTitle || `${gamingZonePage?.name || "Gaming Zone"} - Graba2z`}</title>
-        <meta name="description" content={metaDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-      </Helmet>
+      <SEO
+        title={seoTitle}
+        description={metaDescription}
+        canonicalPath={canonicalUrl}
+        keywords={seoKeywords}
+        robots={seoRobots}
+        ogTitle={ogTitle}
+        ogDescription={ogDescription}
+        ogImage={ogImage}
+        customSchema={customSchema}
+      />
 
       <div className="min-h-screen bg-white">
         {/* Hero Image */}

@@ -9,6 +9,13 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 import axios from "axios"
 import config from "../../config/config"
 
+const SEO_TITLE_MAX_WORDS = 80
+const countWords = (text = "") => String(text).trim().split(/\s+/).filter(Boolean).length
+const limitWords = (text = "", maxWords = SEO_TITLE_MAX_WORDS) => {
+  const words = String(text).trim().split(/\s+/).filter(Boolean)
+  return words.length <= maxWords ? text : words.slice(0, maxWords).join(" ")
+}
+
 const AddGamingZonePage = () => {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -17,9 +24,15 @@ const AddGamingZonePage = () => {
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
-    metaTitle: "",
-    metaDescription: "",
-    canonicalUrl: "",
+    seoTitle: "",
+    seoDescription: "",
+    seoKeywords: "",
+    seoCanonicalUrl: "",
+    seoRobots: "index, follow",
+    customSchema: "",
+    ogTitle: "",
+    ogDescription: "",
+    ogImage: "",
     heroImage: "",
     cardImages: [],
     isActive: true,
@@ -46,9 +59,15 @@ const AddGamingZonePage = () => {
       setFormData({
         name: data.name || "",
         slug: data.slug || "",
-        metaTitle: data.metaTitle || "",
-        metaDescription: data.metaDescription || "",
-        canonicalUrl: data.canonicalUrl || "",
+        seoTitle: data.seoTitle || data.metaTitle || "",
+        seoDescription: data.seoDescription || data.metaDescription || "",
+        seoKeywords: data.seoKeywords || "",
+        seoCanonicalUrl: data.seoCanonicalUrl || data.canonicalUrl || "",
+        seoRobots: data.seoRobots || "index, follow",
+        customSchema: data.customSchema || "",
+        ogTitle: data.ogTitle || "",
+        ogDescription: data.ogDescription || "",
+        ogImage: data.ogImage || "",
         heroImage: data.heroImage || "",
         cardImages: data.cardImages || [],
         isActive: data.isActive !== undefined ? data.isActive : true,
@@ -64,9 +83,10 @@ const AddGamingZonePage = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
+    const normalizedValue = name === "seoTitle" ? limitWords(value, SEO_TITLE_MAX_WORDS) : value
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? checked : normalizedValue,
     }))
   }
 
@@ -248,54 +268,141 @@ const AddGamingZonePage = () => {
               </div>
 
               {/* SEO Settings */}
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900 border-b pb-2">
-                  SEO Settings
-                </h2>
+              <div className="bg-white rounded-lg shadow-sm border border-green-200 p-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <h2 className="text-lg font-semibold text-gray-900">SEO Settings</h2>
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">For Google Only</span>
+                </div>
+                <p className="text-sm text-gray-500 mb-6">
+                  These fields are only used for search engine meta tags. They will NOT be displayed on the page.
+                </p>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Meta Title
-                  </label>
-                  <input
-                    type="text"
-                    name="metaTitle"
-                    value={formData.metaTitle}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="SEO title for search engines"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+                    <input
+                      type="text"
+                      name="seoTitle"
+                      value={formData.seoTitle}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Custom page title for Google (leave blank to use page name)"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      {countWords(formData.seoTitle)}/{SEO_TITLE_MAX_WORDS} words
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Robots Meta</label>
+                    <select
+                      name="seoRobots"
+                      value={formData.seoRobots}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                      <option value="index, follow">Index, Follow (default)</option>
+                      <option value="noindex, follow">No Index, Follow</option>
+                      <option value="index, nofollow">Index, No Follow</option>
+                      <option value="noindex, nofollow">No Index, No Follow</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                    <textarea
+                      name="seoDescription"
+                      value={formData.seoDescription}
+                      onChange={handleChange}
+                      rows={3}
+                      maxLength={160}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Custom meta description for Google (leave blank to auto-generate)"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">{formData.seoDescription.length}/160 characters</p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Meta Keywords</label>
+                    <input
+                      type="text"
+                      name="seoKeywords"
+                      value={formData.seoKeywords}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="keyword1, keyword2, keyword3"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Comma-separated keywords for search engines</p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Canonical URL</label>
+                    <input
+                      type="text"
+                      name="seoCanonicalUrl"
+                      value={formData.seoCanonicalUrl}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder={`https://www.grabatoz.ae/ae-en/gaming-zone/${formData.slug || "your-slug"} (leave blank for default)`}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Override the canonical URL if needed</p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Custom Schema Markup (HTML/JS)</label>
+                    <textarea
+                      name="customSchema"
+                      value={formData.customSchema}
+                      onChange={handleChange}
+                      rows={8}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
+                      placeholder={'<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "WebPage",\n  "name": "Gaming Zone"\n}\n</script>'}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Paste JSON-LD script tags (recommended) or custom head HTML/JS. It is injected into page head and not visible to users.
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Meta Description
-                  </label>
-                  <textarea
-                    name="metaDescription"
-                    value={formData.metaDescription}
-                    onChange={handleChange}
-                    rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="SEO description for search engines"
-                  />
-                </div>
+                <div className="mt-6 pt-6 border-t border-green-200">
+                  <h3 className="text-md font-semibold text-gray-800 mb-4">Open Graph (Social Media Sharing)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">OG Title</label>
+                      <input
+                        type="text"
+                        name="ogTitle"
+                        value={formData.ogTitle}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="Title for Facebook/Twitter sharing (leave blank to use Meta Title)"
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Canonical URL
-                  </label>
-                  <input
-                    type="url"
-                    name="canonicalUrl"
-                    value={formData.canonicalUrl}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder={`https://www.grabatoz.ae/ae-en/gaming-zone/${formData.slug || "your-slug"}`}
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Leave empty to auto-use the current page URL.
-                  </p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">OG Image URL</label>
+                      <input
+                        type="text"
+                        name="ogImage"
+                        value={formData.ogImage}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="Image URL for social sharing (leave blank to use page image)"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">OG Description</label>
+                      <textarea
+                        name="ogDescription"
+                        value={formData.ogDescription}
+                        onChange={handleChange}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="Description for social sharing (leave blank to use Meta Description)"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 

@@ -72,16 +72,31 @@ function parseAndCreateSchemaNodes(schemaMarkup) {
  * - description?: string
  * - canonicalPath?: string | absolute url
  * - image?: string (absolute or relative)
+ * - ogImage?: string (absolute or relative, overrides image for OG/Twitter)
  * - noindex?: boolean
+ * - robots?: string (e.g. "index, follow")
  * - keywords?: string
  * - ogTitle?: string (custom Open Graph title, falls back to title)
  * - ogDescription?: string (custom Open Graph description, falls back to description)
  * - article?: object (for blog posts) - { author, datePublished, dateModified, tags }
  * - customSchema?: string (raw JSON-LD schema markup - can include script tags or just JSON)
  */
-export default function SEO({ title, description, canonicalPath, image, noindex = false, keywords, ogTitle, ogDescription, article, customSchema }) {
+export default function SEO({
+  title,
+  description,
+  canonicalPath,
+  image,
+  ogImage,
+  noindex = false,
+  robots,
+  keywords,
+  ogTitle,
+  ogDescription,
+  article,
+  customSchema,
+}) {
   const canonical = absoluteUrl(canonicalPath || (typeof window !== "undefined" ? window.location.pathname : "/"))
-  const ogImage = image ? absoluteUrl(image) : undefined
+  const resolvedOgImage = absoluteUrl(ogImage || image)
   const finalOgTitle = ogTitle || title
   const finalOgDescription = ogDescription || description
 
@@ -105,7 +120,7 @@ export default function SEO({ title, description, canonicalPath, image, noindex 
       "@type": "BlogPosting",
       "headline": title,
       "description": description,
-      "image": ogImage,
+      "image": resolvedOgImage,
       "url": canonical,
       "datePublished": article.datePublished,
       "dateModified": article.dateModified || article.datePublished,
@@ -134,6 +149,7 @@ export default function SEO({ title, description, canonicalPath, image, noindex 
       {description && <meta name="description" content={description} />}
       {keywords && <meta name="keywords" content={keywords} />}
       {canonical && <link rel="canonical" href={canonical} />}
+      {robots && <meta name="robots" content={robots} />}
       {noindex && <meta name="robots" content="noindex,nofollow" />}
 
       {/* Open Graph */}
@@ -141,7 +157,7 @@ export default function SEO({ title, description, canonicalPath, image, noindex 
       {finalOgDescription && <meta property="og:description" content={finalOgDescription} />}
       {canonical && <meta property="og:url" content={canonical} />}
       <meta property="og:type" content={article ? "article" : "website"} />
-      {ogImage && <meta property="og:image" content={ogImage} />}
+      {resolvedOgImage && <meta property="og:image" content={resolvedOgImage} />}
       {article && article.datePublished && <meta property="article:published_time" content={article.datePublished} />}
       {article && article.dateModified && <meta property="article:modified_time" content={article.dateModified} />}
       {article && article.author && <meta property="article:author" content={article.author} />}
@@ -153,7 +169,7 @@ export default function SEO({ title, description, canonicalPath, image, noindex 
       <meta name="twitter:card" content="summary_large_image" />
       {finalOgTitle && <meta name="twitter:title" content={finalOgTitle} />}
       {finalOgDescription && <meta name="twitter:description" content={finalOgDescription} />}
-      {ogImage && <meta name="twitter:image" content={ogImage} />}
+      {resolvedOgImage && <meta name="twitter:image" content={resolvedOgImage} />}
 
       {/* Structured Data (JSON-LD) */}
       {articleSchema && (
