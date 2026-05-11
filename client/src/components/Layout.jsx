@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useState } from "react"
 import { Outlet, useLocation } from "react-router-dom"
 import Navbar from "./Navbar"
 import BlogNavbar from "./BlogNavbar"
+import StaticRouteSEO from "./StaticRouteSEO"
 
 const Footer = lazy(() => import("./Footer"))
 const BlogFooter = lazy(() => import("./BlogFooter"))
@@ -73,6 +74,8 @@ function Layout() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <StaticRouteSEO />
+
       {/* Navbar - Conditional based on page */}
       {isBlogPage ? <BlogNavbar /> : <Navbar />}
 

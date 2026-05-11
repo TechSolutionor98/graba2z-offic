@@ -520,9 +520,9 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                             </div>
                           )}
                         </div>
-                        <span className={layoutClasses.textClass}>
+                        <h1 className={layoutClasses.textClass}>
                           <TranslatedText text={item.name} sourceDoc={item} fieldName="name" />
-                        </span>
+                        </h1>
                       </>
                     ) : (
                       <>
@@ -551,9 +551,9 @@ const CategorySliderUpdated = ({ onCategoryClick }) => {
                           )}
                         </div>
 
-                        <span className={layoutClasses.textClass}>
+                        <h1 className={layoutClasses.textClass}>
                           <TranslatedText text={item.name} sourceDoc={item} fieldName="name" />
-                        </span>
+                        </h1>
                       </>
                     )}
                   </button>

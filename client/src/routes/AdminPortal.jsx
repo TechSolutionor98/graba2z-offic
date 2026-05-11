@@ -52,6 +52,7 @@ import AdminReviews from "../pages/admin/AdminReviews"
 import AdminReviewsApproved from "../pages/admin/AdminReviewsApproved"
 import AdminReviewsPending from "../pages/admin/AdminReviewsPending"
 import AdminReviewsRejected from "../pages/admin/AdminReviewsRejected"
+import AdminPageSEOManager from "../pages/admin/AdminPageSEOManager"
 import AdminSEOSettings from "../pages/admin/AdminSEOSettings"
 import AdminSettings from "../pages/admin/AdminSettings"
 import AdminSizes from "../pages/admin/AdminSizes"
@@ -216,6 +217,7 @@ const AdminPortal = () => {
             <Route path="reset-cache" element={<ResetCache />} />
             <Route path="*" element={<NotFound />} />
 
+            <Route path="seo-settings/pages" element={<AdminPageSEOManager />} />
             <Route path="seo-settings/redirects" element={<AdminSEOSettings />} />
 
             <Route path="stock-adjustment/price-adjustment" element={<PriceAdjustment />} />

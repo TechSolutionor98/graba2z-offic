@@ -5,7 +5,6 @@ import { Link, useSearchParams } from "react-router-dom"
 import axios from "axios"
 import { Clock, Eye, User, ChevronLeft, ChevronRight } from "lucide-react"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
-import SEO from "../components/SEO"
 import config from "../config/config"
 import { useLanguage } from "../context/LanguageContext"
 
@@ -275,13 +274,6 @@ const BlogList = () => {
 
   return (
     <>
-      <SEO
-        title="Blogs - GrabA2Z | Tech Insights, Reviews & Guides"
-        description="Explore our blog for the latest tech news, product reviews, buying guides, and expert insights on laptops, computers, and technology."
-        keywords="tech blog, laptop reviews, computer guides, technology news, product reviews, tech insights"
-        canonicalUrl="https://www.grabatoz.ae/blogs"
-      />
-
       <div className="min-h-screen bg-white overflow-x-hidden">
         <Suspense
           fallback={

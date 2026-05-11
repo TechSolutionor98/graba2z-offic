@@ -30,7 +30,6 @@ import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
 import { useLanguage } from "../context/LanguageContext"
 import BrandSlider from "../components/BrandSlider"
-import SEO from "../components/SEO"
 import DynamicSection from "../components/DynamicSection"
 import TranslatedText from "../components/TranslatedText"
 
@@ -854,13 +853,6 @@ const Home = () => {
 
   return (
     <div className="bg-white mt-1">
-      {/* SEO Meta Tags for Home Page */}
-      <SEO
-        title="Buy Laptops, Mobiles & Electronics Online in UAE | Grabatoz"
-        description="Discover the best deals on laptops, desktops, mobiles, and gaming products in UAE. Grabatoz is your trusted electronics shop in Dubai."
-        canonicalPath="/ae-en"
-      />
-
       {/* Notification/Newsletter Popup */}
       {showNotifPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">

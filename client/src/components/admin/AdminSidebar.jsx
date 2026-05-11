@@ -61,7 +61,6 @@ const AdminSidebar = () => {
     createOrderQuotation: false,
     seoSettings: false,
     superAdmin: false, // Super Admin dropdown state
-    seoSettings: false, // Added seoSettings dropdown state
   })
 
   // Auto-open dropdowns based on current route
@@ -520,7 +519,10 @@ const AdminSidebar = () => {
       icon: Cog,
       dropdown: "seoSettings",
       permission: "seoSettings",
-      items: [{ title: "Redirects", path: "/admin/seo-settings/redirects" }],
+      items: [
+        { title: "Pages", path: "/admin/seo-settings/pages" },
+        { title: "Redirects", path: "/admin/seo-settings/redirects" },
+      ],
     },
     {
       title: "Email Templates",
