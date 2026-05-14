@@ -54,6 +54,7 @@ import AdminReviewsPending from "../pages/admin/AdminReviewsPending"
 import AdminReviewsRejected from "../pages/admin/AdminReviewsRejected"
 import AdminPageSEOManager from "../pages/admin/AdminPageSEOManager"
 import AdminSEOSettings from "../pages/admin/AdminSEOSettings"
+import AdminArabicConversion from "../pages/admin/AdminArabicConversion"
 import AdminSettings from "../pages/admin/AdminSettings"
 import AdminSizes from "../pages/admin/AdminSizes"
 import AdminSubCategories from "../pages/admin/AdminSubCategories"
@@ -215,6 +216,7 @@ const AdminPortal = () => {
             <Route path="email-templates" element={<AdminEmailTemplates />} />
             <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
             <Route path="reset-cache" element={<ResetCache />} />
+            <Route path="arabic-conversion" element={<AdminArabicConversion />} />
             <Route path="*" element={<NotFound />} />
 
             <Route path="seo-settings/pages" element={<AdminPageSEOManager />} />

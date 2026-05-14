@@ -37,12 +37,26 @@ const BannerSlider = ({ banners }) => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
 
+  const resolvePreferredHeroLink = (linkValue, buttonLinkValue) => {
+    const link = String(linkValue || "").trim()
+    const buttonLink = String(buttonLinkValue || "").trim()
+    const isDefaultShop = (value) => value === "/shop"
+
+    if (link && buttonLink) {
+      if (isDefaultShop(link) && !isDefaultShop(buttonLink)) return buttonLink
+      if (isDefaultShop(buttonLink) && !isDefaultShop(link)) return link
+      return link
+    }
+
+    return link || buttonLink || "/shop"
+  }
+
   const resolveBannerLink = (banner) => {
     if (!banner) return { href: getLocalizedPath("/shop"), isExternal: false }
 
     const rawLink = String(banner.link || "").trim()
     const rawButtonLink = String(banner.buttonLink || "").trim()
-    const chosen = rawLink || rawButtonLink || "/shop"
+    const chosen = resolvePreferredHeroLink(rawLink, rawButtonLink)
 
     const isExternal = chosen.startsWith("http://") || chosen.startsWith("https://")
     if (isExternal) {

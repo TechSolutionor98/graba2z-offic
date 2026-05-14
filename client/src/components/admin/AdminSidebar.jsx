@@ -32,6 +32,7 @@ import {
   ShieldCheck,
   Activity,
   UserCog,
+  Languages,
 } from "lucide-react"
 
 const AdminSidebar = () => {
@@ -540,6 +541,12 @@ const AdminSidebar = () => {
       title: "Reset Cache",
       icon: RefreshCw,
       path: "/admin/reset-cache",
+      permission: "cache",
+    },
+    {
+      title: "Arabic Conversion",
+      icon: Languages,
+      path: "/admin/arabic-conversion",
       permission: "cache",
     },
     // {
