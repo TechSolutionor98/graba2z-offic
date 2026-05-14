@@ -69,7 +69,7 @@ const writeBlogListCache = (data) => {
 }
 
 const BlogList = () => {
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
   const [searchParams] = useSearchParams()
   const [blogs, setBlogs] = useState([])
   const [featuredBlogs, setFeaturedBlogs] = useState([])
@@ -95,6 +95,15 @@ const BlogList = () => {
     if (blog.subCategory1) return blog.subCategory1
     return blog.mainCategory
   }
+
+  const getCategoryName = (category) => {
+    if (!category) return ""
+    return isArabic ? category.nameAr || category.name : category.name
+  }
+
+  const getBlogTitle = (blog) => (isArabic ? blog?.titleAr || blog?.title : blog?.title)
+  const getBlogDescription = (blog) => (isArabic ? blog?.descriptionAr || blog?.description : blog?.description)
+  const getBlogAuthor = (blog) => (isArabic ? blog?.postedByAr || blog?.postedBy : blog?.postedBy)
 
   const hydrateFromCache = (cached) => {
     setBlogs(Array.isArray(cached.blogs) ? cached.blogs : [])
@@ -278,8 +287,10 @@ const BlogList = () => {
         <Suspense
           fallback={
             <section className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12">
-              <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
-                <div className="text-center py-10 text-gray-300">Loading featured posts...</div>
+                <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
+                <div className="text-center py-10 text-gray-300">
+                  {isArabic ? "جاري تحميل المقالات المميزة..." : "Loading featured posts..."}
+                </div>
               </div>
             </section>
           }
@@ -290,7 +301,9 @@ const BlogList = () => {
         <section className="bg-white py-6 sm:py-16">
           <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
             <div className="text-center mb-4 sm:mb-12">
-              <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2">TRENDING THIS WEEK</h2>
+              <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2">
+                {isArabic ? "الأكثر تداولاً هذا الأسبوع" : "TRENDING THIS WEEK"}
+              </h2>
             </div>
 
             {(() => {
@@ -325,7 +338,7 @@ const BlogList = () => {
                                     ? getOptimizedImageUrl(blog.mainImage, { width: 480, height: 300, quality: 70 })
                                     : "/placeholder.svg?height=250&width=250"
                                 }
-                                alt={blog.title}
+                                alt={getBlogTitle(blog)}
                                 loading="lazy"
                                 decoding="async"
                                 className="block w-full h-full object-cover"
@@ -343,15 +356,15 @@ const BlogList = () => {
                                       deepestCategory.color || blog.blogCategory?.color || blog.mainCategory?.color || "#2563eb",
                                   }}
                                 >
-                                  {deepestCategory.name}
+                                  {getCategoryName(deepestCategory)}
                                 </div>
                               ) : null
                             })()}
                             <h3 className="font-bold text-base text-gray-900 mb-2 line-clamp-2 flex-shrink-0 leading-tight">
-                              {blog.title}
+                              {getBlogTitle(blog)}
                             </h3>
                             <p className="text-sm text-gray-600 line-clamp-2 flex-shrink-0 leading-snug">
-                              {truncateContent(blog.description)}
+                              {truncateContent(getBlogDescription(blog))}
                             </p>
                           </div>
                         </Link>
@@ -405,7 +418,9 @@ const BlogList = () => {
         <section className="mb-9">
           <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
             <div className="text-center mb-12">
-              <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2">LATEST POSTS</h2>
+              <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2">
+                {isArabic ? "أحدث المقالات" : "LATEST POSTS"}
+              </h2>
             </div>
 
             {visibleBlogs.length > 0 ? (
@@ -417,7 +432,7 @@ const BlogList = () => {
                         <div className="relative h-60 w-full bg-gray-100 overflow-hidden rounded-lg">
                           <img
                             src={getOptimizedImageUrl(blog.mainImage, { width: 900, height: 560, quality: 72 }) || "/placeholder.svg"}
-                            alt={blog.title}
+                            alt={getBlogTitle(blog)}
                             loading="lazy"
                             decoding="async"
                             fetchPriority={index === 0 ? "high" : "auto"}
@@ -431,26 +446,26 @@ const BlogList = () => {
                           const deepestCategory = getDeepestCategory(blog)
                           return deepestCategory ? (
                             <span className="inline-block bg-lime-100 text-lime-700 text-xs px-3 py-1 rounded-full mb-1 w-fit">
-                              {deepestCategory.name}
+                              {getCategoryName(deepestCategory)}
                             </span>
                           ) : null
                         })()}
 
-                        <h3 className="text-xl font-bold mb-1 line-clamp-1 group-hover:text-lime-600 transition-colors">{blog.title}</h3>
+                        <h3 className="text-xl font-bold mb-1 line-clamp-1 group-hover:text-lime-600 transition-colors">{getBlogTitle(blog)}</h3>
 
-                        <p className="text-gray-600 mb-2 text-sm line-clamp-3 flex-1">{truncateContent(blog.description, 120)}</p>
+                        <p className="text-gray-600 mb-2 text-sm line-clamp-3 flex-1">{truncateContent(getBlogDescription(blog), 120)}</p>
 
                         <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
                           <div className="flex items-center gap-3">
                             <span className="flex items-center gap-1">
-                              <User size={14} /> {blog.postedBy || "Admin"}
+                              <User size={14} /> {getBlogAuthor(blog) || (isArabic ? "المشرف" : "Admin")}
                             </span>
                             <span className="flex items-center gap-1">
                               <Eye size={14} /> {blog.views || 0}
                             </span>
                           </div>
                           <span className="flex items-center gap-1 text-gray-400">
-                            <Clock size={14} /> {blog.readMinutes || 5} min
+                            <Clock size={14} /> {blog.readMinutes || 5} {isArabic ? "دقيقة" : "min"}
                           </span>
                         </div>
                       </div>
@@ -460,8 +475,12 @@ const BlogList = () => {
               </div>
             ) : (
               <div className="text-center py-12">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No blogs found</h3>
-                <p className="text-gray-600">No blogs available at the moment</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {isArabic ? "لم يتم العثور على مقالات" : "No blogs found"}
+                </h3>
+                <p className="text-gray-600">
+                  {isArabic ? "لا توجد مقالات متاحة حالياً" : "No blogs available at the moment"}
+                </p>
               </div>
             )}
 
@@ -472,7 +491,7 @@ const BlogList = () => {
                   disabled={loadingMore}
                   className="px-6 py-3 rounded-lg bg-lime-500 text-white hover:bg-lime-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                 >
-                  {loadingMore ? "Loading..." : "Load More"}
+                  {loadingMore ? (isArabic ? "جاري التحميل..." : "Loading...") : (isArabic ? "تحميل المزيد" : "Load More")}
                 </button>
               </div>
             )}

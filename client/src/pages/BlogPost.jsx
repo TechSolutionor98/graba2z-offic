@@ -13,12 +13,13 @@ import RelatedPosts from "../components/RelatedPosts"
 import SEO from "../components/SEO"
 import TipTapRenderer from "../components/TipTapRenderer"
 import { useLanguage } from "../context/LanguageContext"
+import TranslatedText from "../components/TranslatedText"
 
 const API_BASE_URL = `${config.API_URL}`
 
 const BlogPost = () => {
   const { slug } = useParams()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
   const [blog, setBlog] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -38,12 +39,17 @@ const BlogPost = () => {
     return blog.mainCategory
   }
 
+  const activeDescription = useMemo(
+    () => (isArabic ? blog?.descriptionAr || blog?.description || "" : blog?.description || ""),
+    [blog, isArabic],
+  )
+
   const readingMinutes = useMemo(() => {
-    const html = blog?.description || ""
+    const html = activeDescription
     const text = html.replace(/<[^>]+>/g, " ")
     const words = text.trim().split(/\s+/).filter(Boolean).length
     return Math.max(1, Math.ceil(words / 200))
-  }, [blog])
+  }, [activeDescription])
 
 
   useEffect(() => {
@@ -69,12 +75,13 @@ const BlogPost = () => {
     // Build TOC from blog.description (h2/h3) and inject ids
     try {
       const parser = new DOMParser()
-      const doc = parser.parseFromString(blog.description || "", "text/html")
+      const localizedDescription = isArabic ? blog.descriptionAr || blog.description : blog.description
+      const doc = parser.parseFromString(localizedDescription || "", "text/html")
       const headings = Array.from(doc.querySelectorAll("h2, h3"))
       const makeId = (text) =>
         text
           .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/[^\p{L}\p{N}\s-]/gu, "")
           .trim()
           .replace(/\s+/g, "-")
       const tocItems = []
@@ -87,9 +94,9 @@ const BlogPost = () => {
       setToc(tocItems)
       setContentHtml(doc.body.innerHTML)
     } catch (_) {
-      setContentHtml(blog.description || "")
+      setContentHtml((isArabic ? blog.descriptionAr : "") || blog.description || "")
     }
-  }, [blog])
+  }, [blog, isArabic])
 
   // Reading progress (page scroll)
   useEffect(() => {
@@ -126,7 +133,7 @@ const BlogPost = () => {
   }
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString(isArabic ? "ar-AE" : "en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -144,7 +151,7 @@ const BlogPost = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-lime-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading blog...</p>
+          <p className="mt-4 text-gray-600">{isArabic ? "جاري تحميل المقال..." : "Loading blog..."}</p>
         </div>
       </div>
     )
@@ -154,14 +161,14 @@ const BlogPost = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Blog Not Found</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{isArabic ? "المقال غير موجود" : "Blog Not Found"}</h2>
+          <p className="text-gray-600 mb-6"><TranslatedText text={error} /></p>
           <Link
             to={getLocalizedPath("/blogs")}
             className="inline-flex items-center px-4 py-2 bg-lime-500 text-white font-medium rounded-lg hover:bg-lime-600 transition-colors space-x-2"
           >
             <ArrowLeft size={20} />
-            <span>Back to Blogs</span>
+            <span>{isArabic ? "العودة إلى المدونات" : "Back to Blogs"}</span>
           </Link>
         </div>
       </div>
@@ -169,20 +176,27 @@ const BlogPost = () => {
   }
 
   const deepestCategory = getDeepestCategory(blog)
+  const displayTitle = isArabic ? blog?.titleAr || blog?.title : blog?.title
+  const displayDescription = (isArabic ? blog?.descriptionAr : "") || blog?.description || ""
+  const displayAuthor = isArabic ? blog?.postedByAr || blog?.postedBy : blog?.postedBy
+  const displayCategoryName = deepestCategory ? (isArabic ? deepestCategory.nameAr || deepestCategory.name : deepestCategory.name) : ""
 
   // Prepare SEO data
-  const seoTitle = blog.metaTitle || blog.title || "Blog Post"
-  const seoDescription = blog.metaDescription || truncateContent(blog.description, 160)
+  const seoTitle = (isArabic ? blog.metaTitleAr : "") || blog.metaTitle || displayTitle || "Blog Post"
+  const seoDescription = (isArabic ? blog.metaDescriptionAr : "") || blog.metaDescription || truncateContent(displayDescription, 160)
   const seoImage = getFullImageUrl(blog.mainImage)
   const seoCanonicalPath = getLocalizedPath(`/blogs/${blog.slug}`)
-  const seoKeywords = blog.tags && blog.tags.length > 0 ? blog.tags.join(", ") : ""
+  const seoKeywords = (() => {
+    const sourceTags = isArabic && Array.isArray(blog.tagsAr) && blog.tagsAr.length ? blog.tagsAr : blog.tags
+    return Array.isArray(sourceTags) && sourceTags.length > 0 ? sourceTags.join(", ") : ""
+  })()
   
   // Article structured data for Google
   const articleData = {
-    author: blog.postedBy || "Graba2z Team",
+    author: displayAuthor || "Graba2z Team",
     datePublished: blog.createdAt,
     dateModified: blog.updatedAt || blog.createdAt,
-    tags: blog.tags || []
+    tags: (isArabic && Array.isArray(blog.tagsAr) && blog.tagsAr.length ? blog.tagsAr : blog.tags) || []
   }
 
   return (
@@ -209,16 +223,16 @@ const BlogPost = () => {
         <nav className="text-sm text-gray-600 mb-8">
           <ol className="flex items-center flex-wrap gap-2">
             <li>
-              <Link to="/" className="hover:text-lime-600 transition-colors">Home</Link>
+              <Link to={getLocalizedPath("/")} className="hover:text-lime-600 transition-colors">{isArabic ? "الرئيسية" : "Home"}</Link>
             </li>
             <li className="text-gray-400">›</li>
             <li>
-              <Link to={getLocalizedPath("/blogs")} className="hover:text-lime-600 transition-colors">Blogs</Link>
+              <Link to={getLocalizedPath("/blogs")} className="hover:text-lime-600 transition-colors">{isArabic ? "المدونات" : "Blogs"}</Link>
             </li>
             {deepestCategory && (
               <>
                 <li className="text-gray-400">›</li>
-                <li className="text-gray-700">{deepestCategory.name}</li>
+                <li className="text-gray-700">{displayCategoryName}</li>
               </>
             )}
           </ol>
@@ -234,7 +248,7 @@ const BlogPost = () => {
                 <div className="mb-6 overflow-hidden bg-gray-100">
                   <img
                     src={getFullImageUrl(blog.mainImage)}
-                    alt={blog.title}
+                    alt={displayTitle}
                     className="w-full h-auto object-cover"
                   />
                 </div>
@@ -269,14 +283,14 @@ const BlogPost = () => {
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
                     style={{ backgroundColor: deepestCategory.color || blog.blogCategory?.color || blog.mainCategory?.color || "#16a34a" }}
                   >
-                    {deepestCategory.name}
+                    {displayCategoryName}
                   </button>
                 </div>
               )}
 
               {/* Title */}
               <h1 className="text-lg sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
-                {blog.title}
+                {displayTitle}
               </h1>
 
               {/* Meta Information */}
@@ -287,22 +301,22 @@ const BlogPost = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <User size={18} />
-                  <span>By {blog.postedBy || "Admin"}</span>
+                  <span>{isArabic ? "بواسطة" : "By"} {displayAuthor || (isArabic ? "المشرف" : "Admin")}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Eye size={18} />
-                  <span>{blog.views || 0} views</span>
+                  <span>{blog.views || 0} {isArabic ? "مشاهدة" : "views"}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="inline-block w-2 h-2 rounded-full bg-lime-500" />
-                  <span>{blog.readMinutes || readingMinutes} min read</span>
+                  <span>{blog.readMinutes || readingMinutes} {isArabic ? "دقائق قراءة" : "min read"}</span>
                 </div>
               </div>
             </header>
 
             {/* Content */}
             <div className="sm:px-8 sm:py-6 px-2 py-2">
-              <TipTapRenderer content={contentHtml || blog.description} />
+              <TipTapRenderer content={contentHtml || displayDescription} />
             </div>
 
             {/* Tags */}
@@ -310,10 +324,10 @@ const BlogPost = () => {
               <div className="px-8 py-6 border-t border-gray-200">
                 <div className="flex items-center mb-4">
                   <Tag size={18} className="text-lime-600 mr-2" />
-                  <span className="text-gray-700 font-medium">Tags</span>
+                  <span className="text-gray-700 font-medium">{isArabic ? "الوسوم" : "Tags"}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {blog.tags.map((tag, index) => (
+                  {(isArabic && Array.isArray(blog.tagsAr) && blog.tagsAr.length ? blog.tagsAr : blog.tags).map((tag, index) => (
                     <span
                       key={index}
                       className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-lime-50 text-lime-800 border border-lime-200 hover:bg-lime-100 transition-colors"
@@ -331,16 +345,16 @@ const BlogPost = () => {
                 <div className="flex-shrink-0">
                   <div className="w-16 h-16 bg-lime-500 rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-xl">
-                      {blog.postedBy?.charAt(0).toUpperCase() || "A"}
+                      {(displayAuthor || "A").charAt(0).toUpperCase()}
                     </span>
                   </div>
                 </div>
                 <div className="ml-4">
                   <h4 className="text-lg font-semibold text-gray-900">
-                    Written by {blog.postedBy || "Admin"}
+                    {isArabic ? "كتب بواسطة" : "Written by"} {displayAuthor || (isArabic ? "المشرف" : "Admin")}
                   </h4>
                   <p className="text-gray-600">
-                    Published on {formatDate(blog.createdAt)}
+                    {isArabic ? "نُشر في" : "Published on"} {formatDate(blog.createdAt)}
                   </p>
                 </div>
               </div>
@@ -382,7 +396,7 @@ const BlogPost = () => {
             {/* Table of Contents */}
             {toc.length > 0 && (
               <div className="bg-white rounded-lg p-5">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Table of Contents</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{isArabic ? "جدول المحتويات" : "Table of Contents"}</h3>
                 <nav className="text-sm text-gray-700">
                   <ul className="space-y-2">
                     {toc.map((item) => (
@@ -410,10 +424,10 @@ const BlogPost = () => {
             <div className="bg-white rounded-lg p-5">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-lime-500 text-white flex items-center justify-center font-semibold">
-                  {blog.postedBy?.charAt(0).toUpperCase() || "A"}
+                  {(displayAuthor || "A").charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">{blog.postedBy || "Admin"}</div>
+                  <div className="font-semibold text-gray-900">{displayAuthor || (isArabic ? "المشرف" : "Admin")}</div>
                   <div className="text-xs text-gray-500">{formatDate(blog.createdAt)}</div>
                 </div>
               </div>
@@ -422,7 +436,7 @@ const BlogPost = () => {
             {/* Recent Posts */}
             {recent.length > 0 && (
               <div className="bg-white rounded-lg border border-gray-200 p-5">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Recent Posts</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{isArabic ? "أحدث المقالات" : "Recent Posts"}</h3>
                 <ul className="space-y-3">
                   {recent.map((p) => (
                     <li key={p._id}>
@@ -431,7 +445,7 @@ const BlogPost = () => {
                           {p.mainImage ? (
                             <img 
                               src={getFullImageUrl(p.mainImage)} 
-                              alt={p.title} 
+                              alt={isArabic ? p.titleAr || p.title : p.title} 
                               className="w-full h-full object-cover" 
                             />
                           ) : (
@@ -440,7 +454,7 @@ const BlogPost = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-gray-900 group-hover:text-lime-600 line-clamp-2 break-words">
-                            {p.title}
+                            {isArabic ? p.titleAr || p.title : p.title}
                           </div>
                           <div className="text-xs text-gray-500">{formatDate(p.createdAt)}</div>
                         </div>
@@ -453,7 +467,7 @@ const BlogPost = () => {
 
             {/* Ad Placeholder */}
             <div className="rounded-lg bg-gray-100 text-gray-600 p-6 text-center">
-              <div className="text-sm">Advertisement</div>
+              <div className="text-sm">{isArabic ? "إعلان" : "Advertisement"}</div>
               <div className="mt-2 h-28 rounded bg-white border border-dashed border-gray-300" />
             </div>
           </aside>
@@ -461,7 +475,7 @@ const BlogPost = () => {
 
         {/* Comments Section */}
         <div className="mt-12 bg-white rounded-lg p-2 sm:p-8">
-          <Comments blogId={blog._id} blogTitle={blog.title} />
+          <Comments blogId={blog._id} blogTitle={displayTitle} />
         </div>
 
         {/* Related Posts */}

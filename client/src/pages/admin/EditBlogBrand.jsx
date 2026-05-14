@@ -25,6 +25,7 @@ const EditBlogBrand = () => {
     metaTitle: "",
     metaDescription: "",
     isActive: true,
+    autoTranslateArabic: true,
   })
 
   useEffect(() => {
@@ -48,6 +49,7 @@ const EditBlogBrand = () => {
         metaTitle: brand.metaTitle || "",
         metaDescription: brand.metaDescription || "",
         isActive: brand.isActive ?? true,
+        autoTranslateArabic: true,
       })
     } catch (error) {
       console.error("Error fetching blog brand:", error)
@@ -265,6 +267,19 @@ const EditBlogBrand = () => {
                 <p className="mt-2 text-sm text-gray-500">
                   Inactive brands won't be visible in blog creation
                 </p>
+                <div className="mt-4 flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="autoTranslateArabic"
+                    name="autoTranslateArabic"
+                    checked={formData.autoTranslateArabic}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="autoTranslateArabic" className="text-sm font-medium text-gray-700">
+                    Auto translate Arabic on save
+                  </label>
+                </div>
               </div>
 
               {/* Submit Buttons */}

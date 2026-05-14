@@ -7,11 +7,12 @@ import config from "../config/config"
 import { useLanguage } from "../context/LanguageContext"
 import { getCategoryTreeCached } from "../services/categoryTreeCache"
 import { generateShopURL } from "../utils/urlUtils"
+import LanguageSelector from "./LanguageSelector"
 
 const API_BASE_URL = `${config.API_URL}`
 
 const Header = () => {
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, currentLanguage } = useLanguage()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -37,6 +38,13 @@ const Header = () => {
   const categoryOpenTimeoutRef = useRef(null)
 
   const CATEGORY_OPEN_DELAY = 220
+  const isArabic = currentLanguage?.code === "ar"
+
+  const getDisplayName = (node) => {
+    if (!node) return ""
+    if (!isArabic) return node.name || ""
+    return node.nameAr || node.name_ar || node.name || ""
+  }
 
   useEffect(() => {
     fetchNavbarData()
@@ -305,7 +313,7 @@ const Header = () => {
                   }}
                   className="flex-1 font-medium text-gray-800"
                 >
-                  {node.name}
+                  {getDisplayName(node)}
                 </Link>
                 {hasChildren && (
                   <button
@@ -333,7 +341,7 @@ const Header = () => {
 
   const renderRootCategories = () => {
     if (!Array.isArray(shopCategories) || shopCategories.length === 0) {
-      return <div className="px-3 py-2 text-sm text-gray-500">No categories found</div>
+      return <div className="px-3 py-2 text-sm text-gray-500">{isArabic ? "لا توجد فئات" : "No categories found"}</div>
     }
 
     return shopCategories.map((parentCategory, index) => {
@@ -351,7 +359,7 @@ const Header = () => {
               }}
               className="flex-1 text-sm font-semibold text-gray-900"
             >
-              {parentCategory.name}
+              {getDisplayName(parentCategory)}
             </Link>
             {hasChildren && (
               <button
@@ -407,10 +415,11 @@ const Header = () => {
               </Link>
             </div>
             <div className="flex items-center justify-end pr-1 gap-1">
+              <LanguageSelector variant="compact" />
               {!isMobileSearchOpen && (
                 <button
                   className="p-2 text-gray-700 hover:text-gray-900"
-                  aria-label="Search"
+                aria-label={isArabic ? "بحث" : "Search"}
                   onClick={() => {
                     setIsMobileSearchOpen(true)
                     setIsMenuOpen(false)
@@ -419,7 +428,7 @@ const Header = () => {
                   <Search size={22} />
                 </button>
               )}
-              <Link to="https://www.grabatoz.ae/" target="_blank" aria-label="Shop Now" className="p-2 text-gray-700 hover:text-gray-900">
+              <Link to="https://www.grabatoz.ae/" target="_blank" aria-label={isArabic ? "تسوق الآن" : "Shop Now"} className="p-2 text-gray-700 hover:text-gray-900">
                 <ShoppingBag size={20} />
               </Link>
             </div>
@@ -431,20 +440,20 @@ const Header = () => {
                 <div className="flex items-center bg-white rounded-md overflow-hidden">
                   <input
                     type="text"
-                    placeholder="Search"
+                    placeholder={isArabic ? "بحث" : "Search"}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1 h-10 px-3 outline-none border border-lime-300"
                     autoFocus
                   />
                   <div className="flex items-center h-10 mr-1 text-white">
-                    <button type="submit" aria-label="Search" className="h-10 w-10 flex items-center justify-center bg-lime-500 hover:bg-lime-600/90">
+                    <button type="submit" aria-label={isArabic ? "بحث" : "Search"} className="h-10 w-10 flex items-center justify-center bg-lime-500 hover:bg-lime-600/90">
                       <Search size={22} />
                     </button>
                     <span aria-hidden className="h-6 w-px" />
                     <button
                       type="button"
-                      aria-label="Close search"
+                      aria-label={isArabic ? "إغلاق البحث" : "Close search"}
                       onClick={() => setIsMobileSearchOpen(false)}
                       className="h-10 w-10 flex items-center justify-center text-gray-500 hover:text-gray-700 ml-1"
                     >
@@ -456,7 +465,7 @@ const Header = () => {
             </div>
           )}
 
-          <div className="hidden md:grid grid-cols-[auto,auto,minmax(0,1fr),auto] items-center my-3 gap-4 min-h-[56px]">
+          <div className="hidden md:grid grid-cols-[auto,auto,minmax(0,1fr),auto,auto] items-center my-3 gap-4 min-h-[56px]">
             <Link to="/" className="flex items-center space-x-2 justify-self-start">
               {showLogo ? (
                 <img
@@ -476,7 +485,7 @@ const Header = () => {
                 onClick={() => setIsBlogDropdownOpen((v) => !v)}
                 className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-md border border-gray-300 text-gray-700 text-center hover:border-lime-500 hover:text-lime-600"
               >
-                <span className="text-sm font-medium">Topics</span>
+                <span className="text-sm font-medium">{isArabic ? "المواضيع" : "Topics"}</span>
                 <ChevronDown size={16} className={isBlogDropdownOpen ? "rotate-180 transition-transform" : "transition-transform"} />
               </button>
 
@@ -487,7 +496,7 @@ const Header = () => {
                     className="block px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-50"
                     onClick={() => setIsBlogDropdownOpen(false)}
                   >
-                    All Blogs
+                    {isArabic ? "كل المدونات" : "All Blogs"}
                   </Link>
                   {blogCategories.map((category) => (
                     <Link
@@ -496,7 +505,7 @@ const Header = () => {
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       onClick={() => setIsBlogDropdownOpen(false)}
                     >
-                      {category.name}
+                      {getDisplayName(category)}
                     </Link>
                   ))}
                 </div>
@@ -507,14 +516,14 @@ const Header = () => {
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="Search"
+                  placeholder={isArabic ? "بحث" : "Search"}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-12 px-4 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-lime-500 focus:border-lime-500"
                 />
                 <button
                   type="submit"
-                  aria-label="Search"
+                  aria-label={isArabic ? "بحث" : "Search"}
                   className="h-12 w-14 bg-lime-500 text-white flex items-center justify-center hover:bg-lime-600 transition-colors"
                 >
                   <Search size={16} />
@@ -528,8 +537,9 @@ const Header = () => {
               className="hidden md:flex items-center space-x-2 px-6 py-2 border hover:border-2 border-gray-300 hover:border-lime-300 text-black hover:bg-lime-500 hover:text-white transition-colors font-medium justify-self-end"
             >
               <ShoppingBag size={18} />
-              <span>Shop Now</span>
+              <span>{isArabic ? "تسوق الآن" : "Shop Now"}</span>
             </Link>
+            <LanguageSelector variant="compact" className="hidden md:block justify-self-end" />
           </div>
         </div>
 
@@ -542,7 +552,7 @@ const Header = () => {
                   onClick={toggleDesktopCategoryDropdown}
                   className="hidden md:inline-flex items-center gap-2 px-3 xl:px-3.5 py-2 rounded-lg text-white transition text-sm font-semibold whitespace-nowrap shadow-sm hover:bg-lime-600"
                 >
-                  <span>All Categories</span>
+                  <span>{isArabic ? "جميع الفئات" : "All Categories"}</span>
                   <ChevronDown
                     size={16}
                     className={isAllCategoriesDropdownOpen ? "rotate-180 transition-transform" : "transition-transform"}
@@ -572,7 +582,7 @@ const Header = () => {
                                     isActive ? "bg-gray-50" : ""
                                   }`}
                                 >
-                                  <span className="flex-1 pr-2">{parentCategory.name}</span>
+                                  <span className="flex-1 pr-2">{getDisplayName(parentCategory)}</span>
                                   {hasChildren && <ChevronRight size={14} className="text-gray-400" />}
                                 </Link>
                               )
@@ -650,7 +660,7 @@ const Header = () => {
                                           isActive ? "bg-gray-50" : ""
                                         }`}
                                       >
-                                        <span className="flex-1 pr-2">{node.name}</span>
+                                        <span className="flex-1 pr-2">{getDisplayName(node)}</span>
                                         {hasNested && <ChevronRight size={14} className="text-gray-400" />}
                                       </Link>
                                     )
@@ -725,7 +735,7 @@ const Header = () => {
                             isActiveCategory ? "font-semibold" : ""
                           }`}
                         >
-                          {category.name}
+                          {getDisplayName(category)}
                         </Link>
                         {isActiveCategory && (
                           <span className="pointer-events-none absolute bottom-0 left-0 right-0 h-1 rounded-full bg-white shadow-sm" />
@@ -735,7 +745,7 @@ const Header = () => {
                           <div
                             className="fixed bg-white mt-1 shadow-2xl rounded-lg p-5 z-[60] border border-gray-100 overflow-y-auto"
                             role="menu"
-                            aria-label={`${category.name} menu`}
+                            aria-label={`${getDisplayName(category)} menu`}
                             style={{ ...getCategoryDropdownStyle(activeCategoryRect), maxWidth: "calc(100vw - 32px)" }}
                             onMouseEnter={() => {
                               if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current)
@@ -762,7 +772,7 @@ const Header = () => {
                                         className="block text-red-600 text-xs font-semibold hover:text-red-600"
                                         onClick={resetMegaMenu}
                                       >
-                                        {subCategory.name}
+                                        {getDisplayName(subCategory)}
                                       </Link>
                                       <ul className="flex flex-col gap-1 px-1 pb-1 text-left">
                                         {firstColumnLevel2.map((sub2) => (
@@ -772,7 +782,7 @@ const Header = () => {
                                               className="block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug"
                                               onClick={resetMegaMenu}
                                             >
-                                              {sub2.name}
+                                              {getDisplayName(sub2)}
                                             </Link>
                                           </li>
                                         ))}
@@ -781,7 +791,7 @@ const Header = () => {
 
                                     {hasMoreLevel2 && (
                                       <div className="w-[160px] flex-shrink-0 flex flex-col gap-3">
-                                        <div className="block text-lime-600 text-xs font-bold uppercase tracking-wide">More</div>
+                                        <div className="block text-lime-600 text-xs font-bold uppercase tracking-wide">{isArabic ? "المزيد" : "More"}</div>
                                         <ul className="flex flex-col gap-1 px-1 pb-1 text-left">
                                           {moreLevel2Items.map((sub2) => (
                                             <li key={sub2._id}>
@@ -790,7 +800,7 @@ const Header = () => {
                                                 className="block w-full text-xs text-gray-700 hover:text-red-600 hover:underline leading-snug"
                                                 onClick={resetMegaMenu}
                                               >
-                                                {sub2.name}
+                                                {getDisplayName(sub2)}
                                               </Link>
                                             </li>
                                           ))}
@@ -812,7 +822,7 @@ const Header = () => {
                       onClick={resetMegaMenu}
                       className="text-white hover:text-lime-100 font-medium text-sm py-2 whitespace-nowrap group-hover:font-semibold"
                     >
-                      Gaming Zone
+                      {isArabic ? "منطقة الألعاب" : "Gaming Zone"}
                     </Link>
                     <span className="pointer-events-none absolute bottom-0 left-0 right-0 h-1 rounded-full bg-white shadow-sm opacity-0 transition-opacity group-hover:opacity-100" />
                   </li>
@@ -855,7 +865,7 @@ const Header = () => {
                   className="flex items-center gap-2"
                 >
                   <LayoutGrid size={18} />
-                  <span className="font-xl text-lg">All Categories</span>
+                  <span className="font-xl text-lg">{isArabic ? "جميع الفئات" : "All Categories"}</span>
                 </button>
                 <button onClick={() => setIsMenuOpen(false)} aria-label="Close categories" className="text-white">
                   <X size={22} />
@@ -863,10 +873,10 @@ const Header = () => {
               </div>
 
               <div className="border-b border-gray-200 p-3">
-                <div className="text-sm font-semibold text-gray-800 mb-2">Blog Categories</div>
+                <div className="text-sm font-semibold text-gray-800 mb-2">{isArabic ? "فئات المدونة" : "Blog Categories"}</div>
                 <div className="space-y-1 max-h-32 overflow-y-auto">
                   <Link to={getLocalizedPath("/blogs")} onClick={() => setIsMenuOpen(false)} className="block text-sm px-2 py-1.5 rounded hover:bg-gray-50">
-                    All Blogs
+                    {isArabic ? "كل المدونات" : "All Blogs"}
                   </Link>
                   {blogCategories.map((category) => (
                     <Link
@@ -875,7 +885,7 @@ const Header = () => {
                       onClick={() => setIsMenuOpen(false)}
                       className="block text-sm px-2 py-1.5 rounded hover:bg-gray-50"
                     >
-                      {category.name}
+                      {getDisplayName(category)}
                     </Link>
                   ))}
                 </div>

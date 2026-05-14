@@ -38,6 +38,7 @@ const AddBlog = () => {
     metaDescription: "",
     schema: "",
     tags: [],
+    autoTranslateArabic: true,
   })
 
   useEffect(() => {
@@ -190,6 +191,7 @@ const AddBlog = () => {
         metaDescription: formData.metaDescription.trim(),
         schema: formData.schema,
         tags: formData.tags,
+        autoTranslateArabic: formData.autoTranslateArabic,
       }
 
       console.log("Submitting blog data:", blogData) // Debug log
@@ -304,6 +306,24 @@ const AddBlog = () => {
                 </div>
 
                 <div className="md:col-span-2 space-y-4">
+                  <div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="autoTranslateArabic"
+                        checked={formData.autoTranslateArabic}
+                        onChange={(e) => setFormData({ ...formData, autoTranslateArabic: e.target.checked })}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        Auto Translate & Save Arabic Content
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1 ml-6">
+                      When enabled, saving this blog also stores Arabic fields in DB for instant Arabic rendering.
+                    </p>
+                  </div>
+
                   <div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input

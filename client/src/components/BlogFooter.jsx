@@ -6,15 +6,31 @@ import axios from 'axios';
 import config from '../config/config';
 import { getFullImageUrl } from '../utils/imageUtils';
 import { useLanguage } from '../context/LanguageContext';
+import TranslatedText from './TranslatedText';
 
 const API_BASE_URL = `${config.API_URL}`;
 
 const Footer = () => {
-  const { getLocalizedPath } = useLanguage();
+  const { getLocalizedPath, isArabic } = useLanguage();
   const [editorsPick, setEditorsPick] = useState([]);
   const [randomPosts, setRandomPosts] = useState([]);
   const [popularCategories, setPopularCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const isArabicText = (value) => /[\u0600-\u06FF]/.test(String(value || ""));
+  const getBlogTitle = (post) => {
+    if (!isArabic) return post?.title || "";
+    if (post?.titleAr && isArabicText(post.titleAr)) return post.titleAr;
+    return post?.title || "";
+  };
+  const getCategoryName = (category) => {
+    if (!category) return "";
+    if (!isArabic) return category.name || "";
+    if (category.nameAr && isArabicText(category.nameAr)) return category.nameAr;
+    return category.name || "";
+  };
+  const formatDate = (value) =>
+    new Date(value).toLocaleDateString(isArabic ? "ar-AE" : "en-US");
 
   useEffect(() => {
     const fetchFooterData = async () => {
@@ -48,10 +64,19 @@ const Footer = () => {
           const categoryName = blog.blogCategory?.name || blog.subCategory4?.name || blog.subCategory3?.name || 
                               blog.subCategory2?.name || blog.subCategory1?.name || 
                               blog.mainCategory?.name;
+          const categoryNameAr = blog.blogCategory?.nameAr || blog.subCategory4?.nameAr || blog.subCategory3?.nameAr || 
+                                blog.subCategory2?.nameAr || blog.subCategory1?.nameAr || 
+                                blog.mainCategory?.nameAr;
           
           if (categoryId && categoryName && blog.slug) {
             if (!categoryCounts[categoryId]) {
-              categoryCounts[categoryId] = { _id: categoryId, name: categoryName, blogCount: 0, slugs: [] };
+              categoryCounts[categoryId] = {
+                _id: categoryId,
+                name: categoryName,
+                nameAr: categoryNameAr || "",
+                blogCount: 0,
+                slugs: [],
+              };
             }
             categoryCounts[categoryId].blogCount++;
             categoryCounts[categoryId].slugs.push(blog.slug);
@@ -109,7 +134,7 @@ const Footer = () => {
           {/* Editor's Pick Section */}
           <div>
             <div className="mb-6">
-              <h3 className="text-lg font-bold mb-2">EDITOR'S PICK</h3>
+              <h3 className="text-lg font-bold mb-2">{isArabic ? "اختيارات المحرر" : "EDITOR'S PICK"}</h3>
               <div className="w-12 h-1 bg-pink-500"></div>
             </div>
             <div className="space-y-4">
@@ -122,16 +147,18 @@ const Footer = () => {
                   <div className="w-16 h-16 flex-shrink-0">
                     <img
                       src={post.mainImage ? getFullImageUrl(post.mainImage) : '/placeholder.svg?height=64&width=64'}
-                      alt={post.title}
+                      alt={getBlogTitle(post)}
                       className="w-full h-full object-cover rounded"
                     />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium leading-tight group-hover:text-lime-300 transition-colors line-clamp-2">
-                      {post.title}
+                      {isArabic
+                        ? (post?.titleAr && isArabicText(post.titleAr) ? post.titleAr : <TranslatedText text={post?.title || ""} />)
+                        : post?.title}
                     </h4>
                     <p className="text-xs text-gray-400 mt-1">
-                      {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                      {formatDate(post.publishedAt || post.createdAt)}
                     </p>
                   </div>
                 </Link>
@@ -142,7 +169,7 @@ const Footer = () => {
           {/* Random Posts Section */}
           <div>
             <div className="mb-6">
-              <h3 className="text-lg font-bold mb-2">RANDOM POSTS</h3>
+              <h3 className="text-lg font-bold mb-2">{isArabic ? "مقالات عشوائية" : "RANDOM POSTS"}</h3>
               <div className="w-12 h-1 bg-pink-500"></div>
             </div>
             <div className="space-y-4">
@@ -155,16 +182,18 @@ const Footer = () => {
                   <div className="w-16 h-16 flex-shrink-0">
                     <img
                       src={post.mainImage ? getFullImageUrl(post.mainImage) : '/placeholder.svg?height=64&width=64'}
-                      alt={post.title}
+                      alt={getBlogTitle(post)}
                       className="w-full h-full object-cover rounded"
                     />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium  group-hover:text-lime-300 ">
-                      {post.title}
+                      {isArabic
+                        ? (post?.titleAr && isArabicText(post.titleAr) ? post.titleAr : <TranslatedText text={post?.title || ""} />)
+                        : post?.title}
                     </h4>
                     <p className="text-xs text-gray-400 mt-1">
-                      {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                      {formatDate(post.publishedAt || post.createdAt)}
                     </p>
                   </div>
                 </Link>
@@ -175,7 +204,7 @@ const Footer = () => {
           {/* Popular Categories Section */}
           <div>
             <div className="mb-6">
-              <h3 className="text-lg font-bold mb-2">POPULAR CATEGORIES</h3>
+              <h3 className="text-lg font-bold mb-2">{isArabic ? "الفئات الشائعة" : "POPULAR CATEGORIES"}</h3>
               <div className="w-12 h-1 bg-orange-500"></div>
             </div>
             <div className="space-y-3">
@@ -188,7 +217,7 @@ const Footer = () => {
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400 transition-colors group-hover:text-lime-300"><strong>→</strong></span>
                     <span className="text-sm font-medium transition-colors group-hover:text-lime-300">
-                      {category.name}
+                      {getCategoryName(category)}
                     </span>
                   </div>
                   <span className="text-xs text-white bg-gray-800 px-2 py-1 rounded">
@@ -212,11 +241,13 @@ const Footer = () => {
             />
 
             <p className="text-sm md:text-base text-gray-300 max-w-3xl leading-relaxed">
-              Graba2z is a UAE-based e-commerce platform specializing in premium tech products, including laptops, accessories, and gadgets. Established in 2025, it offers fast, secure delivery across the UAE through its user-friendly mobile app. Headquartered in Bur Dubai, Graba2z is committed to providing genuine products and exceptional customer service.
+              {isArabic
+                ? "جرابا2ز منصة تجارة إلكترونية مقرها الإمارات ومتخصصة في منتجات التقنية المميزة مثل اللابتوبات والإكسسوارات والأجهزة الذكية. تأسست في 2025 وتوفر توصيلاً سريعاً وآمناً في جميع أنحاء الإمارات عبر تطبيق سهل الاستخدام. يقع مقرها في بر دبي، وتلتزم جرابا2ز بتقديم منتجات أصلية وخدمة عملاء استثنائية."
+                : "Graba2z is a UAE-based e-commerce platform specializing in premium tech products, including laptops, accessories, and gadgets. Established in 2025, it offers fast, secure delivery across the UAE through its user-friendly mobile app. Headquartered in Bur Dubai, Graba2z is committed to providing genuine products and exceptional customer service."}
             </p>
 
             <div className="mt-2">
-              <span className="sr-only">Follow Us</span>
+              <span className="sr-only"><TranslatedText>Follow Us</TranslatedText></span>
               <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
                 {[
                   { name: 'Facebook', href: 'https://www.facebook.com/grabatozae/', Icon: FaFacebookF, color: '#1877F2' },
@@ -249,18 +280,18 @@ const Footer = () => {
         <div className="border-t border-gray-700 mt-12 py-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="order-2 md:order-1 text-sm text-white text-center md:text-left">
-              © {new Date().getFullYear()} Grabatoz Powered By Crown Excel
+              © {new Date().getFullYear()} {isArabic ? "جراباتوز بدعم من Crown Excel" : "Grabatoz Powered By Crown Excel"}
             </p>
             <nav aria-label="Footer links" className="order-1 md:order-2 text-sm">
               <ul className="flex items-center gap-5 text-white">
                 <li>
-                <Link to="https://www.grabatoz.ae/privacy-policy" target='_blank' className="hover:text-white transition-colors">Privacy</Link>
+                <Link to="https://www.grabatoz.ae/privacy-policy" target='_blank' className="hover:text-white transition-colors">{isArabic ? "الخصوصية" : "Privacy"}</Link>
                 </li>
                 <li>
-                  <Link to="https://www.grabatoz.ae/disclaimer-policy" target='_blank' className="hover:text-white transition-colors">Disclaimer</Link>
+                  <Link to="https://www.grabatoz.ae/disclaimer-policy" target='_blank' className="hover:text-white transition-colors">{isArabic ? "إخلاء المسؤولية" : "Disclaimer"}</Link>
                 </li>
                 <li>
-                  <Link to="https://www.grabatoz.ae/contact" target='_blank' className="hover:text-white transition-colors">Contact</Link>
+                  <Link to="https://www.grabatoz.ae/contact" target='_blank' className="hover:text-white transition-colors">{isArabic ? "اتصل بنا" : "Contact"}</Link>
                 </li>
               </ul>
             </nav>

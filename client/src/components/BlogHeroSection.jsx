@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom'
 import { Sparkles, ChevronLeft, ChevronRight, Eye, Clock } from 'lucide-react'
 import { getOptimizedImageUrl } from '../utils/imageUtils'
 import { useLanguage } from '../context/LanguageContext'
+import TranslatedText from "./TranslatedText"
 
 const BlogHeroSection = ({ featuredBlogs = [] }) => {
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [enableTransition, setEnableTransition] = useState(true)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -19,6 +20,13 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
   const gapPx = 24
   const slideDurationMs = 600
   const autoAdvanceMs = 5000
+  const isArabicText = (value) => /[\u0600-\u06FF]/.test(String(value || ""))
+  const getBlogTitle = (blog) => (isArabic ? blog?.titleAr || blog?.title : blog?.title)
+  const getBestArabicTitle = (blog) => {
+    const arTitle = blog?.titleAr
+    if (arTitle && isArabicText(arTitle)) return arTitle
+    return null
+  }
 
   // Initialize carousel with cloned items for infinite loop
   const useLoop = featuredBlogs.length >= itemsPerView
@@ -76,11 +84,17 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
           <div className="text-center py-12">
             <div className="flex items-center justify-center mb-4">
               <Sparkles className="w-8 h-8 text-lime-400 mr-2" />
-              <span className="text-lime-400 text-lg font-medium">Tech Insights & Stories</span>
+              <span className="text-lime-400 text-lg font-medium">
+                {isArabic ? "رؤى وقصص تقنية" : "Tech Insights & Stories"}
+              </span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Welcome to our Blog</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              {isArabic ? "مرحبًا بكم في مدونتنا" : "Welcome to our Blog"}
+            </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Discover the latest in technology, expert reviews, buying guides, and industry insights
+              {isArabic
+                ? "اكتشف أحدث ما في عالم التقنية، ومراجعات الخبراء، وأدلة الشراء، ورؤى القطاع"
+                : "Discover the latest in technology, expert reviews, buying guides, and industry insights"}
             </p>
           </div>
         </div>
@@ -95,15 +109,21 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-3">
             <Sparkles className="w-6 h-6 text-lime-400 mr-2" />
-            <span className="text-lime-400 text-lg font-semibold">Featured Articles</span>
+            <span className="text-lime-400 text-lg font-semibold">
+              {isArabic ? "مقالات مميزة" : "Featured Articles"}
+            </span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Welcome to our Blogs</h2>
-          <p className="text-gray-300 max-w-2xl mx-auto">Discover our hand-picked featured articles</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            {isArabic ? "مرحبًا بكم في مدوناتنا" : "Welcome to our Blogs"}
+          </h2>
+          <p className="text-gray-300 max-w-2xl mx-auto">
+            {isArabic ? "اكتشف مقالاتنا المميزة المختارة بعناية" : "Discover our hand-picked featured articles"}
+          </p>
         </div>
 
         <div className="relative group">
           {/* Track container with clipping */}
-          <div className="overflow-hidden" ref={viewportRef}>
+          <div className="overflow-hidden" ref={viewportRef} style={{ direction: "ltr" }}>
             <div
               ref={trackRef}
               className="flex"
@@ -160,25 +180,27 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
                         <div className="aspect-[4/3] relative">
                         <img
                           src={getOptimizedImageUrl(blog.mainImage, { width: 900, height: 675, quality: 72 }) || "/placeholder.svg?height=300&width=400"}
-                          alt={blog.title}
+                          alt={getBlogTitle(blog)}
                           loading={i < itemsPerView ? "eager" : "lazy"}
                           decoding="async"
                           fetchPriority={i === itemsPerView ? "high" : "auto"}
                           className="block w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-end">
-                          <div className="p-6 w-full">
+                          <div className="p-6 w-full" dir={isArabic ? "rtl" : "ltr"}>
                             {/* Featured Badge */}
                             <div className="mb-3">
                               <span className="inline-flex items-center gap-1.5 bg-lime-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
                                 <Sparkles className="w-3 h-3" />
-                                Featured
+                                {isArabic ? "مميز" : "Featured"}
                               </span>
                             </div>
                             
                             {/* Title */}
                             <h3 className="text-white text-xl font-bold mb-2 line-clamp-2 group-hover/card:text-lime-400 transition-colors">
-                              {blog.title}
+                              {isArabic
+                                ? (getBestArabicTitle(blog) || <TranslatedText text={blog?.title || ""} />)
+                                : blog?.title}
                             </h3>
                             
                             {/* Meta */}
@@ -189,7 +211,7 @@ const BlogHeroSection = ({ featuredBlogs = [] }) => {
                               </span>
                               <span className="flex items-center gap-1">
                                 <Clock size={14} />
-                                {blog.readMinutes || 5} min
+                                {blog.readMinutes || 5} {isArabic ? "دقيقة" : "min"}
                               </span>
                             </div>
                           </div>

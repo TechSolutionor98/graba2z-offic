@@ -29,6 +29,7 @@ const ManageBlogBrands = () => {
     isActive: true,
     metaTitle: "",
     metaDescription: "",
+    autoTranslateArabic: true,
   })
 
   useEffect(() => {
@@ -107,6 +108,7 @@ const ManageBlogBrands = () => {
       isActive: brand.isActive,
       metaTitle: brand.metaTitle || "",
       metaDescription: brand.metaDescription || "",
+      autoTranslateArabic: true,
     })
     setShowEditModal(true)
   }
@@ -163,6 +165,7 @@ const ManageBlogBrands = () => {
       isActive: true,
       metaTitle: "",
       metaDescription: "",
+      autoTranslateArabic: true,
     })
     setEditingBrand(null)
     setShowAddModal(false)
@@ -277,6 +280,16 @@ const ManageBlogBrands = () => {
       <div className="flex items-center">
         <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleInputChange} className="mr-2" />
         <label className="text-sm font-medium text-gray-700">Active</label>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          name="autoTranslateArabic"
+          checked={formData.autoTranslateArabic}
+          onChange={handleInputChange}
+          className="mr-2"
+        />
+        <label className="text-sm font-medium text-gray-700">Auto translate Arabic on save</label>
       </div>
 
       <div className="flex justify-end gap-3 pt-4">

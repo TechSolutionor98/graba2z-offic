@@ -6,8 +6,11 @@ import { Calendar } from "lucide-react"
 import axios from "axios"
 import config from "../config/config"
 import { getFullImageUrl } from "../utils/imageUtils"
+import { useLanguage } from "../context/LanguageContext"
+import TranslatedText from "./TranslatedText"
 
 const RelatedPosts = ({ blogId, categoryId, topicId, limit = 3 }) => {
+  const { isArabic, getLocalizedPath } = useLanguage()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
 
@@ -41,7 +44,7 @@ const RelatedPosts = ({ blogId, categoryId, topicId, limit = 3 }) => {
   }, [blogId, categoryId, topicId, limit])
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString(isArabic ? "ar-AE" : "en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -56,8 +59,8 @@ const RelatedPosts = ({ blogId, categoryId, topicId, limit = 3 }) => {
   if (loading) {
     return (
       <section className="mt-12" aria-label="Related posts">
-        <h3 className="text-2xl font-bold text-gray-900">Related Posts</h3>
-        <p className="mt-6 text-sm text-gray-600">Loading related posts...</p>
+        <h3 className="text-2xl font-bold text-gray-900"><TranslatedText>Related Posts</TranslatedText></h3>
+        <p className="mt-6 text-sm text-gray-600"><TranslatedText>Loading related posts...</TranslatedText></p>
       </section>
     )
   }
@@ -66,30 +69,30 @@ const RelatedPosts = ({ blogId, categoryId, topicId, limit = 3 }) => {
 
   return (
     <section className="mt-12" aria-label="Related posts">
-      <h3 className="text-2xl font-bold text-gray-900">Related Posts</h3>
+      <h3 className="text-2xl font-bold text-gray-900"><TranslatedText>Related Posts</TranslatedText></h3>
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         {items.map((post) => (
           <Link
             key={post._id}
-            to={`/blog/${post.slug}`}
+            to={getLocalizedPath(`/blogs/${post.slug}`)}
             className="group block"
           >
             {post.mainImage && (
               <div className="aspect-video overflow-hidden bg-gray-100">
                 <img
                   src={getFullImageUrl(post.mainImage)}
-                  alt={post.title}
+                  alt={isArabic ? post.titleAr || post.title : post.title}
                   className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
                 />
               </div>
             )}
             <div className="mt-3">
-              <h4 className="font-semibold text-gray-900 text-lg leading-snug line-clamp-2 group-hover:text-lime-600 transition-colors">
-                {post.title}
-              </h4>
-              <p className="mt-2 text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                {truncateContent(post.description)}
-              </p>
+                <h4 className="font-semibold text-gray-900 text-lg leading-snug line-clamp-2 group-hover:text-lime-600 transition-colors">
+                {isArabic ? post.titleAr || post.title : post.title}
+                </h4>
+                <p className="mt-2 text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                {truncateContent((isArabic ? post.descriptionAr : "") || post.description)}
+                </p>
               <div className="mt-3 flex items-center text-xs text-gray-500">
                 <Calendar size={12} className="mr-1.5" />
                 <span>{formatDate(post.createdAt)}</span>

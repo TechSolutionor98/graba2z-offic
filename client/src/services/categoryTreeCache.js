@@ -1,7 +1,7 @@
 import axios from "axios"
 import config from "../config/config"
 
-const CACHE_KEY = "graba2z_category_tree_cache_v1"
+const CACHE_KEY = "graba2z_category_tree_cache_v2"
 const CACHE_TTL = 10 * 60 * 1000
 
 let inflightPromise = null
