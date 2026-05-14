@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
 import { Mail, Phone, Clock, MapPin } from "lucide-react"
+import { useLanguage } from "../context/LanguageContext"
 
 export default function PrivacyPolicy() {
-  const [language, setLanguage] = useState("english")
+  const { currentLanguage, switchLanguage } = useLanguage()
 
   const content = {
     english: {
@@ -123,8 +123,9 @@ export default function PrivacyPolicy() {
     },
   }
 
+  const isArabic = currentLanguage.code === "ar"
+  const language = isArabic ? "arabic" : "english"
   const currentContent = content[language]
-  const isArabic = language === "arabic"
 
   return (
     <div className={`min-h-screen bg-white py-8 px-4 ${isArabic ? "rtl" : "ltr"}`}>
@@ -132,7 +133,7 @@ export default function PrivacyPolicy() {
         {/* Language Toggle Buttons */}
         <div className="flex justify-center gap-4 mb-8">
           <button
-            onClick={() => setLanguage("english")}
+            onClick={() => switchLanguage("en")}
             className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
               language === "english"
                 ? "bg-lime-500 text-white hover:bg-lime-600"
@@ -142,7 +143,7 @@ export default function PrivacyPolicy() {
             English
           </button>
           <button
-            onClick={() => setLanguage("arabic")}
+            onClick={() => switchLanguage("ar")}
             className={`px-8 py-3 rounded-lg font-medium transition-all duration-200 ${
               language === "arabic"
                 ? "bg-lime-500 text-white hover:bg-lime-600"

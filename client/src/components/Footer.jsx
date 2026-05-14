@@ -245,7 +245,7 @@ const Footer = ({ className = "" }) => {
                 <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>Top Categories</TranslatedText></h3>
                 <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                   <li>
-                    <Link to="/ae-en/offers/gaming-zone" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/offers/gaming-zone")} className="hover:text-lime-400">
                       <TranslatedText>Gaming Zone</TranslatedText>
                     </Link>
                   </li>
@@ -294,43 +294,43 @@ const Footer = ({ className = "" }) => {
                 <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>Legal</TranslatedText></h3>
                 <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
                   <li>
-                    <Link to="/refund-return" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/refund-return")} className="hover:text-lime-400">
                       <TranslatedText>Refund and Return</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/cookies-policy" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/cookies-policy")} className="hover:text-lime-400">
                       <TranslatedText>Cookies Policy</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/terms-conditions" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/terms-conditions")} className="hover:text-lime-400">
                       <TranslatedText>Terms & Conditions</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/privacy-policy" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/privacy-policy")} className="hover:text-lime-400">
                       <TranslatedText>Privacy Policy</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/disclaimer-policy" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/disclaimer-policy")} className="hover:text-lime-400">
                       <TranslatedText>Disclaimer Policy</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/track-order" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/track-order")} className="hover:text-lime-400">
                       <TranslatedText>Track Order</TranslatedText>
                     </Link>
                   </li>
 
                   <li>
-                    <Link to="/voucher-terms" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/voucher-terms")} className="hover:text-lime-400">
                       <TranslatedText>Voucher Terms</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/delivery-terms" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/delivery-terms")} className="hover:text-lime-400">
                       <TranslatedText>Delivery Terms</TranslatedText>
                     </Link>
                   </li>
@@ -362,22 +362,22 @@ const Footer = ({ className = "" }) => {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/login" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/login")} className="hover:text-lime-400">
                       <TranslatedText>Login</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/register" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/register")} className="hover:text-lime-400">
                       <TranslatedText>Register</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/wishlist" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/wishlist")} className="hover:text-lime-400">
                       <TranslatedText>Wishlist</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to="/cart" className="hover:text-lime-400 font-semibold">
+                    <Link to={getLocalizedPath("/cart")} className="hover:text-lime-400 font-semibold">
                       <TranslatedText>Cart</TranslatedText>
                     </Link>
                   </li>
@@ -478,12 +478,12 @@ const Footer = ({ className = "" }) => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/login" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/login")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Login</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/register" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/register")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Register</TranslatedText>
                   </Link>
                 </li>
@@ -505,42 +505,42 @@ const Footer = ({ className = "" }) => {
             <div className="px-4 pb-4">
               <ul className="space-y-3">
                 <li>
-                  <Link to="/refund-return" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/refund-return")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Refund and Return</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/cookies-policy" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/cookies-policy")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Cookies Policy</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/terms-conditions" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/terms-conditions")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Terms & Conditions</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/privacy-policy" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/privacy-policy")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Privacy Policy</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/disclaimer-policy" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/disclaimer-policy")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Disclaimer Policy</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/track-order" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/track-order")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Track Order</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/wishlist" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/wishlist")} className="text-gray-700 hover:text-orange-500">
                     <TranslatedText>Wishlist</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to="/cart" className="text-gray-700 hover:text-orange-500 font-semibold">
+                  <Link to={getLocalizedPath("/cart")} className="text-gray-700 hover:text-orange-500 font-semibold">
                     <TranslatedText>Cart</TranslatedText>
                   </Link>
                 </li>

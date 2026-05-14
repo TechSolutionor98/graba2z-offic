@@ -11,6 +11,7 @@ import {
   populateTranslationCache
 } from "../LanguageModel/translationService"
 import { uiDictionary } from "../LanguageModel/uiDictionary"
+import { normalizeTranslationLookupKey } from "../constants/staticPagePaths"
 
 // Supported languages
 export const LANGUAGES = {
@@ -47,6 +48,11 @@ export const LanguageProvider = ({ children }) => {
     return DEFAULT_LANGUAGE
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [staticPageTranslationState, setStaticPageTranslationState] = useState({
+    pageKey: null,
+    routePath: "",
+    map: {},
+  })
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -177,6 +183,32 @@ export const LanguageProvider = ({ children }) => {
     navigate(destination, { replace: true })
   }, [getPathWithoutLangPrefix, getLocalizedPath, location.pathname, location.search, location.hash, navigate])
 
+  const setStaticPageTranslations = useCallback((payload) => {
+    setStaticPageTranslationState({
+      pageKey: payload?.pageKey || null,
+      routePath: payload?.routePath || "",
+      map: payload?.map || {},
+    })
+  }, [])
+
+  const clearStaticPageTranslations = useCallback(() => {
+    setStaticPageTranslationState({
+      pageKey: null,
+      routePath: "",
+      map: {},
+    })
+  }, [])
+
+  const getStaticPageTranslation = useCallback((sourceText) => {
+    if (currentLanguage.code !== "ar" || !sourceText) return null
+
+    const rawKey = String(sourceText)
+    const normalizedKey = normalizeTranslationLookupKey(rawKey)
+    const map = staticPageTranslationState?.map || {}
+
+    return map[rawKey] || (normalizedKey ? map[normalizedKey] : null) || null
+  }, [currentLanguage.code, staticPageTranslationState])
+
   // Translate text function using Helsinki-NLP model (uses batched queue internally)
   const translate = useCallback(async (text, targetLang = currentLanguage.code) => {
     if (!text) return text
@@ -223,6 +255,10 @@ export const LanguageProvider = ({ children }) => {
     isEnglish: currentLanguage.code === "en",
     getLocalizedPath,
     getPathWithoutLangPrefix,
+    staticPageTranslationState,
+    setStaticPageTranslations,
+    clearStaticPageTranslations,
+    getStaticPageTranslation,
     languages: LANGUAGES,
   }
 

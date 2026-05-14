@@ -12,7 +12,7 @@ import config from "../config/config"
 
 const TrackOrder = () => {
   const { showToast } = useToast()
-  const { getLocalizedPath } = useLanguage()
+  const { isArabic } = useLanguage()
   const [formData, setFormData] = useState({
     email: "",
     orderId: "",
@@ -98,7 +98,8 @@ const TrackOrder = () => {
   }
 
   const formatPrice = (price) => {
-    return `${Number(price).toLocaleString()}.00 AED`
+    const locale = isArabic ? "ar-AE" : "en-US"
+    return `${Number(price || 0).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`
   }
 
   const getTrackingSteps = (status) => {
@@ -150,7 +151,7 @@ const TrackOrder = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Enter your email address"
+                  placeholder={isArabic ? "أدخل بريدك الإلكتروني" : "Enter your email address"}
                   required
                 />
               </div>
@@ -162,7 +163,7 @@ const TrackOrder = () => {
                   value={formData.orderId}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Enter your order ID"
+                  placeholder={isArabic ? "أدخل رقم الطلب" : "Enter your order ID"}
                   required
                 />
               </div>
@@ -185,7 +186,7 @@ const TrackOrder = () => {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
             <div className="flex items-center">
               <AlertCircle className="text-red-500 mr-2" size={20} />
-              <p className="text-red-700">{error}</p>
+              <p className="text-red-700"><TranslatedText text={error} /></p>
             </div>
           </div>
         )}
@@ -196,49 +197,49 @@ const TrackOrder = () => {
             {/* Order Summary */}
             <div className="bg-white rounded-lg shadow-md p-6 min-w-0 w-full">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Order Details</h2>
+                <h2 className="text-xl font-bold text-gray-900"><TranslatedText>Order Details</TranslatedText></h2>
                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(orderData.status)}`}>
-                  {orderData.status}
+                  <TranslatedText text={orderData.status} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-w-0 w-full">
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Order Information</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2"><TranslatedText>Order Information</TranslatedText></h3>
                   <div className="space-y-1 text-sm">
                     <p>
-                      <span className="font-medium">Order ID:</span> {orderData._id}
+                      <span className="font-medium"><TranslatedText>Order ID:</TranslatedText></span> {orderData._id}
                     </p>
                     <p>
-                      <span className="font-medium">Order Date:</span>{" "}
-                      {new Date(orderData.createdAt).toLocaleDateString()}
+                      <span className="font-medium"><TranslatedText>Order Date:</TranslatedText></span>{" "}
+                      {new Date(orderData.createdAt).toLocaleDateString(isArabic ? "ar-AE" : "en-US")}
                     </p>
                     <p>
-                      <span className="font-medium">Total Amount:</span> {formatPrice(orderData.totalPrice)}
+                      <span className="font-medium"><TranslatedText>Total Amount:</TranslatedText></span> {formatPrice(orderData.totalPrice)}
                     </p>
                     {orderData.trackingId && (
                       <p>
-                        <span className="font-medium">Tracking ID:</span> {orderData.trackingId}
+                        <span className="font-medium"><TranslatedText>Tracking ID:</TranslatedText></span> {orderData.trackingId}
                       </p>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Shipping Address</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2"><TranslatedText>Shipping Address</TranslatedText></h3>
                   <div className="text-sm text-gray-600">
                     {orderData.shippingAddress ? (
                       <>
-                        <p>{orderData.shippingAddress.name}</p>
-                        <p>{orderData.shippingAddress.address}</p>
+                        <p><TranslatedText text={orderData.shippingAddress.name} /></p>
+                        <p><TranslatedText text={orderData.shippingAddress.address} /></p>
                         <p>
-                          {orderData.shippingAddress.city}, {orderData.shippingAddress.postalCode}
+                          <TranslatedText text={orderData.shippingAddress.city} />, {orderData.shippingAddress.postalCode}
                         </p>
-                        <p>{orderData.shippingAddress.country}</p>
-                        <p>Phone: {orderData.shippingAddress.phone}</p>
+                        <p><TranslatedText text={orderData.shippingAddress.country} /></p>
+                        <p><TranslatedText>Phone:</TranslatedText> {orderData.shippingAddress.phone}</p>
                       </>
                     ) : (
-                      <p>No shipping address available.</p>
+                      <p><TranslatedText>No shipping address available.</TranslatedText></p>
                     )}
                   </div>
                 </div>
@@ -247,7 +248,7 @@ const TrackOrder = () => {
 
             {/* Tracking Progress */}
             <div className="bg-white rounded-lg shadow-md p-6 overflow-x-auto relative">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Order Progress</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-6"><TranslatedText>Order Progress</TranslatedText></h2>
 
               <div className="flex items-center justify-between mb-8 min-w-0 w-full">
                 {getTrackingSteps(orderData.status).map((step, index) => (
@@ -276,7 +277,7 @@ const TrackOrder = () => {
                           : "text-gray-500"
                       }`}
                     >
-                      {step.name}
+                      <TranslatedText text={step.name} />
                     </span>
                     {index < getTrackingSteps(orderData.status).length - 1 && (
                       <div
@@ -293,27 +294,30 @@ const TrackOrder = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center mb-2">
                   {getStatusIcon(orderData.status)}
-                  <span className="ml-2 text-lg font-semibold text-gray-900">Current Status: {orderData.status}</span>
+                  <span className="ml-2 text-lg font-semibold text-gray-900"><TranslatedText>Current Status:</TranslatedText> <TranslatedText text={orderData.status} /></span>
                 </div>
                 <p className="text-gray-600 text-sm">
-                  {orderData.status.toLowerCase().includes("delivered")
-                    ? "Your order has been delivered successfully!"
-                    : orderData.status.toLowerCase().includes("shipped") ||
-                        orderData.status.toLowerCase().includes("way")
-                      ? "Your order is on the way to your address."
-                      : orderData.status.toLowerCase().includes("processing")
-                        ? "Your order is being processed and will be shipped soon."
-                        : "Your order has been received and is being prepared."}
+                  <TranslatedText
+                    text={
+                      orderData.status.toLowerCase().includes("delivered")
+                        ? "Your order has been delivered successfully!"
+                        : orderData.status.toLowerCase().includes("shipped") ||
+                            orderData.status.toLowerCase().includes("way")
+                          ? "Your order is on the way to your address."
+                          : orderData.status.toLowerCase().includes("processing")
+                            ? "Your order is being processed and will be shipped soon."
+                            : "Your order has been received and is being prepared."
+                    }
+                  />
                 </p>
               </div>
             </div>
 
             {/* Order Items */}
             <div className="bg-white rounded-lg shadow-md p-6 min-w-0 w-full">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Order Items</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4"><TranslatedText>Order Items</TranslatedText></h2>
               <div className="space-y-4">
                 {orderData.orderItems.filter(item => !item.isProtection).map((item, index) => {
-                  console.log('Order item:', item);
                   const price = Number(item.price) || 0;
                   const qty = Number(item.quantity) || 0;
                   const total = price * qty;
@@ -326,15 +330,17 @@ const TrackOrder = () => {
                           className="w-20 h-20 object-contain rounded"
                         />
                         <span className="absolute bottom-1 right-1 bg-lime-500 text-white text-xs px-2 py-0.5 rounded-full">
-                          Qty: {item.quantity}
+                          <TranslatedText>Qty:</TranslatedText> {item.quantity}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900">{item.name}</h3>
-                        <p className="text-sm font-medium text-gray-900">{formatPrice(item.price)} each</p>
+                        <h3 className="font-medium text-gray-900">
+                          <TranslatedText text={item.name} sourceDoc={item.product} fieldName="name" />
+                        </h3>
+                        <p className="text-sm font-medium text-gray-900">{formatPrice(item.price)} <TranslatedText>each</TranslatedText></p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-gray-900">{total > 0 ? formatPrice(total) : "N/A"}</p>
+                        <p className="font-bold text-gray-900">{total > 0 ? formatPrice(total) : <TranslatedText>N/A</TranslatedText>}</p>
                       </div>
                     </div>
                   );
@@ -347,7 +353,7 @@ const TrackOrder = () => {
                     <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
-                    Buyer Protection Plans
+                    <TranslatedText>Buyer Protection Plans</TranslatedText>
                   </h3>
                   <div className="space-y-3">
                     {orderData.orderItems.filter(item => item.isProtection).map((item, index) => {
@@ -358,7 +364,9 @@ const TrackOrder = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                           </svg>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900">{item.name}</h4>
+                            <h4 className="font-medium text-gray-900">
+                              <TranslatedText text={item.name} sourceDoc={item.product} fieldName="name" />
+                            </h4>
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-gray-900">{formatPrice(price)}</p>
@@ -372,7 +380,7 @@ const TrackOrder = () => {
 
               <div className="mt-6 pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-gray-900">Total Amount:</span>
+                  <span className="text-lg font-bold text-gray-900"><TranslatedText>Total Amount:</TranslatedText></span>
                   <span className="text-lg font-bold text-green-600">{formatPrice(orderData.totalPrice)}</span>
                 </div>
               </div>

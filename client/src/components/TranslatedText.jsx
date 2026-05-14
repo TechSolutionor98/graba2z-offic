@@ -21,7 +21,7 @@ const TranslatedText = ({
   skipTranslation = false,
   useModelOnly = false // Force use of translation model (skip dictionary)
 }) => {
-  const { currentLanguage, translate } = useLanguage()
+  const { currentLanguage, translate, getStaticPageTranslation } = useLanguage()
   const sourceText = text ?? (typeof children === "string" ? children : null)
   const sourceTextString = typeof sourceText === "string" ? sourceText : null
   const [apiTranslation, setApiTranslation] = useState(null)
@@ -56,10 +56,16 @@ const TranslatedText = ({
   };
 
   const dbTranslation = getPreTranslatedField();
+
+  // 1a. Priority 0.5: Page-scoped DB static-page translations (INSTANT)
+  const staticPageTranslation =
+    currentLanguage.code === "ar" && sourceTextString
+      ? getStaticPageTranslation(sourceTextString)
+      : null
   
   // 2. Priority 1: Check shared dictionary synchronously (INSTANT)
   const getDictionaryTranslation = () => {
-    if (dbTranslation) return null; // Already have DB translation
+    if (dbTranslation || staticPageTranslation) return null; // Already have DB translation
     if (!sourceTextString || currentLanguage.code === "en" || skipTranslation || useModelOnly) {
       return null
     }
@@ -71,7 +77,7 @@ const TranslatedText = ({
   
   // 3. Priority 2: Check if already cached in translation service (INSTANT)
   const getCachedApiTranslation = () => {
-    if (dbTranslation || dictTranslation) return null; // Already handled
+    if (dbTranslation || staticPageTranslation || dictTranslation) return null; // Already handled
     if (!sourceTextString || currentLanguage.code === "en" || skipTranslation) {
       return null
     }
@@ -82,7 +88,7 @@ const TranslatedText = ({
   useEffect(() => {
     const fetchTranslation = async () => {
       // Skip if we already have a translation or don't need one
-      if (currentLanguage.code === "en" || !sourceTextString || skipTranslation || dbTranslation || dictTranslation) {
+      if (currentLanguage.code === "en" || !sourceTextString || skipTranslation || dbTranslation || staticPageTranslation || dictTranslation) {
         setApiTranslation(null)
         translationRequestedRef.current = false
         return
@@ -122,12 +128,14 @@ const TranslatedText = ({
     }
 
     fetchTranslation()
-  }, [sourceTextString, currentLanguage.code, dbTranslation, dictTranslation, skipTranslation, translate])
+  }, [sourceTextString, currentLanguage.code, dbTranslation, staticPageTranslation, dictTranslation, skipTranslation, translate])
 
   // Determine what to display
   let displayText = sourceText
   if (currentLanguage.code === "ar" && !skipTranslation) {
-    if (dbTranslation) {
+    if (staticPageTranslation) {
+      displayText = staticPageTranslation
+    } else if (dbTranslation) {
       displayText = dbTranslation
     } else if (dictTranslation) {
       displayText = dictTranslation

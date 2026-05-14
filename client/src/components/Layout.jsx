@@ -3,6 +3,8 @@ import { Outlet, useLocation } from "react-router-dom"
 import Navbar from "./Navbar"
 import BlogNavbar from "./BlogNavbar"
 import StaticRouteSEO from "./StaticRouteSEO"
+import StaticPageTranslationLoader from "./StaticPageTranslationLoader"
+import StaticPageContentTranslator from "./StaticPageContentTranslator"
 
 const Footer = lazy(() => import("./Footer"))
 const BlogFooter = lazy(() => import("./BlogFooter"))
@@ -75,15 +77,18 @@ function Layout() {
   return (
     <div className="flex flex-col min-h-screen">
       <StaticRouteSEO />
+      <StaticPageTranslationLoader />
 
       {/* Navbar - Conditional based on page */}
       {isBlogPage ? <BlogNavbar /> : <Navbar />}
 
       {/* Main Content Area - Grows to fill space */}
       <main className="flex-1 w-full">
-        <div className="w-full max-w-[1360px] mx-auto">
-          <Outlet />
-        </div>
+        <StaticPageContentTranslator>
+          <div className="w-full max-w-[1360px] mx-auto">
+            <Outlet />
+          </div>
+        </StaticPageContentTranslator>
       </main>
 
       {/* Footer - Conditional based on page */}
