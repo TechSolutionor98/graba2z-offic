@@ -1,4 +1,5 @@
 export const STATIC_PAGE_PATHS = [
+  { pageKey: "about", routePath: "/about" },
   { pageKey: "refund-return", routePath: "/refund-return" },
   { pageKey: "cookies-policy", routePath: "/cookies-policy" },
   { pageKey: "terms-conditions", routePath: "/terms-conditions" },
