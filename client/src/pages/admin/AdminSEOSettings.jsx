@@ -7,6 +7,7 @@ import axios from "axios"
 import Modal from "react-modal"
 import { Trash2, Edit2, Plus, Search, X } from "lucide-react"
 import config from "../../config/config"
+import { getSeoUnlockTokenIfValid, isSeoUnlockTokenValid } from "../../utils/seoUnlock"
 
 // Set app element for react-modal accessibility
 if (typeof window !== 'undefined') {
@@ -21,6 +22,7 @@ const AdminSEOSettings = () => {
   const [editingRedirect, setEditingRedirect] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("")
+  const [isSeoUnlocked, setIsSeoUnlocked] = useState(isSeoUnlockTokenValid)
 
   const [formData, setFormData] = useState({
     redirectFrom: "",
@@ -53,6 +55,17 @@ const AdminSEOSettings = () => {
     fetchRedirects()
   }, [])
 
+  useEffect(() => {
+    const syncLockState = () => setIsSeoUnlocked(isSeoUnlockTokenValid())
+    syncLockState()
+    window.addEventListener("storage", syncLockState)
+    const interval = setInterval(syncLockState, 5000)
+    return () => {
+      window.removeEventListener("storage", syncLockState)
+      clearInterval(interval)
+    }
+  }, [])
+
   // Handle form input change
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -65,6 +78,10 @@ const AdminSEOSettings = () => {
   // Add or update redirect
   const handleSaveRedirect = async (e) => {
     e.preventDefault()
+    if (!isSeoUnlocked) {
+      showToast("SEO settings are locked. Click Unlock Potential first.", "error")
+      return
+    }
 
     // Validation
     if (!formData.redirectFrom.trim()) {
@@ -98,10 +115,12 @@ const AdminSEOSettings = () => {
 
     try {
       const token = localStorage.getItem("adminToken")
+      const seoUnlockToken = getSeoUnlockTokenIfValid()
       const axiosConfig = {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
+          ...(seoUnlockToken ? { "X-SEO-Unlock-Token": seoUnlockToken } : {}),
         },
       }
 
@@ -158,15 +177,21 @@ const AdminSEOSettings = () => {
 
   // Delete redirect
   const handleDeleteRedirect = async (id) => {
+    if (!isSeoUnlocked) {
+      showToast("SEO settings are locked. Click Unlock Potential first.", "error")
+      return
+    }
     if (!window.confirm("Are you sure you want to delete this redirect?")) {
       return
     }
 
     try {
       const token = localStorage.getItem("adminToken")
+      const seoUnlockToken = getSeoUnlockTokenIfValid()
       await axios.delete(`${config.API_URL}/api/redirects/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          ...(seoUnlockToken ? { "X-SEO-Unlock-Token": seoUnlockToken } : {}),
         },
       })
       setRedirects(redirects.filter((r) => r._id !== id))
@@ -213,10 +238,14 @@ const AdminSEOSettings = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">SEO Settings</h1>
             <p className="text-gray-600 mt-1">Manage URL redirects for your store</p>
+            {!isSeoUnlocked && (
+              <p className="text-amber-700 text-sm mt-2">SEO is locked. Use Unlock Potential from sidebar.</p>
+            )}
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-lime-500 text-white px-4 py-2 rounded-lg hover:bg-lime-600 transition"
+            disabled={!isSeoUnlocked}
+            className="flex items-center gap-2 bg-lime-500 text-white px-4 py-2 rounded-lg hover:bg-lime-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus size={20} />
             Add Redirect
@@ -295,14 +324,16 @@ const AdminSEOSettings = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleEditRedirect(redirect)}
-                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 transition"
+                            disabled={!isSeoUnlocked}
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Edit2 size={16} />
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteRedirect(redirect._id)}
-                            className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 transition"
+                            disabled={!isSeoUnlocked}
+                            className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Trash2 size={16} />
                             Delete
@@ -353,8 +384,9 @@ const AdminSEOSettings = () => {
                 name="redirectFrom"
                 value={formData.redirectFrom}
                 onChange={handleInputChange}
+                disabled={!isSeoUnlocked}
                 placeholder="/old-product-url"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500 disabled:bg-gray-100"
               />
               <p className="text-xs text-gray-500 mt-1">The URL path to redirect from (must start with /). Trailing slashes will be automatically removed.</p>
             </div>
@@ -367,8 +399,9 @@ const AdminSEOSettings = () => {
                 name="redirectTo"
                 value={formData.redirectTo}
                 onChange={handleInputChange}
+                disabled={!isSeoUnlocked}
                 placeholder="/new-product-url or https://example.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500 disabled:bg-gray-100"
               />
               <p className="text-xs text-gray-500 mt-1">The destination URL (internal path or external URL). Trailing slashes will be automatically removed for internal URLs.</p>
             </div>
@@ -380,7 +413,8 @@ const AdminSEOSettings = () => {
                 name="redirectType"
                 value={formData.redirectType}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
+                disabled={!isSeoUnlocked}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500 disabled:bg-gray-100"
               >
                 <option value="301">301 - Permanent Redirect</option>
                 <option value="302">302 - Temporary Redirect</option>
@@ -397,7 +431,8 @@ const AdminSEOSettings = () => {
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
+                disabled={!isSeoUnlocked}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500 disabled:bg-gray-100"
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
@@ -412,9 +447,10 @@ const AdminSEOSettings = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
+                disabled={!isSeoUnlocked}
                 placeholder="Add notes about this redirect..."
                 rows="3"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lime-500 disabled:bg-gray-100"
               />
             </div>
 
@@ -429,7 +465,8 @@ const AdminSEOSettings = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-lime-500 text-white rounded-lg hover:bg-lime-600 transition font-medium"
+                disabled={!isSeoUnlocked}
+                className="px-4 py-2 bg-lime-500 text-white rounded-lg hover:bg-lime-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {editingRedirect ? "Update Redirect" : "Add Redirect"}
               </button>

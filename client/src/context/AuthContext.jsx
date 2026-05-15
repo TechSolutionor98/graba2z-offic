@@ -3,6 +3,7 @@
 import { createContext, useContext, useReducer, useEffect } from "react"
 import { authAPI } from "../services/api"
 import { adminAPI } from "../services/api"
+import { clearSeoUnlockStorage } from "../utils/seoUnlock"
 
 // Initial state - load permissions from localStorage if available
 const getInitialPermissions = () => {
@@ -25,11 +26,6 @@ const initialState = {
   isAdminAuthenticated: !!localStorage.getItem("adminToken"),
   isSuperAdmin: localStorage.getItem("isSuperAdmin") === "true",
   adminPermissions: getInitialPermissions(),
-}
-
-const clearSeoUnlockState = () => {
-  localStorage.removeItem("seoUnlockToken")
-  localStorage.removeItem("seoUnlockExpiresAt")
 }
 
 // Action types
@@ -165,11 +161,6 @@ const AuthContext = createContext()
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState)
 
-  // Keep SEO lock strict: every fresh app load starts locked.
-  useEffect(() => {
-    clearSeoUnlockState()
-  }, [])
-
   // Check if user is logged in on app start
   useEffect(() => {
     const checkAuth = async () => {
@@ -304,7 +295,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await adminAPI.login(credentials)
       // Force explicit unlock per admin login
-      clearSeoUnlockState()
+      clearSeoUnlockStorage()
       localStorage.setItem("adminToken", data.token)
       // Store permissions in localStorage for persistence
       localStorage.setItem("isSuperAdmin", data.isSuperAdmin ? "true" : "false")
@@ -323,7 +314,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const adminLogout = () => {
-    clearSeoUnlockState()
+    clearSeoUnlockStorage()
     localStorage.removeItem("adminToken")
     localStorage.removeItem("isSuperAdmin")
     localStorage.removeItem("adminPermissions")

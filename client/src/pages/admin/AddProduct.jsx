@@ -9,10 +9,22 @@ import TipTapEditor from "../../components/TipTapEditor"
 import { ArrowLeft, Plus, X } from "lucide-react"
 import axios from "axios"
 import { getFullImageUrl } from "../../utils/imageUtils"
+import { isSeoUnlockTokenValid } from "../../utils/seoUnlock"
 
 import config from "../../config/config"
 
 const SEO_TITLE_MAX_WORDS = 80
+const PRODUCT_SEO_FIELDS = [
+  "seoTitle",
+  "seoDescription",
+  "seoKeywords",
+  "seoCanonicalUrl",
+  "seoRobots",
+  "customSchema",
+  "ogTitle",
+  "ogDescription",
+  "ogImage",
+]
 
 const countWords = (text = "") => {
   const normalized = String(text).trim()
@@ -41,6 +53,7 @@ const AddProduct = () => {
   const [colors, setColors] = useState([])
   const [sizes, setSizes] = useState([])
   const [loading, setLoading] = useState(false)
+  const [isSeoUnlocked, setIsSeoUnlocked] = useState(isSeoUnlockTokenValid())
   const [formData, setFormData] = useState({
     name: "",
     sku: "",
@@ -92,6 +105,19 @@ const AddProduct = () => {
 
   useEffect(() => {
     fetchAllData()
+  }, [])
+
+  useEffect(() => {
+    const syncSeoLockState = () => setIsSeoUnlocked(isSeoUnlockTokenValid())
+    syncSeoLockState()
+    const intervalId = window.setInterval(syncSeoLockState, 1000)
+    window.addEventListener("storage", syncSeoLockState)
+    window.addEventListener("focus", syncSeoLockState)
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener("storage", syncSeoLockState)
+      window.removeEventListener("focus", syncSeoLockState)
+    }
   }, [])
 
   useEffect(() => {
@@ -519,6 +545,12 @@ const AddProduct = () => {
         ogTitle: formData.ogTitle || "",
         ogDescription: formData.ogDescription || "",
         ogImage: formData.ogImage || "",
+      }
+
+      if (!isSeoUnlocked) {
+        PRODUCT_SEO_FIELDS.forEach((field) => {
+          delete productData[field]
+        })
       }
 
       await axios.post(`${config.API_URL}/api/products`, productData, {
@@ -1362,8 +1394,13 @@ const AddProduct = () => {
                 <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">For Google Only</span>
               </div>
               <p className="text-sm text-gray-500 mb-6">These fields are only used for search engine meta tags. They will NOT be displayed on the product page.</p>
+              {!isSeoUnlocked && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-4">
+                  SEO fields are locked. Use Unlock Potential from the sidebar.
+                </p>
+              )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isSeoUnlocked ? "" : "pointer-events-none opacity-60"}`}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
                   <input

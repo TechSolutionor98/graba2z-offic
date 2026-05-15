@@ -7,16 +7,31 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import ImageUpload from "../../components/ImageUpload"
 import { ArrowLeft } from "lucide-react"
 import axios from "axios"
+import { isSeoUnlockTokenValid } from "../../utils/seoUnlock"
 
 import config from "../../config/config"
 const REQUEST_TIMEOUT_MS = 30000
 const ROBOTS_OPTIONS = ["index, follow", "noindex, follow", "index, nofollow", "noindex, nofollow"]
+const BRAND_SEO_FIELDS = [
+  "metaTitle",
+  "metaDescription",
+  "seoTitle",
+  "seoDescription",
+  "seoKeywords",
+  "seoCanonicalUrl",
+  "seoRobots",
+  "customSchema",
+  "ogTitle",
+  "ogDescription",
+  "ogImage",
+]
 
 const AddBrand = () => {
   const navigate = useNavigate()
   const { id } = useParams() // id for edit mode
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [isSeoUnlocked, setIsSeoUnlocked] = useState(isSeoUnlockTokenValid())
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -63,6 +78,19 @@ const AddBrand = () => {
       })
     }
   }, [id])
+
+  useEffect(() => {
+    const syncSeoLockState = () => setIsSeoUnlocked(isSeoUnlockTokenValid())
+    syncSeoLockState()
+    const intervalId = window.setInterval(syncSeoLockState, 1000)
+    window.addEventListener("storage", syncSeoLockState)
+    window.addEventListener("focus", syncSeoLockState)
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener("storage", syncSeoLockState)
+      window.removeEventListener("focus", syncSeoLockState)
+    }
+  }, [])
 
   const fetchBrand = async (brandId) => {
     setLoading(true)
@@ -117,8 +145,15 @@ const AddBrand = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem("adminToken")
+      const submitData = { ...formData }
+      if (!isSeoUnlocked) {
+        BRAND_SEO_FIELDS.forEach((field) => {
+          delete submitData[field]
+        })
+      }
+
       if (isEdit && id) {
-        await axios.put(`${config.API_URL}/api/brands/${id}`, formData, {
+        await axios.put(`${config.API_URL}/api/brands/${id}`, submitData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -127,7 +162,7 @@ const AddBrand = () => {
         })
         showToast("Brand updated successfully!", "success")
       } else {
-        await axios.post(`${config.API_URL}/api/brands`, formData, {
+        await axios.post(`${config.API_URL}/api/brands`, submitData, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -211,8 +246,13 @@ const AddBrand = () => {
 
               <div className="border-t border-gray-200 pt-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">SEO Settings</h2>
+                {!isSeoUnlocked && (
+                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-4">
+                    SEO fields are locked. Use Unlock Potential from the sidebar.
+                  </p>
+                )}
 
-                <div className="space-y-4">
+                <div className={`space-y-4 ${isSeoUnlocked ? "" : "pointer-events-none opacity-60"}`}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
                     <input

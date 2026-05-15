@@ -1,11 +1,12 @@
 import config from "../config/config.js"
+import { getSeoUnlockTokenIfValid } from "../utils/seoUnlock.js"
 
 const API_URL = config.API_URL
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token")
-  const seoUnlockToken = localStorage.getItem("seoUnlockToken")
+  const seoUnlockToken = getSeoUnlockTokenIfValid()
   return {
     "Content-Type": "application/json",
     ...(token && { Authorization: `Bearer ${token}` }),

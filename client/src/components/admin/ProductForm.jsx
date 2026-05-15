@@ -12,10 +12,22 @@ import ProductVariationModal from "./ProductVariationModal"
 import ColorVariationForm from "./ColorVariationForm"
 import DosVariationForm from "./DosVariationForm"
 import { getFullImageUrl } from "../../utils/imageUtils"
+import { isSeoUnlockTokenValid } from "../../utils/seoUnlock"
 
 import config from "../../config/config"
 
 const SEO_TITLE_MAX_WORDS = 80
+const PRODUCT_SEO_FIELDS = [
+  "seoTitle",
+  "seoDescription",
+  "seoKeywords",
+  "seoCanonicalUrl",
+  "seoRobots",
+  "customSchema",
+  "ogTitle",
+  "ogDescription",
+  "ogImage",
+]
 
 const countWords = (text = "") => {
   const normalized = String(text).trim()
@@ -118,6 +130,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   // Video Source Type (upload or youtube)
   const [videoSourceType, setVideoSourceType] = useState("youtube") // 'upload' | 'youtube'
   const [youtubeUrl, setYoutubeUrl] = useState("")
+  const [isSeoUnlocked, setIsSeoUnlocked] = useState(isSeoUnlockTokenValid())
 
   // Helper function to check if a URL is a YouTube URL
   const isYouTubeUrl = (url) => {
@@ -134,6 +147,19 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     { value: "box", label: "Box" },
     { value: "pack", label: "Pack" },
   ]
+
+  useEffect(() => {
+    const syncSeoLockState = () => setIsSeoUnlocked(isSeoUnlockTokenValid())
+    syncSeoLockState()
+    const intervalId = window.setInterval(syncSeoLockState, 1000)
+    window.addEventListener("storage", syncSeoLockState)
+    window.addEventListener("focus", syncSeoLockState)
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener("storage", syncSeoLockState)
+      window.removeEventListener("focus", syncSeoLockState)
+    }
+  }, [])
 
   // Fetch taxes from backend
   useEffect(() => {
@@ -827,6 +853,11 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         ogTitle: formData.ogTitle || "",
         ogDescription: formData.ogDescription || "",
         ogImage: formData.ogImage || "",
+      }
+      if (!isSeoUnlocked) {
+        PRODUCT_SEO_FIELDS.forEach((field) => {
+          delete productData[field]
+        })
       }
       await onSubmit(productData)
     } catch (error) {
@@ -1922,8 +1953,13 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">SEO Settings</h3>
           <p className="text-sm text-gray-500 mb-6">These fields are only used for search engine meta tags. They will NOT be displayed on the product page.</p>
+          {!isSeoUnlocked && (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-4">
+              SEO fields are locked. Use Unlock Potential from the sidebar.
+            </p>
+          )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isSeoUnlocked ? "" : "pointer-events-none opacity-60"}`}>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
               <input

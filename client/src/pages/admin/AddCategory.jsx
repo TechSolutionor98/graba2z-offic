@@ -8,6 +8,7 @@ import ImageUpload from "../../components/ImageUpload"
 import TipTapEditor from "../../components/TipTapEditor"
 import { ArrowLeft } from "lucide-react"
 import axios from "axios"
+import { isSeoUnlockTokenValid } from "../../utils/seoUnlock"
 
 import config from "../../config/config"
 
@@ -18,11 +19,14 @@ const generateSlug = (value = "") =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
 
+const CATEGORY_SEO_FIELDS = ["seoContent", "metaTitle", "metaDescription", "customSchema", "redirectUrl"]
+
 const AddCategory = () => {
   const navigate = useNavigate()
   const { id } = useParams()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [isSeoUnlocked, setIsSeoUnlocked] = useState(isSeoUnlockTokenValid())
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -73,6 +77,19 @@ const AddCategory = () => {
     }
   }, [id])
 
+  useEffect(() => {
+    const syncSeoLockState = () => setIsSeoUnlocked(isSeoUnlockTokenValid())
+    syncSeoLockState()
+    const intervalId = window.setInterval(syncSeoLockState, 1000)
+    window.addEventListener("storage", syncSeoLockState)
+    window.addEventListener("focus", syncSeoLockState)
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener("storage", syncSeoLockState)
+      window.removeEventListener("focus", syncSeoLockState)
+    }
+  }, [])
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     if (name === "name") {
@@ -112,6 +129,11 @@ const AddCategory = () => {
       const submitData = {
         ...formData,
         slug: generateSlug(formData.name),
+      }
+      if (!isSeoUnlocked) {
+        CATEGORY_SEO_FIELDS.forEach((field) => {
+          delete submitData[field]
+        })
       }
       if (isEdit) {
         await axios.put(`${config.API_URL}/api/categories/${id}`, submitData, {
@@ -223,16 +245,23 @@ const AddCategory = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">SEO Content</label>
-                <TipTapEditor
-                  content={formData.seoContent}
-                  onChange={handleSeoContentChange}
-                  placeholder="Enter detailed SEO content for this category..."
-                />
+                {!isSeoUnlocked && (
+                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-3">
+                    SEO fields are locked. Use Unlock Potential from the sidebar.
+                  </p>
+                )}
+                <div className={isSeoUnlocked ? "" : "pointer-events-none opacity-60"}>
+                  <TipTapEditor
+                    content={formData.seoContent}
+                    onChange={handleSeoContentChange}
+                    placeholder="Enter detailed SEO content for this category..."
+                  />
+                </div>
                 <p className="text-sm text-gray-500 mt-1">This content will be displayed on the category page for SEO purposes.</p>
               </div>
 
-              {/* Meta Title */}
-              <div>
+              <div className={isSeoUnlocked ? "" : "pointer-events-none opacity-60"}>
+                {/* Meta Title */}
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Meta Title
                   <span className="text-gray-500 text-xs ml-2">(Up to 100 characters)</span>
@@ -256,8 +285,8 @@ const AddCategory = () => {
                 </div>
               </div>
 
-              {/* Meta Description */}
-              <div>
+              <div className={isSeoUnlocked ? "" : "pointer-events-none opacity-60"}>
+                {/* Meta Description */}
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Meta Description
                   <span className="text-gray-500 text-xs ml-2">(Up to 300 characters)</span>
@@ -281,7 +310,7 @@ const AddCategory = () => {
                 </div>
               </div>
 
-              <div>
+              <div className={isSeoUnlocked ? "" : "pointer-events-none opacity-60"}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Custom Schema Markup (HTML/JS)
                 </label>
@@ -298,8 +327,8 @@ const AddCategory = () => {
                 </p>
               </div>
 
-              {/* Redirect URL */}
-              <div>
+              <div className={isSeoUnlocked ? "" : "pointer-events-none opacity-60"}>
+                {/* Redirect URL */}
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Redirect URL
                   <span className="text-gray-500 text-xs ml-2">(Optional)</span>

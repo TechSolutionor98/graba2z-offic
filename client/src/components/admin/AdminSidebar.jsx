@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../../context/AuthContext"
 import { adminAPI } from "../../services/api"
+import { clearSeoUnlockStorage, isSeoUnlockTokenValid } from "../../utils/seoUnlock"
 import {
   LayoutDashboard,
   Package,
@@ -40,47 +41,11 @@ import {
 const SEO_UNLOCK_TOKEN_KEY = "seoUnlockToken"
 const SEO_UNLOCK_EXPIRES_AT_KEY = "seoUnlockExpiresAt"
 
-const clearSeoUnlockStorage = () => {
-  localStorage.removeItem(SEO_UNLOCK_TOKEN_KEY)
-  localStorage.removeItem(SEO_UNLOCK_EXPIRES_AT_KEY)
-}
-
-const isSeoUnlockTokenValid = () => {
-  const token = localStorage.getItem(SEO_UNLOCK_TOKEN_KEY)
-  if (!token) return false
-
-  try {
-    const payloadBase64 = token.split(".")[1]
-    if (!payloadBase64) {
-      clearSeoUnlockStorage()
-      return false
-    }
-
-    const normalizedPayloadBase64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/")
-    const paddedPayloadBase64 = normalizedPayloadBase64.padEnd(
-      normalizedPayloadBase64.length + ((4 - (normalizedPayloadBase64.length % 4)) % 4),
-      "=",
-    )
-    const payload = JSON.parse(atob(paddedPayloadBase64))
-    if (!payload?.exp) return true
-
-    const isExpired = Date.now() >= payload.exp * 1000
-    if (isExpired) {
-      clearSeoUnlockStorage()
-      return false
-    }
-    return true
-  } catch (_error) {
-    clearSeoUnlockStorage()
-    return false
-  }
-}
-
 const AdminSidebar = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { adminLogout, isSuperAdmin, hasPermission } = useAuth()
-  const [isSeoUnlocked, setIsSeoUnlocked] = useState(isSeoUnlockTokenValid)
+  const [isSeoUnlocked, setIsSeoUnlocked] = useState(() => isSeoUnlockTokenValid())
   const [seoUnlockExpiresAt, setSeoUnlockExpiresAt] = useState(localStorage.getItem(SEO_UNLOCK_EXPIRES_AT_KEY) || "")
   const [openDropdowns, setOpenDropdowns] = useState({
     productSystem: false,
@@ -276,7 +241,10 @@ const AdminSidebar = () => {
 
     try {
       const response = await adminAPI.seoUnlock(password)
-      localStorage.setItem(SEO_UNLOCK_TOKEN_KEY, response.unlockToken || "")
+      if (!response?.unlockToken) {
+        throw new Error("Unlock token missing from server response")
+      }
+      localStorage.setItem(SEO_UNLOCK_TOKEN_KEY, response.unlockToken)
       if (response.expiresAt) {
         localStorage.setItem(SEO_UNLOCK_EXPIRES_AT_KEY, response.expiresAt)
         setSeoUnlockExpiresAt(response.expiresAt)

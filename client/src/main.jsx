@@ -5,9 +5,10 @@ import App from "./App"
 import "./index.css"
 import { HelmetProvider } from "react-helmet-async"
 import { checkCacheVersion } from "./utils/cacheManager"
+import { getSeoUnlockTokenIfValid } from "./utils/seoUnlock"
 
 axios.interceptors.request.use((requestConfig) => {
-  const seoUnlockToken = localStorage.getItem("seoUnlockToken")
+  const seoUnlockToken = getSeoUnlockTokenIfValid()
   if (!seoUnlockToken) return requestConfig
 
   requestConfig.headers = requestConfig.headers || {}

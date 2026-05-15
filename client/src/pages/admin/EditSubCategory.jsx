@@ -7,6 +7,7 @@ import TipTapEditor from "../../components/TipTapEditor";
 import { ArrowLeft } from "lucide-react";
 import axios from "axios";
 import config from "../../config/config";
+import { isSeoUnlockTokenValid } from "../../utils/seoUnlock";
 
 const generateSlug = (value = "") =>
   String(value)
@@ -15,12 +16,15 @@ const generateSlug = (value = "") =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+const SUBCATEGORY_SEO_FIELDS = ["seoContent", "metaTitle", "metaDescription", "customSchema", "redirectUrl"];
+
 const EditSubCategory = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [isSeoUnlocked, setIsSeoUnlocked] = useState(isSeoUnlockTokenValid());
   const [categories, setCategories] = useState([]);
   const [subCategories1, setSubCategories1] = useState([]); // For Level 3 & 4
   const [subCategories2, setSubCategories2] = useState([]); // For Level 4
@@ -62,6 +66,19 @@ const EditSubCategory = () => {
       fetchSubCategory();
     }
   }, [id]);
+
+  useEffect(() => {
+    const syncSeoLockState = () => setIsSeoUnlocked(isSeoUnlockTokenValid());
+    syncSeoLockState();
+    const intervalId = window.setInterval(syncSeoLockState, 1000);
+    window.addEventListener("storage", syncSeoLockState);
+    window.addEventListener("focus", syncSeoLockState);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("storage", syncSeoLockState);
+      window.removeEventListener("focus", syncSeoLockState);
+    };
+  }, []);
 
   // Fetch Level 1 subcategories when category is selected (for Level 3 & 4)
   useEffect(() => {
@@ -356,6 +373,11 @@ const EditSubCategory = () => {
         showInSlider: formData.showInSlider,
         parentSubCategory: level > 1 ? formData.parentSubCategory : undefined
       }
+      if (!isSeoUnlocked) {
+        SUBCATEGORY_SEO_FIELDS.forEach((field) => {
+          delete submitData[field];
+        });
+      }
 
       const response = await axios.put(`${config.API_URL}/api/subcategories/${id}`, submitData, {
         headers: {
@@ -580,16 +602,23 @@ const EditSubCategory = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">SEO Content</label>
-                <TipTapEditor
-                  content={formData.seoContent}
-                  onChange={handleSeoContentChange}
-                  placeholder="Enter detailed SEO content for this subcategory..."
-                />
+                {!isSeoUnlocked && (
+                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-3">
+                    SEO fields are locked. Use Unlock Potential from the sidebar.
+                  </p>
+                )}
+                <div className={isSeoUnlocked ? "" : "pointer-events-none opacity-60"}>
+                  <TipTapEditor
+                    content={formData.seoContent}
+                    onChange={handleSeoContentChange}
+                    placeholder="Enter detailed SEO content for this subcategory..."
+                  />
+                </div>
                 <p className="text-sm text-gray-500 mt-1">This content will be displayed on the subcategory page for SEO purposes.</p>
               </div>
 
               {/* Meta Title */}
-              <div>
+              <div className={isSeoUnlocked ? "" : "pointer-events-none opacity-60"}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Meta Title
                   <span className="text-gray-500 text-xs ml-2">(Up to 100 characters)</span>
@@ -614,7 +643,7 @@ const EditSubCategory = () => {
               </div>
 
               {/* Meta Description */}
-              <div>
+              <div className={isSeoUnlocked ? "" : "pointer-events-none opacity-60"}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Meta Description
                   <span className="text-gray-500 text-xs ml-2">(Up to 300 characters)</span>
@@ -638,7 +667,7 @@ const EditSubCategory = () => {
                 </div>
               </div>
 
-              <div>
+              <div className={isSeoUnlocked ? "" : "pointer-events-none opacity-60"}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Custom Schema Markup (HTML/JS)
                 </label>
@@ -656,7 +685,7 @@ const EditSubCategory = () => {
               </div>
 
               {/* Redirect URL */}
-              <div>
+              <div className={isSeoUnlocked ? "" : "pointer-events-none opacity-60"}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Redirect URL
                   <span className="text-gray-500 text-xs ml-2">(Optional)</span>

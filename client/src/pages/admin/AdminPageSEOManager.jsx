@@ -6,6 +6,7 @@ import axios from "axios"
 import { Search, Save, RefreshCw, ArrowLeftRight, Settings2 } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 import config from "../../config/config"
+import { getSeoUnlockTokenIfValid, isSeoUnlockTokenValid } from "../../utils/seoUnlock"
 
 const ROBOTS_OPTIONS = ["index, follow", "noindex, follow", "index, nofollow", "noindex, nofollow"]
 
@@ -41,14 +42,28 @@ const AdminPageSEOManager = () => {
 
   const [selectedItem, setSelectedItem] = useState(null)
   const [formData, setFormData] = useState(EMPTY_FORM)
+  const [isSeoUnlocked, setIsSeoUnlocked] = useState(isSeoUnlockTokenValid)
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem("adminToken")
+    const seoUnlockToken = getSeoUnlockTokenIfValid()
     return {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
+      ...(seoUnlockToken ? { "X-SEO-Unlock-Token": seoUnlockToken } : {}),
     }
   }
+
+  useEffect(() => {
+    const syncLockState = () => setIsSeoUnlocked(isSeoUnlockTokenValid())
+    syncLockState()
+    window.addEventListener("storage", syncLockState)
+    const interval = setInterval(syncLockState, 5000)
+    return () => {
+      window.removeEventListener("storage", syncLockState)
+      clearInterval(interval)
+    }
+  }, [])
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -177,6 +192,10 @@ const AdminPageSEOManager = () => {
   const handleSave = async () => {
     if (!selectedItem) {
       showToast("Select a page first", "error")
+      return
+    }
+    if (!isSeoUnlocked) {
+      showToast("SEO settings are locked. Click Unlock Potential first.", "error")
       return
     }
 
@@ -440,7 +459,7 @@ const AdminPageSEOManager = () => {
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={!selectedItem || saving}
+                disabled={!selectedItem || saving || !isSeoUnlocked}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-lime-500 text-white text-sm font-medium hover:bg-lime-600 disabled:opacity-50"
               >
                 <Save size={16} />
@@ -452,6 +471,11 @@ const AdminPageSEOManager = () => {
               <div className="p-6 text-sm text-gray-500">Select a page from the left to edit SEO settings.</div>
             ) : (
               <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+                {!isSeoUnlocked && (
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                    SEO is locked. Use <strong>Unlock Potential</strong> from sidebar to edit and save.
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">SEO Title</label>
@@ -459,7 +483,7 @@ const AdminPageSEOManager = () => {
                       name="title"
                       value={formData.title}
                       onChange={handleFormChange}
-                      disabled={!supportsField("title")}
+                      disabled={!supportsField("title") || !isSeoUnlocked}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                     />
                   </div>
@@ -470,7 +494,7 @@ const AdminPageSEOManager = () => {
                       name="canonicalUrl"
                       value={formData.canonicalUrl}
                       onChange={handleFormChange}
-                      disabled={!supportsField("canonicalUrl")}
+                      disabled={!supportsField("canonicalUrl") || !isSeoUnlocked}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                       placeholder="/about or https://www.example.com/about"
                     />
@@ -483,7 +507,7 @@ const AdminPageSEOManager = () => {
                     name="description"
                     value={formData.description}
                     onChange={handleFormChange}
-                    disabled={!supportsField("description")}
+                    disabled={!supportsField("description") || !isSeoUnlocked}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                   />
@@ -496,7 +520,7 @@ const AdminPageSEOManager = () => {
                       name="keywords"
                       value={formData.keywords}
                       onChange={handleFormChange}
-                      disabled={!supportsField("keywords")}
+                      disabled={!supportsField("keywords") || !isSeoUnlocked}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                     />
                   </div>
@@ -507,7 +531,7 @@ const AdminPageSEOManager = () => {
                       name="robots"
                       value={formData.robots}
                       onChange={handleFormChange}
-                      disabled={!supportsField("robots")}
+                      disabled={!supportsField("robots") || !isSeoUnlocked}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                     >
                       {ROBOTS_OPTIONS.map((option) => (
@@ -526,8 +550,9 @@ const AdminPageSEOManager = () => {
                       name="seoContent"
                       value={formData.seoContent}
                       onChange={handleFormChange}
+                      disabled={!isSeoUnlocked}
                       rows={5}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                       placeholder="This field is used on category/subcategory pages."
                     />
                   </div>
@@ -539,7 +564,7 @@ const AdminPageSEOManager = () => {
                     name="ogTitle"
                     value={formData.ogTitle}
                     onChange={handleFormChange}
-                    disabled={!supportsField("ogTitle")}
+                      disabled={!supportsField("ogTitle") || !isSeoUnlocked}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                   />
                 </div>
@@ -550,7 +575,7 @@ const AdminPageSEOManager = () => {
                     name="ogDescription"
                     value={formData.ogDescription}
                     onChange={handleFormChange}
-                    disabled={!supportsField("ogDescription")}
+                    disabled={!supportsField("ogDescription") || !isSeoUnlocked}
                     rows={2}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                   />
@@ -562,7 +587,7 @@ const AdminPageSEOManager = () => {
                     name="ogImage"
                     value={formData.ogImage}
                     onChange={handleFormChange}
-                    disabled={!supportsField("ogImage")}
+                    disabled={!supportsField("ogImage") || !isSeoUnlocked}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100"
                   />
                 </div>
@@ -576,7 +601,7 @@ const AdminPageSEOManager = () => {
                     name="customSchema"
                     value={formData.customSchema}
                     onChange={handleFormChange}
-                    disabled={!supportsField("customSchema")}
+                    disabled={!supportsField("customSchema") || !isSeoUnlocked}
                     rows={6}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-xs disabled:bg-gray-100"
                     placeholder='{"@context":"https://schema.org","@type":"WebPage","name":"Page Name"}'
