@@ -5,9 +5,11 @@ const API_URL = config.API_URL
 // Helper function to get auth headers
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token")
+  const seoUnlockToken = localStorage.getItem("seoUnlockToken")
   return {
     "Content-Type": "application/json",
     ...(token && { Authorization: `Bearer ${token}` }),
+    ...(seoUnlockToken && { "X-SEO-Unlock-Token": seoUnlockToken }),
   }
 }
 
@@ -213,6 +215,12 @@ export const adminAPI = {
   getProfile: () =>
     apiRequest("/api/admin/profile", {
       headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  seoUnlock: (password) =>
+    apiRequest("/api/admin/seo-unlock", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify({ password }),
     }),
   getDashboardStats: () =>
     apiRequest("/api/admin/stats", {

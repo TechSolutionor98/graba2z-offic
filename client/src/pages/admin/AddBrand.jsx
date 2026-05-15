@@ -10,6 +10,7 @@ import axios from "axios"
 
 import config from "../../config/config"
 const REQUEST_TIMEOUT_MS = 30000
+const ROBOTS_OPTIONS = ["index, follow", "noindex, follow", "index, nofollow", "noindex, nofollow"]
 
 const AddBrand = () => {
   const navigate = useNavigate()
@@ -21,6 +22,17 @@ const AddBrand = () => {
     description: "",
     logo: "",
     website: "",
+    metaTitle: "",
+    metaDescription: "",
+    seoTitle: "",
+    seoDescription: "",
+    seoKeywords: "",
+    seoCanonicalUrl: "",
+    seoRobots: "index, follow",
+    customSchema: "",
+    ogTitle: "",
+    ogDescription: "",
+    ogImage: "",
     isActive: true,
   })
   const [isEdit, setIsEdit] = useState(false)
@@ -36,6 +48,17 @@ const AddBrand = () => {
         description: "",
         logo: "",
         website: "",
+        metaTitle: "",
+        metaDescription: "",
+        seoTitle: "",
+        seoDescription: "",
+        seoKeywords: "",
+        seoCanonicalUrl: "",
+        seoRobots: "index, follow",
+        customSchema: "",
+        ogTitle: "",
+        ogDescription: "",
+        ogImage: "",
         isActive: true,
       })
     }
@@ -53,6 +76,17 @@ const AddBrand = () => {
         description: data.description || "",
         logo: data.logo || "",
         website: data.website || "",
+        metaTitle: data.metaTitle || "",
+        metaDescription: data.metaDescription || "",
+        seoTitle: data.seoTitle || "",
+        seoDescription: data.seoDescription || "",
+        seoKeywords: data.seoKeywords || "",
+        seoCanonicalUrl: data.seoCanonicalUrl || "",
+        seoRobots: data.seoRobots || "index, follow",
+        customSchema: data.customSchema || "",
+        ogTitle: data.ogTitle || "",
+        ogDescription: data.ogDescription || "",
+        ogImage: data.ogImage || "",
         isActive: data.isActive !== undefined ? data.isActive : true,
       })
     } catch (error) {
@@ -173,6 +207,149 @@ const AddBrand = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="https://example.com"
                 />
+              </div>
+
+              <div className="border-t border-gray-200 pt-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">SEO Settings</h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+                    <input
+                      type="text"
+                      name="metaTitle"
+                      value={formData.metaTitle}
+                      onChange={handleChange}
+                      maxLength={180}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{formData.metaTitle.length}/180</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                    <textarea
+                      name="metaDescription"
+                      value={formData.metaDescription}
+                      onChange={handleChange}
+                      rows={3}
+                      maxLength={300}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{formData.metaDescription.length}/300</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">SEO Title</label>
+                    <input
+                      type="text"
+                      name="seoTitle"
+                      value={formData.seoTitle}
+                      onChange={handleChange}
+                      maxLength={180}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{formData.seoTitle.length}/180</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">SEO Description</label>
+                    <textarea
+                      name="seoDescription"
+                      value={formData.seoDescription}
+                      onChange={handleChange}
+                      rows={3}
+                      maxLength={300}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">{formData.seoDescription.length}/300</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">SEO Keywords</label>
+                    <input
+                      type="text"
+                      name="seoKeywords"
+                      value={formData.seoKeywords}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="keyword1, keyword2, keyword3"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Canonical URL</label>
+                    <input
+                      type="text"
+                      name="seoCanonicalUrl"
+                      value={formData.seoCanonicalUrl}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="/brands/apple or https://www.grabatoz.ae/brands/apple"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Robots</label>
+                    <select
+                      name="seoRobots"
+                      value={formData.seoRobots}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {ROBOTS_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Open Graph Title</label>
+                    <input
+                      type="text"
+                      name="ogTitle"
+                      value={formData.ogTitle}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Open Graph Description</label>
+                    <textarea
+                      name="ogDescription"
+                      value={formData.ogDescription}
+                      onChange={handleChange}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Open Graph Image URL</label>
+                    <input
+                      type="text"
+                      name="ogImage"
+                      value={formData.ogImage}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Custom Schema (JSON-LD / script)</label>
+                    <textarea
+                      name="customSchema"
+                      value={formData.customSchema}
+                      onChange={handleChange}
+                      rows={5}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs"
+                      placeholder='{"@context":"https://schema.org","@type":"Brand","name":"Brand Name"}'
+                    />
+                  </div>
+                </div>
               </div>
               <div className="flex items-center">
                 <input

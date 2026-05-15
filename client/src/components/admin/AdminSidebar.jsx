@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../../context/AuthContext"
+import { adminAPI } from "../../services/api"
 import {
   LayoutDashboard,
   Package,
@@ -33,12 +34,54 @@ import {
   Activity,
   UserCog,
   Languages,
+  Unlock,
 } from "lucide-react"
+
+const SEO_UNLOCK_TOKEN_KEY = "seoUnlockToken"
+const SEO_UNLOCK_EXPIRES_AT_KEY = "seoUnlockExpiresAt"
+
+const clearSeoUnlockStorage = () => {
+  localStorage.removeItem(SEO_UNLOCK_TOKEN_KEY)
+  localStorage.removeItem(SEO_UNLOCK_EXPIRES_AT_KEY)
+}
+
+const isSeoUnlockTokenValid = () => {
+  const token = localStorage.getItem(SEO_UNLOCK_TOKEN_KEY)
+  if (!token) return false
+
+  try {
+    const payloadBase64 = token.split(".")[1]
+    if (!payloadBase64) {
+      clearSeoUnlockStorage()
+      return false
+    }
+
+    const normalizedPayloadBase64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/")
+    const paddedPayloadBase64 = normalizedPayloadBase64.padEnd(
+      normalizedPayloadBase64.length + ((4 - (normalizedPayloadBase64.length % 4)) % 4),
+      "=",
+    )
+    const payload = JSON.parse(atob(paddedPayloadBase64))
+    if (!payload?.exp) return true
+
+    const isExpired = Date.now() >= payload.exp * 1000
+    if (isExpired) {
+      clearSeoUnlockStorage()
+      return false
+    }
+    return true
+  } catch (_error) {
+    clearSeoUnlockStorage()
+    return false
+  }
+}
 
 const AdminSidebar = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { adminLogout, isSuperAdmin, hasPermission } = useAuth()
+  const [isSeoUnlocked, setIsSeoUnlocked] = useState(isSeoUnlockTokenValid)
+  const [seoUnlockExpiresAt, setSeoUnlockExpiresAt] = useState(localStorage.getItem(SEO_UNLOCK_EXPIRES_AT_KEY) || "")
   const [openDropdowns, setOpenDropdowns] = useState({
     productSystem: false,
     products: false,
@@ -211,9 +254,41 @@ const AdminSidebar = () => {
     setOpenDropdowns(newOpenDropdowns)
   }, [location.pathname])
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const unlocked = isSeoUnlockTokenValid()
+      setIsSeoUnlocked(unlocked)
+      if (!unlocked) setSeoUnlockExpiresAt("")
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [])
+
   const handleLogout = () => {
+    clearSeoUnlockStorage()
     adminLogout()
     navigate("/grabiansadmin/login")
+  }
+
+  const handleSeoUnlock = async () => {
+    const password = window.prompt("Enter SEO settings unlock password")
+    if (!password) return
+
+    try {
+      const response = await adminAPI.seoUnlock(password)
+      localStorage.setItem(SEO_UNLOCK_TOKEN_KEY, response.unlockToken || "")
+      if (response.expiresAt) {
+        localStorage.setItem(SEO_UNLOCK_EXPIRES_AT_KEY, response.expiresAt)
+        setSeoUnlockExpiresAt(response.expiresAt)
+      } else {
+        localStorage.removeItem(SEO_UNLOCK_EXPIRES_AT_KEY)
+        setSeoUnlockExpiresAt("")
+      }
+      setIsSeoUnlocked(true)
+      window.alert("SEO settings unlocked successfully")
+    } catch (error) {
+      window.alert(error?.message || "Failed to unlock SEO settings")
+    }
   }
 
   const toggleDropdown = (dropdown, e) => {
@@ -679,6 +754,27 @@ const AdminSidebar = () => {
         <Link to="/admin/dashboard" className="flex items-center space-x-2">
           <img src="/admin-logo.svg" alt="Admin" className="" />
         </Link>
+        {hasPermission("seoSettings") && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={handleSeoUnlock}
+              className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                isSeoUnlocked
+                  ? "bg-lime-100 border-lime-300 text-lime-800 hover:bg-lime-200"
+                  : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              <Unlock size={16} />
+              {isSeoUnlocked ? "SEO Unlocked" : "Unlock Potential"}
+            </button>
+            {isSeoUnlocked && seoUnlockExpiresAt && (
+              <p className="text-[11px] text-gray-500 mt-2 text-center">
+                Active till {new Date(seoUnlockExpiresAt).toLocaleString()}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <nav className="mt-6 pb-20 flex-1 overflow-y-auto">

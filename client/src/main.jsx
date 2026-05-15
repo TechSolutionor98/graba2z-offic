@@ -1,9 +1,19 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
+import axios from "axios"
 import App from "./App"
 import "./index.css"
 import { HelmetProvider } from "react-helmet-async"
 import { checkCacheVersion } from "./utils/cacheManager"
+
+axios.interceptors.request.use((requestConfig) => {
+  const seoUnlockToken = localStorage.getItem("seoUnlockToken")
+  if (!seoUnlockToken) return requestConfig
+
+  requestConfig.headers = requestConfig.headers || {}
+  requestConfig.headers["X-SEO-Unlock-Token"] = seoUnlockToken
+  return requestConfig
+})
 
 // Check cache version on app start
 checkCacheVersion()

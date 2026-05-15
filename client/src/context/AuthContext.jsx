@@ -27,6 +27,11 @@ const initialState = {
   adminPermissions: getInitialPermissions(),
 }
 
+const clearSeoUnlockState = () => {
+  localStorage.removeItem("seoUnlockToken")
+  localStorage.removeItem("seoUnlockExpiresAt")
+}
+
 // Action types
 const AUTH_ACTIONS = {
   LOGIN_START: "LOGIN_START",
@@ -159,6 +164,11 @@ const AuthContext = createContext()
 // Auth provider component
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState)
+
+  // Keep SEO lock strict: every fresh app load starts locked.
+  useEffect(() => {
+    clearSeoUnlockState()
+  }, [])
 
   // Check if user is logged in on app start
   useEffect(() => {
@@ -293,6 +303,8 @@ export const AuthProvider = ({ children }) => {
   const adminLogin = async (credentials) => {
     try {
       const data = await adminAPI.login(credentials)
+      // Force explicit unlock per admin login
+      clearSeoUnlockState()
       localStorage.setItem("adminToken", data.token)
       // Store permissions in localStorage for persistence
       localStorage.setItem("isSuperAdmin", data.isSuperAdmin ? "true" : "false")
@@ -311,6 +323,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const adminLogout = () => {
+    clearSeoUnlockState()
     localStorage.removeItem("adminToken")
     localStorage.removeItem("isSuperAdmin")
     localStorage.removeItem("adminPermissions")
