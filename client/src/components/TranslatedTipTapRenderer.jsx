@@ -52,6 +52,60 @@ const shouldTranslateText = (text) => {
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+const decodeHtmlEntities = (value) => {
+  if (typeof value !== "string" || !value) return value
+  try {
+    const parser = new DOMParser()
+    const decodedDoc = parser.parseFromString(value, "text/html")
+    return decodedDoc.documentElement.textContent || value
+  } catch {
+    return value
+  }
+}
+
+const containsTagLiteralsInText = (html) => {
+  if (typeof html !== "string" || !html.trim()) return false
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, "text/html")
+    const text = doc.body?.textContent || ""
+    return /<\/?[a-z][^>]*>/i.test(text)
+  } catch {
+    return /<\/?[a-z][^>]*>/i.test(html)
+  }
+}
+
+const repairPossiblyBrokenHtmlTranslation = (value) => {
+  if (typeof value !== "string") return value
+
+  let repaired = value
+    .replace(/<\s*["']\s*([a-z/])/gi, "<$1")
+    .replace(/<\s+\/\s*/g, "</")
+
+  if (repaired.includes("&lt;") || repaired.includes("&gt;")) {
+    repaired = decodeHtmlEntities(repaired)
+  }
+
+  return repaired
+}
+
+const resolveDbTranslationContent = (value) => {
+  if (typeof value !== "string") return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  if (!containsTagLiteralsInText(trimmed)) {
+    return trimmed
+  }
+
+  const repaired = repairPossiblyBrokenHtmlTranslation(trimmed)
+  if (!containsTagLiteralsInText(repaired)) {
+    return repaired
+  }
+
+  return null
+}
+
 const parseTranslatableNodes = (content) => {
   const parser = new DOMParser()
   const doc = parser.parseFromString(content, "text/html")
@@ -190,7 +244,7 @@ const TranslatedTipTapRenderer = ({
     return null;
   };
 
-  const dbTranslation = getPreTranslatedField();
+  const dbTranslation = resolveDbTranslationContent(getPreTranslatedField());
   
   useEffect(() => {
     let isCancelled = false

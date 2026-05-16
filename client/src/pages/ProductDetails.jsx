@@ -3411,11 +3411,11 @@ const ProductDetails = () => {
                   className="flex items-start space-x-3 cursor-pointer border-2 border-yellow-400 hover:bg-lime-100 p-2 rounded-lg transition-colors"
                   onClick={() => navigate(getLocalizedPath('/refund-return'))}
                 >
-                  <RotateCcw className="text-green-600 mt-1" size={60} />
+                  <RotateCcw className="text-green-600 mt-1" size={80} />
                   <div>
-                    <h4 className="font-bold text-gray-900 text-sm"><TranslatedText>Delivery & Returns Policy</TranslatedText></h4>
+                    <h4 className="font-bold text-gray-900 text-sm"><TranslatedText>Return and Refund policy</TranslatedText></h4>
                     <p className="text-xs text-gray-700">
-                      <TranslatedText>Delivery in remote areas will be considered as normal delivery which takes place with 1 working day delivery.</TranslatedText>
+                      <TranslatedText>Grabatoz offers a 7-day return policy. Customers may request a return or refund if the received product is different from the product description, defective, or damaged.</TranslatedText>
                     </p>
                   </div>
                 </div>

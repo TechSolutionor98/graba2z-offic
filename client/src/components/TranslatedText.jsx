@@ -5,6 +5,42 @@ import { useLanguage } from "../context/LanguageContext"
 import { getCachedTranslation } from "../LanguageModel/translationService"
 import { uiDictionary } from "../LanguageModel/uiDictionary"
 
+const HTML_ALLOWED_FIELD_NAMES = new Set([
+  "description",
+  "shortdescription",
+  "seocontent",
+  "details",
+  "content",
+])
+
+const hasHtmlLikeContent = (value) => {
+  const source = String(value || "")
+  if (!source.trim()) return false
+  return /<[^>]+>/.test(source) || /&lt;\s*\/?\s*[a-z][^&]*&gt;/i.test(source)
+}
+
+const shouldRejectDbTranslation = (value, fieldName) => {
+  if (typeof value !== "string" || !value.trim()) return false
+
+  const normalizedField = String(fieldName || "")
+    .replace(/Ar$/i, "")
+    .toLowerCase()
+
+  if (HTML_ALLOWED_FIELD_NAMES.has(normalizedField)) {
+    return false
+  }
+
+  if (hasHtmlLikeContent(value)) {
+    return true
+  }
+
+  if (normalizedField === "stockstatus" && value.trim().length > 40) {
+    return true
+  }
+
+  return false
+}
+
 /**
  * TranslatedText - Component that translates text
  * Uses database fields, shared dictionary, and Model API fallback
@@ -44,12 +80,14 @@ const TranslatedText = ({
     // Check for common patterns: fieldNameAr (e.g., nameAr)
     const arField = `${fieldName}Ar`;
     if (sourceDoc[arField]) {
-      return sourceDoc[arField];
+      const value = sourceDoc[arField];
+      return shouldRejectDbTranslation(value, fieldName) ? null : value;
     }
     
     // Check if the fieldName itself is already Arabic (if fieldName was passed as 'nameAr')
     if (fieldName.endsWith('Ar') && sourceDoc[fieldName]) {
-      return sourceDoc[fieldName];
+      const value = sourceDoc[fieldName];
+      return shouldRejectDbTranslation(value, fieldName) ? null : value;
     }
 
     return null;
