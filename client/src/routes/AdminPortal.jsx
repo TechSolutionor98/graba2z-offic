@@ -47,6 +47,7 @@ import AdminManagement from "../pages/admin/AdminManagement"
 import AdminNewsletter from "../pages/admin/AdminNewsletter"
 import AdminOrders from "../pages/admin/AdminOrders"
 import AdminProducts from "../pages/admin/AdminProducts"
+import AdminProductOptionManager from "../pages/admin/AdminProductOptionManager"
 import AdminRequestCallbacks from "../pages/admin/AdminRequestCallbacks"
 import AdminReviews from "../pages/admin/AdminReviews"
 import AdminReviewsApproved from "../pages/admin/AdminReviewsApproved"
@@ -153,6 +154,56 @@ const AdminPortal = () => {
             <Route path="brands" element={<AdminBrands />} />
             <Route path="brands/add" element={<AddBrand />} />
             <Route path="edit-brand/:id" element={<AddBrand />} />
+            <Route
+              path="series"
+              element={<AdminProductOptionManager routeType="series" title="Series" singularTitle="Series" />}
+            />
+            <Route
+              path="series/add"
+              element={
+                <AdminProductOptionManager
+                  routeType="series"
+                  title="Series"
+                  singularTitle="Series"
+                  openFormOnLoad
+                />
+              }
+            />
+            <Route path="makes" element={<AdminProductOptionManager routeType="make" title="Make" singularTitle="Make" />} />
+            <Route
+              path="makes/add"
+              element={<AdminProductOptionManager routeType="make" title="Make" singularTitle="Make" openFormOnLoad />}
+            />
+            <Route
+              path="manufacturers"
+              element={<AdminProductOptionManager routeType="manufacturer" title="Manufacturer" singularTitle="Manufacturer" />}
+            />
+            <Route
+              path="manufacturers/add"
+              element={
+                <AdminProductOptionManager
+                  routeType="manufacturer"
+                  title="Manufacturer"
+                  singularTitle="Manufacturer"
+                  openFormOnLoad
+                />
+              }
+            />
+            <Route
+              path="sold-by"
+              element={<AdminProductOptionManager routeType="sold-by" title="Sold By" singularTitle="Sold By" />}
+            />
+            <Route
+              path="sold-by/add"
+              element={
+                <AdminProductOptionManager
+                  routeType="sold-by"
+                  title="Sold By"
+                  singularTitle="Sold By"
+                  openFormOnLoad
+                />
+              }
+            />
             <Route path="colors" element={<AdminColors />} />
             <Route path="colors/add" element={<AddColor />} />
             <Route path="sizes" element={<AdminSizes />} />

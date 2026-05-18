@@ -66,6 +66,10 @@ const AdminSidebar = () => {
     subcategories4: false,
     coupons: false,
     reviews: false,
+    series: false,
+    makes: false,
+    manufacturers: false,
+    soldBy: false,
     stockAdjustment: false,
     createOrderQuotation: false,
     seoSettings: false,
@@ -86,6 +90,10 @@ const AdminSidebar = () => {
       path.includes("/admin/trash-categories") ||
       path.includes("/admin/brands") ||
       path.includes("/admin/add-brand") ||
+      path.includes("/admin/series") ||
+      path.includes("/admin/makes") ||
+      path.includes("/admin/manufacturers") ||
+      path.includes("/admin/sold-by") ||
       path.includes("/admin/volumes") ||
       path.includes("/admin/add-volume") ||
       path.includes("/admin/warranty") ||
@@ -214,6 +222,18 @@ const AdminSidebar = () => {
     }
     if (path.includes("/admin/subcategories-4") || path.includes("/admin/add-subcategory-4")) {
       newOpenDropdowns.subcategories4 = true
+    }
+    if (path.includes("/admin/series")) {
+      newOpenDropdowns.series = true
+    }
+    if (path.includes("/admin/makes")) {
+      newOpenDropdowns.makes = true
+    }
+    if (path.includes("/admin/manufacturers")) {
+      newOpenDropdowns.manufacturers = true
+    }
+    if (path.includes("/admin/sold-by")) {
+      newOpenDropdowns.soldBy = true
     }
 
     setOpenDropdowns(newOpenDropdowns)
@@ -364,6 +384,50 @@ const AdminSidebar = () => {
           items: [
             { title: "List Brands", path: "/admin/brands" },
             { title: "Add Brand", path: "/admin/brands/add" },
+          ],
+        },
+        {
+          title: "Series",
+          icon: Layers,
+          dropdown: "series",
+          section: "series",
+          permission: "products",
+          items: [
+            { title: "List Series", path: "/admin/series" },
+            { title: "Add Series", path: "/admin/series/add" },
+          ],
+        },
+        {
+          title: "Make",
+          icon: Settings,
+          dropdown: "makes",
+          section: "makes",
+          permission: "products",
+          items: [
+            { title: "List Make", path: "/admin/makes" },
+            { title: "Add Make", path: "/admin/makes/add" },
+          ],
+        },
+        {
+          title: "Manufacturer",
+          icon: Cog,
+          dropdown: "manufacturers",
+          section: "manufacturers",
+          permission: "products",
+          items: [
+            { title: "List Manufacturer", path: "/admin/manufacturers" },
+            { title: "Add Manufacturer", path: "/admin/manufacturers/add" },
+          ],
+        },
+        {
+          title: "Sold By",
+          icon: ShoppingBag,
+          dropdown: "soldBy",
+          section: "soldBy",
+          permission: "products",
+          items: [
+            { title: "List Sold By", path: "/admin/sold-by" },
+            { title: "Add Sold By", path: "/admin/sold-by/add" },
           ],
         },
         {

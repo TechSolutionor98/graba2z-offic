@@ -13,6 +13,7 @@ import ColorVariationForm from "./ColorVariationForm"
 import DosVariationForm from "./DosVariationForm"
 import { getFullImageUrl } from "../../utils/imageUtils"
 import { isSeoUnlockTokenValid } from "../../utils/seoUnlock"
+import { useToast } from "../../context/ToastContext"
 
 import config from "../../config/config"
 
@@ -27,6 +28,13 @@ const PRODUCT_SEO_FIELDS = [
   "ogTitle",
   "ogDescription",
   "ogImage",
+]
+
+const PRODUCT_OPTION_FIELDS = [
+  { field: "series", routeType: "series", label: "Series" },
+  { field: "make", routeType: "make", label: "Make" },
+  { field: "manufacturer", routeType: "manufacturer", label: "Manufacturer" },
+  { field: "soldBy", routeType: "sold-by", label: "Sold By" },
 ]
 
 const countWords = (text = "") => {
@@ -44,8 +52,15 @@ const limitWords = (text = "", maxWords = SEO_TITLE_MAX_WORDS) => {
 }
 
 const ProductForm = ({ product, onSubmit, onCancel }) => {
+  const { showToast } = useToast()
   const [categories, setCategories] = useState([])
   const [brands, setBrands] = useState([])
+  const [productOptions, setProductOptions] = useState({
+    series: [],
+    make: [],
+    manufacturer: [],
+    soldBy: [],
+  })
   const [subCategories, setSubCategories] = useState([])
   const [subCategories2, setSubCategories2] = useState([])
   const [subCategories3, setSubCategories3] = useState([])
@@ -60,6 +75,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     barcode: "",
     gtin: "",
     brand: "",
+    series: "",
+    make: "",
+    manufacturer: "",
+    soldBy: "",
     parentCategory: "",
     category: "",
     subCategory: "",
@@ -297,6 +316,28 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
             (typeof product.brand === "object" && product.brand ? product.brand._id : product.brand)
               ? String(typeof product.brand === "object" && product.brand ? product.brand._id : product.brand)
               : "",
+          series:
+            (typeof product.series === "object" && product.series ? product.series._id : product.series)
+              ? String(typeof product.series === "object" && product.series ? product.series._id : product.series)
+              : "",
+          make:
+            (typeof product.make === "object" && product.make ? product.make._id : product.make)
+              ? String(typeof product.make === "object" && product.make ? product.make._id : product.make)
+              : "",
+          manufacturer:
+            (typeof product.manufacturer === "object" && product.manufacturer
+              ? product.manufacturer._id
+              : product.manufacturer)
+              ? String(
+                  typeof product.manufacturer === "object" && product.manufacturer
+                    ? product.manufacturer._id
+                    : product.manufacturer,
+                )
+              : "",
+          soldBy:
+            (typeof product.soldBy === "object" && product.soldBy ? product.soldBy._id : product.soldBy)
+              ? String(typeof product.soldBy === "object" && product.soldBy ? product.soldBy._id : product.soldBy)
+              : "",
           parentCategory: parentId ? String(parentId) : "",
           category: resolvedCategoryId ? String(resolvedCategoryId) : "",
           subCategory:
@@ -521,6 +562,68 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       console.error("Failed to load brands:", error)
     }
   }
+
+  const fetchProductOptionsByType = async (routeType) => {
+    try {
+      const { data } = await axios.get(`${config.API_URL}/api/product-system-options/${routeType}`)
+      return Array.isArray(data) ? data : []
+    } catch (error) {
+      console.error(`Failed to load product options for ${routeType}:`, error)
+      return []
+    }
+  }
+
+  const fetchAllProductOptions = async () => {
+    const [seriesOptions, makeOptions, manufacturerOptions, soldByOptions] = await Promise.all([
+      fetchProductOptionsByType("series"),
+      fetchProductOptionsByType("make"),
+      fetchProductOptionsByType("manufacturer"),
+      fetchProductOptionsByType("sold-by"),
+    ])
+
+    setProductOptions({
+      series: seriesOptions,
+      make: makeOptions,
+      manufacturer: manufacturerOptions,
+      soldBy: soldByOptions,
+    })
+  }
+
+  const handleCreateProductOption = async ({ field, routeType, label }) => {
+    const input = window.prompt(`Enter ${label} name`)
+    const name = String(input || "").trim()
+    if (!name) return
+
+    try {
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      if (!token) {
+        showToast("Please login as admin first", "error")
+        return
+      }
+
+      const { data } = await axios.post(
+        `${config.API_URL}/api/product-system-options/${routeType}`,
+        { name },
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+
+      await fetchAllProductOptions()
+      const createdId = data?._id ? String(data._id) : ""
+      if (createdId) {
+        setFormData((prev) => ({ ...prev, [field]: createdId }))
+      }
+      showToast(`${label} added successfully`, "success")
+    } catch (error) {
+      const message = error?.response?.data?.message || `Failed to add ${label.toLowerCase()}`
+      showToast(message, "error")
+    }
+  }
+
+  useEffect(() => {
+    fetchAllProductOptions()
+  }, [])
 
   const generateSlug = (name) => {
     return name
@@ -818,6 +921,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         maxPurchaseQty: Number.parseInt(formData.maxPurchaseQty) || 10,
         weight: Number.parseFloat(formData.weight) || 0,
         tax: taxValue,
+        series: formData.series || undefined,
+        make: formData.make || undefined,
+        manufacturer: formData.manufacturer || undefined,
+        soldBy: formData.soldBy || undefined,
         tags: formData.tags ? formData.tags.split(",").map((tag) => tag.trim()) : [],
         galleryImages: formData.galleryImages.filter((img) => img !== ""),
         video: formData.video || "",
@@ -1110,6 +1217,34 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               ))}
             </select>
           </div>
+
+          {PRODUCT_OPTION_FIELDS.map((optionConfig) => (
+            <div key={optionConfig.field}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{optionConfig.label}</label>
+              <div className="flex items-center gap-2">
+                <select
+                  name={optionConfig.field}
+                  value={formData[optionConfig.field]}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select {optionConfig.label}</option>
+                  {productOptions[optionConfig.field].map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handleCreateProductOption(optionConfig)}
+                  className="px-3 py-2 text-xs font-medium rounded-md border border-gray-300 hover:bg-gray-50 whitespace-nowrap"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Pricing */}

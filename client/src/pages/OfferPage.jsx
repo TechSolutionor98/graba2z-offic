@@ -15,6 +15,12 @@ const DEFAULT_PRICE_RANGE = [0, Number.POSITIVE_INFINITY]
 const PRICE_FILTER_MIN = 0
 const PRICE_FILTER_MAX = 20000
 const INFINITY_SYMBOL = "∞"
+const PRODUCT_SYSTEM_FILTERS = [
+  { key: "series", routeType: "series", label: "Series" },
+  { key: "make", routeType: "make", label: "Make" },
+  { key: "manufacturer", routeType: "manufacturer", label: "Manufacturer" },
+  { key: "soldBy", routeType: "sold-by", label: "Sold By" },
+]
 
 const SortDropdown = ({ value, onChange }) => {
   const [open, setOpen] = useState(false)
@@ -110,12 +116,26 @@ const OfferPage = () => {
   const [isPriceFilterApplied, setIsPriceFilterApplied] = useState(false)
   const [priceFilterApplyCount, setPriceFilterApplyCount] = useState(0)
   const [selectedBrands, setSelectedBrands] = useState([])
+  const [selectedSeries, setSelectedSeries] = useState([])
+  const [selectedMakes, setSelectedMakes] = useState([])
+  const [selectedManufacturers, setSelectedManufacturers] = useState([])
+  const [selectedSoldBy, setSelectedSoldBy] = useState([])
   const [stockFilters, setStockFilters] = useState({ inStock: false, outOfStock: false })
   const [brandSearch, setBrandSearch] = useState("")
   const [sortBy, setSortBy] = useState("newest")
   const [showPriceFilter, setShowPriceFilter] = useState(true)
   const [showCategoryFilter, setShowCategoryFilter] = useState(false)
   const [showBrandFilter, setShowBrandFilter] = useState(false)
+  const [showSeriesFilter, setShowSeriesFilter] = useState(false)
+  const [showMakeFilter, setShowMakeFilter] = useState(false)
+  const [showManufacturerFilter, setShowManufacturerFilter] = useState(false)
+  const [showSoldByFilter, setShowSoldByFilter] = useState(false)
+  const [productSystemOptions, setProductSystemOptions] = useState({
+    series: [],
+    make: [],
+    manufacturer: [],
+    soldBy: [],
+  })
   const [allSubcategories, setAllSubcategories] = useState([])
   const [expandedCategories, setExpandedCategories] = useState({})
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
@@ -159,6 +179,19 @@ const OfferPage = () => {
     )
   }
 
+  const normalizeRefId = (value) => {
+    if (value == null) return null
+    const resolved = typeof value === "object" ? value?._id : value
+    if (resolved == null) return null
+    const id = String(resolved).trim()
+    if (!id) return null
+    const lowered = id.toLowerCase()
+    if (lowered === "null" || lowered === "undefined" || lowered === "none" || lowered === "n/a" || lowered === "na" || lowered === "-") {
+      return null
+    }
+    return id
+  }
+
   const normalizeOfferProduct = (item) => {
     const product = { ...(item?.product || {}) }
 
@@ -196,9 +229,13 @@ const OfferPage = () => {
       setLoading(true)
       setError(null)
 
-      const [pageResponse, productsRes] = await Promise.all([
+      const [pageResponse, productsRes, seriesRes, makeRes, manufacturerRes, soldByRes] = await Promise.all([
         axios.get(`${config.API_URL}/api/offer-pages/slug/${slug}`),
         axios.get(`${config.API_URL}/api/offer-products/page/${slug}`),
+        axios.get(`${config.API_URL}/api/product-system-options/series`),
+        axios.get(`${config.API_URL}/api/product-system-options/make`),
+        axios.get(`${config.API_URL}/api/product-system-options/manufacturer`),
+        axios.get(`${config.API_URL}/api/product-system-options/sold-by`),
       ])
       const pageData = pageResponse.data
 
@@ -218,6 +255,31 @@ const OfferPage = () => {
 
       setProducts(enrichedProducts)
       setFilteredProducts(enrichedProducts)
+
+      const idsByField = {
+        series: new Set(),
+        make: new Set(),
+        manufacturer: new Set(),
+        soldBy: new Set(),
+      }
+      enrichedProducts.forEach(({ product }) => {
+        PRODUCT_SYSTEM_FILTERS.forEach(({ key }) => {
+          const value = normalizeRefId(product?.[key])
+          if (value) idsByField[key].add(value)
+        })
+      })
+
+      const filterValidOptions = (options, optionKey) =>
+        (Array.isArray(options) ? options : []).filter(
+          (item) => item && item._id && item.isActive !== false && idsByField[optionKey].has(item._id),
+        )
+
+      setProductSystemOptions({
+        series: filterValidOptions(seriesRes?.data, "series"),
+        make: filterValidOptions(makeRes?.data, "make"),
+        manufacturer: filterValidOptions(manufacturerRes?.data, "manufacturer"),
+        soldBy: filterValidOptions(soldByRes?.data, "soldBy"),
+      })
 
       // Extract unique categories from products for slider (instead of using offer-categories API)
       const uniqueCategoriesMap = new Map()
@@ -499,6 +561,10 @@ const OfferPage = () => {
     setPriceFilterApplyCount((count) => count + 1)
   }
 
+  const toggleProductSystemSelection = (value, setter) => {
+    setter((prev) => (prev.includes(value) ? prev.filter((id) => id !== value) : [...prev, value]))
+  }
+
   const resetPriceFilter = () => {
     setPriceRange(DEFAULT_PRICE_RANGE)
     setIsPriceFilterApplied(false)
@@ -507,6 +573,10 @@ const OfferPage = () => {
 
   const clearAllFilters = () => {
     setSelectedBrands([])
+    setSelectedSeries([])
+    setSelectedMakes([])
+    setSelectedManufacturers([])
+    setSelectedSoldBy([])
     setSelectedCategory(null)
     setSelectedParentCategory(null)
     setSelectedSubCategory1(null)
@@ -548,6 +618,74 @@ const OfferPage = () => {
 
   const filteredBrands = brands.filter(item =>
     item.brand?.name?.toLowerCase().includes(brandSearch.toLowerCase())
+  )
+
+  const availableSeries = productSystemOptions.series || []
+  const availableMakes = productSystemOptions.make || []
+  const availableManufacturers = productSystemOptions.manufacturer || []
+  const availableSoldBy = productSystemOptions.soldBy || []
+  const showSeriesSection = availableSeries.length > 0 || selectedSeries.length > 0
+  const showMakeSection = availableMakes.length > 0 || selectedMakes.length > 0
+  const showManufacturerSection = availableManufacturers.length > 0 || selectedManufacturers.length > 0
+  const showSoldBySection = availableSoldBy.length > 0 || selectedSoldBy.length > 0
+
+  const getOptionNameById = (optionKey, optionId) => {
+    const options = productSystemOptions[optionKey] || []
+    return options.find((item) => item._id === optionId)?.name || optionId
+  }
+
+  const renderProductSystemFilterSection = ({
+    title,
+    selectedValues,
+    options,
+    showFilter,
+    setShowFilter,
+    idPrefix,
+    onToggle,
+  }) => (
+    <div className="border-b pb-4">
+      <button
+        onClick={() => setShowFilter(!showFilter)}
+        className={`flex items-center justify-between w-full text-left font-medium ${
+          selectedValues.length > 0 ? "text-lime-500" : "text-gray-900"
+        }`}
+      >
+        <span className="flex items-center gap-2">
+          <TranslatedText text={title} />
+          {selectedValues.length > 0 && (
+            <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-lime-500 rounded-full">
+              {selectedValues.length}
+            </span>
+          )}
+        </span>
+        {showFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
+      </button>
+      {showFilter && (
+        <div className="mt-4 space-y-2">
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {options.map((item) => (
+              <div key={item._id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`${idPrefix}-${item._id}`}
+                  checked={selectedValues.includes(item._id)}
+                  onChange={() => onToggle(item._id)}
+                  className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
+                />
+                <label htmlFor={`${idPrefix}-${item._id}`} className="ml-2 text-sm text-gray-700 cursor-pointer">
+                  <TranslatedText text={item.name} />
+                </label>
+              </div>
+            ))}
+            {options.length === 0 && (
+              <p className="text-sm text-gray-500 italic">
+                <TranslatedText text={`No ${title.toLowerCase()} found`} />
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   )
 
   // Helper function to check if a category is in the selected hierarchy path
@@ -611,11 +749,44 @@ const OfferPage = () => {
   const applyFilters = () => {
     let filtered = [...products]
 
+    const getFieldId = (field) => {
+      if (!field) return null
+      return typeof field === "object" ? field._id : field
+    }
+
     // Brand filter (multiple brands)
     if (selectedBrands.length > 0) {
       filtered = filtered.filter(item => {
         const productBrandId = item.product?.brand?._id || item.product?.brand
         return selectedBrands.includes(productBrandId)
+      })
+    }
+
+    if (selectedSeries.length > 0) {
+      filtered = filtered.filter((item) => {
+        const seriesId = getFieldId(item.product?.series)
+        return seriesId ? selectedSeries.includes(seriesId) : false
+      })
+    }
+
+    if (selectedMakes.length > 0) {
+      filtered = filtered.filter((item) => {
+        const makeId = getFieldId(item.product?.make)
+        return makeId ? selectedMakes.includes(makeId) : false
+      })
+    }
+
+    if (selectedManufacturers.length > 0) {
+      filtered = filtered.filter((item) => {
+        const manufacturerId = getFieldId(item.product?.manufacturer)
+        return manufacturerId ? selectedManufacturers.includes(manufacturerId) : false
+      })
+    }
+
+    if (selectedSoldBy.length > 0) {
+      filtered = filtered.filter((item) => {
+        const soldById = getFieldId(item.product?.soldBy)
+        return soldById ? selectedSoldBy.includes(soldById) : false
       })
     }
 
@@ -625,10 +796,7 @@ const OfferPage = () => {
         const product = item.product
         
         // Helper to extract ID from object or string
-        const getId = (field) => {
-          if (!field) return null
-          return typeof field === 'object' ? field._id : field
-        }
+        const getId = (field) => getFieldId(field)
         
         // Get all category/subcategory IDs from the product
         const categoryId = getId(product.category)
@@ -776,7 +944,18 @@ const OfferPage = () => {
     if (products.length > 0) {
       applyFilters()
     }
-  }, [selectedBrands, selectedCategory, priceFilterApplyCount, stockFilters, sortBy, products])
+  }, [
+    selectedBrands,
+    selectedSeries,
+    selectedMakes,
+    selectedManufacturers,
+    selectedSoldBy,
+    selectedCategory,
+    priceFilterApplyCount,
+    stockFilters,
+    sortBy,
+    products,
+  ])
 
   useEffect(() => {
     if (brandSliderRef.current) {
@@ -872,6 +1051,10 @@ const OfferPage = () => {
                   selectedSubCategory3 || 
                   selectedSubCategory4 || 
                   selectedBrands.length > 0 || 
+                  selectedSeries.length > 0 ||
+                  selectedMakes.length > 0 ||
+                  selectedManufacturers.length > 0 ||
+                  selectedSoldBy.length > 0 ||
                   stockFilters.inStock || 
                   stockFilters.outOfStock ||
                   isPriceFilterApplied) && (
@@ -1031,6 +1214,62 @@ const OfferPage = () => {
                           </div>
                         ) : null
                       })}
+                      {selectedSeries.map((seriesId) => (
+                        <div key={`series-mobile-${seriesId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold"><TranslatedText>Series:</TranslatedText></span>{" "}
+                            <TranslatedText text={getOptionNameById("series", seriesId)} />
+                          </span>
+                          <button
+                            onClick={() => toggleProductSystemSelection(seriesId, setSelectedSeries)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {selectedMakes.map((makeId) => (
+                        <div key={`make-mobile-${makeId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold"><TranslatedText>Make:</TranslatedText></span>{" "}
+                            <TranslatedText text={getOptionNameById("make", makeId)} />
+                          </span>
+                          <button
+                            onClick={() => toggleProductSystemSelection(makeId, setSelectedMakes)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {selectedManufacturers.map((manufacturerId) => (
+                        <div key={`manufacturer-mobile-${manufacturerId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold"><TranslatedText>Manufacturer:</TranslatedText></span>{" "}
+                            <TranslatedText text={getOptionNameById("manufacturer", manufacturerId)} />
+                          </span>
+                          <button
+                            onClick={() => toggleProductSystemSelection(manufacturerId, setSelectedManufacturers)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {selectedSoldBy.map((soldById) => (
+                        <div key={`soldby-mobile-${soldById}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold"><TranslatedText>Sold By:</TranslatedText></span>{" "}
+                            <TranslatedText text={getOptionNameById("soldBy", soldById)} />
+                          </span>
+                          <button
+                            onClick={() => toggleProductSystemSelection(soldById, setSelectedSoldBy)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
 
                       {(isPriceFilterApplied) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
@@ -1251,6 +1490,46 @@ const OfferPage = () => {
                   </div>
                 )}
 
+                {showSeriesSection && renderProductSystemFilterSection({
+                  title: "Series",
+                  selectedValues: selectedSeries,
+                  options: availableSeries,
+                  showFilter: showSeriesFilter,
+                  setShowFilter: setShowSeriesFilter,
+                  idPrefix: "series-mobile",
+                  onToggle: (value) => toggleProductSystemSelection(value, setSelectedSeries),
+                })}
+
+                {showMakeSection && renderProductSystemFilterSection({
+                  title: "Make",
+                  selectedValues: selectedMakes,
+                  options: availableMakes,
+                  showFilter: showMakeFilter,
+                  setShowFilter: setShowMakeFilter,
+                  idPrefix: "make-mobile",
+                  onToggle: (value) => toggleProductSystemSelection(value, setSelectedMakes),
+                })}
+
+                {showManufacturerSection && renderProductSystemFilterSection({
+                  title: "Manufacturer",
+                  selectedValues: selectedManufacturers,
+                  options: availableManufacturers,
+                  showFilter: showManufacturerFilter,
+                  setShowFilter: setShowManufacturerFilter,
+                  idPrefix: "manufacturer-mobile",
+                  onToggle: (value) => toggleProductSystemSelection(value, setSelectedManufacturers),
+                })}
+
+                {showSoldBySection && renderProductSystemFilterSection({
+                  title: "Sold By",
+                  selectedValues: selectedSoldBy,
+                  options: availableSoldBy,
+                  showFilter: showSoldByFilter,
+                  setShowFilter: setShowSoldByFilter,
+                  idPrefix: "soldby-mobile",
+                  onToggle: (value) => toggleProductSystemSelection(value, setSelectedSoldBy),
+                })}
+
                 {/* Stock Status Filter - Mobile */}
                 <div className="border-b pb-4">
                   <div className={`font-medium mb-4 ${
@@ -1393,6 +1672,10 @@ const OfferPage = () => {
                   selectedSubCategory3 || 
                   selectedSubCategory4 || 
                   selectedBrands.length > 0 || 
+                  selectedSeries.length > 0 ||
+                  selectedMakes.length > 0 ||
+                  selectedManufacturers.length > 0 ||
+                  selectedSoldBy.length > 0 ||
                   stockFilters.inStock || 
                   stockFilters.outOfStock ||
                   isPriceFilterApplied) && (
@@ -1552,6 +1835,62 @@ const OfferPage = () => {
                           </div>
                         ) : null
                       })}
+                      {selectedSeries.map((seriesId) => (
+                        <div key={`series-desktop-${seriesId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold"><TranslatedText>Series:</TranslatedText></span>{" "}
+                            <TranslatedText text={getOptionNameById("series", seriesId)} />
+                          </span>
+                          <button
+                            onClick={() => toggleProductSystemSelection(seriesId, setSelectedSeries)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {selectedMakes.map((makeId) => (
+                        <div key={`make-desktop-${makeId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold"><TranslatedText>Make:</TranslatedText></span>{" "}
+                            <TranslatedText text={getOptionNameById("make", makeId)} />
+                          </span>
+                          <button
+                            onClick={() => toggleProductSystemSelection(makeId, setSelectedMakes)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {selectedManufacturers.map((manufacturerId) => (
+                        <div key={`manufacturer-desktop-${manufacturerId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold"><TranslatedText>Manufacturer:</TranslatedText></span>{" "}
+                            <TranslatedText text={getOptionNameById("manufacturer", manufacturerId)} />
+                          </span>
+                          <button
+                            onClick={() => toggleProductSystemSelection(manufacturerId, setSelectedManufacturers)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {selectedSoldBy.map((soldById) => (
+                        <div key={`soldby-desktop-${soldById}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                          <span className="text-gray-700">
+                            <span className="font-semibold"><TranslatedText>Sold By:</TranslatedText></span>{" "}
+                            <TranslatedText text={getOptionNameById("soldBy", soldById)} />
+                          </span>
+                          <button
+                            onClick={() => toggleProductSystemSelection(soldById, setSelectedSoldBy)}
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
 
                       {(isPriceFilterApplied) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
@@ -1957,6 +2296,46 @@ const OfferPage = () => {
                   </div>
                 )}
 
+                {showSeriesSection && renderProductSystemFilterSection({
+                  title: "Series",
+                  selectedValues: selectedSeries,
+                  options: availableSeries,
+                  showFilter: showSeriesFilter,
+                  setShowFilter: setShowSeriesFilter,
+                  idPrefix: "series-desktop",
+                  onToggle: (value) => toggleProductSystemSelection(value, setSelectedSeries),
+                })}
+
+                {showMakeSection && renderProductSystemFilterSection({
+                  title: "Make",
+                  selectedValues: selectedMakes,
+                  options: availableMakes,
+                  showFilter: showMakeFilter,
+                  setShowFilter: setShowMakeFilter,
+                  idPrefix: "make-desktop",
+                  onToggle: (value) => toggleProductSystemSelection(value, setSelectedMakes),
+                })}
+
+                {showManufacturerSection && renderProductSystemFilterSection({
+                  title: "Manufacturer",
+                  selectedValues: selectedManufacturers,
+                  options: availableManufacturers,
+                  showFilter: showManufacturerFilter,
+                  setShowFilter: setShowManufacturerFilter,
+                  idPrefix: "manufacturer-desktop",
+                  onToggle: (value) => toggleProductSystemSelection(value, setSelectedManufacturers),
+                })}
+
+                {showSoldBySection && renderProductSystemFilterSection({
+                  title: "Sold By",
+                  selectedValues: selectedSoldBy,
+                  options: availableSoldBy,
+                  showFilter: showSoldByFilter,
+                  setShowFilter: setShowSoldByFilter,
+                  idPrefix: "soldby-desktop",
+                  onToggle: (value) => toggleProductSystemSelection(value, setSelectedSoldBy),
+                })}
+
                 {/* Stock Status Filter */}
                 <div className="border-b pb-4">
                   <div className={`font-medium mb-4 ${
@@ -2037,6 +2416,10 @@ const OfferPage = () => {
                     selectedSubCategory3 || 
                     selectedSubCategory4 || 
                     selectedBrands.length > 0 || 
+                    selectedSeries.length > 0 ||
+                    selectedMakes.length > 0 ||
+                    selectedManufacturers.length > 0 ||
+                    selectedSoldBy.length > 0 ||
                     stockFilters.inStock || 
                     stockFilters.outOfStock ||
                     isPriceFilterApplied) && (
@@ -2044,6 +2427,10 @@ const OfferPage = () => {
                       {[
                         selectedParentCategory || selectedSubCategory1 || selectedSubCategory2 || selectedSubCategory3 || selectedSubCategory4,
                         selectedBrands.length,
+                        selectedSeries.length > 0,
+                        selectedMakes.length > 0,
+                        selectedManufacturers.length > 0,
+                        selectedSoldBy.length > 0,
                         stockFilters.inStock || stockFilters.outOfStock,
                         isPriceFilterApplied
                       ].filter(Boolean).length}

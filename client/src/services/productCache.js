@@ -493,6 +493,7 @@ class ProductCacheService {
   constructor() {
     this.CACHE_KEY = "graba2z_products_cache"
     this.CACHE_CHUNK_PREFIX = "graba2z_products_chunk_"
+    this.CACHE_VERSION = 2
     this.CACHE_EXPIRY = 8 * 60 * 60 * 1000 // 8hrs
     this.MAX_CACHE_SIZE = 1 * 1024 * 1024 // 1MB per chunk (reduced)
     this.MAX_CHUNKS = 20 // More chunks, smaller size
@@ -526,6 +527,7 @@ class ProductCacheService {
     try {
       const data = this.decompressData(cached)
       if (!data) return false
+      if (data.version !== this.CACHE_VERSION) return false
 
       const now = Date.now()
       return data.timestamp && now - data.timestamp < this.CACHE_EXPIRY
@@ -608,6 +610,10 @@ class ProductCacheService {
         subCategory2: product.subCategory2,
         subCategory3: product.subCategory3,
         subCategory4: product.subCategory4,
+        series: product.series,
+        make: product.make,
+        manufacturer: product.manufacturer,
+        soldBy: product.soldBy,
         countInStock: product.countInStock,
         stockStatus: product.stockStatus,
         discount: product.discount,
@@ -623,6 +629,7 @@ class ProductCacheService {
       const cacheData = {
         products: minimalProducts,
         timestamp: Date.now(),
+        version: this.CACHE_VERSION,
         isMinimal: true,
       }
 
@@ -661,6 +668,7 @@ class ProductCacheService {
         totalProducts: products.length,
         chunkCount: chunks.length,
         timestamp: Date.now(),
+        version: this.CACHE_VERSION,
         isChunked: true,
       }
 
@@ -840,6 +848,13 @@ class ProductCacheService {
       return values
     }
 
+    const getFieldId = (field) => {
+      if (!field) return null
+      if (typeof field === "string") return field
+      if (typeof field === "object" && field._id) return String(field._id)
+      return null
+    }
+
     const matchesField = (field, expected) => {
       if (!expected || expected === "all") return true
       const rawExpected = String(expected)
@@ -879,6 +894,34 @@ class ProductCacheService {
         const brandId = typeof product.brand === "string" ? product.brand : product.brand._id
 
         return filters.brand.includes(brandId)
+      })
+    }
+
+    if (filters.series && filters.series.length > 0) {
+      filteredProducts = filteredProducts.filter((product) => {
+        const seriesId = getFieldId(product.series)
+        return seriesId ? filters.series.includes(seriesId) : false
+      })
+    }
+
+    if (filters.make && filters.make.length > 0) {
+      filteredProducts = filteredProducts.filter((product) => {
+        const makeId = getFieldId(product.make)
+        return makeId ? filters.make.includes(makeId) : false
+      })
+    }
+
+    if (filters.manufacturer && filters.manufacturer.length > 0) {
+      filteredProducts = filteredProducts.filter((product) => {
+        const manufacturerId = getFieldId(product.manufacturer)
+        return manufacturerId ? filters.manufacturer.includes(manufacturerId) : false
+      })
+    }
+
+    if (filters.soldBy && filters.soldBy.length > 0) {
+      filteredProducts = filteredProducts.filter((product) => {
+        const soldById = getFieldId(product.soldBy)
+        return soldById ? filters.soldBy.includes(soldById) : false
       })
     }
 

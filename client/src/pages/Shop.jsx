@@ -27,6 +27,12 @@ const PRICE_FILTER_MAX = 20000
 const PRICE_FILTER_STEP = 1
 const INFINITY_SYMBOL = "∞"
 const NUMERIC_INPUT_PATTERN = /^\d*$/
+const PRODUCT_SYSTEM_FILTERS = [
+  { key: "series", routeType: "series", label: "Series" },
+  { key: "make", routeType: "make", label: "Make" },
+  { key: "manufacturer", routeType: "manufacturer", label: "Manufacturer" },
+  { key: "soldBy", routeType: "sold-by", label: "Sold By" },
+]
 
 const bounceStyle = {
   animation: "bounce 1s infinite",
@@ -321,6 +327,10 @@ const Shop = () => {
   const [actualSearchQuery, setActualSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedBrands, setSelectedBrands] = useState([])
+  const [selectedSeries, setSelectedSeries] = useState([])
+  const [selectedMakes, setSelectedMakes] = useState([])
+  const [selectedManufacturers, setSelectedManufacturers] = useState([])
+  const [selectedSoldBy, setSelectedSoldBy] = useState([])
   const [priceRange, setPriceRange] = useState(DEFAULT_PRICE_RANGE)
   const [maxPrice, setMaxPrice] = useState(PRICE_FILTER_MAX)
   const [sortBy, setSortBy] = useState("newest")
@@ -346,7 +356,17 @@ const Shop = () => {
   const [showPriceFilter, setShowPriceFilter] = useState(true)
   const [showCategoryFilter, setShowCategoryFilter] = useState(false)
   const [showBrandFilter, setShowBrandFilter] = useState(false)
+  const [showSeriesFilter, setShowSeriesFilter] = useState(false)
+  const [showMakeFilter, setShowMakeFilter] = useState(false)
+  const [showManufacturerFilter, setShowManufacturerFilter] = useState(false)
+  const [showSoldByFilter, setShowSoldByFilter] = useState(false)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  const [productSystemOptions, setProductSystemOptions] = useState({
+    series: [],
+    make: [],
+    manufacturer: [],
+    soldBy: [],
+  })
 
   // State for expandable category tree
   const [expandedCategories, setExpandedCategories] = useState({})
@@ -494,6 +514,10 @@ const Shop = () => {
       subcategory3: resolvedLevel3,
       subcategory4: resolvedLevel4,
       brand: selectedBrands.length > 0 ? selectedBrands : null,
+      series: selectedSeries.length > 0 ? selectedSeries : null,
+      make: selectedMakes.length > 0 ? selectedMakes : null,
+      manufacturer: selectedManufacturers.length > 0 ? selectedManufacturers : null,
+      soldBy: selectedSoldBy.length > 0 ? selectedSoldBy : null,
       search: null,
       priceRange: includePriceRange && isPriceFilterApplied ? priceRange : null,
       stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
@@ -552,6 +576,13 @@ const Shop = () => {
           if (brand.name) textsToTranslate.push(brand.name)
         })
       }
+
+      PRODUCT_SYSTEM_FILTERS.forEach(({ key }) => {
+        const options = productSystemOptions[key] || []
+        options.forEach((option) => {
+          if (option?.name) textsToTranslate.push(option.name)
+        })
+      })
       
       // Preload all translations in one batch
       if (textsToTranslate.length > 0) {
@@ -559,7 +590,7 @@ const Shop = () => {
         preloadTranslations(textsToTranslate, 'ar')
       }
     }
-  }, [categories, subCategories, brands, currentLanguage.code])
+  }, [categories, subCategories, brands, productSystemOptions, currentLanguage.code])
 
   // Progressive search function
   // Subcategory slider handlers
@@ -821,6 +852,7 @@ const Shop = () => {
   useEffect(() => {
     fetchCategories()
     fetchBrands()
+    fetchProductSystemOptions()
     fetchBanners()
     fetchAllSubcategories()
     loadAndFilterProducts()
@@ -840,6 +872,10 @@ const Shop = () => {
     location.search,
     selectedCategory,
     selectedBrands,
+    selectedSeries,
+    selectedMakes,
+    selectedManufacturers,
+    selectedSoldBy,
     searchQuery,
     priceFilterApplyCount,
     selectedSubCategories,
@@ -1119,6 +1155,24 @@ const Shop = () => {
     }
   }
 
+  const fetchProductSystemOptions = async () => {
+    try {
+      const responses = await Promise.all(
+        PRODUCT_SYSTEM_FILTERS.map(({ routeType }) => axios.get(`${API_BASE_URL}/api/product-system-options/${routeType}`)),
+      )
+
+      const nextOptions = PRODUCT_SYSTEM_FILTERS.reduce((acc, { key }, index) => {
+        const list = Array.isArray(responses[index]?.data) ? responses[index].data : []
+        acc[key] = list.filter((item) => item && item._id && item.isActive !== false)
+        return acc
+      }, {})
+
+      setProductSystemOptions((prev) => ({ ...prev, ...nextOptions }))
+    } catch (err) {
+      // Handle error silently
+    }
+  }
+
   const fetchBanners = async () => {
     try {
       const { data } = await axios.get(`${API_BASE_URL}/api/banners`)
@@ -1202,6 +1256,35 @@ const Shop = () => {
     }
     return id
   }
+
+  const getProductSystemFieldId = (product, key) => {
+    if (!product) return null
+    return normalizeRefId(product[key])
+  }
+
+  const getOptionNameById = (optionKey, optionId) => {
+    const options = productSystemOptions[optionKey] || []
+    return options.find((item) => item._id === optionId)?.name || optionId
+  }
+
+  const buildAvailableProductSystemOptions = (optionKey) => {
+    const optionIdsInProducts = new Set(
+      products
+        .map((product) => getProductSystemFieldId(product, optionKey))
+        .filter(Boolean),
+    )
+    const options = productSystemOptions[optionKey] || []
+    return options.filter((item) => optionIdsInProducts.has(item._id))
+  }
+
+  const availableSeries = buildAvailableProductSystemOptions("series")
+  const availableMakes = buildAvailableProductSystemOptions("make")
+  const availableManufacturers = buildAvailableProductSystemOptions("manufacturer")
+  const availableSoldBy = buildAvailableProductSystemOptions("soldBy")
+  const showSeriesSection = availableSeries.length > 0 || selectedSeries.length > 0
+  const showMakeSection = availableMakes.length > 0 || selectedMakes.length > 0
+  const showManufacturerSection = availableManufacturers.length > 0 || selectedManufacturers.length > 0
+  const showSoldBySection = availableSoldBy.length > 0 || selectedSoldBy.length > 0
 
   const getSubcategoryCategoryId = (sub) => {
     if (!sub) return null
@@ -1650,6 +1733,10 @@ const Shop = () => {
     navigate(url)
   }
 
+  const toggleProductSystemSelection = (value, setter) => {
+    setter((prev) => (prev.includes(value) ? prev.filter((id) => id !== value) : [...prev, value]))
+  }
+
   const handleStockFilterChange = (key) => {
     setStockFilters((prev) => {
       const newState = { inStock: false, outOfStock: false, onSale: false }
@@ -1691,6 +1778,10 @@ const Shop = () => {
   const clearAllFilters = () => {
     setSelectedCategory("all")
     setSelectedBrands([])
+    setSelectedSeries([])
+    setSelectedMakes([])
+    setSelectedManufacturers([])
+    setSelectedSoldBy([])
     setSelectedSubCategories([])
     resetPriceFilter()
     setSearchQuery("")
@@ -1698,6 +1789,60 @@ const Shop = () => {
     setStockFilters({ inStock: false, outOfStock: false, onSale: false })
     navigate("/shop")
   }
+
+  const renderProductSystemFilterSection = ({
+    title,
+    selectedValues,
+    options,
+    showFilter,
+    setShowFilter,
+    idPrefix,
+    onToggle,
+  }) => (
+    <div className="border-b pb-4">
+      <button
+        onClick={() => setShowFilter(!showFilter)}
+        className={`flex items-center justify-between w-full text-left font-medium ${
+          selectedValues.length > 0 ? "text-lime-500" : "text-gray-900"
+        }`}
+      >
+        <span className="flex items-center gap-2">
+          <TranslatedText text={title} />
+          {selectedValues.length > 0 && (
+            <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-lime-500 rounded-full">
+              {selectedValues.length}
+            </span>
+          )}
+        </span>
+        {showFilter ? <Minus size={16} /> : <ChevronDown size={16} />}
+      </button>
+      {showFilter && (
+        <div className="mt-4 space-y-2">
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {options.map((item) => (
+              <div key={item._id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`${idPrefix}-${item._id}`}
+                  checked={selectedValues.includes(item._id)}
+                  onChange={() => onToggle(item._id)}
+                  className="w-4 h-4 text-lime-600 border-gray-300 rounded focus:ring-lime-500"
+                />
+                <label htmlFor={`${idPrefix}-${item._id}`} className="ml-2 text-sm text-gray-700 cursor-pointer">
+                  <TranslatedText text={item.name} />
+                </label>
+              </div>
+            ))}
+            {options.length === 0 && (
+              <p className="text-sm text-gray-500 italic">
+                <TranslatedText text={`No ${title.toLowerCase()} found`} />
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 
   if (loading && products.length === 0) {
     return (
@@ -1804,6 +1949,10 @@ const Shop = () => {
                 selectedSubCategory3 || 
                 selectedSubCategory4 || 
                 selectedBrands.length > 0 || 
+                selectedSeries.length > 0 ||
+                selectedMakes.length > 0 ||
+                selectedManufacturers.length > 0 ||
+                selectedSoldBy.length > 0 ||
                 stockFilters.inStock || 
                 stockFilters.outOfStock || 
                 stockFilters.onSale ||
@@ -1913,6 +2062,62 @@ const Shop = () => {
                         </div>
                       ) : null
                     })}
+                    {selectedSeries.map((seriesId) => (
+                      <div key={`series-mobile-${seriesId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold"><TranslatedText>Series</TranslatedText>:</span>{" "}
+                          <TranslatedText text={getOptionNameById("series", seriesId)} />
+                        </span>
+                        <button
+                          onClick={() => toggleProductSystemSelection(seriesId, setSelectedSeries)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {selectedMakes.map((makeId) => (
+                      <div key={`make-mobile-${makeId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold"><TranslatedText>Make</TranslatedText>:</span>{" "}
+                          <TranslatedText text={getOptionNameById("make", makeId)} />
+                        </span>
+                        <button
+                          onClick={() => toggleProductSystemSelection(makeId, setSelectedMakes)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {selectedManufacturers.map((manufacturerId) => (
+                      <div key={`manufacturer-mobile-${manufacturerId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold"><TranslatedText>Manufacturer</TranslatedText>:</span>{" "}
+                          <TranslatedText text={getOptionNameById("manufacturer", manufacturerId)} />
+                        </span>
+                        <button
+                          onClick={() => toggleProductSystemSelection(manufacturerId, setSelectedManufacturers)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {selectedSoldBy.map((soldById) => (
+                      <div key={`soldby-mobile-${soldById}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold"><TranslatedText>Sold By</TranslatedText>:</span>{" "}
+                          <TranslatedText text={getOptionNameById("soldBy", soldById)} />
+                        </span>
+                        <button
+                          onClick={() => toggleProductSystemSelection(soldById, setSelectedSoldBy)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                     {(isPriceFilterApplied) && (
                       <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                         <span className="text-gray-700">
@@ -2310,6 +2515,46 @@ const Shop = () => {
                 )}
               </div>
 
+              {showSeriesSection && renderProductSystemFilterSection({
+                title: "Series",
+                selectedValues: selectedSeries,
+                options: availableSeries,
+                showFilter: showSeriesFilter,
+                setShowFilter: setShowSeriesFilter,
+                idPrefix: "series-mobile",
+                onToggle: (value) => toggleProductSystemSelection(value, setSelectedSeries),
+              })}
+
+              {showMakeSection && renderProductSystemFilterSection({
+                title: "Make",
+                selectedValues: selectedMakes,
+                options: availableMakes,
+                showFilter: showMakeFilter,
+                setShowFilter: setShowMakeFilter,
+                idPrefix: "make-mobile",
+                onToggle: (value) => toggleProductSystemSelection(value, setSelectedMakes),
+              })}
+
+              {showManufacturerSection && renderProductSystemFilterSection({
+                title: "Manufacturer",
+                selectedValues: selectedManufacturers,
+                options: availableManufacturers,
+                showFilter: showManufacturerFilter,
+                setShowFilter: setShowManufacturerFilter,
+                idPrefix: "manufacturer-mobile",
+                onToggle: (value) => toggleProductSystemSelection(value, setSelectedManufacturers),
+              })}
+
+              {showSoldBySection && renderProductSystemFilterSection({
+                title: "Sold By",
+                selectedValues: selectedSoldBy,
+                options: availableSoldBy,
+                showFilter: showSoldByFilter,
+                setShowFilter: setShowSoldByFilter,
+                idPrefix: "soldby-mobile",
+                onToggle: (value) => toggleProductSystemSelection(value, setSelectedSoldBy),
+              })}
+
               {/* Stock Status Filter - Mobile */}
               <div className="border-b pb-4">
                 <div className={`font-medium mb-4 ${
@@ -2402,6 +2647,10 @@ const Shop = () => {
                 selectedSubCategory3 || 
                 selectedSubCategory4 || 
                 selectedBrands.length > 0 || 
+                selectedSeries.length > 0 ||
+                selectedMakes.length > 0 ||
+                selectedManufacturers.length > 0 ||
+                selectedSoldBy.length > 0 ||
                 stockFilters.inStock || 
                 stockFilters.outOfStock || 
                 stockFilters.onSale ||
@@ -2522,6 +2771,62 @@ const Shop = () => {
                         </div>
                       ) : null
                     })}
+                    {selectedSeries.map((seriesId) => (
+                      <div key={`series-desktop-${seriesId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold"><TranslatedText>Series</TranslatedText>:</span>{" "}
+                          <TranslatedText text={getOptionNameById("series", seriesId)} />
+                        </span>
+                        <button
+                          onClick={() => toggleProductSystemSelection(seriesId, setSelectedSeries)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {selectedMakes.map((makeId) => (
+                      <div key={`make-desktop-${makeId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold"><TranslatedText>Make</TranslatedText>:</span>{" "}
+                          <TranslatedText text={getOptionNameById("make", makeId)} />
+                        </span>
+                        <button
+                          onClick={() => toggleProductSystemSelection(makeId, setSelectedMakes)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {selectedManufacturers.map((manufacturerId) => (
+                      <div key={`manufacturer-desktop-${manufacturerId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold"><TranslatedText>Manufacturer</TranslatedText>:</span>{" "}
+                          <TranslatedText text={getOptionNameById("manufacturer", manufacturerId)} />
+                        </span>
+                        <button
+                          onClick={() => toggleProductSystemSelection(manufacturerId, setSelectedManufacturers)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {selectedSoldBy.map((soldById) => (
+                      <div key={`soldby-desktop-${soldById}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold"><TranslatedText>Sold By</TranslatedText>:</span>{" "}
+                          <TranslatedText text={getOptionNameById("soldBy", soldById)} />
+                        </span>
+                        <button
+                          onClick={() => toggleProductSystemSelection(soldById, setSelectedSoldBy)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
 
                     {/* Price Range Filter */}
                     {(isPriceFilterApplied) && (
@@ -2931,6 +3236,46 @@ const Shop = () => {
                 )}
               </div>
 
+              {showSeriesSection && renderProductSystemFilterSection({
+                title: "Series",
+                selectedValues: selectedSeries,
+                options: availableSeries,
+                showFilter: showSeriesFilter,
+                setShowFilter: setShowSeriesFilter,
+                idPrefix: "series-desktop",
+                onToggle: (value) => toggleProductSystemSelection(value, setSelectedSeries),
+              })}
+
+              {showMakeSection && renderProductSystemFilterSection({
+                title: "Make",
+                selectedValues: selectedMakes,
+                options: availableMakes,
+                showFilter: showMakeFilter,
+                setShowFilter: setShowMakeFilter,
+                idPrefix: "make-desktop",
+                onToggle: (value) => toggleProductSystemSelection(value, setSelectedMakes),
+              })}
+
+              {showManufacturerSection && renderProductSystemFilterSection({
+                title: "Manufacturer",
+                selectedValues: selectedManufacturers,
+                options: availableManufacturers,
+                showFilter: showManufacturerFilter,
+                setShowFilter: setShowManufacturerFilter,
+                idPrefix: "manufacturer-desktop",
+                onToggle: (value) => toggleProductSystemSelection(value, setSelectedManufacturers),
+              })}
+
+              {showSoldBySection && renderProductSystemFilterSection({
+                title: "Sold By",
+                selectedValues: selectedSoldBy,
+                options: availableSoldBy,
+                showFilter: showSoldByFilter,
+                setShowFilter: setShowSoldByFilter,
+                idPrefix: "soldby-desktop",
+                onToggle: (value) => toggleProductSystemSelection(value, setSelectedSoldBy),
+              })}
+
               {/* Stock Status Filter */}
               <div className="border-b pb-4">
                 <div className={`font-medium mb-4 ${
@@ -3007,12 +3352,17 @@ const Shop = () => {
                 {(selectedCategory !== "all" || 
                   selectedSubCategories.length > 0 || 
                   selectedBrands.length > 0 || 
+                  selectedSeries.length > 0 ||
+                  selectedMakes.length > 0 ||
+                  selectedManufacturers.length > 0 ||
+                  selectedSoldBy.length > 0 ||
                   stockFilters.inStock || 
                   stockFilters.outOfStock || 
                   stockFilters.onSale ||
                   isPriceFilterApplied) && (
                   <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold bg-white text-lime-600 rounded-full">
-                    {[selectedCategory !== "all", selectedSubCategories.length > 0, selectedBrands.length, 
+                    {[selectedCategory !== "all", selectedSubCategories.length > 0, selectedBrands.length,
+                      selectedSeries.length > 0, selectedMakes.length > 0, selectedManufacturers.length > 0, selectedSoldBy.length > 0,
                       stockFilters.inStock || stockFilters.outOfStock || stockFilters.onSale,
                       isPriceFilterApplied].filter(Boolean).length}
                   </span>

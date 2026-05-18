@@ -26,6 +26,13 @@ const PRODUCT_SEO_FIELDS = [
   "ogImage",
 ]
 
+const PRODUCT_OPTION_FIELDS = [
+  { field: "series", routeType: "series", label: "Series" },
+  { field: "make", routeType: "make", label: "Make" },
+  { field: "manufacturer", routeType: "manufacturer", label: "Manufacturer" },
+  { field: "soldBy", routeType: "sold-by", label: "Sold By" },
+]
+
 const countWords = (text = "") => {
   const normalized = String(text).trim()
   if (!normalized) return 0
@@ -50,6 +57,12 @@ const AddProduct = () => {
   const [units, setUnits] = useState([])
   const [warranties, setWarranties] = useState([])
   const [volumes, setVolumes] = useState([])
+  const [productOptions, setProductOptions] = useState({
+    series: [],
+    make: [],
+    manufacturer: [],
+    soldBy: [],
+  })
   const [colors, setColors] = useState([])
   const [sizes, setSizes] = useState([])
   const [loading, setLoading] = useState(false)
@@ -70,6 +83,10 @@ const AddProduct = () => {
     galleryImages: [],
     tax: "",
     brand: "",
+    series: "",
+    make: "",
+    manufacturer: "",
+    soldBy: "",
     isActive: true,
     canPurchase: true,
     showStockOut: true,
@@ -239,7 +256,35 @@ const AddProduct = () => {
         }),
       )
 
-      const [categoriesRes, brandsRes, taxesRes, unitsRes, warrantiesRes, volumesRes, colorsRes, sizesRes] =
+      fetchPromises.push(
+        axios.get(`${config.API_URL}/api/product-system-options/series`, { headers }).catch((err) => {
+          console.log("Series API error:", err)
+          return { data: [] }
+        }),
+      )
+
+      fetchPromises.push(
+        axios.get(`${config.API_URL}/api/product-system-options/make`, { headers }).catch((err) => {
+          console.log("Make API error:", err)
+          return { data: [] }
+        }),
+      )
+
+      fetchPromises.push(
+        axios.get(`${config.API_URL}/api/product-system-options/manufacturer`, { headers }).catch((err) => {
+          console.log("Manufacturer API error:", err)
+          return { data: [] }
+        }),
+      )
+
+      fetchPromises.push(
+        axios.get(`${config.API_URL}/api/product-system-options/sold-by`, { headers }).catch((err) => {
+          console.log("Sold By API error:", err)
+          return { data: [] }
+        }),
+      )
+
+      const [categoriesRes, brandsRes, taxesRes, unitsRes, warrantiesRes, volumesRes, colorsRes, sizesRes, seriesRes, makeRes, manufacturerRes, soldByRes] =
         await Promise.all(fetchPromises)
 
       console.log("API Responses:", {
@@ -262,6 +307,12 @@ const AddProduct = () => {
       setVolumes(Array.isArray(volumesRes.data) ? volumesRes.data.filter((volume) => volume.isActive !== false) : [])
       setColors(Array.isArray(colorsRes.data) ? colorsRes.data.filter((color) => color.isActive !== false) : [])
       setSizes(Array.isArray(sizesRes.data) ? sizesRes.data.filter((size) => size.isActive !== false) : [])
+      setProductOptions({
+        series: Array.isArray(seriesRes.data) ? seriesRes.data.filter((item) => item.isActive !== false) : [],
+        make: Array.isArray(makeRes.data) ? makeRes.data.filter((item) => item.isActive !== false) : [],
+        manufacturer: Array.isArray(manufacturerRes.data) ? manufacturerRes.data.filter((item) => item.isActive !== false) : [],
+        soldBy: Array.isArray(soldByRes.data) ? soldByRes.data.filter((item) => item.isActive !== false) : [],
+      })
     } catch (error) {
       console.error("Error fetching data:", error)
       showToast("Failed to load some form data. Please check if all services are running.", "error")
@@ -281,6 +332,57 @@ const AddProduct = () => {
     } catch (error) {
       console.error("Error fetching subcategories:", error)
       setSubCategories([])
+    }
+  }
+
+  const fetchProductOptionsByType = async (routeType) => {
+    try {
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+      const { data } = await axios.get(`${config.API_URL}/api/product-system-options/${routeType}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      return Array.isArray(data) ? data.filter((item) => item.isActive !== false) : []
+    } catch (error) {
+      console.error(`Error fetching ${routeType}:`, error)
+      return []
+    }
+  }
+
+  const handleCreateProductOption = async ({ field, routeType, label }) => {
+    const input = window.prompt(`Enter ${label} name`)
+    const name = String(input || "").trim()
+    if (!name) return
+
+    try {
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
+
+      if (!token) {
+        showToast("Please login as admin first", "error")
+        return
+      }
+
+      const { data } = await axios.post(
+        `${config.API_URL}/api/product-system-options/${routeType}`,
+        { name },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      const refreshed = await fetchProductOptionsByType(routeType)
+      setProductOptions((prev) => ({ ...prev, [field]: refreshed }))
+      if (data?._id) {
+        setFormData((prev) => ({ ...prev, [field]: String(data._id) }))
+      }
+      showToast(`${label} added successfully`, "success")
+    } catch (error) {
+      console.error(`Error adding ${label}:`, error)
+      showToast(error.response?.data?.message || `Failed to add ${label}`, "error")
     }
   }
 
@@ -518,6 +620,10 @@ const AddProduct = () => {
         galleryImages: formData.galleryImages.filter((img) => img !== ""),
         tax: formData.tax,
         brand: formData.brand,
+        series: formData.series || undefined,
+        make: formData.make || undefined,
+        manufacturer: formData.manufacturer || undefined,
+        soldBy: formData.soldBy || undefined,
         isActive: formData.isActive,
         canPurchase: formData.canPurchase,
         showStockOut: formData.showStockOut,
@@ -604,6 +710,10 @@ const AddProduct = () => {
               <div>Units: {units.length}</div>
               <div>Warranties: {warranties.length}</div>
               <div>Volumes: {volumes.length}</div>
+              <div>Series: {productOptions.series.length}</div>
+              <div>Make: {productOptions.make.length}</div>
+              <div>Manufacturers: {productOptions.manufacturer.length}</div>
+              <div>Sold By: {productOptions.soldBy.length}</div>
             </div>
           </div>
 
@@ -1002,6 +1112,34 @@ const AddProduct = () => {
                     ))}
                   </select>
                 </div>
+
+                {PRODUCT_OPTION_FIELDS.map((optionConfig) => (
+                  <div key={optionConfig.field}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{optionConfig.label}</label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        name={optionConfig.field}
+                        value={formData[optionConfig.field]}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select {optionConfig.label}</option>
+                        {productOptions[optionConfig.field].map((item) => (
+                          <option key={item._id} value={item._id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => handleCreateProductOption(optionConfig)}
+                        className="px-3 py-2 text-xs font-medium rounded-md border border-gray-300 hover:bg-gray-50 whitespace-nowrap"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                ))}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Unit</label>
