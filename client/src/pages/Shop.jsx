@@ -29,6 +29,7 @@ const INFINITY_SYMBOL = "∞"
 const NUMERIC_INPUT_PATTERN = /^\d*$/
 const PRODUCT_SYSTEM_FILTERS = [
   { key: "series", routeType: "series", label: "Series" },
+  { key: "model", routeType: "model", label: "Model" },
   { key: "make", routeType: "make", label: "Make" },
   { key: "manufacturer", routeType: "manufacturer", label: "Manufacturer" },
   { key: "soldBy", routeType: "sold-by", label: "Sold By" },
@@ -328,6 +329,7 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedBrands, setSelectedBrands] = useState([])
   const [selectedSeries, setSelectedSeries] = useState([])
+  const [selectedModels, setSelectedModels] = useState([])
   const [selectedMakes, setSelectedMakes] = useState([])
   const [selectedManufacturers, setSelectedManufacturers] = useState([])
   const [selectedSoldBy, setSelectedSoldBy] = useState([])
@@ -354,15 +356,17 @@ const Shop = () => {
   const [priceFilterApplyCount, setPriceFilterApplyCount] = useState(0)
 
   const [showPriceFilter, setShowPriceFilter] = useState(true)
-  const [showCategoryFilter, setShowCategoryFilter] = useState(false)
-  const [showBrandFilter, setShowBrandFilter] = useState(false)
-  const [showSeriesFilter, setShowSeriesFilter] = useState(false)
-  const [showMakeFilter, setShowMakeFilter] = useState(false)
-  const [showManufacturerFilter, setShowManufacturerFilter] = useState(false)
-  const [showSoldByFilter, setShowSoldByFilter] = useState(false)
+  const [showCategoryFilter, setShowCategoryFilter] = useState(true)
+  const [showBrandFilter, setShowBrandFilter] = useState(true)
+  const [showSeriesFilter, setShowSeriesFilter] = useState(true)
+  const [showModelFilter, setShowModelFilter] = useState(true)
+  const [showMakeFilter, setShowMakeFilter] = useState(true)
+  const [showManufacturerFilter, setShowManufacturerFilter] = useState(true)
+  const [showSoldByFilter, setShowSoldByFilter] = useState(true)
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
   const [productSystemOptions, setProductSystemOptions] = useState({
     series: [],
+    model: [],
     make: [],
     manufacturer: [],
     soldBy: [],
@@ -515,6 +519,7 @@ const Shop = () => {
       subcategory4: resolvedLevel4,
       brand: selectedBrands.length > 0 ? selectedBrands : null,
       series: selectedSeries.length > 0 ? selectedSeries : null,
+      model: selectedModels.length > 0 ? selectedModels : null,
       make: selectedMakes.length > 0 ? selectedMakes : null,
       manufacturer: selectedManufacturers.length > 0 ? selectedManufacturers : null,
       soldBy: selectedSoldBy.length > 0 ? selectedSoldBy : null,
@@ -873,6 +878,7 @@ const Shop = () => {
     selectedCategory,
     selectedBrands,
     selectedSeries,
+    selectedModels,
     selectedMakes,
     selectedManufacturers,
     selectedSoldBy,
@@ -1278,10 +1284,12 @@ const Shop = () => {
   }
 
   const availableSeries = buildAvailableProductSystemOptions("series")
+  const availableModels = buildAvailableProductSystemOptions("model")
   const availableMakes = buildAvailableProductSystemOptions("make")
   const availableManufacturers = buildAvailableProductSystemOptions("manufacturer")
   const availableSoldBy = buildAvailableProductSystemOptions("soldBy")
   const showSeriesSection = availableSeries.length > 0 || selectedSeries.length > 0
+  const showModelSection = availableModels.length > 0 || selectedModels.length > 0
   const showMakeSection = availableMakes.length > 0 || selectedMakes.length > 0
   const showManufacturerSection = availableManufacturers.length > 0 || selectedManufacturers.length > 0
   const showSoldBySection = availableSoldBy.length > 0 || selectedSoldBy.length > 0
@@ -1779,6 +1787,7 @@ const Shop = () => {
     setSelectedCategory("all")
     setSelectedBrands([])
     setSelectedSeries([])
+    setSelectedModels([])
     setSelectedMakes([])
     setSelectedManufacturers([])
     setSelectedSoldBy([])
@@ -1801,7 +1810,7 @@ const Shop = () => {
   }) => (
     <div className="border-b pb-4">
       <button
-        onClick={() => setShowFilter(!showFilter)}
+        onClick={() => setShowFilter(true)}
         className={`flex items-center justify-between w-full text-left font-medium ${
           selectedValues.length > 0 ? "text-lime-500" : "text-gray-900"
         }`}
@@ -1950,6 +1959,7 @@ const Shop = () => {
                 selectedSubCategory4 || 
                 selectedBrands.length > 0 || 
                 selectedSeries.length > 0 ||
+                selectedModels.length > 0 ||
                 selectedMakes.length > 0 ||
                 selectedManufacturers.length > 0 ||
                 selectedSoldBy.length > 0 ||
@@ -2076,6 +2086,20 @@ const Shop = () => {
                         </button>
                       </div>
                     ))}
+                    {selectedModels.map((modelId) => (
+                      <div key={`model-mobile-${modelId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold"><TranslatedText>Model</TranslatedText>:</span>{" "}
+                          <TranslatedText text={getOptionNameById("model", modelId)} />
+                        </span>
+                        <button
+                          onClick={() => toggleProductSystemSelection(modelId, setSelectedModels)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                     {selectedMakes.map((makeId) => (
                       <div key={`make-mobile-${makeId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                         <span className="text-gray-700">
@@ -2177,7 +2201,7 @@ const Shop = () => {
               {/* Price Filter - Mobile */}
               <div className="border-b pb-4">
                 <button
-                  onClick={() => setShowPriceFilter(!showPriceFilter)}
+                  onClick={() => setShowPriceFilter(true)}
                   className={`flex items-center justify-between w-full text-left font-medium ${
                     isPriceFilterApplied
                       ? "text-lime-500"
@@ -2203,7 +2227,7 @@ const Shop = () => {
               {/* Categories Filter - Mobile */}
               <div className="border-b pb-4">
                 <button
-                  onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+                  onClick={() => setShowCategoryFilter(true)}
                   className={`flex items-center justify-between w-full text-left font-medium ${
                     selectedCategory !== "all" || selectedSubCategories.length > 0 || selectedSubCategory2 || selectedSubCategory3 || selectedSubCategory4
                       ? "text-lime-500"
@@ -2468,7 +2492,7 @@ const Shop = () => {
               {/* Brand Filter - Mobile */}
               <div className="border-b pb-4">
                 <button
-                  onClick={() => setShowBrandFilter(!showBrandFilter)}
+                  onClick={() => setShowBrandFilter(true)}
                   className={`flex items-center justify-between w-full text-left font-medium ${
                     selectedBrands.length > 0 ? "text-lime-500" : "text-gray-900"
                   }`}
@@ -2523,6 +2547,16 @@ const Shop = () => {
                 setShowFilter: setShowSeriesFilter,
                 idPrefix: "series-mobile",
                 onToggle: (value) => toggleProductSystemSelection(value, setSelectedSeries),
+              })}
+
+              {showModelSection && renderProductSystemFilterSection({
+                title: "Model",
+                selectedValues: selectedModels,
+                options: availableModels,
+                showFilter: showModelFilter,
+                setShowFilter: setShowModelFilter,
+                idPrefix: "model-mobile",
+                onToggle: (value) => toggleProductSystemSelection(value, setSelectedModels),
               })}
 
               {showMakeSection && renderProductSystemFilterSection({
@@ -2648,6 +2682,7 @@ const Shop = () => {
                 selectedSubCategory4 || 
                 selectedBrands.length > 0 || 
                 selectedSeries.length > 0 ||
+                selectedModels.length > 0 ||
                 selectedMakes.length > 0 ||
                 selectedManufacturers.length > 0 ||
                 selectedSoldBy.length > 0 ||
@@ -2785,6 +2820,20 @@ const Shop = () => {
                         </button>
                       </div>
                     ))}
+                    {selectedModels.map((modelId) => (
+                      <div key={`model-desktop-${modelId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
+                        <span className="text-gray-700">
+                          <span className="font-semibold"><TranslatedText>Model</TranslatedText>:</span>{" "}
+                          <TranslatedText text={getOptionNameById("model", modelId)} />
+                        </span>
+                        <button
+                          onClick={() => toggleProductSystemSelection(modelId, setSelectedModels)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                     {selectedMakes.map((makeId) => (
                       <div key={`make-desktop-${makeId}`} className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                         <span className="text-gray-700">
@@ -2891,7 +2940,7 @@ const Shop = () => {
 
               <div className="border-b pb-4">
                 <button
-                  onClick={() => setShowPriceFilter(!showPriceFilter)}
+                  onClick={() => setShowPriceFilter(true)}
                   className={`flex items-center justify-between w-full text-left font-medium ${
                     isPriceFilterApplied
                       ? "text-lime-500"
@@ -2916,7 +2965,7 @@ const Shop = () => {
 
               <div className="border-b pb-4">
                 <button
-                  onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+                  onClick={() => setShowCategoryFilter(true)}
                   className={`flex items-center justify-between w-full text-left font-medium ${
                     selectedCategory !== "all" || selectedSubCategories.length > 0 || selectedSubCategory2 || selectedSubCategory3 || selectedSubCategory4
                       ? "text-lime-500"
@@ -3189,7 +3238,7 @@ const Shop = () => {
               {/* Brand Filter */}
               <div className="border-b pb-4">
                 <button
-                  onClick={() => setShowBrandFilter(!showBrandFilter)}
+                  onClick={() => setShowBrandFilter(true)}
                   className={`flex items-center justify-between w-full text-left font-medium ${
                     selectedBrands.length > 0 ? "text-lime-500" : "text-gray-900"
                   }`}
@@ -3244,6 +3293,16 @@ const Shop = () => {
                 setShowFilter: setShowSeriesFilter,
                 idPrefix: "series-desktop",
                 onToggle: (value) => toggleProductSystemSelection(value, setSelectedSeries),
+              })}
+
+              {showModelSection && renderProductSystemFilterSection({
+                title: "Model",
+                selectedValues: selectedModels,
+                options: availableModels,
+                showFilter: showModelFilter,
+                setShowFilter: setShowModelFilter,
+                idPrefix: "model-desktop",
+                onToggle: (value) => toggleProductSystemSelection(value, setSelectedModels),
               })}
 
               {showMakeSection && renderProductSystemFilterSection({
@@ -3353,6 +3412,7 @@ const Shop = () => {
                   selectedSubCategories.length > 0 || 
                   selectedBrands.length > 0 || 
                   selectedSeries.length > 0 ||
+                  selectedModels.length > 0 ||
                   selectedMakes.length > 0 ||
                   selectedManufacturers.length > 0 ||
                   selectedSoldBy.length > 0 ||
@@ -3362,7 +3422,7 @@ const Shop = () => {
                   isPriceFilterApplied) && (
                   <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-bold bg-white text-lime-600 rounded-full">
                     {[selectedCategory !== "all", selectedSubCategories.length > 0, selectedBrands.length,
-                      selectedSeries.length > 0, selectedMakes.length > 0, selectedManufacturers.length > 0, selectedSoldBy.length > 0,
+                      selectedSeries.length > 0, selectedModels.length > 0, selectedMakes.length > 0, selectedManufacturers.length > 0, selectedSoldBy.length > 0,
                       stockFilters.inStock || stockFilters.outOfStock || stockFilters.onSale,
                       isPriceFilterApplied].filter(Boolean).length}
                   </span>

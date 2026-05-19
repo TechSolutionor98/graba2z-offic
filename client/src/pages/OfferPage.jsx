@@ -124,12 +124,12 @@ const OfferPage = () => {
   const [brandSearch, setBrandSearch] = useState("")
   const [sortBy, setSortBy] = useState("newest")
   const [showPriceFilter, setShowPriceFilter] = useState(true)
-  const [showCategoryFilter, setShowCategoryFilter] = useState(false)
-  const [showBrandFilter, setShowBrandFilter] = useState(false)
-  const [showSeriesFilter, setShowSeriesFilter] = useState(false)
-  const [showMakeFilter, setShowMakeFilter] = useState(false)
-  const [showManufacturerFilter, setShowManufacturerFilter] = useState(false)
-  const [showSoldByFilter, setShowSoldByFilter] = useState(false)
+  const [showCategoryFilter, setShowCategoryFilter] = useState(true)
+  const [showBrandFilter, setShowBrandFilter] = useState(true)
+  const [showSeriesFilter, setShowSeriesFilter] = useState(true)
+  const [showMakeFilter, setShowMakeFilter] = useState(true)
+  const [showManufacturerFilter, setShowManufacturerFilter] = useState(true)
+  const [showSoldByFilter, setShowSoldByFilter] = useState(true)
   const [productSystemOptions, setProductSystemOptions] = useState({
     series: [],
     make: [],
@@ -645,7 +645,7 @@ const OfferPage = () => {
   }) => (
     <div className="border-b pb-4">
       <button
-        onClick={() => setShowFilter(!showFilter)}
+        onClick={() => setShowFilter(true)}
         className={`flex items-center justify-between w-full text-left font-medium ${
           selectedValues.length > 0 ? "text-lime-500" : "text-gray-900"
         }`}
@@ -1321,7 +1321,7 @@ const OfferPage = () => {
                 {/* Price Filter - Mobile */}
                 <div className="border-b pb-4">
                   <button
-                    onClick={() => setShowPriceFilter(!showPriceFilter)}
+                    onClick={() => setShowPriceFilter(true)}
                     className={`flex items-center justify-between w-full text-left font-medium ${
                       isPriceFilterApplied
                         ? "text-lime-500"
@@ -1348,7 +1348,7 @@ const OfferPage = () => {
                 {categories.length > 0 && (
                   <div className="border-b pb-4">
                     <button
-                      onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+                      onClick={() => setShowCategoryFilter(true)}
                       className={`flex items-center justify-between w-full text-left font-medium ${
                         selectedCategory ? "text-lime-500" : "text-gray-900"
                       }`}
@@ -1442,7 +1442,7 @@ const OfferPage = () => {
                 {brands.length > 0 && (
                   <div className="border-b pb-4">
                     <button
-                      onClick={() => setShowBrandFilter(!showBrandFilter)}
+                      onClick={() => setShowBrandFilter(true)}
                       className={`flex items-center justify-between w-full text-left font-medium ${
                         selectedBrands.length > 0 ? "text-lime-500" : "text-gray-900"
                       }`}
@@ -1942,7 +1942,7 @@ const OfferPage = () => {
                 {/* Price Filter */}
                 <div className="border-b pb-4">
                   <button
-                    onClick={() => setShowPriceFilter(!showPriceFilter)}
+                    onClick={() => setShowPriceFilter(true)}
                     className={`flex items-center justify-between w-full text-left font-medium ${
                       isPriceFilterApplied
                         ? "text-lime-500"
@@ -1969,7 +1969,7 @@ const OfferPage = () => {
                 {categories.length > 0 && (
                   <div className="border-b pb-4">
                     <button
-                      onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+                      onClick={() => setShowCategoryFilter(true)}
                       className={`flex items-center justify-between w-full text-left font-medium ${
                         selectedCategory ? "text-lime-500" : "text-gray-900"
                       }`}
@@ -2248,7 +2248,7 @@ const OfferPage = () => {
                 {brands.length > 0 && (
                   <div className="border-b pb-4">
                     <button
-                      onClick={() => setShowBrandFilter(!showBrandFilter)}
+                      onClick={() => setShowBrandFilter(true)}
                       className={`flex items-center justify-between w-full text-left font-medium ${
                         selectedBrands.length > 0 ? "text-lime-500" : "text-gray-900"
                       }`}

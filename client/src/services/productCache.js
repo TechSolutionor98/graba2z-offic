@@ -493,7 +493,7 @@ class ProductCacheService {
   constructor() {
     this.CACHE_KEY = "graba2z_products_cache"
     this.CACHE_CHUNK_PREFIX = "graba2z_products_chunk_"
-    this.CACHE_VERSION = 2
+    this.CACHE_VERSION = 3
     this.CACHE_EXPIRY = 8 * 60 * 60 * 1000 // 8hrs
     this.MAX_CACHE_SIZE = 1 * 1024 * 1024 // 1MB per chunk (reduced)
     this.MAX_CHUNKS = 20 // More chunks, smaller size
@@ -611,6 +611,7 @@ class ProductCacheService {
         subCategory3: product.subCategory3,
         subCategory4: product.subCategory4,
         series: product.series,
+        model: product.model,
         make: product.make,
         manufacturer: product.manufacturer,
         soldBy: product.soldBy,
@@ -901,6 +902,13 @@ class ProductCacheService {
       filteredProducts = filteredProducts.filter((product) => {
         const seriesId = getFieldId(product.series)
         return seriesId ? filters.series.includes(seriesId) : false
+      })
+    }
+
+    if (filters.model && filters.model.length > 0) {
+      filteredProducts = filteredProducts.filter((product) => {
+        const modelId = getFieldId(product.model)
+        return modelId ? filters.model.includes(modelId) : false
       })
     }
 

@@ -32,6 +32,7 @@ const PRODUCT_SEO_FIELDS = [
 
 const PRODUCT_OPTION_FIELDS = [
   { field: "series", routeType: "series", label: "Series" },
+  { field: "model", routeType: "model", label: "Model" },
   { field: "make", routeType: "make", label: "Make" },
   { field: "manufacturer", routeType: "manufacturer", label: "Manufacturer" },
   { field: "soldBy", routeType: "sold-by", label: "Sold By" },
@@ -57,6 +58,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   const [brands, setBrands] = useState([])
   const [productOptions, setProductOptions] = useState({
     series: [],
+    model: [],
     make: [],
     manufacturer: [],
     soldBy: [],
@@ -76,6 +78,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     gtin: "",
     brand: "",
     series: "",
+    model: "",
     make: "",
     manufacturer: "",
     soldBy: "",
@@ -319,6 +322,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           series:
             (typeof product.series === "object" && product.series ? product.series._id : product.series)
               ? String(typeof product.series === "object" && product.series ? product.series._id : product.series)
+              : "",
+          model:
+            (typeof product.model === "object" && product.model ? product.model._id : product.model)
+              ? String(typeof product.model === "object" && product.model ? product.model._id : product.model)
               : "",
           make:
             (typeof product.make === "object" && product.make ? product.make._id : product.make)
@@ -574,8 +581,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
   }
 
   const fetchAllProductOptions = async () => {
-    const [seriesOptions, makeOptions, manufacturerOptions, soldByOptions] = await Promise.all([
+    const [seriesOptions, modelOptions, makeOptions, manufacturerOptions, soldByOptions] = await Promise.all([
       fetchProductOptionsByType("series"),
+      fetchProductOptionsByType("model"),
       fetchProductOptionsByType("make"),
       fetchProductOptionsByType("manufacturer"),
       fetchProductOptionsByType("sold-by"),
@@ -583,6 +591,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
 
     setProductOptions({
       series: seriesOptions,
+      model: modelOptions,
       make: makeOptions,
       manufacturer: manufacturerOptions,
       soldBy: soldByOptions,
@@ -922,6 +931,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         weight: Number.parseFloat(formData.weight) || 0,
         tax: taxValue,
         series: formData.series || undefined,
+        model: formData.model || undefined,
         make: formData.make || undefined,
         manufacturer: formData.manufacturer || undefined,
         soldBy: formData.soldBy || undefined,

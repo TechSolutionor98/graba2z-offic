@@ -67,6 +67,7 @@ const AdminSidebar = () => {
     coupons: false,
     reviews: false,
     series: false,
+    models: false,
     makes: false,
     manufacturers: false,
     soldBy: false,
@@ -91,6 +92,7 @@ const AdminSidebar = () => {
       path.includes("/admin/brands") ||
       path.includes("/admin/add-brand") ||
       path.includes("/admin/series") ||
+      path.includes("/admin/models") ||
       path.includes("/admin/makes") ||
       path.includes("/admin/manufacturers") ||
       path.includes("/admin/sold-by") ||
@@ -225,6 +227,9 @@ const AdminSidebar = () => {
     }
     if (path.includes("/admin/series")) {
       newOpenDropdowns.series = true
+    }
+    if (path.includes("/admin/models")) {
+      newOpenDropdowns.models = true
     }
     if (path.includes("/admin/makes")) {
       newOpenDropdowns.makes = true
@@ -395,6 +400,17 @@ const AdminSidebar = () => {
           items: [
             { title: "List Series", path: "/admin/series" },
             { title: "Add Series", path: "/admin/series/add" },
+          ],
+        },
+        {
+          title: "Model",
+          icon: Package,
+          dropdown: "models",
+          section: "models",
+          permission: "products",
+          items: [
+            { title: "List Model", path: "/admin/models" },
+            { title: "Add Model", path: "/admin/models/add" },
           ],
         },
         {

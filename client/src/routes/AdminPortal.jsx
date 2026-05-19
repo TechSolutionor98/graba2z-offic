@@ -169,6 +169,11 @@ const AdminPortal = () => {
                 />
               }
             />
+            <Route path="models" element={<AdminProductOptionManager routeType="model" title="Model" singularTitle="Model" />} />
+            <Route
+              path="models/add"
+              element={<AdminProductOptionManager routeType="model" title="Model" singularTitle="Model" openFormOnLoad />}
+            />
             <Route path="makes" element={<AdminProductOptionManager routeType="make" title="Make" singularTitle="Make" />} />
             <Route
               path="makes/add"

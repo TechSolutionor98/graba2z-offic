@@ -28,6 +28,7 @@ const PRODUCT_SEO_FIELDS = [
 
 const PRODUCT_OPTION_FIELDS = [
   { field: "series", routeType: "series", label: "Series" },
+  { field: "model", routeType: "model", label: "Model" },
   { field: "make", routeType: "make", label: "Make" },
   { field: "manufacturer", routeType: "manufacturer", label: "Manufacturer" },
   { field: "soldBy", routeType: "sold-by", label: "Sold By" },
@@ -59,6 +60,7 @@ const AddProduct = () => {
   const [volumes, setVolumes] = useState([])
   const [productOptions, setProductOptions] = useState({
     series: [],
+    model: [],
     make: [],
     manufacturer: [],
     soldBy: [],
@@ -84,6 +86,7 @@ const AddProduct = () => {
     tax: "",
     brand: "",
     series: "",
+    model: "",
     make: "",
     manufacturer: "",
     soldBy: "",
@@ -271,6 +274,13 @@ const AddProduct = () => {
       )
 
       fetchPromises.push(
+        axios.get(`${config.API_URL}/api/product-system-options/model`, { headers }).catch((err) => {
+          console.log("Model API error:", err)
+          return { data: [] }
+        }),
+      )
+
+      fetchPromises.push(
         axios.get(`${config.API_URL}/api/product-system-options/manufacturer`, { headers }).catch((err) => {
           console.log("Manufacturer API error:", err)
           return { data: [] }
@@ -284,7 +294,7 @@ const AddProduct = () => {
         }),
       )
 
-      const [categoriesRes, brandsRes, taxesRes, unitsRes, warrantiesRes, volumesRes, colorsRes, sizesRes, seriesRes, makeRes, manufacturerRes, soldByRes] =
+      const [categoriesRes, brandsRes, taxesRes, unitsRes, warrantiesRes, volumesRes, colorsRes, sizesRes, seriesRes, makeRes, modelRes, manufacturerRes, soldByRes] =
         await Promise.all(fetchPromises)
 
       console.log("API Responses:", {
@@ -309,6 +319,7 @@ const AddProduct = () => {
       setSizes(Array.isArray(sizesRes.data) ? sizesRes.data.filter((size) => size.isActive !== false) : [])
       setProductOptions({
         series: Array.isArray(seriesRes.data) ? seriesRes.data.filter((item) => item.isActive !== false) : [],
+        model: Array.isArray(modelRes.data) ? modelRes.data.filter((item) => item.isActive !== false) : [],
         make: Array.isArray(makeRes.data) ? makeRes.data.filter((item) => item.isActive !== false) : [],
         manufacturer: Array.isArray(manufacturerRes.data) ? manufacturerRes.data.filter((item) => item.isActive !== false) : [],
         soldBy: Array.isArray(soldByRes.data) ? soldByRes.data.filter((item) => item.isActive !== false) : [],
@@ -621,6 +632,7 @@ const AddProduct = () => {
         tax: formData.tax,
         brand: formData.brand,
         series: formData.series || undefined,
+        model: formData.model || undefined,
         make: formData.make || undefined,
         manufacturer: formData.manufacturer || undefined,
         soldBy: formData.soldBy || undefined,
@@ -711,6 +723,7 @@ const AddProduct = () => {
               <div>Warranties: {warranties.length}</div>
               <div>Volumes: {volumes.length}</div>
               <div>Series: {productOptions.series.length}</div>
+              <div>Model: {productOptions.model.length}</div>
               <div>Make: {productOptions.make.length}</div>
               <div>Manufacturers: {productOptions.manufacturer.length}</div>
               <div>Sold By: {productOptions.soldBy.length}</div>
