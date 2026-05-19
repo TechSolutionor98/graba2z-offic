@@ -1914,23 +1914,41 @@ const Shop = () => {
     setSortBy(e.target.value)
   }
 
-  const buildCanonicalPath = () => {
-    const path = location.pathname || "/shop"
-    return path
-  }
-
   const categoryObj = categories.find((cat) => cat._id === selectedCategory)
   const subcategoryObj =
     selectedSubCategories.length > 0 ? subCategories.find((s) => s._id === selectedSubCategories[0]) : null
+  const selectedBrandForSEO = selectedBrands.length === 1 ? brands.find((brand) => brand._id === selectedBrands[0]) : null
 
   // Determine which subcategory level to use for SEO (deepest level takes priority)
   const activeSubcategoryForSEO = subCategory4Data || subCategory3Data || subCategory2Data || subcategoryObj
 
   const seoContent = activeSubcategoryForSEO?.seoContent || categoryObj?.seoContent || ""
 
-  const customMetaTitle = activeSubcategoryForSEO?.metaTitle || categoryObj?.metaTitle || ""
-  const customMetaDescription = activeSubcategoryForSEO?.metaDescription || categoryObj?.metaDescription || ""
-  const customSchema = activeSubcategoryForSEO?.customSchema || categoryObj?.customSchema || ""
+  const brandMetaTitle = selectedBrandForSEO?.seoTitle || selectedBrandForSEO?.metaTitle || ""
+  const brandMetaDescription = selectedBrandForSEO?.seoDescription || selectedBrandForSEO?.metaDescription || ""
+  const customMetaTitle = brandMetaTitle || activeSubcategoryForSEO?.metaTitle || categoryObj?.metaTitle || ""
+  const customMetaDescription = brandMetaDescription || activeSubcategoryForSEO?.metaDescription || categoryObj?.metaDescription || ""
+  const customSchema = selectedBrandForSEO?.customSchema || activeSubcategoryForSEO?.customSchema || categoryObj?.customSchema || ""
+  const seoKeywords = selectedBrandForSEO?.seoKeywords || ""
+  const seoRobots = selectedBrandForSEO?.seoRobots || ""
+  const ogTitle = selectedBrandForSEO?.ogTitle || ""
+  const ogDescription = selectedBrandForSEO?.ogDescription || ""
+  const ogImage = selectedBrandForSEO?.ogImage || selectedBrandForSEO?.logo || ""
+
+  const buildCanonicalPath = () => {
+    if (selectedBrandForSEO?.seoCanonicalUrl) {
+      return selectedBrandForSEO.seoCanonicalUrl
+    }
+
+    if (selectedBrandForSEO) {
+      const brandParam = selectedBrandForSEO.slug || selectedBrandForSEO.name
+      const params = new URLSearchParams()
+      params.set("brand", brandParam)
+      return `${location.pathname || "/shop"}?${params.toString()}`
+    }
+
+    return location.pathname || "/shop"
+  }
 
   const seoTitle =
     customMetaTitle ||
@@ -1968,7 +1986,17 @@ const Shop = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <SEO title={seoTitle} description={seoDescription} canonicalPath={buildCanonicalPath()} customSchema={customSchema} />
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonicalPath={buildCanonicalPath()}
+        keywords={seoKeywords || undefined}
+        robots={seoRobots || undefined}
+        ogTitle={ogTitle || undefined}
+        ogDescription={ogDescription || undefined}
+        ogImage={ogImage || undefined}
+        customSchema={customSchema}
+      />
       <ProductSchema products={products} type="list" />
       
       {/* Mobile Filter Modal */}
