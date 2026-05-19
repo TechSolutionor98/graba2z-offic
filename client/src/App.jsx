@@ -67,8 +67,6 @@ function DefaultCanonical() {
   const href = typeof window !== "undefined" ? `${window.location.origin.replace(/\/+$/, "")}/ae-en` : "/ae-en"
   return (
     <Helmet prioritizeSeoTags>
-      {/* Default Site Title can be adjusted by SEO team */}
-      <title>Grabatoz</title>
       <link rel="canonical" href={href} />
     </Helmet>
   )
