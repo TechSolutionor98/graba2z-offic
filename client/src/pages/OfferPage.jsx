@@ -998,21 +998,45 @@ const OfferPage = () => {
   }
 
   const formattedAppliedMaxPrice = Number.isFinite(priceRange[1]) ? priceRange[1] : INFINITY_SYMBOL
+  const selectedBrandForSEO =
+    selectedBrands.length === 1
+      ? brands.find((item) => item?.brand?._id === selectedBrands[0])?.brand || null
+      : null
+
+  const brandCanonicalUrl = selectedBrandForSEO?.seoCanonicalUrl
+  const fallbackBrandCanonicalPath = (() => {
+    if (!selectedBrandForSEO) return null
+    const brandParam = selectedBrandForSEO.slug || selectedBrandForSEO.name
+    if (!brandParam) return null
+    const params = new URLSearchParams()
+    params.set("brand", brandParam)
+    return `${location.pathname || `/offers/${slug || ""}` }?${params.toString()}`
+  })()
+
   const canonicalUrl =
+    brandCanonicalUrl ||
     offerPage?.seoCanonicalUrl ||
     offerPage?.canonicalUrl ||
+    fallbackBrandCanonicalPath ||
     (typeof window !== "undefined"
       ? `${window.location.origin}${location.pathname}`
       : `/offers/${slug || ""}`)
-  const metaDescription =
-    offerPage?.seoDescription || offerPage?.metaDescription || `Browse ${offerPage?.name || "this offer"} products`
-  const seoTitle = offerPage?.seoTitle || offerPage?.metaTitle || offerPage?.name
-  const seoKeywords = offerPage?.seoKeywords || ""
-  const seoRobots = offerPage?.seoRobots || "index, follow"
-  const ogTitle = offerPage?.ogTitle || ""
-  const ogDescription = offerPage?.ogDescription || ""
-  const ogImage = offerPage?.ogImage || getFullImageUrl(offerPage?.heroImage || "")
-  const customSchema = offerPage?.customSchema || ""
+  const metaDescription = selectedBrandForSEO?.seoDescription ||
+    selectedBrandForSEO?.metaDescription ||
+    offerPage?.seoDescription ||
+    offerPage?.metaDescription ||
+    `Browse ${offerPage?.name || "this offer"} products`
+  const seoTitle = selectedBrandForSEO?.seoTitle || selectedBrandForSEO?.metaTitle || offerPage?.seoTitle || offerPage?.metaTitle || offerPage?.name
+  const seoKeywords = selectedBrandForSEO?.seoKeywords || offerPage?.seoKeywords || ""
+  const seoRobots = selectedBrandForSEO?.seoRobots || offerPage?.seoRobots || "index, follow"
+  const ogTitle = selectedBrandForSEO?.ogTitle || offerPage?.ogTitle || ""
+  const ogDescription = selectedBrandForSEO?.ogDescription || offerPage?.ogDescription || ""
+  const ogImage =
+    selectedBrandForSEO?.ogImage ||
+    selectedBrandForSEO?.logo ||
+    offerPage?.ogImage ||
+    getFullImageUrl(offerPage?.heroImage || "")
+  const customSchema = selectedBrandForSEO?.customSchema || offerPage?.customSchema || ""
 
   return (
     <>

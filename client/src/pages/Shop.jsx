@@ -1274,7 +1274,7 @@ const Shop = () => {
   // Apply search filter on available brands
   const filteredBrands = availableBrands.filter((brand) => brand.name.toLowerCase().includes(brandSearch.toLowerCase()))
 
-  const normalizeRefId = (value) => {
+  function normalizeRefId(value) {
     if (value == null) return null
     const resolved = typeof value === "object" ? value?._id : value
     if (resolved == null) return null
@@ -1287,17 +1287,17 @@ const Shop = () => {
     return id
   }
 
-  const getProductSystemFieldId = (product, key) => {
+  function getProductSystemFieldId(product, key) {
     if (!product) return null
     return normalizeRefId(product[key])
   }
 
-  const getOptionNameById = (optionKey, optionId) => {
+  function getOptionNameById(optionKey, optionId) {
     const options = productSystemOptions[optionKey] || []
     return options.find((item) => item._id === optionId)?.name || optionId
   }
 
-  const buildAvailableProductSystemOptions = (optionKey) => {
+  function buildAvailableProductSystemOptions(optionKey) {
     const allProducts = scopedOptionProducts
     const options = productSystemOptions[optionKey] || []
     if (allProducts.length === 0 || options.length === 0) return []
@@ -1329,22 +1329,22 @@ const Shop = () => {
   const showManufacturerSection = availableManufacturers.length > 0 || selectedManufacturers.length > 0
   const showSoldBySection = availableSoldBy.length > 0 || selectedSoldBy.length > 0
 
-  const getSubcategoryCategoryId = (sub) => {
+  function getSubcategoryCategoryId(sub) {
     if (!sub) return null
     return normalizeRefId(sub.category)
   }
 
-  const getSubcategoryParentId = (sub) => {
+  function getSubcategoryParentId(sub) {
     if (!sub) return null
     return normalizeRefId(sub.parentSubCategory)
   }
 
-  const getUrlIdentifier = (item) => {
+  function getUrlIdentifier(item) {
     if (!item) return null
     return item.slug || item._id || item.name || null
   }
 
-  const findBestMatchingSubcategory = (subcategories, urlPart) => {
+  function findBestMatchingSubcategory(subcategories, urlPart) {
     if (!Array.isArray(subcategories) || subcategories.length === 0 || !urlPart) return null
     const rawUrlPart = String(urlPart)
     const normalized = createSlug(rawUrlPart)
@@ -1357,13 +1357,13 @@ const Shop = () => {
     )
   }
 
-  const getSubcategoryById = (id) => {
+  function getSubcategoryById(id) {
     const normalizedId = normalizeRefId(id)
     if (!normalizedId) return null
     return allSubcategories.find((sub) => normalizeRefId(sub?._id) === normalizedId) || null
   }
 
-  const getUrlMatchScore = (sub, urlPart) => {
+  function getUrlMatchScore(sub, urlPart) {
     if (!sub || !urlPart) return 0
     const rawUrlPart = String(urlPart)
     const normalized = createSlug(rawUrlPart)
@@ -1374,7 +1374,7 @@ const Shop = () => {
     return 0
   }
 
-  const getSubcategoryDepth = (sub) => {
+  function getSubcategoryDepth(sub) {
     if (!sub) return Number.MAX_SAFE_INTEGER
     let depth = 1
     let current = sub
@@ -1391,7 +1391,7 @@ const Shop = () => {
     return depth
   }
 
-  const getSubcategoryAncestry = (sub) => {
+  function getSubcategoryAncestry(sub) {
     if (!sub) return []
     const ancestry = []
     let current = sub
@@ -1406,7 +1406,7 @@ const Shop = () => {
     return ancestry
   }
 
-  const resolveSubcategoryPath = (categoryId, parts = []) => {
+  function resolveSubcategoryPath(categoryId, parts = []) {
     const normalizedCategoryId = normalizeRefId(categoryId)
     const normalizedParts = parts.filter(Boolean)
     if (!normalizedCategoryId || normalizedParts.length === 0) return []
@@ -1464,7 +1464,7 @@ const Shop = () => {
     return combined.slice(0, 4)
   }
 
-  const resolveSubcategoryPathFromAny = (parts = []) => {
+  function resolveSubcategoryPathFromAny(parts = []) {
     const normalizedParts = parts.filter(Boolean)
     if (normalizedParts.length === 0) return []
     if (!Array.isArray(allSubcategories) || allSubcategories.length === 0) return []
