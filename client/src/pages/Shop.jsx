@@ -1238,14 +1238,38 @@ const Shop = () => {
     }
   }
 
-  // Get unique brand IDs from currently displayed products
-  const brandsInProducts = [...new Set(products.map(product => {
-    // Handle both object and string brand IDs
-    return typeof product.brand === 'object' ? product.brand?._id : product.brand
-  }).filter(Boolean))]
+  const buildFilterOptionScopeProducts = () => {
+    const allProducts = Array.isArray(allProductsRef.current) && allProductsRef.current.length > 0
+      ? allProductsRef.current
+      : products
+    if (!Array.isArray(allProducts) || allProducts.length === 0) return []
 
-  // Filter brands to only show those with products currently displayed
-  const availableBrands = brands.filter((brand) => brandsInProducts.includes(brand._id))
+    const scopedFilters = buildProductFilters(false)
+    // Keep sidebar option lists stable across brand/product-system/stock/price/search selections.
+    scopedFilters.brand = null
+    scopedFilters.series = null
+    scopedFilters.model = null
+    scopedFilters.make = null
+    scopedFilters.manufacturer = null
+    scopedFilters.soldBy = null
+    scopedFilters.stockStatus = null
+    scopedFilters.priceRange = null
+    scopedFilters.search = null
+    scopedFilters.sortBy = null
+
+    return productCache.filterProducts(allProducts, scopedFilters)
+  }
+
+  const scopedOptionProducts = buildFilterOptionScopeProducts()
+
+  const brandsInProducts = new Set(
+    scopedOptionProducts
+      .map((product) => (typeof product.brand === "object" ? product.brand?._id : product.brand))
+      .filter(Boolean),
+  )
+
+  const selectedBrandIds = new Set(selectedBrands)
+  const availableBrands = brands.filter((brand) => brandsInProducts.has(brand._id) || selectedBrandIds.has(brand._id))
 
   // Apply search filter on available brands
   const filteredBrands = availableBrands.filter((brand) => brand.name.toLowerCase().includes(brandSearch.toLowerCase()))
@@ -1274,13 +1298,24 @@ const Shop = () => {
   }
 
   const buildAvailableProductSystemOptions = (optionKey) => {
+    const allProducts = scopedOptionProducts
+    const options = productSystemOptions[optionKey] || []
+    if (allProducts.length === 0 || options.length === 0) return []
+
+    const selectedIdsByOption = {
+      series: selectedSeries,
+      model: selectedModels,
+      make: selectedMakes,
+      manufacturer: selectedManufacturers,
+      soldBy: selectedSoldBy,
+    }
+    const selectedIds = selectedIdsByOption[optionKey] || []
     const optionIdsInProducts = new Set(
-      products
+      allProducts
         .map((product) => getProductSystemFieldId(product, optionKey))
         .filter(Boolean),
     )
-    const options = productSystemOptions[optionKey] || []
-    return options.filter((item) => optionIdsInProducts.has(item._id))
+    return options.filter((item) => optionIdsInProducts.has(item._id) || selectedIds.includes(item._id))
   }
 
   const availableSeries = buildAvailableProductSystemOptions("series")
