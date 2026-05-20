@@ -43,6 +43,7 @@ const BannerSlider = ({ banners }) => {
     const isDefaultShop = (value) => value === "/shop"
 
     if (link && buttonLink) {
+      if (link !== buttonLink && !isDefaultShop(buttonLink)) return buttonLink
       if (isDefaultShop(link) && !isDefaultShop(buttonLink)) return buttonLink
       if (isDefaultShop(buttonLink) && !isDefaultShop(link)) return link
       return link

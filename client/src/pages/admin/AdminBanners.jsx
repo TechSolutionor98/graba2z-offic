@@ -159,6 +159,12 @@ const AdminBanners = () => {
         category: formData.position === "category" ? formData.category : null,
       }
 
+      if (finalPosition === "hero") {
+        const heroLink = String(formData.buttonLink || formData.link || "/shop").trim() || "/shop"
+        bannerData.buttonLink = heroLink
+        bannerData.link = heroLink
+      }
+
       debugBanners("submit:payload", {
         url: editingBanner
           ? `${config.API_URL}/api/banners/${editingBanner._id}`
