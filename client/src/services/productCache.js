@@ -772,11 +772,29 @@ class ProductCacheService {
   // Fetch products from API and cache them
   async fetchAndCacheProducts() {
     try {
-      const response = await fetch(`${config.API_URL}/api/products`)
-      if (!response.ok) {
-        throw new Error("Failed to fetch products")
+      const endpoints = ["/api/products/shop-cache", "/api/products"]
+      let products = null
+      let lastError = null
+
+      for (const endpoint of endpoints) {
+        try {
+          const response = await fetch(`${config.API_URL}${endpoint}`)
+          if (!response.ok) {
+            throw new Error(`Failed to fetch products from ${endpoint}`)
+          }
+          products = await response.json()
+          if (Array.isArray(products)) {
+            break
+          }
+          throw new Error(`Invalid products payload from ${endpoint}`)
+        } catch (error) {
+          lastError = error
+        }
       }
-      const products = await response.json()
+
+      if (!Array.isArray(products)) {
+        throw lastError || new Error("Failed to fetch products")
+      }
 
       // Always try to cache products
       try {

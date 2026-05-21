@@ -27,6 +27,8 @@ const PRICE_FILTER_MAX = 20000
 const PRICE_FILTER_STEP = 1
 const INFINITY_SYMBOL = "∞"
 const NUMERIC_INPUT_PATTERN = /^\d*$/
+const SHOP_HYBRID_BOOTSTRAP_ENABLED =
+  String(import.meta.env?.VITE_SHOP_HYBRID_BOOTSTRAP_ENABLED || "false").toLowerCase() === "true"
 const PRODUCT_SYSTEM_FILTERS = [
   { key: "series", routeType: "series", label: "Series" },
   { key: "model", routeType: "model", label: "Model" },
@@ -396,6 +398,8 @@ const Shop = () => {
   const loadingTimeout = useRef()
   const allProductsRef = useRef([])
   const filterRunIdRef = useRef(0)
+  const isHybridCacheReadyRef = useRef(false)
+  const isHydratingHybridCacheRef = useRef(false)
 
   const findCategoryByUrlIdentifier = (identifier) => {
     if (!identifier || identifier === "all") return null
@@ -528,6 +532,37 @@ const Shop = () => {
       stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
       sortBy,
     }
+  }
+
+  const buildShopQueryParams = () => {
+    const filters = buildProductFilters(true)
+    const queryParams = {
+      page: 1,
+      limit: 30,
+      sortBy: filters.sortBy || "newest",
+    }
+
+    if (filters.parent_category) queryParams.parent_category = filters.parent_category
+    if (filters.category) queryParams.category = filters.category
+    if (filters.subcategory2) queryParams.subcategory2 = filters.subcategory2
+    if (filters.subcategory3) queryParams.subcategory3 = filters.subcategory3
+    if (filters.subcategory4) queryParams.subcategory4 = filters.subcategory4
+    if (Array.isArray(filters.brand) && filters.brand.length > 0) queryParams.brand = filters.brand
+    if (Array.isArray(filters.series) && filters.series.length > 0) queryParams.series = filters.series
+    if (Array.isArray(filters.model) && filters.model.length > 0) queryParams.model = filters.model
+    if (Array.isArray(filters.make) && filters.make.length > 0) queryParams.make = filters.make
+    if (Array.isArray(filters.manufacturer) && filters.manufacturer.length > 0) queryParams.manufacturer = filters.manufacturer
+    if (Array.isArray(filters.soldBy) && filters.soldBy.length > 0) queryParams.soldBy = filters.soldBy
+    if (Array.isArray(filters.stockStatus) && filters.stockStatus.length > 0) queryParams.stockStatus = filters.stockStatus
+    if (searchQuery && searchQuery.trim()) queryParams.search = searchQuery.trim()
+
+    if (Array.isArray(filters.priceRange) && filters.priceRange.length === 2 && isPriceFilterApplied) {
+      const [priceMin, priceMax] = filters.priceRange
+      if (Number.isFinite(Number(priceMin))) queryParams.priceMin = Number(priceMin)
+      if (Number.isFinite(Number(priceMax))) queryParams.priceMax = Number(priceMax)
+    }
+
+    return queryParams
   }
 
   const syncAvailablePriceBounds = () => {
@@ -794,6 +829,57 @@ const Shop = () => {
     }
   }
 
+  const fetchProductsFromShopQuery = async (existingRunId = null) => {
+    const runId = existingRunId || ++filterRunIdRef.current
+    const isStaleRun = () => runId !== filterRunIdRef.current
+    const shouldManageLoading = existingRunId == null
+
+    try {
+      if (isStaleRun()) return
+      if (shouldManageLoading) setLoading(true)
+      setError(null)
+
+      const queryParams = buildShopQueryParams()
+      const { data } = await axios.get(`${API_BASE_URL}/api/products/shop-query`, {
+        params: queryParams,
+        paramsSerializer: {
+          indexes: false,
+        },
+      })
+
+      if (isStaleRun()) return
+      const nextProducts = Array.isArray(data?.products) ? data.products : []
+      setActualSearchQuery(searchQuery && searchQuery.trim() ? searchQuery.trim() : "")
+      setProducts(nextProducts)
+      syncAvailablePriceBounds(nextProducts)
+    } catch (err) {
+      if (isStaleRun()) return
+      await filterProductsFromCache()
+    } finally {
+      if (shouldManageLoading && !isStaleRun()) {
+        setLoading(false)
+      }
+    }
+  }
+
+  const hydrateHybridCacheInBackground = async () => {
+    if (isHydratingHybridCacheRef.current || isHybridCacheReadyRef.current) return
+    isHydratingHybridCacheRef.current = true
+
+    try {
+      const allProducts = await productCache.getProducts()
+      allProductsRef.current = allProducts || []
+      isHybridCacheReadyRef.current = Array.isArray(allProducts) && allProducts.length > 0
+      if (isHybridCacheReadyRef.current) {
+        await filterProductsFromCache()
+      }
+    } catch (error) {
+      // Keep server-first mode active; cache hydration can retry on next interaction.
+    } finally {
+      isHydratingHybridCacheRef.current = false
+    }
+  }
+
   const filterProductsFromCache = async () => {
     const runId = ++filterRunIdRef.current
     const isStaleRun = () => runId !== filterRunIdRef.current
@@ -860,6 +946,11 @@ const Shop = () => {
     fetchProductSystemOptions()
     fetchBanners()
     fetchAllSubcategories()
+    if (SHOP_HYBRID_BOOTSTRAP_ENABLED) {
+      fetchProductsFromShopQuery()
+      hydrateHybridCacheInBackground()
+      return
+    }
     loadAndFilterProducts()
   }, [])
 
@@ -867,6 +958,11 @@ const Shop = () => {
     if (fetchTimeout.current) clearTimeout(fetchTimeout.current)
 
     fetchTimeout.current = setTimeout(() => {
+      if (SHOP_HYBRID_BOOTSTRAP_ENABLED && !isHybridCacheReadyRef.current) {
+        fetchProductsFromShopQuery()
+        hydrateHybridCacheInBackground()
+        return
+      }
       filterProductsFromCache()
     }, 100)
     return () => {
