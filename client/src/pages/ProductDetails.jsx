@@ -3401,9 +3401,17 @@ const ProductDetails = () => {
                   <Truck className="text-green-600 mt-1" size={60} />
                   <div>
                     <h4 className="font-bold text-gray-900 text-sm"><TranslatedText>Express Delivery</TranslatedText></h4>
-                    <p className="text-xs text-gray-700">
-                      <TranslatedText>Free shipping when you spend AED95 & above. Unlimited destination with in UAE</TranslatedText>
-                    </p>
+                    <ul className="text-xs text-gray-700 list-disc pl-4 mt-1 space-y-1">
+                      <li>
+                        <TranslatedText>Free shipping is available on all orders for a limited period.</TranslatedText>
+                      </li>
+                      <li>
+                        <TranslatedText>Express delivery timelines apply only to eligible locations within the UAE.</TranslatedText>
+                      </li>
+                      <li>
+                        <TranslatedText>Deliveries to remote or restricted areas may require an additional 1-2 business days.</TranslatedText>
+                      </li>
+                    </ul>
                   </div>
                 </div>
 

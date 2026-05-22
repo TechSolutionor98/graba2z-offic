@@ -60,6 +60,15 @@ export default function DeliveryInfo() {
               </p>
               <p>· Offer is valid for UAE customers only.</p>
               <p>
+                · <TranslatedText>Free shipping is available on all orders for a limited period.</TranslatedText>
+              </p>
+              <p>
+                · <TranslatedText>Express delivery timelines apply only to eligible locations within the UAE.</TranslatedText>
+              </p>
+              <p>
+                · <TranslatedText>Deliveries to remote or restricted areas may require an additional 1-2 business days.</TranslatedText>
+              </p>
+              <p>
                 · For bulk orders or international deliveries, please refer to our Bulk Delivery Section or contact
                 Customer Care through the available support channels.
               </p>
