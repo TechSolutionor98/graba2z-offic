@@ -20,7 +20,6 @@ import '../styles/phoneInput.css'
 import config from "../config/config"
 const UAE_STATES = ["Abu Dhabi", "Ajman", "Al Ain", "Dubai", "Fujairah", "Ras Al Khaimah", "Sharjah", "Umm al-Qaywain"]
 const COD_FEE_AMOUNT = 5
-const FREE_DELIVERY_THRESHOLD_AED = 95
 
 const STORES = [
   {
@@ -301,13 +300,9 @@ const Checkout = () => {
   // Calculate protection items total
   const protectionTotal = protectionItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
-  // Delivery charge logic (dynamic)
-  let deliveryCharge = 0
-  // Only charge delivery fee if: 1) Home delivery is selected, 2) Order is below FREE_DELIVERY_THRESHOLD_AED
-  if (deliveryType === "home" && selectedDelivery && cartTotals.totalOfferPrice < FREE_DELIVERY_THRESHOLD_AED) {
-    deliveryCharge = selectedDelivery.charge
-  }
-  // Store pickup is always free (deliveryCharge remains 0)
+  const fallbackDelivery = selectedDelivery || deliveryOptions?.[0]
+  const hasAdminDeliveryCharges = (deliveryOptions?.length || 0) > 0
+  const deliveryCharge = deliveryType === "home" && hasAdminDeliveryCharges ? Number(fallbackDelivery?.charge || 0) : 0
 
   const codFee = selectedPaymentMethod === "cod" ? COD_FEE_AMOUNT : 0
   const finalTotal = cartTotals.totalOfferPrice + protectionTotal + deliveryCharge + codFee - couponDiscount
@@ -645,6 +640,7 @@ const Checkout = () => {
         }),
         itemsPrice: cartTotal,
         shippingPrice: deliveryCharge,
+        deliveryChargeId: deliveryType === "home" ? (fallbackDelivery?._id || undefined) : undefined,
         totalPrice: finalTotal,
         deliveryType: deliveryType,
         paymentMethod: actualPaymentMethod, // Use actual payment method (card for tabby)
@@ -937,6 +933,7 @@ const Checkout = () => {
         }),
         itemsPrice: cartTotal,
         shippingPrice: deliveryCharge, // Include delivery charge
+        deliveryChargeId: deliveryType === "home" ? (fallbackDelivery?._id || undefined) : undefined,
         totalPrice: finalTotal, // Include delivery charge
         deliveryType: deliveryType,
         paymentMethod: selectedPaymentMethod,
@@ -1905,19 +1902,10 @@ const Checkout = () => {
                   <span className="text-black">{formatPrice(finalTotal)}</span>
                 </div>
 
-                {/* Free shipping message */}
-                {cartTotals.totalOfferPrice < FREE_DELIVERY_THRESHOLD_AED && cartTotals.totalOfferPrice > 0 && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-700">
-                      <TranslatedText>You are just</TranslatedText> {formatPrice(FREE_DELIVERY_THRESHOLD_AED - cartTotals.totalOfferPrice)} <TranslatedText>away from free shipping. Shop more to get free delivery.</TranslatedText>
-                    </p>
-                  </div>
-                )}
-
-                {cartTotals.totalOfferPrice >= FREE_DELIVERY_THRESHOLD_AED && (
+                {!hasAdminDeliveryCharges && (
                   <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
                     <span className="text-lg">🎉</span>
-                    <p className="text-sm text-green-700 font-medium"><TranslatedText>You qualify for free shipping!</TranslatedText></p>
+                    <p className="text-sm text-green-700 font-medium"><TranslatedText>Free shipping is applied to this order.</TranslatedText></p>
                   </div>
                 )}
               </div>

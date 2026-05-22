@@ -11,8 +11,6 @@ import TranslatedText from "../components/TranslatedText"
 
 import config from "../config/config"
 
-const FREE_DELIVERY_THRESHOLD_AED = 95
-
 const Cart = () => {
   const {
     cartItems,
@@ -306,12 +304,9 @@ const Cart = () => {
   // Calculate protection items total
   const protectionTotal = protectionItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   
-  // Delivery charge (free if cartTotals.totalCurrentPrice >= FREE_DELIVERY_THRESHOLD_AED)
-  const deliveryCharge = selectedDelivery
-    ? cartTotals.totalCurrentPrice >= FREE_DELIVERY_THRESHOLD_AED
-      ? 0
-      : selectedDelivery.charge
-    : 0
+  const fallbackDelivery = selectedDelivery || deliveryOptions?.[0]
+  const hasAdminDeliveryCharges = (deliveryOptions?.length || 0) > 0
+  const deliveryCharge = hasAdminDeliveryCharges ? Number(fallbackDelivery?.charge || 0) : 0
   
   const totalWithDeliveryTaxCoupon = cartTotals.totalCurrentPrice + protectionTotal + deliveryCharge + taxAmount - couponDiscount
 
@@ -646,27 +641,23 @@ const Cart = () => {
                 )}
 
                 {/* Delivery Options */}
-                {cartTotals.totalCurrentPrice <= FREE_DELIVERY_THRESHOLD_AED && (
+                {deliveryOptions.length > 0 && (
                   <div className="mb-2">
                     <span className="text-gray-600 block mb-1"><TranslatedText>Delivery Options</TranslatedText></span>
-                    {deliveryOptions.length > 0 ? (
-                      <select
-                        className="w-full border rounded px-2 py-1"
-                        value={selectedDelivery?._id || ""}
-                        onChange={e => {
-                          const found = deliveryOptions.find(opt => opt._id === e.target.value)
-                          setSelectedDelivery(found)
-                        }}
-                      >
-                        {deliveryOptions.map(opt => (
-                          <option key={opt._id} value={opt._id}>
-                            {opt.name} ({formatPrice(opt.charge)}) - {opt.deliveryTime}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="text-gray-500"><TranslatedText>No delivery options</TranslatedText></span>
-                    )}
+                    <select
+                      className="w-full border rounded px-2 py-1"
+                      value={selectedDelivery?._id || deliveryOptions[0]?._id || ""}
+                      onChange={e => {
+                        const found = deliveryOptions.find(opt => opt._id === e.target.value)
+                        setSelectedDelivery(found)
+                      }}
+                    >
+                      {deliveryOptions.map(opt => (
+                        <option key={opt._id} value={opt._id}>
+                          {opt.name} ({formatPrice(Number(opt.charge || 0))}) - {opt.deliveryTime}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
                 <div className="flex justify-between">
@@ -757,19 +748,10 @@ const Cart = () => {
                 </div>
               </div>
 
-              {/* Free shipping message */}
-              {cartTotals.totalCurrentPrice < FREE_DELIVERY_THRESHOLD_AED && cartTotals.totalCurrentPrice > 0 && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-700">
-                  <TranslatedText>You are just</TranslatedText> {formatPrice(FREE_DELIVERY_THRESHOLD_AED - cartTotals.totalCurrentPrice)} <TranslatedText>away from free shipping. Shop more to get free and express delivery.</TranslatedText>
-                  </p>
-                </div>
-              )}
-
-              {cartTotals.totalCurrentPrice >= FREE_DELIVERY_THRESHOLD_AED && (
+              {!hasAdminDeliveryCharges && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-700 font-medium">
-                    🎉 <TranslatedText>You qualify for free shipping!</TranslatedText>
+                    🎉 <TranslatedText>Free shipping is applied to this order.</TranslatedText>
                   </p>
                 </div>
               )}

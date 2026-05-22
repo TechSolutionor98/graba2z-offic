@@ -85,6 +85,7 @@ export const uiDictionary = {
   "Free shipping when you spend AED500 & above. Unlimited destinations in Dubai and Abu Dhabi": "شحن مجاني عند إنفاق 500 درهم وأكثر. وجهات غير محدودة في دبي وأبوظبي",
   "Free shipping when you spend AED95 & above. Unlimited destination with in UAE": "شحن مجاني عند إنفاق 95 درهم وأكثر. وجهة غير محدودة داخل الإمارات",
   "Free shipping is available on all orders for a limited period.": "الشحن المجاني متاح على جميع الطلبات لفترة محدودة.",
+  "Free shipping is applied to this order.": "تم تطبيق الشحن المجاني على هذا الطلب.",
   "Express delivery timelines apply only to eligible locations within the UAE.": "تنطبق مدة التوصيل السريع فقط على المواقع المؤهلة داخل الإمارات العربية المتحدة.",
   "Deliveries to remote or restricted areas may require an additional 1-2 business days.": "قد تتطلب عمليات التسليم إلى المناطق النائية أو المقيدة مدة إضافية تتراوح بين 1-2 يوم عمل.",
   "Get Coupons": "احصل على الكوبونات",
