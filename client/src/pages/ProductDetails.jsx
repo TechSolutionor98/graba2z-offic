@@ -3382,7 +3382,7 @@ const ProductDetails = () => {
               <div className="bg-yellow-50 rounded-lg p-4">
                 <h4 className="font-bold text-gray-900 text-md mb-2 flex items-center">🎯 <TranslatedText>Get My Coupon</TranslatedText></h4>
                 <p className="text-sm text-gray-700 mb-3">
-                  <TranslatedText>Free shipping when you spend AED95 & above. Unlimited destination with in UAE</TranslatedText>
+                  <TranslatedText>Looking for offers and discount click on the button to get all available coupons amd discounts.</TranslatedText>
                 </p>
                 <button
                   className="w-full bg-yellow-400 text-black py-2 px-4 rounded font-bold text-sm hover:bg-yellow-500 transition-colors"
