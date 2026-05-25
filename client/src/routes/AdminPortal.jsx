@@ -68,6 +68,7 @@ import AdminUsers from "../pages/admin/AdminUsers"
 import AdminVolumes from "../pages/admin/AdminVolumes"
 import AdminWarranty from "../pages/admin/AdminWarranty"
 import AllCoupons from "../pages/admin/AllCoupons"
+import AppDiscounts from "../pages/admin/AppDiscounts"
 import BlogBrands from "../pages/admin/BlogBrands"
 import BlogCategories from "../pages/admin/BlogCategories"
 import BlogDashboard from "../pages/admin/BlogDashboard"
@@ -223,6 +224,7 @@ const AdminPortal = () => {
             <Route path="tax/add" element={<AddTax />} />
             <Route path="coupons" element={<AllCoupons />} />
             <Route path="coupons/all" element={<AllCoupons />} />
+            <Route path="app-discounts" element={<AppDiscounts />} />
             <Route path="banners" element={<AdminBanners />} />
             <Route path="banner-cards" element={<AdminBannerCards />} />
             <Route path="banner-cards/add" element={<AddBannerCard />} />

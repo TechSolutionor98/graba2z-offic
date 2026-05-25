@@ -36,6 +36,8 @@ const config = {
   // App Configuration
   APP_NAME: "GrabAtoZ",
   APP_VERSION: "1.0.0",
+  ANDROID_APP_URL: import.meta.env.VITE_ANDROID_APP_URL || "",
+  IOS_APP_URL: import.meta.env.VITE_IOS_APP_URL || "",
 }
 
 export default config
