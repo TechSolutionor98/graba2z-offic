@@ -954,17 +954,18 @@ class ProductCacheService {
     // Filter by search query
     if (filters.search && filters.search.trim()) {
       const searchTerm = filters.search.toLowerCase().trim()
+      const words = searchTerm.split(/\s+/)
       filteredProducts = filteredProducts.filter((product) => {
         const name = (product.name || "").toLowerCase()
         const description = (product.description || "").toLowerCase()
         const brandName = product.brand?.name?.toLowerCase() || ""
         const sku = (product.sku || "").toLowerCase()
 
-        return (
-          name.includes(searchTerm) ||
-          description.includes(searchTerm) ||
-          brandName.includes(searchTerm) ||
-          sku.includes(searchTerm)
+        return words.every((word) =>
+          name.includes(word) ||
+          description.includes(word) ||
+          brandName.includes(word) ||
+          sku.includes(word)
         )
       })
     }

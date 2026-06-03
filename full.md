@@ -268,3 +268,96 @@ If business wants web-registered users to become app-eligible later, add a separ
 6. Confirm order has `appDiscountApplied: true` and reduced `totalPrice`.
 7. Call status API again => usually `eligible: false` for first-user discount.
 
+---
+
+## 10) Product Card Badge + Price Cutting (App UI Logic)
+
+This is how app developer should show **New User Deal** on product cards.
+
+### Step A: fetch current user discount status once
+Call:
+- `GET /api/app-discounts/me/first-user-discount`
+
+Use response as `firstUserDiscountState`.
+
+### Step B: decide if badge should be visible on each product card
+Badge visible rules:
+1. `firstUserDiscountState.eligible === true`
+2. AND product matches discount scope:
+   - if `discount.appliesTo === "all"` => all product cards show badge
+   - if `discount.appliesTo === "products"` => only show badge for products whose `_id` is in `discount.products[]`
+
+### Step C: show cut price on product card (estimated)
+Use product selling price first:
+- `basePrice = product.offerPrice > 0 ? product.offerPrice : product.price`
+
+Then apply discount rule:
+- if `discountType = percentage`:
+  - `rawDiscount = basePrice * (discountValue / 100)`
+- if `discountType = fixed`:
+  - `rawDiscount = discountValue`
+
+Apply max cap if exists:
+- `effectiveDiscount = min(rawDiscount, maxDiscountAmount)` when cap is set
+
+Final display price:
+- `discountedPrice = max(0, basePrice - effectiveDiscount)`
+
+For UI:
+- show original price with strike-through
+- show discounted price in green
+- show small label: `New User Deal`
+
+### Important note for app developer
+Product-card discount is **display estimate**.
+Final amount must always come from backend at checkout:
+- `POST /api/app-discounts/preview` (cart-level exact amount)
+- `POST /api/orders` (final server-applied discount in order response)
+
+### Product card pseudocode (app side)
+```js
+function getProductCardDeal(product, state) {
+  if (!state?.eligible || !state?.discount) {
+    return { showBadge: false, showPriceCut: false }
+  }
+
+  const d = state.discount
+  const productId = String(product._id)
+
+  const matchesScope =
+    d.appliesTo === "all" ||
+    (d.appliesTo === "products" && Array.isArray(d.products) && d.products.map(String).includes(productId))
+
+  if (!matchesScope) {
+    return { showBadge: false, showPriceCut: false }
+  }
+
+  const basePrice = Number(product.offerPrice > 0 ? product.offerPrice : product.price)
+  if (!Number.isFinite(basePrice) || basePrice <= 0) {
+    return { showBadge: true, showPriceCut: false }
+  }
+
+  let rawDiscount = 0
+  if (d.discountType === "percentage") rawDiscount = (basePrice * Number(d.discountValue || 0)) / 100
+  else rawDiscount = Number(d.discountValue || 0)
+
+  let effectiveDiscount = rawDiscount
+  if (d.maxDiscountAmount != null && Number(d.maxDiscountAmount) > 0) {
+    effectiveDiscount = Math.min(effectiveDiscount, Number(d.maxDiscountAmount))
+  }
+
+  const discountedPrice = Math.max(0, basePrice - Math.max(0, effectiveDiscount))
+
+  return {
+    showBadge: true,
+    showPriceCut: discountedPrice < basePrice,
+    originalPrice: basePrice,
+    discountedPrice,
+  }
+}
+```
+
+### If discount has minimum order amount
+If `discount.minOrderAmount > basePrice` for a single product card:
+- still show badge (`New User Deal`)
+- but price cut can be hidden until cart/checkout confirms eligibility

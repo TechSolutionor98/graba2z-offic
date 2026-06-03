@@ -715,9 +715,9 @@ const Shop = () => {
 
     // Build the non-search filtered list once, then only apply text matching progressively.
     // This avoids repeatedly sorting/filtering the full product array on every candidate term.
-    const baseFilters = precomputedFilters || buildProductFilters(includePriceRange)
+    const { search: _skipSearch, ...nonSearchFilters } = precomputedFilters || buildProductFilters(includePriceRange)
 
-    const baseFilteredProducts = productCache.filterProducts(allProducts, baseFilters)
+    const baseFilteredProducts = productCache.filterProducts(allProducts, nonSearchFilters)
     if (!baseFilteredProducts.length) {
       if (isStaleRun()) return []
       setActualSearchQuery(searchTerm)
@@ -731,11 +731,12 @@ const Shop = () => {
       const description = (product?.description || "").toLowerCase()
       const brandName = (product?.brand?.name || "").toLowerCase()
       const sku = (product?.sku || "").toLowerCase()
-      return (
-        name.includes(searchTermNormalized) ||
-        description.includes(searchTermNormalized) ||
-        brandName.includes(searchTermNormalized) ||
-        sku.includes(searchTermNormalized)
+      const words = searchTermNormalized.split(/\s+/)
+      return words.every((word) =>
+        name.includes(word) ||
+        description.includes(word) ||
+        brandName.includes(word) ||
+        sku.includes(word)
       )
     }
 
