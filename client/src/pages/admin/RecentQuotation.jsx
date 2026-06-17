@@ -265,10 +265,12 @@ const QuotationPrint = forwardRef(({ quotation }, ref) => {
               </div>
             )}
 
+            {!isCOD && (
             <div className="flex justify-between">
               <span className="text-gray-600">Shipping:</span>
               <span className="text-gray-900">{formatPrice(shipping)}</span>
             </div>
+            )}
             <div className="flex justify-between">
               <span className="text-gray-600">VAT:</span>
               <span className="text-gray-900">{formatPrice(tax)}</span>

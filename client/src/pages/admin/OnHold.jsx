@@ -40,6 +40,9 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
     couponDiscount,
     displaySubtotal,
     displayTotal,
+    codFee,
+    codShippingFee,
+    isCOD,
   } = getInvoiceBreakdown(order)
   const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
 
@@ -292,10 +295,24 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               </div>
             )}
 
+            {!isCOD && (
             <div className="flex justify-between text-gray-700">
               <span>🚚 Shipping Charge:</span>
               <span className="font-medium">{formatPrice(shipping)}</span>
             </div>
+            )}
+            {isCOD && codFee > 0 && (
+              <div className="flex justify-between">
+                <span className="text-yellow-700 text-sm">💰 COD Handling Fee (Non-Refundable):</span>
+                <span className="text-yellow-700 text-sm">{formatPrice(codFee)}</span>
+              </div>
+            )}
+            {isCOD && codShippingFee > 0 && (
+              <div className="flex justify-between">
+                <span className="text-yellow-700 text-sm">🚚 COD Shipping Fee:</span>
+                <span className="text-yellow-700 text-sm">{formatPrice(codShippingFee)}</span>
+              </div>
+            )}
 
             <div className="border-t-2 border-lime-500">
               <div className="flex justify-between text-xl font-bold text-lime-800 bg-lime-100 p-2 rounded-lg">
@@ -382,10 +399,12 @@ const OnHold = () => {
     "Confirmed",
     "Ready For Shipment",
     "Shipped",
+    "On the Way",
+    "Out for Delivery",
     "Delivered",
+    "On Hold",
     "Cancelled",
-    "Returned",
-    "On Hold"
+    "Deleted"
   ]
 
   const paymentStatusOptions = ["Unpaid", "Paid"]
@@ -1026,10 +1045,24 @@ const OnHold = () => {
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
                   </div>
+                  {!selectedTotals.isCOD && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping:</span>
                     <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
                   </div>
+                  )}
+                  {selectedTotals.isCOD && selectedTotals.codFee > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-yellow-700 text-sm">💰 COD Handling Fee (Non-Refundable):</span>
+                        <span className="text-yellow-700 text-sm">{formatPrice(selectedTotals.codFee)}</span>
+                      </div>
+                    )}
+                  {selectedTotals.isCOD && selectedTotals.codShippingFee > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-yellow-700 text-sm">🚚 COD Shipping Fee:</span>
+                        <span className="text-yellow-700 text-sm">{formatPrice(selectedTotals.codShippingFee)}</span>
+                      </div>
+                    )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">VAT:</span>
                     <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>

@@ -20,6 +20,7 @@ import '../styles/phoneInput.css'
 import config from "../config/config"
 const UAE_STATES = ["Abu Dhabi", "Ajman", "Al Ain", "Dubai", "Fujairah", "Ras Al Khaimah", "Sharjah", "Umm al-Qaywain"]
 const COD_FEE_AMOUNT = 5
+const COD_SHIPPING_FEE_AMOUNT = 10
 
 const STORES = [
   {
@@ -305,7 +306,8 @@ const Checkout = () => {
   const deliveryCharge = deliveryType === "home" && hasAdminDeliveryCharges ? Number(fallbackDelivery?.charge || 0) : 0
 
   const codFee = selectedPaymentMethod === "cod" ? COD_FEE_AMOUNT : 0
-  const finalTotal = cartTotals.totalOfferPrice + protectionTotal + deliveryCharge + codFee - couponDiscount
+  const codShippingFee = selectedPaymentMethod === "cod" ? COD_SHIPPING_FEE_AMOUNT : 0
+  const finalTotal = cartTotals.totalOfferPrice + protectionTotal + deliveryCharge + codFee + codShippingFee - couponDiscount
 
   // Coupon logic
   const handleApplyCoupon = async () => {
@@ -648,6 +650,11 @@ const Checkout = () => {
         paymentStatus: "pending",
         isPaid: false,
         customerNotes: customerNotes.trim() || undefined,
+        // COD-specific fees
+        ...(selectedPaymentMethod === "cod" && {
+          codFee: COD_FEE_AMOUNT,
+          codShippingFee: COD_SHIPPING_FEE_AMOUNT,
+        }),
       }
 
       if (deliveryType === "home") {
@@ -934,10 +941,15 @@ const Checkout = () => {
         itemsPrice: cartTotal,
         shippingPrice: deliveryCharge, // Include delivery charge
         deliveryChargeId: deliveryType === "home" ? (fallbackDelivery?._id || undefined) : undefined,
-        totalPrice: finalTotal, // Include delivery charge
+        totalPrice: finalTotal, // Include delivery charge + COD fees
         deliveryType: deliveryType,
         paymentMethod: selectedPaymentMethod,
         customerNotes: customerNotes.trim() || undefined, // Only include if not empty
+        // COD-specific fees
+        ...(selectedPaymentMethod === "cod" && {
+          codFee: COD_FEE_AMOUNT,
+          codShippingFee: COD_SHIPPING_FEE_AMOUNT,
+        }),
       }
 
       if (deliveryType === "home") {
@@ -1628,11 +1640,16 @@ const Checkout = () => {
                         <span className="font-semibold text-yellow-800"><TranslatedText>Cash on Delivery</TranslatedText></span>
                       </div>
                       <p className="text-sm text-yellow-700">
-                        <TranslatedText>An additional 5 AED will be charged for Cash on Delivery (COD) as a cash handling fee..</TranslatedText>
+                        <TranslatedText>Cash on Delivery includes a handling fee and a shipping fee.</TranslatedText>
                       </p>
-                      <p className="text-sm font-semibold text-yellow-800 mt-2" lang="en" dir="ltr">
-                        COD Fee (Non-Refundable) AED 5.00
-                      </p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-sm font-semibold text-yellow-800" lang="en" dir="ltr">
+                          💰 COD Handling Fee (Non-Refundable): AED 5.00
+                        </p>
+                        <p className="text-sm font-semibold text-yellow-800" lang="en" dir="ltr">
+                          🚚 COD Shipping Fee: AED 10.00
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -1805,16 +1822,24 @@ const Checkout = () => {
                   </div>
                 )}
 
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600"><TranslatedText>Shipping</TranslatedText></span>
-                  <span className="text-black">{deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}</span>
-                </div>
+                {selectedPaymentMethod !== "cod" && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600"><TranslatedText>Shipping</TranslatedText></span>
+                    <span className="text-black">{deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}</span>
+                  </div>
+                )}
 
                 {selectedPaymentMethod === "cod" && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600" lang="en" dir="ltr">COD Fee (Non-Refundable)</span>
-                    <span className="text-black" lang="en" dir="ltr">AED 5.00</span>
-                  </div>
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600" lang="en" dir="ltr">COD Handling Fee (Non-Refundable)</span>
+                      <span className="text-black" lang="en" dir="ltr">AED 5.00</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600" lang="en" dir="ltr">COD Shipping Fee</span>
+                      <span className="text-black" lang="en" dir="ltr">AED 10.00</span>
+                    </div>
+                  </>
                 )}
 
                 {/* Protection Plans Section */}
@@ -1902,7 +1927,7 @@ const Checkout = () => {
                   <span className="text-black">{formatPrice(finalTotal)}</span>
                 </div>
 
-                {!hasAdminDeliveryCharges && (
+                {!hasAdminDeliveryCharges && selectedPaymentMethod !== "cod" && (
                   <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
                     <span className="text-lg">🎉</span>
                     <p className="text-sm text-green-700 font-medium"><TranslatedText>Free shipping is applied to this order.</TranslatedText></p>

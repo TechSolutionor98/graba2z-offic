@@ -45,7 +45,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   
   const baseSubtotal = computeBaseSubtotal(regularItems)
 
-  const { subtotal, shipping, tax, total, couponCode, couponDiscount } = getInvoiceBreakdown(order)
+  const { subtotal, shipping, tax, total, couponCode, couponDiscount, codFee, codShippingFee, isCOD } = getInvoiceBreakdown(order)
   const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
 
   const currentDate = new Date().toLocaleDateString()
@@ -233,10 +233,24 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               <span className="text-gray-600">Subtotal:</span>
               <span className="text-gray-900">{formatPrice(subtotal)}</span>
             </div>
+            {!isCOD && (
             <div className="flex justify-between">
               <span className="text-gray-600">Shipping:</span>
               <span className="text-gray-900">{formatPrice(shipping)}</span>
             </div>
+            )}
+            {isCOD && codFee > 0 && (
+              <div className="flex justify-between">
+                <span className="text-yellow-700 text-sm">💰 COD Handling Fee (Non-Refundable):</span>
+                <span className="text-yellow-700 text-sm">{formatPrice(codFee)}</span>
+              </div>
+            )}
+            {isCOD && codShippingFee > 0 && (
+              <div className="flex justify-between">
+                <span className="text-yellow-700 text-sm">🚚 COD Shipping Fee:</span>
+                <span className="text-yellow-700 text-sm">{formatPrice(codShippingFee)}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-gray-600">VAT:</span>
               <span className="text-gray-900">{formatPrice(tax)}</span>
@@ -352,7 +366,7 @@ const ReadyForShipment = () => {
     "Delivered",
     "On Hold",
     "Cancelled",
-    "Deleted",
+    "Deleted"
   ]
 
   const paymentStatusOptions = ["Paid", "Unpaid"]
@@ -900,35 +914,29 @@ const ReadyForShipment = () => {
                         <div className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap relative">
-                        <div className="relative">
+                        <div className="relative inline-block w-full text-left">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              toggleStatusDropdown(order._id)
-                            }}
-                            className="px-3 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full cursor-pointer hover:opacity-80 transition-opacity bg-purple-100 text-purple-800"
+                            className={`px-3 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full hover:opacity-80 transition-opacity`}
                           >
-                            {order.status || "Ready For Shipment"}
+                            {order.status || "New"}
                             <ChevronDown size={12} className="ml-1" />
                           </button>
-
-                          {showStatusDropdown[order._id] && (
-                            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
-                              {orderStatusOptions.map((status) => (
-                                <button
-                                  key={status}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleUpdateStatus(order._id, status)
-                                  }}
-                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                  disabled={processingAction}
-                                >
-                                  {status}
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                          
+                          <select
+                            value={order.status || "New"}
+                            onChange={(e) => {
+                              e.stopPropagation()
+                              handleUpdateStatus(order._id, e.target.value)
+                            }}
+                            disabled={processingAction}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          >
+                            {orderStatusOptions.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap relative">
@@ -1240,10 +1248,24 @@ const ReadyForShipment = () => {
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
                   </div>
+                  {!selectedTotals.isCOD && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Shipping:</span>
                     <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
                   </div>
+                  )}
+                  {selectedTotals.isCOD && selectedTotals.codFee > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-yellow-700 text-sm">💰 COD Handling Fee (Non-Refundable):</span>
+                        <span className="text-yellow-700 text-sm">{formatPrice(selectedTotals.codFee)}</span>
+                      </div>
+                    )}
+                  {selectedTotals.isCOD && selectedTotals.codShippingFee > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-yellow-700 text-sm">🚚 COD Shipping Fee:</span>
+                        <span className="text-yellow-700 text-sm">{formatPrice(selectedTotals.codShippingFee)}</span>
+                      </div>
+                    )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">VAT:</span>
                     <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
