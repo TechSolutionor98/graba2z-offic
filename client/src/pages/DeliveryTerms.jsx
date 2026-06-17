@@ -29,13 +29,15 @@ export default function DeliveryInfo() {
   
             <div className="space-y-4">
               <div className="bg-white p-4 rounded border border-lime-200">
-                <p className="font-medium text-lime-500">Below AED 95</p>
-                <p className="text-gray-700">will be charges AED 20.00 delivery charges</p>
+                <p className="font-medium text-lime-500">Below 95AED</p>
                 <p className="text-gray-700">
-                  if COD (Cash on Delivery) then COD Handling Fee: AED 5.00 will be applicable (Non-refundable)
+                  Credit/Debit Card: No COD handling fee and no shipping fee will be charged.
                 </p>
                 <p className="text-gray-700">
-                  AED 20 Delivery Charges +5 COD handling Fee total payable on delivery AED 25.00
+                  Cash on Delivery (COD): A AED 5 COD handling fee (non-refundable) and AED 10 shipping fee will apply.
+                </p>
+                <p className="text-gray-700">
+                  Total payable on delivery (COD): AED 15.00
                 </p>
               </div>
   
