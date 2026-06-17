@@ -3,7 +3,7 @@ import { Plus, X, Trash2 } from "lucide-react"
 import ImageUpload from "../ImageUpload"
 import { getFullImageUrl } from "../../utils/imageUtils"
 
-const ColorVariationForm = ({ colorVariations = [], onChange }) => {
+const ColorVariationForm = ({ colorVariations = [], onChange, displayType = "card", onDisplayTypeChange }) => {
   const [expandedIndex, setExpandedIndex] = useState(null)
 
   const normalizeImageUrl = (item) => {
@@ -125,16 +125,43 @@ const ColorVariationForm = ({ colorVariations = [], onChange }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h3 className="text-lg font-semibold text-gray-900">Color Variations</h3>
-        <button
-          type="button"
-          onClick={addColorVariation}
-          className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-        >
-          <Plus size={18} className="mr-2" />
-          Add Color
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-3 bg-white px-3 py-1.5 rounded-lg border border-purple-200">
+            <span className="text-xs font-semibold text-purple-700 uppercase">Layout:</span>
+            <label className="inline-flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                name="colorVariationsDisplayType"
+                value="button"
+                checked={displayType === "button"}
+                onChange={(e) => onDisplayTypeChange && onDisplayTypeChange(e.target.value)}
+                className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 mr-1.5"
+              />
+              Buttons
+            </label>
+            <label className="inline-flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                name="colorVariationsDisplayType"
+                value="card"
+                checked={displayType === "card"}
+                onChange={(e) => onDisplayTypeChange && onDisplayTypeChange(e.target.value)}
+                className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 mr-1.5"
+              />
+              Cards
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={addColorVariation}
+            className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <Plus size={18} className="mr-2" />
+            Add Color
+          </button>
+        </div>
       </div>
 
       {colorVariations.length === 0 ? (

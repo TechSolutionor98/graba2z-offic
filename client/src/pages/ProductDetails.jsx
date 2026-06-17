@@ -2865,68 +2865,96 @@ const ProductDetails = () => {
                     <span className="text-purple-600 mr-2"></span>
                     <TranslatedText>Color</TranslatedText>: {selectedColorIndex !== null && product.colorVariations[selectedColorIndex]?.color ? <TranslatedText text={product.colorVariations[selectedColorIndex].color}>{product.colorVariations[selectedColorIndex].color}</TranslatedText> : <TranslatedText>Select Color</TranslatedText>}
                   </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {product.colorVariations
-                      .filter(colorVar => colorVar.color)
-                      .map((colorVar, index) => {
-                        const isSelected = index === selectedColorIndex
-                        const colorPrice = colorVar.offerPrice > 0 ? colorVar.offerPrice : colorVar.price
-                        
-                        return (
-                          <button
-                            key={index}
-                            type="button"
-                            onClick={() => {
-                              // Toggle: if already selected, deselect to show original product
-                              setSelectedColorIndex(isSelected ? null : index)
-                              setSelectedImage(0)
-                            }}
-                            className={`relative border-2 rounded-lg p-3 transition-all duration-200 hover:shadow-lg ${
-                              isSelected 
-                                ? 'border-purple-500 bg-purple-50' 
-                                : 'border-gray-200 hover:border-purple-300'
-                            }`}
-                          >
-                            {/* Product Image */}
-                            <div className="aspect-square mb-2 bg-white rounded-md overflow-hidden">
-                              <img
-                                src={getFullImageUrl(colorVar.image) || "/placeholder.svg"}
-                                alt={colorVar.color}
-                                className="w-full h-full object-contain"
-                              />
-                            </div>
-                            
-                            {/* Color Name */}
-                            <p className={`text-xs font-semibold text-center mb-1 ${
-                              isSelected ? 'text-purple-700' : 'text-gray-700'
-                            }`}>
-                              {colorVar.color}
-                            </p>
-                            
-                            {/* Price */}
-                            <p className="text-sm font-bold text-center text-gray-900">
-                              {formatPrice(colorPrice)}
-                            </p>
-                            
-                            {/* Current Selection Indicator */}
-                            {isSelected && (
-                              <div className="absolute top-1 right-1 bg-purple-500 text-white rounded-full p-1">
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
+                  {product.colorVariationsDisplayType === "button" ? (
+                    <div className="flex flex-wrap gap-3">
+                      {product.colorVariations
+                        .filter(colorVar => colorVar.color)
+                        .map((colorVar, index) => {
+                          const isSelected = index === selectedColorIndex
+                          return (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => {
+                                // Toggle: if already selected, deselect to show original product
+                                setSelectedColorIndex(isSelected ? null : index)
+                                setSelectedImage(0)
+                              }}
+                              className={`px-5 py-2 rounded-lg font-medium text-sm border transition-all duration-200 ${
+                                isSelected
+                                  ? 'bg-purple-200 text-purple-800 border-purple-400 font-semibold'
+                                  : 'bg-white text-gray-700 border-gray-400 hover:bg-purple-50 hover:border-purple-300'
+                              }`}
+                            >
+                              <TranslatedText text={colorVar.color}>{colorVar.color}</TranslatedText>
+                            </button>
+                          )
+                        })}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {product.colorVariations
+                        .filter(colorVar => colorVar.color)
+                        .map((colorVar, index) => {
+                          const isSelected = index === selectedColorIndex
+                          const colorPrice = colorVar.offerPrice > 0 ? colorVar.offerPrice : colorVar.price
+                          
+                          return (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => {
+                                // Toggle: if already selected, deselect to show original product
+                                setSelectedColorIndex(isSelected ? null : index)
+                                setSelectedImage(0)
+                              }}
+                              className={`relative border-2 rounded-lg p-3 transition-all duration-200 hover:shadow-lg ${
+                                isSelected 
+                                  ? 'border-purple-500 bg-purple-50' 
+                                  : 'border-gray-200 hover:border-purple-300'
+                              }`}
+                            >
+                              {/* Product Image */}
+                              <div className="aspect-square mb-2 bg-white rounded-md overflow-hidden">
+                                <img
+                                  src={getFullImageUrl(colorVar.image) || "/placeholder.svg"}
+                                  alt={colorVar.color}
+                                  className="w-full h-full object-contain"
+                                />
                               </div>
-                            )}
-                            
-                            {/* Stock Badge */}
-                            {colorVar.countInStock <= 0 && (
-                              <div className="absolute bottom-2 left-2 right-2 bg-red-500 text-white text-xs py-1 px-2 rounded text-center">
-                                Out of Stock
-                              </div>
-                            )}
-                          </button>
-                        )
-                      })}
-                  </div>
+                              
+                              {/* Color Name */}
+                              <p className={`text-xs font-semibold text-center mb-1 ${
+                                isSelected ? 'text-purple-700' : 'text-gray-700'
+                              }`}>
+                                {colorVar.color}
+                              </p>
+                              
+                              {/* Price */}
+                              <p className="text-sm font-bold text-center text-gray-900">
+                                {formatPrice(colorPrice)}
+                              </p>
+                              
+                              {/* Current Selection Indicator */}
+                              {isSelected && (
+                                <div className="absolute top-1 right-1 bg-purple-500 text-white rounded-full p-1">
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
+                              )}
+                              
+                              {/* Stock Badge */}
+                              {colorVar.countInStock <= 0 && (
+                                <div className="absolute bottom-2 left-2 right-2 bg-red-500 text-white text-xs py-1 px-2 rounded text-center">
+                                  Out of Stock
+                                </div>
+                              )}
+                            </button>
+                          )
+                        })}
+                    </div>
+                  )}
                   <p className="text-xs text-gray-600 mt-3">
                     Select a color to view its image and price
                   </p>
@@ -3009,175 +3037,335 @@ const ProductDetails = () => {
                     <span className="text-blue-600 mr-2"></span>
                    <TranslatedText>Available Options</TranslatedText>:
                   </h3>
-                  <div className="flex flex-wrap gap-3 ">
-                    {/* Combine current product and all variations, then sort alphabetically */}
-                    {(() => {
-                      // Build array of all variations including current product
-                      const allVariations = []
-                      
-                      // Add current product if it has selfVariationText (or fallback to reverseVariationText)
-                      const currentProductText = product.selfVariationText || product.reverseVariationText
-                      if (currentProductText) {
-                        allVariations.push({
-                          id: product._id,
-                          text: currentProductText,
-                          slug: product.slug,
-                          isCurrent: true
-                        })
-                      }
-                      
-                      // Add other variations - use their selfVariationText, fallback to variationText
-                      product.variations
-                        .filter(variation => {
-                          const varProduct = variation.product
-                          if (!varProduct) return false
-                          // Get the text: prefer selfVariationText from the product, fallback to variationText
-                          const varText = (typeof varProduct === 'object' && (varProduct.selfVariationText || varProduct.reverseVariationText)) 
-                            || variation.variationText 
-                            || ""
-                          return varText.trim() !== ""
-                        })
-                        .forEach(variation => {
-                          const varProduct = variation.product
-                          const varId = typeof varProduct === 'object' ? varProduct._id : varProduct
-                          const varSlug = typeof varProduct === 'object' ? varProduct.slug : null
-                          // Get the text: prefer selfVariationText from the product, fallback to variationText
-                          const varText = (typeof varProduct === 'object' && (varProduct.selfVariationText || varProduct.reverseVariationText)) 
-                            || variation.variationText 
-                            || ""
-                          
-                          allVariations.push({
-                            id: varId,
-                            text: varText,
-                            slug: varSlug || varId,
-                            isCurrent: false
-                          })
-                        })
-                      
-                      // Sort alphabetically by text to maintain consistent order
-                      allVariations.sort((a, b) => a.text.localeCompare(b.text))
-                      
-                      return allVariations.map((variation) => {
-                        // Find the original variation object in product.variations to get pre-translated fields
-                        const matchingVar = product.variations?.find(v => 
-                          (v.product?._id || v.product || "").toString() === (variation.id || "").toString()
-                        );
-
-                        return (
-                          <div key={variation.id} className="relative">
-                            {variation.isCurrent ? (
-                              <div className="px-5 py-2 bg-blue-200 text-gray-700 rounded-lg font-medium text-sm border-2 border-blue-400 cursor-default">
-                                <TranslatedText 
-                                  text={variation.text} 
-                                  sourceDoc={product} 
-                                  fieldName="selfVariationText" 
-                                />
-                              </div>
-                            ) : (
-                              <Link
-                                to={getLocalizedPath(`/product/${encodeURIComponent(variation.slug)}`)}
-                                className="block px-5 py-2 bg-white text-gray-700 rounded-lg font-medium text-sm border border-gray-400 hover:bg-blue-100 hover:border-blue-400 transition-all duration-200"
-                              >
-                                <TranslatedText 
-                                  text={variation.text} 
-                                  sourceDoc={matchingVar} 
-                                  fieldName="variationText" 
-                                />
-                              </Link>
-                            )}
-                          </div>
-                        )
+                  {(() => {
+                    // Build array of all variations including current product
+                    const allVariations = []
+                    
+                    // Add current product if it has selfVariationText (or fallback to reverseVariationText)
+                    const currentProductText = product.selfVariationText || product.reverseVariationText
+                    if (currentProductText) {
+                      allVariations.push({
+                        id: product._id,
+                        text: currentProductText,
+                        slug: product.slug,
+                        isCurrent: true,
+                        image: product.image,
+                        price: product.price,
+                        offerPrice: product.offerPrice,
+                        sku: product.sku
                       })
-                    })()}
-                  </div>
+                    }
+                    
+                    // Add other variations - use their selfVariationText, fallback to variationText
+                    product.variations
+                      .filter(variation => {
+                        const varProduct = variation.product
+                        if (!varProduct) return false
+                        // Get the text: prefer selfVariationText from the product, fallback to variationText
+                        const varText = (typeof varProduct === 'object' && (varProduct.selfVariationText || varProduct.reverseVariationText)) 
+                          || variation.variationText 
+                          || ""
+                        return varText.trim() !== ""
+                      })
+                      .forEach(variation => {
+                        const varProduct = variation.product
+                        const varId = typeof varProduct === 'object' ? varProduct._id : varProduct
+                        const varSlug = typeof varProduct === 'object' ? varProduct.slug : null
+                        // Get the text: prefer selfVariationText from the product, fallback to variationText
+                        const varText = (typeof varProduct === 'object' && (varProduct.selfVariationText || varProduct.reverseVariationText)) 
+                          || variation.variationText 
+                          || ""
+                        
+                        allVariations.push({
+                          id: varId,
+                          text: varText,
+                          slug: varSlug || varId,
+                          isCurrent: false,
+                          image: typeof varProduct === 'object' ? varProduct.image : null,
+                          price: typeof varProduct === 'object' ? varProduct.price : null,
+                          offerPrice: typeof varProduct === 'object' ? varProduct.offerPrice : null,
+                          sku: typeof varProduct === 'object' ? varProduct.sku : null
+                        })
+                      })
+                    
+                    // Sort alphabetically by text to maintain consistent order
+                    allVariations.sort((a, b) => a.text.localeCompare(b.text))
+                    
+                    if (product.variationsDisplayType === "card") {
+                      return (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                          {allVariations.map((variation) => {
+                            const isSelected = variation.isCurrent
+                            const varPrice = variation.offerPrice > 0 ? variation.offerPrice : variation.price
+                            const matchingVar = product.variations?.find(v => 
+                              (v.product?._id || v.product || "").toString() === (variation.id || "").toString()
+                            );
+
+                            return (
+                              <div key={variation.id} className="relative">
+                                {variation.isCurrent ? (
+                                  <div className="relative border-2 rounded-lg p-3 bg-blue-50 border-blue-500 cursor-default text-center">
+                                    {/* Product Image */}
+                                    <div className="aspect-square mb-2 bg-white rounded-md overflow-hidden">
+                                      <img
+                                        src={getFullImageUrl(variation.image) || "/placeholder.svg"}
+                                        alt={variation.text}
+                                        className="w-full h-full object-contain"
+                                      />
+                                    </div>
+                                    
+                                    {/* Variation Text */}
+                                    <p className="text-xs font-semibold text-center mb-1 text-blue-700">
+                                      <TranslatedText text={variation.text} sourceDoc={product} fieldName="selfVariationText" />
+                                    </p>
+                                    
+                                    {/* Price */}
+                                    <p className="text-sm font-bold text-center text-gray-900">
+                                      {formatPrice(varPrice)}
+                                    </p>
+                                    
+                                    {/* Selection Indicator */}
+                                    <div className="absolute top-1 right-1 bg-blue-500 text-white rounded-full p-1">
+                                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <Link
+                                    to={getLocalizedPath(`/product/${encodeURIComponent(variation.slug)}`)}
+                                    className="block relative border-2 rounded-lg p-3 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 text-center"
+                                  >
+                                    {/* Product Image */}
+                                    <div className="aspect-square mb-2 bg-white rounded-md overflow-hidden">
+                                      <img
+                                        src={getFullImageUrl(variation.image) || "/placeholder.svg"}
+                                        alt={variation.text}
+                                        className="w-full h-full object-contain"
+                                      />
+                                    </div>
+                                    
+                                    {/* Variation Text */}
+                                    <p className="text-xs font-semibold text-center mb-1 text-gray-700">
+                                      <TranslatedText text={variation.text} sourceDoc={matchingVar} fieldName="variationText" />
+                                    </p>
+                                    
+                                    {/* Price */}
+                                    <p className="text-sm font-bold text-center text-gray-900">
+                                      {formatPrice(varPrice)}
+                                    </p>
+                                  </Link>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div className="flex flex-wrap gap-3">
+                        {allVariations.map((variation) => {
+                          const matchingVar = product.variations?.find(v => 
+                            (v.product?._id || v.product || "").toString() === (variation.id || "").toString()
+                          );
+
+                          return (
+                            <div key={variation.id} className="relative">
+                              {variation.isCurrent ? (
+                                <div className="px-5 py-2 bg-blue-200 text-gray-700 rounded-lg font-medium text-sm border-2 border-blue-400 cursor-default">
+                                  <TranslatedText 
+                                    text={variation.text} 
+                                    sourceDoc={product} 
+                                    fieldName="selfVariationText" 
+                                  />
+                                </div>
+                              ) : (
+                                <Link
+                                  to={getLocalizedPath(`/product/${encodeURIComponent(variation.slug)}`)}
+                                  className="block px-5 py-2 bg-white text-gray-700 rounded-lg font-medium text-sm border border-gray-400 hover:bg-blue-100 hover:border-blue-400 transition-all duration-200"
+                                >
+                                  <TranslatedText 
+                                    text={variation.text} 
+                                    sourceDoc={matchingVar} 
+                                    fieldName="variationText" 
+                                  />
+                                </Link>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
                   <p className="text-xs text-gray-600 mt-3">
                     <TranslatedText>Click on any variation to view its details</TranslatedText>
                   </p>
                 </div>
-              )}
-
-              {/* Available Models */}
+              )}                {/* Available Models */}
               {product.availableModels && product.availableModels.length > 0 && (
                 <div className="mb-6">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center">
                     <span className="text-blue-600 mr-2"></span>
                     <TranslatedText>Available Models</TranslatedText>:
                   </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {(() => {
-                      const allModels = []
+                  {(() => {
+                    const allModels = []
 
-                      const currentModelText = product.selfAvailableModelText
-                      if (currentModelText) {
-                        allModels.push({
-                          id: product._id,
-                          text: currentModelText,
-                          slug: product.slug,
-                          isCurrent: true,
-                        })
-                      }
-
-                      product.availableModels
-                        .filter((model) => {
-                          const modelProduct = model.product
-                          if (!modelProduct) return false
-                          const modelText =
-                            (typeof modelProduct === "object" && modelProduct.selfAvailableModelText) ||
-                            model.variationText ||
-                            ""
-                          return modelText.trim() !== ""
-                        })
-                        .forEach((model) => {
-                          const modelProduct = model.product
-                          const modelId = typeof modelProduct === "object" ? modelProduct._id : modelProduct
-                          const modelSlug = typeof modelProduct === "object" ? modelProduct.slug : null
-                          const modelText =
-                            (typeof modelProduct === "object" && modelProduct.selfAvailableModelText) ||
-                            model.variationText ||
-                            ""
-
-                          allModels.push({
-                            id: modelId,
-                            text: modelText,
-                            slug: modelSlug || modelId,
-                            isCurrent: false,
-                          })
-                        })
-
-                      allModels.sort((a, b) => a.text.localeCompare(b.text))
-
-                      return allModels.map((model) => {
-                        const matchingModel = product.availableModels?.find(
-                          (item) => (item.product?._id || item.product || "").toString() === (model.id || "").toString()
-                        )
-
-                        return (
-                          <div key={model.id} className="relative">
-                            {model.isCurrent ? (
-                              <div className="px-5 py-2 bg-blue-200 text-gray-700 rounded-lg font-medium text-sm border-2 border-blue-400 cursor-default">
-                                <TranslatedText
-                                  text={model.text}
-                                  sourceDoc={product}
-                                  fieldName="selfAvailableModelText"
-                                />
-                              </div>
-                            ) : (
-                              <Link
-                                to={getLocalizedPath(`/product/${encodeURIComponent(model.slug)}`)}
-                                className="block px-5 py-2 bg-white text-gray-700 rounded-lg font-medium text-sm border border-gray-400 hover:bg-blue-100 hover:border-blue-400 transition-all duration-200"
-                              >
-                                <TranslatedText
-                                  text={model.text}
-                                  sourceDoc={matchingModel}
-                                  fieldName="variationText"
-                                />
-                              </Link>
-                            )}
-                          </div>
-                        )
+                    const currentModelText = product.selfAvailableModelText
+                    if (currentModelText) {
+                      allModels.push({
+                        id: product._id,
+                        text: currentModelText,
+                        slug: product.slug,
+                        isCurrent: true,
+                        image: product.image,
+                        price: product.price,
+                        offerPrice: product.offerPrice,
+                        sku: product.sku
                       })
-                    })()}
-                  </div>
+                    }
+
+                    product.availableModels
+                      .filter((model) => {
+                        const modelProduct = model.product
+                        if (!modelProduct) return false
+                        const modelText =
+                          (typeof modelProduct === "object" && modelProduct.selfAvailableModelText) ||
+                          model.variationText ||
+                          ""
+                        return modelText.trim() !== ""
+                      })
+                      .forEach((model) => {
+                        const modelProduct = model.product
+                        const modelId = typeof modelProduct === "object" ? modelProduct._id : modelProduct
+                        const modelSlug = typeof modelProduct === "object" ? modelProduct.slug : null
+                        const modelText =
+                          (typeof modelProduct === "object" && modelProduct.selfAvailableModelText) ||
+                          model.variationText ||
+                          ""
+
+                        allModels.push({
+                          id: modelId,
+                          text: modelText,
+                          slug: modelSlug || modelId,
+                          isCurrent: false,
+                          image: typeof modelProduct === "object" ? modelProduct.image : null,
+                          price: typeof modelProduct === "object" ? modelProduct.price : null,
+                          offerPrice: typeof modelProduct === "object" ? modelProduct.offerPrice : null,
+                          sku: typeof modelProduct === "object" ? modelProduct.sku : null
+                        })
+                      })
+
+                    allModels.sort((a, b) => a.text.localeCompare(b.text))
+
+                    if (product.availableModelsDisplayType === "card") {
+                      return (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                          {allModels.map((model) => {
+                            const isSelected = model.isCurrent
+                            const modelPrice = model.offerPrice > 0 ? model.offerPrice : model.price
+                            const matchingModel = product.availableModels?.find(
+                              (item) => (item.product?._id || item.product || "").toString() === (model.id || "").toString()
+                            )
+
+                            return (
+                              <div key={model.id} className="relative">
+                                {model.isCurrent ? (
+                                  <div className="relative border-2 rounded-lg p-3 bg-blue-50 border-blue-500 cursor-default text-center">
+                                    {/* Product Image */}
+                                    <div className="aspect-square mb-2 bg-white rounded-md overflow-hidden">
+                                      <img
+                                        src={getFullImageUrl(model.image) || "/placeholder.svg"}
+                                        alt={model.text}
+                                        className="w-full h-full object-contain"
+                                      />
+                                    </div>
+                                    
+                                    {/* Model Text */}
+                                    <p className="text-xs font-semibold text-center mb-1 text-blue-700">
+                                      <TranslatedText text={model.text} sourceDoc={product} fieldName="selfAvailableModelText" />
+                                    </p>
+                                    
+                                    {/* Price */}
+                                    <p className="text-sm font-bold text-center text-gray-900">
+                                      {formatPrice(modelPrice)}
+                                    </p>
+                                    
+                                    {/* Selection Indicator */}
+                                    <div className="absolute top-1 right-1 bg-blue-500 text-white rounded-full p-1">
+                                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <Link
+                                    to={getLocalizedPath(`/product/${encodeURIComponent(model.slug)}`)}
+                                    className="block relative border-2 rounded-lg p-3 border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 text-center"
+                                  >
+                                    {/* Product Image */}
+                                    <div className="aspect-square mb-2 bg-white rounded-md overflow-hidden">
+                                      <img
+                                        src={getFullImageUrl(model.image) || "/placeholder.svg"}
+                                        alt={model.text}
+                                        className="w-full h-full object-contain"
+                                      />
+                                    </div>
+                                    
+                                    {/* Model Text */}
+                                    <p className="text-xs font-semibold text-center mb-1 text-gray-700">
+                                      <TranslatedText text={model.text} sourceDoc={matchingModel} fieldName="variationText" />
+                                    </p>
+                                    
+                                    {/* Price */}
+                                    <p className="text-sm font-bold text-center text-gray-900">
+                                      {formatPrice(modelPrice)}
+                                    </p>
+                                  </Link>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div className="flex flex-wrap gap-3">
+                        {allModels.map((model) => {
+                          const matchingModel = product.availableModels?.find(
+                            (item) => (item.product?._id || item.product || "").toString() === (model.id || "").toString()
+                          )
+
+                          return (
+                            <div key={model.id} className="relative">
+                              {model.isCurrent ? (
+                                <div className="px-5 py-2 bg-blue-200 text-gray-700 rounded-lg font-medium text-sm border-2 border-blue-400 cursor-default">
+                                  <TranslatedText
+                                    text={model.text}
+                                    sourceDoc={product}
+                                    fieldName="selfAvailableModelText"
+                                  />
+                                </div>
+                              ) : (
+                                <Link
+                                  to={getLocalizedPath(`/product/${encodeURIComponent(model.slug)}`)}
+                                  className="block px-5 py-2 bg-white text-gray-700 rounded-lg font-medium text-sm border border-gray-400 hover:bg-blue-100 hover:border-blue-400 transition-all duration-200"
+                                >
+                                  <TranslatedText
+                                    text={model.text}
+                                    sourceDoc={matchingModel}
+                                    fieldName="variationText"
+                                  />
+                                </Link>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
                   <p className="text-xs text-gray-600 mt-3">
                     <TranslatedText>Click on any model to view its details</TranslatedText>
                   </p>

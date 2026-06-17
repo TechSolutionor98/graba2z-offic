@@ -122,6 +122,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     ogTitle: "",
     ogDescription: "",
     ogImage: "",
+    variationsDisplayType: "button",
+    availableModelsDisplayType: "button",
+    colorVariationsDisplayType: "card",
   })
 
   // New states for price calculation
@@ -416,6 +419,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           ogTitle: product.ogTitle || "",
           ogDescription: product.ogDescription || "",
           ogImage: product.ogImage || "",
+          variationsDisplayType: product.variationsDisplayType || "button",
+          availableModelsDisplayType: product.availableModelsDisplayType || "button",
+          colorVariationsDisplayType: product.colorVariationsDisplayType || "card",
         })
         
         // Set video source type based on existing video URL
@@ -970,6 +976,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         ogTitle: formData.ogTitle || "",
         ogDescription: formData.ogDescription || "",
         ogImage: formData.ogImage || "",
+        variationsDisplayType: formData.variationsDisplayType || "button",
+        availableModelsDisplayType: formData.availableModelsDisplayType || "button",
+        colorVariationsDisplayType: formData.colorVariationsDisplayType || "card",
       }
       if (!isSeoUnlocked) {
         PRODUCT_SEO_FIELDS.forEach((field) => {
@@ -1863,6 +1872,33 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
             </button>
           </div>
 
+          {/* Display Layout selection */}
+          <div className="mb-6 flex items-center space-x-6 bg-white p-3 rounded-lg border border-gray-200">
+            <span className="text-sm font-semibold text-gray-700 font-medium">Display Layout:</span>
+            <label className="inline-flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                name="variationsDisplayType"
+                value="button"
+                checked={formData.variationsDisplayType === "button"}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mr-2"
+              />
+              Buttons
+            </label>
+            <label className="inline-flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                name="variationsDisplayType"
+                value="card"
+                checked={formData.variationsDisplayType === "card"}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mr-2"
+              />
+              Cards
+            </label>
+          </div>
+
           {/* Self Variation Text Input */}
           <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
             <label className="block text-sm font-semibold text-gray-800 mb-2">
@@ -1981,6 +2017,33 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
             </button>
           </div>
 
+          {/* Display Layout selection */}
+          <div className="mb-6 flex items-center space-x-6 bg-white p-3 rounded-lg border border-gray-200">
+            <span className="text-sm font-semibold text-gray-700 font-medium">Display Layout:</span>
+            <label className="inline-flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                name="availableModelsDisplayType"
+                value="button"
+                checked={formData.availableModelsDisplayType === "button"}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mr-2"
+              />
+              Buttons
+            </label>
+            <label className="inline-flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                name="availableModelsDisplayType"
+                value="card"
+                checked={formData.availableModelsDisplayType === "card"}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mr-2"
+              />
+              Cards
+            </label>
+          </div>
+
           <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
             <label className="block text-sm font-semibold text-gray-800 mb-2">
               This Product's Available Model Label
@@ -2083,6 +2146,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           <ColorVariationForm
             colorVariations={colorVariations}
             onChange={setColorVariations}
+            displayType={formData.colorVariationsDisplayType}
+            onDisplayTypeChange={(value) => setFormData(prev => ({ ...prev, colorVariationsDisplayType: value }))}
           />
         </div>
 
