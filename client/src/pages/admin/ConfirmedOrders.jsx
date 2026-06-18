@@ -312,12 +312,10 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               <span className="text-gray-600">Subtotal:</span>
               <span className="text-gray-900">{formatPrice(subtotal)}</span>
             </div>
-            {!isCOD && (
             <div className="flex justify-between">
               <span className="text-gray-600">Shipping:</span>
-              <span className="text-gray-900">{formatPrice(shipping)}</span>
+              <span className="text-gray-900">{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
             </div>
-            )}
             {paymentCharges?.length > 0 ? (
               paymentCharges.map((charge, idx) => (
                 <div key={idx} className="flex justify-between">
@@ -1317,12 +1315,10 @@ const ConfirmedOrders = () => {
                       <span className="text-gray-600">Subtotal:</span>
                       <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
                     </div>
-                    {!selectedTotals.isCOD && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Shipping:</span>
-                      <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
+                      <span className="text-gray-900">{selectedTotals.shipping === 0 ? "Free" : formatPrice(selectedTotals.shipping)}</span>
                     </div>
-                    )}
                     {selectedTotals.hasPaymentCharges ? (
                       selectedTotals.paymentCharges.map((charge, index) => (
                         <div key={index} className="flex justify-between">

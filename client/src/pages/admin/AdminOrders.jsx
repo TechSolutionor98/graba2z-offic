@@ -625,7 +625,7 @@ const AdminOrders = () => {
                     </div>
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-gray-600">Shipping</span>
-                      <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
+                      <span className="text-gray-900">{selectedTotals.shipping === 0 ? "Free" : formatPrice(selectedTotals.shipping)}</span>
                     </div>
                     {selectedTotals?.paymentCharges?.length > 0 ? (
                       selectedTotals.paymentCharges.map((charge, idx) => (

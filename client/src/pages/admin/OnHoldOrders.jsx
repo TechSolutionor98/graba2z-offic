@@ -1348,12 +1348,10 @@ const orderStatusOptions = [
                       <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
                     </div>
                   )}
-                  {!selectedTotals.isCOD && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping:</span>
-                    <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
-                  </div>
-                  )}
+                      <span className="text-gray-600">Shipping:</span>
+                      <span className="text-gray-900">{selectedTotals.shipping === 0 ? "Free" : formatPrice(selectedTotals.shipping)}</span>
+                    </div>
                   {selectedTotals.hasPaymentCharges ? (
                       selectedTotals.paymentCharges.map((charge, index) => (
                         <div key={index} className="flex justify-between">
