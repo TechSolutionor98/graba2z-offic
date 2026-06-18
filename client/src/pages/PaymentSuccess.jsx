@@ -82,6 +82,8 @@ const PaymentSuccess = () => {
 
       // Clear cart after successful purchase tracking
       localStorage.removeItem("cart")
+      localStorage.removeItem("guestInfo")
+      localStorage.removeItem("savedShippingAddress")
 
       // Fetch order details for Google Customer Reviews
       fetchOrderDetails(orderId)

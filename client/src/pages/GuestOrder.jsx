@@ -27,6 +27,8 @@ const GuestOrder = () => {
 
     if (success === "true") {
       setSuccessMessage(`Thank you for your order! Your order #${orderId.slice(-6)} has been placed successfully.`);
+      localStorage.removeItem("guestInfo");
+      localStorage.removeItem("savedShippingAddress");
     }
 
     const fetchOrder = async () => {

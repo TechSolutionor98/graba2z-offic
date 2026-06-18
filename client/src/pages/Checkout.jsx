@@ -990,6 +990,8 @@ const Checkout = () => {
       if (selectedPaymentMethod === "cod") {
         // For COD, order is created directly
         clearCart()
+        localStorage.removeItem("guestInfo")
+        localStorage.removeItem("savedShippingAddress")
         if (!token && guestInfo) {
           // Guest: redirect to GuestOrder page
           if (paymentResult && paymentResult.order && paymentResult.order._id) {
