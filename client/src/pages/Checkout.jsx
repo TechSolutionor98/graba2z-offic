@@ -19,8 +19,6 @@ import '../styles/phoneInput.css'
 
 import config from "../config/config"
 const UAE_STATES = ["Abu Dhabi", "Ajman", "Al Ain", "Dubai", "Fujairah", "Ras Al Khaimah", "Sharjah", "Umm al-Qaywain"]
-const COD_FEE_AMOUNT = 5
-const COD_SHIPPING_FEE_AMOUNT = 10
 
 const STORES = [
   {
@@ -150,6 +148,7 @@ const Checkout = () => {
   const location = useLocation()
 
   const [tax, setTax] = useState(null)
+  const [paymentChargesList, setPaymentChargesList] = useState({})
 
   // Fetch delivery options on mount (if not already fetched)
   useEffect(() => {
@@ -177,6 +176,21 @@ const Checkout = () => {
       }
     }
     fetchTax()
+
+    // Fetch payment charges
+    const fetchPaymentCharges = async () => {
+      try {
+        const { data } = await axios.get(`${config.API_URL}/api/payment-charges/active`)
+        const chargesMap = {}
+        data.forEach(item => {
+          chargesMap[item.paymentMethod] = item
+        })
+        setPaymentChargesList(chargesMap)
+      } catch (err) {
+        console.error("Failed to fetch payment charges", err)
+      }
+    }
+    fetchPaymentCharges()
   }, [])
 
   useEffect(() => {
@@ -305,9 +319,11 @@ const Checkout = () => {
   const hasAdminDeliveryCharges = (deliveryOptions?.length || 0) > 0
   const deliveryCharge = deliveryType === "home" && hasAdminDeliveryCharges ? Number(fallbackDelivery?.charge || 0) : 0
 
-  const codFee = selectedPaymentMethod === "cod" ? COD_FEE_AMOUNT : 0
-  const codShippingFee = selectedPaymentMethod === "cod" ? COD_SHIPPING_FEE_AMOUNT : 0
-  const finalTotal = cartTotals.totalOfferPrice + protectionTotal + deliveryCharge + codFee + codShippingFee - couponDiscount
+  // Dynamic payment charges calculation
+  const currentPaymentChargesData = selectedPaymentMethod ? paymentChargesList[selectedPaymentMethod] : null;
+  const paymentChargesTotal = currentPaymentChargesData?.charges?.reduce((sum, charge) => sum + (Number(charge.amount) || 0), 0) || 0;
+  
+  const finalTotal = cartTotals.totalOfferPrice + protectionTotal + deliveryCharge + paymentChargesTotal - couponDiscount
 
   // Coupon logic
   const handleApplyCoupon = async () => {
@@ -650,11 +666,8 @@ const Checkout = () => {
         paymentStatus: "pending",
         isPaid: false,
         customerNotes: customerNotes.trim() || undefined,
-        // COD-specific fees
-        ...(selectedPaymentMethod === "cod" && {
-          codFee: COD_FEE_AMOUNT,
-          codShippingFee: COD_SHIPPING_FEE_AMOUNT,
-        }),
+        // Dynamic payment charges
+        paymentCharges: currentPaymentChargesData?.charges || [],
       }
 
       if (deliveryType === "home") {
@@ -835,8 +848,9 @@ const Checkout = () => {
 
     // Track add payment info event
     if (cartItems.length > 0) {
-      const codFeeForMethod = paymentMethod === "cod" ? COD_FEE_AMOUNT : 0
-      const trackedTotal = cartTotal + deliveryCharge + codFeeForMethod - couponDiscount
+      const paymentChargesData = paymentChargesList[paymentMethod];
+      const methodPaymentChargesTotal = paymentChargesData?.charges?.reduce((sum, charge) => sum + (Number(charge.amount) || 0), 0) || 0;
+      const trackedTotal = cartTotal + deliveryCharge + methodPaymentChargesTotal - couponDiscount
       window.dataLayer = window.dataLayer || []
       window.dataLayer.push({
         event: "add_payment_info",
@@ -945,11 +959,8 @@ const Checkout = () => {
         deliveryType: deliveryType,
         paymentMethod: selectedPaymentMethod,
         customerNotes: customerNotes.trim() || undefined, // Only include if not empty
-        // COD-specific fees
-        ...(selectedPaymentMethod === "cod" && {
-          codFee: COD_FEE_AMOUNT,
-          codShippingFee: COD_SHIPPING_FEE_AMOUNT,
-        }),
+        // Dynamic payment charges
+        paymentCharges: currentPaymentChargesData?.charges || [],
       }
 
       if (deliveryType === "home") {
@@ -1635,23 +1646,24 @@ const Checkout = () => {
                     ))}
                   </div>
 
-                  {selectedPaymentMethod === "cod" && (
-                    <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
+                  {currentPaymentChargesData?.description && (
+                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
                       <div className="flex items-center gap-2 mb-2">
-                        <Banknote className="h-5 w-5 text-yellow-600" />
-                        <span className="font-semibold text-yellow-800"><TranslatedText>Cash on Delivery</TranslatedText></span>
+                        <Banknote className="h-5 w-5 text-blue-600" />
+                        <span className="font-semibold text-blue-800"><TranslatedText>{PAYMENT_METHODS.find(m => m.id === selectedPaymentMethod)?.name || "Payment Information"}</TranslatedText></span>
                       </div>
-                      <p className="text-sm text-yellow-700">
-                        <TranslatedText>Cash on Delivery includes a handling fee and a shipping fee.</TranslatedText>
+                      <p className="text-sm text-blue-700">
+                        <TranslatedText>{currentPaymentChargesData.description}</TranslatedText>
                       </p>
-                      <div className="mt-2 space-y-1">
-                        <p className="text-sm font-semibold text-yellow-800" lang="en" dir="ltr">
-                          💰 COD Handling Fee (Non-Refundable): AED 5.00
-                        </p>
-                        <p className="text-sm font-semibold text-yellow-800" lang="en" dir="ltr">
-                          🚚 COD Shipping Fee: AED 10.00
-                        </p>
-                      </div>
+                      {currentPaymentChargesData?.charges?.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {currentPaymentChargesData.charges.map((charge, idx) => (
+                            <p key={idx} className="text-sm font-semibold text-blue-800" lang="en" dir="ltr">
+                              • {charge.name}: {formatPrice(charge.amount)}
+                            </p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1831,18 +1843,12 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {selectedPaymentMethod === "cod" && (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600" lang="en" dir="ltr">COD Handling Fee (Non-Refundable)</span>
-                      <span className="text-black" lang="en" dir="ltr">AED 5.00</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600" lang="en" dir="ltr">COD Shipping Fee</span>
-                      <span className="text-black" lang="en" dir="ltr">AED 10.00</span>
-                    </div>
-                  </>
-                )}
+                {currentPaymentChargesData?.charges?.map((charge, idx) => (
+                  <div key={idx} className="flex justify-between text-sm">
+                    <span className="text-gray-600" lang="en" dir="ltr">{charge.name}</span>
+                    <span className="text-black" lang="en" dir="ltr">{formatPrice(charge.amount)}</span>
+                  </div>
+                ))}
 
                 {/* Protection Plans Section */}
                 {protectionItems.length > 0 && (

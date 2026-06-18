@@ -1045,7 +1045,11 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
   
   const baseSubtotal = computeBaseSubtotal(regularItems)
 
-  const { subtotal, shipping, tax, total, couponCode, couponDiscount, codFee, codShippingFee, isCOD } = getInvoiceBreakdown(order)
+  const { subtotal, shipping, tax, total, couponCode, couponDiscount, codFee,
+    codShippingFee,
+    isCOD,
+    paymentCharges,
+  } = getInvoiceBreakdown(order)
   const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
 
   const currentDate = new Date().toLocaleDateString()
@@ -1292,17 +1296,28 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               <span className="font-medium">{formatPrice(shipping)}</span>
             </div>
             )}
-            {isCOD && codFee > 0 && (
-              <div className="flex justify-between">
-                <span className="text-yellow-700 text-sm">💰 COD Handling Fee (Non-Refundable):</span>
-                <span className="text-yellow-700 text-sm">{formatPrice(codFee)}</span>
-              </div>
-            )}
-            {isCOD && codShippingFee > 0 && (
-              <div className="flex justify-between">
-                <span className="text-yellow-700 text-sm">🚚 COD Shipping Fee:</span>
-                <span className="text-yellow-700 text-sm">{formatPrice(codShippingFee)}</span>
-              </div>
+            {paymentCharges?.length > 0 ? (
+              paymentCharges.map((charge, idx) => (
+                <div key={idx} className="flex justify-between">
+                  <span className="text-gray-700 text-sm">💰 {charge.name}:</span>
+                  <span className="text-gray-700 text-sm">{formatPrice(charge.amount)}</span>
+                </div>
+              ))
+            ) : (
+              <>
+                {isCOD && codFee > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-yellow-700 text-sm">💰 COD Handling Fee (Non-Refundable):</span>
+                    <span className="text-yellow-700 text-sm">{formatPrice(codFee)}</span>
+                  </div>
+                )}
+                {isCOD && codShippingFee > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-yellow-700 text-sm">🚚 COD Shipping Fee:</span>
+                    <span className="text-yellow-700 text-sm">{formatPrice(codShippingFee)}</span>
+                  </div>
+                )}
+              </>
             )}
 
             <div className="border-t-2 border-lime-500">
@@ -2251,17 +2266,39 @@ const DeletedOrders = () => {
                       <span className="text-gray-900">{formatPrice(selectedTotals.shipping)}</span>
                     </div>
                     )}
-                    {selectedTotals.isCOD && selectedTotals.codFee > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-yellow-700 text-sm">💰 COD Handling Fee (Non-Refundable):</span>
-                        <span className="text-yellow-700 text-sm">{formatPrice(selectedTotals.codFee)}</span>
-                      </div>
+                    {selectedTotals.hasPaymentCharges ? (
+                      selectedTotals.paymentCharges.map((charge, index) => (
+                        <div key={index} className="flex justify-between">
+                          <span className="text-gray-700 text-sm">💰 {charge.name}:</span>
+                          <span className="text-gray-700 text-sm">{formatPrice(charge.amount)}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        {selectedTotals.hasPaymentCharges ? (
+                      selectedTotals.paymentCharges.map((charge, index) => (
+                        <div key={index} className="flex justify-between">
+                          <span className="text-gray-700 text-sm">💰 {charge.name}:</span>
+                          <span className="text-gray-700 text-sm">{formatPrice(charge.amount)}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        {selectedTotals.isCOD && selectedTotals.codFee > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-yellow-700 text-sm">💰 COD Handling Fee (Non-Refundable):</span>
+                            <span className="text-yellow-700 text-sm">{formatPrice(selectedTotals.codFee)}</span>
+                          </div>
+                        )}
+                        {selectedTotals.isCOD && selectedTotals.codShippingFee > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-yellow-700 text-sm">🚚 COD Shipping Fee:</span>
+                            <span className="text-yellow-700 text-sm">{formatPrice(selectedTotals.codShippingFee)}</span>
+                          </div>
+                        )}
+                      </>
                     )}
-                    {selectedTotals.isCOD && selectedTotals.codShippingFee > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-yellow-700 text-sm">🚚 COD Shipping Fee:</span>
-                        <span className="text-yellow-700 text-sm">{formatPrice(selectedTotals.codShippingFee)}</span>
-                      </div>
+                      </>
                     )}
                     <div className="flex justify-between">
                       <span className="text-gray-600">VAT:</span>

@@ -537,6 +537,7 @@ const AdminSidebar = () => {
       items: [
         { title: "List Delivery Charges", path: "/admin/delivery-charges" },
         { title: "Add Delivery Charge", path: "/admin/delivery-charges/add" },
+        { title: "Delivery | Handling Fee", path: "/admin/delivery-handling-fee" },
       ],
     },
     {

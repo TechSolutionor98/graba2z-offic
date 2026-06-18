@@ -105,6 +105,7 @@ import Rejected from "../pages/admin/Rejected"
 import ResetCache from "../pages/admin/ResetCache"
 import TrashCategories from "../pages/admin/TrashCategories"
 import TrashSubCategories from "../pages/admin/TrashSubCategories"
+import DeliveryHandlingFee from "../pages/admin/DeliveryHandlingFee"
 
 const AdminPortal = () => {
   return (
@@ -220,6 +221,7 @@ const AdminPortal = () => {
             <Route path="volumes/add" element={<AddVolume />} />
             <Route path="warranty" element={<AdminWarranty />} />
             <Route path="warranty/add" element={<AddWarranty />} />
+            <Route path="delivery-handling-fee" element={<DeliveryHandlingFee />} />
             <Route path="tax" element={<AdminTax />} />
             <Route path="tax/add" element={<AddTax />} />
             <Route path="coupons" element={<AllCoupons />} />

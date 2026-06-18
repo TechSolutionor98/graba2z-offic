@@ -44,7 +44,14 @@ export function getInvoiceBreakdown(order = {}) {
   const derivedVat = subtotal > 0 ? Number((subtotal * vatRate).toFixed(2)) : 0
   const vat = tax > 0 ? tax : derivedVat
 
-  const calculatedTotal = subtotal + shipping + codFee + codShippingFee - couponDiscount
+  const paymentCharges = Array.isArray(order.paymentCharges) ? order.paymentCharges : []
+  const hasPaymentCharges = paymentCharges.length > 0
+  const paymentChargesTotal = paymentCharges.reduce((sum, charge) => sum + (Number(charge.amount) || 0), 0)
+
+  const calculatedTotal = hasPaymentCharges 
+    ? subtotal + shipping + paymentChargesTotal - couponDiscount
+    : subtotal + shipping + codFee + codShippingFee - couponDiscount
+    
   const displayTotal = calculatedTotal > storedTotal ? calculatedTotal : storedTotal
 
   return {
@@ -61,6 +68,9 @@ export function getInvoiceBreakdown(order = {}) {
     codFee,
     codShippingFee,
     isCOD,
+    paymentCharges,
+    hasPaymentCharges,
+    paymentChargesTotal
   }
 }
 
