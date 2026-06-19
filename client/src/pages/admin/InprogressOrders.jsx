@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import AdminOrderDetailsModal from "../../components/admin/AdminOrderDetailsModal";
 import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, Mail, RefreshCw, Truck } from "lucide-react"
@@ -272,82 +273,17 @@ const InprogressOrders = () => {
         )}
       </div>
 
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <div className="p-6 border-b">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Order #{selectedOrder._id.slice(-6)}</h2>
-                <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-500 text-2xl">
-                  &times;
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Customer Information</h3>
-                  {selectedOrder.deliveryType === 'pickup' ? (
-                    <>
-                      <p className="text-gray-600">
-                        <span className="font-medium">Name:</span> {selectedOrder.pickupDetails?.location || 'N/A'}
-                      </p>
-                      <p className="text-gray-600">
-                        <span className="font-medium">Phone:</span> {selectedOrder.pickupDetails?.phone || 'N/A'}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-gray-600">
-                        <span className="font-medium">Name:</span> {selectedOrder.shippingAddress?.name || 'N/A'}
-                      </p>
-                      <p className="text-gray-600">
-                        <span className="font-medium">Email:</span> {selectedOrder.shippingAddress?.email || 'N/A'}
-                      </p>
-                      <p className="text-gray-600">
-                        <span className="font-medium">Phone:</span> {selectedOrder.shippingAddress?.phone || 'N/A'}
-                      </p>
-                    </>
-                  )}
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Order Actions</h3>
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => handleMarkReadyForShipment(selectedOrder._id)}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md flex items-center justify-center"
-                      disabled={processingAction}
-                    >
-                      <Truck size={18} className="mr-2" />
-                      Ready for Shipment
-                    </button>
-                    <button
-                      onClick={() => handleSendNotification(selectedOrder._id)}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md flex items-center justify-center"
-                      disabled={processingAction}
-                    >
-                      <Mail size={18} className="mr-2" />
-                      Send Notification
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  onClick={handleCloseModal}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        <AdminOrderDetailsModal
+          isOpen={!!selectedOrder}
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onUpdate={(updatedOrder) => {
+            setOrders(orders.map(o => o._id === updatedOrder._id ? updatedOrder : o));
+            if (selectedOrder && selectedOrder._id === updatedOrder._id) {
+              setSelectedOrder(updatedOrder);
+            }
+          }}
+        />
     </div>
   )
 }

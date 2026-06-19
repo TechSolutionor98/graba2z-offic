@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import AdminOrderDetailsModal from "../../components/admin/AdminOrderDetailsModal";
 import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, Mail, ChevronDown, RefreshCw } from "lucide-react"
@@ -471,240 +472,17 @@ const AdminOrders = () => {
         )}
       </div>
 
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
-            <div className="p-6 border-b">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Order #{selectedOrder._id.slice(-6)}</h2>
-                <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-500 text-2xl">
-                  ×
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Customer Information</h3>
-                  {selectedOrder.deliveryType === 'pickup' ? (
-                    <>
-                      <p className="text-gray-600"><span className="font-medium">Name:</span> {selectedOrder.pickupDetails?.location || 'N/A'}</p>
-                      <p className="text-gray-600"><span className="font-medium">Phone:</span> {selectedOrder.pickupDetails?.phone || 'N/A'}</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-gray-600"><span className="font-medium">Name:</span> {selectedOrder.shippingAddress?.name || 'N/A'}</p>
-                      <p className="text-gray-600"><span className="font-medium">Email:</span> {selectedOrder.shippingAddress?.email || 'N/A'}</p>
-                      <p className="text-gray-600"><span className="font-medium">Phone:</span> {selectedOrder.shippingAddress?.phone || 'N/A'}</p>
-                    </>
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Shipping / Pickup Address</h3>
-                  {selectedOrder.shippingAddress ? (
-                    <>
-                      <div>Name: {selectedOrder.shippingAddress.name || "N/A"}</div>
-                      <div>Email: {selectedOrder.shippingAddress.email || "N/A"}</div>
-                      <div>Phone: {selectedOrder.shippingAddress.phone || "N/A"}</div>
-                      <div>Address: {selectedOrder.shippingAddress.address || "N/A"}</div>
-                      <div>City: {selectedOrder.shippingAddress.city || "N/A"}</div>
-                      <div>State: {selectedOrder.shippingAddress.state || "N/A"}</div>
-                      <div>Zip Code: {selectedOrder.shippingAddress.zipCode || "N/A"}</div>
-                    </>
-                  ) : selectedOrder.pickupDetails ? (
-                    <>
-                      <div>Store Name: {selectedOrder.pickupDetails.location || "N/A"}</div>
-                      <div>Store Address: {selectedOrder.pickupDetails.storeAddress || "N/A"}</div>
-                      <div>Store Phone: {selectedOrder.pickupDetails.storePhone || "N/A"}</div>
-                    </>
-                  ) : (
-                    <div>N/A</div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Order Items</h3>
-                <div className="bg-gray-50 rounded-md overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Product
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Price
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Quantity
-                        </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Subtotal
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {selectedOrder.orderItems.map((item, index) => {
-                        const unitPrice = resolveOrderItemSalePrice(item)
-                        const quantity = Number(item.quantity) || 1
-                        const lineTotal = unitPrice * quantity
-
-                        return (
-                          <tr key={item._id || `${item.name}-${index}`}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <div className="h-10 w-10 flex-shrink-0">
-                                  <img
-                                    src={getFullImageUrl(item.image) || "/placeholder.svg?height=40&width=40"}
-                                    alt={item.name}
-                                    className="h-10 w-10 rounded-md object-cover"
-                                  />
-                                </div>
-                                <div className="ml-4">
-                                  <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {formatPrice(unitPrice)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quantity}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                              {formatPrice(lineTotal)}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Order Status</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Status</label>
-                      <select
-                        value={selectedOrder.status}
-                        onChange={(e) => handleUpdateStatus(selectedOrder._id, e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        disabled={processingAction}
-                      >
-                        {orderStatusOptions.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Tracking ID</label>
-                      <input
-                        type="text"
-                        value={selectedOrder.trackingId || ""}
-                        onChange={(e) => handleUpdateTracking(selectedOrder._id, e.target.value)}
-                        placeholder="Enter tracking ID"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        disabled={processingAction}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Order Summary</h3>
-                  <div className="bg-gray-50 p-4 rounded-md">
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600">Shipping</span>
-                      <span className="text-gray-900">{selectedTotals.shipping === 0 ? "Free" : formatPrice(selectedTotals.shipping)}</span>
-                    </div>
-                    {selectedTotals?.paymentCharges?.length > 0 ? (
-                      selectedTotals.paymentCharges.map((charge, idx) => (
-                        <div key={idx} className="flex justify-between py-2 border-b">
-                          <span className="text-gray-600">💰 {charge.name}</span>
-                          <span className="text-gray-900 font-medium">{formatPrice(charge.amount)}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <>
-                        {selectedTotals.isCOD && selectedTotals.codFee > 0 && (
-                          <div className="flex justify-between py-2 border-b">
-                            <span className="text-yellow-700 font-medium">💰 COD Handling Fee (Non-Refundable)</span>
-                            <span className="text-yellow-700 font-medium">{formatPrice(selectedTotals.codFee)}</span>
-                          </div>
-                        )}
-                        {selectedTotals.isCOD && selectedTotals.codShippingFee > 0 && (
-                          <div className="flex justify-between py-2 border-b">
-                            <span className="text-yellow-700 font-medium">🚚 COD Shipping Fee</span>
-                            <span className="text-yellow-700 font-medium">{formatPrice(selectedTotals.codShippingFee)}</span>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    <div className="flex justify-between py-2 border-b font-medium">
-                      <span className="text-gray-900">Total</span>
-                      <span className="text-blue-600">{formatPrice(selectedTotals.total)}</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600">Payment Method</span>
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPaymentMethodBadgeColor(selectedOrder)}`}>
-                        {getPaymentMethodDisplay(selectedOrder)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-2">
-                      <span className="text-gray-600">Payment Status</span>
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${selectedOrder.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                        {selectedOrder.isPaid ? "Paid" : "Unpaid"}
-                      </span>
-                    </div>
-                    {selectedOrder.paidAt && (
-                      <div className="flex justify-between py-2 text-sm">
-                        <span className="text-gray-600">Paid At</span>
-                        <span className="text-gray-900">{new Date(selectedOrder.paidAt).toLocaleString()}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {(selectedOrder.customerNotes || selectedOrder.notes) && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Customer Notes</h3>
-                  <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
-                    <p className="text-gray-700 whitespace-pre-wrap">{selectedOrder.customerNotes || selectedOrder.notes}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={handleCloseModal}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => handleSendNotification(selectedOrder._id)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md flex items-center"
-                  disabled={processingAction}
-                >
-                  <Mail size={18} className="mr-1" />
-                  Send Notification
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        <AdminOrderDetailsModal
+          isOpen={!!selectedOrder}
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onUpdate={(updatedOrder) => {
+            setOrders(orders.map(o => o._id === updatedOrder._id ? updatedOrder : o));
+            if (selectedOrder && selectedOrder._id === updatedOrder._id) {
+              setSelectedOrder(updatedOrder);
+            }
+          }}
+        />
     </div>
   )
 }
