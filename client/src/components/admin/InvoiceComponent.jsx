@@ -296,10 +296,15 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               </div>
             )}
 
-            <div className="flex justify-between">
-              <span className="text-gray-600">Shipping:</span>
-              <span className="text-gray-900">{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
-            </div>
+            {!(shipping === 0 && (
+              (paymentCharges?.length > 0 && paymentCharges.some(c => c.name?.toLowerCase().includes('shipping'))) ||
+              (!(paymentCharges?.length > 0) && isCOD && codShippingFee > 0)
+            )) && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Shipping:</span>
+                <span className="text-gray-900">{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
+              </div>
+            )}
             {paymentCharges?.length > 0 ? (
               paymentCharges.map((charge, idx) => (
                 <div key={idx} className="flex justify-between">
@@ -324,7 +329,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
               </>
             )}
             <div className="flex justify-between">
-              <span className="text-gray-600">VAT:</span>
+              <span className="text-gray-600">VAT (Included):</span>
               <span className="text-gray-900">{formatPrice(tax)}</span>
             </div>
             <div className="border-t pt-2 flex justify-between">

@@ -18,6 +18,7 @@ import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor } from "../../utils/paymentUtils"
+import { paymentMethodChargeAPI } from "../../services/api"
 import InvoiceComponent from "./InvoiceComponent"
 
 const orderStatusOptions = [
@@ -48,8 +49,12 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
   const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState("")
   const [notificationOrderId, setNotificationOrderId] = useState(null)
+  
+  const [fallbackDynamicCharges, setFallbackDynamicCharges] = useState([])
 
   const printComponentRef = useRef(null)
+
+  const selectedTotals = order ? getInvoiceBreakdown(order) : {}
 
   useEffect(() => {
     if (initialOrder) {
@@ -63,6 +68,17 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
       setSellerComments(initialOrder.sellerComments || "")
     }
   }, [initialOrder])
+
+  useEffect(() => {
+    if (isOpen && order && !selectedTotals.hasPaymentCharges && selectedTotals.isCOD) {
+      paymentMethodChargeAPI.getAll().then(res => {
+        const codConfig = res.find(c => c.paymentMethod === 'Cash on Delivery' && c.isActive);
+        if (codConfig && codConfig.charges) {
+          setFallbackDynamicCharges(codConfig.charges);
+        }
+      }).catch(err => console.error("Failed to fetch dynamic charges", err));
+    }
+  }, [isOpen, order, selectedTotals.hasPaymentCharges, selectedTotals.isCOD])
 
   const handlePrint = useReactToPrint({
     contentRef: printComponentRef,
@@ -99,7 +115,6 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
   }
 
   const selectedBaseSubtotal = computeBaseSubtotal(order.orderItems || [])
-  const selectedTotals = getInvoiceBreakdown(order)
   const selectedBaseDiscount = deriveBaseDiscount(selectedBaseSubtotal, selectedTotals.subtotal)
 
   // Calculate total discount (manual or coupon)
@@ -476,13 +491,26 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                   <span className="text-gray-600">Subtotal:</span>
                   <span className="text-gray-900">{formatPrice(selectedTotals.subtotal)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping:</span>
-                  <span className="text-gray-900">{selectedTotals.shipping === 0 ? "Free" : formatPrice(selectedTotals.shipping)}</span>
-                </div>
+                {!(selectedTotals.shipping === 0 && (
+                  (selectedTotals.hasPaymentCharges && selectedTotals.paymentCharges.some(c => c.name?.toLowerCase().includes('shipping'))) ||
+                  (!selectedTotals.hasPaymentCharges && fallbackDynamicCharges.some(c => c.name?.toLowerCase().includes('shipping'))) ||
+                  (!selectedTotals.hasPaymentCharges && fallbackDynamicCharges.length === 0 && selectedTotals.isCOD && selectedTotals.codShippingFee > 0)
+                )) && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Shipping:</span>
+                    <span className="text-gray-900">{selectedTotals.shipping === 0 ? "Free" : formatPrice(selectedTotals.shipping)}</span>
+                  </div>
+                )}
                 {selectedTotals.hasPaymentCharges ? (
                   selectedTotals.paymentCharges.map((charge, index) => (
                     <div key={index} className="flex justify-between">
+                      <span className="text-gray-700 text-sm">💰 {charge.name}:</span>
+                      <span className="text-gray-700 text-sm">{formatPrice(charge.amount)}</span>
+                    </div>
+                  ))
+                ) : fallbackDynamicCharges.length > 0 ? (
+                  fallbackDynamicCharges.map((charge, index) => (
+                    <div key={`fallback-${index}`} className="flex justify-between">
                       <span className="text-gray-700 text-sm">💰 {charge.name}:</span>
                       <span className="text-gray-700 text-sm">{formatPrice(charge.amount)}</span>
                     </div>
@@ -504,7 +532,7 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                   </>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">VAT:</span>
+                  <span className="text-gray-600">VAT (Included):</span>
                   <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
                 </div>
                 {selectedBaseDiscount > 0 && (

@@ -1,7 +1,5 @@
 import { computeSaleSubtotal } from "./orderPricing"
 
-const COD_FEE = 5
-const COD_SHIPPING_FEE = 10
 
 export function getInvoiceBreakdown(order = {}) {
   let subtotal = Number(order.itemsPrice || 0)
@@ -31,14 +29,9 @@ export function getInvoiceBreakdown(order = {}) {
     order.paymentMethod === "cod" ||
     order.paymentMethod === "Cash on Delivery"
 
-  // COD fees: read stored values first, fall back to fixed amounts if COD
-  const codFee = Number(order.codFee || 0) > 0
-    ? Number(order.codFee)
-    : isCOD ? COD_FEE : 0
-
-  const codShippingFee = Number(order.codShippingFee || 0) > 0
-    ? Number(order.codShippingFee)
-    : isCOD ? COD_SHIPPING_FEE : 0
+  // COD fees: read explicitly stored values if present
+  const codFee = Number(order.codFee || 0);
+  const codShippingFee = Number(order.codShippingFee || 0);
 
   const vatRate = 0.05
   const derivedVat = subtotal > 0 ? Number((subtotal * vatRate).toFixed(2)) : 0

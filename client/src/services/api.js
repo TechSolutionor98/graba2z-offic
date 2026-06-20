@@ -500,6 +500,29 @@ export const redirectsAPI = {
     }),
 }
 
+// Payment Method Charge API calls
+export const paymentMethodChargeAPI = {
+  getAll: () => apiRequest("/api/payment-charges"),
+  getById: (id) => apiRequest(`/api/payment-charges/${id}`),
+  create: (chargeData) =>
+    apiRequest("/api/payment-charges", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify(chargeData),
+    }),
+  update: (id, chargeData) =>
+    apiRequest(`/api/payment-charges/${id}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify(chargeData),
+    }),
+  delete: (id) =>
+    apiRequest(`/api/payment-charges/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+}
+
 export { apiRequest }
 export default {
   authAPI,
@@ -513,4 +536,5 @@ export default {
   uploadAPI,
   productsAdminAPI,
   redirectsAPI,
+  paymentMethodChargeAPI,
 }
