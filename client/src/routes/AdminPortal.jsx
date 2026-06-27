@@ -106,6 +106,7 @@ import ResetCache from "../pages/admin/ResetCache"
 import TrashCategories from "../pages/admin/TrashCategories"
 import TrashSubCategories from "../pages/admin/TrashSubCategories"
 import DeliveryHandlingFee from "../pages/admin/DeliveryHandlingFee"
+import ProductPaymentMethods from "../pages/admin/ProductPaymentMethods"
 
 const AdminPortal = () => {
   return (
@@ -119,6 +120,7 @@ const AdminPortal = () => {
             <Route path="products" element={<AdminProducts />} />
             <Route path="products/add" element={<AddProduct />} />
             <Route path="products/bulk-add" element={<AddBulkProducts />} />
+            <Route path="product-pm" element={<ProductPaymentMethods />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="orders/received" element={<ReceivedOrders />} />
             <Route path="orders/in-progress" element={<InprogressOrders />} />

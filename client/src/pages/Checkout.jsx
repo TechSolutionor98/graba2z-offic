@@ -72,27 +72,24 @@ const STORES = [
 ]
 
 const PAYMENT_METHODS = [
-  // {
-  //   id: "tamara",
-  //   name: "",
-  //   description: "",
-  //   iconUrls: [
-  //     { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764221/tamara_card_lh6vev.webp", size: "big" },
-  //   ],
-  //   color: "",
-  // },
-
-
-  
-  // {
-  //   id: "tabby",
-  //   name: "",
-  //   description: "",
-  //   iconUrls: [
-  //     { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764220/tabby_card_lpsmhh.webp", size: "big" },
-  //   ],
-  //   color: "",
-  // },
+  {
+    id: "tamara",
+    name: "",
+    description: "",
+    iconUrls: [
+      { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764221/tamara_card_lh6vev.webp", size: "big" },
+    ],
+    color: "",
+  },
+  {
+    id: "tabby",
+    name: "",
+    description: "",
+    iconUrls: [
+      { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764220/tabby_card_lpsmhh.webp", size: "big" },
+    ],
+    color: "",
+  },
   {
     id: "card",
     name: "",
@@ -234,6 +231,45 @@ const Checkout = () => {
   const [step, setStep] = useState(1)
   const [showAllItems, setShowAllItems] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("")
+  const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(["card", "cod"])
+
+  useEffect(() => {
+    const fetchAllowedPaymentMethods = async () => {
+      if (!cartItems || cartItems.length === 0) {
+        setAllowedPaymentMethods(["card", "cod"])
+        return
+      }
+
+      try {
+        const productIds = cartItems
+          .filter(item => !item.isProtection && item._id)
+          .map(item => item._id)
+
+        if (productIds.length === 0) {
+          setAllowedPaymentMethods(["card", "cod"])
+          return
+        }
+
+        const { data } = await axios.post(`${config.API_URL}/api/product-payment-methods/resolve`, {
+          productIds,
+        })
+
+        if (data && Array.isArray(data.paymentMethods)) {
+          setAllowedPaymentMethods(data.paymentMethods)
+          if (selectedPaymentMethod && !data.paymentMethods.includes(selectedPaymentMethod)) {
+            setSelectedPaymentMethod(data.paymentMethods[0] || "")
+          } else if (!selectedPaymentMethod && data.paymentMethods.length > 0) {
+            setSelectedPaymentMethod(data.paymentMethods[0])
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch allowed payment methods:", err)
+        setAllowedPaymentMethods(["card", "cod"])
+      }
+    }
+
+    fetchAllowedPaymentMethods()
+  }, [cartItems])
   const [cardDetails, setCardDetails] = useState({
     cardNumber: "",
     expiryDate: "",
@@ -1609,7 +1645,7 @@ const Checkout = () => {
                   <h3 className="font-bold text-lg mb-6"><TranslatedText>Payment Method</TranslatedText></h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
-                    {PAYMENT_METHODS.map((method) => (
+                    {PAYMENT_METHODS.filter(method => allowedPaymentMethods.includes(method.id)).map((method) => (
                       <div
                         key={method.id}
                         className={` rounded-lg p-4 cursor-pointer transition-all relative ${selectedPaymentMethod === method.id

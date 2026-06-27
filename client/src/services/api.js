@@ -523,6 +523,26 @@ export const paymentMethodChargeAPI = {
     }),
 }
 
+// Product Payment Methods API calls
+export const productPaymentMethodsAPI = {
+  getConfig: () =>
+    apiRequest("/api/product-payment-methods/config", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  saveConfig: (configData) =>
+    apiRequest("/api/product-payment-methods/save", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify(configData),
+    }),
+  resetConfig: (resetData) =>
+    apiRequest("/api/product-payment-methods/reset", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify(resetData),
+    }),
+}
+
 export { apiRequest }
 export default {
   authAPI,
@@ -537,4 +557,5 @@ export default {
   productsAdminAPI,
   redirectsAPI,
   paymentMethodChargeAPI,
+  productPaymentMethodsAPI,
 }

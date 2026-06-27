@@ -86,6 +86,7 @@ const AdminSidebar = () => {
 
     // Product System dropdown - open if any product-related route is active
     if (
+      path.includes("/admin/product-pm") ||
       path.includes("/admin/products") ||
       path.includes("/admin/add-product") ||
       path.includes("/admin/categories") ||
@@ -325,6 +326,7 @@ const AdminSidebar = () => {
             { title: "List Products", path: "/admin/products" },
             //{ title: "Add Product", path: "/admin/products/add" },
             { title: "Add Bulk Products", path: "/admin/products/bulk-add" },
+            { title: "Product Payment Method", path: "/admin/product-pm" },
           ],
         },
         {
