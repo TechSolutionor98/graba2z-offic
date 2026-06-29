@@ -28,7 +28,7 @@ const UserOrders = () => {
   const printRef = useRef()
 
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
+    contentRef: printRef,
     documentTitle: `Invoice_${selectedOrder?._id?.slice(-6) || "Order"}`,
   })
 
@@ -150,119 +150,12 @@ const UserOrders = () => {
     setTimeout(() => setSelectedOrder(null), 300)
   }
 
-  const generateInvoicePDF = (order) => {
-    const doc = new jsPDF()
-    
-    // Header - Company Info
-    doc.setFontSize(24)
-    doc.setTextColor(22, 163, 74) // Green theme
-    doc.setFont(undefined, 'bold')
-    doc.text("Graba2z", 195, 22, { align: 'right' })
-    
-    doc.setFontSize(10)
-    doc.setTextColor(100, 100, 100)
-    doc.setFont(undefined, 'normal')
-    doc.text("www.grabatoz.ae", 195, 28, { align: 'right' })
-    doc.text("support@grabatoz.ae", 195, 34, { align: 'right' })
-
-    // Header - Invoice Info
-    doc.setFontSize(22)
-    doc.setTextColor(40, 40, 40)
-    doc.setFont(undefined, 'bold')
-    doc.text("INVOICE", 14, 22)
-    
-    doc.setFontSize(10)
-    doc.setTextColor(100, 100, 100)
-    doc.setFont(undefined, 'normal')
-    doc.text(`Invoice ID: INV-${order._id.slice(-6).toUpperCase()}`, 14, 30)
-    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 36)
-    doc.text(`Order Status: ${order.status}`, 14, 42)
-
-    // Divider line
-    doc.setDrawColor(230, 230, 230)
-    doc.line(14, 48, 195, 48)
-
-    // Billing Info
-    doc.setFontSize(12)
-    doc.setTextColor(40, 40, 40)
-    doc.setFont(undefined, 'bold')
-    doc.text("Bill To:", 14, 58)
-    
-    doc.setFontSize(10)
-    doc.setTextColor(80, 80, 80)
-    doc.setFont(undefined, 'normal')
-    doc.text(`${order.shippingAddress?.name || user?.name || "Customer"}`, 14, 65)
-    doc.text(`${order.shippingAddress?.email || user?.email || ""}`, 14, 71)
-    doc.text(`${order.shippingAddress?.phone || ""}`, 14, 77)
-    doc.text(`${order.shippingAddress?.address || ""}, ${order.shippingAddress?.city || ""}`, 14, 83)
-
-    const tableColumn = ["Item Description", "Qty", "Unit Price", "Total"]
-    const tableRows = []
-
-    order.orderItems.forEach(item => {
-      let desc = item.name
-      if (item.selectedColorData?.color) desc += ` (Color: ${item.selectedColorData.color})`
-      if (item.selectedDosData?.dosType) desc += ` (OS: ${item.selectedDosData.dosType})`
-      
-      const rowData = [
-        desc,
-        item.quantity,
-        `AED ${Number(item.price).toFixed(2)}`,
-        `AED ${(Number(item.price) * item.quantity).toFixed(2)}`
-      ]
-      tableRows.push(rowData)
-    })
-
-    autoTable(doc, {
-      startY: 93,
-      head: [tableColumn],
-      body: tableRows,
-      theme: 'grid',
-      headStyles: { fillColor: [22, 163, 74], textColor: [255, 255, 255], fontStyle: 'bold' },
-      styles: { fontSize: 9, cellPadding: 5 },
-      columnStyles: {
-        0: { cellWidth: 80 },
-        1: { halign: 'center' },
-        2: { halign: 'right' },
-        3: { halign: 'right' },
-      }
-    })
-
-    const finalY = doc.lastAutoTable.finalY || 93
-    
-    // Totals Section
-    doc.setFontSize(10)
-    doc.setTextColor(80, 80, 80)
-    
-    doc.text(`Subtotal:`, 150, finalY + 12)
-    doc.text(`AED ${Number(order.itemsPrice || order.totalPrice).toFixed(2)}`, 195, finalY + 12, { align: 'right' })
-    
-    doc.text(`Shipping:`, 150, finalY + 20)
-    doc.text(`AED ${Number(order.shippingPrice || 0).toFixed(2)}`, 195, finalY + 20, { align: 'right' })
-    
-    if (order.taxPrice) {
-      doc.text(`Tax:`, 150, finalY + 28)
-      doc.text(`AED ${Number(order.taxPrice).toFixed(2)}`, 195, finalY + 28, { align: 'right' })
-    }
-
-    // Divider for total
-    const totalY = finalY + (order.taxPrice ? 34 : 26)
-    doc.setDrawColor(230, 230, 230)
-    doc.line(140, totalY - 4, 195, totalY - 4)
-
-    doc.setFontSize(12)
-    doc.setTextColor(22, 163, 74)
-    doc.setFont(undefined, 'bold')
-    doc.text(`Total Amount:`, 150, totalY + 2)
-    doc.text(`AED ${Number(order.totalPrice).toFixed(2)}`, 195, totalY + 2, { align: 'right' })
-
-    // Footer
-    doc.setFontSize(9)
-    doc.setTextColor(150, 150, 150)
-    doc.setFont(undefined, 'normal')
-    doc.text("Thank you for your business!", 105, 280, { align: 'center' })
-
-    doc.save(`Graba2z_Invoice_${order._id.slice(-6)}.pdf`)
+  const triggerPrint = (order) => {
+    setSelectedOrder(order)
+    // Wait for state to update and InvoiceComponent to render before printing
+    setTimeout(() => {
+      handlePrint()
+    }, 100)
   }
 
   const getStatusIcon = (status) => {
@@ -362,8 +255,8 @@ const UserOrders = () => {
                 </div>
 
                 <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-6 bg-gray-50/30">
-                  <div className="flex items-center gap-4 w-full md:w-auto py-2">
-                    <div className="flex items-center -space-x-4 overflow-hidden">
+                  <div className="flex items-center gap-4 flex-1 py-2">
+                    <div className="flex items-center -space-x-4 overflow-hidden flex-shrink-0">
                       {order.orderItems.filter(item => !item.isProtection).slice(0, 3).map((item, idx) => (
                         <div key={item._id || idx} className="relative z-10 w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden flex-shrink-0 group-hover:-translate-y-1 transition-transform duration-300" style={{ transitionDelay: `${idx * 50}ms` }}>
                           <img
@@ -374,9 +267,9 @@ const UserOrders = () => {
                         </div>
                       ))}
                     </div>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col flex-1">
                       {order.orderItems.length > 0 && (
-                        <span className="font-semibold text-gray-900 line-clamp-2 max-w-[200px] sm:max-w-xs">
+                        <span className="font-semibold text-gray-900 pr-4">
                           {order.orderItems.filter(item => !item.isProtection)[0]?.name || "Product Item"}
                         </span>
                       )}
@@ -388,7 +281,7 @@ const UserOrders = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-shrink-0">
                     <button 
                       onClick={() => openModal(order)} 
                       className="inline-flex items-center justify-center px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
@@ -397,7 +290,7 @@ const UserOrders = () => {
                       View Details
                     </button>
                     <button 
-                      onClick={() => generateInvoicePDF(order)}
+                      onClick={() => triggerPrint(order)}
                       className="inline-flex items-center justify-center px-5 py-2.5 bg-green-50 text-green-700 border border-green-100 rounded-xl font-medium hover:bg-green-100 transition-all shadow-sm"
                     >
                       <Download className="w-4 h-4 mr-2" />
@@ -414,7 +307,7 @@ const UserOrders = () => {
       {/* Invisible component for printing */}
       <div style={{ display: "none" }}>
         <div ref={printRef}>
-          {selectedOrder && <InvoiceComponent order={selectedOrder} />}
+          {selectedOrder && <InvoiceComponent order={selectedOrder} showStatus={true} />}
         </div>
       </div>
 
@@ -491,7 +384,9 @@ const UserOrders = () => {
                                       />
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center">
-                                      <h5 className="font-semibold text-gray-900 line-clamp-2">{item.name}</h5>
+                                      <Link to={`/product/${item.product?.slug || item.product?._id || item.product}`} title={item.name} className="inline-block hover:opacity-80 transition">
+                                        <h5 className="font-semibold text-gray-900 line-clamp-2 hover:text-green-600 hover:underline decoration-green-600 decoration-2 underline-offset-2">{item.name}</h5>
+                                      </Link>
                                       <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                                         <span className="text-gray-500">Qty: <span className="font-medium text-gray-900">{item.quantity}</span></span>
                                         {item.selectedColorData?.color && (
@@ -628,18 +523,11 @@ const UserOrders = () => {
                       {/* Modal Footer */}
                       <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-end gap-3 sticky bottom-0 z-10">
                         <button
-                          onClick={() => generateInvoicePDF(selectedOrder)}
-                          className="inline-flex items-center justify-center px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Download Invoice
-                        </button>
-                        <button
-                          onClick={handlePrint}
+                          onClick={() => triggerPrint(selectedOrder)}
                           className="inline-flex items-center justify-center px-5 py-2.5 bg-green-600 text-white border border-transparent rounded-xl font-medium hover:bg-green-700 transition-all shadow-sm"
                         >
                           <Printer className="w-4 h-4 mr-2" />
-                          Print Receipt
+                          Print / Download Invoice
                         </button>
                       </div>
                     </div>

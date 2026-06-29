@@ -3,7 +3,7 @@ import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor } from "../../utils/paymentUtils"
 
-const InvoiceComponent = forwardRef(({ order }, ref) => {
+const InvoiceComponent = forwardRef(({ order, showStatus }, ref) => {
   const formatPrice = (price) => {
     return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
@@ -83,6 +83,7 @@ const InvoiceComponent = forwardRef(({ order }, ref) => {
             <h2 className="text-2xl font-bold mb-1">VAT INVOICE</h2>
             <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
             <div className="text-sm">📅 Date: {orderDate}</div>
+            {showStatus && <div className="text-sm font-semibold mt-1 text-lime-700">🏷️ Status: {order.status}</div>}
           </div>
         </div>
       </div>
