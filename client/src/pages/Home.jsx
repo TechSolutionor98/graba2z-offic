@@ -872,7 +872,8 @@ const Home = () => {
     <div className="bg-white mt-1">
       {showAppPromoPopup && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 p-2 md:p-4">
-          <div className="relative w-full max-w-[1320px] aspect-[2.05/1] max-h-[92vh] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-300">
+          {!isMobileViewport ? (
+            <div className="relative w-full max-w-[1320px] aspect-[2.05/1] max-h-[92vh] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-300">
             <button
               onClick={handleAppPromoClose}
               className="absolute top-3 right-3 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-black/70 text-white flex items-center justify-center"
@@ -957,6 +958,83 @@ const Home = () => {
               </div>
             </div>
           </div>
+          ) : (
+            <div className="relative w-[92%] max-w-[400px] bg-white rounded-3xl shadow-2xl p-5 pt-6">
+              <button
+                onClick={handleAppPromoClose}
+              className="absolute top-4 right-4 z-20 text-gray-500 hover:text-gray-800 p-1"
+              aria-label="Close app popup"
+            >
+              <X size={20} strokeWidth={2.5} />
+            </button>
+
+            <div className="flex flex-col">
+              <div className="text-center mt-2 whitespace-nowrap">
+                <h3 className="text-[18px] font-bold text-gray-900 flex items-center justify-center gap-2">
+                  <span className="text-green-500">-</span> Why Download Our App? <span className="text-green-500">-</span>
+                </h3>
+              </div>
+
+              {/* Features List (3 columns like desktop) */}
+              <div className="grid grid-cols-3 gap-1 mt-5 text-center text-gray-900 mb-6">
+                <div>
+                  <div className="mx-auto w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <Tag className="text-green-600" size={20} />
+                  </div>
+                  <p className="mt-2 text-[10px] leading-tight font-bold">Exclusive</p>
+                  <p className="text-[10px] leading-tight font-bold">App Discounts</p>
+                </div>
+                <div>
+                  <div className="mx-auto w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <Zap className="text-green-600" size={20} />
+                  </div>
+                  <p className="mt-2 text-[10px] leading-tight font-bold">Faster &</p>
+                  <p className="text-[10px] leading-tight font-bold">Smooth Checkout</p>
+                </div>
+                <div>
+                  <div className="mx-auto w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                    <Bell className="text-green-600" size={20} />
+                  </div>
+                  <p className="mt-2 text-[10px] leading-tight font-bold">Early Access to</p>
+                  <p className="text-[10px] leading-tight font-bold">Deals & Offers</p>
+                </div>
+              </div>
+
+              {/* Discount Box */}
+              <div className="w-full rounded-2xl py-3 border-2 border-dashed border-green-400 text-center mb-5">
+                <p className="text-[13px] font-black text-gray-900 uppercase tracking-wide">Download Now & Get</p>
+                <p className="text-[34px] leading-none font-black text-green-600 uppercase my-1">10% Off</p>
+                <p className="text-[14px] font-extrabold text-gray-900 uppercase leading-none">On Your First App Order!</p>
+                <p className="text-[9px] text-gray-500 mt-1.5">*T&C Apply</p>
+              </div>
+
+              {/* App Store Buttons */}
+              <div className="flex items-center justify-center gap-2 w-full mb-2">
+                <a
+                  href="https://play.google.com/store/apps/details?id=ae.grabatoz1.grabatoz1"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center transition-transform hover:scale-[1.02]"
+                >
+                  <img src="/getitongoogle.png" alt="Google Play" className="h-10 w-auto object-contain" />
+                </a>
+                <a
+                  href="https://apps.apple.com/pk/app/graba2z/id6742447046"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center transition-transform hover:scale-[1.02]"
+                >
+                  <img src="/getitonappstore.png" alt="App Store" className="h-12 w-auto object-contain" />
+                </a>
+              </div>
+
+              {/* Footer text */}
+              <div className="flex items-center gap-1.5 self-start text-[11px] text-gray-400 mt-1">
+                
+              </div>
+            </div>
+          </div>
+          )}
         </div>
       )}
       {/* Notification/Newsletter Popup */}

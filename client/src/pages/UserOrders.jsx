@@ -1,13 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, Fragment } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { useAuth } from "../context/AuthContext"
-import { CheckCircle, Clock, Package, Truck, AlertTriangle } from "lucide-react"
+import { CheckCircle, Clock, Package, Truck, AlertTriangle, Printer, Download, X, Eye, FileText, ShoppingBag, MapPin, CreditCard } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
+import { Dialog, Transition } from "@headlessui/react"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+import { useReactToPrint } from "react-to-print"
+import InvoiceComponent from "../components/admin/InvoiceComponent"
 
 import config from "../config/config"
+
 const UserOrders = () => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -16,6 +22,15 @@ const UserOrders = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState("")
+
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const printRef = useRef()
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+    documentTitle: `Invoice_${selectedOrder?._id?.slice(-6) || "Order"}`,
+  })
 
   // Check for success message from URL params
   useEffect(() => {
@@ -107,22 +122,16 @@ const UserOrders = () => {
           return
         }
 
-        console.log("Fetching orders with token:", token ? "Token exists" : "No token")
-        
         const { data } = await axios.get(`${config.API_URL}/api/orders/myorders`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
         
-        console.log("Orders fetched:", data.length, "orders")
-        console.log("Orders data:", data)
-        
         setOrders(data)
         setLoading(false)
       } catch (error) {
         console.error("Error fetching orders:", error)
-        console.error("Error response:", error.response?.data)
         setError(error.response?.data?.message || "Failed to load your orders. Please try again later.")
         setLoading(false)
       }
@@ -131,143 +140,516 @@ const UserOrders = () => {
     fetchOrders()
   }, [isAuthenticated, navigate])
 
+  const openModal = (order) => {
+    setSelectedOrder(order)
+    setIsModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setTimeout(() => setSelectedOrder(null), 300)
+  }
+
+  const generateInvoicePDF = (order) => {
+    const doc = new jsPDF()
+    
+    // Header - Company Info
+    doc.setFontSize(24)
+    doc.setTextColor(22, 163, 74) // Green theme
+    doc.setFont(undefined, 'bold')
+    doc.text("Graba2z", 195, 22, { align: 'right' })
+    
+    doc.setFontSize(10)
+    doc.setTextColor(100, 100, 100)
+    doc.setFont(undefined, 'normal')
+    doc.text("www.grabatoz.ae", 195, 28, { align: 'right' })
+    doc.text("support@grabatoz.ae", 195, 34, { align: 'right' })
+
+    // Header - Invoice Info
+    doc.setFontSize(22)
+    doc.setTextColor(40, 40, 40)
+    doc.setFont(undefined, 'bold')
+    doc.text("INVOICE", 14, 22)
+    
+    doc.setFontSize(10)
+    doc.setTextColor(100, 100, 100)
+    doc.setFont(undefined, 'normal')
+    doc.text(`Invoice ID: INV-${order._id.slice(-6).toUpperCase()}`, 14, 30)
+    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 36)
+    doc.text(`Order Status: ${order.status}`, 14, 42)
+
+    // Divider line
+    doc.setDrawColor(230, 230, 230)
+    doc.line(14, 48, 195, 48)
+
+    // Billing Info
+    doc.setFontSize(12)
+    doc.setTextColor(40, 40, 40)
+    doc.setFont(undefined, 'bold')
+    doc.text("Bill To:", 14, 58)
+    
+    doc.setFontSize(10)
+    doc.setTextColor(80, 80, 80)
+    doc.setFont(undefined, 'normal')
+    doc.text(`${order.shippingAddress?.name || user?.name || "Customer"}`, 14, 65)
+    doc.text(`${order.shippingAddress?.email || user?.email || ""}`, 14, 71)
+    doc.text(`${order.shippingAddress?.phone || ""}`, 14, 77)
+    doc.text(`${order.shippingAddress?.address || ""}, ${order.shippingAddress?.city || ""}`, 14, 83)
+
+    const tableColumn = ["Item Description", "Qty", "Unit Price", "Total"]
+    const tableRows = []
+
+    order.orderItems.forEach(item => {
+      let desc = item.name
+      if (item.selectedColorData?.color) desc += ` (Color: ${item.selectedColorData.color})`
+      if (item.selectedDosData?.dosType) desc += ` (OS: ${item.selectedDosData.dosType})`
+      
+      const rowData = [
+        desc,
+        item.quantity,
+        `AED ${Number(item.price).toFixed(2)}`,
+        `AED ${(Number(item.price) * item.quantity).toFixed(2)}`
+      ]
+      tableRows.push(rowData)
+    })
+
+    autoTable(doc, {
+      startY: 93,
+      head: [tableColumn],
+      body: tableRows,
+      theme: 'grid',
+      headStyles: { fillColor: [22, 163, 74], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 9, cellPadding: 5 },
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { halign: 'center' },
+        2: { halign: 'right' },
+        3: { halign: 'right' },
+      }
+    })
+
+    const finalY = doc.lastAutoTable.finalY || 93
+    
+    // Totals Section
+    doc.setFontSize(10)
+    doc.setTextColor(80, 80, 80)
+    
+    doc.text(`Subtotal:`, 150, finalY + 12)
+    doc.text(`AED ${Number(order.itemsPrice || order.totalPrice).toFixed(2)}`, 195, finalY + 12, { align: 'right' })
+    
+    doc.text(`Shipping:`, 150, finalY + 20)
+    doc.text(`AED ${Number(order.shippingPrice || 0).toFixed(2)}`, 195, finalY + 20, { align: 'right' })
+    
+    if (order.taxPrice) {
+      doc.text(`Tax:`, 150, finalY + 28)
+      doc.text(`AED ${Number(order.taxPrice).toFixed(2)}`, 195, finalY + 28, { align: 'right' })
+    }
+
+    // Divider for total
+    const totalY = finalY + (order.taxPrice ? 34 : 26)
+    doc.setDrawColor(230, 230, 230)
+    doc.line(140, totalY - 4, 195, totalY - 4)
+
+    doc.setFontSize(12)
+    doc.setTextColor(22, 163, 74)
+    doc.setFont(undefined, 'bold')
+    doc.text(`Total Amount:`, 150, totalY + 2)
+    doc.text(`AED ${Number(order.totalPrice).toFixed(2)}`, 195, totalY + 2, { align: 'right' })
+
+    // Footer
+    doc.setFontSize(9)
+    doc.setTextColor(150, 150, 150)
+    doc.setFont(undefined, 'normal')
+    doc.text("Thank you for your business!", 105, 280, { align: 'center' })
+
+    doc.save(`Graba2z_Invoice_${order._id.slice(-6)}.pdf`)
+  }
+
   const getStatusIcon = (status) => {
     switch (status) {
-      case "Processing":
-        return <Clock className="h-5 w-5 text-yellow-500" />
-      case "Shipped":
-        return <Package className="h-5 w-5 text-blue-500" />
-      case "Out for Delivery":
-        return <Truck className="h-5 w-5 text-purple-500" />
-      case "Delivered":
-        return <CheckCircle className="h-5 w-5 text-green-500" />
-      default:
-        return <AlertTriangle className="h-5 w-5 text-gray-500" />
+      case "Processing": return <Clock className="h-5 w-5 text-yellow-600" />
+      case "Shipped": return <Package className="h-5 w-5 text-blue-600" />
+      case "Out for Delivery": return <Truck className="h-5 w-5 text-purple-600" />
+      case "Delivered": return <CheckCircle className="h-5 w-5 text-green-600" />
+      default: return <AlertTriangle className="h-5 w-5 text-gray-600" />
+    }
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Processing": return "bg-yellow-50 text-yellow-700 border-yellow-200"
+      case "Shipped": return "bg-blue-50 text-blue-700 border-blue-200"
+      case "Out for Delivery": return "bg-purple-50 text-purple-700 border-purple-200"
+      case "Delivered": return "bg-green-50 text-green-700 border-green-200"
+      case "Cancelled":
+      case "Deleted": return "bg-red-50 text-red-700 border-red-200"
+      default: return "bg-gray-50 text-gray-700 border-gray-200"
     }
   }
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">My Orders</h1>
-
-      {successMessage && (
-        <div className="mb-6 p-4 bg-green-50 text-green-600 rounded-md flex items-center">
-          <CheckCircle className="h-5 w-5 mr-2" />
-          {successMessage}
-        </div>
-      )}
-
-      {error && <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-md">{error}</div>}
-
-      {orders.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-          <Package size={64} className="mx-auto text-gray-300 mb-4" />
-          <h2 className="text-xl font-medium text-gray-900 mb-2">No orders yet</h2>
-          <p className="text-gray-600 mb-6">You haven't placed any orders yet.</p>
-          <Link to="/" className="btn-primary">
-            Start Shopping
+    <div className="min-h-screen bg-gray-50/50 py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">My Orders</h1>
+            <p className="mt-2 text-gray-600">View and manage your recent purchases</p>
+          </div>
+          <Link to="/" className="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition shadow-sm hover:shadow">
+            <ShoppingBag className="w-5 h-5 mr-2" />
+            Continue Shopping
           </Link>
         </div>
-      ) : (
-        <div className="space-y-6">
-          {orders.map((order) => (
-            <div key={order._id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="p-6 border-b">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-medium text-gray-900">Order #{order._id.slice(-6)}</h2>
-                    <p className="text-sm text-gray-500">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <div className="mt-2 sm:mt-0 flex items-center">
-                    {getStatusIcon(order.status)}
-                    <span className="ml-2 text-sm font-medium">{order.status}</span>
-                  </div>
-                </div>
-              </div>
 
-              <div className="px-6 py-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Items</h3>
-                <ul className="divide-y divide-gray-200">
-                  {order.orderItems.filter(item => !item.isProtection).map((item) => (
-                    <li key={item._id} className="py-4 flex">
-                      <div className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden">
-                        <img
-                          src={getFullImageUrl(item.image) || "/placeholder.svg"}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex justify-between">
-                          <h4 className="text-sm font-medium text-gray-900">{item.name}</h4>
-                          <p className="text-sm font-medium text-gray-900">AED {item.price.toLocaleString()}</p>
-                        </div>
-                        {item.selectedColorData && (
-                          <p className="text-xs text-purple-600 font-medium mt-1 flex items-center">
-                            <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
-                            Color: {item.selectedColorData.color}
-                          </p>
-                        )}
-                        {item.selectedDosData && (
-                          <p className="text-xs text-blue-600 font-medium mt-1 flex items-center">
-                            <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300 bg-blue-500"></span>
-                            OS: {item.selectedDosData.dosType}
-                          </p>
-                        )}
-                        <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                {order.orderItems.some(item => item.isProtection) && (
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center">
-                      <svg className="w-4 h-4 mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                      Buyer Protection Plans
-                    </h4>
-                    <ul className="divide-y divide-gray-200 bg-blue-50 rounded-lg">
-                      {order.orderItems.filter(item => item.isProtection).map((item) => (
-                        <li key={item._id} className="py-3 px-4 flex items-center">
-                          <svg className="w-5 h-5 mr-2 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                          </svg>
-                          <div className="flex-1">
-                            <h5 className="text-sm font-medium text-gray-900">{item.name}</h5>
-                          </div>
-                          <p className="text-sm font-medium text-gray-900 ml-2">AED {item.price.toLocaleString()}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+        {successMessage && (
+          <div className="mb-8 p-4 bg-green-50 text-green-700 border border-green-200 rounded-xl flex items-center shadow-sm">
+            <CheckCircle className="h-5 w-5 mr-3 flex-shrink-0" />
+            <p className="font-medium">{successMessage}</p>
+          </div>
+        )}
 
-              <div className="px-6 py-4 bg-gray-50">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium text-gray-900">Total</span>
-                  <span className="font-medium text-gray-900">AED {order.totalPrice.toLocaleString()}</span>
-                </div>
-                {order.trackingId && (
-                  <div className="mt-2 text-sm">
-                    <span className="font-medium text-gray-900">Tracking ID: </span>
-                    <span className="text-gray-600">{order.trackingId}</span>
-                  </div>
-                )}
-              </div>
+        {error && (
+          <div className="mb-8 p-4 bg-red-50 text-red-700 border border-red-200 rounded-xl flex items-center shadow-sm">
+            <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
+            <p className="font-medium">{error}</p>
+          </div>
+        )}
+
+        {orders.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-50 rounded-full mb-6">
+              <Package className="w-10 h-10 text-gray-400" />
             </div>
-          ))}
+            <h2 className="text-2xl font-semibold text-gray-900 mb-3">No orders found</h2>
+            <p className="text-gray-500 mb-8 max-w-md mx-auto">Looks like you haven't made any purchases yet. Start shopping to see your orders here.</p>
+            <Link to="/" className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-all shadow-md hover:shadow-lg">
+              Explore Products
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {orders.map((order) => (
+              <div key={order._id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden group">
+                <div className="p-6 border-b border-gray-50 bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 mb-1">Order Number</p>
+                      <h3 className="text-lg font-bold text-gray-900">#{order._id.slice(-6).toUpperCase()}</h3>
+                    </div>
+                    <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 mb-1">Date Placed</p>
+                      <p className="text-base font-medium text-gray-900">{new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 mb-1">Total Amount</p>
+                      <p className="text-base font-bold text-green-600">AED {order.totalPrice.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div className={`px-4 py-2 rounded-full border flex items-center gap-2 ${getStatusColor(order.status)}`}>
+                    {getStatusIcon(order.status)}
+                    <span className="font-semibold text-sm tracking-wide">{order.status}</span>
+                  </div>
+                </div>
+
+                <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-6 bg-gray-50/30">
+                  <div className="flex items-center gap-4 w-full md:w-auto py-2">
+                    <div className="flex items-center -space-x-4 overflow-hidden">
+                      {order.orderItems.filter(item => !item.isProtection).slice(0, 3).map((item, idx) => (
+                        <div key={item._id || idx} className="relative z-10 w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden flex-shrink-0 group-hover:-translate-y-1 transition-transform duration-300" style={{ transitionDelay: `${idx * 50}ms` }}>
+                          <img
+                            src={getFullImageUrl(item.image) || "/placeholder.svg"}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex flex-col">
+                      {order.orderItems.length > 0 && (
+                        <span className="font-semibold text-gray-900 line-clamp-2 max-w-[200px] sm:max-w-xs">
+                          {order.orderItems.filter(item => !item.isProtection)[0]?.name || "Product Item"}
+                        </span>
+                      )}
+                      {order.orderItems.filter(item => !item.isProtection).length > 1 && (
+                        <span className="text-sm text-gray-500 font-medium mt-0.5">
+                          + {order.orderItems.filter(item => !item.isProtection).length - 1} more item(s)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <button 
+                      onClick={() => openModal(order)} 
+                      className="inline-flex items-center justify-center px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
+                    </button>
+                    <button 
+                      onClick={() => generateInvoicePDF(order)}
+                      className="inline-flex items-center justify-center px-5 py-2.5 bg-green-50 text-green-700 border border-green-100 rounded-xl font-medium hover:bg-green-100 transition-all shadow-sm"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Invoice
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Invisible component for printing */}
+      <div style={{ display: "none" }}>
+        <div ref={printRef}>
+          {selectedOrder && <InvoiceComponent order={selectedOrder} />}
         </div>
-      )}
+      </div>
+
+      {/* Order Details Modal */}
+      <Transition appear show={isModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={closeModal}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95 translate-y-4"
+                enterTo="opacity-100 scale-100 translate-y-0"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100 translate-y-0"
+                leaveTo="opacity-0 scale-95 translate-y-4"
+              >
+                <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-2xl transition-all">
+                  {selectedOrder && (
+                    <div className="flex flex-col max-h-[90vh]">
+                      {/* Modal Header */}
+                      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/80 sticky top-0 z-10">
+                        <div>
+                          <Dialog.Title as="h3" className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                            Order Summary
+                            <span className={`px-3 py-1 rounded-full border text-xs font-semibold tracking-wide flex items-center gap-1 ${getStatusColor(selectedOrder.status)}`}>
+                              {getStatusIcon(selectedOrder.status)}
+                              {selectedOrder.status}
+                            </span>
+                          </Dialog.Title>
+                          <p className="text-sm text-gray-500 mt-1">
+                            Placed on {new Date(selectedOrder.createdAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                          </p>
+                        </div>
+                        <button
+                          onClick={closeModal}
+                          className="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+                        >
+                          <X className="w-6 h-6" />
+                        </button>
+                      </div>
+
+                      {/* Modal Body - Scrollable */}
+                      <div className="overflow-y-auto flex-1 p-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                          
+                          {/* Left Column: Items */}
+                          <div className="lg:col-span-2 space-y-6">
+                            <div>
+                              <h4 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Package className="w-5 h-5 text-green-600" />
+                                Order Items
+                              </h4>
+                              <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-50">
+                                {selectedOrder.orderItems.filter(item => !item.isProtection).map((item) => (
+                                  <div key={item._id} className="p-4 flex gap-4 hover:bg-gray-50/50 transition">
+                                    <div className="w-20 h-20 rounded-lg border border-gray-100 overflow-hidden flex-shrink-0 bg-white">
+                                      <img
+                                        src={getFullImageUrl(item.image) || "/placeholder.svg"}
+                                        alt={item.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <div className="flex-1 flex flex-col justify-center">
+                                      <h5 className="font-semibold text-gray-900 line-clamp-2">{item.name}</h5>
+                                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                                        <span className="text-gray-500">Qty: <span className="font-medium text-gray-900">{item.quantity}</span></span>
+                                        {item.selectedColorData?.color && (
+                                          <span className="text-gray-500 flex items-center gap-1">
+                                            Color: 
+                                            <span className="w-3 h-3 rounded-full border border-gray-200" style={{backgroundColor: item.selectedColorData.color.toLowerCase()}}></span>
+                                            <span className="font-medium text-gray-900">{item.selectedColorData.color}</span>
+                                          </span>
+                                        )}
+                                        {item.selectedDosData?.dosType && (
+                                          <span className="text-gray-500">OS: <span className="font-medium text-gray-900">{item.selectedDosData.dosType}</span></span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="text-right flex flex-col justify-center">
+                                      <span className="font-bold text-gray-900">AED {(item.price * item.quantity).toLocaleString()}</span>
+                                      {item.quantity > 1 && (
+                                        <span className="text-xs text-gray-500">AED {item.price.toLocaleString()} each</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                                
+                                {/* Protection Items */}
+                                {selectedOrder.orderItems.some(item => item.isProtection) && (
+                                  <div className="bg-green-50/50 p-4 border-t border-green-100">
+                                    <h5 className="text-sm font-semibold text-green-900 mb-3 flex items-center gap-2">
+                                      <Shield className="w-4 h-4 text-green-600" />
+                                      Protection Plans
+                                    </h5>
+                                    <div className="space-y-3">
+                                      {selectedOrder.orderItems.filter(item => item.isProtection).map((item) => (
+                                        <div key={item._id} className="flex justify-between items-center text-sm">
+                                          <div className="flex items-center gap-2 text-green-800">
+                                            <CheckCircle className="w-4 h-4 text-green-500" />
+                                            <span>{item.name}</span>
+                                          </div>
+                                          <span className="font-semibold text-green-900">AED {item.price.toLocaleString()}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Tracking Info if available */}
+                            {selectedOrder.trackingId && (
+                              <div>
+                                <h4 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                  <Truck className="w-5 h-5 text-purple-600" />
+                                  Delivery Information
+                                </h4>
+                                <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-4 flex flex-col sm:flex-row gap-6">
+                                  <div>
+                                    <p className="text-sm text-gray-500 mb-1">Tracking ID</p>
+                                    <p className="font-semibold text-gray-900">{selectedOrder.trackingId}</p>
+                                  </div>
+                                  {selectedOrder.estimatedDelivery && (
+                                    <div>
+                                      <p className="text-sm text-gray-500 mb-1">Estimated Delivery</p>
+                                      <p className="font-semibold text-gray-900">{new Date(selectedOrder.estimatedDelivery).toLocaleDateString()}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right Column: Order Info */}
+                          <div className="space-y-6">
+                            {/* Summary Box */}
+                            <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                              <h4 className="text-base font-bold text-gray-900 mb-4">Payment Summary</h4>
+                              <div className="space-y-3 text-sm">
+                                <div className="flex justify-between text-gray-600">
+                                  <span>Subtotal</span>
+                                  <span className="font-medium text-gray-900">AED {selectedOrder.itemsPrice?.toLocaleString() || selectedOrder.totalPrice?.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-600">
+                                  <span>Shipping Fee</span>
+                                  <span className="font-medium text-gray-900">AED {selectedOrder.shippingPrice?.toLocaleString() || 0}</span>
+                                </div>
+                                {selectedOrder.taxPrice > 0 && (
+                                  <div className="flex justify-between text-gray-600">
+                                    <span>Tax</span>
+                                    <span className="font-medium text-gray-900">AED {selectedOrder.taxPrice?.toLocaleString()}</span>
+                                  </div>
+                                )}
+                                {selectedOrder.discountAmount > 0 && (
+                                  <div className="flex justify-between text-green-600">
+                                    <span>Discount</span>
+                                    <span className="font-medium">-AED {selectedOrder.discountAmount?.toLocaleString()}</span>
+                                  </div>
+                                )}
+                                <div className="pt-3 mt-3 border-t border-gray-200 flex justify-between items-center">
+                                  <span className="font-bold text-gray-900">Total</span>
+                                  <span className="text-xl font-bold text-green-600">AED {selectedOrder.totalPrice?.toLocaleString()}</span>
+                                </div>
+                                <div className="mt-4 flex items-center justify-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-200">
+                                  <CreditCard className="w-4 h-4 text-gray-500" />
+                                  <span className="font-medium text-gray-700">{selectedOrder.paymentMethod}</span>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full ${selectedOrder.isPaid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                    {selectedOrder.isPaid ? 'Paid' : 'Pending'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Shipping Address */}
+                            <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                              <h4 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-red-500" />
+                                Shipping Address
+                              </h4>
+                              <div className="text-sm text-gray-600 space-y-1">
+                                <p className="font-medium text-gray-900">{selectedOrder.shippingAddress?.name || user?.name}</p>
+                                <p>{selectedOrder.shippingAddress?.address}</p>
+                                <p>{selectedOrder.shippingAddress?.city}{selectedOrder.shippingAddress?.state ? `, ${selectedOrder.shippingAddress.state}` : ''}</p>
+                                <p className="pt-2 flex items-center gap-2">
+                                  <span className="w-4 flex justify-center">📞</span> 
+                                  {selectedOrder.shippingAddress?.phone}
+                                </p>
+                                <p className="flex items-center gap-2">
+                                  <span className="w-4 flex justify-center">✉️</span> 
+                                  {selectedOrder.shippingAddress?.email || user?.email}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Modal Footer */}
+                      <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-end gap-3 sticky bottom-0 z-10">
+                        <button
+                          onClick={() => generateInvoicePDF(selectedOrder)}
+                          className="inline-flex items-center justify-center px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download Invoice
+                        </button>
+                        <button
+                          onClick={handlePrint}
+                          className="inline-flex items-center justify-center px-5 py-2.5 bg-green-600 text-white border border-transparent rounded-xl font-medium hover:bg-green-700 transition-all shadow-sm"
+                        >
+                          <Printer className="w-4 h-4 mr-2" />
+                          Print Receipt
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
     </div>
   )
 }
