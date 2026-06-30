@@ -1,3 +1,4 @@
+import { lazyWithRetry } from "../utils/lazyWithRetry"
 import { Suspense, lazy, useEffect, useState } from "react"
 import { Outlet, useLocation } from "react-router-dom"
 import Navbar from "./Navbar"
@@ -6,8 +7,8 @@ import StaticRouteSEO from "./StaticRouteSEO"
 import StaticPageTranslationLoader from "./StaticPageTranslationLoader"
 import StaticPageContentTranslator from "./StaticPageContentTranslator"
 
-const Footer = lazy(() => import("./Footer"))
-const BlogFooter = lazy(() => import("./BlogFooter"))
+const Footer = lazyWithRetry(() => import("./Footer"))
+const BlogFooter = lazyWithRetry(() => import("./BlogFooter"))
 
 function WhatsAppButton() {
   return (

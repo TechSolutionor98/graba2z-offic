@@ -1,3 +1,4 @@
+import { lazyWithRetry } from "../utils/lazyWithRetry"
 "use client"
 
 import React, { lazy, Suspense, useEffect, useRef, useState } from "react"
@@ -8,7 +9,7 @@ import { getOptimizedImageUrl } from "../utils/imageUtils"
 import config from "../config/config"
 import { useLanguage } from "../context/LanguageContext"
 
-const BlogHeroSection = lazy(() => import("../components/BlogHeroSection"))
+const BlogHeroSection = lazyWithRetry(() => import("../components/BlogHeroSection"))
 
 const API_BASE_URL = `${config.API_URL}`
 const BLOG_LIST_CACHE_KEY = "graba2z_blog_list_cache_v1"
