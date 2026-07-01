@@ -1478,7 +1478,7 @@ const Checkout = () => {
                           <PhoneInput
                             international
                             defaultCountry="AE"
-                            value={formData.phone}
+                            value={formData.phone ? (formData.phone.startsWith('+') ? formData.phone : `+971${formData.phone}`) : ''}
                             onChange={(value) => setFormData({ ...formData, phone: value || '' })}
                             className="w-full -mt-2 rounded-lg px-4 py-3"
                             placeholder="Enter phone number"
