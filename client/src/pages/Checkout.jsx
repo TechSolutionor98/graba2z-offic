@@ -784,7 +784,7 @@ const Checkout = () => {
       } else if (selectedPaymentMethod === "tabby") {
         const tabbyPayload = {
           payment: {
-            amount: finalTotal.toString(),
+            amount: Number(finalTotal).toFixed(2),
             currency: "AED",
             description: `Order payment for ${cartItems.length} items`,
             buyer: {
@@ -795,11 +795,11 @@ const Checkout = () => {
             shipping_address: {
               city: formData.city,
               address: formData.address,
-              zip: formData.zipCode,
+              zip: formData.zipCode || "00000",
             },
             order: {
-              tax_amount: taxAmount === "included" ? "0.00" : taxAmount.toString(),
-              shipping_amount: deliveryCharge.toString(),
+              tax_amount: taxAmount === "included" ? "0.00" : Number(taxAmount).toFixed(2),
+              shipping_amount: Number(deliveryCharge).toFixed(2),
               discount_amount: "0.00",
               updated_at: new Date().toISOString(),
               reference_id: orderId,
@@ -807,7 +807,7 @@ const Checkout = () => {
                 title: item.name,
                 description: item.description || item.name,
                 quantity: item.quantity,
-                unit_price: getItemPrice(item).toString(),
+                unit_price: Number(getItemPrice(item)).toFixed(2),
                 discount_amount: "0.00",
                 reference_id: item._id,
                 image_url: item.image,
