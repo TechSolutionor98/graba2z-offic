@@ -48,7 +48,7 @@ export default function DeliveryHandlingFee() {
   const fetchCharges = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token")
       const { data } = await axios.get(`${config.API_URL}/api/payment-charges`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -68,7 +68,7 @@ export default function DeliveryHandlingFee() {
   }
 
   const handleAddCharge = () => {
-    setCharges([...charges, { name: "", amount: 0 }])
+    setCharges([...charges, { name: "", amount: 0, type: "fixed" }])
   }
 
   const handleRemoveCharge = (index) => {
@@ -92,7 +92,7 @@ export default function DeliveryHandlingFee() {
       setSaving(true)
       setError(null)
       setSuccess(null)
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token")
       
       // Validate charges
       for (const c of charges) {
@@ -289,9 +289,36 @@ export default function DeliveryHandlingFee() {
                             placeholder="e.g. COD Handling Fee (Non-Refundable)"
                           />
                         </div>
+                        <div className="w-48">
+                          <label className="block text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">
+                            Type
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`chargeType-${index}`}
+                                checked={charge.type === "fixed" || !charge.type}
+                                onChange={() => handleChargeChange(index, "type", "fixed")}
+                                className="accent-lime-500"
+                              />
+                              <span className="text-sm text-gray-700">Fixed</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`chargeType-${index}`}
+                                checked={charge.type === "percentage"}
+                                onChange={() => handleChargeChange(index, "type", "percentage")}
+                                className="accent-lime-500"
+                              />
+                              <span className="text-sm text-gray-700">Percentage</span>
+                            </label>
+                          </div>
+                        </div>
                         <div className="w-40">
                           <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">
-                            Amount (AED)
+                            Amount {charge.type === "percentage" ? "(%)" : "(AED)"}
                           </label>
                           <input
                             type="number"

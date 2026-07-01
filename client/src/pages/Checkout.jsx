@@ -357,7 +357,13 @@ const Checkout = () => {
 
   // Dynamic payment charges calculation
   const currentPaymentChargesData = selectedPaymentMethod ? paymentChargesList[selectedPaymentMethod] : null;
-  const paymentChargesTotal = currentPaymentChargesData?.charges?.reduce((sum, charge) => sum + (Number(charge.amount) || 0), 0) || 0;
+  const paymentChargesTotal = currentPaymentChargesData?.charges?.reduce((sum, charge) => {
+    let amount = Number(charge.amount) || 0;
+    if (charge.type === "percentage") {
+      amount = (cartTotals.totalOfferPrice + protectionTotal) * (amount / 100);
+    }
+    return sum + amount;
+  }, 0) || 0;
   
   const finalTotal = cartTotals.totalOfferPrice + protectionTotal + deliveryCharge + paymentChargesTotal - couponDiscount
 
@@ -1756,11 +1762,17 @@ const Checkout = () => {
                       </p>
                       {currentPaymentChargesData?.charges?.length > 0 && (
                         <div className="mt-2 space-y-1">
-                          {currentPaymentChargesData.charges.map((charge, idx) => (
-                            <p key={idx} className="text-sm font-semibold text-blue-800" lang="en" dir="ltr">
-                              • {charge.name}: {formatPrice(charge.amount)}
-                            </p>
-                          ))}
+                          {currentPaymentChargesData.charges.map((charge, idx) => {
+                            let computedAmount = Number(charge.amount) || 0;
+                            if (charge.type === "percentage") {
+                              computedAmount = (cartTotals.totalOfferPrice + protectionTotal) * (computedAmount / 100);
+                            }
+                            return (
+                              <p key={idx} className="text-sm font-semibold text-blue-800" lang="en" dir="ltr">
+                                • {charge.name}: {charge.type === "percentage" ? `${charge.amount}% (${formatPrice(computedAmount)})` : formatPrice(charge.amount)}
+                              </p>
+                            )
+                          })}
                         </div>
                       )}
                     </div>
@@ -1942,12 +1954,18 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {currentPaymentChargesData?.charges?.map((charge, idx) => (
-                  <div key={idx} className="flex justify-between text-sm">
-                    <span className="text-gray-600" lang="en" dir="ltr">{charge.name}</span>
-                    <span className="text-black" lang="en" dir="ltr">{formatPrice(charge.amount)}</span>
-                  </div>
-                ))}
+                {currentPaymentChargesData?.charges?.map((charge, idx) => {
+                  let computedAmount = Number(charge.amount) || 0;
+                  if (charge.type === "percentage") {
+                    computedAmount = (cartTotals.totalOfferPrice + protectionTotal) * (computedAmount / 100);
+                  }
+                  return (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-gray-600" lang="en" dir="ltr">{charge.name} {charge.type === "percentage" && `(${charge.amount}%)`}</span>
+                      <span className="text-black" lang="en" dir="ltr">{formatPrice(computedAmount)}</span>
+                    </div>
+                  )
+                })}
 
                 {/* Protection Plans Section */}
                 {protectionItems.length > 0 && (
