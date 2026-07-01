@@ -822,7 +822,7 @@ const Checkout = () => {
             },
           },
           lang: "en",
-          merchant_code: import.meta.env.VITE_TABBY_MERCHANT_CODE || process.env.REACT_APP_TABBY_MERCHANT_CODE || "grabatoz",
+          merchant_code: "AE",
           merchant_urls: {
             success: `${window.location.origin}${getLocalizedPath("/orders")}?success=true`,
             cancel: `${window.location.origin}${getLocalizedPath("/checkout")}`,
