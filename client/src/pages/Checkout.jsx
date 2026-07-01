@@ -643,8 +643,7 @@ const Checkout = () => {
         return
       }
 
-      // Map tabby to card for payment processing
-      const actualPaymentMethod = selectedPaymentMethod === "tabby" ? "card" : selectedPaymentMethod
+      const actualPaymentMethod = selectedPaymentMethod
 
       // Prepare order data
       const orderData = {
@@ -767,8 +766,7 @@ const Checkout = () => {
       }
 
       // Now initiate payment based on selected method
-      if (selectedPaymentMethod === "card" || selectedPaymentMethod === "tabby") {
-        // Both card and tabby use N-Genius card payment
+      if (selectedPaymentMethod === "card") {
         const response = await axios.post(`${config.API_URL}/api/payment/ngenius/card`, {
           amount: finalTotal,
           currencyCode: "AED",
@@ -782,6 +780,71 @@ const Checkout = () => {
           window.location.href = paymentUrl
         } else {
           throw new Error("Payment URL not received from N-Genius")
+        }
+      } else if (selectedPaymentMethod === "tabby") {
+        const tabbyPayload = {
+          payment: {
+            amount: finalTotal.toString(),
+            currency: "AED",
+            description: `Order payment for ${cartItems.length} items`,
+            buyer: {
+              phone: `+971${formData.phone.replace('+971', '')}`,
+              email: formData.email,
+              name: formData.name,
+            },
+            shipping_address: {
+              city: formData.city,
+              address: formData.address,
+              zip: formData.zipCode,
+            },
+            order: {
+              tax_amount: taxAmount === "included" ? "0.00" : taxAmount.toString(),
+              shipping_amount: deliveryCharge.toString(),
+              discount_amount: "0.00",
+              updated_at: new Date().toISOString(),
+              reference_id: orderId,
+              items: cartItems.map((item) => ({
+                title: item.name,
+                description: item.description || item.name,
+                quantity: item.quantity,
+                unit_price: getItemPrice(item).toString(),
+                discount_amount: "0.00",
+                reference_id: item._id,
+                image_url: item.image,
+                product_url: `${window.location.origin}${getLocalizedPath("/product/" + (item.slug || item._id))}`,
+                category: item.category?.name || "Electronics",
+              })),
+            },
+            order_history: [],
+            meta: {
+              order_id: orderId,
+              customer: formData.email,
+            },
+          },
+          lang: "en",
+          merchant_code: import.meta.env.VITE_TABBY_MERCHANT_CODE || process.env.REACT_APP_TABBY_MERCHANT_CODE || "grabatoz",
+          merchant_urls: {
+            success: `${window.location.origin}${getLocalizedPath("/orders")}?success=true`,
+            cancel: `${window.location.origin}${getLocalizedPath("/checkout")}`,
+            failure: `${window.location.origin}${getLocalizedPath("/checkout")}?error=payment_failed`,
+          },
+        }
+
+        const tabbyConfig = {}
+        if (token) {
+          tabbyConfig.headers = { Authorization: `Bearer ${token}` }
+        }
+
+        const response = await axios.post(`${config.API_URL}/api/payment/tabby/checkout`, tabbyPayload, tabbyConfig)
+        
+        const configuration = response.data?.configuration
+        const webUrl = configuration?.available_products?.installments?.[0]?.web_url 
+          || response.data?.payment?.instructions?.web_url
+
+        if (webUrl) {
+          window.location.href = webUrl
+        } else {
+          throw new Error("Payment URL not received from Tabby")
         }
       } else if (selectedPaymentMethod === "tamara") {
         // Tamara payment logic
