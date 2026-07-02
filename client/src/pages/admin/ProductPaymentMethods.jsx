@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Save, Trash2, Edit2, AlertCircle, CheckCircle2, Search, Layers, Package, Tag, Palette, Shield } from "lucide-react"
+import { Save, Trash2, Edit2, AlertCircle, CheckCircle2, Search, Layers, Package, Tag, Palette, Shield, X } from "lucide-react"
 import axios from "axios"
 import config from "../../config/config"
 
@@ -29,6 +29,9 @@ export default function ProductPaymentMethods() {
   // Form State
   const [selectedEntityType, setSelectedEntityType] = useState("product")
   const [selectedEntityId, setSelectedEntityId] = useState("")
+  const [selectedProducts, setSelectedProducts] = useState([])
+  const [productSelectionMode, setProductSelectionMode] = useState("specific") // "specific" or "all"
+  const [selectedTableRows, setSelectedTableRows] = useState([])
   const [selectedMethods, setSelectedMethods] = useState(["card", "cod"]) // default
 
   // Lists for dropdowns
@@ -129,7 +132,7 @@ export default function ProductPaymentMethods() {
   }
 
   const handleSave = async () => {
-    if (!selectedEntityId) {
+    if (selectedEntityType === "product" ? (productSelectionMode === "specific" && selectedProducts.length === 0) : !selectedEntityId) {
       setError("Please select a specific item to configure")
       return
     }
@@ -142,7 +145,7 @@ export default function ProductPaymentMethods() {
 
       const payload = {
         entityType: selectedEntityType,
-        entityId: selectedEntityId,
+        entityId: selectedEntityType === "product" ? (productSelectionMode === "all" ? "all" : selectedProducts.map(p => p._id)) : selectedEntityId,
         paymentMethods: selectedMethods,
       }
 
@@ -153,8 +156,10 @@ export default function ProductPaymentMethods() {
       setSuccess("Payment method configuration saved successfully")
       // Clear form except type
       setSelectedEntityId("")
+      setSelectedProducts([])
       setProductSearch("")
       setProductsList([])
+      setProductSelectionMode("specific")
       setSelectedMethods(["card", "cod"])
 
       // Refetch
@@ -194,6 +199,48 @@ export default function ProductPaymentMethods() {
     }
   }
 
+  const handleSelectRow = (item) => {
+    const isSelected = selectedTableRows.some((r) => r.entityType === item.entityType && r.entityId === item._id)
+    if (isSelected) {
+      setSelectedTableRows(selectedTableRows.filter((r) => !(r.entityType === item.entityType && r.entityId === item._id)))
+    } else {
+      setSelectedTableRows([...selectedTableRows, { entityType: item.entityType, entityId: item._id }])
+    }
+  }
+
+  const handleSelectAllRows = (e, currentConfigs) => {
+    if (e.target.checked) {
+      setSelectedTableRows(currentConfigs.map((item) => ({ entityType: item.entityType, entityId: item._id })))
+    } else {
+      setSelectedTableRows([])
+    }
+  }
+
+  const handleBulkReset = async () => {
+    if (!window.confirm(`Are you sure you want to reset payment methods for ${selectedTableRows.length} items?`)) {
+      return
+    }
+    try {
+      setError(null)
+      setSuccess(null)
+      const token = localStorage.getItem("adminToken") || localStorage.getItem("token")
+
+      await axios.post(
+        `${config.API_URL}/api/product-payment-methods/bulk-reset`,
+        { items: selectedTableRows },
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+
+      setSuccess("Bulk reset completed successfully")
+      setSelectedTableRows([])
+      fetchConfigs()
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to bulk reset configuration")
+      console.error(err)
+    }
+  }
+
   const handleEdit = (entityType, item) => {
     setSelectedEntityType(entityType)
     setSelectedEntityId(item._id)
@@ -201,8 +248,10 @@ export default function ProductPaymentMethods() {
     
     // For product, populate search or product options
     if (entityType === "product") {
-      setProductSearch(item.name)
-      setProductsList([item])
+      setProductSelectionMode("specific")
+      setSelectedProducts([{ _id: item._id, name: item.name, sku: item.sku }])
+    } else {
+      setSelectedProducts([])
     }
     
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -282,7 +331,9 @@ export default function ProductPaymentMethods() {
                     onClick={() => {
                       setSelectedEntityType(type.id)
                       setSelectedEntityId("")
+                      setSelectedProducts([])
                       setProductSearch("")
+                      setProductSelectionMode("specific")
                     }}
                     className={`flex items-center gap-2 p-3 rounded-lg border text-sm font-medium transition-all ${
                       selectedEntityType === type.id
@@ -300,12 +351,45 @@ export default function ProductPaymentMethods() {
 
           {/* 2. Specific Entity Selection Dropdown */}
           <div className="space-y-3">
-            <label className="block text-sm font-semibold text-gray-700">
-              Select Specific {selectedEntityType.charAt(0).toUpperCase() + selectedEntityType.slice(1)}
+            <label className="block text-sm font-semibold text-gray-700 flex items-center justify-between">
+              <span>Select {selectedEntityType === "product" ? "Products" : `Specific ${selectedEntityType.charAt(0).toUpperCase() + selectedEntityType.slice(1)}`}</span>
+              {selectedEntityType === "product" && productSelectionMode === "specific" && selectedProducts.length > 0 && (
+                <span className="text-xs text-lime-600 bg-lime-100 px-2 py-0.5 rounded-full font-medium">
+                  {selectedProducts.length} Selected
+                </span>
+              )}
             </label>
 
-            {/* Product Autocomplete Search */}
+            {/* Product Selection Mode Radio Buttons */}
             {selectedEntityType === "product" && (
+              <div className="flex gap-6 mb-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="productSelectionMode"
+                    value="specific"
+                    checked={productSelectionMode === "specific"}
+                    onChange={() => setProductSelectionMode("specific")}
+                    className="accent-lime-500 w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Specific Products</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="productSelectionMode"
+                    value="all"
+                    checked={productSelectionMode === "all"}
+                    onChange={() => setProductSelectionMode("all")}
+                    className="accent-lime-500 w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-gray-700">All Products</span>
+                </label>
+              </div>
+            )}
+
+            {/* Product Autocomplete Search */}
+            {selectedEntityType === "product" && productSelectionMode === "specific" && (
               <div className="space-y-2 relative">
                 <div className="relative">
                   <Search className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
@@ -331,12 +415,14 @@ export default function ProductPaymentMethods() {
                         key={prod._id}
                         type="button"
                         onClick={() => {
-                          setSelectedEntityId(prod._id)
-                          setProductSearch(prod.name)
+                          if (!selectedProducts.find((p) => p._id === prod._id)) {
+                            setSelectedProducts([...selectedProducts, prod])
+                          }
+                          setProductSearch("")
                           setProductsList([])
                         }}
                         className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm border-b border-gray-100 last:border-0 ${
-                          selectedEntityId === prod._id ? "bg-lime-50 font-semibold text-lime-700" : "text-gray-700"
+                          selectedProducts.some((p) => p._id === prod._id) ? "bg-lime-50 font-semibold text-lime-700" : "text-gray-700"
                         }`}
                       >
                         {prod.name}
@@ -345,6 +431,28 @@ export default function ProductPaymentMethods() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+            
+            {/* Display Selected Products */}
+            {selectedEntityType === "product" && productSelectionMode === "specific" && selectedProducts.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3 p-3 bg-gray-50 border border-gray-100 rounded-lg max-h-40 overflow-y-auto">
+                {selectedProducts.map((prod) => (
+                  <span
+                    key={prod._id}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-lime-100 text-lime-800 shadow-sm border border-lime-200"
+                  >
+                    {prod.name}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProducts(selectedProducts.filter((p) => p._id !== prod._id))}
+                      className="text-lime-600 hover:text-lime-900 hover:bg-lime-200 rounded-full p-0.5 transition-colors"
+                      title="Remove"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
               </div>
             )}
 
@@ -432,7 +540,12 @@ export default function ProductPaymentMethods() {
           <div className="pt-2">
             <button
               onClick={handleSave}
-              disabled={saving || !selectedEntityId}
+              disabled={
+                saving || 
+                (selectedEntityType === "product" 
+                  ? (productSelectionMode === "specific" && selectedProducts.length === 0)
+                  : !selectedEntityId)
+              }
               className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-lime-500 text-white rounded-lg font-bold hover:bg-lime-600 transition-colors disabled:opacity-50"
             >
               {saving ? (
@@ -447,10 +560,21 @@ export default function ProductPaymentMethods() {
 
         {/* Right Column: Custom Rules Table */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-          <h2 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
-            <Shield className="w-5 h-5 text-lime-500" />
-            Active Customized Settings
-          </h2>
+          <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-lime-500" />
+              Active Customized Settings
+            </h2>
+            {selectedTableRows.length > 0 && (
+              <button
+                onClick={handleBulkReset}
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-semibold transition-colors border border-red-100"
+              >
+                <Trash2 className="w-4 h-4" />
+                Reset Selected ({selectedTableRows.length})
+              </button>
+            )}
+          </div>
 
           {allConfigs.length === 0 ? (
             <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
@@ -462,6 +586,14 @@ export default function ProductPaymentMethods() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase bg-gray-50/50">
+                    <th className="py-3 px-4 w-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedTableRows.length > 0 && selectedTableRows.length === allConfigs.length}
+                        onChange={(e) => handleSelectAllRows(e, allConfigs)}
+                        className="accent-lime-500 w-4 h-4 rounded border-gray-300 cursor-pointer"
+                      />
+                    </th>
                     <th className="py-3 px-4">Entity Type</th>
                     <th className="py-3 px-4">Name / ID</th>
                     <th className="py-3 px-4">Allowed Methods</th>
@@ -470,7 +602,15 @@ export default function ProductPaymentMethods() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
                   {allConfigs.map((item) => (
-                    <tr key={item._id} className="hover:bg-gray-50/50 transition-colors">
+                    <tr key={item._id} className={`transition-colors ${selectedTableRows.some((r) => r.entityType === item.entityType && r.entityId === item._id) ? 'bg-lime-50/30' : 'hover:bg-gray-50/50'}`}>
+                      <td className="py-3.5 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedTableRows.some((r) => r.entityType === item.entityType && r.entityId === item._id)}
+                          onChange={() => handleSelectRow(item)}
+                          className="accent-lime-500 w-4 h-4 rounded border-gray-300 cursor-pointer"
+                        />
+                      </td>
                       <td className="py-3.5 px-4 font-medium">
                         <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
                           {item.entityType === "product" && <Package className="w-3.5 h-3.5" />}

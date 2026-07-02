@@ -485,11 +485,11 @@ const AllCoupons = () => {
                                 <Percent className="h-5 w-5 text-blue-600" />
                               </div>
                             </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded">
+                            <div className="ml-4 max-w-xs xl:max-w-sm">
+                              <div className="text-sm font-medium text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded inline-block">
                                 {coupon.code}
                               </div>
-                              <div className="text-sm text-gray-500 mt-1">{coupon.description}</div>
+                              <div className="text-sm text-gray-500 mt-1 truncate" title={coupon.description}>{coupon.description}</div>
                             </div>
                           </div>
                         </td>
