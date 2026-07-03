@@ -15,14 +15,12 @@ import {
   Truck,
   Headphones,
   CheckCircle,
-  Zap,
   Shield,
   Award,
   Bell,
   Tag,
   Calendar,
   ShoppingBag,
-  X,
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import BannerSlider from "../components/BannerSlider"
@@ -33,6 +31,7 @@ import { useLanguage } from "../context/LanguageContext"
 import BrandSlider from "../components/BrandSlider"
 import DynamicSection from "../components/DynamicSection"
 import TranslatedText from "../components/TranslatedText"
+import PromoPopup from "../components/PromoPopup"
 
 import config from "../config/config"
 
@@ -64,7 +63,6 @@ const FALLBACK_TOP_ELECTRONICS_MOBILE = "acer-banner-mobile.webp"
 const FALLBACK_TOP_CAMERA_MOBILE = "asus-banner-mobile.webp"
 
 const NOTIF_POPUP_KEY = "notif_popup_shown"
-const APP_PROMO_POPUP_KEY = "app_promo_popup_shown"
 const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/
 
 const NEWSLETTER_OPTIONS = [
@@ -219,7 +217,6 @@ const Home = () => {
   }, [homeBanners, deviceType])
 
   // Notification popup state
-  const [showAppPromoPopup, setShowAppPromoPopup] = useState(false)
   const [showNotifPopup, setShowNotifPopup] = useState(false)
   const [notifStep, setNotifStep] = useState("ask") // 'ask' | 'email'
   const [notifEmail, setNotifEmail] = useState("")
@@ -269,16 +266,7 @@ const Home = () => {
   }, [isMobileViewport])
 
   useEffect(() => {
-    if (localStorage.getItem(APP_PROMO_POPUP_KEY)) return
-    const timer = window.setTimeout(() => {
-      setShowAppPromoPopup(true)
-    }, 450)
-
-    return () => window.clearTimeout(timer)
-  }, [])
-
-  useEffect(() => {
-    if (showAppPromoPopup) return
+    if (showNotifPopup) return
     if (localStorage.getItem(NOTIF_POPUP_KEY)) return
 
     let opened = false
@@ -298,7 +286,7 @@ const Home = () => {
         window.removeEventListener(eventName, openPopup)
       })
     }
-  }, [showAppPromoPopup])
+  }, [showNotifPopup])
 
   // Helper function to render dynamic section by position
   const renderDynamicSection = (position, options = {}) => {
@@ -804,10 +792,6 @@ const Home = () => {
     setShowNotifPopup(false)
     localStorage.setItem(NOTIF_POPUP_KEY, "1")
   }
-  const handleAppPromoClose = () => {
-    setShowAppPromoPopup(false)
-    localStorage.setItem(APP_PROMO_POPUP_KEY, "1")
-  }
   const handleNotifAllow = () => {
     setNotifStep("email")
   }
@@ -870,173 +854,7 @@ const Home = () => {
 
   return (
     <div className="bg-white mt-1">
-      {showAppPromoPopup && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 p-2 md:p-4">
-          {!isMobileViewport ? (
-            <div className="relative w-full max-w-[1320px] aspect-[2.05/1] max-h-[92vh] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-300">
-            <button
-              onClick={handleAppPromoClose}
-              className="absolute top-3 right-3 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-black/70 text-white flex items-center justify-center"
-              aria-label="Close app popup"
-            >
-              <X size={28} />
-            </button>
-            <div className="grid grid-cols-1 md:grid-cols-[1.05fr_0.95fr] h-full">
-              <div className="relative overflow-hidden">
-                <img
-                  src="/download-banner.png"
-                  alt="Download banner"
-                  className="absolute inset-0 w-full h-full bg-cover"
-                  loading="eager"
-                />
-                <div className="hidden md:block absolute top-0 right-[-70px] w-[140px] h-full bg-white skew-x-[-9deg]" />
-              </div>
-              <div className="bg-white px-4 md:px-7 py-4 md:py-6 relative">
-                <div className="text-center mt-1 whitespace-nowrap">
-                  <h3 className="text-[clamp(14px,1.6vw,32px)] font-bold text-gray-900 flex items-center justify-center gap-2">
-                    <span className="text-green-500">-</span> Why Download Our App? <span className="text-green-500">-</span>
-                  </h3>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mt-4 text-center text-gray-900">
-                  <div>
-                    <div className="mx-auto w-10 h-10 md:w-14 md:h-14 rounded-full bg-green-100 flex items-center justify-center">
-                      <Tag className="text-green-600" size={24} />
-                    </div>
-                    <p className="mt-2 text-[clamp(10px,1.15vw,22px)] leading-tight font-bold">Exclusive</p>
-                    <p className="text-[clamp(10px,1.15vw,22px)] leading-tight font-bold">App Discounts</p>
-                  </div>
-                  <div>
-                    <div className="mx-auto w-10 h-10 md:w-14 md:h-14 rounded-full bg-green-100 flex items-center justify-center">
-                      <Zap className="text-green-600" size={24} />
-                    </div>
-                    <p className="mt-2 text-[clamp(10px,1.15vw,22px)] leading-tight font-bold">Faster &amp;</p>
-                    <p className="text-[clamp(10px,1.15vw,22px)] leading-tight font-bold">Smooth Checkout</p>
-                  </div>
-                  <div>
-                    <div className="mx-auto w-10 h-10 md:w-14 md:h-14 rounded-full bg-green-100 flex items-center justify-center">
-                      <Bell className="text-green-600" size={24} />
-                    </div>
-                    <p className="mt-2 text-[clamp(10px,1.15vw,22px)] leading-tight font-bold">Early Access to</p>
-                    <p className="text-[clamp(10px,1.15vw,22px)] leading-tight font-bold">Deals &amp; Offers</p>
-                  </div>
-                </div>
-
-                <div className="mt-4 border-2 border-dashed border-green-400 rounded-2xl py-3 md:py-5 text-center">
-                  <p className="text-[clamp(13px,1.55vw,30px)] font-black text-gray-900 uppercase tracking-wide">Download Now &amp; Get</p>
-                  <p className="text-[clamp(34px,3.7vw,64px)] leading-none font-black text-green-600 uppercase">10% Off</p>
-                  <p className="text-[clamp(14px,1.5vw,28px)] font-extrabold text-gray-900 uppercase leading-none">On Your First App Order!</p>
-                  <p className="text-[clamp(9px,0.85vw,14px)] text-gray-500 mt-1">*T&amp;C Apply</p>
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                  <a
-                    href="https://play.google.com/store/apps/details?id=ae.grabatoz1.grabatoz1"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-xl px-2 py-1.5 flex items-center justify-center min-h-[62px] md:min-h-[74px]"
-                  >
-                    <img src="/getitongoogle.png" alt="Google Play" className="h-12 md:h-14 w-auto" />
-                  </a>
-                  <a
-                    href="https://apps.apple.com/pk/app/graba2z/id6742447046"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-xl px-2 py-1.5 flex items-center justify-center min-h-[62px] md:min-h-[74px]"
-                  >
-                    <img src="/getitonappstore.png" alt="App Store" className="h-14 md:h-16 w-auto" />
-                  </a>
-                </div>
-
-                <div className="mt-4">
-                  <button
-                    onClick={handleAppPromoClose}
-                    className="w-full rounded-xl border-2 border-gray-300 py-2.5 text-[clamp(14px,1.2vw,24px)] text-gray-700 font-semibold hover:bg-gray-100"
-                  >
-                    Continue to Website
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          ) : (
-            <div className="relative w-[92%] max-w-[400px] bg-white rounded-3xl shadow-2xl p-5 pt-6">
-              <button
-                onClick={handleAppPromoClose}
-              className="absolute top-4 right-4 z-20 text-gray-500 hover:text-gray-800 p-1"
-              aria-label="Close app popup"
-            >
-              <X size={20} strokeWidth={2.5} />
-            </button>
-
-            <div className="flex flex-col">
-              <div className="text-center mt-2 whitespace-nowrap">
-                <h3 className="text-[18px] font-bold text-gray-900 flex items-center justify-center gap-2">
-                  <span className="text-green-500">-</span> Why Download Our App? <span className="text-green-500">-</span>
-                </h3>
-              </div>
-
-              {/* Features List (3 columns like desktop) */}
-              <div className="grid grid-cols-3 gap-1 mt-5 text-center text-gray-900 mb-6">
-                <div>
-                  <div className="mx-auto w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <Tag className="text-green-600" size={20} />
-                  </div>
-                  <p className="mt-2 text-[10px] leading-tight font-bold">Exclusive</p>
-                  <p className="text-[10px] leading-tight font-bold">App Discounts</p>
-                </div>
-                <div>
-                  <div className="mx-auto w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <Zap className="text-green-600" size={20} />
-                  </div>
-                  <p className="mt-2 text-[10px] leading-tight font-bold">Faster &</p>
-                  <p className="text-[10px] leading-tight font-bold">Smooth Checkout</p>
-                </div>
-                <div>
-                  <div className="mx-auto w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <Bell className="text-green-600" size={20} />
-                  </div>
-                  <p className="mt-2 text-[10px] leading-tight font-bold">Early Access to</p>
-                  <p className="text-[10px] leading-tight font-bold">Deals & Offers</p>
-                </div>
-              </div>
-
-              {/* Discount Box */}
-              <div className="w-full rounded-2xl py-3 border-2 border-dashed border-green-400 text-center mb-5">
-                <p className="text-[13px] font-black text-gray-900 uppercase tracking-wide">Download Now & Get</p>
-                <p className="text-[34px] leading-none font-black text-green-600 uppercase my-1">10% Off</p>
-                <p className="text-[14px] font-extrabold text-gray-900 uppercase leading-none">On Your First App Order!</p>
-                <p className="text-[9px] text-gray-500 mt-1.5">*T&C Apply</p>
-              </div>
-
-              {/* App Store Buttons */}
-              <div className="flex items-center justify-center gap-2 w-full mb-2">
-                <a
-                  href="https://play.google.com/store/apps/details?id=ae.grabatoz1.grabatoz1"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center transition-transform hover:scale-[1.02]"
-                >
-                  <img src="/getitongoogle.png" alt="Google Play" className="h-10 w-auto object-contain" />
-                </a>
-                <a
-                  href="https://apps.apple.com/pk/app/graba2z/id6742447046"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center transition-transform hover:scale-[1.02]"
-                >
-                  <img src="/getitonappstore.png" alt="App Store" className="h-12 w-auto object-contain" />
-                </a>
-              </div>
-
-              {/* Footer text */}
-              <div className="flex items-center gap-1.5 self-start text-[11px] text-gray-400 mt-1">
-                
-              </div>
-            </div>
-          </div>
-          )}
-        </div>
-      )}
+      <PromoPopup pageKey="home" delayMs={3000} />
       {/* Notification/Newsletter Popup */}
       {showNotifPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">

@@ -36,7 +36,6 @@ import {
   UserCog,
   Languages,
   Unlock,
-  Smartphone,
 } from "lucide-react"
 
 const SEO_UNLOCK_TOKEN_KEY = "seoUnlockToken"
@@ -66,7 +65,6 @@ const AdminSidebar = () => {
     subcategories3: false,
     subcategories4: false,
     coupons: false,
-    appDiscounts: false,
     reviews: false,
     series: false,
     models: false,
@@ -165,11 +163,8 @@ const AdminSidebar = () => {
     }
 
     // Coupons dropdown - open if any coupon-related route is active
-    if (path.includes("/admin/coupons")) {
+    if (path.includes("/admin/coupons") || path.includes("/admin/app-discount-settings")) {
       newOpenDropdowns.coupons = true
-    }
-    if (path.includes("/admin/app-discounts")) {
-      newOpenDropdowns.appDiscounts = true
     }
 
     // Reviews dropdown - open if any review-related route is active
@@ -644,14 +639,11 @@ const AdminSidebar = () => {
       icon: Percent,
       dropdown: "coupons",
       permission: "coupons",
-      items: [{ title: "All Coupons", path: "/admin/coupons/all" }],
-    },
-    {
-      title: "App Discounts",
-      icon: Smartphone,
-      dropdown: "appDiscounts",
-      permission: "appDiscounts",
-      items: [{ title: "Manage App Discounts", path: "/admin/app-discounts" }],
+      items: [
+        { title: "All Coupons", path: "/admin/coupons/all" },
+        { title: "App Discount Settings", path: "/admin/app-discount-settings" },
+        { title: "Popup Settings", path: "/admin/app-discount-settings/popup-settings" },
+      ],
     },
     {
       title: "SEO Settings",
