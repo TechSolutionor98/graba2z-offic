@@ -281,13 +281,13 @@ const OfferPage = () => {
         soldBy: filterValidOptions(soldByRes?.data, "soldBy"),
       })
 
-      // Extract unique categories from products for slider (instead of using offer-categories API)
-      const uniqueCategoriesMap = new Map()
+      // Extract unique categories from products for sidebar (parent categories)
+      const uniqueSidebarCategoriesMap = new Map()
       enrichedProducts.forEach(({ product }) => {
         const category = product.category
         if (category && typeof category === 'object' && category._id && category.name) {
-          if (!uniqueCategoriesMap.has(category._id)) {
-            uniqueCategoriesMap.set(category._id, { 
+          if (!uniqueSidebarCategoriesMap.has(category._id)) {
+            uniqueSidebarCategoriesMap.set(category._id, { 
               category: category, 
               isActive: true, 
               _id: category._id 
@@ -295,8 +295,38 @@ const OfferPage = () => {
           }
         }
       })
-      const categoriesFromProducts = Array.from(uniqueCategoriesMap.values())
-      setSliderCategories(categoriesFromProducts)
+      const sidebarCategoriesList = Array.from(uniqueSidebarCategoriesMap.values())
+
+      // Extract unique deepest subcategories from products for the top slider
+      const uniqueSliderCategoriesMap = new Map()
+      enrichedProducts.forEach(({ product }) => {
+        let deepestCategory = null
+        const candidates = [
+          product.subcategory4,
+          product.subcategory3,
+          product.subcategory2,
+          product.subcategory,
+          product.category
+        ]
+        for (const cat of candidates) {
+          if (cat && typeof cat === 'object' && cat._id && cat.name) {
+            deepestCategory = cat
+            break
+          }
+        }
+        if (deepestCategory) {
+          if (!uniqueSliderCategoriesMap.has(deepestCategory._id)) {
+            uniqueSliderCategoriesMap.set(deepestCategory._id, { 
+              category: deepestCategory, 
+              isActive: true, 
+              _id: deepestCategory._id 
+            })
+          }
+        }
+      })
+      const sliderCategoriesList = Array.from(uniqueSliderCategoriesMap.values())
+
+      setSliderCategories(sliderCategoriesList)
 
       // Build the filter and slider brands directly from the offer products payload.
       const uniqueBrandsMap = new Map()
@@ -316,8 +346,8 @@ const OfferPage = () => {
       setBrands(normalizedBrands)
       setSliderBrands(normalizedBrands)
 
-      // Use the same categories from products for sidebar
-      setCategories(categoriesFromProducts)
+      // Use parent categories for sidebar hierarchy
+      setCategories(sidebarCategoriesList)
 
       // Keep subcategory tree empty here so the current category UI remains unchanged.
       setAllSubcategories([])
