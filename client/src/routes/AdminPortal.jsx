@@ -71,6 +71,7 @@ import AllCoupons from "../pages/admin/AllCoupons"
 import AppDiscountSettings from "../pages/admin/AppDiscountSettings"
 import AppDiscountForm from "../pages/admin/AppDiscountForm"
 import PopupSettings from "../pages/admin/PopupSettings"
+import PopupForm from "../pages/admin/PopupForm"
 import BlogBrands from "../pages/admin/BlogBrands"
 import BlogCategories from "../pages/admin/BlogCategories"
 import BlogDashboard from "../pages/admin/BlogDashboard"
@@ -234,6 +235,8 @@ const AdminPortal = () => {
             <Route path="app-discount-settings/add" element={<AppDiscountForm />} />
             <Route path="app-discount-settings/edit/:id" element={<AppDiscountForm />} />
             <Route path="app-discount-settings/popup-settings" element={<PopupSettings />} />
+            <Route path="app-discount-settings/popup-settings/add" element={<PopupForm />} />
+            <Route path="app-discount-settings/popup-settings/edit/:id" element={<PopupForm />} />
             <Route path="banners" element={<AdminBanners />} />
             <Route path="banner-cards" element={<AdminBannerCards />} />
             <Route path="banner-cards/add" element={<AddBannerCard />} />

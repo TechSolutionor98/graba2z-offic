@@ -4,6 +4,7 @@ import { Trash2, Heart } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { useLanguage } from "../context/LanguageContext"
 import TranslatedText from "../components/TranslatedText"
+import PromoPopup from "../components/PromoPopup"
 
 const Wishlist = () => {
   const { wishlist, removeFromWishlist, loading } = useWishlist()
@@ -107,6 +108,7 @@ const Wishlist = () => {
           ))}
         </div>
       )}
+      <PromoPopup pageKey="wishlist" delayMs={3000} />
     </div>
   )
 }

@@ -71,6 +71,7 @@ const AdminProducts = () => {
   const PRODUCTS_PER_PAGE = 20
   const { showToast } = useToast()
   const [justEditedId, setJustEditedId] = useState(null)
+  const [copiedSkuId, setCopiedSkuId] = useState(null)
   const [highlightTimer, setHighlightTimer] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [selectAllMode, setSelectAllMode] = useState(false) // Track if "select all" is active
@@ -2160,8 +2161,34 @@ const AdminProducts = () => {
                                 )}
                                 {isColumnVisible('sku') && (
                                 <td className="px-1 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-900 truncate" title={product.sku || 'N/A'}>
-                                    {(product.sku || 'N/A').substring(0, 10)}{(product.sku || 'N/A').length > 10 ? '...' : ''}
+                                  <div className="flex flex-col items-start gap-1">
+                                    {product.sku ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(product.sku)
+                                          setCopiedSkuId(product._id)
+                                          setTimeout(() => setCopiedSkuId(null), 1500)
+                                        }}
+                                        className="inline-flex items-center gap-1 text-[9px] font-bold text-gray-500 hover:text-lime-600 transition-colors uppercase bg-gray-100 hover:bg-lime-50 border border-gray-200 hover:border-lime-200 px-1 py-0.5 rounded shadow-xs"
+                                        title="Copy SKU to clipboard"
+                                      >
+                                        {copiedSkuId === product._id ? (
+                                          <>
+                                            <Check size={9} className="text-green-600" />
+                                            <span className="text-green-600">Copied!</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Copy size={9} />
+                                            <span>Copy</span>
+                                          </>
+                                        )}
+                                      </button>
+                                    ) : null}
+                                    <div className="text-xs text-gray-900 truncate font-mono" title={product.sku || 'N/A'}>
+                                      {(product.sku || 'N/A').substring(0, 10)}{(product.sku || 'N/A').length > 10 ? '...' : ''}
+                                    </div>
                                   </div>
                                 </td>
                                 )}

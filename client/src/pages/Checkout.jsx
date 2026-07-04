@@ -2208,6 +2208,7 @@ const Checkout = () => {
             </div>
           </div>
         </Dialog>
+        <PromoPopup pageKey="checkout" delayMs={3000} />
       </div>
     </div>
   )

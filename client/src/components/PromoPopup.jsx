@@ -42,12 +42,36 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
     return () => window.removeEventListener("resize", check)
   }, [])
 
+  const checkIsApp = () => {
+    const params = new URLSearchParams(window.location.search)
+    if (
+      params.get("platform") === "app" ||
+      params.get("isApp") === "true" ||
+      params.get("source") === "app"
+    ) {
+      localStorage.setItem("isAppUser", "true")
+      return true
+    }
+    if (localStorage.getItem("isAppUser") === "true") {
+      return true
+    }
+    if (window.ReactNativeWebView || window.webkit?.messageHandlers?.firebase) {
+      return true
+    }
+    const ua = navigator.userAgent.toLowerCase()
+    if (ua.includes("wv") || ua.includes("webview") || ua.includes("graba2z")) {
+      return true
+    }
+    return false
+  }
+
   // Fetch settings
   useEffect(() => {
     let cancelled = false
+    const platform = checkIsApp() ? "app" : "web"
 
     axios
-      .get(`${config.API_URL}/api/popup-settings`)
+      .get(`${config.API_URL}/api/popup-settings`, { params: { pageKey, platform } })
       .then(({ data }) => {
         if (cancelled) return
         if (
