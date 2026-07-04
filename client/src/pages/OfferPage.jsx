@@ -2500,7 +2500,7 @@ const OfferPage = () => {
                             <div className="flex-1 flex items-center justify-center w-full mb-2">
                               {displayImage ? (
                                 <img
-                                  src={displayImage}
+                                  src={getFullImageUrl(displayImage)}
                                   alt={displayName}
                                   className="max-h-16 max-w-full object-contain"
                                 />
