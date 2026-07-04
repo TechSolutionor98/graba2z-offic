@@ -120,7 +120,7 @@ const OfferPage = () => {
   const [selectedMakes, setSelectedMakes] = useState([])
   const [selectedManufacturers, setSelectedManufacturers] = useState([])
   const [selectedSoldBy, setSelectedSoldBy] = useState([])
-  const [stockFilters, setStockFilters] = useState({ inStock: false, outOfStock: false })
+  const [stockFilters, setStockFilters] = useState({ inStock: true, outOfStock: false })
   const [brandSearch, setBrandSearch] = useState("")
   const [sortBy, setSortBy] = useState("newest")
   const [showPriceFilter, setShowPriceFilter] = useState(true)
@@ -589,7 +589,7 @@ const OfferPage = () => {
     setSubCategory3Name(null)
     setSubCategory4Name(null)
     resetPriceFilter()
-    setStockFilters({ inStock: false, outOfStock: false })
+    setStockFilters({ inStock: true, outOfStock: false })
     setBrandSearch("")
   }
 
