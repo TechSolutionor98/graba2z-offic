@@ -15,6 +15,7 @@ import { createMetaDescription, generateSEOTitle } from "../utils/seoHelpers"
 import { getFullImageUrl } from "../utils/imageUtils"
 import TranslatedText from "../components/TranslatedText"
 import { preloadTranslations } from "../LanguageModel/translationService"
+import PromoPopup from "../components/PromoPopup"
 
 import config from "../config/config"
 import "rc-slider/assets/index.css"
@@ -3925,6 +3926,7 @@ const Shop = () => {
           </div>
         )}
       </div>
+      <PromoPopup pageKey="shop" delayMs={3000} />
     </div>
   )
 }

@@ -49,6 +49,7 @@ const EMPTY_SETTINGS = {
   googlePlayLink: "https://play.google.com/store/apps/details?id=ae.grabatoz1.grabatoz1",
   appStoreLink: "https://apps.apple.com/pk/app/graba2z/id6742447046",
   continueButtonText: "Continue to Website",
+  showLimit: "once",
 }
 
 const inputClass =
@@ -118,6 +119,7 @@ const PopupSettings = () => {
           googlePlayLink: data.googlePlayLink || EMPTY_SETTINGS.googlePlayLink,
           appStoreLink: data.appStoreLink || EMPTY_SETTINGS.appStoreLink,
           continueButtonText: data.continueButtonText || EMPTY_SETTINGS.continueButtonText,
+          showLimit: data.showLimit || "once",
         })
       } catch {
         setError("Failed to load popup settings.")
@@ -203,6 +205,7 @@ const PopupSettings = () => {
         googlePlayLink: data.googlePlayLink || EMPTY_SETTINGS.googlePlayLink,
         appStoreLink: data.appStoreLink || EMPTY_SETTINGS.appStoreLink,
         continueButtonText: data.continueButtonText || EMPTY_SETTINGS.continueButtonText,
+        showLimit: data.showLimit || "once",
       })
 
       // Clear the file state — preview now comes from the saved URL
@@ -557,6 +560,44 @@ const PopupSettings = () => {
                         </button>
                       )
                     })}
+                  </div>
+                </div>
+
+                {/* Display Frequency */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <h2 className="text-base font-semibold text-gray-800 mb-3">Popup Frequency</h2>
+                  <p className="text-xs text-gray-400 mb-3">
+                    Determine how often the popup appears for a user.
+                  </p>
+                  <div className="space-y-3">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="showLimit"
+                        value="once"
+                        checked={settings.showLimit === "once" || !settings.showLimit}
+                        onChange={() => setSettings((p) => ({ ...p, showLimit: "once" }))}
+                        className="mt-1 h-4 w-4 text-lime-500 focus:ring-lime-400"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-800">Once per session</span>
+                        <p className="text-xs text-gray-400 mt-0.5">Recommended. Shows once, then remains hidden during their visit.</p>
+                      </div>
+                    </label>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="showLimit"
+                        value="always"
+                        checked={settings.showLimit === "always"}
+                        onChange={() => setSettings((p) => ({ ...p, showLimit: "always" }))}
+                        className="mt-1 h-4 w-4 text-lime-500 focus:ring-lime-400"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-800">Show on every visit</span>
+                        <p className="text-xs text-gray-400 mt-0.5">Forces the popup to display on every single page load or tab visit.</p>
+                      </div>
+                    </label>
                   </div>
                 </div>
 

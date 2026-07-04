@@ -8,6 +8,7 @@ import { useEffect, useState, useMemo } from "react"
 import axios from "axios"
 import { getFullImageUrl } from "../utils/imageUtils"
 import TranslatedText from "../components/TranslatedText"
+import PromoPopup from "../components/PromoPopup"
 
 import config from "../config/config"
 
@@ -915,6 +916,7 @@ const Cart = () => {
           </div>
         </div>
       )}
+      <PromoPopup pageKey="cart" delayMs={3000} />
     </div>
   )
 }

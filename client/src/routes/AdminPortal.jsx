@@ -69,6 +69,7 @@ import AdminVolumes from "../pages/admin/AdminVolumes"
 import AdminWarranty from "../pages/admin/AdminWarranty"
 import AllCoupons from "../pages/admin/AllCoupons"
 import AppDiscountSettings from "../pages/admin/AppDiscountSettings"
+import AppDiscountForm from "../pages/admin/AppDiscountForm"
 import PopupSettings from "../pages/admin/PopupSettings"
 import BlogBrands from "../pages/admin/BlogBrands"
 import BlogCategories from "../pages/admin/BlogCategories"
@@ -230,6 +231,8 @@ const AdminPortal = () => {
             <Route path="coupons" element={<AllCoupons />} />
             <Route path="coupons/all" element={<AllCoupons />} />
             <Route path="app-discount-settings" element={<AppDiscountSettings />} />
+            <Route path="app-discount-settings/add" element={<AppDiscountForm />} />
+            <Route path="app-discount-settings/edit/:id" element={<AppDiscountForm />} />
             <Route path="app-discount-settings/popup-settings" element={<PopupSettings />} />
             <Route path="banners" element={<AdminBanners />} />
             <Route path="banner-cards" element={<AdminBannerCards />} />

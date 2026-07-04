@@ -14,6 +14,7 @@ import { Fragment } from "react"
 import { getFullImageUrl } from "../utils/imageUtils"
 import TranslatedText from "../components/TranslatedText"
 import PhoneInput from 'react-phone-number-input'
+import PromoPopup from "../components/PromoPopup"
 import 'react-phone-number-input/style.css'
 import '../styles/phoneInput.css'
 

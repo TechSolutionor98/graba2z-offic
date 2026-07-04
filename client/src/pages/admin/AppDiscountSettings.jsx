@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
 import {
@@ -13,47 +13,20 @@ import {
   Calendar,
   Eye,
   EyeOff,
-  X,
 } from "lucide-react"
-import Select from "react-select"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import config from "../../config/config"
-
-const DEFAULT_COUPON_FORM = {
-  code: "",
-  description: "",
-  discountType: "percentage",
-  discountValue: "",
-  categories: [],
-  minOrderAmount: "",
-  maxDiscountAmount: "",
-  usageLimit: "",
-  validFrom: "",
-  validUntil: "",
-  isActive: true,
-  visibility: "public",
-}
 
 const AppDiscountSettings = () => {
   const navigate = useNavigate()
 
-  // App Discounts list state
   const [discounts, setDiscounts] = useState([])
-  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState("all")
 
-  // Coupon (Add Discount) modal state
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [editingCoupon, setEditingCoupon] = useState(null)
-  const [formData, setFormData] = useState(DEFAULT_COUPON_FORM)
-  const [formError, setFormError] = useState(null)
-  const [formLoading, setFormLoading] = useState(false)
-
   const token = localStorage.getItem("adminToken")
 
-  // ── Data fetching ────────────────────────────────────────────────────────────
   const fetchDiscounts = async () => {
     try {
       const { data } = await axios.get(`${config.API_URL}/api/app-discounts/admin`, {
@@ -65,93 +38,19 @@ const AppDiscountSettings = () => {
     }
   }
 
-  const fetchCategories = async () => {
-    try {
-      const { data } = await axios.get(`${config.API_URL}/api/categories`)
-      setCategories(Array.isArray(data) ? data : [])
-    } catch {
-      console.error("Failed to load categories")
-    }
-  }
-
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      await Promise.all([fetchDiscounts(), fetchCategories()])
+      await fetchDiscounts()
       setLoading(false)
     }
     load()
-  }, [])
-
-  // ── Coupon form handlers ─────────────────────────────────────────────────────
-  const resetCouponForm = () => {
-    setFormData(DEFAULT_COUPON_FORM)
-    setEditingCoupon(null)
-    setFormError(null)
-  }
-
-  const handleOpenAddModal = () => {
-    resetCouponForm()
-    setShowAddModal(true)
-  }
-
-  const handleEditDiscount = (item) => {
-    setEditingCoupon(item)
-    setFormData({
-      code: item.code || "",
-      description: item.description || "",
-      discountType: item.discountType || "percentage",
-      discountValue: item.discountValue?.toString() || "",
-      categories: item.categories ? item.categories.map((c) => c._id || c) : [],
-      minOrderAmount: item.minOrderAmount?.toString() || "",
-      maxDiscountAmount: item.maxDiscountAmount?.toString() || "",
-      usageLimit: item.usageLimit?.toString() || "",
-      validFrom: item.validFrom ? new Date(item.validFrom).toISOString().split("T")[0] : "",
-      validUntil: item.validUntil ? new Date(item.validUntil).toISOString().split("T")[0] : "",
-      isActive: item.isActive !== false,
-      visibility: item.visibility || "public",
-    })
-    setShowAddModal(true)
-  }
-
-  const handleCouponSubmit = async (e) => {
-    e.preventDefault()
-    setFormLoading(true)
-    setFormError(null)
-    try {
-      const payload = {
-        ...formData,
-        discountValue: parseFloat(formData.discountValue),
-        minOrderAmount: parseFloat(formData.minOrderAmount) || 0,
-        maxDiscountAmount: formData.maxDiscountAmount ? parseFloat(formData.maxDiscountAmount) : null,
-        usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
-        categories: formData.categories.includes("ALL") ? [] : formData.categories,
-      }
-
-      if (editingCoupon) {
-        await axios.put(`${config.API_URL}/api/coupons/${editingCoupon._id}`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-      } else {
-        await axios.post(`${config.API_URL}/api/coupons`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-      }
-
-      await fetchDiscounts()
-      setShowAddModal(false)
-      resetCouponForm()
-    } catch (err) {
-      setFormError(err.response?.data?.message || "Failed to save. Please try again.")
-    } finally {
-      setFormLoading(false)
-    }
-  }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDeleteDiscount = async (id) => {
-    if (!window.confirm("Delete this discount?")) return
+    if (!window.confirm("Are you sure you want to delete this app discount?")) return
     try {
-      await axios.delete(`${config.API_URL}/api/coupons/${id}`, {
+      await axios.delete(`${config.API_URL}/api/app-discounts/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       await fetchDiscounts()
@@ -160,9 +59,8 @@ const AppDiscountSettings = () => {
     }
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
   const getStatusBadge = (item) => {
-    const isExpired = item.validUntil && new Date(item.validUntil) < new Date()
+    const isExpired = item.endsAt && new Date(item.endsAt) < new Date()
     if (isExpired) {
       return (
         <span className="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
@@ -185,14 +83,13 @@ const AppDiscountSettings = () => {
   }
 
   const filteredDiscounts = discounts.filter((item) => {
-    const isExpired = item.validUntil && new Date(item.validUntil) < new Date()
+    const isExpired = item.endsAt && new Date(item.endsAt) < new Date()
     const isActive = item.isActive && !isExpired
     if (filter === "active") return isActive
     if (filter === "expired") return isExpired || !item.isActive
     return true
   })
 
-  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-100">
       <AdminSidebar />
@@ -220,7 +117,7 @@ const AppDiscountSettings = () => {
               Popup Settings
             </button>
             <button
-              onClick={handleOpenAddModal}
+              onClick={() => navigate("/admin/app-discount-settings/add")}
               className="flex items-center gap-2 px-4 py-2 rounded-md bg-lime-500 text-white font-medium hover:bg-lime-600 transition-colors shadow-sm"
             >
               <Plus size={16} />
@@ -264,13 +161,16 @@ const AppDiscountSettings = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Discount
+                      Coupon Code
                     </th>
                     <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Category
+                      Scope / Target
                     </th>
                     <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Value
+                      Rules Slabs
+                    </th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Eligibility
                     </th>
                     <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       Validity
@@ -293,11 +193,11 @@ const AppDiscountSettings = () => {
                               <Percent className="text-lime-600" size={16} />
                             </div>
                             <div>
-                              <div className="font-mono text-xs font-semibold bg-gray-100 px-2 py-0.5 rounded inline-block">
-                                {item.code || item.name}
+                              <div className="font-semibold text-gray-900 text-sm">
+                                {item.name}
                               </div>
                               {item.description && (
-                                <p className="text-gray-400 text-xs mt-0.5 truncate max-w-[220px]">
+                                <p className="text-gray-400 text-xs mt-0.5 truncate max-w-[200px]">
                                   {item.description}
                                 </p>
                               )}
@@ -305,40 +205,52 @@ const AppDiscountSettings = () => {
                           </div>
                         </td>
                         <td className="px-5 py-4">
-                          <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-50 text-purple-700 border border-purple-100">
-                            {!item.categories || item.categories.length === 0
-                              ? "All Categories"
-                              : item.categories.map((c) => c.name || c).join(", ")}
+                          <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-50 text-purple-700 border border-purple-100 font-mono">
+                            {item.appliesTo === "products"
+                              ? `${item.products?.length || 0} Products`
+                              : item.appliesTo === "categories"
+                              ? `${item.categories?.length || 0} Categories`
+                              : item.appliesTo === "subcategories"
+                              ? `${item.subcategories?.length || 0} Subcategories`
+                              : "All Products"}
                           </span>
                         </td>
-                        <td className="px-5 py-4 text-gray-800 font-medium">
-                          {item.discountType === "percentage"
-                            ? `${item.discountValue}%`
-                            : `AED ${Number(item.discountValue || 0).toFixed(2)}`}
-                          {item.minOrderAmount > 0 && (
-                            <p className="text-xs text-gray-400 font-normal">
-                              Min: AED {item.minOrderAmount}
-                            </p>
-                          )}
-                        </td>
-                        <td className="px-5 py-4 text-gray-500">
-                          {item.validFrom || item.startsAt ? (
-                            <div className="flex items-center gap-1 text-xs">
-                              <Calendar size={12} className="text-gray-400" />
-                              {new Date(item.validFrom || item.startsAt).toLocaleDateString()}
-                              {" – "}
-                              {new Date(item.validUntil || item.endsAt).toLocaleDateString()}
+                        <td className="px-5 py-4">
+                          {Array.isArray(item.rules) && item.rules.length > 0 ? (
+                            <div className="flex flex-col gap-1 max-w-xs">
+                              {item.rules.map((r, ri) => (
+                                <div key={ri} className="text-xs bg-gray-50 rounded px-2 py-0.5 border border-gray-100 font-mono">
+                                  AED {r.minCartAmount}-{r.maxCartAmount} → {r.discountType === "percentage" ? `${r.discountValue}%` : `AED ${r.discountValue}`}
+                                </div>
+                              ))}
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-400">—</span>
+                            <div className="text-xs font-mono text-gray-600 bg-gray-50 rounded px-2 py-0.5 border border-gray-100 inline-block">
+                              {item.discountType === "percentage"
+                                ? `${item.discountValue}%`
+                                : `AED ${item.discountValue}`}
+                              {item.minOrderAmount > 0 && ` (Min: AED ${item.minOrderAmount})`}
+                            </div>
                           )}
+                        </td>
+                        <td className="px-5 py-4 text-xs text-gray-700">
+                          <div>User: <span className="font-medium capitalize">{item.userEligibility || (item.onlyNewAppUsers ? "new" : "all")}</span></div>
+                          <div className="mt-0.5">Usage: <span className="font-medium capitalize">{item.usageLimitType || (item.singleUsePerUser ? "one-time" : "unlimited")}</span></div>
+                        </td>
+                        <td className="px-5 py-4 text-gray-500">
+                          <div className="flex items-center gap-1 text-xs">
+                            <Calendar size={12} className="text-gray-400" />
+                            {new Date(item.startsAt).toLocaleDateString()}
+                            {" – "}
+                            {new Date(item.endsAt).toLocaleDateString()}
+                          </div>
                         </td>
                         <td className="px-5 py-4">{getStatusBadge(item)}</td>
                         <td className="px-5 py-4 text-right">
                           <div className="flex justify-end gap-3">
                             <button
                               className="text-blue-500 hover:text-blue-700 transition-colors"
-                              onClick={() => handleEditDiscount(item)}
+                              onClick={() => navigate(`/admin/app-discount-settings/edit/${item._id}`)}
                               title="Edit"
                             >
                               <Edit size={16} />
@@ -356,11 +268,11 @@ const AppDiscountSettings = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="px-5 py-10 text-center text-gray-400 text-sm">
+                      <td colSpan={7} className="px-5 py-10 text-center text-gray-400 text-sm">
                         No app discounts found.{" "}
                         <button
                           className="text-lime-600 font-medium hover:underline"
-                          onClick={handleOpenAddModal}
+                          onClick={() => navigate("/admin/app-discount-settings/add")}
                         >
                           Add one now
                         </button>
@@ -373,247 +285,6 @@ const AppDiscountSettings = () => {
           </div>
         )}
       </div>
-
-      {/* ── Add / Edit Discount Modal ───────────────────────────────────────── */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h2 className="text-lg font-bold text-gray-900">
-                {editingCoupon ? "Edit Discount" : "Add Discount"}
-              </h2>
-              <button
-                onClick={() => { setShowAddModal(false); resetCouponForm() }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Modal Body — Reused Coupon Form */}
-            <form onSubmit={handleCouponSubmit} className="px-6 py-5 space-y-4">
-              {formError && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-md text-sm">
-                  {formError}
-                </div>
-              )}
-
-              {/* Code + Categories */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Coupon Code
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400 text-sm"
-                    placeholder="APPEXCLUSIVE10"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Categories
-                  </label>
-                  <Select
-                    isMulti
-                    options={[
-                      { value: "ALL", label: "All Categories" },
-                      ...categories.map((c) => ({ value: c._id, label: c.name })),
-                    ]}
-                    value={
-                      formData.categories.includes("ALL")
-                        ? [{ value: "ALL", label: "All Categories" }]
-                        : categories
-                            .filter((c) => formData.categories.includes(c._id))
-                            .map((c) => ({ value: c._id, label: c.name }))
-                    }
-                    onChange={(selected) => {
-                      if (!selected || selected.length === 0) {
-                        setFormData({ ...formData, categories: [] })
-                      } else if (selected.some((o) => o.value === "ALL")) {
-                        setFormData({ ...formData, categories: ["ALL"] })
-                      } else {
-                        setFormData({ ...formData, categories: selected.map((o) => o.value) })
-                      }
-                    }}
-                    placeholder="Select categories..."
-                    classNamePrefix="react-select"
-                  />
-                </div>
-              </div>
-
-              {/* Visibility */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
-                <div className="flex gap-6">
-                  {["public", "private"].map((v) => (
-                    <label key={v} className="inline-flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="visibility"
-                        value={v}
-                        checked={formData.visibility === v}
-                        onChange={() => setFormData({ ...formData, visibility: v })}
-                        className="h-4 w-4 text-lime-500"
-                      />
-                      <span className="ml-2 text-sm capitalize">{v}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400 text-sm"
-                  placeholder="Describe the discount offer"
-                  required
-                />
-              </div>
-
-              {/* Type + Value + Min Order */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
-                  <select
-                    value={formData.discountType}
-                    onChange={(e) => setFormData({ ...formData, discountType: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400 text-sm"
-                  >
-                    <option value="percentage">Percentage</option>
-                    <option value="fixed">Fixed Amount</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Discount Value</label>
-                  <input
-                    type="number"
-                    value={formData.discountValue}
-                    onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400 text-sm"
-                    placeholder={formData.discountType === "percentage" ? "10" : "50"}
-                    min="0"
-                    step={formData.discountType === "percentage" ? "1" : "0.01"}
-                    required
-                  />
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {formData.discountType === "percentage" ? "%" : "AED"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Min Order (AED)</label>
-                  <input
-                    type="number"
-                    value={formData.minOrderAmount}
-                    onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400 text-sm"
-                    placeholder="0"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-
-              {/* Max Discount + Usage Limit */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {formData.discountType === "percentage" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Max Discount (AED, optional)
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.maxDiscountAmount}
-                      onChange={(e) => setFormData({ ...formData, maxDiscountAmount: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400 text-sm"
-                      placeholder="500"
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                )}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Usage Limit (optional)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.usageLimit}
-                    onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400 text-sm"
-                    placeholder="100"
-                    min="1"
-                  />
-                </div>
-              </div>
-
-              {/* Valid From / Until */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Valid From</label>
-                  <input
-                    type="date"
-                    value={formData.validFrom}
-                    onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400 text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Valid Until</label>
-                  <input
-                    type="date"
-                    value={formData.validUntil}
-                    onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-400 text-sm"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Active toggle */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="h-4 w-4 rounded text-lime-500"
-                />
-                <label htmlFor="isActive" className="text-sm text-gray-700">
-                  Active
-                </label>
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-3 pt-2 border-t">
-                <button
-                  type="button"
-                  onClick={() => { setShowAddModal(false); resetCouponForm() }}
-                  className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={formLoading}
-                  className="px-4 py-2 text-sm bg-lime-500 text-white rounded-md hover:bg-lime-600 disabled:opacity-50 font-medium"
-                >
-                  {formLoading ? "Saving..." : editingCoupon ? "Update Discount" : "Create Discount"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

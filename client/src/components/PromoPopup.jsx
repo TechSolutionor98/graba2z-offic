@@ -44,7 +44,6 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
 
   // Fetch settings
   useEffect(() => {
-    if (sessionStorage.getItem(storageKey)) return
     let cancelled = false
 
     axios
@@ -62,14 +61,22 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
       .catch(() => {})
 
     return () => { cancelled = true }
-  }, [pageKey, storageKey])
+  }, [pageKey])
 
   // Show after delay
   useEffect(() => {
     if (!settings) return
+
+    const isDismissed = sessionStorage.getItem(storageKey)
+    const showLimit = settings.showLimit || "once"
+
+    if (isDismissed && showLimit !== "always") {
+      return
+    }
+
     const timer = setTimeout(() => setVisible(true), delayMs)
     return () => clearTimeout(timer)
-  }, [settings, delayMs])
+  }, [settings, delayMs, storageKey])
 
   const handleClose = () => {
     setVisible(false)

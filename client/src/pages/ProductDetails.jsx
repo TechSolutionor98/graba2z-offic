@@ -40,6 +40,7 @@ import config from "../config/config"
 import ProductSchema from "../components/ProductSchema"
 import ReviewSection from "../components/ReviewSection"
 import { useLanguage } from "../context/LanguageContext"
+import PromoPopup from "../components/PromoPopup"
 
 import TabbyModal from "../components/payments/TabbyModal"
 import TamaraModal from "../components/payments/TamaraModal"
@@ -4616,6 +4617,7 @@ const ProductDetails = () => {
 
       {showTamaraModal && <TamaraModal amount={getEffectivePrice()} onClose={() => setShowTamaraModal(false)} />}
       {showTabbyModal && <TabbyModal amount={getEffectivePrice()} onClose={() => setShowTabbyModal(false)} />}
+      <PromoPopup pageKey="product" delayMs={3000} />
     </div>
   )
 }
