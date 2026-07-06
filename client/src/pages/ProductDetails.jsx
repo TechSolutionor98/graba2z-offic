@@ -895,7 +895,8 @@ const ProductDetails = () => {
     }
     
     // Add main product to cart
-    addToCart(productToAdd, quantity)
+    const qtyToUse = (quantity === "" || isNaN(quantity) || quantity < 1) ? 1 : quantity
+    addToCart(productToAdd, qtyToUse)
     
     // Add selected protections to cart as separate items linked to the product
     if (selectedProtections.length > 0) {
@@ -923,11 +924,43 @@ const ProductDetails = () => {
 
   const handleQuantityChange = (delta) => {
     setQuantity((prev) => {
-      const newQuantity = prev + delta
+      const current = (prev === "" || isNaN(prev)) ? 1 : prev
+      const newQuantity = current + delta
       if (newQuantity < 1) return 1
       if (newQuantity > (product.maxPurchaseQty || 10)) return product.maxPurchaseQty || 10
       return newQuantity
     })
+  }
+
+  const handleQuantityInput = (e) => {
+    const valStr = e.target.value
+    if (valStr === "") {
+      setQuantity("")
+      return
+    }
+    const num = parseInt(valStr, 10)
+    if (isNaN(num)) return
+
+    const maxQty = product.maxPurchaseQty || 10
+    if (num < 1) {
+      setQuantity(1)
+    } else if (num > maxQty) {
+      setQuantity(maxQty)
+    } else {
+      setQuantity(num)
+    }
+  }
+
+  const handleQuantityBlur = () => {
+    if (quantity === "" || quantity < 1) {
+      setQuantity(1)
+    }
+  }
+
+  const handleQuantityKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.target.blur()
+    }
   }
 
   const handleImageClick = (index) => {
@@ -3447,17 +3480,24 @@ const ProductDetails = () => {
                     <button
                       onClick={() => handleQuantityChange(-1)}
                       className="px-3 py-2 text-gray-600 hover:text-red-600 transition-colors"
-                      disabled={quantity <= 1}
+                      disabled={quantity === "" || quantity <= 1}
                     >
                       <Minus size={16} />
                     </button>
-                    <span className="px-4 py-2 border-l border-r border-black min-w-[60px] text-center font-medium">
-                      {quantity}
-                    </span>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={handleQuantityInput}
+                      onBlur={handleQuantityBlur}
+                      onKeyDown={handleQuantityKeyDown}
+                      className="w-16 py-2 text-center font-medium border-l border-r border-black bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      min="1"
+                      max={product.maxPurchaseQty || 10}
+                    />
                     <button
                       onClick={() => handleQuantityChange(1)}
                       className="px-3 py-2 text-gray-600 hover:text-green-600  transition-colors"
-                      disabled={quantity >= (product.maxPurchaseQty || 10)}
+                      disabled={quantity !== "" && quantity >= (product.maxPurchaseQty || 10)}
                     >
                       <Plus size={16} />
                     </button>

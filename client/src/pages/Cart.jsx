@@ -12,6 +12,86 @@ import PromoPopup from "../components/PromoPopup"
 
 import config from "../config/config"
 
+const CartQuantityInput = ({ value, onChange, max }) => {
+  const [localVal, setLocalVal] = useState(value)
+
+  useEffect(() => {
+    setLocalVal(value)
+  }, [value])
+
+  const handleInputChange = (e) => {
+    const valStr = e.target.value
+    if (valStr === "") {
+      setLocalVal("")
+      return
+    }
+    const num = parseInt(valStr, 10)
+    if (isNaN(num)) return
+    
+    const finalNum = max ? Math.min(num, max) : num
+    setLocalVal(finalNum)
+    
+    if (finalNum >= 1) {
+      onChange(finalNum)
+    }
+  }
+
+  const handleBlur = () => {
+    if (localVal === "" || localVal < 1) {
+      setLocalVal(1)
+      onChange(1)
+    }
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.target.blur()
+    }
+  }
+
+  const handleDecrease = () => {
+    const newVal = Math.max(1, (typeof localVal === 'number' ? localVal : 1) - 1)
+    setLocalVal(newVal)
+    onChange(newVal)
+  }
+
+  const handleIncrease = () => {
+    const current = typeof localVal === 'number' ? localVal : 1
+    const newVal = max ? Math.min(max, current + 1) : current + 1
+    setLocalVal(newVal)
+    onChange(newVal)
+  }
+
+  return (
+    <div className="flex items-center border rounded-md w-max bg-white">
+      <button
+        onClick={handleDecrease}
+        className="px-3 py-1 text-gray-600 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={value <= 1}
+      >
+        <Minus size={16} />
+      </button>
+      <input
+        type="number"
+        value={localVal}
+        onChange={handleInputChange}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        className="w-12 py-1 text-center font-medium border-l border-r bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        min="1"
+        max={max}
+      />
+      <button
+        onClick={handleIncrease}
+        className="px-3 py-1 text-gray-600 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={max ? value >= max : false}
+      >
+        <Plus size={16} />
+      </button>
+    </div>
+  )
+}
+
 const Cart = () => {
   const {
     cartItems,
@@ -377,22 +457,11 @@ const Cart = () => {
           </div>
 
           <div className="flex flex-row items-center justify-between">
-            <div className="flex items-center border rounded-md w-max">
-              <button
-                onClick={() => handleQuantityChange(item._id, item.quantity - 1, bundleId)}
-                className="px-3 py-1 text-gray-600 hover:text-blue-600"
-                disabled={item.quantity === 1}
-              >
-                <Minus size={16} />
-              </button>
-              <span className="px-4 py-1 border-l border-r">{item.quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(item._id, item.quantity + 1, bundleId)}
-                className="px-3 py-1 text-gray-600 hover:text-blue-600"
-              >
-                <Plus size={16} />
-              </button>
-            </div>
+            <CartQuantityInput
+              value={item.quantity}
+              onChange={(newQty) => handleQuantityChange(item._id, newQty, bundleId)}
+              max={item.maxPurchaseQty}
+            />
             <div className="text-center">
               <p className="text-lg font-bold text-gray-900">
                 {formatPrice(itemTotal)}
@@ -479,22 +548,11 @@ const Cart = () => {
             </div>
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center border rounded-md">
-                <button
-                  onClick={() => handleQuantityChange(item._id, item.quantity - 1, bundleId)}
-                  className="px-3 py-1 text-gray-600 hover:text-blue-600"
-                  disabled={item.quantity === 1}
-                >
-                  <Minus size={16} />
-                </button>
-                <span className="px-4 py-1 border-l border-r">{item.quantity}</span>
-                <button
-                  onClick={() => handleQuantityChange(item._id, item.quantity + 1, bundleId)}
-                  className="px-3 py-1 text-gray-600 hover:text-blue-600"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
+              <CartQuantityInput
+                value={item.quantity}
+                onChange={(newQty) => handleQuantityChange(item._id, newQty, bundleId)}
+                max={item.maxPurchaseQty}
+              />
               <div className="text-right ml-4">
                 <p className="text-xl font-bold text-gray-900">
                   {formatPrice(itemTotal)}
