@@ -74,41 +74,41 @@ const STORES = [
 
 const PAYMENT_METHODS = [
   {
-    id: "tamara",
-    name: "",
-    description: "",
-    iconUrls: [
-      { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764221/tamara_card_lh6vev.webp", size: "big" },
-    ],
-    color: "",
-  },
-  {
-    id: "tabby",
-    name: "",
-    description: "",
-    iconUrls: [
-      { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764220/tabby_card_lpsmhh.webp", size: "big" },
-    ],
-    color: "",
-  },
-  {
     id: "card",
-    name: "",
-    description: "",
+    name: "Debit/Credit Card",
+    description: "You'll be redirected to Debit/Credit Card to complete your purchase.",
     iconUrls: [
       {
         src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764222/master_visa_card_q9zo4b.webp",
         size: "big",
       },
     ],
-    color: "", // Remove background color
+    color: "",
+  },
+  {
+    id: "tabby",
+    name: "Pay later with Tabby",
+    description: "You'll be redirected to Tabby to complete your purchase.",
+    iconUrls: [
+      { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764220/tabby_card_lpsmhh.webp", size: "big" },
+    ],
+    color: "",
+  },
+  {
+    id: "tamara",
+    name: "Tamara - Monthly payments. Sharia compliant",
+    description: "You'll be redirected to Tamara to complete your purchase.",
+    iconUrls: [
+      { src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764221/tamara_card_lh6vev.webp", size: "big" },
+    ],
+    color: "",
   },
   {
     id: "cod",
-    name: "",
-    description: "",
+    name: "Cash on Delivery (COD)",
+    description: "Pay with cash upon delivery.",
     iconUrls: [{ src: "https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757764221/cash_qk1cws.webp", size: "big" }],
-    color: "", // Remove background color
+    color: "",
   },
 ]
 
@@ -123,6 +123,57 @@ if (typeof document !== "undefined" && !document.getElementById("bounce-keyframe
   style.innerHTML = bounceKeyframes
   document.head.appendChild(style)
 }
+
+const renderPaymentLogos = (id) => {
+  switch (id) {
+    case "card":
+      return (
+        <div className="flex items-center gap-1.5">
+          {/* Visa */}
+          <div className="bg-[#0033a0] text-white px-2 py-0.5 rounded font-extrabold italic text-[9px] tracking-wider flex items-center justify-center h-5 w-10 select-none">
+            VISA
+          </div>
+          {/* Mastercard */}
+          <div className="bg-[#141414] px-1.5 py-0.5 rounded flex items-center justify-center h-5 w-10 select-none">
+            <svg width="20" height="12" viewBox="0 0 24 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="7" cy="7.5" r="7" fill="#EB001B"/>
+              <circle cx="17" cy="7.5" r="7" fill="#F79E1B" fill-opacity="0.8"/>
+            </svg>
+          </div>
+          {/* Samsung Pay */}
+          <div className="bg-white border border-gray-200 px-1 py-0.5 rounded flex flex-col items-center justify-center h-5 w-10 select-none leading-none">
+            <span className="text-[5px] font-black text-black tracking-tighter">SAMSUNG</span>
+            <span className="text-[4px] font-medium text-gray-500 tracking-tighter">Pay</span>
+          </div>
+          {/* UnionPay */}
+          <div className="bg-[#007989] rounded flex items-center justify-center h-5 w-10 select-none">
+            <svg width="22" height="12" viewBox="0 0 28 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 4H12L9 12H4V4Z" fill="#D0121B"/>
+              <path d="M11.5 4H18.5L15.5 12H11.5L11.5 4Z" fill="#002D62"/>
+              <path d="M18 4H24L21 12H15L18 4Z" fill="#0A5B9B"/>
+            </svg>
+          </div>
+        </div>
+      );
+    case "tabby":
+      return (
+        <div className="bg-[#39F3BB] text-[#040404] font-black px-2 py-0.5 rounded flex items-center justify-center h-5 w-11 text-[9px] tracking-tighter select-none">
+          tabby
+        </div>
+      );
+    case "tamara":
+      return (
+        <div className="bg-black text-white px-2 py-0.5 rounded flex items-center justify-center h-5 w-11 select-none">
+          <svg width="18" height="10" viewBox="0 0 20 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 5C7 7.2 5.2 9 3 9C0.8 9 0 7.2 0 5C0 2.8 2.2 1 4 1C6.2 1 7 2.8 7 5Z" fill="white"/>
+            <circle cx="14" cy="5" r="4" fill="white"/>
+          </svg>
+        </div>
+      );
+    default:
+      return null;
+  }
+};
 
 const Checkout = () => {
   const navigate = useNavigate()
@@ -1714,104 +1765,74 @@ const Checkout = () => {
                 <div>
                   <h3 className="font-bold text-lg mb-6"><TranslatedText>Payment Method</TranslatedText></h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
-                    {PAYMENT_METHODS.filter(method => allowedPaymentMethods.includes(method.id)).map((method) => (
-                      <div
-                        key={method.id}
-                        className={` rounded-lg p-4 cursor-pointer transition-all relative ${selectedPaymentMethod === method.id
-                            ? "border-lime-500 bg-lime-50"
-                            : "border-gray-200 hover:border-gray-300 bg-white"
+                  <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white mb-6">
+                    {PAYMENT_METHODS.filter(method => allowedPaymentMethods.includes(method.id)).map((method) => {
+                      const isSelected = selectedPaymentMethod === method.id;
+                      return (
+                        <div
+                          key={method.id}
+                          className={`transition-all duration-200 ${
+                            isSelected
+                              ? "border-2 border-blue-600 -mt-px -mx-px z-10 relative first:rounded-t-2xl last:rounded-b-2xl bg-white shadow-sm"
+                              : "border-b border-gray-200 last:border-b-0"
                           }`}
-                        onClick={() => handlePaymentMethodSelect(method.id)}
-                      >
-                        {/* Radio button positioned at top-left corner */}
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value={method.id}
-                          checked={selectedPaymentMethod === method.id}
-                          onChange={() => setSelectedPaymentMethod(method.id)}
-                          className="absolute top-20 left-16 accent-lime-500 w-4 h-4"
-                        />
+                        >
+                          {/* Header row */}
+                          <div
+                            className={`flex items-center justify-between p-4 cursor-pointer select-none ${
+                              isSelected ? "bg-[#f4f8ff]/50" : "hover:bg-gray-50/50"
+                            }`}
+                            onClick={() => handlePaymentMethodSelect(method.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              {/* Custom Radio Button */}
+                              <div className="flex items-center justify-center">
+                                {isSelected ? (
+                                  <div className="w-5 h-5 rounded-full border-2 border-blue-600 flex items-center justify-center bg-white">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                                  </div>
+                                ) : (
+                                  <div className="w-5 h-5 rounded-full border-2 border-gray-300 bg-white" />
+                                )}
+                              </div>
+                              <span className="font-semibold text-gray-900 text-sm sm:text-base">
+                                <TranslatedText>{method.name}</TranslatedText>
+                              </span>
+                            </div>
 
-                        {/* Image container centered */}
-                        <div className="flex items-center justify-center pt-2">
-                          <div className="flex gap-2 flex-wrap justify-center">
-                            {method.iconUrls.map((icon, idx) => (
-                              <img
-                                key={idx}
-                                src={icon.src || "/placeholder.svg"}
-                                alt={method.name}
-                                className={`w-60 h-48 md:w-60 md:h-36 object-contain rounded-lg transition-all ${selectedPaymentMethod === method.id ? " border-lime-500" : " border-gray-200"
-                                  }`}
-                              />
-                            ))}
+                            {/* Logos on right */}
+                            <div>
+                              {renderPaymentLogos(method.id)}
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
 
-                  {currentPaymentChargesData?.description && (
-                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Banknote className="h-5 w-5 text-blue-600" />
-                        <span className="font-semibold text-blue-800"><TranslatedText>{PAYMENT_METHODS.find(m => m.id === selectedPaymentMethod)?.name || "Payment Information"}</TranslatedText></span>
-                      </div>
-                      <p className="text-sm text-blue-700">
-                        <TranslatedText>{currentPaymentChargesData.description}</TranslatedText>
-                      </p>
-                      {currentPaymentChargesData?.charges?.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {currentPaymentChargesData.charges.map((charge, idx) => {
-                            let computedAmount = Number(charge.amount) || 0;
-                            if (charge.type === "percentage") {
-                              computedAmount = (cartTotals.totalOfferPrice + protectionTotal) * (computedAmount / 100);
-                            }
-                            return (
-                              <p key={idx} className="text-sm font-semibold text-blue-800" lang="en" dir="ltr">
-                                • {charge.name}: {charge.type === "percentage" ? `${charge.amount}% (${formatPrice(computedAmount)})` : formatPrice(charge.amount)}
+                          {/* Expandable redirect message */}
+                          {isSelected && (
+                            <div className="bg-gray-50 border-t border-gray-200 px-12 py-4">
+                              <p className="text-sm font-medium text-gray-700">
+                                <TranslatedText>{method.description}</TranslatedText>
                               </p>
-                            )
-                          })}
+                              {currentPaymentChargesData?.charges?.length > 0 && (
+                                <div className="mt-2 space-y-1">
+                                  {currentPaymentChargesData.charges.map((charge, idx) => {
+                                    let computedAmount = Number(charge.amount) || 0;
+                                    if (charge.type === "percentage") {
+                                      computedAmount = (cartTotals.totalOfferPrice + protectionTotal) * (computedAmount / 100);
+                                    }
+                                    return (
+                                      <p key={idx} className="text-xs font-semibold text-red-600" lang="en" dir="ltr">
+                                        • {charge.name}: {charge.type === "percentage" ? `${charge.amount}% (${formatPrice(computedAmount)})` : formatPrice(charge.amount)}
+                                      </p>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  )}
-
-                  {selectedPaymentMethod === "tamara" && (
-                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="h-5 w-5 text-blue-600" />
-                        <span className="font-semibold text-blue-800"><TranslatedText>Buy Now, Pay Later</TranslatedText></span>
-                      </div>
-                      <p className="text-sm text-blue-700">
-                        <TranslatedText>Split your purchase into 3 interest-free installments with Tamara.</TranslatedText>
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedPaymentMethod === "tabby" && (
-                    <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg mb-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="h-5 w-5 text-purple-600" />
-                        <span className="font-semibold text-purple-800"><TranslatedText>Split into 4 Payments</TranslatedText></span>
-                      </div>
-                      <p className="text-sm text-purple-700">
-                        <TranslatedText>Split your purchase into 4 interest-free installments with Tabby.</TranslatedText>
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedPaymentMethod === "card" && (
-                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="h-5 w-5 text-blue-600" />
-                        <span className="font-semibold text-blue-800"><TranslatedText>Card Payment</TranslatedText></span>
-                      </div>
-                      <p className="text-sm text-blue-700"><TranslatedText>Pay securely with your credit or debit card.</TranslatedText></p>
-                    </div>
-                  )}
+                      );
+                    })}
+                  </div>
 
                   <div className="flex gap-4">
                     <button
