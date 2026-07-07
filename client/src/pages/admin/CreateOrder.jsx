@@ -47,6 +47,7 @@ export default function CreateOrder() {
   const [shippingPrice, setShippingPrice] = useState(0)
   const [taxRate, setTaxRate] = useState(0)
   const [discountAmount, setDiscountAmount] = useState(0)
+  const [paymentMethod, setPaymentMethod] = useState("cod")
 
   // Custom line item
   const [customName, setCustomName] = useState("")
@@ -247,7 +248,8 @@ export default function CreateOrder() {
         taxPrice: Number(taxPrice.toFixed(2)),
         discountAmount: Number((Number(discountAmount) || 0).toFixed(2)),
         totalPrice: Number(totalPrice.toFixed(2)),
-        paymentMethod: "Cash on Delivery",
+        paymentMethod: paymentMethod === "tabby" ? "card" : paymentMethod,
+        actualPaymentMethod: paymentMethod,
         customerNotes: "",
         status: "New",
       }
@@ -619,6 +621,19 @@ export default function CreateOrder() {
                 min="0"
                 step="0.01"
               />
+            </div>
+            <div className="flex justify-between items-center py-1">
+              <span>Payment Method</span>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-40 border rounded px-2 py-1 text-right text-sm bg-white"
+              >
+                <option value="cod">Cash on Delivery (COD)</option>
+                <option value="card">Debit/Credit Card</option>
+                <option value="tabby">Tabby (Pay Later)</option>
+                <option value="tamara">Tamara (Split Payments)</option>
+              </select>
             </div>
             <div className="border-t pt-2 flex justify-between font-semibold">
               <span>Total</span>
