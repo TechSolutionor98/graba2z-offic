@@ -41,6 +41,7 @@ const AppDiscountForm = () => {
   const [selectedSubcategories, setSelectedSubcategories] = useState([])
   const [userEligibility, setUserEligibility] = useState("all") // "all" | "new"
   const [usageLimitType, setUsageLimitType] = useState("one-time") // "one-time" | "unlimited"
+  const [applicationMode, setApplicationMode] = useState("manual") // "manual" | "automatic"
   
   // Date-times
   const [startsAt, setStartsAt] = useState("")
@@ -146,6 +147,7 @@ const AppDiscountForm = () => {
         setAppliesTo(data.appliesTo || "all")
         setUserEligibility(data.userEligibility || (data.onlyNewAppUsers ? "new" : "all"))
         setUsageLimitType(data.usageLimitType || (data.singleUsePerUser ? "one-time" : "unlimited"))
+        setApplicationMode(data.applicationMode || "manual")
 
         if (data.startsAt) {
           setStartsAt(new Date(data.startsAt).toISOString().slice(0, 16))
@@ -332,6 +334,7 @@ const AppDiscountForm = () => {
         subcategories: appliesTo === "subcategories" ? selectedSubcategories.map((sc) => sc.value) : [],
         userEligibility,
         usageLimitType,
+        applicationMode,
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
         rules: formattedRules,
@@ -415,6 +418,42 @@ const AppDiscountForm = () => {
                 <p className="text-xs text-gray-400 mt-1">
                   This acts as the coupon code the user must type in the mobile app to get the discount (case-insensitive).
                 </p>
+              </div>
+
+              <div className="border-t pt-4">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  Discount Application Method
+                </label>
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="applicationMode"
+                      value="manual"
+                      checked={applicationMode === "manual"}
+                      onChange={() => setApplicationMode("manual")}
+                      className="mt-1 h-4 w-4 text-lime-500 focus:ring-lime-400"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-800">Enter Manually</span>
+                      <p className="text-xs text-gray-400 mt-0.5">User must manually enter the coupon code at checkout.</p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="applicationMode"
+                      value="automatic"
+                      checked={applicationMode === "automatic"}
+                      onChange={() => setApplicationMode("automatic")}
+                      className="mt-1 h-4 w-4 text-lime-500 focus:ring-lime-400"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-800">Apply Automatically</span>
+                      <p className="text-xs text-gray-400 mt-0.5">Discount is automatically applied on eligible pages/checkout.</p>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               <div className="flex items-center gap-2 pt-2">

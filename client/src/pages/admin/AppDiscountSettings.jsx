@@ -236,6 +236,7 @@ const AppDiscountSettings = () => {
                         <td className="px-5 py-4 text-xs text-gray-700">
                           <div>User: <span className="font-medium capitalize">{item.userEligibility || (item.onlyNewAppUsers ? "new" : "all")}</span></div>
                           <div className="mt-0.5">Usage: <span className="font-medium capitalize">{item.usageLimitType || (item.singleUsePerUser ? "one-time" : "unlimited")}</span></div>
+                          <div className="mt-0.5">Method: <span className="font-medium capitalize">{item.applicationMode || "manual"}</span></div>
                         </td>
                         <td className="px-5 py-4 text-gray-500">
                           <div className="flex items-center gap-1 text-xs">
