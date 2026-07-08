@@ -112,7 +112,7 @@ const StaticMobileHero = ({ getLocalizedPath }) => (
       <img
         src={MOBILE_STATIC_HERO.image}
         alt={MOBILE_STATIC_HERO.title}
-        fetchPriority="high"
+        fetchpriority="high"
         loading="eager"
         decoding="async"
         width="720"

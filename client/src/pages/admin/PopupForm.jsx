@@ -364,7 +364,7 @@ const PopupForm = () => {
                         {currentImageSrc ? "Change Image" : "Upload Image"}
                       </label>
                       <p className="mt-2 text-xs text-gray-400">
-                        Recommended: 660 × 480 px (portrait). Max 10 MB.{" "}
+                        Recommended: 500 × 600 px (portrait). Max 10 MB.{" "}
                         <span className="font-medium text-gray-500">WebP format only.</span>
                       </p>
                       {imageFile && (
@@ -420,7 +420,7 @@ const PopupForm = () => {
                         {currentMobileImageSrc ? "Change Image" : "Upload Image"}
                       </label>
                       <p className="mt-2 text-xs text-gray-400">
-                        Recommended: 600 × 300 px (landscape/banner). Max 10 MB.{" "}
+                        Recommended: 800 × 300 px (landscape/banner). Max 10 MB.{" "}
                         <span className="font-medium text-gray-500">WebP format only.</span>
                       </p>
                       {mobileImageFile && (

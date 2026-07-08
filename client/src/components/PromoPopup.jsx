@@ -121,7 +121,7 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
     ? settings.mobileImageUrl.startsWith("http")
       ? settings.mobileImageUrl
       : `${config.API_URL}${settings.mobileImageUrl}`
-    : leftImageSrc
+    : null
 
   // Split feature labels on \n for two-line display
   const features = [
