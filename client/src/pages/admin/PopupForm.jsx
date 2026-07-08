@@ -214,6 +214,9 @@ const PopupForm = () => {
       })
       if (imageFile) fd.append("leftImage", imageFile)
       if (mobileImageFile) fd.append("mobileImage", mobileImageFile)
+      
+      if (!settings.leftImageUrl && !imageFile) fd.append("removeLeftImage", "true")
+      if (!settings.mobileImageUrl && !mobileImageFile) fd.append("removeMobileImage", "true")
 
       const url = isEdit
         ? `${config.API_URL}/api/popup-settings/${id}`
@@ -356,13 +359,29 @@ const PopupForm = () => {
                         className="hidden"
                         id="left-image-input"
                       />
-                      <label
-                        htmlFor="left-image-input"
-                        className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                      >
-                        <Upload size={15} />
-                        {currentImageSrc ? "Change Image" : "Upload Image"}
-                      </label>
+                      <div className="flex gap-2">
+                        <label
+                          htmlFor="left-image-input"
+                          className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                        >
+                          <Upload size={15} />
+                          {currentImageSrc ? "Change Image" : "Upload Image"}
+                        </label>
+                        {currentImageSrc && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImageFile(null)
+                              setPreviewImage(null)
+                              setSettings(prev => ({ ...prev, leftImageUrl: "" }))
+                              if (fileInputRef.current) fileInputRef.current.value = ""
+                            }}
+                            className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
                       <p className="mt-2 text-xs text-gray-400">
                         Recommended: 500 × 600 px (portrait). Max 10 MB.{" "}
                         <span className="font-medium text-gray-500">WebP format only.</span>
@@ -412,13 +431,30 @@ const PopupForm = () => {
                         className="hidden"
                         id="mobile-image-input"
                       />
-                      <label
-                        htmlFor="mobile-image-input"
-                        className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                      >
-                        <Upload size={15} />
-                        {currentMobileImageSrc ? "Change Image" : "Upload Image"}
-                      </label>
+                      <div className="flex gap-2">
+                        <label
+                          htmlFor="mobile-image-input"
+                          className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                        >
+                          <Upload size={15} />
+                          {currentMobileImageSrc ? "Change Image" : "Upload Image"}
+                        </label>
+                        {currentMobileImageSrc && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMobileImageFile(null)
+                              setPreviewMobileImage(null)
+                              setSettings(prev => ({ ...prev, mobileImageUrl: "" }))
+                              const input = document.getElementById("mobile-image-input")
+                              if (input) input.value = ""
+                            }}
+                            className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 rounded-lg text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
                       <p className="mt-2 text-xs text-gray-400">
                         Recommended: 800 × 300 px (landscape/banner). Max 10 MB.{" "}
                         <span className="font-medium text-gray-500">WebP format only.</span>
