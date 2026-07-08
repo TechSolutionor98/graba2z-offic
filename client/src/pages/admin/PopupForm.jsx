@@ -39,6 +39,7 @@ const EMPTY_SETTINGS = {
   showLimit: "once",
   platforms: ["web", "app"],
   leftImageUrl: "",
+  mobileImageUrl: "",
   sectionTitle: "Why Download Our App?",
   feature1Label: "Exclusive\nApp Discounts",
   feature2Label: "Faster &\nSmooth Checkout",
@@ -92,6 +93,8 @@ const PopupForm = () => {
   // Separate state for image preview
   const [previewImage, setPreviewImage] = useState(null)
   const [imageFile, setImageFile] = useState(null)
+  const [previewMobileImage, setPreviewMobileImage] = useState(null)
+  const [mobileImageFile, setMobileImageFile] = useState(null)
 
   const token = localStorage.getItem("adminToken")
 
@@ -110,6 +113,7 @@ const PopupForm = () => {
           showOnPages: Array.isArray(data.showOnPages) ? data.showOnPages : ["home"],
           showLimit: data.showLimit || "once",
           leftImageUrl: data.leftImageUrl || "",
+          mobileImageUrl: data.mobileImageUrl || "",
           sectionTitle: data.sectionTitle || EMPTY_SETTINGS.sectionTitle,
           feature1Label: data.feature1Label || EMPTY_SETTINGS.feature1Label,
           feature2Label: data.feature2Label || EMPTY_SETTINGS.feature2Label,
@@ -169,12 +173,28 @@ const PopupForm = () => {
     setPreviewImage(objectUrl)
   }
 
+  const handleMobileImageSelect = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    if (!file.type.includes("webp") && !file.name.toLowerCase().endsWith(".webp")) {
+      alert("Only WebP images are accepted. Please select a .webp file.")
+      e.target.value = ""
+      return
+    }
+
+    setMobileImageFile(file)
+    const objectUrl = URL.createObjectURL(file)
+    setPreviewMobileImage(objectUrl)
+  }
+
   // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
       if (previewImage) URL.revokeObjectURL(previewImage)
+      if (previewMobileImage) URL.revokeObjectURL(previewMobileImage)
     }
-  }, [previewImage])
+  }, [previewImage, previewMobileImage])
 
   // ── Save ────────────────────────────────────────────────────────────────────
   const handleSave = async (e) => {
@@ -188,11 +208,12 @@ const PopupForm = () => {
       Object.entries(settings).forEach(([k, v]) => {
         if (k === "showOnPages") {
           fd.append(k, JSON.stringify(v))
-        } else if (k !== "leftImageUrl") {
+        } else if (k !== "leftImageUrl" && k !== "mobileImageUrl") {
           fd.append(k, String(v))
         }
       })
       if (imageFile) fd.append("leftImage", imageFile)
+      if (mobileImageFile) fd.append("mobileImage", mobileImageFile)
 
       const url = isEdit
         ? `${config.API_URL}/api/popup-settings/${id}`
@@ -226,6 +247,14 @@ const PopupForm = () => {
     ? settings.leftImageUrl.startsWith("http")
       ? settings.leftImageUrl
       : `${config.API_URL}${settings.leftImageUrl}`
+    : null
+
+  const currentMobileImageSrc = previewMobileImage
+    ? previewMobileImage
+    : settings.mobileImageUrl
+    ? settings.mobileImageUrl.startsWith("http")
+      ? settings.mobileImageUrl
+      : `${config.API_URL}${settings.mobileImageUrl}`
     : null
 
   return (
@@ -290,10 +319,10 @@ const PopupForm = () => {
                   </Field>
                 </Card>
 
-                {/* ── Banner Image ── */}
-                <Card title="Left Panel — Banner Image" icon={ImageIcon}>
+                {/* ── Desktop Banner Image ── */}
+                <Card title="Left Panel — Desktop Banner Image" icon={ImageIcon}>
                   <p className="text-xs text-gray-400 -mt-2">
-                    This is the full-bleed promotional image on the left side of the popup.{" "}
+                    This is the full-bleed promotional image on the left side of the popup for desktop view.{" "}
                     <strong className="text-gray-600">Only .webp files accepted.</strong>
                   </p>
 
@@ -341,6 +370,62 @@ const PopupForm = () => {
                       {imageFile && (
                         <p className="mt-1 text-xs text-lime-600 font-medium">
                           ✓ Selected: {imageFile.name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+
+                {/* ── Mobile Banner Image ── */}
+                <Card title="Mobile Banner Image" icon={ImageIcon}>
+                  <p className="text-xs text-gray-400 -mt-2">
+                    This is the promotional image displayed on mobile devices.{" "}
+                    <strong className="text-gray-600">Only .webp files accepted.</strong>
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-5 items-start">
+                    {/* Preview box */}
+                    <div className="w-full sm:w-56 h-36 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {currentMobileImageSrc ? (
+                        <img
+                          src={currentMobileImageSrc}
+                          alt="Mobile banner preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = "none"
+                          }}
+                        />
+                      ) : (
+                        <div className="text-center text-gray-400">
+                          <ImageIcon size={30} className="mx-auto mb-1 opacity-40" />
+                          <p className="text-xs">No image uploaded</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Upload controls */}
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept=".webp,image/webp"
+                        onChange={handleMobileImageSelect}
+                        className="hidden"
+                        id="mobile-image-input"
+                      />
+                      <label
+                        htmlFor="mobile-image-input"
+                        className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                      >
+                        <Upload size={15} />
+                        {currentMobileImageSrc ? "Change Image" : "Upload Image"}
+                      </label>
+                      <p className="mt-2 text-xs text-gray-400">
+                        Recommended: 600 × 300 px (landscape/banner). Max 10 MB.{" "}
+                        <span className="font-medium text-gray-500">WebP format only.</span>
+                      </p>
+                      {mobileImageFile && (
+                        <p className="mt-1 text-xs text-lime-600 font-medium">
+                          ✓ Selected: {mobileImageFile.name}
                         </p>
                       )}
                     </div>

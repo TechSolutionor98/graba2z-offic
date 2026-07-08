@@ -116,6 +116,13 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
       : `${config.API_URL}${settings.leftImageUrl}`
     : "/download-banner.png"
 
+  // Resolve the mobile image URL
+  const mobileImageSrc = settings.mobileImageUrl
+    ? settings.mobileImageUrl.startsWith("http")
+      ? settings.mobileImageUrl
+      : `${config.API_URL}${settings.mobileImageUrl}`
+    : leftImageSrc
+
   // Split feature labels on \n for two-line display
   const features = [
     settings.feature1Label || "Exclusive\nApp Discounts",
@@ -135,16 +142,14 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
         <X size={20} />
       </button>
 
-      {/* ── Left: Green image panel ─────────────────────────────────── */}
-      <div className="relative w-[48%] flex-shrink-0 overflow-hidden">
+      {/* ── Left: Image panel (50% width grid column) ─────────────────── */}
+      <div className="relative w-1/2 flex-shrink-0 overflow-hidden">
         <img
           src={leftImageSrc}
           alt="App promotion"
           className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
         />
-        {/* Diagonal white divider */}
-        <div className="hidden md:block absolute top-0 right-[-60px] w-[120px] h-full bg-white skew-x-[-8deg]" />
       </div>
 
       {/* ── Right: White content panel ──────────────────────────────── */}
@@ -228,9 +233,9 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
       </button>
 
       {/* Top image strip */}
-      {leftImageSrc && (
+      {mobileImageSrc && (
         <div className="w-full h-40 overflow-hidden">
-          <img src={leftImageSrc} alt="App promotion" className="w-full h-full object-cover object-top" />
+          <img src={mobileImageSrc} alt="App promotion" className="w-full h-full object-cover object-top" />
         </div>
       )}
 
