@@ -204,7 +204,7 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
           )}
           {settings.appStoreLink && (
             <a href={settings.appStoreLink} target="_blank" rel="noreferrer">
-              <img src="/getitonappstore.png" alt="App Store" className="h-13 w-auto" />
+              <img src="/getitonappstore.png" alt="App Store" className="h-[52px] w-auto" />
             </a>
           )}
         </div>
@@ -288,7 +288,7 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
           )}
           {settings.appStoreLink && (
             <a href={settings.appStoreLink} target="_blank" rel="noreferrer">
-              <img src="/getitonappstore.png" alt="App Store" className="h-11 w-auto" />
+              <img src="/getitonappstore.png" alt="App Store" className="h-[42px] w-auto" />
             </a>
           )}
         </div>
