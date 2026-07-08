@@ -331,7 +331,7 @@ const PopupForm = () => {
 
                   <div className="flex flex-col sm:flex-row gap-5 items-start">
                     {/* Preview box */}
-                    <div className="w-full sm:w-56 h-36 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-full sm:w-[200px] h-[240px] rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {currentImageSrc ? (
                         <img
                           src={currentImageSrc}
@@ -404,7 +404,7 @@ const PopupForm = () => {
 
                   <div className="flex flex-col sm:flex-row gap-5 items-start">
                     {/* Preview box */}
-                    <div className="w-full sm:w-56 h-36 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-full sm:w-[250px] h-[94px] rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {currentMobileImageSrc ? (
                         <img
                           src={currentMobileImageSrc}
