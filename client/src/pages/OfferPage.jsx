@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, Minus, Plus, X } from "lucide-r
 import Slider from "rc-slider"
 import "rc-slider/assets/index.css"
 import PriceFilter from "../components/PriceFilter"
+import PromoPopup from "../components/PromoPopup"
 
 const DEFAULT_PRICE_RANGE = [0, Number.POSITIVE_INFINITY]
 const PRICE_FILTER_MIN = 0
@@ -2661,6 +2662,7 @@ const OfferPage = () => {
           </div>
         </div>
       </div>
+      <PromoPopup pageKey="offer" delayMs={3000} />
     </>
   )
 }

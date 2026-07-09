@@ -26,6 +26,8 @@ import config from "../../config/config"
 const PAGE_OPTIONS = [
   { key: "home", label: "Home Page" },
   { key: "shop", label: "Shop Page" },
+  { key: "category", label: "Categories and Subcategories" },
+  { key: "offer", label: "Offer Page" },
   { key: "product", label: "Product Details Page" },
   { key: "cart", label: "Cart Page" },
   { key: "checkout", label: "Checkout Page" },

@@ -3926,7 +3926,15 @@ const Shop = () => {
           </div>
         )}
       </div>
-      <PromoPopup pageKey="shop" delayMs={3000} />
+      {(() => {
+        const pathSegments = location.pathname.split("/").filter(Boolean)
+        const hasLang = pathSegments[0] && /^[a-z]{2}-[a-z]{2}$/i.test(pathSegments[0])
+        const startIdx = hasLang ? 1 : 0
+        const pageName = pathSegments[startIdx]
+        const isCategoryPage = pageName === "product-category" || (pageName === "shop" && pathSegments.length > startIdx + 1)
+        const popupPageKey = isCategoryPage ? "category" : "shop"
+        return <PromoPopup pageKey={popupPageKey} delayMs={3000} />
+      })()}
     </div>
   )
 }
