@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
-import { Plus, Edit, Trash2, Percent, Calendar, Eye, EyeOff } from "lucide-react"
+import { Plus, Edit, Trash2, Percent, Calendar, Eye, EyeOff, ChevronUp, ChevronDown } from "lucide-react"
 import Select from 'react-select'
 
 import config from "../../config/config"
@@ -15,6 +15,33 @@ const AllCoupons = () => {
   const [showForm, setShowForm] = useState(false)
   const [editingCoupon, setEditingCoupon] = useState(null)
   const [filter, setFilter] = useState("all")
+  const [rules, setRules] = useState([])
+
+  const handleAddRule = () => {
+    setRules((prev) => [...prev, { minCartAmount: "", maxCartAmount: "", discountType: "percentage", discountValue: "" }])
+  }
+
+  const handleUpdateRule = (index, field, value) => {
+    setRules((prev) =>
+      prev.map((r, i) => (i === index ? { ...r, [field]: value } : r))
+    )
+  }
+
+  const handleDeleteRule = (index) => {
+    setRules((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleMoveRule = (index, direction) => {
+    const nextIndex = direction === "up" ? index - 1 : index + 1
+    if (nextIndex < 0 || nextIndex >= rules.length) return
+    setRules((prev) => {
+      const copy = [...prev]
+      const temp = copy[index]
+      copy[index] = copy[nextIndex]
+      copy[nextIndex] = temp
+      return copy
+    })
+  }
 
   const [formData, setFormData] = useState({
     code: "",
@@ -62,8 +89,62 @@ const AllCoupons = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError(null)
+
+    // Validate rules if any exist
+    if (rules.length > 0) {
+      const parsedRules = []
+      for (let i = 0; i < rules.length; i++) {
+        const r = rules[i]
+        const min = parseFloat(r.minCartAmount)
+        const max = parseFloat(r.maxCartAmount)
+        const val = parseFloat(r.discountValue)
+
+        if (Number.isNaN(min) || min < 0) {
+          setError(`Rule ${i + 1}: Minimum Cart Amount must be a valid number >= 0.`)
+          return
+        }
+        if (Number.isNaN(max) || max < min) {
+          setError(`Rule ${i + 1}: Maximum Cart Amount must be greater than or equal to Minimum Cart Amount (${min}).`)
+          return
+        }
+        if (Number.isNaN(val) || val < 0) {
+          setError(`Rule ${i + 1}: Discount value is required and must be >= 0.`)
+          return
+        }
+        if (r.discountType === "percentage" && val > 100) {
+          setError(`Rule ${i + 1}: Percentage discount cannot exceed 100%.`)
+          return
+        }
+        if (r.discountType === "fixed" && val > min) {
+          setError(`Rule ${i + 1}: Fixed discount amount (AED ${val}) cannot exceed the minimum cart amount (AED ${min}) for this slab.`)
+          return
+        }
+        parsedRules.push({ min, max, index: i })
+      }
+
+      // Check for range overlaps
+      parsedRules.sort((a, b) => a.min - b.min)
+      for (let i = 1; i < parsedRules.length; i++) {
+        const prev = parsedRules[i - 1]
+        const curr = parsedRules[i]
+        const prevRule = rules[prev.index]
+        if (curr.min <= prev.max) {
+          setError(`Overlapping ranges: Slab [AED ${prevRule.minCartAmount} - AED ${prevRule.maxCartAmount}] overlaps with Slab [AED ${rules[curr.index].minCartAmount} - AED ${rules[curr.index].maxCartAmount}].`)
+          return
+        }
+      }
+    }
+
     try {
       const token = localStorage.getItem("adminToken")
+      const formattedRules = rules.map((r) => ({
+        minCartAmount: parseFloat(r.minCartAmount),
+        maxCartAmount: parseFloat(r.maxCartAmount),
+        discountType: r.discountType,
+        discountValue: parseFloat(r.discountValue),
+      }))
+
       const couponData = {
         ...formData,
         discountValue: Number.parseFloat(formData.discountValue),
@@ -71,7 +152,8 @@ const AllCoupons = () => {
         maxDiscountAmount: formData.maxDiscountAmount ? Number.parseFloat(formData.maxDiscountAmount) : null,
         usageLimit: formData.usageLimit ? Number.parseInt(formData.usageLimit) : null,
         categories: formData.categories.includes("ALL") ? [] : formData.categories,
-        visibility: formData.visibility || "public", // <-- ensure this is sent
+        visibility: formData.visibility || "public",
+        rules: formattedRules,
       }
 
       if (editingCoupon) {
@@ -106,8 +188,9 @@ const AllCoupons = () => {
       validFrom: "",
       validUntil: "",
       isActive: true,
-      visibility: "public", // <-- add this line
+      visibility: "public",
     })
+    setRules([])
   }
 
   const handleEdit = (coupon) => {
@@ -124,8 +207,18 @@ const AllCoupons = () => {
       validFrom: new Date(coupon.validFrom).toISOString().split("T")[0],
       validUntil: new Date(coupon.validUntil).toISOString().split("T")[0],
       isActive: coupon.isActive,
-      visibility: coupon.visibility || "public", // <-- add this line
+      visibility: coupon.visibility || "public",
     })
+    setRules(
+      coupon.rules
+        ? coupon.rules.map((r) => ({
+            minCartAmount: String(r.minCartAmount),
+            maxCartAmount: String(r.maxCartAmount),
+            discountType: r.discountType,
+            discountValue: String(r.discountValue),
+          }))
+        : []
+    )
     setShowForm(true)
   }
 
@@ -412,6 +505,138 @@ const AllCoupons = () => {
                 </div>
               </div>
 
+              {/* Discount Slabs & Rules (Optional) */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                <div className="flex justify-between items-center border-b pb-3 mb-4">
+                  <div>
+                    <h3 className="text-base font-semibold text-gray-800">
+                      Discount Slabs & Rules (Optional)
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Define spending tiers. Ensure cart slab ranges are continuous and do not overlap. If no rules are added, the default Min Order Amount and Discount Value will be used.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddRule}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-lime-500 hover:bg-lime-600 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
+                  >
+                    <Plus size={14} />
+                    Add Rule Slab
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {rules.map((rule, index) => (
+                    <div
+                      key={index}
+                      className="p-4 border rounded-xl bg-gray-50/50 flex flex-col md:flex-row items-center gap-4 relative"
+                    >
+                      {/* Indicator */}
+                      <div className="hidden md:flex flex-col items-center justify-center bg-gray-200 text-gray-600 w-8 h-8 rounded-full font-mono text-xs font-bold">
+                        {index + 1}
+                      </div>
+
+                      {/* Spend range */}
+                      <div className="grid grid-cols-2 gap-2 flex-1 w-full">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-500 mb-0.5">
+                            Min Cart Amount (AED)
+                          </label>
+                          <input
+                            type="number"
+                            value={rule.minCartAmount}
+                            onChange={(e) => handleUpdateRule(index, "minCartAmount", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="e.g. 0"
+                            min="0"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-500 mb-0.5">
+                            Max Cart Amount (AED)
+                          </label>
+                          <input
+                            type="number"
+                            value={rule.maxCartAmount}
+                            onChange={(e) => handleUpdateRule(index, "maxCartAmount", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="e.g. 300"
+                            min="0"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Discount config */}
+                      <div className="grid grid-cols-2 gap-2 flex-1 w-full">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-500 mb-0.5">
+                            Discount Type
+                          </label>
+                          <select
+                            value={rule.discountType}
+                            onChange={(e) => handleUpdateRule(index, "discountType", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          >
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="fixed">Fixed Amount (AED)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-500 mb-0.5">
+                            Value
+                          </label>
+                          <input
+                            type="number"
+                            value={rule.discountValue}
+                            onChange={(e) => handleUpdateRule(index, "discountValue", e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder={rule.discountType === "percentage" ? "15" : "50"}
+                            min="0"
+                            step={rule.discountType === "percentage" ? "1" : "0.01"}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Reorder and Delete controls */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex flex-col gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveRule(index, "up")}
+                            disabled={index === 0}
+                            className="p-1 rounded bg-white border hover:bg-gray-100 disabled:opacity-30 text-gray-500"
+                            title="Move up"
+                          >
+                            <ChevronUp size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveRule(index, "down")}
+                            disabled={index === rules.length - 1}
+                            className="p-1 rounded bg-white border hover:bg-gray-100 disabled:opacity-30 text-gray-500"
+                            title="Move down"
+                          >
+                            <ChevronDown size={14} />
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRule(index)}
+                          className="p-2.5 rounded-lg border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                          title="Delete rule"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -501,13 +726,26 @@ const AllCoupons = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {coupon.discountType === "percentage"
-                              ? `${coupon.discountValue}%`
-                              : `AED ${coupon.discountValue}`}
-                          </div>
-                          {coupon.minOrderAmount > 0 && (
-                            <div className="text-xs text-gray-500">Min: AED {coupon.minOrderAmount}</div>
+                          {coupon.rules && coupon.rules.length > 0 ? (
+                            <div>
+                              <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                Tiered: {coupon.rules.length} slab(s)
+                              </span>
+                              <div className="text-xs text-gray-500 mt-1">
+                                {coupon.rules[0].minCartAmount}+ AED
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="text-sm text-gray-900">
+                                {coupon.discountType === "percentage"
+                                  ? `${coupon.discountValue}%`
+                                  : `AED ${coupon.discountValue}`}
+                              </div>
+                              {coupon.minOrderAmount > 0 && (
+                                <div className="text-xs text-gray-500">Min: AED {coupon.minOrderAmount}</div>
+                              )}
+                            </>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
