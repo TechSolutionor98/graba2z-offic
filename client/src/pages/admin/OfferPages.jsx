@@ -21,7 +21,50 @@ const OfferPages = () => {
   const [offerCategories, setOfferCategories] = useState([])
   const [categoriesLoading, setCategoriesLoading] = useState(false)
   const scrollContainerRef = useRef(null)
+  const categoriesScrollRef = useRef(null)
   const { showToast } = useToast()
+
+  const [adminSliderCategories, setAdminSliderCategories] = useState([])
+  const [selectedAdminCategory, setSelectedAdminCategory] = useState(null)
+
+  useEffect(() => {
+    if (!offerProducts || offerProducts.length === 0) {
+      setAdminSliderCategories([])
+      setSelectedAdminCategory(null)
+      return
+    }
+
+    const uniqueSliderCategoriesMap = new Map()
+    offerProducts.forEach((item) => {
+      const product = item.product
+      if (!product) return
+
+      let deepestCategory = null
+      const candidates = [
+        product.subcategory4 || product.subCategory4,
+        product.subcategory3 || product.subCategory3,
+        product.subcategory2 || product.subCategory2,
+        product.subcategory || product.subCategory,
+        product.category,
+        product.parentCategory
+      ]
+      for (const cat of candidates) {
+        if (cat && typeof cat === 'object' && cat._id && cat.name) {
+          deepestCategory = cat
+          break
+        }
+      }
+      if (deepestCategory) {
+        if (!uniqueSliderCategoriesMap.has(deepestCategory._id)) {
+          uniqueSliderCategoriesMap.set(deepestCategory._id, { 
+            category: deepestCategory, 
+            _id: deepestCategory._id 
+          })
+        }
+      }
+    })
+    setAdminSliderCategories(Array.from(uniqueSliderCategoriesMap.values()))
+  }, [offerProducts])
 
   useEffect(() => {
     fetchOfferPages()
@@ -364,6 +407,25 @@ const OfferPages = () => {
     }
   }
 
+  const filteredProducts = offerProducts.filter((item) => {
+    if (!selectedAdminCategory) return true
+    const product = item.product
+    if (!product) return false
+
+    const candidates = [
+      product.subcategory4 || product.subCategory4,
+      product.subcategory3 || product.subCategory3,
+      product.subcategory2 || product.subCategory2,
+      product.subcategory || product.subCategory,
+      product.category,
+      product.parentCategory
+    ]
+    return candidates.some((cat) => {
+      const catId = typeof cat === 'object' ? cat?._id : cat
+      return catId === selectedAdminCategory
+    })
+  })
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
@@ -596,26 +658,120 @@ const OfferPages = () => {
                   </Link>
                 </div>
               ) : activeTab === 'products' ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Product
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Price
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {offerProducts.map((item) => (
+                <div>
+                  {/* Categories Slider */}
+                  {adminSliderCategories.length > 0 && (
+                    <div className="mb-6 relative border-b pb-6 px-2">
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-sm font-semibold text-gray-700">Filter by Category:</h3>
+                        {selectedAdminCategory && (
+                          <button
+                            onClick={() => setSelectedAdminCategory(null)}
+                            className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
+                          >
+                            Clear Filter
+                          </button>
+                        )}
+                      </div>
+                      <div className="relative flex items-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (categoriesScrollRef.current) {
+                              categoriesScrollRef.current.scrollBy({ left: -200, behavior: 'smooth' })
+                            }
+                          }}
+                          className="absolute -left-4 z-10 bg-white border shadow-md rounded-full p-1.5 hover:bg-gray-100"
+                        >
+                          <FaChevronLeft className="w-3 h-3 text-gray-600" />
+                        </button>
+
+                        <div
+                          ref={categoriesScrollRef}
+                          className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-6 w-full"
+                          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        >
+                          {adminSliderCategories.map((item) => {
+                            const catData = item.category
+                            const displayName = catData?.displayName || catData?.name || 'N/A'
+                            const displayImage = catData?.image
+                            const isSelected = selectedAdminCategory === catData._id
+                            return (
+                              <button
+                                key={item._id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedAdminCategory(isSelected ? null : catData._id)
+                                }}
+                                className={`flex-shrink-0 w-28 border rounded-lg transition-all flex flex-col items-center p-2 hover:border-blue-300 ${
+                                  isSelected
+                                    ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500/20'
+                                    : 'bg-white border-gray-200'
+                                }`}
+                              >
+                                <div className="h-12 w-full flex items-center justify-center mb-2 overflow-hidden">
+                                  {displayImage ? (
+                                    <img
+                                      src={getFullImageUrl(displayImage)}
+                                      alt={displayName}
+                                      className="max-h-full max-w-full object-contain"
+                                    />
+                                  ) : (
+                                    <span className="text-xl">📦</span>
+                                  )}
+                                </div>
+                                <span className={`text-[11px] font-semibold text-center line-clamp-2 w-full ${
+                                  isSelected ? 'text-blue-700 font-bold' : 'text-gray-600'
+                                }`}>
+                                  {displayName}
+                                </span>
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (categoriesScrollRef.current) {
+                              categoriesScrollRef.current.scrollBy({ left: 200, behavior: 'smooth' })
+                            }
+                          }}
+                          className="absolute -right-4 z-10 bg-white border shadow-md rounded-full p-1.5 hover:bg-gray-100"
+                        >
+                          <FaChevronRight className="w-3 h-3 text-gray-600" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Product
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Price
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredProducts.length === 0 ? (
+                          <tr>
+                            <td colSpan="4" className="px-6 py-10 text-center text-gray-500 text-sm">
+                              No products found in this category for this offer page.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredProducts.map((item) => (
                         <tr key={item._id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -660,10 +816,12 @@ const OfferPages = () => {
                             </button>
                           </td>
                         </tr>
-                      ))}
+                      )))
+                    }
                     </tbody>
                   </table>
                 </div>
+              </div>
               ) : null}
 
               {/* Brands Tab Content */}
