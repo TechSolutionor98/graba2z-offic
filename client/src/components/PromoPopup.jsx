@@ -147,7 +147,7 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
         <img
           src={leftImageSrc}
           alt="App promotion"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full bg-cover"
           loading="eager"
         />
       </div>
@@ -235,7 +235,7 @@ const PromoPopup = ({ pageKey, delayMs = 3000 }) => {
       {/* Top image strip */}
       {mobileImageSrc && (
         <div className="w-full h-40 overflow-hidden">
-          <img src={mobileImageSrc} alt="App promotion" className="w-full h-full object-cover object-top" />
+          <img src={mobileImageSrc} alt="App promotion" className="w-full h-full bg-cover object-top" />
         </div>
       )}
 
