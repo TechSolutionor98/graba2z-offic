@@ -266,6 +266,25 @@ export const adminAPI = {
       headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
       body: JSON.stringify(payload),
     }),
+  getIndexNowLogs: (page = 1, limit = 10) =>
+    apiRequest(`/api/indexnow/logs?page=${page}&limit=${limit}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  submitIndexNowUrls: (urls) =>
+    apiRequest("/api/indexnow/submit", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify({ urls }),
+    }),
+  submitIndexNowSitemap: () =>
+    apiRequest("/api/indexnow/submit-sitemap", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  getIndexNowStatus: () =>
+    apiRequest("/api/indexnow/status", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
 }
 
 // Super Admin API calls
@@ -540,27 +559,6 @@ export const productPaymentMethodsAPI = {
       method: "POST",
       headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
       body: JSON.stringify(resetData),
-    }),
-
-  // IndexNow API calls
-  getIndexNowLogs: (page = 1, limit = 10) =>
-    apiRequest(`/api/indexnow/logs?page=${page}&limit=${limit}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
-    }),
-  submitIndexNowUrls: (urls) =>
-    apiRequest("/api/indexnow/submit", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
-      body: JSON.stringify({ urls }),
-    }),
-  submitIndexNowSitemap: () =>
-    apiRequest("/api/indexnow/submit-sitemap", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
-    }),
-  getIndexNowStatus: () =>
-    apiRequest("/api/indexnow/status", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
     }),
 }
 
