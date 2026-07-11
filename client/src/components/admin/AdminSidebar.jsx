@@ -653,6 +653,7 @@ const AdminSidebar = () => {
       items: [
         { title: "Pages", path: "/admin/seo-settings/pages" },
         { title: "Redirects", path: "/admin/seo-settings/redirects" },
+        { title: "Bing IndexNow", path: "/admin/seo-settings/bing-indexnow" },
       ],
     },
     {
