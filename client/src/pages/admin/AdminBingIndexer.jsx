@@ -252,8 +252,8 @@ const AdminBingIndexer = () => {
                         <div>
                           <span className="text-gray-500 font-semibold">Hosted Path:</span>
                           <span className="ml-1 text-blue-600 hover:underline">
-                            <a href={verificationStatus.keyLocation || "https://www.grabatoz.ae/efbecd6ca3b644ecbfe7759b87d8e886.txt"} target="_blank" rel="noreferrer">
-                              {verificationStatus.keyLocation || "https://www.grabatoz.ae/efbecd6ca3b644ecbfe7759b87d8e886.txt"}
+                            <a href={verificationStatus.keyLocation || "https://www.grabatoz.ae/514fe7113eb04ed98d7e94f191678d37.txt"} target="_blank" rel="noreferrer">
+                              {verificationStatus.keyLocation || "https://www.grabatoz.ae/514fe7113eb04ed98d7e94f191678d37.txt"}
                             </a>
                           </span>
                         </div>

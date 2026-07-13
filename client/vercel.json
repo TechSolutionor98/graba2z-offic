@@ -36,6 +36,18 @@
             "destination": "https://api.grabatoz.ae/sitemap.xml"
         },
         {
+            "source": "/ae-en/:key([a-f0-9]{32})\\.txt",
+            "destination": "https://api.grabatoz.ae/ae-en/:key.txt"
+        },
+        {
+            "source": "/ae-ar/:key([a-f0-9]{32})\\.txt",
+            "destination": "https://api.grabatoz.ae/ae-ar/:key.txt"
+        },
+        {
+            "source": "/:key([a-f0-9]{32})\\.txt",
+            "destination": "https://api.grabatoz.ae/:key.txt"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
