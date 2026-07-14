@@ -137,7 +137,7 @@ const renderPaymentLogos = (id) => {
           <div className="bg-[#141414] px-1.5 py-0.5 rounded flex items-center justify-center h-5 w-10 select-none">
             <svg width="20" height="12" viewBox="0 0 24 15" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="7" cy="7.5" r="7" fill="#EB001B"/>
-              <circle cx="17" cy="7.5" r="7" fill="#F79E1B" fill-opacity="0.8"/>
+              <circle cx="17" cy="7.5" r="7" fill="#F79E1B" fillOpacity="0.8"/>
             </svg>
           </div>
           {/* Samsung Pay */}
