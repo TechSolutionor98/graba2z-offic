@@ -59,6 +59,7 @@ const AdminProducts = () => {
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [linkSearch, setLinkSearch] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
   const [filterSubcategory, setFilterSubcategory] = useState("all")
   const [filterSubcategory2, setFilterSubcategory2] = useState("all")
@@ -153,9 +154,28 @@ const AdminProducts = () => {
     return params
   }
 
+  const extractSlugFromUrl = (url) => {
+    if (!url) return ""
+    try {
+      const decoded = decodeURIComponent(url.trim())
+      const cleanUrl = decoded.split("?")[0].replace(/\/$/, "")
+      const parts = cleanUrl.split("/product/")
+      if (parts.length > 1) {
+        return parts[1]
+      }
+      return url.trim()
+    } catch (e) {
+      return url.trim()
+    }
+  }
+
   const buildAdminQueryParams = (statusValue = filterStatus) => {
     const params = {}
-    if (searchTerm.trim() !== "") params.search = searchTerm.trim()
+    if (linkSearch.trim() !== "") {
+      params.search = extractSlugFromUrl(linkSearch)
+    } else if (searchTerm.trim() !== "") {
+      params.search = searchTerm.trim()
+    }
     if (filterCategory && filterCategory !== "all") params.parentCategory = filterCategory
     if (filterSubcategory && filterSubcategory !== "all") params.category = filterSubcategory
     if (filterSubcategory2 && filterSubcategory2 !== "all") params.subCategory2 = filterSubcategory2
@@ -382,11 +402,11 @@ const AdminProducts = () => {
 
   useEffect(() => {
     fetchProducts()
-  }, [page, searchTerm, filterCategory, filterSubcategory, filterSubcategory2, filterSubcategory3, filterSubcategory4, filterBrand, filterStatus])
+  }, [page, searchTerm, linkSearch, filterCategory, filterSubcategory, filterSubcategory2, filterSubcategory3, filterSubcategory4, filterBrand, filterStatus])
 
   useEffect(() => {
     setPage(1)
-  }, [searchTerm, filterCategory, filterSubcategory, filterSubcategory2, filterSubcategory3, filterSubcategory4, filterBrand, filterStatus])
+  }, [searchTerm, linkSearch, filterCategory, filterSubcategory, filterSubcategory2, filterSubcategory3, filterSubcategory4, filterBrand, filterStatus])
 
   useEffect(() => {
     fetchCategories()
@@ -1659,7 +1679,7 @@ const AdminProducts = () => {
                 </div>
 
                 {/* Second Row: Brand, Status, Search */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-4 gap-3 mb-4">
                   {/* Brand Filter */}
                   <div className="min-w-0">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
@@ -1708,14 +1728,30 @@ const AdminProducts = () => {
                       />
                     </div>
                   </div>
+
+                  {/* Search by Link Filter */}
+                  <div className="min-w-0">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Search by Link</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                      <input
+                        type="text"
+                        placeholder="Paste product link..."
+                        value={linkSearch}
+                        onChange={(e) => setLinkSearch(e.target.value)}
+                        className="pl-9 pr-2 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Clear Filters Button */}
-                {(searchTerm || filterCategory !== "all" || filterSubcategory !== "all" || filterSubcategory2 !== "all" || filterSubcategory3 !== "all" || filterSubcategory4 !== "all" || filterBrand !== "all" || filterStatus !== "all") && (
+                {(searchTerm || linkSearch || filterCategory !== "all" || filterSubcategory !== "all" || filterSubcategory2 !== "all" || filterSubcategory3 !== "all" || filterSubcategory4 !== "all" || filterBrand !== "all" || filterStatus !== "all") && (
                   <div className="flex justify-start mt-4">
                     <button
                       onClick={() => {
                         setSearchTerm("")
+                        setLinkSearch("")
                         setFilterCategory("all")
                         setFilterSubcategory("all")
                         setFilterSubcategory2("all")
@@ -1735,10 +1771,11 @@ const AdminProducts = () => {
                 {/* Action Buttons */}
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-4">
-                    {(searchTerm || filterCategory !== "all" || filterSubcategory !== "all" || filterSubcategory2 !== "all" || filterSubcategory3 !== "all" || filterSubcategory4 !== "all" || filterBrand !== "all" || filterStatus !== "all") && (
+                    {(searchTerm || linkSearch || filterCategory !== "all" || filterSubcategory !== "all" || filterSubcategory2 !== "all" || filterSubcategory3 !== "all" || filterSubcategory4 !== "all" || filterBrand !== "all" || filterStatus !== "all") && (
                       <button
                         onClick={() => {
                           setSearchTerm("")
+                          setLinkSearch("")
                           setFilterCategory("all")
                           setFilterSubcategory("all")
                           setFilterSubcategory2("all")
