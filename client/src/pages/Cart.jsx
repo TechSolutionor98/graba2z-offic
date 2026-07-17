@@ -401,12 +401,16 @@ const Cart = () => {
         {/* Mobile Card */}
         <div className="block sm:hidden">
           <div className="flex flex-row items-center mb-3">
-            <div className="w-20 h-20 flex-shrink-0 overflow-hidden rounded-md bg-white">
-              <img src={getFullImageUrl(item.image) || "/placeholder.svg"} alt={item.name} className="w-full h-full object-contain" />
+            <div className="w-20 h-20 flex-shrink-0 overflow-hidden rounded-md bg-white hover:opacity-90 transition">
+              <Link to={getLocalizedPath(`/product/${encodeURIComponent(item.slug || item._id)}`)}>
+                <img src={getFullImageUrl(item.image) || "/placeholder.svg"} alt={item.name} className="w-full h-full object-contain" />
+              </Link>
             </div>
             <div className="flex-1 ml-4">
-              <h3 className="text-base font-medium text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
-                <TranslatedText text={item.name.length > 30 ? item.name.slice(0, 25) + "..." : item.name} />
+              <h3 className="text-base font-medium text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis hover:text-lime-600 transition">
+                <Link to={getLocalizedPath(`/product/${encodeURIComponent(item.slug || item._id)}`)}>
+                  <TranslatedText text={item.name.length > 30 ? item.name.slice(0, 25) + "..." : item.name} />
+                </Link>
               </h3>
               <p className="mt-1 text-sm text-gray-500">{item.brand?.name || 'N/A'}</p>
               {item.selectedColorData && (
@@ -484,18 +488,22 @@ const Cart = () => {
 
         {/* Desktop Card */}
         <div className="hidden sm:flex flex-col sm:flex-row">
-          <div className="sm:w-40 sm:h-26 flex-shrink-0 overflow-hidden rounded-md mb-4 sm:mb-0">
-            <img
-              src={getFullImageUrl(item.image) || "/placeholder.svg"}
-              alt={item.name}
-              className="w-full h-full object-cover"
-            />
+          <div className="sm:w-40 sm:h-26 flex-shrink-0 overflow-hidden rounded-md mb-4 sm:mb-0 hover:opacity-90 transition">
+            <Link to={getLocalizedPath(`/product/${encodeURIComponent(item.slug || item._id)}`)}>
+              <img
+                src={getFullImageUrl(item.image) || "/placeholder.svg"}
+                alt={item.name}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              />
+            </Link>
           </div>
           <div className="sm:ml-8 flex-1">
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <h3 className="text-lg font-medium text-gray-900 mb-1">
-                  <TranslatedText text={item.name.length > 60 ? item.name.slice(0, 60) + "..." : item.name} />
+                <h3 className="text-lg font-medium text-gray-900 mb-1 hover:text-lime-600 transition">
+                  <Link to={getLocalizedPath(`/product/${encodeURIComponent(item.slug || item._id)}`)}>
+                    <TranslatedText text={item.name.length > 60 ? item.name.slice(0, 60) + "..." : item.name} />
+                  </Link>
                 </h3>
                 <p className="text-sm text-gray-500 mb-1">{item.brand?.name || 'N/A'}</p>
                 {item.selectedColorData && (

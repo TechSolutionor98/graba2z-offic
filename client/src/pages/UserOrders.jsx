@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, Fragment } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { useAuth } from "../context/AuthContext"
+import { useLanguage } from "../context/LanguageContext"
+import { useCart } from "../context/CartContext"
 import { CheckCircle, Clock, Package, Truck, AlertTriangle, Printer, Download, X, Eye, FileText, ShoppingBag, MapPin, CreditCard } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { Dialog, Transition } from "@headlessui/react"
@@ -18,14 +20,51 @@ const UserOrders = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuth()
+  const { getLocalizedPath } = useLanguage()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState("")
 
+  const { addToCart } = useCart()
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [expandedOrders, setExpandedOrders] = useState({})
   const printRef = useRef()
+
+  const toggleExpand = (orderId) => {
+    setExpandedOrders((prev) => ({
+      ...prev,
+      [orderId]: !prev[orderId],
+    }))
+  }
+
+  const handleOrderAgain = (order) => {
+    const nonProtectionItems = order.orderItems.filter(item => !item.isProtection)
+
+    nonProtectionItems.forEach(item => {
+      const productToAdd = {
+        _id: item.product?._id || item.product,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+        selectedColorIndex: item.selectedColorIndex ?? null,
+        selectedColorData: item.selectedColorData ?? null,
+        selectedDosIndex: item.selectedDosIndex ?? null,
+        selectedDosData: item.selectedDosData ?? null,
+        slug: item.product?.slug || '',
+        brand: item.product?.brand || null,
+        category: item.product?.category || null,
+        parentCategory: item.product?.parentCategory || null,
+        countInStock: item.product?.countInStock || 99,
+        offerPrice: 0,
+      }
+
+      addToCart(productToAdd, item.quantity)
+    })
+
+    navigate(getLocalizedPath("/cart"))
+  }
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -229,77 +268,139 @@ const UserOrders = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {orders.map((order) => (
-              <div key={order._id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden group">
-                <div className="p-6 border-b border-gray-50 bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 mb-1">Order Number</p>
-                      <h3 className="text-lg font-bold text-gray-900">#{order._id.slice(-6).toUpperCase()}</h3>
+            {orders.map((order) => {
+              const nonProtectionItems = order.orderItems.filter(item => !item.isProtection);
+              const firstProductItem = nonProtectionItems[0];
+              const isExpanded = !!expandedOrders[order._id];
+              return (
+                <div key={order._id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden group">
+                  <div className="p-6 border-b border-gray-50 bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 mb-1">Order Number</p>
+                        <h3 className="text-lg font-bold text-gray-900">#{order._id.slice(-6).toUpperCase()}</h3>
+                      </div>
+                      <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 mb-1">Date Placed</p>
+                        <p className="text-base font-medium text-gray-900">{new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                      </div>
+                      <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 mb-1">Total Amount</p>
+                        <p className="text-base font-bold text-green-600">AED {order.totalPrice.toLocaleString()}</p>
+                      </div>
                     </div>
-                    <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 mb-1">Date Placed</p>
-                      <p className="text-base font-medium text-gray-900">{new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
-                    <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 mb-1">Total Amount</p>
-                      <p className="text-base font-bold text-green-600">AED {order.totalPrice.toLocaleString()}</p>
+                    <div className={`px-4 py-2 rounded-full border flex items-center gap-2 ${getStatusColor(order.status)}`}>
+                      {getStatusIcon(order.status)}
+                      <span className="font-semibold text-sm tracking-wide">{order.status}</span>
                     </div>
                   </div>
-                  <div className={`px-4 py-2 rounded-full border flex items-center gap-2 ${getStatusColor(order.status)}`}>
-                    {getStatusIcon(order.status)}
-                    <span className="font-semibold text-sm tracking-wide">{order.status}</span>
-                  </div>
-                </div>
 
-                <div className="p-6 flex flex-col md:flex-row justify-between items-center gap-6 bg-gray-50/30">
-                  <div className="flex items-center gap-4 flex-1 py-2">
-                    <div className="flex items-center -space-x-4 overflow-hidden flex-shrink-0">
-                      {order.orderItems.filter(item => !item.isProtection).slice(0, 3).map((item, idx) => (
-                        <div key={item._id || idx} className="relative z-10 w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden flex-shrink-0 group-hover:-translate-y-1 transition-transform duration-300" style={{ transitionDelay: `${idx * 50}ms` }}>
-                          <img
-                            src={getFullImageUrl(item.image) || "/placeholder.svg"}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
+                  <div className="p-6 flex flex-col md:flex-row justify-between items-start gap-6 bg-gray-50/30">
+                    <div className="flex items-start gap-4 flex-1 py-2 w-full">
+                      {isExpanded ? (
+                        <div className="flex flex-col gap-4 w-full">
+                          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Items in this order</h4>
+                          <div className="space-y-3 w-full">
+                            {nonProtectionItems.map((item, idx) => (
+                              <div key={item._id || idx} className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-b-0">
+                                <Link 
+                                  to={getLocalizedPath(`/product/${item.product?.slug || item.product?._id || item.product}`)}
+                                  className="w-14 h-14 rounded-lg border border-gray-200 overflow-hidden flex-shrink-0 bg-white hover:scale-105 transition-transform duration-200"
+                                >
+                                  <img
+                                    src={getFullImageUrl(item.image) || "/placeholder.svg"}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </Link>
+                                <div className="flex-1 min-w-0">
+                                  <Link 
+                                    to={getLocalizedPath(`/product/${item.product?.slug || item.product?._id || item.product}`)}
+                                    className="font-semibold text-gray-900 hover:text-green-600 hover:underline line-clamp-1 block transition-colors"
+                                  >
+                                    {item.name}
+                                  </Link>
+                                  <span className="text-sm text-gray-500 font-medium block mt-1">Qty: {item.quantity}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <button 
+                            onClick={() => toggleExpand(order._id)}
+                            className="text-xs font-bold text-green-600 hover:text-green-700 mt-2 self-start flex items-center gap-1 hover:underline transition-colors"
+                          >
+                            Show Less
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                    <div className="flex flex-col flex-1">
-                      {order.orderItems.length > 0 && (
-                        <span className="font-semibold text-gray-900 pr-4">
-                          {order.orderItems.filter(item => !item.isProtection)[0]?.name || "Product Item"}
-                        </span>
+                      ) : (
+                        <>
+                          <div className="flex items-center -space-x-4 overflow-hidden flex-shrink-0">
+                            {nonProtectionItems.slice(0, 3).map((item, idx) => (
+                              <Link 
+                                key={item._id || idx} 
+                                to={getLocalizedPath(`/product/${item.product?.slug || item.product?._id || item.product}`)}
+                                className="relative z-10 w-16 h-16 rounded-full border-4 border-white bg-white shadow-sm overflow-hidden flex-shrink-0 group-hover:-translate-y-1 transition-transform duration-300 hover:scale-105 hover:z-20" 
+                                style={{ transitionDelay: `${idx * 50}ms` }}
+                              >
+                                <img
+                                  src={getFullImageUrl(item.image) || "/placeholder.svg"}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </Link>
+                            ))}
+                          </div>
+                          <div className="flex flex-col flex-1">
+                            {firstProductItem && (
+                              <Link 
+                                to={getLocalizedPath(`/product/${firstProductItem.product?.slug || firstProductItem.product?._id || firstProductItem.product}`)}
+                                className="font-semibold text-gray-900 pr-4 hover:text-green-600 hover:underline transition-colors duration-200"
+                              >
+                                {firstProductItem.name || "Product Item"}
+                              </Link>
+                            )}
+                            {nonProtectionItems.length > 1 && (
+                              <button 
+                                onClick={() => toggleExpand(order._id)}
+                                className="text-sm text-green-600 font-semibold hover:text-green-700 mt-1.5 self-start text-left hover:underline flex items-center gap-1 transition-colors"
+                              >
+                                + {nonProtectionItems.length - 1} more item(s)
+                              </button>
+                            )}
+                          </div>
+                        </>
                       )}
-                      {order.orderItems.filter(item => !item.isProtection).length > 1 && (
-                        <span className="text-sm text-gray-500 font-medium mt-0.5">
-                          + {order.orderItems.filter(item => !item.isProtection).length - 1} more item(s)
-                        </span>
-                      )}
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-shrink-0">
-                    <button 
-                      onClick={() => openModal(order)} 
-                      className="inline-flex items-center justify-center px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
-                    </button>
-                    <button 
-                      onClick={() => triggerPrint(order)}
-                      className="inline-flex items-center justify-center px-5 py-2.5 bg-green-50 text-green-700 border border-green-100 rounded-xl font-medium hover:bg-green-100 transition-all shadow-sm"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Invoice
-                    </button>
+                    
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-shrink-0 md:self-center">
+                      <button 
+                        onClick={() => handleOrderAgain(order)}
+                        className="inline-flex items-center justify-center px-5 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-all shadow-sm hover:shadow"
+                      >
+                        <ShoppingBag className="w-4 h-4 mr-2" />
+                        Order Again
+                      </button>
+                      <button 
+                        onClick={() => openModal(order)} 
+                        className="inline-flex items-center justify-center px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </button>
+                      <button 
+                        onClick={() => triggerPrint(order)}
+                        className="inline-flex items-center justify-center px-5 py-2.5 bg-green-50 text-green-700 border border-green-100 rounded-xl font-medium hover:bg-green-100 transition-all shadow-sm"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Invoice
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -376,15 +477,17 @@ const UserOrders = () => {
                               <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-50">
                                 {selectedOrder.orderItems.filter(item => !item.isProtection).map((item) => (
                                   <div key={item._id} className="p-4 flex gap-4 hover:bg-gray-50/50 transition">
-                                    <div className="w-20 h-20 rounded-lg border border-gray-100 overflow-hidden flex-shrink-0 bg-white">
-                                      <img
-                                        src={getFullImageUrl(item.image) || "/placeholder.svg"}
-                                        alt={item.name}
-                                        className="w-full h-full object-cover"
-                                      />
+                                    <div className="w-20 h-20 rounded-lg border border-gray-100 overflow-hidden flex-shrink-0 bg-white hover:opacity-90 transition">
+                                      <Link to={getLocalizedPath(`/product/${item.product?.slug || item.product?._id || item.product}`)}>
+                                        <img
+                                          src={getFullImageUrl(item.image) || "/placeholder.svg"}
+                                          alt={item.name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </Link>
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center">
-                                      <Link to={`/product/${item.product?.slug || item.product?._id || item.product}`} title={item.name} className="inline-block hover:opacity-80 transition">
+                                      <Link to={getLocalizedPath(`/product/${item.product?.slug || item.product?._id || item.product}`)} title={item.name} className="inline-block hover:opacity-80 transition">
                                         <h5 className="font-semibold text-gray-900 line-clamp-2 hover:text-green-600 hover:underline decoration-green-600 decoration-2 underline-offset-2">{item.name}</h5>
                                       </Link>
                                       <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">

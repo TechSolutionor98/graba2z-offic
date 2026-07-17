@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
 import axios from "axios";
 import { CheckCircle, Clock, Package, Truck, AlertTriangle } from "lucide-react";
 import { getFullImageUrl } from "../utils/imageUtils";
@@ -8,6 +9,7 @@ import config from "../config/config";
 const GuestOrder = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { getLocalizedPath } = useLanguage();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -162,16 +164,22 @@ const GuestOrder = () => {
             <ul className="divide-y divide-gray-200">
               {order.orderItems.filter(item => !item.isProtection).map((item) => (
                 <li key={item._id} className="py-4 flex">
-                  <div className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden">
-                    <img
-                      src={getFullImageUrl(item.image) || "/placeholder.svg"}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden hover:opacity-90 transition">
+                    <Link to={getLocalizedPath(`/product/${encodeURIComponent(item.product?.slug || item.product?._id || item.product)}`)}>
+                      <img
+                        src={getFullImageUrl(item.image) || "/placeholder.svg"}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </Link>
                   </div>
                   <div className="ml-4 flex-1">
                     <div className="flex justify-between">
-                      <h4 className="text-sm font-medium text-gray-900">{item.name}</h4>
+                      <h4 className="text-sm font-medium text-gray-900 hover:text-lime-600 transition">
+                        <Link to={getLocalizedPath(`/product/${encodeURIComponent(item.product?.slug || item.product?._id || item.product)}`)}>
+                          {item.name}
+                        </Link>
+                      </h4>
                       <p className="text-sm font-medium text-gray-900">AED {item.price.toLocaleString()}</p>
                     </div>
                     <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
