@@ -282,24 +282,8 @@ const OfferPage = () => {
         soldBy: filterValidOptions(soldByRes?.data, "soldBy"),
       })
 
-      // Extract unique categories from products for sidebar (parent categories)
+      // Extract unique deepest categories from products for sidebar and top slider
       const uniqueSidebarCategoriesMap = new Map()
-      enrichedProducts.forEach(({ product }) => {
-        const category = product.category
-        if (category && typeof category === 'object' && category._id && category.name) {
-          if (!uniqueSidebarCategoriesMap.has(category._id)) {
-            uniqueSidebarCategoriesMap.set(category._id, { 
-              category: category, 
-              isActive: true, 
-              _id: category._id 
-            })
-          }
-        }
-      })
-      const sidebarCategoriesList = Array.from(uniqueSidebarCategoriesMap.values())
-
-      // Extract unique deepest subcategories from products for the top slider
-      const uniqueSliderCategoriesMap = new Map()
       enrichedProducts.forEach(({ product }) => {
         let deepestCategory = null
         const candidates = [
@@ -307,7 +291,8 @@ const OfferPage = () => {
           product.subcategory3,
           product.subcategory2,
           product.subcategory,
-          product.category
+          product.category,
+          product.parentCategory
         ]
         for (const cat of candidates) {
           if (cat && typeof cat === 'object' && cat._id && cat.name) {
@@ -316,8 +301,8 @@ const OfferPage = () => {
           }
         }
         if (deepestCategory) {
-          if (!uniqueSliderCategoriesMap.has(deepestCategory._id)) {
-            uniqueSliderCategoriesMap.set(deepestCategory._id, { 
+          if (!uniqueSidebarCategoriesMap.has(deepestCategory._id)) {
+            uniqueSidebarCategoriesMap.set(deepestCategory._id, { 
               category: deepestCategory, 
               isActive: true, 
               _id: deepestCategory._id 
@@ -325,7 +310,8 @@ const OfferPage = () => {
           }
         }
       })
-      const sliderCategoriesList = Array.from(uniqueSliderCategoriesMap.values())
+      const sidebarCategoriesList = Array.from(uniqueSidebarCategoriesMap.values())
+      const sliderCategoriesList = sidebarCategoriesList
 
       setSliderCategories(sliderCategoriesList)
 
@@ -2498,7 +2484,7 @@ const OfferPage = () => {
               </div>
 
               {/* Categories Slider - First Line */}
-              {sliderCategories.length > 0 && (
+              {sliderCategories.length > 0 && offerPage?.showCategorySlider !== false && (
                 <section className="mb-8">
                   {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Categories...</h2> */}
                   <div className="relative">
@@ -2508,7 +2494,7 @@ const OfferPage = () => {
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </button>
-
+ 
                     <div
                       ref={categoriesScrollRef}
                       className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-10 md:px-12"
@@ -2546,7 +2532,7 @@ const OfferPage = () => {
                         )
                       })}
                     </div>
-
+ 
                     <button
                       onClick={() => scrollSlider(categoriesScrollRef, 'right')}
                       className="absolute right-0 md:-right-5 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-lime-500 hover:text-white transition-colors"
@@ -2556,9 +2542,9 @@ const OfferPage = () => {
                   </div>
                 </section>
               )}
-
+ 
               {/* Brands Slider */}
-              {sliderBrands.length > 0 && (
+              {sliderBrands.length > 0 && offerPage?.showBrandSlider !== false && (
                 <section className="mb-8">
                   <div className="relative">
                     <button

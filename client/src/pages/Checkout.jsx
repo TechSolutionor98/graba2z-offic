@@ -8,7 +8,7 @@ import axios from "axios"
 import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import { useLanguage } from "../context/LanguageContext"
-import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X } from "lucide-react"
+import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Check } from "lucide-react"
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
 import { getFullImageUrl } from "../utils/imageUtils"
@@ -261,6 +261,7 @@ const Checkout = () => {
     zipCode: "",
   })
 
+  const [savedAddresses, setSavedAddresses] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [deliveryType, setDeliveryType] = useState("home")
@@ -1205,7 +1206,7 @@ const Checkout = () => {
   }
 
   // Update handleAddressModalSubmit to only save to localStorage for guests, and always update formData
-  const handleAddressModalSubmit = (e) => {
+  const handleAddressModalSubmit = async (e) => {
     e.preventDefault()
     const newAddress = {
       address: addressDetails.address,
@@ -1213,10 +1214,34 @@ const Checkout = () => {
       state: addressDetails.state,
       zipCode: addressDetails.zip,
     }
-    setFormData({
-      ...formData,
+
+    if (user) {
+      try {
+        const token = localStorage.getItem("token")
+        const payload = {
+          name: addressType === "home" ? "Home" : "Office",
+          phone: formData.phone || user.phone || "",
+          email: formData.email || user.email || "",
+          address: addressDetails.address,
+          city: addressDetails.city,
+          state: addressDetails.state,
+          zipCode: addressDetails.zip,
+          isDefault: addressDetails.isDefault,
+        }
+        const { data } = await axios.post(`${config.API_URL}/api/users/addresses`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        setSavedAddresses(data)
+      } catch (err) {
+        // ignore/handle error
+      }
+    }
+
+    setFormData((prev) => ({
+      ...prev,
       ...newAddress,
-    })
+    }))
+
     // Only save to localStorage if not logged in
     if (!user) {
       localStorage.setItem(
@@ -1350,20 +1375,26 @@ const Checkout = () => {
           const { data } = await axios.get(`${config.API_URL}/api/users/profile`, {
             headers: { Authorization: `Bearer ${token}` },
           })
+          
+          const userAddresses = data.addresses || []
+          setSavedAddresses(userAddresses)
+
+          const defaultAddr = userAddresses.find((a) => a.isDefault) || userAddresses[0]
+
           // Fill formData and pickupDetails.phone
           setFormData((prev) => ({
             ...prev,
-            name: data.name || prev.name,
-            email: data.email || prev.email,
-            phone: data.phone || prev.phone || "",
-            address: data.address?.street || prev.address || "",
-            city: data.address?.city || prev.city || "",
-            state: data.address?.state || prev.state || "",
-            zipCode: data.address?.zipCode || prev.zipCode || "",
+            name: defaultAddr?.name || data.name || prev.name,
+            email: defaultAddr?.email || data.email || prev.email,
+            phone: defaultAddr?.phone || data.phone || prev.phone || "",
+            address: defaultAddr ? defaultAddr.address : (data.address?.street || prev.address || ""),
+            city: defaultAddr ? defaultAddr.city : (data.address?.city || prev.city || ""),
+            state: defaultAddr ? defaultAddr.state : (data.address?.state || prev.state || ""),
+            zipCode: defaultAddr ? defaultAddr.zipCode : (data.address?.zipCode || prev.zipCode || ""),
           }))
           setPickupDetails((prev) => ({
             ...prev,
-            phone: data.phone || prev.phone || "",
+            phone: defaultAddr?.phone || data.phone || prev.phone || "",
           }))
         } catch (err) {
           // ignore error
@@ -1544,7 +1575,67 @@ const Checkout = () => {
                         </div>
                       </div>
 
-                      {formData.address && (
+                      {user && savedAddresses.length > 0 && (
+                        <div className="mb-6 bg-gray-50/50 border border-gray-200 p-4 rounded-xl">
+                          <h4 className="font-semibold text-gray-800 mb-3"><TranslatedText>Select Saved Address</TranslatedText></h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {savedAddresses.map((addr) => {
+                              const isSelected = formData.address === addr.address && formData.city === addr.city
+                              return (
+                                <div
+                                  key={addr._id}
+                                  onClick={() => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      address: addr.address,
+                                      city: addr.city,
+                                      state: addr.state,
+                                      zipCode: addr.zipCode,
+                                    }))
+                                  }}
+                                  className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
+                                    isSelected
+                                      ? "border-lime-600 bg-lime-50/20"
+                                      : "border-gray-200 hover:border-gray-300 bg-white"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="font-bold text-gray-800 text-xs">{addr.name}</span>
+                                    {isSelected && (
+                                      <span className="bg-lime-600 text-white rounded-full p-0.5">
+                                        <Check className="h-3 w-3" />
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-gray-600 line-clamp-2">{addr.address}</p>
+                                  <p className="text-xs text-gray-500 mt-1">{addr.city}, {addr.state}</p>
+                                </div>
+                              )
+                            })}
+                          </div>
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAddressDetails({
+                                address: "",
+                                zip: "",
+                                country: "UAE",
+                                state: "",
+                                city: "",
+                                isDefault: false,
+                              })
+                              setShowAddressModal(true)
+                            }}
+                            className="flex items-center gap-1.5 text-lime-600 hover:text-lime-700 font-bold text-sm mt-3"
+                          >
+                            <Plus size={16} />
+                            <TranslatedText>Add New Address</TranslatedText>
+                          </button>
+                        </div>
+                      )}
+
+                      {formData.address && (!user || savedAddresses.length === 0) && (
                         <div className="mb-6 bg-gray-50 p-4 rounded-lg">
                           <h4 className="font-semibold mb-1"><TranslatedText>Shipping Address</TranslatedText></h4>
                           <div className="text-gray-700">{formData.address}</div>
