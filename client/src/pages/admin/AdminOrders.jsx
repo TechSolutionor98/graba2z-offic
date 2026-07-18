@@ -26,6 +26,7 @@ const AdminOrders = () => {
   const [focusOrderId, setFocusOrderId] = useState(location.state?.orderId || null)
 
   const statusOptions = [
+    { value: "all", label: "All Statuses" },
     { value: "New", label: "New" },
     { value: "Processing", label: "Processing" },
     { value: "Confirmed", label: "Confirmed" },
@@ -35,8 +36,7 @@ const AdminOrders = () => {
     { value: "Out for Delivery", label: "Out for Delivery" },
     { value: "Delivered", label: "Delivered" },
     { value: "On Hold", label: "On Hold" },
-    { value: "Cancelled", label: "Cancelled" },
-    { value: "Deleted", label: "Deleted" }
+    { value: "Cancelled", label: "Cancelled" }
   ]
 
   const orderStatusOptions = [
@@ -67,7 +67,7 @@ const AdminOrders = () => {
       setLoading(true)
       const token = localStorage.getItem('adminToken')
       const { data } = await axios.get(`${config.API_URL}/api/admin/orders`, {
-        params: { includeDeleted: true },
+        params: { includeDeleted: false },
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -191,6 +191,8 @@ const AdminOrders = () => {
   }
 
   const filteredOrders = orders.filter((order) => {
+    if (order.status === "Deleted") return false
+
     const matchesSearch =
       order._id.includes(searchTerm) ||
       order.shippingAddress.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

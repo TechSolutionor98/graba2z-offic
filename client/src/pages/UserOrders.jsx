@@ -167,7 +167,7 @@ const UserOrders = () => {
           },
         })
         
-        setOrders(data)
+        setOrders(data.filter(order => order.status !== "Deleted"))
         setLoading(false)
       } catch (error) {
         console.error("Error fetching orders:", error)
