@@ -1098,14 +1098,14 @@ function BannerSection({ section, cards, settings, isMobileViewport }) {
               <Link
                 key={card._id}
                 to={card.linkUrl || '#'}
-                className="group overflow-hidden relative transition-all duration-300 hover:scale-[1.02] rounded-2xl shadow-md hover:shadow-xl block"
+                className="overflow-hidden relative rounded-lg shadow-md block"
               >
                 {card.image && (
-                  <div className="w-full overflow-hidden rounded-2xl">
+                  <div className="w-full overflow-hidden rounded-lg h-[150px] sm:h-[220px] md:h-[270px] lg:h-[280px]">
                     <img 
                       src={getFullImageUrl(card.image)} 
                       alt={card.name} 
-                      className="w-full h-auto object-contain block group-hover:scale-[1.03] transition-transform duration-500"
+                      className="w-full h-full object-cover block"
                     />
                   </div>
                 )}
