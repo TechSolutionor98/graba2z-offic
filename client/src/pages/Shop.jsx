@@ -1815,6 +1815,36 @@ const Shop = () => {
     navigate(url)
   }
 
+  const handleClearSubCategory = (level) => {
+    if (level === 1) {
+      handleCategoryChange(selectedCategory)
+    } else if (level === 2) {
+      if (selectedSubCategories.length > 0) {
+        handleSubcategorySelect(selectedSubCategories[0], 1)
+      } else {
+        handleCategoryChange(selectedCategory)
+      }
+    } else if (level === 3) {
+      if (selectedSubCategory2) {
+        handleSubcategorySelect(selectedSubCategory2, 2)
+      } else if (selectedSubCategories.length > 0) {
+        handleSubcategorySelect(selectedSubCategories[0], 1)
+      } else {
+        handleCategoryChange(selectedCategory)
+      }
+    } else if (level === 4) {
+      if (selectedSubCategory3) {
+        handleSubcategorySelect(selectedSubCategory3, 3)
+      } else if (selectedSubCategory2) {
+        handleSubcategorySelect(selectedSubCategory2, 2)
+      } else if (selectedSubCategories.length > 0) {
+        handleSubcategorySelect(selectedSubCategories[0], 1)
+      } else {
+        handleCategoryChange(selectedCategory)
+      }
+    }
+  }
+
   const handleSubCategoryChange = (subCatId) => {
     setSelectedSubCategories([subCatId])
     const subcatObj = subCategories.find((sub) => sub._id === subCatId)
@@ -2159,10 +2189,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Subcategory</TranslatedText>:</span> <TranslatedText text={currentSubCategoryName} />
                         </span>
                         <button
-                          onClick={() => {
-                            setSelectedSubCategories([])
-                            setCurrentSubCategoryName(null)
-                          }}
+                          onClick={() => handleClearSubCategory(1)}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -2175,10 +2202,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Level 2</TranslatedText>:</span> <TranslatedText text={currentSubCategory2Name} />
                         </span>
                         <button
-                          onClick={() => {
-                            setSelectedSubCategory2(null)
-                            setCurrentSubCategory2Name(null)
-                          }}
+                          onClick={() => handleClearSubCategory(2)}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -2191,10 +2215,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Level 3</TranslatedText>:</span> <TranslatedText text={currentSubCategory3Name} />
                         </span>
                         <button
-                          onClick={() => {
-                            setSelectedSubCategory3(null)
-                            setCurrentSubCategory3Name(null)
-                          }}
+                          onClick={() => handleClearSubCategory(3)}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -2207,10 +2228,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Level 4</TranslatedText>:</span> <TranslatedText text={currentSubCategory4Name} />
                         </span>
                         <button
-                          onClick={() => {
-                            setSelectedSubCategory4(null)
-                            setCurrentSubCategory4Name(null)
-                          }}
+                          onClick={() => handleClearSubCategory(4)}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -2885,10 +2903,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Subcategory</TranslatedText>:</span> <TranslatedText text={currentSubCategoryName} />
                         </span>
                         <button
-                          onClick={() => {
-                            setSelectedSubCategories([])
-                            setCurrentSubCategoryName(null)
-                          }}
+                          onClick={() => handleClearSubCategory(1)}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -2903,10 +2918,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Level 2</TranslatedText>:</span> <TranslatedText text={currentSubCategory2Name} />
                         </span>
                         <button
-                          onClick={() => {
-                            setSelectedSubCategory2(null)
-                            setCurrentSubCategory2Name(null)
-                          }}
+                          onClick={() => handleClearSubCategory(2)}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -2921,10 +2933,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Level 3</TranslatedText>:</span> <TranslatedText text={currentSubCategory3Name} />
                         </span>
                         <button
-                          onClick={() => {
-                            setSelectedSubCategory3(null)
-                            setCurrentSubCategory3Name(null)
-                          }}
+                          onClick={() => handleClearSubCategory(3)}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -2939,10 +2948,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Level 4</TranslatedText>:</span> <TranslatedText text={currentSubCategory4Name} />
                         </span>
                         <button
-                          onClick={() => {
-                            setSelectedSubCategory4(null)
-                            setCurrentSubCategory4Name(null)
-                          }}
+                          onClick={() => handleClearSubCategory(4)}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
