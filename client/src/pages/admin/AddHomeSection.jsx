@@ -38,6 +38,7 @@ const AddHomeSection = () => {
     { value: "cards-right-image-left", label: "3 Cards Right + Image Left (4+8 grid)" },
     { value: "simple-cards", label: "Simple Section (5 cards, optional bg color)" },
     { value: "vertical-grid", label: "Vertical Grid Section (Cards wrap to new rows)" },
+    { value: "banner-section", label: "Banner Section (Choose 1-8 banners)" },
   ]
 
   useEffect(() => {
@@ -126,6 +127,12 @@ const AddHomeSection = () => {
         defaultSettings = {
           cardsPerRow: 4,
           backgroundColor: "#f3f4f6",
+        }
+        break
+      case "banner-section":
+        defaultSettings = {
+          cardsCount: 3,
+          backgroundColor: "#ffffff",
         }
         break
       default:
@@ -319,6 +326,7 @@ const AddHomeSection = () => {
                         onChange={(e) => handleSettingsChange('cardsCount', parseInt(e.target.value))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
+                        <option value={1}>1 Card</option>
                         <option value={2}>2 Cards</option>
                         <option value={3}>3 Cards</option>
                         <option value={4}>4 Cards</option>
@@ -375,6 +383,7 @@ const AddHomeSection = () => {
                         onChange={(e) => handleSettingsChange('cardsCount', parseInt(e.target.value))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
+                        <option value={1}>1 Card</option>
                         <option value={2}>2 Cards</option>
                         <option value={3}>3 Cards</option>
                         <option value={4}>4 Cards</option>
@@ -473,6 +482,7 @@ const AddHomeSection = () => {
                         onChange={(e) => handleSettingsChange('cardsCount', parseInt(e.target.value))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
+                        <option value={1}>1 Card</option>
                         <option value={2}>2 Cards</option>
                         <option value={3}>3 Cards</option>
                         <option value={4}>4 Cards</option>
@@ -518,6 +528,7 @@ const AddHomeSection = () => {
                         onChange={(e) => handleSettingsChange('cardsPerRow', parseInt(e.target.value))}
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
+                        <option value={1}>1 Card Per Row</option>
                         <option value={2}>2 Cards Per Row</option>
                         <option value={3}>3 Cards Per Row</option>
                         <option value={4}>4 Cards Per Row</option>
@@ -553,6 +564,51 @@ const AddHomeSection = () => {
                     </div>
                     <div className="bg-blue-50 border border-blue-200 rounded p-3 text-xs text-gray-700">
                       <strong>How it works:</strong> Cards will be displayed in rows. If you add 12 cards and select 4 cards per row, they'll appear as 3 rows (4+4+4). You can add unlimited cards.
+                    </div>
+                  </div>
+                )}
+
+                {/* Banner Section Settings */}
+                {formData.sectionType === "banner-section" && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Number of Banners *
+                      </label>
+                      <select
+                        value={formData.settings.cardsCount || 3}
+                        onChange={(e) => handleSettingsChange('cardsCount', parseInt(e.target.value))}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value={1}>1 Banner</option>
+                        <option value={2}>2 Banners</option>
+                        <option value={3}>3 Banners</option>
+                        <option value={4}>4 Banners</option>
+                        <option value={5}>5 Banners</option>
+                        <option value={6}>6 Banners</option>
+                        <option value={7}>7 Banners</option>
+                        <option value={8}>8 Banners</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Background Color (Optional)
+                      </label>
+                      <div className="flex gap-4 items-center">
+                        <input
+                          type="color"
+                          value={formData.settings.backgroundColor || "#ffffff"}
+                          onChange={(e) => handleSettingsChange('backgroundColor', e.target.value)}
+                          className="w-20 h-10 border border-gray-300 rounded cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={formData.settings.backgroundColor || "#ffffff"}
+                          onChange={(e) => handleSettingsChange('backgroundColor', e.target.value.trim())}
+                          placeholder="#ffffff or rgb(255,255,255)"
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

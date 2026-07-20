@@ -266,6 +266,7 @@ const AdminBannerCards = () => {
       "cards-right-image-left": "Cards Right + Image Left",
       "simple-cards": "Simple Cards",
       "vertical-grid": "Vertical Grid",
+      "banner-section": "Banner Section",
     }
     return types[type] || type
   }
@@ -387,6 +388,20 @@ const AdminBannerCards = () => {
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-3">Cards automatically wrap to new rows. Add as many cards as you need.</p>
+          </div>
+        )
+      case "banner-section":
+        const bannersCount = selectedSection.settings?.cardsCount || 3
+        return (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="text-sm font-semibold text-gray-700 mb-2">Banner Section Preview ({bannersCount} banners)</div>
+            <div className="flex gap-3">
+              {Array.from({ length: bannersCount }).map((_, idx) => (
+                <div key={idx} className="flex-1 bg-gradient-to-r from-orange-400 to-amber-300 rounded-lg h-20 flex items-center justify-center text-xs text-white font-semibold">
+                  Banner {idx + 1}
+                </div>
+              ))}
+            </div>
           </div>
         )
       default:

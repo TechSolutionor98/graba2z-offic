@@ -960,6 +960,11 @@ const Home = () => {
       {/* Categories Section - Admin Controlled Slider */}
       <CategorySliderUpdated onCategoryClick={handleCategoryClick} />
 
+      {/* Dynamic Section Position 1 */}
+      {renderDynamicSection(1, {
+        reserveMobileLayout: true,
+        mobileReservedHeight: MOBILE_RESERVED_HEIGHTS.dynamicAboveFold,
+      })}
 
       {/* Three Cards Section - Dynamic Banners */}
       <div className="m-3">
@@ -1078,11 +1083,6 @@ const Home = () => {
         <img src="https://res.cloudinary.com/dyfhsu5v6/image/upload/v1757761484/tamara_tabby_kooxbn.webp" alt="" className="w-full  sm:mx-4 h-auto rounded-lg" />
       </div> */}
 
-      {/* Dynamic Section Position 1 */}
-      {renderDynamicSection(1, {
-        reserveMobileLayout: true,
-        mobileReservedHeight: MOBILE_RESERVED_HEIGHTS.dynamicAboveFold,
-      })}
 
       {/* Big Sale Section - Handles both mobile and desktop views */}
       {!isMobileViewport && <BigSaleSection products={featuredProducts} />}

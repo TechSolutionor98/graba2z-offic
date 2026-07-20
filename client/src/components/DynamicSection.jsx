@@ -99,6 +99,9 @@ function DynamicSection({ section, reserveMobileLayout = false, mobileReservedHe
     case 'vertical-grid':
       return <VerticalGridSection section={section} cards={cards} settings={settings} />
     
+    case 'banner-section':
+      return <BannerSection section={section} cards={cards} settings={settings} isMobileViewport={isMobileViewport} />
+    
     default:
       return <SimpleCardsSection section={section} cards={cards} settings={settings} />
   }
@@ -248,18 +251,20 @@ function ArrowSliderSection({ section, cards, settings, currentIndex, setCurrent
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
   
-  const cardsCount = isMobile ? mobileCardsCount : desktopCardsCount
+  const cardsCount = isMobile 
+    ? Math.min(cards.length, mobileCardsCount, desktopCardsCount) 
+    : Math.min(cards.length, desktopCardsCount)
 
   const handlePrev = () => {
     setCurrentIndex(prev => Math.max(0, prev - 1))
   }
 
   const handleNext = () => {
-    setCurrentIndex(prev => Math.min(cards.length - cardsCount, prev + 1))
+    setCurrentIndex(prev => Math.min(Math.max(0, cards.length - cardsCount), prev + 1))
   }
 
   const canGoPrev = currentIndex > 0
-  const canGoNext = currentIndex < cards.length - cardsCount
+  const canGoNext = currentIndex < Math.max(0, cards.length - cardsCount)
   const visibleCards = cards.slice(currentIndex, currentIndex + cardsCount)
   return (
     <>
@@ -928,12 +933,14 @@ function VerticalGridSection({ section, cards, settings }) {
     // Desktop (lg): Use admin setting
     
     const gridMap = {
+      1: 'grid-cols-1 lg:grid-cols-1',
       2: 'grid-cols-3 lg:grid-cols-2',
       3: 'grid-cols-3 lg:grid-cols-3',
       4: 'grid-cols-3 lg:grid-cols-4',
       5: 'grid-cols-3 lg:grid-cols-5',
       6: 'grid-cols-4 lg:grid-cols-6',
       7: 'grid-cols-4 lg:grid-cols-7',
+      8: 'grid-cols-4 lg:grid-cols-8',
     }
     
     return gridMap[desktopCount] || 'grid-cols-4 lg:grid-cols-7'
@@ -1065,6 +1072,48 @@ function VerticalGridSection({ section, cards, settings }) {
         </div>
       </div>
     </section>
+    </>
+  )
+}
+
+// Banner Section - 1 to 8 banners layout
+function BannerSection({ section, cards, settings, isMobileViewport }) {
+  const backgroundColor = settings.backgroundColor || '#ffffff'
+  const cardsCount = settings.cardsCount || 3 // Default to 3
+  const visibleCards = cards.slice(0, cardsCount)
+
+  return (
+    <>
+      <section className="py-4 md:py-8" style={{ backgroundColor }}>
+        <div className="max-w-[1920px] mx-auto px-4">
+          <div 
+            className="grid gap-4 md:gap-6 animate-fadeIn"
+            style={{
+              gridTemplateColumns: isMobileViewport
+                ? 'repeat(1, minmax(0, 1fr))' 
+                : `repeat(${cardsCount}, minmax(0, 1fr))`
+            }}
+          >
+            {visibleCards.map((card) => (
+              <Link
+                key={card._id}
+                to={card.linkUrl || '#'}
+                className="group overflow-hidden relative transition-all duration-300 hover:scale-[1.02] rounded-2xl shadow-md hover:shadow-xl block"
+              >
+                {card.image && (
+                  <div className="w-full overflow-hidden rounded-2xl">
+                    <img 
+                      src={getFullImageUrl(card.image)} 
+                      alt={card.name} 
+                      className="w-full h-auto object-contain block group-hover:scale-[1.03] transition-transform duration-500"
+                    />
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
     </>
   )
 }
