@@ -1105,7 +1105,7 @@ function BannerSection({ section, cards, settings, isMobileViewport }) {
                     <img 
                       src={getFullImageUrl(card.image)} 
                       alt={card.name} 
-                      className="w-full h-full object-cover block"
+                      className="w-full h-full bg-cover block"
                     />
                   </div>
                 )}
