@@ -635,11 +635,18 @@ const AdminBannerCards = () => {
                           filteredCards.map((card) => (
                             <tr key={card._id} className="hover:bg-gray-50">
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <img
-                                  src={getFullImageUrl(card.image || card.bgImage)}
-                                  alt={card.name}
-                                  className="h-12 w-12 rounded object-cover"
-                                />
+                                <div className="flex items-center gap-2">
+                                  <img
+                                    src={getFullImageUrl(card.image || card.mobileImage || card.bgImage)}
+                                    alt={card.name}
+                                    className="h-12 w-12 rounded object-cover border"
+                                  />
+                                  {card.mobileImage && (
+                                    <span className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200" title="Has separate mobile banner">
+                                      📱 Mobile
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                               <td className="px-6 py-4">
                                 <div className="text-sm font-medium text-gray-900">

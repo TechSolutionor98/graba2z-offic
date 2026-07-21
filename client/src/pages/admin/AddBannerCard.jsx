@@ -37,6 +37,7 @@ const AddBannerCard = () => {
     slug: "",
     details: "",
     image: "",
+    mobileImage: "",
     bgImage: "",
     section: "",
     linkUrl: "",
@@ -201,6 +202,7 @@ const AddBannerCard = () => {
         slug: data.slug || "",
         details: data.details || "",
         image: data.image || "",
+        mobileImage: data.mobileImage || "",
         bgImage: data.bgImage || "",
         section: data.section || "",
         linkUrl: data.linkUrl || "",
@@ -228,6 +230,13 @@ const AddBannerCard = () => {
     setFormData((prev) => ({
       ...prev,
       image: imageUrl,
+    }))
+  }
+
+  const handleMobileImageUpload = (imageUrl) => {
+    setFormData((prev) => ({
+      ...prev,
+      mobileImage: imageUrl,
     }))
   }
 
@@ -549,18 +558,34 @@ const AddBannerCard = () => {
                 />
               </div>
 
-              {/* Image Upload */}
+              {/* Desktop Image / Banner Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Card Image *
+                  Desktop Banner / Card Image *
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
-                  This image will appear inside the card (below the text)
+                  This image will appear on desktop screens (and as default for mobile if no mobile banner is uploaded).
                 </p>
                 <ImageUpload
                   key="card-image"
                   currentImage={formData.image}
                   onImageUpload={handleImageUpload}
+                  folder="banner-cards"
+                />
+              </div>
+
+              {/* Mobile Banner Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  📱 Mobile Banner Image (Optional)
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Upload a separate banner specifically optimized for mobile devices. It will only be displayed on mobile layouts.
+                </p>
+                <ImageUpload
+                  key="mobile-banner-image"
+                  currentImage={formData.mobileImage}
+                  onImageUpload={handleMobileImageUpload}
                   folder="banner-cards"
                 />
               </div>

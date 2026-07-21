@@ -853,10 +853,10 @@ function SimpleCardsSection({ section, cards, settings }) {
                   minWidth: mobileCardsPerView === 2 ? '260px' : '70vw',
                 }}
               >
-                {card.image && (
+                {(card.image || card.mobileImage) && (
                   <div className="relative w-full overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-shadow duration-300 h-[150px] sm:h-[220px] md:h-[270px] lg:h-[280px]">
                     <img 
-                      src={getFullImageUrl(card.image)} 
+                      src={getFullImageUrl(card.mobileImage || card.image)} 
                       alt={card.name} 
                       className="w-full h-full bg-cover"
                     />
@@ -1094,23 +1094,39 @@ function BannerSection({ section, cards, settings, isMobileViewport }) {
                 : `repeat(${cardsCount}, minmax(0, 1fr))`
             }}
           >
-            {visibleCards.map((card) => (
-              <Link
-                key={card._id}
-                to={card.linkUrl || '#'}
-                className="overflow-hidden relative rounded-lg shadow-md block"
-              >
-                {card.image && (
-                  <div className="w-full overflow-hidden rounded-lg h-[150px] sm:h-[220px] md:h-[270px] lg:h-[280px]">
-                    <img 
-                      src={getFullImageUrl(card.image)} 
-                      alt={card.name} 
-                      className="w-full h-full bg-cover block"
-                    />
-                  </div>
-                )}
-              </Link>
-            ))}
+            {visibleCards.map((card) => {
+              const desktopImgUrl = card.image ? getFullImageUrl(card.image) : ''
+              const mobileImgUrl = card.mobileImage ? getFullImageUrl(card.mobileImage) : ''
+
+              return (
+                <Link
+                  key={card._id}
+                  to={card.linkUrl || '#'}
+                  className="overflow-hidden relative rounded-lg shadow-md block"
+                >
+                  {(desktopImgUrl || mobileImgUrl) && (
+                    <div className="w-full overflow-hidden rounded-lg h-[150px] sm:h-[220px] md:h-[270px] lg:h-[280px]">
+                      {mobileImgUrl && desktopImgUrl ? (
+                        <picture>
+                          <source media="(max-width: 767px)" srcSet={mobileImgUrl} />
+                          <img 
+                            src={desktopImgUrl} 
+                            alt={card.name} 
+                            className="w-full h-full bg-cover block"
+                          />
+                        </picture>
+                      ) : (
+                        <img 
+                          src={mobileImgUrl || desktopImgUrl} 
+                          alt={card.name} 
+                          className="w-full h-full bg-cover block"
+                        />
+                      )}
+                    </div>
+                  )}
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section>
