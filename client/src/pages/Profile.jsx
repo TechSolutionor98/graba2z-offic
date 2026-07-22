@@ -175,7 +175,7 @@ const Profile = () => {
     setAddressDetails({
       name: "",
       phone: profile.phone || "",
-      email: profile.email || "",
+      email: "",
       address: "",
       city: "",
       state: "",
@@ -809,28 +809,16 @@ const Profile = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Phone *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. 50XXXXXXX"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none text-sm animate-none"
-                    value={addressDetails.phone}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, phone: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Email</label>
-                  <input
-                    type="email"
-                    placeholder="email@example.com"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none text-sm animate-none"
-                    value={addressDetails.email}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, email: e.target.value })}
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Phone *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 50XXXXXXX"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none text-sm animate-none"
+                  value={addressDetails.phone}
+                  onChange={(e) => setAddressDetails({ ...addressDetails, phone: e.target.value })}
+                />
               </div>
 
               <div>
