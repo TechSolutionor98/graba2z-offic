@@ -8,7 +8,7 @@ import axios from "axios"
 import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import { useLanguage } from "../context/LanguageContext"
-import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Check } from "lucide-react"
+import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Check, Edit } from "lucide-react"
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
 import { getFullImageUrl } from "../utils/imageUtils"
@@ -266,13 +266,14 @@ const Checkout = () => {
   const [error, setError] = useState(null)
   const [deliveryType, setDeliveryType] = useState("home")
   const [showAddressModal, setShowAddressModal] = useState(false)
-  const [addressType, setAddressType] = useState("home")
+  const [editingAddressId, setEditingAddressId] = useState(null)
   const [addressDetails, setAddressDetails] = useState({
+    name: "",
+    phone: "",
     address: "",
-    zip: "",
-    country: "UAE",
-    state: "",
     city: "",
+    state: "",
+    zipCode: "",
     isDefault: false,
   })
   const [pickupDetails, setPickupDetails] = useState({
@@ -1205,6 +1206,21 @@ const Checkout = () => {
     }
   }
 
+  const handleEditAddressClick = (e, addr) => {
+    e.stopPropagation()
+    setEditingAddressId(addr._id)
+    setAddressDetails({
+      name: addr.name || "",
+      phone: addr.phone || "",
+      address: addr.address || "",
+      city: addr.city || "",
+      state: addr.state || "",
+      zipCode: addr.zipCode || "",
+      isDefault: addr.isDefault || false,
+    })
+    setShowAddressModal(true)
+  }
+
   // Update handleAddressModalSubmit to only save to localStorage for guests, and always update formData
   const handleAddressModalSubmit = async (e) => {
     e.preventDefault()
@@ -1212,26 +1228,34 @@ const Checkout = () => {
       address: addressDetails.address,
       city: addressDetails.city,
       state: addressDetails.state,
-      zipCode: addressDetails.zip,
+      zipCode: addressDetails.zipCode,
     }
 
     if (user) {
       try {
         const token = localStorage.getItem("token")
         const payload = {
-          name: addressType === "home" ? "Home" : "Office",
-          phone: formData.phone || user.phone || "",
+          name: addressDetails.name || "Home",
+          phone: addressDetails.phone || formData.phone || user.phone || "",
           email: formData.email || user.email || "",
           address: addressDetails.address,
           city: addressDetails.city,
           state: addressDetails.state,
-          zipCode: addressDetails.zip,
+          zipCode: addressDetails.zipCode,
           isDefault: addressDetails.isDefault,
         }
-        const { data } = await axios.post(`${config.API_URL}/api/users/addresses`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        setSavedAddresses(data)
+        
+        let response
+        if (editingAddressId) {
+          response = await axios.put(`${config.API_URL}/api/users/addresses/${editingAddressId}`, payload, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        } else {
+          response = await axios.post(`${config.API_URL}/api/users/addresses`, payload, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        }
+        setSavedAddresses(response.data)
       } catch (err) {
         // ignore/handle error
       }
@@ -1253,6 +1277,7 @@ const Checkout = () => {
       )
     }
     setShowAddressModal(false)
+    setEditingAddressId(null)
     // Do NOT advance step here; let main form handle it
   }
 
@@ -1601,11 +1626,21 @@ const Checkout = () => {
                                 >
                                   <div className="flex items-center justify-between mb-2">
                                     <span className="font-bold text-gray-800 text-xs">{addr.name}</span>
-                                    {isSelected && (
-                                      <span className="bg-lime-600 text-white rounded-full p-0.5">
-                                        <Check className="h-3 w-3" />
-                                      </span>
-                                    )}
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleEditAddressClick(e, addr)}
+                                        className="p-1 text-gray-400 hover:text-lime-600 rounded transition-colors"
+                                        title="Edit Address"
+                                      >
+                                        <Edit className="h-3.5 w-3.5" />
+                                      </button>
+                                      {isSelected && (
+                                        <span className="bg-lime-600 text-white rounded-full p-0.5">
+                                          <Check className="h-3 w-3" />
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                   <p className="text-xs text-gray-600 line-clamp-2">{addr.address}</p>
                                   <p className="text-xs text-gray-500 mt-1">{addr.city}, {addr.state}</p>
@@ -1617,6 +1652,7 @@ const Checkout = () => {
                           <button
                             type="button"
                             onClick={() => {
+                              setEditingAddressId(null)
                               setAddressDetails({
                                 address: "",
                                 zip: "",
@@ -2202,71 +2238,49 @@ const Checkout = () => {
               >
                 <X />
               </button>
-              <h3 className="font-bold text-2xl mb-6"><TranslatedText>Address Details</TranslatedText></h3>
+              <h3 className="font-bold text-2xl mb-6">
+                <TranslatedText>{editingAddressId ? "Edit Address Details" : "Address Details"}</TranslatedText>
+              </h3>
               <form onSubmit={handleAddressModalSubmit}>
-                <div className="flex gap-6 mb-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="addressType"
-                      value="home"
-                      checked={addressType === "home"}
-                      onChange={() => setAddressType("home")}
-                      className="accent-lime-500"
-                    />
-                    <TranslatedText>Home</TranslatedText>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="addressType"
-                      value="office"
-                      checked={addressType === "office"}
-                      onChange={() => setAddressType("office")}
-                      className="accent-lime-500"
-                    />
-                    <TranslatedText>Office</TranslatedText>
-                  </label>
+                <div className="mb-4">
+                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Address Label</TranslatedText> *</label>
+                  <input
+                    type="text"
+                    className="w-full border rounded-lg px-4 py-3"
+                    value={addressDetails.name}
+                    onChange={(e) => setAddressDetails({ ...addressDetails, name: e.target.value })}
+                    placeholder="e.g. Home, Office, Work"
+                    required
+                  />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Address</TranslatedText> *</label>
+                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Phone</TranslatedText> *</label>
+                  <input
+                    type="text"
+                    className="w-full border rounded-lg px-4 py-3"
+                    value={addressDetails.phone}
+                    onChange={(e) => setAddressDetails({ ...addressDetails, phone: e.target.value })}
+                    placeholder="e.g. 50XXXXXXX"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Address Street</TranslatedText> *</label>
                   <input
                     type="text"
                     className="w-full border rounded-lg px-4 py-3"
                     value={addressDetails.address}
                     onChange={(e) => setAddressDetails({ ...addressDetails, address: e.target.value })}
-                    placeholder="Enter address"
+                    placeholder="Street name, Villa/Apartment details"
                     required
                   />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Zip Code</TranslatedText> *</label>
-                  <input
-                    type="text"
-                    className="w-full border rounded-lg px-4 py-3"
-                    value={addressDetails.zip}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, zip: e.target.value })}
-                    placeholder="Enter zip code"
-                    required
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Country</TranslatedText></label>
-                  <select
-                    className="w-full border rounded-lg px-4 py-3"
-                    value={addressDetails.country}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, country: e.target.value })}
-                  >
-                    <option value="UAE">UAE</option>
-                  </select>
                 </div>
 
                 <div className="flex gap-4 mb-4">
                   <div className="w-1/2">
-                    <label className="block text-gray-700 font-medium mb-1"><TranslatedText>State/Region</TranslatedText> *</label>
+                    <label className="block text-gray-700 font-medium mb-1"><TranslatedText>State/Emirate</TranslatedText> *</label>
                     <select
                       className="w-full border rounded-lg px-4 py-3"
                       value={addressDetails.state}
@@ -2294,6 +2308,17 @@ const Checkout = () => {
                   </div>
                 </div>
 
+                <div className="mb-4">
+                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Zip Code / Post Code</TranslatedText></label>
+                  <input
+                    type="text"
+                    className="w-full border rounded-lg px-4 py-3"
+                    value={addressDetails.zipCode}
+                    onChange={(e) => setAddressDetails({ ...addressDetails, zipCode: e.target.value })}
+                    placeholder="00000"
+                  />
+                </div>
+
                 <div className="flex items-center gap-2 mb-6">
                   <input
                     type="checkbox"
@@ -2301,7 +2326,7 @@ const Checkout = () => {
                     onChange={(e) => setAddressDetails({ ...addressDetails, isDefault: e.target.checked })}
                     className="accent-lime-500"
                   />
-                  <span><TranslatedText>Default Address</TranslatedText></span>
+                  <span><TranslatedText>Set as Default Address</TranslatedText></span>
                 </div>
 
                 <div className="flex gap-4">

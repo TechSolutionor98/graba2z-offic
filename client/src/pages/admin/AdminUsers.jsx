@@ -11,16 +11,25 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [page, setPage] = useState(1)
+  const [pages, setPages] = useState(1)
+  const [total, setTotal] = useState(0)
 
   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, [page, searchTerm])
+
+  useEffect(() => {
+    setPage(1)
+  }, [searchTerm])
 
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      const data = await adminAPI.getUsers()
-      setUsers(data)
+      const data = await adminAPI.getUsers({ page, limit: 20, search: searchTerm.trim() })
+      setUsers(data.users || [])
+      setPages(data.pages || 1)
+      setTotal(data.total || 0)
       setLoading(false)
     } catch (error) {
       setError("Failed to load users. Please try again later.")
@@ -28,28 +37,27 @@ const AdminUsers = () => {
     }
   }
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
-
-  const handleDownloadCsv = () => {
-    downloadCsv({
-      rows: users,
-      columns: [
-        { header: "User ID", accessor: (row) => row._id || "" },
-        { header: "Name", accessor: (row) => row.name || "N/A" },
-        { header: "Email", accessor: (row) => row.email || "N/A" },
-        { header: "Role", accessor: (row) => (row.isAdmin ? "Admin" : "Customer") },
-        {
-          header: "Joined Date",
-          accessor: (row) => (row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "N/A"),
-        },
-        { header: "Status", accessor: () => "Active" },
-      ],
-      filename: "users-management.csv",
-    })
+  const handleDownloadCsv = async () => {
+    try {
+      const allUsers = await adminAPI.getUsers()
+      downloadCsv({
+        rows: allUsers,
+        columns: [
+          { header: "User ID", accessor: (row) => row._id || "" },
+          { header: "Name", accessor: (row) => row.name || "N/A" },
+          { header: "Email", accessor: (row) => row.email || "N/A" },
+          { header: "Role", accessor: (row) => (row.isAdmin ? "Admin" : "Customer") },
+          {
+            header: "Joined Date",
+            accessor: (row) => (row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "N/A"),
+          },
+          { header: "Status", accessor: () => "Active" },
+        ],
+        filename: "users-management.csv",
+      })
+    } catch (err) {
+      console.error("CSV download error:", err)
+    }
   }
 
   return (
@@ -112,8 +120,8 @@ const AdminUsers = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredUsers.length > 0 ? (
-                    filteredUsers.map((user) => (
+                  {users.length > 0 ? (
+                    users.map((user) => (
                       <tr key={user._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -167,6 +175,84 @@ const AdminUsers = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {pages > 1 && (
+              <div className="flex justify-center items-center gap-2 py-4 bg-gray-50 border-t border-gray-200">
+                <button
+                  className="px-3 py-1 border rounded bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  Previous
+                </button>
+                {(() => {
+                  const buttons = [];
+                  // Always show page 1
+                  buttons.push(
+                    <button
+                      key={1}
+                      className={`px-3 py-1 border rounded text-sm ${page === 1 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                      onClick={() => setPage(1)}
+                    >
+                      1
+                    </button>
+                  );
+
+                  let start = Math.max(2, page - 1);
+                  let end = Math.min(pages - 1, page + 1);
+
+                  if (page <= 2) {
+                    start = 2;
+                    end = Math.min(pages - 1, 3);
+                  } else if (page >= pages - 1) {
+                    start = Math.max(2, pages - 2);
+                    end = pages - 1;
+                  }
+
+                  if (start > 2) {
+                    buttons.push(<span key="start-ellipsis" className="px-1 text-gray-400">...</span>);
+                  }
+
+                  for (let i = start; i <= end; i++) {
+                    buttons.push(
+                      <button
+                        key={i}
+                        className={`px-3 py-1 border rounded text-sm ${page === i ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                        onClick={() => setPage(i)}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+
+                  if (end < pages - 1) {
+                    buttons.push(<span key="end-ellipsis" className="px-1 text-gray-400">...</span>);
+                  }
+
+                  if (pages > 1) {
+                    buttons.push(
+                      <button
+                        key={pages}
+                        className={`px-3 py-1 border rounded text-sm ${page === pages ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                        onClick={() => setPage(pages)}
+                      >
+                        {pages}
+                      </button>
+                    );
+                  }
+
+                  return buttons;
+                })()}
+                <button
+                  className="px-3 py-1 border rounded bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === pages}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
