@@ -2096,7 +2096,7 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {selectedPaymentMethod !== "cod" && (
+                {hasAdminDeliveryCharges && selectedPaymentMethod !== "cod" && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600"><TranslatedText>Shipping</TranslatedText></span>
                     <span className="text-black">{deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}</span>
@@ -2201,7 +2201,7 @@ const Checkout = () => {
                   <span className="text-black">{formatPrice(finalTotal)}</span>
                 </div>
 
-                {!hasAdminDeliveryCharges && selectedPaymentMethod !== "cod" && (
+                {hasAdminDeliveryCharges && deliveryCharge === 0 && selectedPaymentMethod !== "cod" && (
                   <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
                     <span className="text-lg">🎉</span>
                     <p className="text-sm text-green-700 font-medium"><TranslatedText>Free shipping is applied to this order.</TranslatedText></p>

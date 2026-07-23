@@ -727,10 +727,12 @@ const Cart = () => {
                     </select>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span className="text-gray-600"><TranslatedText>Shipping</TranslatedText></span>
-                  <span className="text-gray-900">{deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}</span>
-                </div>
+                {hasAdminDeliveryCharges && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600"><TranslatedText>Shipping</TranslatedText></span>
+                    <span className="text-gray-900">{deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}</span>
+                  </div>
+                )}
 
                 {/* Protection Plans Section */}
                 {protectionItems.length > 0 && (
@@ -815,7 +817,7 @@ const Cart = () => {
                 </div>
               </div>
 
-              {!hasAdminDeliveryCharges && (
+              {hasAdminDeliveryCharges && deliveryCharge === 0 && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-700 font-medium">
                     🎉 <TranslatedText>Free shipping is applied to this order.</TranslatedText>
