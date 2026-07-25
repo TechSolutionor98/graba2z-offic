@@ -629,7 +629,7 @@ const OfferPages = () => {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
-      <div className="flex-1 ml-64">
+      <div className="flex-1 ml-64 overflow-hidden">
         <div className="p-8">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900">All Offer Pages</h1>
@@ -864,7 +864,7 @@ const OfferPages = () => {
                     <h3 className="text-lg font-medium text-gray-900 mb-4">Filter & Search Products</h3>
                     
                     {/* First Row: Parent Category, Level 1, Level 2, Level 3, Level 4 */}
-                    <div className="grid grid-cols-5 gap-3 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
                       {/* Parent Category Filter */}
                       <div className="min-w-0">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
@@ -956,7 +956,7 @@ const OfferPages = () => {
                     </div>
 
                     {/* Second Row: Brand, Status, Search, Search by Link */}
-                    <div className="grid grid-cols-4 gap-3 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                       {/* Brand Filter */}
                       <div className="min-w-0">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
