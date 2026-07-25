@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
-import { FaEdit, FaTrash, FaPlus, FaChevronLeft, FaChevronRight } from "react-icons/fa"
+import { FaEdit, FaTrash, FaPlus, FaChevronLeft, FaChevronRight, FaSearch } from "react-icons/fa"
 import { useToast } from "../../context/ToastContext"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import config from "../../config/config"
@@ -26,6 +26,25 @@ const OfferPages = () => {
 
   const [adminSliderCategories, setAdminSliderCategories] = useState([])
   const [selectedAdminCategory, setSelectedAdminCategory] = useState(null)
+
+  const [categories, setCategories] = useState([])
+  const [subcategories, setSubcategories] = useState([])
+  const [brands, setBrands] = useState([])
+
+  const [filterCategory, setFilterCategory] = useState("all")
+  const [filterSubcategory, setFilterSubcategory] = useState("all")
+  const [filterSubcategory2, setFilterSubcategory2] = useState("all")
+  const [filterSubcategory3, setFilterSubcategory3] = useState("all")
+  const [filterSubcategory4, setFilterSubcategory4] = useState("all")
+  const [filterBrand, setFilterBrand] = useState("all")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [linkSearch, setLinkSearch] = useState("")
+
+  const [filteredSubcategories, setFilteredSubcategories] = useState([])
+  const [filteredSubcategories2, setFilteredSubcategories2] = useState([])
+  const [filteredSubcategories3, setFilteredSubcategories3] = useState([])
+  const [filteredSubcategories4, setFilteredSubcategories4] = useState([])
 
   useEffect(() => {
     if (!offerProducts || offerProducts.length === 0) {
@@ -68,7 +87,125 @@ const OfferPages = () => {
 
   useEffect(() => {
     fetchOfferPages()
+    fetchAllCategories()
+    fetchAllBrands()
+    fetchAllSubcategories()
   }, [])
+
+  // Cascading filter for all subcategory levels
+  useEffect(() => {
+    if (filterCategory === "all") {
+      setFilteredSubcategories(subcategories.filter(sub => sub.level === 1))
+    } else {
+      setFilteredSubcategories(subcategories.filter(sub => 
+        sub.level === 1 && sub.category && sub.category._id === filterCategory
+      ))
+    }
+    setFilterSubcategory("all")
+    setFilterSubcategory2("all")
+    setFilterSubcategory3("all")
+    setFilterSubcategory4("all")
+    setFilteredSubcategories2([])
+    setFilteredSubcategories3([])
+    setFilteredSubcategories4([])
+  }, [filterCategory, subcategories])
+
+  useEffect(() => {
+    if (filterSubcategory === "all" || !filterSubcategory) {
+      setFilteredSubcategories2([])
+    } else {
+      setFilteredSubcategories2(subcategories.filter(sub => {
+        if (sub.level !== 2 || !sub.parentSubCategory) return false
+        const parentId = typeof sub.parentSubCategory === 'object' ? sub.parentSubCategory._id : sub.parentSubCategory
+        return parentId === filterSubcategory
+      }))
+    }
+    setFilterSubcategory2("all")
+    setFilterSubcategory3("all")
+    setFilterSubcategory4("all")
+    setFilteredSubcategories3([])
+    setFilteredSubcategories4([])
+  }, [filterSubcategory, subcategories])
+
+  useEffect(() => {
+    if (filterSubcategory === "all" || !filterSubcategory) {
+      setFilteredSubcategories3([])
+    } else {
+      const parentId = (filterSubcategory2 !== "all" && filterSubcategory2) ? filterSubcategory2 : filterSubcategory
+      setFilteredSubcategories3(subcategories.filter(sub => {
+        if (sub.level !== 3 || !sub.parentSubCategory) return false
+        const subParentId = typeof sub.parentSubCategory === 'object' ? sub.parentSubCategory._id : sub.parentSubCategory
+        return subParentId === parentId
+      }))
+    }
+    setFilterSubcategory3("all")
+    setFilterSubcategory4("all")
+    setFilteredSubcategories4([])
+  }, [filterSubcategory, filterSubcategory2, subcategories])
+
+  useEffect(() => {
+    if (filterSubcategory === "all" || !filterSubcategory) {
+      setFilteredSubcategories4([])
+    } else {
+      let parentId = filterSubcategory
+      if (filterSubcategory3 !== "all" && filterSubcategory3) {
+        parentId = filterSubcategory3
+      } else if (filterSubcategory2 !== "all" && filterSubcategory2) {
+        parentId = filterSubcategory2
+      }
+      setFilteredSubcategories4(subcategories.filter(sub => {
+        if (sub.level !== 4 || !sub.parentSubCategory) return false
+        const subParentId = typeof sub.parentSubCategory === 'object' ? sub.parentSubCategory._id : sub.parentSubCategory
+        return subParentId === parentId
+      }))
+    }
+    setFilterSubcategory4("all")
+  }, [filterSubcategory, filterSubcategory2, filterSubcategory3, subcategories])
+
+  const fetchAllCategories = async () => {
+    try {
+      const token = localStorage.getItem("adminToken")
+      if (!token) return
+      const response = await fetch(`${config.API_URL}/api/categories`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data)
+      }
+    } catch (error) {
+      console.error("Failed to load categories:", error)
+    }
+  }
+
+  const fetchAllBrands = async () => {
+    try {
+      const response = await fetch(`${config.API_URL}/api/brands`)
+      if (response.ok) {
+        const data = await response.json()
+        setBrands(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error("Failed to load brands:", error)
+    }
+  }
+
+  const fetchAllSubcategories = async () => {
+    try {
+      const response = await fetch(`${config.API_URL}/api/subcategories`)
+      if (response.ok) {
+        const data = await response.json()
+        const validSubcategories = Array.isArray(data)
+          ? data.filter(sub => sub && sub.category && sub.category._id)
+          : []
+        setSubcategories(validSubcategories)
+      }
+    } catch (error) {
+      console.error("Failed to load subcategories:", error)
+    }
+  }
 
   const fetchOfferPages = async () => {
     try {
@@ -408,22 +545,85 @@ const OfferPages = () => {
   }
 
   const filteredProducts = offerProducts.filter((item) => {
-    if (!selectedAdminCategory) return true
     const product = item.product
     if (!product) return false
 
-    const candidates = [
-      product.subcategory4 || product.subCategory4,
-      product.subcategory3 || product.subCategory3,
-      product.subcategory2 || product.subCategory2,
-      product.subcategory || product.subCategory,
-      product.category,
-      product.parentCategory
-    ]
-    return candidates.some((cat) => {
-      const catId = typeof cat === 'object' ? cat?._id : cat
-      return catId === selectedAdminCategory
-    })
+    // 1. Filter by Category Slider (deepest category selected)
+    if (selectedAdminCategory) {
+      const candidates = [
+        product.subcategory4 || product.subCategory4,
+        product.subcategory3 || product.subCategory3,
+        product.subcategory2 || product.subCategory2,
+        product.subcategory || product.subCategory,
+        product.category,
+        product.parentCategory
+      ]
+      const matchesSlider = candidates.some((cat) => {
+        const catId = typeof cat === 'object' ? cat?._id : cat
+        return catId === selectedAdminCategory
+      })
+      if (!matchesSlider) return false
+    }
+
+    // 2. Filter by Parent Category
+    if (filterCategory !== "all") {
+      const pCatId = typeof product.parentCategory === 'object' ? product.parentCategory?._id : product.parentCategory
+      if (pCatId !== filterCategory) return false
+    }
+
+    // 3. Filter by Level 1
+    if (filterSubcategory !== "all") {
+      const subCatId = typeof product.subcategory === 'object' ? product.subcategory?._id : (product.subcategory || product.subCategory)
+      if (subCatId !== filterSubcategory) return false
+    }
+
+    // 4. Filter by Level 2
+    if (filterSubcategory2 !== "all") {
+      const subCat2Id = typeof product.subcategory2 === 'object' ? product.subcategory2?._id : (product.subcategory2 || product.subCategory2)
+      if (subCat2Id !== filterSubcategory2) return false
+    }
+
+    // 5. Filter by Level 3
+    if (filterSubcategory3 !== "all") {
+      const subCat3Id = typeof product.subcategory3 === 'object' ? product.subcategory3?._id : (product.subcategory3 || product.subCategory3)
+      if (subCat3Id !== filterSubcategory3) return false
+    }
+
+    // 6. Filter by Level 4
+    if (filterSubcategory4 !== "all") {
+      const subCat4Id = typeof product.subcategory4 === 'object' ? product.subcategory4?._id : (product.subcategory4 || product.subCategory4)
+      if (subCat4Id !== filterSubcategory4) return false
+    }
+
+    // 7. Filter by Brand
+    if (filterBrand !== "all") {
+      const brandId = typeof product.brand === 'object' ? product.brand?._id : product.brand
+      if (brandId !== filterBrand) return false
+    }
+
+    // 8. Filter by Status (Active / Inactive of the offer item)
+    if (filterStatus !== "all") {
+      const statusBool = filterStatus === "active"
+      if (item.isActive !== statusBool) return false
+    }
+
+    // 9. Filter by Search (Name, SKU, Brand name)
+    if (searchTerm.trim() !== "") {
+      const sTerm = searchTerm.toLowerCase().trim()
+      const matchesName = product.name?.toLowerCase().includes(sTerm)
+      const matchesSku = product.sku?.toLowerCase().includes(sTerm)
+      const matchesBrand = product.brand?.name?.toLowerCase().includes(sTerm)
+      if (!matchesName && !matchesSku && !matchesBrand) return false
+    }
+
+    // 10. Filter by Search by Link (Slug/URL matching)
+    if (linkSearch.trim() !== "") {
+      const lSearch = linkSearch.toLowerCase().trim()
+      const matchesSlug = product.slug?.toLowerCase().includes(lSearch)
+      if (!matchesSlug) return false
+    }
+
+    return true
   })
 
   return (
@@ -659,6 +859,190 @@ const OfferPages = () => {
                 </div>
               ) : activeTab === 'products' ? (
                 <div>
+                  {/* Search and Filters Section */}
+                  <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6 max-w-full overflow-visible shadow-sm">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Filter & Search Products</h3>
+                    
+                    {/* First Row: Parent Category, Level 1, Level 2, Level 3, Level 4 */}
+                    <div className="grid grid-cols-5 gap-3 mb-4">
+                      {/* Parent Category Filter */}
+                      <div className="min-w-0">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Parent Category</label>
+                        <select
+                          value={filterCategory}
+                          onChange={(e) => setFilterCategory(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
+                        >
+                          <option value="all">All Categories</option>
+                          {categories.map((category) => (
+                            <option key={category._id} value={category._id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Level 1 Subcategory Filter */}
+                      <div className="min-w-0">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Level 1</label>
+                        <select
+                          value={filterSubcategory}
+                          onChange={(e) => setFilterSubcategory(e.target.value)}
+                          disabled={filterCategory === "all"}
+                          className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm bg-white"
+                        >
+                          <option value="all">{filterCategory === "all" ? "Select Parent First" : "All Level 1"}</option>
+                          {filteredSubcategories.map((subcategory) => (
+                            <option key={subcategory._id} value={subcategory._id}>
+                              {subcategory.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Level 2 Subcategory Filter */}
+                      <div className="min-w-0">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Level 2</label>
+                        <select
+                          value={filterSubcategory2}
+                          onChange={(e) => setFilterSubcategory2(e.target.value)}
+                          disabled={filterSubcategory === "all" || filteredSubcategories2.length === 0}
+                          className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm bg-white"
+                        >
+                          <option value="all">{filterSubcategory === "all" ? "Select Level 1 First" : filteredSubcategories2.length === 0 ? "No Level 2" : "All Level 2"}</option>
+                          {filteredSubcategories2.map((subcategory) => (
+                            <option key={subcategory._id} value={subcategory._id}>
+                              {subcategory.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Level 3 Subcategory Filter */}
+                      <div className="min-w-0">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Level 3</label>
+                        <select
+                          value={filterSubcategory3}
+                          onChange={(e) => setFilterSubcategory3(e.target.value)}
+                          disabled={filterSubcategory === "all" || filteredSubcategories3.length === 0}
+                          className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm bg-white"
+                        >
+                          <option value="all">{filterSubcategory === "all" ? "Select Level 1 First" : filteredSubcategories3.length === 0 ? "No Level 3" : "All Level 3"}</option>
+                          {filteredSubcategories3.map((subcategory) => (
+                            <option key={subcategory._id} value={subcategory._id}>
+                              {subcategory.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Level 4 Subcategory Filter */}
+                      <div className="min-w-0">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Level 4</label>
+                        <select
+                          value={filterSubcategory4}
+                          onChange={(e) => setFilterSubcategory4(e.target.value)}
+                          disabled={filterSubcategory === "all" || filteredSubcategories4.length === 0}
+                          className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed text-sm bg-white"
+                        >
+                          <option value="all">{filterSubcategory === "all" ? "Select Level 1 First" : filteredSubcategories4.length === 0 ? "No Level 4" : "All Level 4"}</option>
+                          {filteredSubcategories4.map((subcategory) => (
+                            <option key={subcategory._id} value={subcategory._id}>
+                              {subcategory.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Second Row: Brand, Status, Search, Search by Link */}
+                    <div className="grid grid-cols-4 gap-3 mb-4">
+                      {/* Brand Filter */}
+                      <div className="min-w-0">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
+                        <select
+                          value={filterBrand}
+                          onChange={(e) => setFilterBrand(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
+                        >
+                          <option value="all">All Brands</option>
+                          {brands.map((brand) => (
+                            <option key={brand._id} value={brand._id}>
+                              {brand.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Status Filter */}
+                      <div className="min-w-0">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select
+                          value={filterStatus}
+                          onChange={(e) => setFilterStatus(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
+                        >
+                          <option value="all">All Products</option>
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
+                      </div>
+
+                      {/* Search Filter */}
+                      <div className="min-w-0">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                        <div className="relative">
+                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+                          <input
+                            type="text"
+                            placeholder="Name, SKU, Brand..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-9 pr-2 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Search by Link Filter */}
+                      <div className="min-w-0">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Search by Link</label>
+                        <div className="relative">
+                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+                          <input
+                            type="text"
+                            placeholder="Paste product link..."
+                            value={linkSearch}
+                            onChange={(e) => setLinkSearch(e.target.value)}
+                            className="pl-9 pr-2 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Clear Filters Button */}
+                    {(searchTerm || linkSearch || filterCategory !== "all" || filterSubcategory !== "all" || filterSubcategory2 !== "all" || filterSubcategory3 !== "all" || filterSubcategory4 !== "all" || filterBrand !== "all" || filterStatus !== "all" || selectedAdminCategory) && (
+                      <div className="flex justify-start mt-4">
+                        <button
+                          onClick={() => {
+                            setSearchTerm("")
+                            setLinkSearch("")
+                            setFilterCategory("all")
+                            setFilterSubcategory("all")
+                            setFilterSubcategory2("all")
+                            setFilterSubcategory3("all")
+                            setFilterSubcategory4("all")
+                            setFilterBrand("all")
+                            setFilterStatus("all")
+                            setSelectedAdminCategory(null)
+                          }}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 transition-colors font-medium"
+                        >
+                          Clear Filters
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Categories Slider */}
                   {adminSliderCategories.length > 0 && (
                     <div className="mb-6 relative border-b pb-6 px-2">
@@ -783,7 +1167,7 @@ const OfferPages = () => {
                                 />
                               )}
                               <div>
-                                <div className="text-sm font-medium text-gray-900">
+                                <div className="text-sm font-medium text-gray-900 max-w-[450px] truncate" title={item.product?.name}>
                                   {item.product?.name || 'N/A'}
                                 </div>
                                 <div className="text-sm text-gray-500">
