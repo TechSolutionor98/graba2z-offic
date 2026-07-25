@@ -337,46 +337,39 @@ const Profile = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Upper Welcome Banner */}
-      <div className="bg-gradient-to-r from-lime-600 to-green-700 rounded-2xl shadow-lg p-6 md:p-8 mb-8 text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center space-x-6">
-          <div className="bg-white/20 backdrop-blur-md p-5 rounded-full ring-4 ring-white/10">
-            <User size={48} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-wide mb-1">{profile.name}</h1>
-            <p className="text-lime-100 flex items-center gap-2 font-medium text-sm md:text-base">
-              <Mail size={16} />
-              {profile.email}
-            </p>
-            {user?.isEmailVerified && (
-              <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 bg-white/20 rounded-full text-xs font-semibold">
-                <Shield size={12} />
-                Verified Account
-              </span>
-            )}
-          </div>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+        {/* Decorative vertical green bar on the far right */}
+        <div className="absolute right-0 top-0 bottom-0 w-2 bg-lime-600"></div>
+
+        <div className="flex items-center space-x-4">
+          <h1 className="text-lg md:text-xl font-extrabold text-gray-800 tracking-tight capitalize">
+            {profile.name}
+          </h1>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 md:gap-x-6 pr-4">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className="text-gray-900 font-bold text-xs md:text-sm hover:opacity-80 transition"
+          >
+            Profile
+          </button>
           <button
             onClick={() => navigate(getLocalizedPath("/orders"))}
-            className="flex items-center gap-2 bg-white/15 hover:bg-white/25 transition-all px-4 py-2.5 rounded-xl font-semibold text-sm"
+            className="text-gray-600 hover:text-gray-900 font-semibold text-xs md:text-sm transition"
           >
-            <Package size={16} />
             My Orders
           </button>
           <button
-            onClick={() => navigate("/wishlist")}
-            className="flex items-center gap-2 bg-white/15 hover:bg-white/25 transition-all px-4 py-2.5 rounded-xl font-semibold text-sm"
+            onClick={() => navigate(getLocalizedPath("/track-order"))}
+            className="text-gray-600 hover:text-gray-900 font-semibold text-xs md:text-sm transition"
           >
-            <Heart size={16} />
-            Wishlist
+            Track Order
           </button>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 transition-all px-4 py-2.5 rounded-xl font-semibold text-sm shadow-md"
+            className="text-red-600 hover:text-red-700 font-bold text-xs md:text-sm transition"
           >
-            <LogOut size={16} />
             Logout
           </button>
         </div>

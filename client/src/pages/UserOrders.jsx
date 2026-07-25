@@ -19,7 +19,7 @@ import config from "../config/config"
 const UserOrders = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, logout } = useAuth()
   const { getLocalizedPath } = useLanguage()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -27,6 +27,11 @@ const UserOrders = () => {
   const [successMessage, setSuccessMessage] = useState("")
 
   const { addToCart } = useCart()
+
+  const handleLogout = () => {
+    logout()
+    navigate("/")
+  }
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [expandedOrders, setExpandedOrders] = useState({})
@@ -228,8 +233,49 @@ const UserOrders = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Upper Welcome Banner */}
+        {isAuthenticated && user && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+            {/* Decorative vertical green bar on the far right */}
+            <div className="absolute right-0 top-0 bottom-0 w-2 bg-lime-600"></div>
+
+            <div className="flex items-center space-x-4">
+              <h1 className="text-lg md:text-xl font-extrabold text-gray-800 tracking-tight capitalize">
+                {user.name}
+              </h1>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 md:gap-x-6 pr-4">
+              <button
+                onClick={() => navigate(getLocalizedPath("/profile"))}
+                className="text-gray-600 hover:text-gray-900 font-semibold text-xs md:text-sm transition"
+              >
+                Profile
+              </button>
+              <button
+                onClick={() => navigate(getLocalizedPath("/orders"))}
+                className="text-gray-900 font-bold text-xs md:text-sm hover:opacity-80 transition"
+              >
+                My Orders
+              </button>
+              <button
+                onClick={() => navigate(getLocalizedPath("/track-order"))}
+                className="text-gray-600 hover:text-gray-900 font-semibold text-xs md:text-sm transition"
+              >
+                Track Order
+              </button>
+              <button
+                onClick={handleLogout}
+                className="text-red-600 hover:text-red-700 font-bold text-xs md:text-sm transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">My Orders</h1>

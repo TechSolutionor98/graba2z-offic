@@ -1,23 +1,30 @@
 "use client"
 
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useToast } from "../context/ToastContext"
 import { Package, Truck, CheckCircle, Clock, AlertCircle, Search } from "lucide-react"
 import axios from "axios"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { useLanguage } from "../context/LanguageContext"
 import TranslatedText from "../components/TranslatedText"
+import { useAuth } from "../context/AuthContext"
 
 import config from "../config/config"
 
 const TrackOrder = () => {
+  const navigate = useNavigate()
+  const { user, isAuthenticated, logout } = useAuth()
   const { showToast } = useToast()
   const { isArabic, getLocalizedPath } = useLanguage()
   const [formData, setFormData] = useState({
     email: "",
     orderId: "",
   })
+  const handleLogout = () => {
+    logout()
+    navigate("/")
+  }
   const [loading, setLoading] = useState(false)
   const [orderData, setOrderData] = useState(null)
   const [error, setError] = useState("")
@@ -134,7 +141,49 @@ const TrackOrder = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 overflow-x-hidden">
-      <div className="max-w-4xl w-full mx-auto px-4">
+      <div className="max-w-7xl w-full mx-auto px-4">
+        {/* Upper Welcome Banner */}
+        {isAuthenticated && user && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+            {/* Decorative vertical green bar on the far right */}
+            <div className="absolute right-0 top-0 bottom-0 w-2 bg-lime-600"></div>
+
+            <div className="flex items-center space-x-4">
+              <h1 className="text-lg md:text-xl font-extrabold text-gray-800 tracking-tight capitalize">
+                {user.name}
+              </h1>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 md:gap-x-6 pr-4">
+              <button
+                onClick={() => navigate(getLocalizedPath("/profile"))}
+                className="text-gray-600 hover:text-gray-900 font-semibold text-xs md:text-sm transition"
+              >
+                Profile
+              </button>
+              <button
+                onClick={() => navigate(getLocalizedPath("/orders"))}
+                className="text-gray-600 hover:text-gray-900 font-semibold text-xs md:text-sm transition"
+              >
+                My Orders
+              </button>
+              <button
+                onClick={() => navigate(getLocalizedPath("/track-order"))}
+                className="text-gray-900 font-bold text-xs md:text-sm hover:opacity-80 transition"
+              >
+                Track Order
+              </button>
+              <button
+                onClick={handleLogout}
+                className="text-red-600 hover:text-red-700 font-bold text-xs md:text-sm transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2"><TranslatedText>Track Your Order</TranslatedText></h1>
           <p className="text-gray-600"><TranslatedText>Enter your email and order ID to track your order status</TranslatedText></p>
@@ -392,6 +441,7 @@ const TrackOrder = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   )
