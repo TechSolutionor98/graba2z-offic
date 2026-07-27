@@ -115,7 +115,7 @@ import ProductPaymentMethods from "../pages/admin/ProductPaymentMethods"
 const AdminPortal = () => {
   return (
     <AdminRoute>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white" style={{ zoom: 0.75 }}>
         <AdminSidebar />
         <AdminHeader />
         <div className=" ">

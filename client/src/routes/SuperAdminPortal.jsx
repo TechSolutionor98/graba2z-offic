@@ -12,7 +12,7 @@ import SuperAdminReports from "../pages/superadmin/SuperAdminReports"
 const SuperAdminPortal = () => {
   return (
     <SuperAdminRoute>
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50" style={{ zoom: 0.75 }}>
         <SuperAdminSidebar />
         <SuperAdminHeader />
         <div className="lg:ml-72 pt-20 p-6">
