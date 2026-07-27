@@ -218,13 +218,13 @@ const BigSaleSection = ({ products = [] }) => {
 
   // Only show on desktop (md and above)
   return (
-    <section className="my-6 hidden md:block overflow-hidden bg-[#53a132]" style={{ minHeight: "400px" }}>
+    <section className="my-6 hidden md:block overflow-hidden bg-[#51962c]" style={{ minHeight: "400px" }}>
       <div className="w-full px-5">
         <div className="flex items-center gap-4">
           {/* Logo Section - 30% */}
           <div className="w-[30%] flex items-center justify-center py-8">
             <div className="w-full h-full flex items-center justify-center">
-              <img src="discountshado.webp" alt="Mega Sale" className="w-full h-auto object-contain max-h-[360px]" />
+              <img src="/design2.png" alt="Mega Sale" className="w-full h-auto object-contain max-h-[300px]" />
             </div>
           </div>
 
