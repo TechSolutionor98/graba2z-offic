@@ -193,7 +193,7 @@ const SuperAdminSidebar = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-full w-72 bg-white border-r border-green-100 shadow-xl z-40 transform transition-transform duration-300 ${
+        className={`fixed left-0 top-0 h-[133.33vh] w-72 bg-white border-r border-green-100 shadow-xl z-40 transform transition-transform duration-300 ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
@@ -226,7 +226,7 @@ const SuperAdminSidebar = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-2 flex-1 overflow-y-auto max-h-[calc(100vh-320px)]">
+        <nav className="p-4 space-y-2 flex-1 overflow-y-auto max-h-[calc(133.33vh-320px)]">
           {menuItems.map(renderMenuItem)}
         </nav>
 

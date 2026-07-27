@@ -805,7 +805,7 @@ const AdminSidebar = () => {
   }
 
   return (
-    <div className="w-64 bg-white shadow-lg h-screen overflow-y-auto fixed left-0 top-0 z-50 flex flex-col">
+    <div className="w-64 bg-white shadow-lg h-[133.33vh] overflow-hidden fixed left-0 top-0 z-50 flex flex-col">
       <div className="p-6 border-b flex-shrink-0">
         <Link to="/admin/dashboard" className="flex items-center space-x-2">
           <img src="/admin-logo.svg" alt="Admin" className="" />
