@@ -24,6 +24,15 @@ export default function PrivacyPolicy() {
             "We collect information you provide voluntarily, such as during registration, purchases, or contacting customer support, and use it solely to provide, personalize, and enhance our services.",
           ],
         },
+        dataRetention: {
+          title: "Data Retention and Deletion Policy",
+          points: [
+            "We retain your personal data (such as name, email, phone number, and address) for as long as your account remains active or as needed to provide you with our services.",
+            "We retain transaction history and order details as required by applicable commercial, tax, and regulatory laws in the United Arab Emirates.",
+            "You can request the deletion of your account and personal data at any time through the application settings or by contacting our customer support at customercare@grabatoz.ae.",
+            "Upon receiving a deletion request, we will delete or anonymize your personal data within 30 days, except for data we are legally required to retain for regulatory, compliance, or fraud prevention purposes.",
+          ],
+        },
         cookies: {
           title: "Cookies and Tracking Technologies",
           points: [
@@ -79,6 +88,15 @@ export default function PrivacyPolicy() {
             "نحن لا نجمع بيانات شخصية من المستخدمين المقيمين في الاتحاد الأوروبي.",
             "نستخدم مزودي خدمات من طرف ثالث مخولين، مثل بوابات الدفع وأدوات التحليل ومزودي الشحن، لتشغيل وتحسين خدماتنا. قد يقوم هؤلاء الطرف الثالث بجمع ومعالجة البيانات وفقًا لسياسات الخصوصية الخاصة بهم.",
             "نجمع المعلومات التي تقدمها طواعيةً، مثل التسجيل أو الشراء أو التواصل مع دعم العملاء، ونستخدمها فقط لتقديم خدماتنا وتخصيصها وتحسينها.",
+          ],
+        },
+        dataRetention: {
+          title: "سياسة الاحتفاظ بالبيانات وحذفها",
+          points: [
+            "نحتفظ ببياناتك الشخصية (مثل الاسم والبريد الإلكتروني ورقم الهاتف والعنوان) طالما كان حسابك نشطًا أو حسب الحاجة لتقديم خدماتنا لك.",
+            "نحتفظ بسجل المعاملات وتفاصيل الطلب كما هو مطلوب بموجب القوانين التجارية والضريبية والتنظيمية المعمول بها في دولة الإمارات العربية المتحدة.",
+            "يمكنك طلب حذف حسابك وبياناتك الشخصية في أي وقت من خلال إعدادات التطبيق أو عن طريق الاتصال بدعم العملاء لدينا على customercare@grabatoz.ae.",
+            "عند تلقي طلب الحذف، سنقوم بحذف بياناتك الشخصية أو إخفاء هويتها في غضون 30 يومًا، باستثناء البيانات التي يتعين علينا الاحتفاظ بها قانونًا لأغراض تنظيمية أو امتثال أو منع الاحتيال.",
           ],
         },
         cookies: {
@@ -179,6 +197,21 @@ export default function PrivacyPolicy() {
               </h2>
               <ul className="space-y-3">
                 {currentContent.sections.dataCollection.points.map((point, index) => (
+                  <li key={index} className="text-gray-700 leading-relaxed flex items-start">
+                    <span className="inline-block w-2 h-2 bg-lime-500 rounded-full mt-2 mr-3 ml-1 flex-shrink-0"></span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Data Retention and Deletion Policy */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4 border-b-2 border-lime-500 pb-2">
+                {currentContent.sections.dataRetention.title}
+              </h2>
+              <ul className="space-y-3">
+                {currentContent.sections.dataRetention.points.map((point, index) => (
                   <li key={index} className="text-gray-700 leading-relaxed flex items-start">
                     <span className="inline-block w-2 h-2 bg-lime-500 rounded-full mt-2 mr-3 ml-1 flex-shrink-0"></span>
                     <span>{point}</span>
