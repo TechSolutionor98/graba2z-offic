@@ -15,8 +15,8 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
   const resolvedItems = Array.isArray(order?.orderItems) ? order.orderItems : []
   
   // Separate protection items from regular items
-  const protectionItems = resolvedItems.filter(item => item.isProtection || (item.name && item.name.includes('for ')))
-  const regularItems = resolvedItems.filter(item => !item.isProtection && !(item.name && item.name.includes('for ')))
+  const protectionItems = resolvedItems.filter(item => item.isProtection || item.protectionData || item.protectionFor)
+  const regularItems = resolvedItems.filter(item => !item.isProtection && !item.protectionData && !item.protectionFor)
   
   const baseSubtotal = computeBaseSubtotal(regularItems)
 

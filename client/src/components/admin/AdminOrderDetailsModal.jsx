@@ -458,7 +458,7 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
             <div className="bg-white border rounded-lg p-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
               <div className="space-y-4">
-                {order.orderItems?.filter(item => !item.isProtection && !(item.name && item.name.includes('for '))).map((item, index) => {
+                {order.orderItems?.filter(item => !item.isProtection && !item.protectionData && !item.protectionFor).map((item, index) => {
                   const basePrice = resolveOrderItemBasePrice(item)
                   const salePrice = Number(item.price) || basePrice
                   const showDiscount = basePrice > salePrice
@@ -507,14 +507,14 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
             </div>
 
             {/* Protection Plans Section */}
-            {order.orderItems?.some(item => item.isProtection || (item.name && item.name.includes('for '))) && (
+            {order.orderItems?.some(item => item.isProtection || item.protectionData || item.protectionFor) && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
                   <Shield size={20} className="text-blue-600" />
                   Protection Plans
                 </h3>
                 <div className="space-y-4">
-                  {order.orderItems?.filter(item => item.isProtection || (item.name && item.name.includes('for '))).map((item, index) => {
+                  {order.orderItems?.filter(item => item.isProtection || item.protectionData || item.protectionFor).map((item, index) => {
                     const itemPrice = Number(item.price) || 0
                     const lineTotal = itemPrice * (item.quantity || 0)
 
