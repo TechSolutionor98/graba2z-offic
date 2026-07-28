@@ -3,7 +3,7 @@ import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor } from "../../utils/paymentUtils"
 
-const InvoiceComponent = forwardRef(({ order, showStatus }, ref) => {
+const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) => {
   const formatPrice = (price) => {
     return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
@@ -80,17 +80,18 @@ const InvoiceComponent = forwardRef(({ order, showStatus }, ref) => {
           </div>
 
           <div className="w-1/2 text-end p-5   rounded-xl backdrop-blur-sm max-w-xs ml-auto">
-            <h2 className="text-2xl font-bold mb-1">VAT INVOICE</h2>
-            <div className="text-lg font-semibold mb-1">Order: #{order._id.slice(-6)}</div>
+            <h2 className="text-2xl font-bold mb-1">{isQuotation ? "QUOTATION" : "VAT INVOICE"}</h2>
+            <div className="text-lg font-semibold mb-1">{isQuotation ? "Quotation" : "Order"}: #{order?._id?.slice(-6)}</div>
             <div className="text-sm">📅 Date: {orderDate}</div>
-            {showStatus && <div className="text-sm font-semibold mt-1 text-lime-700">🏷️ Status: {order.status}</div>}
+            {showStatus && !isQuotation && <div className="text-sm font-semibold mt-1 text-lime-700">🏷️ Status: {order.status}</div>}
+            {showStatus && isQuotation && <div className="text-sm font-semibold mt-1 text-lime-700">🏷️ Status: {order.quotationStatus || "Draft"}</div>}
           </div>
         </div>
       </div>
 
       {/* Order Summary Section */}
       <div className="bg-white  border-l-4 pl-2 border-lime-500">
-        <h3 className="text-2xl font-bold text-lime-800 mb-2 uppercase tracking-wide">📋 Order Summary</h3>
+        <h3 className="text-2xl font-bold text-lime-800 mb-2 uppercase tracking-wide">📋 {isQuotation ? "Quotation Summary" : "Order Summary"}</h3>
 
         {/* Addresses */}
         <div className="grid grid-cols-2 md:grid-cols-2 gap-6 mb-2">
@@ -165,7 +166,7 @@ const InvoiceComponent = forwardRef(({ order, showStatus }, ref) => {
 
         {/* Order Items */}
         <div className="mb-4">
-          <h4 className="text-lg font-bold text-lime-800 mb-2 uppercase">🛍️ Order Items</h4>
+          <h4 className="text-lg font-bold text-lime-800 mb-2 uppercase">🛍️ {isQuotation ? "Quotation Items" : "Order Items"}</h4>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-lime-300">
               <thead>

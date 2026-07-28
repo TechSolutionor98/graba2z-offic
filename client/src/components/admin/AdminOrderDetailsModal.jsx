@@ -18,7 +18,7 @@ import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor } from "../../utils/paymentUtils"
-import { paymentMethodChargeAPI } from "../../services/api"
+import { paymentMethodChargeAPI, adminAPI } from "../../services/api"
 import InvoiceComponent from "./InvoiceComponent"
 
 const orderStatusOptions = [
@@ -35,7 +35,7 @@ const orderStatusOptions = [
   "Deleted",
 ]
 
-const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate }) => {
+const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate, isQuotation }) => {
   const [order, setOrder] = useState(initialOrder)
   const [processingAction, setProcessingAction] = useState(false)
   const [error, setError] = useState(null)
@@ -53,6 +53,31 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
   const [fallbackDynamicCharges, setFallbackDynamicCharges] = useState([])
 
   const printComponentRef = useRef(null)
+
+  const [sendingConvert, setSendingConvert] = useState(false)
+  const [sendEmailOnConvert, setSendEmailOnConvert] = useState(false)
+
+  const convertQuotation = async () => {
+    if (!order?._id) return
+    try {
+      setSendingConvert(true)
+      const response = await adminAPI.convertQuotation(order._id, {
+        sendCustomerEmail: sendEmailOnConvert,
+      })
+      alert(`Quotation converted to Order #${response?.order?._id?.slice?.(-6) || ""}`)
+      const updatedQuotation = {
+        ...order,
+        quotationStatus: "Converted",
+        convertedOrderId: response?.order?._id || response?.order,
+      }
+      setOrder(updatedQuotation)
+      if (onUpdate) onUpdate(updatedQuotation)
+    } catch (e) {
+      alert(e?.message || "Failed to convert quotation")
+    } finally {
+      setSendingConvert(false)
+    }
+  }
 
   const selectedTotals = order ? getInvoiceBreakdown(order) : {}
 
@@ -266,11 +291,11 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
               <div className="flex items-center space-x-2 text-sm text-gray-500 mb-1">
                 <span>Dashboard</span>
                 <span>/</span>
-                <span>Orders</span>
+                <span>{isQuotation ? "Quotations" : "Orders"}</span>
                 <span>/</span>
                 <span className="text-lime-600">View</span>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Order ID: {order._id.slice(-6)}</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{isQuotation ? "Quotation" : "Order"} ID: {order._id.slice(-6)}</h2>
             </div>
             <button
               onClick={onClose}
@@ -287,8 +312,10 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                 <div className="flex items-center space-x-2">
                   <Package className="text-lime-600" size={20} />
                   <div>
-                    <p className="text-sm text-gray-600">Status</p>
-                    <p className="font-semibold text-lime-900">{order.status || "New"}</p>
+                    <p className="text-sm text-gray-600">{isQuotation ? "Quotation Status" : "Status"}</p>
+                    <p className="font-semibold text-lime-900">
+                      {isQuotation ? (order.quotationStatus || "Draft") : (order.status || "New")}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -329,64 +356,103 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
             </div>
 
             {/* Status Update Section */}
-            <div className="bg-white border rounded-lg p-4 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Update Order Status</h3>
-              <div className="flex items-center space-x-4">
-                <select
-                  value={order.status || "New"}
-                  onChange={(e) => handleUpdateStatus(e.target.value)}
-                  className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
-                  disabled={processingAction}
-                >
-                  {orderStatusOptions.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-                <span
-                  className={`px-3 py-1 text-sm font-medium rounded-full ${
-                    order.status === "Processing"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : order.status === "Confirmed"
-                        ? "bg-lime-100 text-lime-800"
-                        : order.status === "Shipped"
-                          ? "bg-purple-100 text-purple-800"
-                          : order.status === "Out for Delivery"
-                            ? "bg-indigo-100 text-indigo-800"
-                            : order.status === "Delivered"
-                              ? "bg-green-100 text-green-800"
-                              : order.status === "Cancelled"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {order.status || "New"}
-                </span>
+            {/* Status Update / Quotation Actions Section */}
+            {isQuotation ? (
+              <div className="bg-white border rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quotation Actions</h3>
+                {order.quotationStatus !== "Converted" ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <span className="px-3 py-1 text-sm font-medium rounded-full bg-yellow-100 text-yellow-800">
+                        Draft Quotation
+                      </span>
+                      <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={sendEmailOnConvert}
+                          onChange={(e) => setSendEmailOnConvert(e.target.checked)}
+                          className="rounded border-gray-300 text-lime-600 focus:ring-lime-500"
+                        />
+                        <span className="flex items-center gap-1">
+                          <Mail size={14} /> Send order email on conversion
+                        </span>
+                      </label>
+                    </div>
+                    <button
+                      onClick={convertQuotation}
+                      disabled={sendingConvert}
+                      className="inline-flex items-center gap-2 bg-lime-600 hover:bg-lime-700 text-white px-4 py-2 rounded font-medium disabled:opacity-60 transition-colors"
+                    >
+                      <RefreshCw size={16} className={sendingConvert ? "animate-spin" : ""} />
+                      {sendingConvert ? "Converting..." : "Convert to Order"}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-sm text-green-700 bg-green-50 px-4 py-3 rounded-lg border border-green-200">
+                    ✓ This quotation has been converted to <strong>Order #{order.convertedOrderId?._id?.slice?.(-6) || order.convertedOrderId?.slice?.(-6) || "-"}</strong>.
+                  </div>
+                )}
               </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Update Payment Status</h4>
+            ) : (
+              <div className="bg-white border rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Update Order Status</h3>
                 <div className="flex items-center space-x-4">
                   <select
-                    value={order.isPaid ? "Paid" : "Unpaid"}
-                    onChange={(e) => handleUpdatePaymentStatus(e.target.value === "Paid")}
-                    className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    value={order.status || "New"}
+                    onChange={(e) => handleUpdateStatus(e.target.value)}
+                    className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
                     disabled={processingAction}
                   >
-                    <option value="Unpaid">Unpaid</option>
-                    <option value="Paid">Paid</option>
+                    {orderStatusOptions.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
                   </select>
                   <span
                     className={`px-3 py-1 text-sm font-medium rounded-full ${
-                      order.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      order.status === "Processing"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : order.status === "Confirmed"
+                          ? "bg-lime-100 text-lime-800"
+                          : order.status === "Shipped"
+                            ? "bg-purple-100 text-purple-800"
+                            : order.status === "Out for Delivery"
+                              ? "bg-indigo-100 text-indigo-800"
+                              : order.status === "Delivered"
+                                ? "bg-green-100 text-green-800"
+                                : order.status === "Cancelled"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    {order.isPaid ? "Paid" : "Unpaid"}
+                    {order.status || "New"}
                   </span>
                 </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Update Payment Status</h4>
+                  <div className="flex items-center space-x-4">
+                    <select
+                      value={order.isPaid ? "Paid" : "Unpaid"}
+                      onChange={(e) => handleUpdatePaymentStatus(e.target.value === "Paid")}
+                      className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      disabled={processingAction}
+                    >
+                      <option value="Unpaid">Unpaid</option>
+                      <option value="Paid">Paid</option>
+                    </select>
+                    <span
+                      className={`px-3 py-1 text-sm font-medium rounded-full ${
+                        order.isPaid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {order.isPaid ? "Paid" : "Unpaid"}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Order Items */}
             <div className="bg-white border rounded-lg p-6 mb-6">
@@ -679,28 +745,32 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tracking ID</label>
-                    <input
-                      type="text"
-                      value={trackingId}
-                      onChange={(e) => setTrackingId(e.target.value)}
-                      placeholder="Enter tracking ID"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
-                    />
-                  </div>
+                  {!isQuotation && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tracking ID</label>
+                      <input
+                        type="text"
+                        value={trackingId}
+                        onChange={(e) => setTrackingId(e.target.value)}
+                        placeholder="Enter tracking ID"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Delivery</label>
-                    <input
-                      type="date"
-                      value={estimatedDelivery}
-                      onChange={(e) => setEstimatedDelivery(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
-                    />
-                  </div>
+                  {!isQuotation && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Delivery</label>
+                      <input
+                        type="date"
+                        value={estimatedDelivery}
+                        onChange={(e) => setEstimatedDelivery(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -765,16 +835,18 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                 className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
               >
                 <Printer size={18} className="mr-2" />
-                Print Receipt
+                {isQuotation ? "Print Quotation" : "Print Receipt"}
               </button>
-              <button
-                onClick={() => handleSendNotification(order._id)}
-                className="bg-lime-600 hover:bg-lime-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
-                disabled={processingAction}
-              >
-                <Mail size={18} className="mr-2" />
-                Send Notification
-              </button>
+              {!isQuotation && (
+                <button
+                  onClick={() => handleSendNotification(order._id)}
+                  className="bg-lime-600 hover:bg-lime-700 text-white font-medium py-2 px-6 rounded-md flex items-center transition-colors"
+                  disabled={processingAction}
+                >
+                  <Mail size={18} className="mr-2" />
+                  Send Notification
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -782,7 +854,7 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
 
       {/* Hidden Invoice Component for Printing */}
       <div style={{ display: "none" }}>
-        <InvoiceComponent order={order} ref={printComponentRef} />
+        <InvoiceComponent order={order} ref={printComponentRef} isQuotation={isQuotation} />
       </div>
 
       {/* Notification Modal */}
