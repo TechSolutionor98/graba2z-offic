@@ -28,6 +28,17 @@ const getEffectiveProductPrice = (product, selectedPrice) => {
   return hasValidOffer ? offerPrice : (basePrice > 0 ? basePrice : offerPrice)
 }
 
+const cleanProductFeedId = (sku, mongoId) => {
+  const base = (sku || mongoId || "").toString().trim()
+  return base
+    .normalize("NFKD")
+    .replace(/[^\x00-\x7F]/g, "")
+    .replace(/[^A-Za-z0-9_-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase()
+}
+
 const ProductSchema = ({ product, price }) => {
   if (!product) return null
 
@@ -41,6 +52,7 @@ const ProductSchema = ({ product, price }) => {
   const brandName = typeof product.brand === "string" ? product.brand : product.brand?.name || "Generic"
   const cleanDescription = product.description ? product.description.replace(/<[^>]*>/g, "") : ""
   const priceValue = Number(effectivePrice.toFixed(2))
+  const feedId = cleanProductFeedId(product.sku, product._id)
 
   const schema = {
     "@context": "https://schema.org/",
@@ -49,7 +61,8 @@ const ProductSchema = ({ product, price }) => {
     "image": [getAbsoluteUrl(product.image || product.thumbnail)].filter(Boolean),
     "description": cleanDescription,
     "url": productUrl,
-    "sku": product.sku || product._id,
+    "sku": feedId,
+    "mpn": feedId,
     "category": typeof product.category === "string" ? product.category : product.category?.name,
     "brand": {
       "@type": "Brand",
