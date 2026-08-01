@@ -652,6 +652,7 @@ const AdminSidebar = () => {
       permission: "seoSettings",
       items: [
         { title: "Pages", path: "/admin/seo-settings/pages" },
+        { title: "Home Page SEO", path: "/admin/seo-settings/home" },
         { title: "Redirects", path: "/admin/seo-settings/redirects" },
         { title: "Bing IndexNow", path: "/admin/seo-settings/bing-indexnow" },
       ],

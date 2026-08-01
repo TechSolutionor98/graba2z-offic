@@ -54,6 +54,7 @@ import AdminReviewsApproved from "../pages/admin/AdminReviewsApproved"
 import AdminReviewsPending from "../pages/admin/AdminReviewsPending"
 import AdminReviewsRejected from "../pages/admin/AdminReviewsRejected"
 import AdminPageSEOManager from "../pages/admin/AdminPageSEOManager"
+import AdminHomePageSEO from "../pages/admin/AdminHomePageSEO"
 import AdminSEOSettings from "../pages/admin/AdminSEOSettings"
 import AdminBingIndexer from "../pages/admin/AdminBingIndexer"
 import AdminArabicConversion from "../pages/admin/AdminArabicConversion"
@@ -292,6 +293,7 @@ const AdminPortal = () => {
             <Route path="*" element={<NotFound />} />
 
             <Route path="seo-settings/pages" element={<AdminPageSEOManager />} />
+            <Route path="seo-settings/home" element={<AdminHomePageSEO />} />
             <Route path="seo-settings/redirects" element={<AdminSEOSettings />} />
             <Route path="seo-settings/bing-indexnow" element={<AdminBingIndexer />} />
 

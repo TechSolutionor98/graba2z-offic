@@ -32,6 +32,7 @@ import BrandSlider from "../components/BrandSlider"
 import DynamicSection from "../components/DynamicSection"
 import TranslatedText from "../components/TranslatedText"
 import PromoPopup from "../components/PromoPopup"
+import TipTapRenderer from "../components/TipTapRenderer"
 
 import config from "../config/config"
 
@@ -140,6 +141,7 @@ const Home = () => {
   const [banners, setBanners] = useState([])
   const [heroBanners, setHeroBanners] = useState([])
   const [mobileBanners, setMobileBanners] = useState([])
+  const [homeSeoContent, setHomeSeoContent] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -231,6 +233,19 @@ const Home = () => {
     }
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  useEffect(() => {
+    axios
+      .get(`${API_BASE_URL}/api/seo-pages/public/home`)
+      .then((res) => {
+        if (res.data?.seo?.seoContent) {
+          setHomeSeoContent(res.data.seo.seoContent)
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading home page SEO content:", err)
+      })
   }, [])
 
   useEffect(() => {
@@ -1993,6 +2008,15 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Home Page SEO Content Section - Above Footer */}
+      {homeSeoContent && (
+        <section className="py-8 md:py-12 bg-white border-t border-gray-100 mt-6">
+          <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+            <TipTapRenderer content={homeSeoContent} />
+          </div>
+        </section>
+      )}
         </>
       ) : (
         <MobileDeferredContentPlaceholder />
