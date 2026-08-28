@@ -1,17 +1,19 @@
 import { lazyWithRetry } from "./utils/lazyWithRetry"
 import { lazy, Suspense } from "react"
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
 import { CartProvider } from "./context/CartContext"
 import { WishlistProvider } from "./context/WishlistContext"
 import { ToastProvider } from "./context/ToastContext"
 import { LanguageProvider } from "./context/LanguageContext"
+import { CurrencyProvider } from "./context/CurrencyContext"
 
 // Import components
 import Layout from "./components/Layout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import ScrollToTop from "./components/ScrollToTop"
 import RedirectHandler from "./components/RedirectHandler"
+import ReturnPathTracker from "./components/ReturnPathTracker"
 
 import { Helmet } from "react-helmet-async"
 import { useLocation } from "react-router-dom"
@@ -54,6 +56,7 @@ const VoucherTerms = lazyWithRetry(() => import("./pages/VoucherTerms"))
 const DeliveryTerms = lazyWithRetry(() => import("./pages/DeliveryTerms"))
 const OfferPage = lazyWithRetry(() => import("./pages/OfferPage"))
 const GamingZonePage = lazyWithRetry(() => import("./pages/GamingZonePage"))
+const CountrySelector = lazyWithRetry(() => import("./pages/CountrySelector"))
 
 const AdminLogin = lazyWithRetry(() => import("./pages/admin/AdminLogin"))
 const SuperAdminLogin = lazyWithRetry(() => import("./pages/superadmin/SuperAdminLogin"))
@@ -88,6 +91,60 @@ function RouteCanonical() {
   )
 }
 
+function RootRedirect() {
+  const hasCountry = typeof window !== "undefined" && localStorage.getItem("selected-country-code")
+  const savedLang = typeof window !== "undefined" && localStorage.getItem("preferred-language")
+  if (!hasCountry) {
+    return <Navigate to="/select-country" replace />
+  }
+  return <Navigate to={savedLang === "ar" ? "/ae-ar" : "/ae-en"} replace />
+}
+
+function CountryLangLayout({ lazyFallback }) {
+  const { countryLang } = useParams()
+
+  if (
+    countryLang === "admin" ||
+    countryLang === "superadmin" ||
+    countryLang === "grabiansadmin" ||
+    countryLang === "grabiansuperadmin"
+  ) {
+    if (countryLang === "superadmin") {
+      return (
+        <Suspense fallback={lazyFallback}>
+          <SuperAdminPortal />
+        </Suspense>
+      )
+    }
+    if (countryLang === "grabiansadmin") {
+      return (
+        <Suspense fallback={lazyFallback}>
+          <AdminLogin />
+        </Suspense>
+      )
+    }
+    if (countryLang === "grabiansuperadmin") {
+      return (
+        <Suspense fallback={lazyFallback}>
+          <SuperAdminLogin />
+        </Suspense>
+      )
+    }
+    return (
+      <Suspense fallback={lazyFallback}>
+        <AdminPortal />
+      </Suspense>
+    )
+  }
+
+  return (
+    <>
+      <RouteCanonical />
+      <Layout />
+    </>
+  )
+}
+
 function App() {
   const lazyFallback = (
     <div className="min-h-screen flex items-center justify-center text-gray-600">Loading...</div>
@@ -98,23 +155,22 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <WishlistProvider>
-            <Router>
-              <LanguageProvider>
-              <DefaultCanonical />
-              <ScrollToTop />
-              <RedirectHandler />
-              <div className="App">
-                <Suspense fallback={lazyFallback}>
-                <Routes>
-                  {/* Root redirect to default language */}
-                  <Route path="/" element={<Navigate to="/ae-en" replace />} />
+            <CurrencyProvider>
+              <Router>
+                <LanguageProvider>
+                <DefaultCanonical />
+                <ScrollToTop />
+                <ReturnPathTracker />
+                <RedirectHandler />
+                <div className="App">
+                  <Suspense fallback={lazyFallback}>
+                  <Routes>
+                    {/* Country Selector Landing Page (Directly on root / with no slug) */}
+                    <Route index element={<CountrySelector />} />
+                    <Route path="/" element={<CountrySelector />} />
+                    <Route path="/select-country" element={<CountrySelector />} />
                   
-                  {/* Super Admin Portal - MUST be before language routes to prevent matching */}
-                  {/* Redirect all language-prefixed super admin URLs to non-prefixed versions */}
-                  <Route path="/ae-en/grabiansuperadmin/*" element={<Navigate to="/grabiansuperadmin/login" replace />} />
-                  <Route path="/ae-ar/grabiansuperadmin/*" element={<Navigate to="/grabiansuperadmin/login" replace />} />
-                  <Route path="/ae-en/superadmin/*" element={<Navigate to="/superadmin/dashboard" replace />} />
-                  <Route path="/ae-ar/superadmin/*" element={<Navigate to="/superadmin/dashboard" replace />} />
+
                   
                   {/* Super Admin Portal Routes (separate green-themed portal) */}
                   <Route
@@ -152,15 +208,10 @@ function App() {
                     }
                   />
 
-                  {/* Public Routes with Language Prefix (English) */}
+                  {/* Public Routes with Dynamic Country & Language Prefix (e.g. /sa-en, /sa-ar, /qa-en, /om-en, /kw-en, /bh-en, /eg-en, /ae-en) */}
                   <Route
-                    path="/ae-en/*"
-                    element={
-                      <>
-                        <RouteCanonical />
-                        <Layout />
-                      </>
-                    }
+                    path="/:countryLang/*"
+                    element={<CountryLangLayout lazyFallback={lazyFallback} />}
                   >
                     <Route index element={<Home />} />
                     <Route path="shop" element={<Shop />} />
@@ -356,7 +407,6 @@ function App() {
                       </>
                     }
                   >
-                    <Route index element={<Home />} />
                     <Route path="shop" element={<Shop />} />
                     <Route path="shop/:parentCategory" element={<Shop />} />
                     <Route path="shop/:parentCategory/:subcategory" element={<Shop />} />
@@ -447,6 +497,7 @@ function App() {
               </div>
             </LanguageProvider>
           </Router>
+          </CurrencyProvider>
           </WishlistProvider>
         </CartProvider>
       </AuthProvider>

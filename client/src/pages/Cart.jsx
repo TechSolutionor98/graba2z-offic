@@ -3,6 +3,7 @@
 import { Link } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import { useLanguage } from "../context/LanguageContext"
+import { useCurrency } from "../context/CurrencyContext"
 import { Trash2, Minus, Plus, ShoppingBag, Package, X, Percent, Gift, Shield } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import axios from "axios"
@@ -111,7 +112,8 @@ const Cart = () => {
     couponDiscount,
     setCouponDiscount,
   } = useCart()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice, currentCountry } = useCurrency()
 
   const [couponInput, setCouponInput] = useState("")
   const [couponLoading, setCouponLoading] = useState(false)
@@ -148,22 +150,29 @@ const Cart = () => {
   }, [grouped, standaloneItems, protectionItems])
 
   useEffect(() => {
-    // Fetch delivery options
+    // Fetch country-specific delivery options
     const fetchDeliveryOptions = async () => {
       try {
-        const { data } = await axios.get(`${config.API_URL}/api/delivery-charges`)
+        const { data } = await axios.get(`${config.API_URL}/api/delivery-charges`, {
+          params: {
+            country: currentCountry?.name || "United Arab Emirates",
+            countryCode: currentCountry?.code,
+          },
+        })
         setDeliveryOptions(data)
         if (!selectedDelivery && data.length > 0) {
           setSelectedDelivery(data[0])
         }
       } catch (err) {
-        console.error('Error fetching delivery options:', err)
+        console.error("Error fetching country delivery options:", err)
       }
     }
     // Fetch tax
     const fetchTax = async () => {
       try {
-        const { data } = await axios.get(`${config.API_URL}/api/tax`)
+        const { data } = await axios.get(`${config.API_URL}/api/tax`, {
+          params: { countryCode: currentCountry?.code },
+        })
         // Use first active tax
         if (data && data.length > 0) setTax(data[0])
       } catch (err) {
@@ -172,7 +181,7 @@ const Cart = () => {
     }
     fetchDeliveryOptions()
     fetchTax()
-  }, [])
+  }, [currentCountry?.name, currentCountry?.code])
 
   useEffect(() => {
     if (cartItems.length > 0) {
@@ -299,7 +308,7 @@ const Cart = () => {
   }
 
   const formatPrice = (price) => {
-    return `AED ${Number(price).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+    return formatCurrencyPrice(price, isArabic)
   }
 
   // FIXED: Proper pricing calculation for bundle items

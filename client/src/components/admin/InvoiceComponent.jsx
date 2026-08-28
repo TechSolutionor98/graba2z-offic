@@ -1,11 +1,12 @@
 import React, { forwardRef } from "react"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
-import { getPaymentMethodDisplay, getPaymentMethodBadgeColor } from "../../utils/paymentUtils"
+import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 
 const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) => {
+
   const formatPrice = (price) => {
-    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+    return formatOrderPrice(price, order)
   }
 
   const formatDate = (date) => {
@@ -122,6 +123,9 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
               <p>
                 <strong>Zip Code:</strong> {order.shippingAddress?.zipCode || "N/A"}
               </p>
+              <p>
+                <strong>Country:</strong> {getOrderCountryName(order)}
+              </p>
             </div>
           </div>
 
@@ -151,6 +155,9 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
               </p>
               <p>
                 <strong>Zip Code:</strong> {order.billingAddress?.zipCode || order.shippingAddress?.zipCode || "N/A"}
+              </p>
+              <p>
+                <strong>Country:</strong> {getOrderCountryName(order)}
               </p>
             </div>
           </div>

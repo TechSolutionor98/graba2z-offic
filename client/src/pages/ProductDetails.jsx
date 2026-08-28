@@ -6,6 +6,7 @@ import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import { useWishlist } from "../context/WishlistContext"
+import { useCurrency } from "../context/CurrencyContext"
 import { getFullImageUrl } from "../utils/imageUtils"
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
@@ -35,6 +36,7 @@ import {
 import { productsAPI } from "../services/api.js"
 import { trackProductView } from "../utils/gtmTracking"
 import { generateShopURL } from "../utils/urlUtils"
+import { isProductVisibleInCountry, getProductEffectiveStock } from "../utils/productCategory"
 
 import config from "../config/config"
 import ProductSchema from "../components/ProductSchema"
@@ -87,13 +89,14 @@ const extractTranslatableTextsFromHtml = (html) => {
 }
 
 const ProductDetails = () => {
-  const { slug } = useParams()
+  const { id, slug } = useParams()
   const navigate = useNavigate()
   const { addToCart } = useCart()
-  const { user } = useAuth()
+  const { userInfo } = useAuth()
   const { showToast } = useToast()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const { getLocalizedPath, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice, currentCountry } = useCurrency()
   const [product, setProduct] = useState(null)
   const [relatedProducts, setRelatedProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -218,10 +221,7 @@ const ProductDetails = () => {
   const formatPriceValue = (price) => {
     const num = Number(price)
     const safeNumber = Number.isFinite(num) ? num : 0
-    return `AED ${safeNumber.toLocaleString("en-AE", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`
+    return formatCurrencyPrice(safeNumber, isArabic)
   }
 
   const formatPrice = (price) => {
@@ -4600,7 +4600,7 @@ const ProductDetails = () => {
                                 {coupon.discountType === "percentage" && <Percent className="w-4 h-4 mr-1" />}
                                 {coupon.discountType === "percentage"
                                   ? `${coupon.discountValue}`
-                                  : `AED ${coupon.discountValue}`}
+                                  : formatCurrencyPrice(coupon.discountValue, isArabic)}
                               </span>
                             </div>
 
@@ -4627,7 +4627,7 @@ const ProductDetails = () => {
                           <div className="flex flex-col md:items-end text-left md:text-right space-y-1 mt-3 md:mt-0">
                             <div className="text-xs text-gray-600 md:max-w-xs">{coupon.description}</div>
                             <div className="flex flex-col md:items-end space-y-1">
-                              <div className="text-xs text-gray-500">Min: AED {coupon.minOrderAmount || 0}</div>
+                              <div className="text-xs text-gray-500">Min: {formatCurrencyPrice(coupon.minOrderAmount || 0, isArabic)}</div>
                               <div className="text-xs text-gray-500">
                                 Valid: {new Date(coupon.validFrom).toLocaleDateString()} -{" "}
                                 {new Date(coupon.validUntil).toLocaleDateString()}

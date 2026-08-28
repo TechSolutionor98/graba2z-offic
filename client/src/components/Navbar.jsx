@@ -12,6 +12,7 @@ import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
 import { useLanguage } from "../context/LanguageContext"
 import LanguageSelector from "./LanguageSelector"
+import CountrySwitcher from "./CountrySwitcher"
 import TranslatedText from "./TranslatedText"
 import { preloadTranslations } from "../LanguageModel/translationService"
 import {
@@ -781,7 +782,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout()
-    navigate("/")
+    navigate(getLocalizedPath("/"))
     setIsProfileOpen(false)
   }
 
@@ -1058,8 +1059,11 @@ const Navbar = () => {
                 )}
               </Link>
 
-              {/* Language Selector */}
-              <LanguageSelector variant="compact" />
+              {/* Country and language pickers, independent of each other */}
+              <div className="flex items-center gap-2">
+                <CountrySwitcher />
+                <LanguageSelector />
+              </div>
             </div>
           </div>
 
@@ -1616,11 +1620,15 @@ const Navbar = () => {
 
             {/* Drawer Content */}
             <div className="p-4">
-              {/* Language Selector for Mobile */}
-              <div className="mb-4 pb-4 border-b border-gray-200">
+              {/* Country and language pickers for Mobile */}
+              <div className="mb-4 pb-4 border-b border-gray-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600"><TranslatedText>Country</TranslatedText></span>
+                  <CountrySwitcher />
+                </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-600"><TranslatedText>Language</TranslatedText></span>
-                  <LanguageSelector variant="compact" />
+                  <LanguageSelector />
                 </div>
               </div>
 

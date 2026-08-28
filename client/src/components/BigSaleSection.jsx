@@ -9,12 +9,14 @@ import { getFullImageUrl } from "../utils/imageUtils"
 import { resolveProductCategoryInfo } from "../utils/productCategory"
 import TranslatedText from "./TranslatedText"
 import { useLanguage } from "../context/LanguageContext"
+import { useCurrency } from "../context/CurrencyContext"
 
 // Reusable product card component used in both desktop and mobile views
 const ProductCard = ({ product, isMobile = false }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice } = useCurrency()
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   const stockStatus = product.stockStatus || (product.countInStock > 0 ? "Available" : "Out of Stock")
   const basePrice = Number(product.price) || 0
@@ -101,11 +103,11 @@ const ProductCard = ({ product, isMobile = false }) => {
       <div className="text-[10px] text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex items-center gap-2">
         <div className="text-red-600 font-bold text-xs">
-          {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}<TranslatedText>AED</TranslatedText>
+          {formatCurrencyPrice(priceToShow, isArabic)}
         </div>
         {showOldPrice && (
           <div className="text-gray-400 line-through text-[10px] font-medium">
-            {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}<TranslatedText>AED</TranslatedText>
+            {formatCurrencyPrice(basePrice, isArabic)}
           </div>
         )}
       </div>

@@ -6,20 +6,30 @@ import { ShoppingCart, Heart, Star, ShoppingBag } from "lucide-react"
 import { useWishlist } from "../context/WishlistContext"
 import { useToast } from "../context/ToastContext"
 import { getOptimizedImageUrl } from "../utils/imageUtils"
-import { resolveProductCategoryInfo } from "../utils/productCategory"
+import { resolveProductCategoryInfo, getProductEffectiveStock } from "../utils/productCategory"
 import TranslatedText from "./TranslatedText"
 import { useLanguage } from "../context/LanguageContext"
+
+import { useCurrency } from "../context/CurrencyContext"
 
 const ProductCard = ({ product, offerPageName }) => {
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const { showToast } = useToast()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice, currentCountry } = useCurrency()
+
+  const effectiveStockInfo = getProductEffectiveStock(product, currentCountry?.code)
+  const stockStatus = effectiveStockInfo.stockStatus
 
   const handleAddToCart = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    addToCart(product)
+    addToCart({
+      ...product,
+      countInStock: effectiveStockInfo.countInStock,
+      stockStatus: effectiveStockInfo.stockStatus,
+    })
     showToast && showToast("Added to cart", "success")
   }
 
@@ -27,8 +37,8 @@ const ProductCard = ({ product, offerPageName }) => {
     const normalizedPrice = Number(price)
     const safePrice = Number.isFinite(normalizedPrice) ? normalizedPrice : 0
     return (
-      <span lang="en" dir="ltr">
-        AED {safePrice.toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      <span lang={isArabic ? "ar" : "en"} dir={isArabic ? "rtl" : "ltr"}>
+        {formatCurrencyPrice(safePrice, isArabic)}
       </span>
     )
   }
@@ -54,8 +64,6 @@ const ProductCard = ({ product, offerPageName }) => {
   } else if (offerPrice > 0) {
     priceToShow = offerPrice
   }
-  
-  const stockStatus = product.stockStatus || (product.countInStock > 0 ? "In Stock" : "Out of Stock")
 
   // Fix rating and reviews display
   const rating = Number(product.rating) || 0

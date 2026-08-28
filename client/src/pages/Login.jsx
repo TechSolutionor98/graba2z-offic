@@ -8,6 +8,7 @@ import { Eye, EyeOff, Mail, Lock } from "lucide-react"
 import { Fragment } from "react"
 import { useLanguage } from "../context/LanguageContext"
 import TranslatedText from "../components/TranslatedText"
+import { resolvePostAuthPath, clearReturnPath } from "../utils/authRedirect"
 
 const Login = () => {
   const navigate = useNavigate()
@@ -57,7 +58,10 @@ const Login = () => {
 
       if (result.success) {
         showToast && showToast("Logged in successfully!", "success")
-        const redirectTo = location.state?.from?.pathname || "/"
+        // "/" renders the country selector, so fall back to the localized home
+        // page and prefer wherever the shopper actually came from.
+        const redirectTo = resolvePostAuthPath(location.state, getLocalizedPath)
+        clearReturnPath()
         navigate(redirectTo, { replace: true })
       } else {
         setError(result.message)

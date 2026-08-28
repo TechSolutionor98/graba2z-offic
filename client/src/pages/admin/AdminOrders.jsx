@@ -6,7 +6,7 @@ import axios from "axios"
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import { Search, Eye, Mail, ChevronDown, RefreshCw } from "lucide-react"
 import { getFullImageUrl } from "../../utils/imageUtils"
-import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo } from "../../utils/paymentUtils"
+import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemSalePrice } from "../../utils/orderPricing"
 import { useLocation } from "react-router-dom"
@@ -54,8 +54,8 @@ const AdminOrders = () => {
   ]
   const paymentStatusOptions = ["Paid", "Unpaid"]
 
-  const formatPrice = (price) => {
-    return `AED ${price.toLocaleString()}`
+  const formatPrice = (price, orderObj) => {
+    return formatOrderPrice(price, orderObj)
   }
 
   useEffect(() => {
@@ -65,7 +65,8 @@ const AdminOrders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('adminToken')
+      const token =
+        localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
       const { data } = await axios.get(`${config.API_URL}/api/admin/orders`, {
         params: { includeDeleted: false },
         headers: {
@@ -362,6 +363,11 @@ const AdminOrders = () => {
                             ? order.shippingAddress?.email || order.user?.email || "N/A"
                             : order.user?.email || "N/A"}
                         </div>
+                        <div className="mt-1">
+                          <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800 uppercase">
+                            📍 {getOrderCountryName(order)}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{new Date(order.createdAt).toLocaleDateString()}</div>
@@ -447,8 +453,8 @@ const AdminOrders = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatPrice(order.totalPrice)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                        {formatOrderPrice(order.totalPrice, order)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button

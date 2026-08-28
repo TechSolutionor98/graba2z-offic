@@ -17,7 +17,7 @@ import {
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
-import { getPaymentMethodDisplay, getPaymentMethodBadgeColor } from "../../utils/paymentUtils"
+import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 import { paymentMethodChargeAPI, adminAPI } from "../../services/api"
 import InvoiceComponent from "./InvoiceComponent"
 
@@ -101,7 +101,9 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
         if (codConfig && codConfig.charges) {
           setFallbackDynamicCharges(codConfig.charges);
         }
-      }).catch(err => console.error("Failed to fetch dynamic charges", err));
+      }).catch(err => {
+        console.error("Error fetching fallback payment charges:", err);
+      });
     }
   }, [isOpen, order, selectedTotals.hasPaymentCharges, selectedTotals.isCOD])
 
@@ -131,7 +133,7 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
   if (!isOpen || !order) return null
 
   const formatPrice = (price) => {
-    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+    return formatOrderPrice(price, order)
   }
 
   const formatDate = (date) => {
@@ -660,6 +662,10 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                         <span className="font-medium">Zip Code:</span>{" "}
                         {order.shippingAddress.zipCode || "N/A"}
                       </p>
+                      <p>
+                        <span className="font-medium">Country:</span>{" "}
+                        {getOrderCountryName(order)}
+                      </p>
                     </>
                   ) : order.pickupDetails ? (
                     <>
@@ -713,6 +719,10 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                   <p>
                     <span className="font-medium">Zip Code:</span>{" "}
                     {order.billingAddress?.zipCode || order.shippingAddress?.zipCode || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-medium">Country:</span>{" "}
+                    {getOrderCountryName(order)}
                   </p>
                 </div>
               </div>

@@ -21,10 +21,23 @@ const AddDeliveryCharge = () => {
     minOrderAmount: "",
     maxOrderAmount: "",
     deliveryTime: "1-2 business days",
+    country: "United Arab Emirates",
+    countryCode: "AE",
+    isInternational: false,
     applicableAreas: [""],
     isActive: true,
   })
   const [isEdit, setIsEdit] = useState(false);
+
+  const COUNTRY_MAP = {
+    "United Arab Emirates": { code: "AE", defaultTime: "1-2 business days", isIntl: false },
+    "Oman": { code: "OM", defaultTime: "3-5 business days", isIntl: true },
+    "Saudi Arabia": { code: "SA", defaultTime: "3-5 business days", isIntl: true },
+    "Qatar": { code: "QA", defaultTime: "3-5 business days", isIntl: true },
+    "Bahrain": { code: "BH", defaultTime: "3-5 business days", isIntl: true },
+    "Kuwait": { code: "KW", defaultTime: "3-5 business days", isIntl: true },
+    "International / Rest of World": { code: "INTL", defaultTime: "5-7 business days", isIntl: true },
+  }
 
   useEffect(() => {
     if (id) {
@@ -46,6 +59,9 @@ const AddDeliveryCharge = () => {
             minOrderAmount: data.minOrderAmount || "",
             maxOrderAmount: data.maxOrderAmount || "",
             deliveryTime: data.deliveryTime || "1-2 business days",
+            country: data.country || "United Arab Emirates",
+            countryCode: data.countryCode || "AE",
+            isInternational: typeof data.isInternational === "boolean" ? data.isInternational : (data.country && data.country !== "United Arab Emirates"),
             applicableAreas: data.applicableAreas && data.applicableAreas.length > 0 ? data.applicableAreas : [""],
             isActive: typeof data.isActive === "boolean" ? data.isActive : true,
           })
@@ -56,6 +72,17 @@ const AddDeliveryCharge = () => {
       fetchDeliveryCharge()
     }
   }, [id])
+
+  const handleCountryChange = (countryName) => {
+    const info = COUNTRY_MAP[countryName] || { code: "OTHER", defaultTime: "3-7 business days", isIntl: countryName !== "United Arab Emirates" }
+    setFormData((prev) => ({
+      ...prev,
+      country: countryName,
+      countryCode: info.code,
+      isInternational: info.isIntl,
+      deliveryTime: prev.deliveryTime || info.defaultTime,
+    }))
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -109,6 +136,9 @@ const AddDeliveryCharge = () => {
         minOrderAmount: formData.minOrderAmount ? Number.parseFloat(formData.minOrderAmount) : 0,
         maxOrderAmount: formData.maxOrderAmount ? Number.parseFloat(formData.maxOrderAmount) : null,
         deliveryTime: formData.deliveryTime,
+        country: formData.country,
+        countryCode: formData.countryCode,
+        isInternational: formData.isInternational,
         applicableAreas: formData.applicableAreas.filter((area) => area.trim() !== ""),
         isActive: formData.isActive,
       }
@@ -166,6 +196,45 @@ const AddDeliveryCharge = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Target Country <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="country"
+                    value={formData.country}
+                    onChange={(e) => handleCountryChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="United Arab Emirates">United Arab Emirates (UAE)</option>
+                    <option value="Oman">Oman</option>
+                    <option value="Saudi Arabia">Saudi Arabia</option>
+                    <option value="Qatar">Qatar</option>
+                    <option value="Bahrain">Bahrain</option>
+                    <option value="Kuwait">Kuwait</option>
+                    <option value="International / Rest of World">International / Rest of World</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Delivery Type
+                  </label>
+                  <div className="flex items-center space-x-4 pt-2">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="isInternational"
+                        checked={formData.isInternational}
+                        onChange={handleChange}
+                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-700">International Delivery</span>
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Check if this rate applies to cross-border/international shipping</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -174,7 +243,7 @@ const AddDeliveryCharge = () => {
                     value={formData.name}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., Standard Delivery, Express Delivery"
+                    placeholder="e.g., Standard Delivery, Express GCC, Oman Shipping"
                     required
                   />
                 </div>

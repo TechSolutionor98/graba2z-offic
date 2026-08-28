@@ -15,6 +15,8 @@ const AdminDeliveryCharges = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [deleteModal, setDeleteModal] = useState({ show: false, id: null, name: "" })
 
+  const [selectedCountryFilter, setSelectedCountryFilter] = useState("ALL")
+
   useEffect(() => {
     fetchDeliveryCharges()
   }, [])
@@ -76,11 +78,21 @@ const AdminDeliveryCharges = () => {
     }
   }
 
-  const filteredDeliveryCharges = deliveryCharges.filter(
-    (charge) =>
+  const filteredDeliveryCharges = deliveryCharges.filter((charge) => {
+    const matchesSearch =
       charge.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      charge.description?.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+      charge.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      charge.country?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const chargeCountry = charge.country || "United Arab Emirates"
+    const matchesCountry =
+      selectedCountryFilter === "ALL" ||
+      (selectedCountryFilter === "UAE" && (chargeCountry === "United Arab Emirates" || charge.countryCode === "AE")) ||
+      (selectedCountryFilter === "INTL" && (charge.isInternational || chargeCountry !== "United Arab Emirates")) ||
+      chargeCountry === selectedCountryFilter
+
+    return matchesSearch && matchesCountry
+  })
 
   const formatPrice = (price) => {
     return `${Number(price).toLocaleString()} AED`
@@ -106,23 +118,45 @@ const AdminDeliveryCharges = () => {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Delivery Charges</h1>
-              <p className="text-gray-600 mt-2">Manage delivery charges and shipping options</p>
+              <p className="text-gray-600 mt-2">Manage domestic & country-wise international delivery charges</p>
             </div>
-          
+            <Link
+              to="/admin/delivery-charges/add"
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+            >
+              <Plus size={18} className="mr-2" />
+              Add Delivery Charge
+            </Link>
           </div>
 
           {/* Search and Stats */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  placeholder="Search delivery charges..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 max-w-xl">
+                <div className="relative flex-1 w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="text"
+                    placeholder="Search name, description, country..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <select
+                  value={selectedCountryFilter}
+                  onChange={(e) => setSelectedCountryFilter(e.target.value)}
+                  className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="ALL">All Countries</option>
+                  <option value="United Arab Emirates">UAE (Domestic)</option>
+                  <option value="Oman">Oman</option>
+                  <option value="Saudi Arabia">Saudi Arabia</option>
+                  <option value="Qatar">Qatar</option>
+                  <option value="Bahrain">Bahrain</option>
+                  <option value="Kuwait">Kuwait</option>
+                  <option value="International / Rest of World">International / Rest of World</option>
+                </select>
               </div>
               <div className="flex items-center space-x-6 text-sm">
                 <div className="text-center">
@@ -152,6 +186,7 @@ const AdminDeliveryCharges = () => {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="text-left py-4 px-6 font-medium text-gray-900">Name</th>
+                    <th className="text-left py-4 px-6 font-medium text-gray-900">Country</th>
                     <th className="text-left py-4 px-6 font-medium text-gray-900">Charge</th>
                     <th className="text-left py-4 px-6 font-medium text-gray-900">Order Range</th>
                     <th className="text-left py-4 px-6 font-medium text-gray-900">Delivery Time</th>
@@ -169,6 +204,22 @@ const AdminDeliveryCharges = () => {
                             <div className="font-medium text-gray-900">{charge.name}</div>
                             {charge.description && (
                               <div className="text-sm text-gray-500 mt-1">{charge.description}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className="font-medium text-gray-900 text-sm">
+                              {charge.country || "United Arab Emirates"}
+                            </span>
+                            {charge.isInternational || (charge.country && charge.country !== "United Arab Emirates") ? (
+                              <span className="bg-purple-100 text-purple-800 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                International
+                              </span>
+                            ) : (
+                              <span className="bg-green-100 text-green-800 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                Domestic (UAE)
+                              </span>
                             )}
                           </div>
                         </td>

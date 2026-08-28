@@ -151,16 +151,18 @@ const getFirstPermittedRoute = (hasPermission) => {
 }
 
 const AdminRoute = ({ children, requiredPermission }) => {
-  const adminToken = localStorage.getItem("adminToken")
+  const adminToken =
+    localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
   const location = useLocation()
   const { hasPermission, isSuperAdmin } = useAuth()
+  const isSuper = isSuperAdmin || localStorage.getItem("isSuperAdmin") === "true"
   
   if (!adminToken) {
     return <Navigate to="/grabiansadmin/login" />
   }
   
   // Super admin has access to everything
-  if (isSuperAdmin) {
+  if (isSuper) {
     return children
   }
   
@@ -170,7 +172,9 @@ const AdminRoute = ({ children, requiredPermission }) => {
   if (permission && !hasPermission(permission)) {
     // Redirect to first permitted page instead of dashboard
     const firstPermittedRoute = getFirstPermittedRoute(hasPermission)
-    return <Navigate to={firstPermittedRoute} state={{ accessDenied: true, requiredPermission: permission }} replace />
+    if (firstPermittedRoute && firstPermittedRoute !== location.pathname) {
+      return <Navigate to={firstPermittedRoute} state={{ accessDenied: true, requiredPermission: permission }} replace />
+    }
   }
   
   return children

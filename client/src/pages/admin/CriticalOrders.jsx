@@ -25,7 +25,7 @@ import {
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
-import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo } from "../../utils/paymentUtils"
+import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 
 const CriticalOrders = () => {
   const [orders, setOrders] = useState([])
@@ -65,8 +65,8 @@ const CriticalOrders = () => {
   
   const paymentStatusOptions = ["Paid", "Unpaid"]
 
-  const formatPrice = (price) => {
-    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+  const formatPrice = (price, orderObj) => {
+    return formatOrderPrice(price, orderObj || selectedOrder)
   }
 
   const formatDate = (date) => {

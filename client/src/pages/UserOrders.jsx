@@ -12,8 +12,7 @@ import { Dialog, Transition } from "@headlessui/react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { useReactToPrint } from "react-to-print"
-import InvoiceComponent from "../components/admin/InvoiceComponent"
-
+import { getOrderCurrencySymbol } from "../utils/paymentUtils"
 import config from "../config/config"
 
 const UserOrders = () => {
@@ -30,7 +29,7 @@ const UserOrders = () => {
 
   const handleLogout = () => {
     logout()
-    navigate("/")
+    navigate(getLocalizedPath("/"))
   }
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -44,29 +43,38 @@ const UserOrders = () => {
     }))
   }
 
-  const handleOrderAgain = (order) => {
-    const nonProtectionItems = order.orderItems.filter(item => !item.isProtection)
+  const handleOrderAgain = async (order) => {
+    const nonProtectionItems = order.orderItems.filter((item) => !item.isProtection)
 
-    nonProtectionItems.forEach(item => {
+    for (const item of nonProtectionItems) {
+      const productId = item.product?._id || item.product
+      let freshProduct = null
+      try {
+        const { data } = await axios.get(`${config.API_URL}/api/products/${productId}`)
+        freshProduct = data
+      } catch (e) {
+        // ignore
+      }
+
       const productToAdd = {
-        _id: item.product?._id || item.product,
-        name: item.name,
-        price: item.price,
-        image: item.image,
+        _id: productId,
+        name: freshProduct?.name || item.name,
+        price: freshProduct?.price || item.price,
+        offerPrice: freshProduct?.offerPrice || 0,
+        image: freshProduct?.image || item.image,
         selectedColorIndex: item.selectedColorIndex ?? null,
         selectedColorData: item.selectedColorData ?? null,
         selectedDosIndex: item.selectedDosIndex ?? null,
         selectedDosData: item.selectedDosData ?? null,
-        slug: item.product?.slug || '',
-        brand: item.product?.brand || null,
-        category: item.product?.category || null,
-        parentCategory: item.product?.parentCategory || null,
-        countInStock: item.product?.countInStock || 99,
-        offerPrice: 0,
+        slug: freshProduct?.slug || item.product?.slug || "",
+        brand: freshProduct?.brand || item.product?.brand || null,
+        category: freshProduct?.category || item.product?.category || null,
+        parentCategory: freshProduct?.parentCategory || item.product?.parentCategory || null,
+        countInStock: freshProduct?.countInStock || item.product?.countInStock || 99,
       }
 
       addToCart(productToAdd, item.quantity)
-    })
+    }
 
     navigate(getLocalizedPath("/cart"))
   }
@@ -153,7 +161,7 @@ const UserOrders = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate("/login")
+      navigate(getLocalizedPath("/login"))
       return
     }
 
@@ -334,7 +342,9 @@ const UserOrders = () => {
                       <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
                       <div>
                         <p className="text-sm font-medium text-gray-500 mb-1">Total Amount</p>
-                        <p className="text-base font-bold text-green-600">AED {order.totalPrice.toLocaleString()}</p>
+                        <p className="text-base font-bold text-green-600">
+                          {getOrderCurrencySymbol(order)} {Number(order.totalPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
                       </div>
                     </div>
                     <div className={`px-4 py-2 rounded-full border flex items-center gap-2 ${getStatusColor(order.status)}`}>
@@ -551,9 +561,9 @@ const UserOrders = () => {
                                       </div>
                                     </div>
                                     <div className="text-right flex flex-col justify-center">
-                                      <span className="font-bold text-gray-900">AED {(item.price * item.quantity).toLocaleString()}</span>
+                                      <span className="font-bold text-gray-900">{getOrderCurrencySymbol(selectedOrder)} {(item.price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                       {item.quantity > 1 && (
-                                        <span className="text-xs text-gray-500">AED {item.price.toLocaleString()} each</span>
+                                        <span className="text-xs text-gray-500">{getOrderCurrencySymbol(selectedOrder)} {item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} each</span>
                                       )}
                                     </div>
                                   </div>
@@ -573,7 +583,7 @@ const UserOrders = () => {
                                             <CheckCircle className="w-4 h-4 text-green-500" />
                                             <span>{item.name}</span>
                                           </div>
-                                          <span className="font-semibold text-green-900">AED {item.price.toLocaleString()}</span>
+                                          <span className="font-semibold text-green-900">{getOrderCurrencySymbol(selectedOrder)} {item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                       ))}
                                     </div>
@@ -613,27 +623,27 @@ const UserOrders = () => {
                               <div className="space-y-3 text-sm">
                                 <div className="flex justify-between text-gray-600">
                                   <span>Subtotal</span>
-                                  <span className="font-medium text-gray-900">AED {selectedOrder.itemsPrice?.toLocaleString() || selectedOrder.totalPrice?.toLocaleString()}</span>
+                                  <span className="font-medium text-gray-900">{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.itemsPrice || selectedOrder.totalPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                   <span>Shipping Fee</span>
-                                  <span className="font-medium text-gray-900">AED {selectedOrder.shippingPrice?.toLocaleString() || 0}</span>
+                                  <span className="font-medium text-gray-900">{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.shippingPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                                 {selectedOrder.taxPrice > 0 && (
                                   <div className="flex justify-between text-gray-600">
                                     <span>Tax</span>
-                                    <span className="font-medium text-gray-900">AED {selectedOrder.taxPrice?.toLocaleString()}</span>
+                                    <span className="font-medium text-gray-900">{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.taxPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                   </div>
                                 )}
                                 {selectedOrder.discountAmount > 0 && (
                                   <div className="flex justify-between text-green-600">
                                     <span>Discount</span>
-                                    <span className="font-medium">-AED {selectedOrder.discountAmount?.toLocaleString()}</span>
+                                    <span className="font-medium">-{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.discountAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                   </div>
                                 )}
                                 <div className="pt-3 mt-3 border-t border-gray-200 flex justify-between items-center">
                                   <span className="font-bold text-gray-900">Total</span>
-                                  <span className="text-xl font-bold text-green-600">AED {selectedOrder.totalPrice?.toLocaleString()}</span>
+                                  <span className="text-xl font-bold text-green-600">{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.totalPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
                                 <div className="mt-4 flex items-center justify-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-200">
                                   <CreditCard className="w-4 h-4 text-gray-500" />

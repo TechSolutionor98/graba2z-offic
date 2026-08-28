@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { useLanguage } from "../context/LanguageContext"
+import { resolvePostAuthPath, clearReturnPath } from "../utils/authRedirect"
 
 const EmailVerification = () => {
   const [code, setCode] = useState(["", "", "", "", "", ""])
@@ -120,7 +121,10 @@ const EmailVerification = () => {
       setSuccess("Email verified successfully! Redirecting...")
       sessionStorage.removeItem("pendingVerificationEmail")
       setTimeout(() => {
-        navigate(getLocalizedPath("/"), { replace: true })
+        // Registration often starts from the cart or a product page.
+        const redirectTo = resolvePostAuthPath(location.state, getLocalizedPath)
+        clearReturnPath()
+        navigate(redirectTo, { replace: true })
       }, 2000)
     } catch (error) {
       setError(error.message || "Verification failed. Please try again.")

@@ -58,6 +58,7 @@ import AdminHomePageSEO from "../pages/admin/AdminHomePageSEO"
 import AdminSEOSettings from "../pages/admin/AdminSEOSettings"
 import AdminBingIndexer from "../pages/admin/AdminBingIndexer"
 import AdminArabicConversion from "../pages/admin/AdminArabicConversion"
+import AdminCountryManager from "../pages/admin/AdminCountryManager"
 import AdminSettings from "../pages/admin/AdminSettings"
 import AdminSizes from "../pages/admin/AdminSizes"
 import AdminSubCategories from "../pages/admin/AdminSubCategories"
@@ -112,6 +113,7 @@ import TrashCategories from "../pages/admin/TrashCategories"
 import TrashSubCategories from "../pages/admin/TrashSubCategories"
 import DeliveryHandlingFee from "../pages/admin/DeliveryHandlingFee"
 import ProductPaymentMethods from "../pages/admin/ProductPaymentMethods"
+import CountryPaymentMethods from "../pages/admin/CountryPaymentMethods"
 
 const AdminPortal = () => {
   return (
@@ -126,6 +128,7 @@ const AdminPortal = () => {
             <Route path="products/add" element={<AddProduct />} />
             <Route path="products/bulk-add" element={<AddBulkProducts />} />
             <Route path="product-pm" element={<ProductPaymentMethods />} />
+            <Route path="country-pm" element={<CountryPaymentMethods />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="orders/received" element={<ReceivedOrders />} />
             <Route path="orders/in-progress" element={<InprogressOrders />} />
@@ -290,7 +293,7 @@ const AdminPortal = () => {
             <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
             <Route path="reset-cache" element={<ResetCache />} />
             <Route path="arabic-conversion" element={<AdminArabicConversion />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="countries" element={<AdminCountryManager />} />
 
             <Route path="seo-settings/pages" element={<AdminPageSEOManager />} />
             <Route path="seo-settings/home" element={<AdminHomePageSEO />} />
@@ -313,6 +316,7 @@ const AdminPortal = () => {
 
             <Route path="admin-management" element={<AdminManagement />} />
             <Route path="activity-logs" element={<ActivityLogs />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </div>

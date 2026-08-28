@@ -1,112 +1,80 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useCallback } from "react"
 import { useLanguage, LANGUAGES } from "../context/LanguageContext"
 import { ChevronDown, Globe } from "lucide-react"
+import { useDismissable } from "../hooks/useDismissable"
 
-const LanguageSelector = ({ variant = "default", className = "" }) => {
-  const { currentLanguage, switchLanguage } = useLanguage()
+const LANGUAGE_OPTIONS = [LANGUAGES.EN, LANGUAGES.AR]
+
+/**
+ * Website language picker. The country and currency picker lives in
+ * CountrySwitcher so the two can be changed independently.
+ */
+const LanguageSelector = ({ className = "" }) => {
+  const { currentLanguage, switchLanguage, isArabic } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+  const close = useCallback(() => setIsOpen(false), [])
+  useDismissable(dropdownRef, isOpen, close)
 
   const handleLanguageChange = (langCode) => {
-    switchLanguage(langCode)
-    setIsOpen(false)
+    if (langCode !== currentLanguage.code) {
+      switchLanguage(langCode)
+    }
+    close()
   }
 
-  const languages = [LANGUAGES.EN, LANGUAGES.AR]
-
-  // Compact variant for navbar
-  if (variant === "compact") {
-    return (
-      <div className={`relative ${className}`} ref={dropdownRef}>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-1.5 px-2 py-1.5 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors text-sm"
-          aria-label="Select language"
-        >
-          <Globe className="w-4 h-4 text-gray-600" />
-          <span className="font-medium text-gray-700">
-            {currentLanguage.code.toUpperCase()}
-          </span>
-          <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </button>
-
-        {isOpen && (
-          <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[140px] overflow-hidden">
-            {languages.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => handleLanguageChange(lang.code)}
-                className={`w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-gray-50 transition-colors ${
-                  currentLanguage.code === lang.code ? 'bg-lime-50 text-lime-700' : 'text-gray-700'
-                }`}
-              >
-                <span className={`text-sm font-medium ${lang.dir === 'rtl' ? 'font-arabic' : ''}`}>
-                  {lang.nativeName}
-                </span>
-                {currentLanguage.code === lang.code && (
-                  <span className="ml-auto text-lime-500">✓</span>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // Default full variant
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors"
-        aria-label="Select language"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors text-xs font-semibold text-gray-700 shadow-sm"
+        aria-label="Select website language"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
-        <Globe className="w-5 h-5 text-gray-600" />
-        <span className="font-medium text-gray-700">
-          {currentLanguage.nativeName}
-        </span>
-        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <Globe className="w-3.5 h-3.5 text-gray-600 shrink-0" />
+        <span dir="ltr">{currentLanguage.code.toUpperCase()}</span>
+        <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[180px] overflow-hidden">
-          <div className="py-1">
-            {languages.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => handleLanguageChange(lang.code)}
-                className={`w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                  currentLanguage.code === lang.code ? 'bg-lime-50' : ''
-                }`}
-              >
-                <div className="flex flex-col">
-                  <span className={`text-sm font-semibold ${
-                    currentLanguage.code === lang.code ? 'text-lime-700' : 'text-gray-800'
-                  } ${lang.dir === 'rtl' ? 'font-arabic' : ''}`}>
+        <div
+          role="listbox"
+          className={`absolute ${isArabic ? "left-0" : "right-0"} top-full mt-1.5 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 w-52 overflow-hidden text-xs`}
+        >
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wide">
+            <Globe className="w-3.5 h-3.5" />
+            Language
+          </div>
+
+          <div className="p-2 space-y-1">
+            {LANGUAGE_OPTIONS.map((lang) => {
+              const isSelected = currentLanguage.code === lang.code
+              return (
+                <button
+                  key={lang.code}
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => handleLanguageChange(lang.code)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-left ${
+                    isSelected ? "bg-emerald-50 text-emerald-800 font-bold" : "hover:bg-gray-50 text-gray-700"
+                  }`}
+                >
+                  <span className={`font-semibold ${lang.dir === "rtl" ? "font-arabic" : ""}`}>
                     {lang.nativeName}
                   </span>
-                  <span className="text-xs text-gray-500">{lang.name}</span>
-                </div>
-                {currentLanguage.code === lang.code && (
-                  <span className="text-lime-500 text-lg">✓</span>
-                )}
-              </button>
-            ))}
+                  <span className="flex items-center gap-2 shrink-0">
+                    <span className="text-gray-400 text-[10px] font-mono uppercase" dir="ltr">
+                      {lang.code}
+                    </span>
+                    {isSelected && <span className="text-emerald-600 font-bold">✓</span>}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </div>
       )}

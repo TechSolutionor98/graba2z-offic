@@ -8,6 +8,7 @@ import { useLanguage } from "../context/LanguageContext"
 import { getCategoryTreeCached } from "../services/categoryTreeCache"
 import { generateShopURL } from "../utils/urlUtils"
 import LanguageSelector from "./LanguageSelector"
+import CountrySwitcher from "./CountrySwitcher"
 
 const API_BASE_URL = `${config.API_URL}`
 
@@ -415,7 +416,10 @@ const Header = () => {
               </Link>
             </div>
             <div className="flex items-center justify-end pr-1 gap-1">
-              <LanguageSelector variant="compact" />
+              <div className="flex items-center gap-2">
+                <CountrySwitcher />
+                <LanguageSelector />
+              </div>
               {!isMobileSearchOpen && (
                 <button
                   className="p-2 text-gray-700 hover:text-gray-900"
@@ -539,7 +543,10 @@ const Header = () => {
               <ShoppingBag size={18} />
               <span>{isArabic ? "تسوق الآن" : "Shop Now"}</span>
             </Link>
-            <LanguageSelector variant="compact" className="hidden md:block justify-self-end" />
+            <div className="hidden md:flex items-center gap-2 justify-self-end">
+              <CountrySwitcher />
+              <LanguageSelector />
+            </div>
           </div>
         </div>
 
@@ -859,7 +866,7 @@ const Header = () => {
               <div className="flex items-center justify-between bg-lime-500 text-white h-12 w-full px-3">
                 <button
                   onClick={() => {
-                    navigate("/")
+                    navigate(getLocalizedPath("/"))
                     setIsMenuOpen(false)
                   }}
                   className="flex items-center gap-2"

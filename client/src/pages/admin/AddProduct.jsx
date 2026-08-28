@@ -34,6 +34,15 @@ const PRODUCT_OPTION_FIELDS = [
   { field: "soldBy", routeType: "sold-by", label: "Sold By" },
 ]
 
+const DEFAULT_COUNTRIES = [
+  { code: "AE", name: "UAE" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "QA", name: "Qatar" },
+  { code: "OM", name: "Oman" },
+  { code: "BH", name: "Bahrain" },
+  { code: "KW", name: "Kuwait" },
+]
+
 const countWords = (text = "") => {
   const normalized = String(text).trim()
   if (!normalized) return 0
@@ -54,6 +63,7 @@ const AddProduct = () => {
   const [categories, setCategories] = useState([])
   const [subCategories, setSubCategories] = useState([])
   const [brands, setBrands] = useState([])
+  const [availableCountries, setAvailableCountries] = useState(DEFAULT_COUNTRIES)
   const [taxes, setTaxes] = useState([])
   const [units, setUnits] = useState([])
   const [warranties, setWarranties] = useState([])
@@ -106,6 +116,9 @@ const AddProduct = () => {
     shortDescription: "",
     description: "",
     stockStatus: "",
+    countInStock: "0",
+    targetCountries: ["ALL"],
+    countryStock: { AE: 0, SA: 0, QA: 0, OM: 0, BH: 0, KW: 0 },
     specifications: [],
     seoTitle: "",
     seoDescription: "",
@@ -200,6 +213,21 @@ const AddProduct = () => {
       }
 
       const headers = { Authorization: `Bearer ${token}` }
+
+      axios.get(`${config.API_URL}/api/countries/active`).then(res => {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setAvailableCountries(res.data.map(c => ({ code: c.code, name: c.name })))
+        }
+      }).catch(() => {
+        axios.get(`${config.API_URL}/api/countries`).then(res => {
+          if (Array.isArray(res.data) && res.data.length > 0) {
+            const active = res.data.filter(c => c.isActive !== false)
+            if (active.length > 0) {
+              setAvailableCountries(active.map(c => ({ code: c.code, name: c.name })))
+            }
+          }
+        }).catch(() => {})
+      })
 
       const fetchPromises = []
 
@@ -651,6 +679,12 @@ const AddProduct = () => {
         tags: formData.tags ? formData.tags.split(",").map((tag) => tag.trim()) : [],
         shortDescription: formData.shortDescription,
         description: formData.description,
+        countInStock: Number.parseInt(formData.countInStock) || 0,
+        targetCountries: Array.isArray(formData.targetCountries) && formData.targetCountries.length > 0 ? formData.targetCountries : ["ALL"],
+        countryStock: Object.entries(formData.countryStock || {}).map(([country, count]) => ({
+          country: String(country).toUpperCase(),
+          countInStock: Number(count) || 0,
+        })),
         stockStatus: formData.stockStatus,
         specifications: formData.specifications.filter((spec) => spec.key && spec.value),
         // SEO fields
@@ -1462,6 +1496,130 @@ const AddProduct = () => {
                       <label className="ml-2 text-sm text-gray-700">No</label>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Country Visibility & Regional Stock Management */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
+              <h2 className="text-lg font-semibold text-gray-900">🌍 Country Visibility & Stock Management</h2>
+              
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-bold text-gray-800">
+                    Target Countries (Where to show this product)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, targetCountries: ["ALL"] }))}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium underline"
+                  >
+                    Select All
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  Select "All Countries" to show this product everywhere, or select specific target countries.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <label
+                    className={`inline-flex items-center px-3 py-1.5 rounded-full cursor-pointer text-xs font-semibold border transition-all ${
+                      formData.targetCountries?.includes("ALL")
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={formData.targetCountries?.includes("ALL")}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData((prev) => ({ ...prev, targetCountries: ["ALL"] }))
+                        } else {
+                          setFormData((prev) => ({ ...prev, targetCountries: [availableCountries[0]?.code || "AE"] }))
+                        }
+                      }}
+                    />
+                    🌐 All Countries
+                  </label>
+
+                  {availableCountries.map((country) => {
+                    const isChecked =
+                      !formData.targetCountries?.includes("ALL") &&
+                      formData.targetCountries?.includes(country.code)
+
+                    return (
+                      <label
+                        key={country.code}
+                        className={`inline-flex items-center px-3 py-1.5 rounded-full cursor-pointer text-xs font-medium border transition-all ${
+                          isChecked
+                            ? "bg-indigo-100 text-indigo-800 border-indigo-400 font-semibold shadow-sm"
+                            : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="mr-1.5 h-3.5 w-3.5 text-blue-600 rounded"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            let current = (formData.targetCountries || []).filter((c) => c !== "ALL")
+                            if (e.target.checked) {
+                              current.push(country.code)
+                            } else {
+                              current = current.filter((c) => c !== country.code)
+                            }
+                            if (current.length === 0 || current.length === availableCountries.length) {
+                              setFormData((prev) => ({ ...prev, targetCountries: ["ALL"] }))
+                            } else {
+                              setFormData((prev) => ({ ...prev, targetCountries: current }))
+                            }
+                          }}
+                        />
+                        {country.name} ({country.code})
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Per-Country Stock Quantities */}
+              <div className="pt-4 border-t border-gray-200">
+                <label className="block text-sm font-bold text-gray-800 mb-1">
+                  📦 Country-Specific Stock Quantities
+                </label>
+                <p className="text-xs text-gray-500 mb-4">
+                  Set stock quantity per country. Total stock will be automatically calculated.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                  {availableCountries.map((country) => (
+                    <div key={country.code} className="bg-gray-50 p-3 rounded-md border border-gray-200">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        {country.name} ({country.code})
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.countryStock?.[country.code] ?? 0}
+                        onChange={(e) => {
+                          const newCount = Math.max(0, Number.parseInt(e.target.value) || 0)
+                          const updatedStockMap = {
+                            ...(formData.countryStock || {}),
+                            [country.code]: newCount,
+                          }
+                          const totalStock = Object.values(updatedStockMap).reduce((sum, n) => sum + (Number(n) || 0), 0)
+                          setFormData((prev) => ({
+                            ...prev,
+                            countryStock: updatedStockMap,
+                            countInStock: totalStock.toString(),
+                            stockStatus: totalStock > 0 ? "In Stock" : "Out of Stock",
+                          }))
+                        }}
+                        className="w-full px-2.5 py-1.5 text-sm bg-white border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="0"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

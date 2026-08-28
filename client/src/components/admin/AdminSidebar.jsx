@@ -36,6 +36,7 @@ import {
   UserCog,
   Languages,
   Unlock,
+  Globe,
 } from "lucide-react"
 
 const SEO_UNLOCK_TOKEN_KEY = "seoUnlockToken"
@@ -85,6 +86,7 @@ const AdminSidebar = () => {
     // Product System dropdown - open if any product-related route is active
     if (
       path.includes("/admin/product-pm") ||
+      path.includes("/admin/country-pm") ||
       path.includes("/admin/products") ||
       path.includes("/admin/add-product") ||
       path.includes("/admin/categories") ||
@@ -182,7 +184,12 @@ const AdminSidebar = () => {
     }
 
     // Individual dropdowns
-    if (path.includes("/admin/products") || path.includes("/admin/add-product")) {
+    if (
+      path.includes("/admin/products") ||
+      path.includes("/admin/add-product") ||
+      path.includes("/admin/product-pm") ||
+      path.includes("/admin/country-pm")
+    ) {
       newOpenDropdowns.products = true
     }
     if (
@@ -322,6 +329,7 @@ const AdminSidebar = () => {
             //{ title: "Add Product", path: "/admin/products/add" },
             { title: "Add Bulk Products", path: "/admin/products/bulk-add" },
             { title: "Product Payment Method", path: "/admin/product-pm" },
+            { title: "Country Payment Methods", path: "/admin/country-pm" },
           ],
         },
         {
@@ -681,11 +689,16 @@ const AdminSidebar = () => {
       path: "/admin/arabic-conversion",
       permission: "cache",
     },
-    // {
-    //   title: "Settings",
-    //   icon: Settings,
-    //   path: "/admin/settings",
-    // },
+    {
+      title: "GCC Countries & Rates",
+      icon: Globe,
+      path: "/admin/settings?tab=countries",
+    },
+    {
+      title: "Admin Settings",
+      icon: Settings,
+      path: "/admin/settings",
+    },
   ]
 
   // Super Admin only menu items

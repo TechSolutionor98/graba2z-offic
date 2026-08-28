@@ -28,6 +28,7 @@ import CategorySliderUpdated from "../components/CategorySliderUpdated"
 import { useWishlist } from "../context/WishlistContext"
 import { useCart } from "../context/CartContext"
 import { useLanguage } from "../context/LanguageContext"
+import { useCurrency } from "../context/CurrencyContext"
 import BrandSlider from "../components/BrandSlider"
 import DynamicSection from "../components/DynamicSection"
 import TranslatedText from "../components/TranslatedText"
@@ -194,12 +195,30 @@ const Home = () => {
   const [showDeferredMobileContent, setShowDeferredMobileContent] = useState(false)
   const isMobileViewport = deviceType === "Mobile"
   const shouldRenderDeferredMobileContent = !isMobileViewport || showDeferredMobileContent
+  const { currentCountry } = useCurrency()
+  const activeCountryCode = currentCountry?.code || "AE"
+
+  const isBannerVisibleInCountry = (banner, countryCode) => {
+    if (!banner) return false
+    if (!banner.targetCountries || !Array.isArray(banner.targetCountries) || banner.targetCountries.length === 0) {
+      return true
+    }
+    if (banner.targetCountries.includes("ALL")) {
+      return true
+    }
+    if (!countryCode) return true
+    return banner.targetCountries.includes(String(countryCode).toUpperCase())
+  }
+
   const filteredHeroBanners = useMemo(
     () =>
       heroBanners.filter(
-        (banner) => banner.deviceType && banner.deviceType.toLowerCase() === deviceType.toLowerCase(),
+        (banner) =>
+          banner.deviceType &&
+          banner.deviceType.toLowerCase() === deviceType.toLowerCase() &&
+          isBannerVisibleInCountry(banner, activeCountryCode),
       ),
-    [heroBanners, deviceType],
+    [heroBanners, deviceType, activeCountryCode],
   )
   const homeBannersByKey = useMemo(() => {
     const normalize = (value) => String(value || "").trim().toLowerCase()
@@ -209,6 +228,7 @@ const Home = () => {
     homeBanners.forEach((banner) => {
       const bannerDevice = normalize(banner.deviceType)
       if (bannerDevice && bannerDevice !== targetDevice) return
+      if (!isBannerVisibleInCountry(banner, activeCountryCode)) return
       const key = `${normalize(banner.section)}::${normalize(banner.position)}`
       const current = bannerMap.get(key) || []
       current.push(banner)
@@ -216,7 +236,7 @@ const Home = () => {
     })
 
     return bannerMap
-  }, [homeBanners, deviceType])
+  }, [homeBanners, deviceType, activeCountryCode])
 
   // Notification popup state
   const [showNotifPopup, setShowNotifPopup] = useState(false)
@@ -2038,7 +2058,8 @@ const Home = () => {
 const MobileProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice } = useCurrency()
   // Use dynamic discount
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Use dynamic stock status
@@ -2124,11 +2145,11 @@ const MobileProductCard = ({ product }) => {
 
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0 mb-1">
         <div className="text-red-600 font-bold text-sm">
-          {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+          {formatCurrencyPrice(priceToShow, isArabic)}
         </div>
         {showOldPrice && (
           <div className="text-gray-400 line-through text-xs font-medium">
-            {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+            {formatCurrencyPrice(basePrice, isArabic)}
           </div>
         )}
       </div>
@@ -2170,7 +2191,8 @@ const MobileProductCard = ({ product }) => {
 const DynamicBrandProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice } = useCurrency()
   // Use dynamic discount
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Use dynamic stock status
@@ -2261,11 +2283,11 @@ const DynamicBrandProductCard = ({ product }) => {
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
-          {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+          {formatCurrencyPrice(priceToShow, isArabic)}
         </div>
         {showOldPrice && (
           <div className="text-gray-400 line-through text-xs font-medium">
-            {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+            {formatCurrencyPrice(basePrice, isArabic)}
           </div>
         )}
       </div>
@@ -2307,7 +2329,8 @@ const DynamicBrandProductCard = ({ product }) => {
 const AccessoriesProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice } = useCurrency()
   // Use dynamic discount
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Use dynamic stock status
@@ -2397,11 +2420,11 @@ const AccessoriesProductCard = ({ product }) => {
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
         <div className="text-red-600 font-bold text-sm">
-          {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+          {formatCurrencyPrice(priceToShow, isArabic)}
         </div>
         {showOldPrice && (
           <div className="text-gray-400 line-through text-xs font-medium">
-            {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}AED
+            {formatCurrencyPrice(basePrice, isArabic)}
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import { Package, Truck, CheckCircle, Clock, AlertCircle, Search } from "lucide-
 import axios from "axios"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { useLanguage } from "../context/LanguageContext"
+import { useCurrency } from "../context/CurrencyContext"
 import TranslatedText from "../components/TranslatedText"
 import { useAuth } from "../context/AuthContext"
 
@@ -17,13 +18,14 @@ const TrackOrder = () => {
   const { user, isAuthenticated, logout } = useAuth()
   const { showToast } = useToast()
   const { isArabic, getLocalizedPath } = useLanguage()
+  const { formatPrice: formatCurrencyPrice } = useCurrency()
   const [formData, setFormData] = useState({
     email: "",
     orderId: "",
   })
   const handleLogout = () => {
     logout()
-    navigate("/")
+    navigate(getLocalizedPath("/"))
   }
   const [loading, setLoading] = useState(false)
   const [orderData, setOrderData] = useState(null)
@@ -106,8 +108,7 @@ const TrackOrder = () => {
   }
 
   const formatPrice = (price) => {
-    const locale = isArabic ? "ar-AE" : "en-US"
-    return `${Number(price || 0).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AED`
+    return formatCurrencyPrice(price, isArabic)
   }
 
   const getTrackingSteps = (status) => {

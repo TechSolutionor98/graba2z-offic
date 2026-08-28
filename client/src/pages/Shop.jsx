@@ -6,6 +6,7 @@ import axios from "axios"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import { useLanguage } from "../context/LanguageContext"
+import { useCurrency } from "../context/CurrencyContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
 import ProductSchema from "../components/ProductSchema"
 import SEO from "../components/SEO"
@@ -320,7 +321,8 @@ const Shop = () => {
   const location = useLocation()
   const params = useParams()
   const { addToCart } = useCart()
-  const { currentLanguage } = useLanguage()
+  const { currentLanguage, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice } = useCurrency()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [brands, setBrands] = useState([])
@@ -2324,7 +2326,7 @@ const Shop = () => {
                     {(isPriceFilterApplied) && (
                       <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                         <span className="text-gray-700">
-                          <span className="font-semibold"><TranslatedText>Price</TranslatedText>:</span> <TranslatedText>AED</TranslatedText> {priceRange[0]} - <TranslatedText>AED</TranslatedText> {formattedAppliedMaxPrice}
+                          <span className="font-semibold"><TranslatedText>Price</TranslatedText>:</span> {formatCurrencyPrice(priceRange[0], isArabic)} - {formatCurrencyPrice(formattedAppliedMaxPrice, isArabic)}
                         </span>
                         <button
                           onClick={resetPriceFilter}
@@ -3048,7 +3050,7 @@ const Shop = () => {
                     {(isPriceFilterApplied) && (
                       <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                         <span className="text-gray-700">
-                          <span className="font-semibold"><TranslatedText>Price</TranslatedText>:</span> AED {priceRange[0]} - AED {formattedAppliedMaxPrice}
+                          <span className="font-semibold"><TranslatedText>Price</TranslatedText>:</span> {formatCurrencyPrice(priceRange[0], isArabic)} - {formatCurrencyPrice(formattedAppliedMaxPrice, isArabic)}
                         </span>
                         <button
                           onClick={resetPriceFilter}

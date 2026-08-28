@@ -24,7 +24,7 @@ import {
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
-import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo } from "../../utils/paymentUtils"
+import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 
 const ConfirmedOrders = () => {
   const [orders, setOrders] = useState([])
@@ -64,8 +64,8 @@ const ConfirmedOrders = () => {
   
   const paymentStatusOptions = ["Paid", "Unpaid"]
 
-  const formatPrice = (price) => {
-    return `AED ${price?.toLocaleString() || 0}`
+  const formatPrice = (price, orderObj) => {
+    return formatOrderPrice(price, orderObj || selectedOrder)
   }
 
   const formatDate = (date) => {
@@ -476,6 +476,11 @@ const ConfirmedOrders = () => {
                             <div className="text-sm text-gray-500">{order.shippingAddress?.email || "N/A"}</div>
                           </>
                         )}
+                        <div className="mt-1">
+                          <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800 uppercase">
+                            📍 {getOrderCountryName(order)}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{new Date(order.createdAt).toLocaleDateString()}</div>
@@ -540,8 +545,8 @@ const ConfirmedOrders = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatPrice(order.totalPrice)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                        {formatOrderPrice(order.totalPrice, order)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button

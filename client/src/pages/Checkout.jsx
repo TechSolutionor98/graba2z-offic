@@ -8,6 +8,8 @@ import axios from "axios"
 import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import { useLanguage } from "../context/LanguageContext"
+import { useCurrency } from "../context/CurrencyContext"
+import { getProvincesForCountry } from "../utils/countryStates"
 import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Check, Edit } from "lucide-react"
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
@@ -177,6 +179,7 @@ const renderPaymentLogos = (id) => {
 
 const Checkout = () => {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const {
     cartItems,
     cartTotal,
@@ -192,33 +195,31 @@ const Checkout = () => {
     setCouponDiscount,
     removeFromCart,
   } = useCart()
-  const { user } = useAuth()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice, countries, currentCountry } = useCurrency()
   const location = useLocation()
 
   const [tax, setTax] = useState(null)
   const [paymentChargesList, setPaymentChargesList] = useState({})
 
-  // Fetch delivery options on mount (if not already fetched)
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "",
+  })
+
+  // Fetch tax and payment charges on mount
   useEffect(() => {
-    if (!deliveryOptions || deliveryOptions.length === 0) {
-      const fetchDeliveryOptions = async () => {
-        try {
-          const { data } = await axios.get(`${config.API_URL}/api/delivery-charges`)
-          setDeliveryOptions(data)
-          if (!selectedDelivery && data.length > 0) {
-            setSelectedDelivery(data[0])
-          }
-        } catch (err) {
-          // handle error
-        }
-      }
-      fetchDeliveryOptions()
-    }
-    // Fetch tax
     const fetchTax = async () => {
       try {
-        const { data } = await axios.get(`${config.API_URL}/api/tax`)
+        const { data } = await axios.get(`${config.API_URL}/api/tax`, {
+          params: { countryCode: currentCountry?.code },
+        })
         if (data && data.length > 0) setTax(data[0])
       } catch (err) {
         // handle error
@@ -226,10 +227,12 @@ const Checkout = () => {
     }
     fetchTax()
 
-    // Fetch payment charges
     const fetchPaymentCharges = async () => {
       try {
-        const { data } = await axios.get(`${config.API_URL}/api/payment-charges/active`)
+        // Country specific fees where configured, otherwise the default rule.
+        const { data } = await axios.get(`${config.API_URL}/api/payment-charges/active`, {
+          params: { countryCode: currentCountry?.code },
+        })
         const chargesMap = {}
         data.forEach(item => {
           chargesMap[item.paymentMethod] = item
@@ -240,26 +243,31 @@ const Checkout = () => {
       }
     }
     fetchPaymentCharges()
-  }, [])
+  }, [currentCountry?.code])
 
+  // Fetch country-specific delivery options when country changes or on mount
   useEffect(() => {
-    if (!user) {
-      const guestInfo = localStorage.getItem("guestInfo")
-      if (!guestInfo) {
-        navigate("/login")
+    const activeCountry = formData.country || currentCountry?.name || "United Arab Emirates"
+    const fetchDeliveryOptions = async () => {
+      try {
+        const { data } = await axios.get(`${config.API_URL}/api/delivery-charges`, {
+          params: {
+            country: activeCountry,
+            countryCode: currentCountry?.code,
+          },
+        })
+        setDeliveryOptions(data)
+        if (data.length > 0) {
+          setSelectedDelivery(data[0])
+        } else {
+          setSelectedDelivery(null)
+        }
+      } catch (err) {
+        console.error("Error fetching country delivery charges:", err)
       }
     }
-  }, [user, navigate])
-
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
-  })
+    fetchDeliveryOptions()
+  }, [formData.country, currentCountry?.name, currentCountry?.code])
 
   const [savedAddresses, setSavedAddresses] = useState([])
   const [loading, setLoading] = useState(false)
@@ -274,6 +282,7 @@ const Checkout = () => {
     city: "",
     state: "",
     zipCode: "",
+    country: "",
     isDefault: false,
   })
   const [pickupDetails, setPickupDetails] = useState({
@@ -288,9 +297,25 @@ const Checkout = () => {
   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(["card", "cod"])
 
   useEffect(() => {
+    // Country rules still apply when there is nothing to price against the cart,
+    // so ask for the country list rather than assuming card + cash on delivery.
+    const fetchCountryFallbackMethods = async () => {
+      try {
+        const { data } = await axios.get(`${config.API_URL}/api/country-payment-methods/resolve`, {
+          params: { countryCode: currentCountry?.code },
+        })
+        if (Array.isArray(data?.paymentMethods) && data.paymentMethods.length > 0) {
+          return data.paymentMethods
+        }
+      } catch (err) {
+        console.error("Failed to fetch country payment methods:", err)
+      }
+      return ["card", "cod"]
+    }
+
     const fetchAllowedPaymentMethods = async () => {
       if (!cartItems || cartItems.length === 0) {
-        setAllowedPaymentMethods(["card", "cod"])
+        setAllowedPaymentMethods(await fetchCountryFallbackMethods())
         return
       }
 
@@ -300,12 +325,13 @@ const Checkout = () => {
           .map(item => item._id)
 
         if (productIds.length === 0) {
-          setAllowedPaymentMethods(["card", "cod"])
+          setAllowedPaymentMethods(await fetchCountryFallbackMethods())
           return
         }
 
         const { data } = await axios.post(`${config.API_URL}/api/product-payment-methods/resolve`, {
           productIds,
+          countryCode: currentCountry?.code,
         })
 
         if (data && Array.isArray(data.paymentMethods)) {
@@ -318,12 +344,12 @@ const Checkout = () => {
         }
       } catch (err) {
         console.error("Failed to fetch allowed payment methods:", err)
-        setAllowedPaymentMethods(["card", "cod"])
+        setAllowedPaymentMethods(await fetchCountryFallbackMethods())
       }
     }
 
     fetchAllowedPaymentMethods()
-  }, [cartItems])
+  }, [cartItems, currentCountry?.code])
   const [cardDetails, setCardDetails] = useState({
     cardNumber: "",
     expiryDate: "",
@@ -339,7 +365,7 @@ const Checkout = () => {
   const taxAmount = "included"
 
   const formatPrice = (price) => {
-    return `AED ${price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+    return formatCurrencyPrice(price, isArabic)
   }
 
   // Respect bundlePrice, bundleDiscount (25%), then offerPrice, then base price
@@ -763,9 +789,14 @@ const Checkout = () => {
         customerNotes: customerNotes.trim() || undefined,
         // Dynamic payment charges
         paymentCharges: currentPaymentChargesData?.charges || [],
+        currency: currentCountry?.currencyCode || "AED",
+        currencySymbol: currentCountry?.currencySymbol || currentCountry?.currencyCode || "AED",
+        // Lets the server enforce the country payment method rules.
+        countryCode: currentCountry?.code,
       }
 
       if (deliveryType === "home") {
+        const activeCountryName = currentCountry?.name || "UAE"
         orderData.shippingAddress = {
           name: formData.name,
           email: formData.email,
@@ -774,10 +805,9 @@ const Checkout = () => {
           city: formData.city,
           state: formData.state,
           zipCode: formData.zipCode,
+          country: (formData.country && formData.country !== "UAE") ? formData.country : activeCountryName,
         }
-        if (actualPaymentMethod === "cod") {
-          orderData.billingAddress = { ...orderData.shippingAddress }
-        }
+        orderData.billingAddress = { ...orderData.shippingAddress }
       } else if (deliveryType === "pickup") {
         const store = STORES.find((s) => s.storeId === pickupDetails.storeId)
         orderData.pickupDetails = {
@@ -1120,6 +1150,10 @@ const Checkout = () => {
         customerNotes: customerNotes.trim() || undefined, // Only include if not empty
         // Dynamic payment charges
         paymentCharges: currentPaymentChargesData?.charges || [],
+        currency: currentCountry?.currencyCode || "AED",
+        currencySymbol: currentCountry?.currencySymbol || currentCountry?.currencyCode || "AED",
+        // Lets the server enforce the country payment method rules.
+        countryCode: currentCountry?.code,
       }
 
       if (deliveryType === "home") {
@@ -1216,6 +1250,7 @@ const Checkout = () => {
       city: addr.city || "",
       state: addr.state || "",
       zipCode: addr.zipCode || "",
+      country: addr.country || currentCountry?.name || "UAE",
       isDefault: addr.isDefault || false,
     })
     setShowAddressModal(true)
@@ -1229,6 +1264,7 @@ const Checkout = () => {
       city: addressDetails.city,
       state: addressDetails.state,
       zipCode: addressDetails.zipCode,
+      country: addressDetails.country || currentCountry?.name || "UAE",
     }
 
     if (user) {
@@ -1242,6 +1278,7 @@ const Checkout = () => {
           city: addressDetails.city,
           state: addressDetails.state,
           zipCode: addressDetails.zipCode,
+          country: addressDetails.country || currentCountry?.name || "UAE",
           isDefault: addressDetails.isDefault,
         }
         
@@ -1304,7 +1341,7 @@ const Checkout = () => {
               city: formData.city,
               state: formData.state,
               zipCode: formData.zipCode,
-              country: "UAE",
+              country: formData.country || currentCountry?.name || "UAE",
             },
           }
           await axios.put(`${config.API_URL}/api/users/profile`, payload, {
@@ -1416,6 +1453,7 @@ const Checkout = () => {
             city: defaultAddr ? defaultAddr.city : (data.address?.city || prev.city || ""),
             state: defaultAddr ? defaultAddr.state : (data.address?.state || prev.state || ""),
             zipCode: defaultAddr ? defaultAddr.zipCode : (data.address?.zipCode || prev.zipCode || ""),
+            country: currentCountry?.name || defaultAddr?.country || data.address?.country || prev.country || "UAE",
           }))
           setPickupDetails((prev) => ({
             ...prev,
@@ -1616,6 +1654,7 @@ const Checkout = () => {
                                       city: addr.city,
                                       state: addr.state,
                                       zipCode: addr.zipCode,
+                                      country: addr.country || currentCountry?.name || "UAE",
                                     }))
                                   }}
                                   className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
@@ -1656,7 +1695,7 @@ const Checkout = () => {
                               setAddressDetails({
                                 address: "",
                                 zip: "",
-                                country: "UAE",
+                                country: currentCountry?.name || "UAE",
                                 state: "",
                                 city: "",
                                 isDefault: false,
@@ -2267,6 +2306,22 @@ const Checkout = () => {
                 </div>
 
                 <div className="mb-4">
+                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Country</TranslatedText> *</label>
+                  <select
+                    className="w-full border rounded-lg px-4 py-3"
+                    value={addressDetails.country || currentCountry?.name || "UAE"}
+                    onChange={(e) => setAddressDetails({ ...addressDetails, country: e.target.value, state: "" })}
+                    required
+                  >
+                    {(countries || []).map((c) => (
+                      <option key={c.code} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-4">
                   <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Address Street</TranslatedText> *</label>
                   <input
                     type="text"
@@ -2280,20 +2335,38 @@ const Checkout = () => {
 
                 <div className="flex gap-4 mb-4">
                   <div className="w-1/2">
-                    <label className="block text-gray-700 font-medium mb-1"><TranslatedText>State/Emirate</TranslatedText> *</label>
-                    <select
-                      className="w-full border rounded-lg px-4 py-3"
-                      value={addressDetails.state}
-                      onChange={(e) => setAddressDetails({ ...addressDetails, state: e.target.value })}
-                      required
-                    >
-                      <option value="">Select State</option>
-                      {UAE_STATES.map((state) => (
-                        <option key={state} value={state}>
-                          {state}
-                        </option>
-                      ))}
-                    </select>
+                    <label className="block text-gray-700 font-medium mb-1"><TranslatedText>State/Province</TranslatedText> *</label>
+                    {(() => {
+                      const selectedCountryName = addressDetails.country || currentCountry?.name || "UAE"
+                      const provinces = getProvincesForCountry(selectedCountryName)
+                      if (provinces && provinces.length > 0) {
+                        return (
+                          <select
+                            className="w-full border rounded-lg px-4 py-3"
+                            value={addressDetails.state}
+                            onChange={(e) => setAddressDetails({ ...addressDetails, state: e.target.value })}
+                            required
+                          >
+                            <option value="">Select State / Province</option>
+                            {provinces.map((prov) => (
+                              <option key={prov} value={prov}>
+                                {prov}
+                              </option>
+                            ))}
+                          </select>
+                        )
+                      }
+                      return (
+                        <input
+                          type="text"
+                          className="w-full border rounded-lg px-4 py-3"
+                          value={addressDetails.state}
+                          onChange={(e) => setAddressDetails({ ...addressDetails, state: e.target.value })}
+                          placeholder="State / Province"
+                          required
+                        />
+                      )
+                    })()}
                   </div>
                   <div className="w-1/2">
                     <label className="block text-gray-700 font-medium mb-1"><TranslatedText>City</TranslatedText> *</label>

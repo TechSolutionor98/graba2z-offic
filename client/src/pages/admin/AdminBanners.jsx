@@ -15,9 +15,19 @@ const debugBanners = (...args) => {
   }
 }
 
+const DEFAULT_COUNTRIES = [
+  { code: "AE", name: "UAE" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "QA", name: "Qatar" },
+  { code: "OM", name: "Oman" },
+  { code: "BH", name: "Bahrain" },
+  { code: "KW", name: "Kuwait" },
+]
+
 const AdminBanners = () => {
   const [banners, setBanners] = useState([])
   const [categories, setCategories] = useState([])
+  const [availableCountries, setAvailableCountries] = useState(DEFAULT_COUNTRIES)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showForm, setShowForm] = useState(false)
@@ -40,6 +50,7 @@ const AdminBanners = () => {
     validFrom: "",
     validUntil: "",
     deviceType: "desktop",
+    targetCountries: ["ALL"],
   })
 
   const positions = [
@@ -67,7 +78,19 @@ const AdminBanners = () => {
   useEffect(() => {
     fetchBanners()
     fetchCategories()
+    fetchCountries()
   }, [])
+
+  const fetchCountries = async () => {
+    try {
+      const { data } = await axios.get(`${config.API_URL}/api/countries/public`)
+      if (Array.isArray(data) && data.length > 0) {
+        setAvailableCountries(data.map((c) => ({ code: c.code, name: c.name })))
+      }
+    } catch (err) {
+      console.warn("Could not fetch active countries, using defaults:", err)
+    }
+  }
 
   const fetchBanners = async () => {
     try {
@@ -238,6 +261,7 @@ const AdminBanners = () => {
       validFrom: "",
       validUntil: "",
       deviceType: "desktop",
+      targetCountries: ["ALL"],
     })
   }
 
@@ -252,6 +276,7 @@ const AdminBanners = () => {
       buttonLink: banner?.buttonLink,
       link: banner?.link,
       title: banner?.title,
+      targetCountries: banner?.targetCountries,
     })
     
     // If banner has a section that matches one of our home sections, show that in position dropdown
@@ -281,6 +306,7 @@ const AdminBanners = () => {
       validFrom: banner.validFrom ? new Date(banner.validFrom).toISOString().split("T")[0] : "",
       validUntil: banner.validUntil ? new Date(banner.validUntil).toISOString().split("T")[0] : "",
       deviceType: banner.deviceType || "desktop",
+      targetCountries: Array.isArray(banner.targetCountries) && banner.targetCountries.length > 0 ? banner.targetCountries : ["ALL"],
     })
     setShowForm(true)
   }
@@ -501,6 +527,90 @@ const AdminBanners = () => {
                 </div>
               </div>
 
+              {/* Target Countries Selection */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-bold text-gray-800">
+                    🌍 Target Countries
+                  </label>
+                  <div className="space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, targetCountries: ["ALL"] })}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium underline"
+                    >
+                      Select All
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  Choose "All Countries" to show this banner globally, or check one or more specific countries.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* All Countries Pill */}
+                  <label
+                    className={`inline-flex items-center px-3 py-1.5 rounded-full cursor-pointer text-xs font-semibold border transition-all ${
+                      formData.targetCountries.includes("ALL")
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={formData.targetCountries.includes("ALL")}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({ ...formData, targetCountries: ["ALL"] })
+                        } else {
+                          setFormData({ ...formData, targetCountries: [availableCountries[0]?.code || "AE"] })
+                        }
+                      }}
+                    />
+                    🌐 All Countries
+                  </label>
+
+                  {/* Individual Country Checkboxes */}
+                  {availableCountries.map((country) => {
+                    const isChecked =
+                      !formData.targetCountries.includes("ALL") &&
+                      formData.targetCountries.includes(country.code)
+
+                    return (
+                      <label
+                        key={country.code}
+                        className={`inline-flex items-center px-3 py-1.5 rounded-full cursor-pointer text-xs font-medium border transition-all ${
+                          isChecked
+                            ? "bg-indigo-100 text-indigo-800 border-indigo-400 font-semibold shadow-sm"
+                            : "bg-white text-gray-600 border-gray-300 hover:bg-gray-100"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="mr-1.5 h-3.5 w-3.5 text-blue-600 rounded"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            let current = formData.targetCountries.filter((c) => c !== "ALL")
+                            if (e.target.checked) {
+                              current.push(country.code)
+                            } else {
+                              current = current.filter((c) => c !== country.code)
+                            }
+                            if (current.length === 0 || current.length === availableCountries.length) {
+                              setFormData({ ...formData, targetCountries: ["ALL"] })
+                            } else {
+                              setFormData({ ...formData, targetCountries: current })
+                            }
+                          }}
+                        />
+                        {country.name} ({country.code})
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -551,6 +661,9 @@ const AdminBanners = () => {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Device
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Countries
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -610,6 +723,26 @@ const AdminBanners = () => {
                             {banner.deviceType || 'desktop'}
                           </span>
                         </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                            {!banner.targetCountries ||
+                            banner.targetCountries.length === 0 ||
+                            banner.targetCountries.includes("ALL") ? (
+                              <span className="px-2 py-0.5 inline-flex text-xs font-semibold rounded bg-sky-100 text-sky-800">
+                                🌐 All Countries
+                              </span>
+                            ) : (
+                              banner.targetCountries.map((code) => (
+                                <span
+                                  key={code}
+                                  className="px-2 py-0.5 inline-flex text-xs font-semibold rounded bg-indigo-100 text-indigo-800 border border-indigo-200"
+                                >
+                                  {code}
+                                </span>
+                              ))
+                            )}
+                          </div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -643,7 +776,7 @@ const AdminBanners = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                         No banners found
                       </td>
                     </tr>

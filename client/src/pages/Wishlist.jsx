@@ -3,12 +3,14 @@ import { Link } from "react-router-dom"
 import { Trash2, Heart } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { useLanguage } from "../context/LanguageContext"
+import { useCurrency } from "../context/CurrencyContext"
 import TranslatedText from "../components/TranslatedText"
 import PromoPopup from "../components/PromoPopup"
 
 const Wishlist = () => {
   const { wishlist, removeFromWishlist, loading } = useWishlist()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice } = useCurrency()
 
   if (loading) return <div className="max-w-3xl mx-auto py-12 text-center"><TranslatedText>Loading...</TranslatedText></div>
 
@@ -90,7 +92,7 @@ const Wishlist = () => {
                   {/* Price */}
                   <div className="flex items-center justify-between">
                     <div className="text-lg font-bold text-red-600">
-                      {product.price ? `AED ${product.price.toLocaleString()}` : "Price not available"}
+                      {product.price ? formatCurrencyPrice(product.price, isArabic) : "Price not available"}
                     </div>
                   </div>
                 </Link>

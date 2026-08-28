@@ -11,6 +11,8 @@ import Slider from "rc-slider"
 import "rc-slider/assets/index.css"
 import PriceFilter from "../components/PriceFilter"
 import PromoPopup from "../components/PromoPopup"
+import { useLanguage } from "../context/LanguageContext"
+import { useCurrency } from "../context/CurrencyContext"
 
 const DEFAULT_PRICE_RANGE = [0, Number.POSITIVE_INFINITY]
 const PRICE_FILTER_MIN = 0
@@ -94,6 +96,8 @@ const SortDropdown = ({ value, onChange }) => {
 const OfferPage = () => {
   const { slug } = useParams()
   const location = useLocation()
+  const { isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice } = useCurrency()
   const [loading, setLoading] = useState(true)
   const [offerPage, setOfferPage] = useState(null)
   const [products, setProducts] = useState([])
@@ -1315,7 +1319,7 @@ const OfferPage = () => {
                       {(isPriceFilterApplied) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> AED{priceRange[0]} - AED{formattedAppliedMaxPrice}
+                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> {formatCurrencyPrice(priceRange[0], isArabic)} - {formatCurrencyPrice(formattedAppliedMaxPrice, isArabic)}
                           </span>
                           <button
                             onClick={resetPriceFilter}
@@ -1936,7 +1940,7 @@ const OfferPage = () => {
                       {(isPriceFilterApplied) && (
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 text-sm">
                           <span className="text-gray-700">
-                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> AED {priceRange[0]} - AED {formattedAppliedMaxPrice}
+                            <span className="font-semibold"><TranslatedText>Price:</TranslatedText></span> {formatCurrencyPrice(priceRange[0], isArabic)} - {formatCurrencyPrice(formattedAppliedMaxPrice, isArabic)}
                           </span>
                           <button
                             onClick={resetPriceFilter}

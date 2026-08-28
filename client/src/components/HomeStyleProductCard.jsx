@@ -141,6 +141,7 @@ import { useLanguage } from "../context/LanguageContext"
 import { getImageUrl } from "../utils/imageUtils"
 import { resolveProductCategoryInfo } from "../utils/productCategory"
 import TranslatedText from "./TranslatedText"
+import { useCurrency } from "../context/CurrencyContext"
 
 const getStatusColor = (status) => {
   if (status === "In Stock") return "bg-green-600"
@@ -153,7 +154,8 @@ const HomeStyleProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist()
   const { addToCart } = useCart()
   const { showToast } = useToast()
-  const { getLocalizedPath } = useLanguage()
+  const { getLocalizedPath, isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice } = useCurrency()
   const discount = product.discount && Number(product.discount) > 0 ? `${product.discount}% Off` : null
   // Determine stock status
   const stockStatus = product.stockStatus || (product.countInStock > 0 ? "In Stock" : "Out of Stock")
@@ -233,11 +235,11 @@ const HomeStyleProductCard = ({ product }) => {
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
         <div className="text-red-600 font-bold text-sm">
-          {Number(priceToShow).toLocaleString(undefined, { minimumFractionDigits: 2 })}<TranslatedText>AED</TranslatedText>
+          {formatCurrencyPrice(priceToShow, isArabic)}
         </div>
         {showOldPrice && (
           <div className="text-gray-400 line-through text-xs font-medium">
-            {Number(basePrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}<TranslatedText>AED</TranslatedText>
+            {formatCurrencyPrice(basePrice, isArabic)}
           </div>
         )}
       </div>

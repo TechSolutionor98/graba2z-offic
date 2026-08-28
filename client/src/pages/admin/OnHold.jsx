@@ -12,12 +12,12 @@ import { getFullImageUrl } from "../../utils/imageUtils"
 import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
-import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo } from "../../utils/paymentUtils"
+import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 
 // Invoice Component for Printing - Using forwardRef
 const InvoiceComponent = forwardRef(({ order }, ref) => {
   const formatPrice = (price) => {
-    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+    return formatOrderPrice(price, order)
   }
 
   const formatDate = (date) => {
@@ -476,8 +476,8 @@ const OnHold = () => {
     }
   }
 
-  const formatPrice = (price) => {
-    return `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+  const formatPrice = (price, orderObj) => {
+    return formatOrderPrice(price, orderObj || selectedOrder)
   }
 
   const formatDate = (date) => {
@@ -780,8 +780,13 @@ const OnHold = () => {
                         <div className="text-sm font-medium text-blue-600">#{order._id.slice(-6)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{order.shippingAddress.name}</div>
-                        <div className="text-sm text-gray-500">{order.shippingAddress.email}</div>
+                        <div className="text-sm text-gray-900">{order.shippingAddress?.name || "N/A"}</div>
+                        <div className="text-sm text-gray-500">{order.shippingAddress?.email || "N/A"}</div>
+                        <div className="mt-1">
+                          <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800 uppercase">
+                            📍 {getOrderCountryName(order)}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="relative">
@@ -835,8 +840,8 @@ const OnHold = () => {
                         <div className="text-sm text-gray-900">{order.holdReason || "Payment Issue"}</div>
                       </td>
                       {/* Removed Items column */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatPrice(order.totalPrice)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                        {formatOrderPrice(order.totalPrice, order)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button

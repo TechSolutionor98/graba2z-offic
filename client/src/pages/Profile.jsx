@@ -23,6 +23,8 @@ import {
 } from "lucide-react"
 import { useToast } from "../context/ToastContext"
 import { useLanguage } from "../context/LanguageContext"
+import { useCurrency } from "../context/CurrencyContext"
+import { getProvincesForCountry } from "../utils/countryStates"
 import axios from "axios"
 import config from "../config/config"
 
@@ -34,6 +36,7 @@ const Profile = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { getLocalizedPath } = useLanguage()
+  const { countries, currentCountry } = useCurrency()
 
   // Tabs state
   const [activeTab, setActiveTab] = useState("overview")
@@ -68,6 +71,7 @@ const Profile = () => {
     city: "",
     state: "",
     zipCode: "",
+    country: "",
     isDefault: false,
   })
 
@@ -180,6 +184,7 @@ const Profile = () => {
       city: "",
       state: "",
       zipCode: "",
+      country: currentCountry?.name || (countries && countries[0]?.name) || "UAE",
       isDefault: false,
     })
     setShowAddressModal(true)
@@ -195,6 +200,7 @@ const Profile = () => {
       city: addr.city || "",
       state: addr.state || "",
       zipCode: addr.zipCode || "",
+      country: addr.country || currentCountry?.name || "UAE",
       isDefault: addr.isDefault || false,
     })
     setShowAddressModal(true)
@@ -267,7 +273,7 @@ const Profile = () => {
 
   const handleLogout = () => {
     logout()
-    navigate("/")
+    navigate(getLocalizedPath("/"))
   }
 
   const handleRequestDeletion = async () => {
@@ -308,7 +314,7 @@ const Profile = () => {
       showToast(response.data.message, "success")
       setTimeout(() => {
         logout()
-        navigate("/")
+        navigate(getLocalizedPath("/"))
       }, 2000)
     } catch (error) {
       showToast(
@@ -721,7 +727,7 @@ const Profile = () => {
 
                       <div className="text-sm text-gray-600 space-y-1">
                         <p>{addr.address}</p>
-                        <p>{addr.city}, {addr.state || ""} {addr.zipCode || ""}</p>
+                        <p>{addr.city}, {addr.state || ""} {addr.zipCode || ""} ({addr.country || "UAE"})</p>
                         <p className="flex items-center gap-1 text-gray-500 mt-2 text-xs">
                           <Phone size={12} /> {addr.phone}
                         </p>
@@ -815,6 +821,22 @@ const Profile = () => {
               </div>
 
               <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Country *</label>
+                <select
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none text-sm"
+                  value={addressDetails.country || currentCountry?.name || "UAE"}
+                  onChange={(e) => setAddressDetails({ ...addressDetails, country: e.target.value })}
+                >
+                  {(countries || []).map((c) => (
+                    <option key={c.code} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Address Street *</label>
                 <input
                   type="text"
@@ -828,20 +850,38 @@ const Profile = () => {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">State / Emirate *</label>
-                  <select
-                    required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none text-sm"
-                    value={addressDetails.state}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, state: e.target.value })}
-                  >
-                    <option value="">Select State</option>
-                    {UAE_STATES.map((state) => (
-                      <option key={state} value={state}>
-                        {state}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">State / Province *</label>
+                  {(() => {
+                    const selectedCountryName = addressDetails.country || currentCountry?.name || "UAE"
+                    const provinces = getProvincesForCountry(selectedCountryName)
+                    if (provinces && provinces.length > 0) {
+                      return (
+                        <select
+                          required
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none text-sm"
+                          value={addressDetails.state}
+                          onChange={(e) => setAddressDetails({ ...addressDetails, state: e.target.value })}
+                        >
+                          <option value="">Select State / Province</option>
+                          {provinces.map((prov) => (
+                            <option key={prov} value={prov}>
+                              {prov}
+                            </option>
+                          ))}
+                        </select>
+                      )
+                    }
+                    return (
+                      <input
+                        type="text"
+                        required
+                        placeholder="State / Province"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none text-sm animate-none"
+                        value={addressDetails.state}
+                        onChange={(e) => setAddressDetails({ ...addressDetails, state: e.target.value })}
+                      />
+                    )
+                  })()}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase mb-1">City *</label>

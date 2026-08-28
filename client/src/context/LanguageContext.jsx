@@ -56,46 +56,61 @@ export const LanguageProvider = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // Detect language from URL on initial load and route changes
+  // Detect language & country from URL on initial load and route changes
   useEffect(() => {
     const path = location.pathname
     const search = location.search || ""
     const hash = location.hash || ""
 
-    // Skip language prefix logic for admin and super admin routes
-    if (path.startsWith("/admin") || 
+    // Skip language prefix logic for root path, admin, super admin, and country selector routes
+    if (path === "/" ||
+        path.startsWith("/admin") || 
         path.startsWith("/grabiansadmin") ||
         path.startsWith("/superadmin") ||
-        path.startsWith("/grabiansuperadmin")) {
+        path.startsWith("/grabiansuperadmin") ||
+        path.startsWith("/select-country")) {
       return
     }
 
-    if (path.startsWith("/ae-ar/") || path === "/ae-ar") {
-      setCurrentLanguage(LANGUAGES.AR)
-      localStorage.setItem("preferred-language", "ar")
-      document.documentElement.setAttribute("dir", "rtl")
-      document.documentElement.setAttribute("lang", "ar")
-      document.body.setAttribute("dir", "rtl")
-    } else if (path.startsWith("/ae-en/") || path === "/ae-en") {
-      setCurrentLanguage(LANGUAGES.EN)
-      localStorage.setItem("preferred-language", "en")
-      document.documentElement.setAttribute("dir", "ltr")
-      document.documentElement.setAttribute("lang", "en")
-      document.body.setAttribute("dir", "ltr")
+    // Match any country-language prefix e.g. /sa-en, /sa-ar, /qa-en, /om-ar, /ae-en, /kw-en, /eg-ar
+    const match = path.match(/^\/([a-z]{2})-(en|ar)(\/|$)/i)
+    if (match) {
+      const countryCode = match[1].toUpperCase()
+      const langCode = match[2].toLowerCase()
+
+      // Sync selected country in localStorage and dispatch event for CurrencyContext
+      const currentStoredCountry = localStorage.getItem("selected-country-code")
+      if (currentStoredCountry !== countryCode) {
+        localStorage.setItem("selected-country-code", countryCode)
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("country-changed", { detail: countryCode }))
+        }
+      }
+
+      if (langCode === "ar") {
+        setCurrentLanguage(LANGUAGES.AR)
+        localStorage.setItem("preferred-language", "ar")
+        document.documentElement.setAttribute("dir", "rtl")
+        document.documentElement.setAttribute("lang", "ar")
+        document.body.setAttribute("dir", "rtl")
+      } else {
+        setCurrentLanguage(LANGUAGES.EN)
+        localStorage.setItem("preferred-language", "en")
+        document.documentElement.setAttribute("dir", "ltr")
+        document.documentElement.setAttribute("lang", "en")
+        document.body.setAttribute("dir", "ltr")
+      }
     } else {
       // For paths without language prefix, redirect based on saved preference or default to English
       const savedLang = localStorage.getItem("preferred-language")
-      if (savedLang === "ar") {
-        // User prefers Arabic, redirect to Arabic version
-        const arabicPath = `/ae-ar${path === "/" ? "" : path}`
-        navigate(`${arabicPath}${search}${hash}`, { replace: true })
-      } else {
-        // Default to English - always redirect to /ae-en prefix
-        const englishPath = `/ae-en${path === "/" ? "" : path}`
-        navigate(`${englishPath}${search}${hash}`, { replace: true })
-      }
+      const selectedCountry = (localStorage.getItem("selected-country-code") || "AE").toLowerCase()
+      const langPrefix = savedLang === "ar" ? `${selectedCountry}-ar` : `${selectedCountry}-en`
+      const targetPath = `/${langPrefix}${path === "/" ? "" : path}`
+      // Carry router state across the rewrite. Dropping it here used to lose the
+      // "where did you come from" hint that the login page relies on.
+      navigate(`${targetPath}${search}${hash}`, { replace: true, state: location.state })
     }
-  }, [location.pathname, location.search, location.hash, navigate])
+  }, [location.pathname, location.search, location.hash, location.state, navigate])
 
   // Apply direction and lang attributes whenever language changes
   useEffect(() => {
@@ -136,16 +151,13 @@ export const LanguageProvider = ({ children }) => {
     initializeLanguageLogic();
   }, [currentLanguage.code])
 
-  // Get the path without language prefix
+  // Get the path without language prefix (supports /ae-en, /sa-en, /qa-ar, /om-en, etc.)
   const getPathWithoutLangPrefix = useCallback((path) => {
-    if (path.startsWith("/ae-en/")) {
-      return path.replace("/ae-en", "") || "/"
-    }
-    if (path.startsWith("/ae-ar/")) {
-      return path.replace("/ae-ar", "") || "/"
-    }
-    if (path === "/ae-en" || path === "/ae-ar") {
-      return "/"
+    const prefixMatch = path.match(/^\/([a-z]{2}-(en|ar))(\/|$)/i)
+    if (prefixMatch) {
+      const fullPrefix = prefixMatch[1]
+      const clean = path.replace(new RegExp(`^\\/${fullPrefix}`), "")
+      return clean || "/"
     }
     return path
   }, [])
@@ -153,14 +165,25 @@ export const LanguageProvider = ({ children }) => {
   // Get the full path with language prefix
   const getLocalizedPath = useCallback((path, lang = currentLanguage) => {
     const cleanPath = getPathWithoutLangPrefix(path)
-    const prefix = `/${lang.urlPrefix}`
+    const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`
+
+    // Exempt admin and superadmin routes from language prefixing
+    if (
+      normalizedPath.startsWith('/admin') ||
+      normalizedPath.startsWith('/grabiansadmin') ||
+      normalizedPath.startsWith('/superadmin') ||
+      normalizedPath.startsWith('/grabiansuperadmin')
+    ) {
+      return normalizedPath
+    }
+
+    const selectedCountry = (localStorage.getItem("selected-country-code") || "AE").toLowerCase()
+    const prefix = `/${selectedCountry}-${lang.code}`
 
     if (cleanPath === "/" || cleanPath === "") {
       return prefix
     }
 
-    // Ensure cleanPath starts with / but avoid double slashes
-    const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`
     return `${prefix}${normalizedPath}`
   }, [currentLanguage, getPathWithoutLangPrefix])
 

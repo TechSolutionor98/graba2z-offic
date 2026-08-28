@@ -111,10 +111,119 @@ export const getPaymentInfo = (order) => {
   }
 }
 
+/**
+ * Resolve the order country name (e.g. "Kuwait", "UAE", "Saudi Arabia")
+ * @param {Object} order - The order object
+ * @returns {string} - Country name
+ */
+export const getOrderCountryName = (order) => {
+  const currency = order?.currency?.toUpperCase()
+  const currencyMap = {
+    AED: "UAE",
+    SAR: "Saudi Arabia",
+    QAR: "Qatar",
+    OMR: "Oman",
+    BHD: "Bahrain",
+    KWD: "Kuwait",
+    EGP: "Egypt",
+    JOD: "Jordan",
+    LBP: "Lebanon",
+    IQD: "Iraq",
+    TRY: "Turkey",
+    GBP: "United Kingdom",
+    USD: "United States",
+    INR: "India",
+    PKR: "Pakistan",
+    EUR: "Eurozone",
+    CAD: "Canada",
+    AUD: "Australia",
+    NZD: "New Zealand",
+    SGD: "Singapore",
+    MYR: "Malaysia",
+    THB: "Thailand",
+    PHP: "Philippines",
+    IDR: "Indonesia",
+    CNY: "China",
+    JPY: "Japan",
+    KRW: "South Korea",
+    RUB: "Russia",
+    ZAR: "South Africa",
+  }
+
+  // Helper to detect country from address state / province
+  const detectCountryFromState = (stateStr) => {
+    if (!stateStr) return null
+    const s = String(stateStr).toUpperCase()
+    if (s.includes("HAWALLI") || s.includes("ASIMAH") || s.includes("FARWANIYA") || s.includes("MUBARAK") || s.includes("AHMADI") || s.includes("JAHRA") || s.includes("KUWAIT")) return "Kuwait"
+    if (s.includes("DOHA") || s.includes("RAYYAN") || s.includes("WAKRAH") || s.includes("KHOR") || s.includes("DAAYEN") || s.includes("SALAL") || s.includes("SHAMAL") || s.includes("SHAHANIYA") || s.includes("QATAR")) return "Qatar"
+    if (s.includes("RIYADH") || s.includes("MAKKAH") || s.includes("JEDDAH") || s.includes("MADINAH") || s.includes("DAMMAM") || s.includes("KHOBAR") || s.includes("QASSIM") || s.includes("ASIR") || s.includes("TABUK") || s.includes("SAUDI")) return "Saudi Arabia"
+    if (s.includes("MUSCAT") || s.includes("DHOFAR") || s.includes("MUSANDAM") || s.includes("BURAIMI") || s.includes("BATINAH") || s.includes("OMAN")) return "Oman"
+    if (s.includes("MANAMA") || s.includes("MUHARRAQ") || s.includes("RIFFA") || s.includes("BAHRAIN")) return "Bahrain"
+    return null
+  }
+
+  // Check explicit non-UAE shipping/billing country
+  const explicitCountry = order?.shippingAddress?.country || order?.billingAddress?.country
+  if (explicitCountry && explicitCountry !== "UAE" && explicitCountry.trim() !== "") {
+    return explicitCountry
+  }
+
+  // Detect from state / province
+  const stateDetected = detectCountryFromState(order?.shippingAddress?.state || order?.billingAddress?.state)
+  if (stateDetected) {
+    return stateDetected
+  }
+
+  if (currency && currency !== "AED" && currencyMap[currency]) {
+    return currencyMap[currency]
+  }
+
+  return explicitCountry || order?.currency || "UAE"
+}
+
+/**
+ * Resolve order currency symbol dynamically (e.g. QAR, KWD, SAR, AED)
+ * @param {Object} order
+ * @returns {string}
+ */
+export const getOrderCurrencySymbol = (order) => {
+  if (order?.currencySymbol && order.currencySymbol !== "AED") {
+    return order.currencySymbol
+  }
+  if (order?.currency && order.currency !== "AED") {
+    return order.currency
+  }
+  const countryName = getOrderCountryName(order)
+  if (countryName) {
+    const cUpper = String(countryName).toUpperCase()
+    if (cUpper.includes("KUWAIT") || cUpper.includes("KW")) return "KWD"
+    if (cUpper.includes("QATAR") || cUpper.includes("QA")) return "QAR"
+    if (cUpper.includes("SAUDI") || cUpper.includes("SA")) return "SAR"
+    if (cUpper.includes("OMAN") || cUpper.includes("OM")) return "OMR"
+    if (cUpper.includes("BAHRAIN") || cUpper.includes("BH")) return "BHD"
+    if (cUpper.includes("EGYPT") || cUpper.includes("EG")) return "EGP"
+  }
+  return order?.currencySymbol || order?.currency || "AED"
+}
+
+/**
+ * Format order price using order's currency / currencySymbol
+ * @param {number} price
+ * @param {Object} order
+ * @returns {string}
+ */
+export const formatOrderPrice = (price, order) => {
+  const symbol = getOrderCurrencySymbol(order)
+  return `${symbol} ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+}
+
 export default {
   getPaymentMethodDisplay,
   getPaymentMethodBadgeColor,
   getPaymentMethodIcon,
   isCriticalOrder,
   getPaymentInfo,
+  getOrderCountryName,
+  getOrderCurrencySymbol,
+  formatOrderPrice,
 }

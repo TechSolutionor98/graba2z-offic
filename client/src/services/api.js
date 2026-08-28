@@ -562,6 +562,28 @@ export const productPaymentMethodsAPI = {
     }),
 }
 
+// Country Payment Methods API calls
+export const countryPaymentMethodsAPI = {
+  resolve: (countryCode) =>
+    apiRequest(`/api/country-payment-methods/resolve?countryCode=${encodeURIComponent(countryCode || "")}`),
+  getConfig: () =>
+    apiRequest("/api/country-payment-methods/config", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  save: (updates) =>
+    apiRequest("/api/country-payment-methods", {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify({ updates }),
+    }),
+  reset: (countryId) =>
+    apiRequest("/api/country-payment-methods/reset", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify({ countryId }),
+    }),
+}
+
 export { apiRequest }
 export default {
   authAPI,
@@ -577,4 +599,5 @@ export default {
   redirectsAPI,
   paymentMethodChargeAPI,
   productPaymentMethodsAPI,
+  countryPaymentMethodsAPI,
 }

@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import { Shield, Check, ChevronRight } from "lucide-react"
-import config from "../config/config"
+import { useCurrency } from "../context/CurrencyContext"
+import { useLanguage } from "../context/LanguageContext"
 
 const BuyerProtectionSection = ({ productId, productPrice, onSelectProtection, selectedProtections = [], onProtectionsLoaded }) => {
+  const { isArabic } = useLanguage()
+  const { formatPrice: formatCurrencyPrice } = useCurrency()
   const [protections, setProtections] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -150,7 +153,7 @@ const BuyerProtectionSection = ({ productId, productPrice, onSelectProtection, s
               <div className="flex flex-col items-end gap-2 flex-shrink-0">
                 <div className="text-right">
                   <div className="text-lg font-bold text-gray-900">
-                    AED {((protection.calculatedPrice !== undefined ? protection.calculatedPrice : protection.price) || 0).toFixed(2)}
+                    {formatCurrencyPrice((protection.calculatedPrice !== undefined ? protection.calculatedPrice : protection.price) || 0, isArabic)}
                   </div>
                   {protection.pricingType === "percentage" && protection.pricePercentage && (
                     <div className="text-xs text-gray-500">{protection.pricePercentage}% of price</div>

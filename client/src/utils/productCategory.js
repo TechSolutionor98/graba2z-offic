@@ -91,3 +91,47 @@ export const resolveProductCategoryInfo = (product) => {
     fieldName: null,
   }
 }
+
+/**
+ * Checks if a product is visible for a given country code (e.g. "AE", "SA")
+ */
+export const isProductVisibleInCountry = (product, countryCode) => {
+  if (!product) return false
+  const targetCountries = product.targetCountries
+  if (!targetCountries || !Array.isArray(targetCountries) || targetCountries.length === 0) {
+    return true
+  }
+  if (targetCountries.includes("ALL")) {
+    return true
+  }
+  if (!countryCode) return true
+  return targetCountries.includes(String(countryCode).toUpperCase())
+}
+
+/**
+ * Returns effective countInStock and stockStatus for a product in a given country
+ */
+export const getProductEffectiveStock = (product, countryCode) => {
+  if (!product) return { countInStock: 0, stockStatus: "Out of Stock", isOutOfStock: true }
+
+  const code = String(countryCode || "AE").toUpperCase()
+
+  let count = product.countInStock
+
+  if (Array.isArray(product.countryStock) && product.countryStock.length > 0) {
+    const entry = product.countryStock.find((cs) => cs && String(cs.country).toUpperCase() === code)
+    if (entry && typeof entry.countInStock === "number") {
+      count = entry.countInStock
+    }
+  }
+
+  const numCount = Number(count) || 0
+  const isOutOfStock = numCount <= 0 || product.stockStatus === "Out of Stock"
+  const stockStatus = isOutOfStock ? "Out of Stock" : (product.stockStatus || "In Stock")
+
+  return {
+    countInStock: numCount,
+    stockStatus,
+    isOutOfStock,
+  }
+}
