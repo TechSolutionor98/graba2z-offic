@@ -136,7 +136,7 @@ export const CurrencyProvider = ({ children }) => {
   const currentCountry =
     countries.find((c) => c.code.toUpperCase() === selectedCountryCode.toUpperCase()) ||
     countries.find((c) => c.isDefault) ||
-    DEFAULT_COUNTRIES[0]
+    DEFAULT_GCC_COUNTRIES[0]
 
   const changeCountry = useCallback((countryCode) => {
     if (!countryCode) return

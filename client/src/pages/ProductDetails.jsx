@@ -92,7 +92,7 @@ const ProductDetails = () => {
   const { id, slug } = useParams()
   const navigate = useNavigate()
   const { addToCart } = useCart()
-  const { userInfo } = useAuth()
+  const { user } = useAuth()
   const { showToast } = useToast()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const { getLocalizedPath, isArabic } = useLanguage()

@@ -113,12 +113,9 @@ const orderStatusOptions = [
       if (focusOrderId) {
         const match = newOrders.find((order) => order._id === focusOrderId)
         if (match) {
+          // AdminOrderDetailsModal fills its own notes, tracking, delivery and
+          // seller fields from the order it receives.
           setSelectedOrder(match)
-          setOrderNotes(match.notes || "")
-          setTrackingId(match.trackingId || "")
-          setEstimatedDelivery(match.estimatedDelivery ? new Date(match.estimatedDelivery).toISOString().split("T")[0] : "")
-          setSellerComments(match.sellerComments || "")
-          setSellerMessage(match.sellerMessage || "")
         }
         setFocusOrderId(null)
       }
@@ -220,13 +217,13 @@ const orderStatusOptions = [
     }
   }
 
-  const handleSendNotification = async (orderId) => {
-    // Open notification modal instead of sending directly
-    // Pre-populate with existing seller message from order
-    const order = orders.find(o => o._id === orderId) || selectedOrder
-    setNotificationOrderId(orderId)
-    setNotificationMessage(order?.sellerMessage || "")
-    setShowNotificationModal(true)
+  const handleSendNotification = (orderId) => {
+    // The notification composer lives in AdminOrderDetailsModal, which owns the
+    // seller message state. Open the order there rather than duplicating it here.
+    const order = orders.find((o) => o._id === orderId) || selectedOrder
+    if (order) {
+      handleViewOrder(order)
+    }
   }
 
   // Bulk selection functions

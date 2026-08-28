@@ -14,6 +14,7 @@ const AdminBrands = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [brandsPerPage] = useState(10)
+  const [error, setError] = useState(null)
   const { showToast } = useToast()
 
   useEffect(() => {
@@ -223,6 +224,12 @@ const AdminBrands = () => {
             Add New Brand
           </Link>
         </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 text-red-600 border border-red-200 rounded-lg">
+            {error}
+          </div>
+        )}
 
         {/* Search */}
         <div className="mb-6">

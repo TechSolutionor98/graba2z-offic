@@ -3,6 +3,7 @@ import axios from "axios"
 import { Shield, Check, ChevronRight } from "lucide-react"
 import { useCurrency } from "../context/CurrencyContext"
 import { useLanguage } from "../context/LanguageContext"
+import config from "../config/config"
 
 const BuyerProtectionSection = ({ productId, productPrice, onSelectProtection, selectedProtections = [], onProtectionsLoaded }) => {
   const { isArabic } = useLanguage()

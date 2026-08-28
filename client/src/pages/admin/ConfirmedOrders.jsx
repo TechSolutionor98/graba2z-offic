@@ -205,13 +205,13 @@ const ConfirmedOrders = () => {
     }
   }
 
-  const handleSendNotification = async (orderId) => {
-    // Open notification modal instead of sending directly
-    // Pre-populate with existing seller message from order
-    const order = orders.find(o => o._id === orderId) || selectedOrder
-    setNotificationOrderId(orderId)
-    setNotificationMessage(order?.sellerMessage || "")
-    setShowNotificationModal(true)
+  const handleSendNotification = (orderId) => {
+    // The notification composer lives in AdminOrderDetailsModal, which owns the
+    // seller message state. Open the order there rather than duplicating it here.
+    const order = orders.find((o) => o._id === orderId) || selectedOrder
+    if (order) {
+      handleViewOrder(order)
+    }
   }
 
   // Bulk selection functions
