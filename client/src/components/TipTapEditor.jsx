@@ -11,6 +11,10 @@ import OrderedList from "@tiptap/extension-ordered-list"
 import ListItem from "@tiptap/extension-list-item"
 import Heading from "@tiptap/extension-heading"
 import Placeholder from "@tiptap/extension-placeholder"
+import Table from "@tiptap/extension-table"
+import TableRow from "@tiptap/extension-table-row"
+import TableHeader from "@tiptap/extension-table-header"
+import TableCell from "@tiptap/extension-table-cell"
 import { useState, useEffect, useRef } from "react"
 import {
   Bold,
@@ -25,6 +29,11 @@ import {
   LinkIcon,
   ChevronDown,
   Video as VideoIcon,
+  Table as TableIcon,
+  Rows3,
+  Columns3,
+  Trash2,
+  Type,
 } from "lucide-react"
 import ImageUpload from "./ImageUpload"
 import VideoUpload from "./VideoUpload"
@@ -84,6 +93,9 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
   const [showLinkDialog, setShowLinkDialog] = useState(false)
   const [linkUrl, setLinkUrl] = useState("")
   const [linkText, setLinkText] = useState("")
+  const [imageAlt, setImageAlt] = useState("")
+  const [showAltDialog, setShowAltDialog] = useState(false)
+  const [altDraft, setAltDraft] = useState("")
   const [editorContent, setEditorContent] = useState(content)
   const editorRef = useRef(null)
 
@@ -126,6 +138,15 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
         alignments: ['left', 'center', 'right'],
         defaultAlignment: 'left',
       }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: "tiptap-table",
+        },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: editorContent,
     onUpdate: ({ editor }) => {
@@ -158,9 +179,33 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
 
   const handleImageUpload = (imageUrl) => {
     const fullImageUrl = getFullImageUrl(imageUrl)
-    editor.chain().focus().setImage({ src: fullImageUrl }).run()
+    const alt = imageAlt.trim()
+    // alt is what screen readers announce and what search engines read, so it is
+    // stored on the image node rather than being discarded.
+    editor
+      .chain()
+      .focus()
+      .setImage(alt ? { src: fullImageUrl, alt, title: alt } : { src: fullImageUrl })
+      .run()
     setShowImageUpload(false)
+    setImageAlt("")
   }
+
+  // Alt text for an image that is already in the document.
+  const openAltDialog = () => {
+    setAltDraft(editor.getAttributes("image").alt || "")
+    setShowAltDialog(true)
+  }
+
+  const applyAltText = () => {
+    const alt = altDraft.trim()
+    editor.chain().focus().updateAttributes("image", { alt, title: alt || null }).run()
+    setShowAltDialog(false)
+    setAltDraft("")
+  }
+
+  const isImageSelected = editor.isActive("image")
+  const isInTable = editor.isActive("table")
 
   const handleVideoUpload = (videoUrl) => {
     const fullVideoUrl = getFullImageUrl(videoUrl)
@@ -357,7 +402,81 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
         >
           <LinkIcon size={16} />
         </button>
+
+        {/* Insert a 3x3 table with a header row */}
+        <button
+          type="button"
+          onClick={() =>
+            editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+          }
+          className={`p-2 rounded hover:bg-gray-200 transition-colors ${
+            isInTable ? "bg-gray-200 text-blue-600" : "text-gray-700"
+          }`}
+          title="Insert Table"
+        >
+          <TableIcon size={16} />
+        </button>
+
+        {/* Alt text, shown only while an image is selected */}
+        {isImageSelected && (
+          <>
+            <div className="w-px h-6 bg-gray-300" />
+            <button
+              type="button"
+              onClick={openAltDialog}
+              className="flex items-center gap-1.5 px-2.5 py-2 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors text-xs font-semibold"
+              title="Add or edit the alt text of the selected image"
+            >
+              <Type size={14} />
+              {editor.getAttributes("image").alt ? "Edit Alt Text" : "Add Alt Text"}
+            </button>
+          </>
+        )}
       </div>
+
+      {/* Table tools, shown only while the cursor is inside a table */}
+      {isInTable && (
+        <div className="bg-blue-50/60 border-b border-gray-300 px-3 py-2 flex flex-wrap items-center gap-2 text-xs">
+          <span className="font-semibold text-gray-600 flex items-center gap-1.5">
+            <TableIcon size={14} /> Table
+          </span>
+          <div className="w-px h-5 bg-gray-300" />
+
+          <span className="text-gray-500 flex items-center gap-1">
+            <Columns3 size={13} /> Column
+          </span>
+          <button type="button" onClick={() => editor.chain().focus().addColumnBefore().run()}
+            className="px-2 py-1 rounded bg-white border border-gray-300 hover:bg-gray-50 font-medium">+ Before</button>
+          <button type="button" onClick={() => editor.chain().focus().addColumnAfter().run()}
+            className="px-2 py-1 rounded bg-white border border-gray-300 hover:bg-gray-50 font-medium">+ After</button>
+          <button type="button" onClick={() => editor.chain().focus().deleteColumn().run()}
+            className="px-2 py-1 rounded bg-white border border-gray-300 hover:bg-red-50 hover:text-red-600 font-medium">Delete</button>
+
+          <div className="w-px h-5 bg-gray-300" />
+
+          <span className="text-gray-500 flex items-center gap-1">
+            <Rows3 size={13} /> Row
+          </span>
+          <button type="button" onClick={() => editor.chain().focus().addRowBefore().run()}
+            className="px-2 py-1 rounded bg-white border border-gray-300 hover:bg-gray-50 font-medium">+ Above</button>
+          <button type="button" onClick={() => editor.chain().focus().addRowAfter().run()}
+            className="px-2 py-1 rounded bg-white border border-gray-300 hover:bg-gray-50 font-medium">+ Below</button>
+          <button type="button" onClick={() => editor.chain().focus().deleteRow().run()}
+            className="px-2 py-1 rounded bg-white border border-gray-300 hover:bg-red-50 hover:text-red-600 font-medium">Delete</button>
+
+          <div className="w-px h-5 bg-gray-300" />
+
+          <button type="button" onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+            className="px-2 py-1 rounded bg-white border border-gray-300 hover:bg-gray-50 font-medium">Toggle Header</button>
+          <button type="button" onClick={() => editor.chain().focus().mergeOrSplit().run()}
+            className="px-2 py-1 rounded bg-white border border-gray-300 hover:bg-gray-50 font-medium">Merge / Split</button>
+
+          <button type="button" onClick={() => editor.chain().focus().deleteTable().run()}
+            className="ml-auto flex items-center gap-1 px-2 py-1 rounded bg-white border border-red-200 text-red-600 hover:bg-red-50 font-medium">
+            <Trash2 size={13} /> Delete Table
+          </button>
+        </div>
+      )}
 
       {/* Editor Content */}
       <div className="min-h-[200px]">
@@ -369,11 +488,32 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Upload Image (WebP only)</h3>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Alt Text <span className="text-gray-400 font-normal">(describe the image)</span>
+              </label>
+              <input
+                type="text"
+                value={imageAlt}
+                onChange={(e) => setImageAlt(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g. Lenovo ThinkPad L15 open on a desk"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Read by screen readers and search engines. Set it before uploading; you can edit it later by
+                selecting the image.
+              </p>
+            </div>
+
             <ImageUpload onImageUpload={handleImageUpload} isProduct={true} />
             <div className="flex justify-end gap-2 mt-4">
               <button
                 type="button"
-                onClick={() => setShowImageUpload(false)}
+                onClick={() => {
+                  setShowImageUpload(false)
+                  setImageAlt("")
+                }}
                 className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
               >
                 Cancel
@@ -447,6 +587,62 @@ const TipTapEditor = ({ content = "", onChange, placeholder = "Enter description
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 Insert Link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alt Text Dialog for an image already in the document */}
+      {showAltDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Image Alt Text</h3>
+
+            {editor.getAttributes("image").src && (
+              <img
+                src={editor.getAttributes("image").src}
+                alt={altDraft || "Selected image"}
+                className="w-full max-h-40 object-contain rounded border border-gray-200 bg-gray-50 mb-4"
+              />
+            )}
+
+            <label className="block text-sm font-medium text-gray-700 mb-1">Alt Text</label>
+            <input
+              type="text"
+              value={altDraft}
+              onChange={(e) => setAltDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  applyAltText()
+                }
+              }}
+              autoFocus
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Describe what the image shows"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Leave empty only for purely decorative images.
+            </p>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAltDialog(false)
+                  setAltDraft("")
+                }}
+                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={applyAltText}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Save Alt Text
               </button>
             </div>
           </div>

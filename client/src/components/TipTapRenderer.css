@@ -184,3 +184,48 @@
   list-style-type: revert !important;
   padding-left: 1.5rem !important;
 }
+/* ---------------------------------------------------------------- */
+/* Tables (published content)                                         */
+/* The prose-* utilities need @tailwindcss/typography, which is not    */
+/* installed, so table styling is defined explicitly here.            */
+/* ---------------------------------------------------------------- */
+.tiptap-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 2rem 0;
+  font-size: 0.95rem;
+  display: block;
+  overflow-x: auto;
+  white-space: normal;
+}
+
+@media (min-width: 768px) {
+  .tiptap-content table {
+    display: table;
+    table-layout: auto;
+  }
+}
+
+.tiptap-content table th,
+.tiptap-content table td {
+  border: 1px solid #d1d5db;
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tiptap-content table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #111827;
+}
+
+.tiptap-content table tr:nth-child(even) td {
+  background-color: #fcfcfd;
+}
+
+/* Right-to-left blog content */
+[dir="rtl"] .tiptap-content table th,
+[dir="rtl"] .tiptap-content table td {
+  text-align: right;
+}

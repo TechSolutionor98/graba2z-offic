@@ -169,3 +169,59 @@
 .ProseMirror ::selection {
   background-color: #bfdbfe;
 }
+
+/* ---------------------------------------------------------------- */
+/* Tables (editor)                                                    */
+/* ---------------------------------------------------------------- */
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1.5rem 0;
+  overflow: hidden;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+  min-width: 1em;
+}
+
+.ProseMirror table th {
+  background-color: #f3f4f6;
+  font-weight: 700;
+  text-align: left;
+}
+
+/* Cell being edited */
+.ProseMirror table .selectedCell:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(59, 130, 246, 0.12);
+  pointer-events: none;
+}
+
+/* Drag handle shown while resizing a column */
+.ProseMirror table .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: #3b82f6;
+  pointer-events: none;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Keep a wide table scrollable instead of breaking the layout */
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+}

@@ -489,6 +489,94 @@
 import config from "../config/config.js"
 
 // Product Caching Service with compression and size management
+// Buyer-facing search, kept in step with server/routes/productRoutes.js.
+//
+// Descriptions are not searched, and a term must start a word. Weights are added together:
+// this catalog stores spec text inside the product *name* ("... 512GB SSD, English
+// Keyboard, ..."), so being *in* the Keyboards category counts for far more than a
+// mention buried in a name. Without that, a search for "Keyboard" returns laptops.
+const RELEVANCE_WEIGHTS = {
+  namePrefix: 120,
+  nameAllTerms: 35,
+  namePerTerm: 5,
+  categoryAllTerms: 80,
+  categoryAnyTerm: 35,
+  codeAllTerms: 90,
+  tagAllTerms: 30,
+  tagAnyTerm: 12,
+}
+
+const searchTextOf = (...values) =>
+  values
+    .flat()
+    .map((value) => {
+      if (value == null) return ""
+      if (typeof value === "object") return String(value.name || "")
+      return String(value)
+    })
+    .join(" ")
+    .toLowerCase()
+
+// A term must start a word: "keyboard" hits "Gaming Keyboard" and "keyboard-rgb-black",
+// not an unrelated run of characters that happens to contain those letters.
+const containsWord = (text, term) => {
+  if (!text || !term) return false
+  let from = 0
+  for (;;) {
+    const at = text.indexOf(term, from)
+    if (at === -1) return false
+    if (at === 0 || !/[a-z0-9]/.test(text[at - 1])) return true
+    from = at + 1
+  }
+}
+
+// Returns the relevance score for a product, or null when it does not match at all.
+export const scoreSearchRelevance = (product, searchTerm, words) => {
+  if (!product || !Array.isArray(words) || words.length === 0) return null
+
+  const name = searchTextOf(product.name, product.nameAr, product.slug)
+  const codes = searchTextOf(product.sku, product.barcode)
+  const tags = searchTextOf(product.tags || [], product.tagsAr || [])
+  const categories = searchTextOf(
+    product.parentCategoryName,
+    product.categoryName,
+    product.subCategory2Name,
+    product.subCategory3Name,
+    product.subCategory4Name,
+    product.parentCategory,
+    product.category,
+    product.subCategory,
+    product.subCategory2,
+    product.subCategory3,
+    product.subCategory4,
+  )
+  const brand = searchTextOf(product.brand)
+
+  // Every term still has to land somewhere, or this is not a match at all.
+  const haystack = `${name} ${codes} ${tags} ${categories} ${brand}`
+  if (!words.every((word) => containsWord(haystack, word) || codes.includes(word))) return null
+
+  const nameTermHits = words.filter((word) => containsWord(name, word)).length
+  let score = RELEVANCE_WEIGHTS.namePerTerm * nameTermHits
+
+  if (String(product.name || "").toLowerCase().trimStart().startsWith(searchTerm)) {
+    score += RELEVANCE_WEIGHTS.namePrefix
+  }
+  if (nameTermHits === words.length) score += RELEVANCE_WEIGHTS.nameAllTerms
+  if (words.every((word) => codes.includes(word))) score += RELEVANCE_WEIGHTS.codeAllTerms
+
+  const categoryHits = words.filter((word) => containsWord(categories, word)).length
+  if (categoryHits === words.length) score += RELEVANCE_WEIGHTS.categoryAllTerms
+  if (categoryHits > 0) score += RELEVANCE_WEIGHTS.categoryAnyTerm
+
+  const tagHits = words.filter((word) => containsWord(tags, word)).length
+  if (tagHits === words.length) score += RELEVANCE_WEIGHTS.tagAllTerms
+  if (tagHits > 0) score += RELEVANCE_WEIGHTS.tagAnyTerm
+
+  return score
+}
+
+
 class ProductCacheService {
   constructor() {
     this.CACHE_KEY = "graba2z_products_cache"
@@ -954,20 +1042,16 @@ class ProductCacheService {
     // Filter by search query
     if (filters.search && filters.search.trim()) {
       const searchTerm = filters.search.toLowerCase().trim()
-      const words = searchTerm.split(/\s+/)
-      filteredProducts = filteredProducts.filter((product) => {
-        const name = (product.name || "").toLowerCase()
-        const description = (product.description || "").toLowerCase()
-        const brandName = product.brand?.name?.toLowerCase() || ""
-        const sku = (product.sku || "").toLowerCase()
+      const words = searchTerm.split(/\s+/).filter(Boolean)
 
-        return words.every((word) =>
-          name.includes(word) ||
-          description.includes(word) ||
-          brandName.includes(word) ||
-          sku.includes(word)
-        )
-      })
+      // Score every product so the sort below can order by how well it matches.
+      filteredProducts = filteredProducts
+        .map((product) => ({ product, relevance: scoreSearchRelevance(product, searchTerm, words) }))
+        .filter((entry) => entry.relevance !== null)
+        .map((entry) => {
+          entry.product._searchRelevance = entry.relevance
+          return entry.product
+        })
     }
 
     // Filter by price range
@@ -1043,6 +1127,12 @@ class ProductCacheService {
       if (!aInStock && bInStock) return 1
 
       // If both have same stock status, apply secondary sorting
+      if (filters.sortBy === "relevance") {
+        const relevanceDiff = (b._searchRelevance || 0) - (a._searchRelevance || 0)
+        if (relevanceDiff !== 0) return relevanceDiff
+        return new Date(b.createdAt) - new Date(a.createdAt)
+      }
+
       if (filters.sortBy) {
         switch (filters.sortBy) {
           case "price-low":

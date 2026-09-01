@@ -2052,6 +2052,14 @@ const ProductDetails = () => {
     }
   }
 
+  const handleWhatsAppChat = () => {
+    const productLink = `${window.location.origin}${getLocalizedPath(
+      `/product/${encodeURIComponent(product.slug || product._id)}`,
+    )}`
+    const message = `Hi, I need help with this product: ${product.name}\n${productLink}`
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank")
+  }
+
   const handleCallbackSubmit = async (e) => {
     e.preventDefault()
     
@@ -3553,12 +3561,7 @@ const ProductDetails = () => {
                 <div className="border-2 border-gray-300 rounded-lg p-2 transition-transform duration-200 hover:scale-105 hover:shadow-md group overflow-hidden">
                   <button
                     className="flex flex-col items-center text-gray-600 hover:text-green-600 w-full"
-                    onClick={() =>
-                      window.open(
-                        `https://wa.me/${WHATSAPP_NUMBER}?text=Hi%2C%20I%20need%20help%20with%20this%20product%3A%20${encodeURIComponent(product.name)}`,
-                        "_blank",
-                      )
-                    }
+                    onClick={handleWhatsAppChat}
                   >
                     <MessageCircle
                       size={24}

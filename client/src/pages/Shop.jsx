@@ -10,7 +10,7 @@ import { useCurrency } from "../context/CurrencyContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
 import ProductSchema from "../components/ProductSchema"
 import SEO from "../components/SEO"
-import productCache from "../services/productCache"
+import productCache, { scoreSearchRelevance } from "../services/productCache"
 import { generateShopURL, parseShopURL, createSlug } from "../utils/urlUtils"
 import { createMetaDescription, generateSEOTitle } from "../utils/seoHelpers"
 import { getFullImageUrl } from "../utils/imageUtils"
@@ -51,10 +51,11 @@ if (typeof document !== "undefined" && !document.getElementById("bounce-keyframe
 }
 
 // Right-anchored custom dropdown to avoid right overflow
-const SortDropdown = ({ value, onChange }) => {
+const SortDropdown = ({ value, onChange, showRelevance = false }) => {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const options = [
+    ...(showRelevance ? [{ value: "relevance", label: "Best Match", labelAr: "الأكثر صلة" }] : []),
     { value: "newest", label: "Newest First", labelAr: "الأحدث أولاً" },
     { value: "price-low", label: "Price: Low to High", labelAr: "السعر: من الأقل للأعلى" },
     { value: "price-high", label: "Price: High to Low", labelAr: "السعر: من الأعلى للأقل" },
@@ -341,6 +342,17 @@ const Shop = () => {
   const [priceRange, setPriceRange] = useState(DEFAULT_PRICE_RANGE)
   const [maxPrice, setMaxPrice] = useState(PRICE_FILTER_MAX)
   const [sortBy, setSortBy] = useState("newest")
+  // Until the shopper picks a sort, a search is ordered by how well each product matches.
+  // Sorting search hits by "newest" is what made an unrelated new arrival outrank the
+  // product the buyer actually typed.
+  const [sortExplicitlyChosen, setSortExplicitlyChosen] = useState(false)
+  const hasActiveSearch = Boolean(searchQuery && searchQuery.trim())
+  const effectiveSortBy = (() => {
+    if (hasActiveSearch && !sortExplicitlyChosen) return "relevance"
+    // "Best Match" has no meaning once the search is cleared.
+    if (!hasActiveSearch && sortBy === "relevance") return "newest"
+    return sortBy
+  })()
   const [brandSearch, setBrandSearch] = useState("")
   const [subCategories, setSubCategories] = useState([])
   const [selectedSubCategories, setSelectedSubCategories] = useState([])
@@ -533,7 +545,7 @@ const Shop = () => {
       search: null,
       priceRange: includePriceRange && isPriceFilterApplied ? priceRange : null,
       stockStatus: stockStatusFilters.length > 0 ? stockStatusFilters : null,
-      sortBy,
+      sortBy: effectiveSortBy,
     }
   }
 
@@ -727,27 +739,25 @@ const Shop = () => {
       return []
     }
 
-    const matchesSearchTerm = (product, term) => {
-      const searchTermNormalized = String(term || "").toLowerCase().trim()
-      if (!searchTermNormalized) return true
-      const name = (product?.name || "").toLowerCase()
-      const description = (product?.description || "").toLowerCase()
-      const brandName = (product?.brand?.name || "").toLowerCase()
-      const sku = (product?.sku || "").toLowerCase()
-      const words = searchTermNormalized.split(/\s+/)
-      return words.every((word) =>
-        name.includes(word) ||
-        description.includes(word) ||
-        brandName.includes(word) ||
-        sku.includes(word)
-      )
+    // Scored with the same rules as the server search (scoreSearchRelevance), so the
+    // offline path cannot answer "Keyboard" with a laptop whose spec list mentions one.
+    const matchAndRank = (term) => {
+      const normalized = String(term || "").toLowerCase().trim()
+      if (!normalized) return []
+      const termWords = normalized.split(/\s+/).filter(Boolean)
+
+      return baseFilteredProducts
+        .map((product) => ({ product, relevance: scoreSearchRelevance(product, normalized, termWords) }))
+        .filter((entry) => entry.relevance !== null)
+        .sort((a, b) => b.relevance - a.relevance || new Date(b.product.createdAt) - new Date(a.product.createdAt))
+        .map((entry) => entry.product)
     }
 
     const words = searchTerm.trim().split(/\s+/)
 
     for (let i = words.length; i > 0; i--) {
       const currentSearchTerm = words.slice(0, i).join(" ")
-      const filteredProducts = baseFilteredProducts.filter((product) => matchesSearchTerm(product, currentSearchTerm))
+      const filteredProducts = matchAndRank(currentSearchTerm)
       if (filteredProducts.length > 0) {
         if (isStaleRun()) return []
         setActualSearchQuery(currentSearchTerm)
@@ -758,7 +768,7 @@ const Shop = () => {
     const trimmed = searchTerm.trim()
     for (let len = trimmed.length - 1; len >= 3; len--) {
       const currentSearchTerm = trimmed.slice(0, len)
-      const filteredProducts = baseFilteredProducts.filter((product) => matchesSearchTerm(product, currentSearchTerm))
+      const filteredProducts = matchAndRank(currentSearchTerm)
       if (filteredProducts.length > 0) {
         if (isStaleRun()) return []
         setActualSearchQuery(currentSearchTerm)
@@ -989,7 +999,7 @@ const Shop = () => {
     selectedSubCategory3,
     selectedSubCategory4,
     stockFilters,
-    sortBy,
+    effectiveSortBy,
   ])
 
   useEffect(() => {
@@ -2042,6 +2052,7 @@ const Shop = () => {
 
   const handleSortChange = (e) => {
     setSortBy(e.target.value)
+    setSortExplicitlyChosen(true)
   }
 
   const categoryObj = categories.find((cat) => cat._id === selectedCategory)
@@ -3598,7 +3609,7 @@ const Shop = () => {
                 )}
               </button>
               <div className="flex-shrink-0">
-                <SortDropdown value={sortBy} onChange={handleSortChange} />
+                <SortDropdown value={effectiveSortBy} onChange={handleSortChange} showRelevance={hasActiveSearch} />
               </div>
             </div>
             
@@ -3876,7 +3887,7 @@ const Shop = () => {
               </div>
 
               <div className="hidden md:block mt-0 flex-shrink-0 relative z-20">
-                <SortDropdown value={sortBy} onChange={handleSortChange} />
+                <SortDropdown value={effectiveSortBy} onChange={handleSortChange} showRelevance={hasActiveSearch} />
               </div>
             </div>
 
