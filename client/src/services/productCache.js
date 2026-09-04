@@ -1135,18 +1135,30 @@ class ProductCacheService {
 
       if (filters.sortBy) {
         switch (filters.sortBy) {
-          case "price-low":
-            // Get prices, fallback to Infinity for products without price to push them to the end
-            const priceA = a.offerPrice > 0 ? a.offerPrice : (a.price > 0 ? a.price : Infinity)
-            const priceB = b.offerPrice > 0 ? b.offerPrice : (b.price > 0 ? b.price : Infinity)
-            return priceA - priceB
-          case "price-high":
+          case "price-low": {
+            // Products without a price go last. The sentinel is a finite number on purpose:
+            // Infinity - Infinity is NaN, and a comparator that returns NaN leaves the whole
+            // sort order undefined, not just the two products being compared.
+            const priceA = a.offerPrice > 0 ? a.offerPrice : (a.price > 0 ? a.price : Number.MAX_VALUE)
+            const priceB = b.offerPrice > 0 ? b.offerPrice : (b.price > 0 ? b.price : Number.MAX_VALUE)
+            if (priceA !== priceB) return priceA - priceB
+            return new Date(b.createdAt) - new Date(a.createdAt)
+          }
+          case "price-high": {
             // Get prices, fallback to 0 for products without price to push them to the end
             const priceHighA = a.offerPrice > 0 ? a.offerPrice : (a.price > 0 ? a.price : 0)
             const priceHighB = b.offerPrice > 0 ? b.offerPrice : (b.price > 0 ? b.price : 0)
-            return priceHighB - priceHighA
-          case "name":
-            return (a.name || "").localeCompare(b.name || "")
+            if (priceHighA !== priceHighB) return priceHighB - priceHighA
+            return new Date(b.createdAt) - new Date(a.createdAt)
+          }
+          case "name": {
+            // Trimmed and case-folded, so a stray leading space in the product name cannot
+            // sort it ahead of everything else.
+            const nameA = (a.name || "").trim().toLowerCase()
+            const nameB = (b.name || "").trim().toLowerCase()
+            if (nameA !== nameB) return nameA < nameB ? -1 : 1
+            return new Date(b.createdAt) - new Date(a.createdAt)
+          }
           case "newest":
           default:
             return new Date(b.createdAt) - new Date(a.createdAt)

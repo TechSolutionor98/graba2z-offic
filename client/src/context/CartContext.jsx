@@ -523,6 +523,10 @@ export const CartProvider = ({ children }) => {
   const [tax, setTax] = useState(null)
   const [coupon, setCoupon] = useState(null)
   const [couponDiscount, setCouponDiscount] = useState(0)
+  // Loyalty points the shopper chose to spend, and the AED they take off. Held here rather
+  // than on a page so the choice made in the cart carries through to checkout.
+  const [loyaltyPointsToRedeem, setLoyaltyPointsToRedeem] = useState(0)
+  const [loyaltyDiscount, setLoyaltyDiscount] = useState(0)
   const { showToast } = useToast()
 
   useEffect(() => {
@@ -563,6 +567,14 @@ export const CartProvider = ({ children }) => {
       setCouponDiscount(0)
     }
   }, [cartItems.length, coupon])
+
+  // An empty cart has nothing to redeem against.
+  useEffect(() => {
+    if (cartItems.length === 0 && loyaltyPointsToRedeem > 0) {
+      setLoyaltyPointsToRedeem(0)
+      setLoyaltyDiscount(0)
+    }
+  }, [cartItems.length, loyaltyPointsToRedeem])
 
   // Enhanced addToCart function with bundle price support
   const addToCart = useCallback(
@@ -724,6 +736,18 @@ export const CartProvider = ({ children }) => {
     setCouponDiscount(0)
   }, [])
 
+  // Points and their AED value always move together.
+  const applyLoyaltyRedemption = useCallback((points, discountAed) => {
+    const safePoints = Math.max(0, Math.floor(Number(points) || 0))
+    setLoyaltyPointsToRedeem(safePoints)
+    setLoyaltyDiscount(safePoints > 0 ? Math.max(0, Number(discountAed) || 0) : 0)
+  }, [])
+
+  const clearLoyaltyRedemption = useCallback(() => {
+    setLoyaltyPointsToRedeem(0)
+    setLoyaltyDiscount(0)
+  }, [])
+
   const removeFromCart = useCallback(
     (productId, bundleId = null) => {
       const product = cartItems.find((item) => item._id === productId && item.bundleId === bundleId)
@@ -844,6 +868,10 @@ export const CartProvider = ({ children }) => {
         couponDiscount,
         setCouponDiscount,
         clearCoupon,
+        loyaltyPointsToRedeem,
+        loyaltyDiscount,
+        applyLoyaltyRedemption,
+        clearLoyaltyRedemption,
         calculateFinalTotal,
       }}
     >

@@ -7,6 +7,8 @@ import { WishlistProvider } from "./context/WishlistContext"
 import { ToastProvider } from "./context/ToastContext"
 import { LanguageProvider } from "./context/LanguageContext"
 import { CurrencyProvider } from "./context/CurrencyContext"
+import { LoyaltyProvider } from "./context/LoyaltyContext"
+import LoyaltyRewardDialog from "./components/LoyaltyRewardDialog"
 
 // Import components
 import Layout from "./components/Layout"
@@ -156,10 +158,12 @@ function App() {
         <CartProvider>
           <WishlistProvider>
             <CurrencyProvider>
+              <LoyaltyProvider>
               <Router>
                 <LanguageProvider>
                 <DefaultCanonical />
                 <ScrollToTop />
+                <LoyaltyRewardDialog />
                 <ReturnPathTracker />
                 <RedirectHandler />
                 <div className="App">
@@ -497,6 +501,7 @@ function App() {
               </div>
             </LanguageProvider>
           </Router>
+              </LoyaltyProvider>
           </CurrencyProvider>
           </WishlistProvider>
         </CartProvider>

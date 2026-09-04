@@ -118,6 +118,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     tax: "0",
     tags: "",
     specifications: [],
+    // Loyalty earning override. "inherit" defers to the category rule, then the global rate.
+    loyaltyPointsMode: "inherit",
+    loyaltyPointsMultiplier: 1,
+    loyaltyPointsFixed: 0,
     isActive: true,
     canPurchase: true,
     showStockOut: true,
@@ -450,6 +454,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               : "0",
           tags: Array.isArray(product.tags) ? product.tags.join(", ") : "",
           specifications: product.specifications || [],
+          loyaltyPointsMode: product.loyaltyPointsMode || "inherit",
+          loyaltyPointsMultiplier:
+            product.loyaltyPointsMultiplier !== undefined ? product.loyaltyPointsMultiplier : 1,
+          loyaltyPointsFixed: product.loyaltyPointsFixed !== undefined ? product.loyaltyPointsFixed : 0,
           isActive: product.isActive !== undefined ? product.isActive : true,
           canPurchase: product.canPurchase !== undefined ? product.canPurchase : true,
           showStockOut: product.showStockOut !== undefined ? product.showStockOut : true,
@@ -998,6 +1006,9 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         video: formData.video || "",
         videoGallery: formData.videoGallery.filter((vid) => vid !== ""),
         specifications: formData.specifications.filter((spec) => spec.key && spec.value),
+        loyaltyPointsMode: formData.loyaltyPointsMode || "inherit",
+        loyaltyPointsMultiplier: Number(formData.loyaltyPointsMultiplier) || 0,
+        loyaltyPointsFixed: Number(formData.loyaltyPointsFixed) || 0,
         stockStatus: formData.stockStatus,
         isActive: formData.isActive,
         canPurchase: formData.canPurchase,
@@ -1840,6 +1851,68 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="tag1, tag2, tag3"
             />
+          </div>
+        </div>
+
+        {/* Loyalty points earned on this product. Leave on "inherit" unless this product
+            needs its own rate -- inherit follows the category rule, then the global rate. */}
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">Loyalty Points</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            How many points a customer earns for buying this product.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Earning rule</label>
+              <select
+                name="loyaltyPointsMode"
+                value={formData.loyaltyPointsMode}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="inherit">Use category / global rate</option>
+                <option value="multiplier">Multiply the global rate</option>
+                <option value="fixed">Fixed points per item</option>
+                <option value="none">Earns no points</option>
+              </select>
+            </div>
+
+            {formData.loyaltyPointsMode === "multiplier" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Multiplier</label>
+                <input
+                  type="number"
+                  name="loyaltyPointsMultiplier"
+                  min="0"
+                  step="0.1"
+                  value={formData.loyaltyPointsMultiplier}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="2"
+                />
+                <p className="text-xs text-gray-500 mt-1">2 gives double the usual points on this product.</p>
+              </div>
+            )}
+
+            {formData.loyaltyPointsMode === "fixed" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Points per item</label>
+                <input
+                  type="number"
+                  name="loyaltyPointsFixed"
+                  min="0"
+                  step="1"
+                  value={formData.loyaltyPointsFixed}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="500"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Exactly this many points per unit, whatever the price.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

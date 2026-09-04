@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext"
 import { useToast } from "../context/ToastContext"
 import { useWishlist } from "../context/WishlistContext"
 import { useCurrency } from "../context/CurrencyContext"
+import LoyaltyEarnBadge from "../components/LoyaltyEarnBadge"
 import { getFullImageUrl } from "../utils/imageUtils"
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
@@ -2870,6 +2871,7 @@ const ProductDetails = () => {
                           {discount > 0 && ` (${discount}%)`}
                         </div>
                       )}
+                      <LoyaltyEarnBadge product={product} priceAed={priceToShow} className="mt-3" />
                     </>
                   )
                 })()}

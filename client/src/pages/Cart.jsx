@@ -12,6 +12,10 @@ import TranslatedText from "../components/TranslatedText"
 import PromoPopup from "../components/PromoPopup"
 
 import config from "../config/config"
+import { useLoyalty } from "../context/LoyaltyContext"
+import LoyaltyEarnBadge from "../components/LoyaltyEarnBadge"
+import LoyaltyRedeemPanel from "../components/LoyaltyRedeemPanel"
+import GrabCoin from "../components/GrabCoin"
 
 const CartQuantityInput = ({ value, onChange, max }) => {
   const [localVal, setLocalVal] = useState(value)
@@ -111,6 +115,9 @@ const Cart = () => {
     setCoupon,
     couponDiscount,
     setCouponDiscount,
+    loyaltyPointsToRedeem,
+    loyaltyDiscount,
+    applyLoyaltyRedemption,
   } = useCart()
   const { getLocalizedPath, isArabic } = useLanguage()
   const { formatPrice: formatCurrencyPrice, currentCountry } = useCurrency()
@@ -398,9 +405,22 @@ const Cart = () => {
   const hasAdminDeliveryCharges = (deliveryOptions?.length || 0) > 0
   const deliveryCharge = hasAdminDeliveryCharges ? Number(fallbackDelivery?.charge || 0) : 0
   
-  const totalWithDeliveryTaxCoupon = cartTotals.totalCurrentPrice + protectionTotal + deliveryCharge + taxAmount - couponDiscount
+  // Points only ever discount the goods -- never delivery, tax or fees -- so the panel is
+  // capped against this figure and the discount is clamped to it.
+  const loyaltyEligibleAmount = Math.max(0, cartTotals.totalCurrentPrice + protectionTotal - couponDiscount)
+  const appliedLoyaltyDiscount = Math.min(loyaltyDiscount, loyaltyEligibleAmount)
+
+  const totalBeforeLoyalty = cartTotals.totalCurrentPrice + protectionTotal + deliveryCharge + taxAmount - couponDiscount
+  const totalWithDeliveryTaxCoupon = Math.max(0, totalBeforeLoyalty - appliedLoyaltyDiscount)
 
   // Render individual item component
+  const {
+    isEnabled: loyaltyEnabled,
+    formatPoints,
+    balance: loyaltyBalance,
+    pending: loyaltyPending,
+  } = useLoyalty()
+
   const renderItem = (item, isInBundle = false, bundleId = null) => {
     const pricingDetails = getItemPricingDetails(item)
     const itemTotal = getItemTotal(item)
@@ -493,6 +513,14 @@ const Cart = () => {
               <Trash2 size={18} />
             </button>
           </div>
+
+          <LoyaltyEarnBadge
+            product={item}
+            priceAed={pricingDetails.currentPrice}
+            quantity={item.quantity}
+            surface="cart"
+            className="mt-3 w-full justify-center"
+          />
         </div>
 
         {/* Desktop Card */}
@@ -588,6 +616,14 @@ const Cart = () => {
                 <Trash2 size={18} className="mr-2" />
               </button>
             </div>
+
+            <LoyaltyEarnBadge
+              product={item}
+              priceAed={pricingDetails.currentPrice}
+              quantity={item.quantity}
+              surface="cart"
+              className="mt-3 self-start"
+            />
           </div>
         </div>
       </li>
@@ -817,6 +853,40 @@ const Cart = () => {
                   <div className="flex justify-between text-green-600 text-sm">
                     <span><TranslatedText>Coupon</TranslatedText>: {coupon.code}</span>
                     <span>-{formatPrice(couponDiscount)}</span>
+                  </div>
+                )}
+
+                {/* What the shopper currently holds, then the control to spend it. */}
+                {loyaltyEnabled && loyaltyBalance > 0 && (
+                  <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm">
+                    <span className="flex items-center gap-2 text-gray-700">
+                      <GrabCoin size={18} />
+                      <TranslatedText>Your balance</TranslatedText>
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      {formatPoints(loyaltyBalance, { withName: false })}
+                      {loyaltyPending > 0 && (
+                        <span className="ml-1 font-normal text-xs text-gray-500">
+                          (+{formatPoints(loyaltyPending, { withName: false })} <TranslatedText>pending</TranslatedText>)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {loyaltyEnabled && (
+                  <LoyaltyRedeemPanel
+                    eligibleAmountAed={loyaltyEligibleAmount}
+                    appliedPoints={loyaltyPointsToRedeem}
+                    onChange={applyLoyaltyRedemption}
+                    formatPrice={formatPrice}
+                  />
+                )}
+
+                {appliedLoyaltyDiscount > 0 && (
+                  <div className="flex justify-between text-sm font-medium text-green-600">
+                    <span><TranslatedText>Points applied</TranslatedText></span>
+                    <span>- {formatPrice(appliedLoyaltyDiscount)}</span>
                   </div>
                 )}
 

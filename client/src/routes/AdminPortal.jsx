@@ -72,6 +72,9 @@ import AdminVolumes from "../pages/admin/AdminVolumes"
 import AdminWarranty from "../pages/admin/AdminWarranty"
 import AllCoupons from "../pages/admin/AllCoupons"
 import AppDiscountSettings from "../pages/admin/AppDiscountSettings"
+import AdminLoyaltySettings from "../pages/admin/AdminLoyaltySettings"
+import AdminLoyaltyRules from "../pages/admin/AdminLoyaltyRules"
+import AdminLoyaltyCustomers from "../pages/admin/AdminLoyaltyCustomers"
 import AppDiscountForm from "../pages/admin/AppDiscountForm"
 import PopupSettings from "../pages/admin/PopupSettings"
 import PopupForm from "../pages/admin/PopupForm"
@@ -237,6 +240,10 @@ const AdminPortal = () => {
             <Route path="coupons" element={<AllCoupons />} />
             <Route path="coupons/all" element={<AllCoupons />} />
             <Route path="app-discount-settings" element={<AppDiscountSettings />} />
+            <Route path="loyalty" element={<AdminLoyaltySettings />} />
+            <Route path="loyalty/settings" element={<AdminLoyaltySettings />} />
+            <Route path="loyalty/rules" element={<AdminLoyaltyRules />} />
+            <Route path="loyalty/customers" element={<AdminLoyaltyCustomers />} />
             <Route path="app-discount-settings/add" element={<AppDiscountForm />} />
             <Route path="app-discount-settings/edit/:id" element={<AppDiscountForm />} />
             <Route path="app-discount-settings/popup-settings" element={<PopupSettings />} />

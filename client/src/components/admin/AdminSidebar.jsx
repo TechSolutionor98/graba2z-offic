@@ -37,6 +37,7 @@ import {
   Languages,
   Unlock,
   Globe,
+  Award,
 } from "lucide-react"
 
 const SEO_UNLOCK_TOKEN_KEY = "seoUnlockToken"
@@ -654,6 +655,17 @@ const AdminSidebar = () => {
       ],
     },
     {
+      title: "Loyalty Points",
+      icon: Award,
+      dropdown: "loyalty",
+      permission: "loyalty",
+      items: [
+        { title: "Programme Settings", path: "/admin/loyalty/settings" },
+        { title: "Category Earning Rules", path: "/admin/loyalty/rules" },
+        { title: "Customer Points", path: "/admin/loyalty/customers" },
+      ],
+    },
+    {
       title: "SEO Settings",
       icon: Cog,
       dropdown: "seoSettings",
@@ -693,11 +705,13 @@ const AdminSidebar = () => {
       title: "GCC Countries & Rates",
       icon: Globe,
       path: "/admin/settings?tab=countries",
+      permission: "settings",
     },
     {
       title: "Admin Settings",
       icon: Settings,
       path: "/admin/settings",
+      permission: "settings",
     },
   ]
 
@@ -715,8 +729,13 @@ const AdminSidebar = () => {
     },
   ]
 
-  // Filter menu items based on permissions
-  const filterMenuItems = (items) => {
+  // Filter menu items based on permissions.
+  //
+  // Top-level entries are default-deny: one without a `permission` is hidden rather than
+  // shown. Showing it was how "Admin Settings" and "GCC Countries & Rates" ended up in
+  // every admin's sidebar. Nested items carry no permission of their own -- they inherit
+  // their parent's gate -- so the default applies only at the top level.
+  const filterMenuItems = (items, isTopLevel = true) => {
     return items.filter(item => {
       // Super admin only items
       if (item.superAdminOnly && !isSuperAdmin) {
@@ -729,7 +748,12 @@ const AdminSidebar = () => {
       }
       
       // Check permission for item
-      if (item.permission && !hasPermission(item.permission)) {
+      if (item.permission) {
+        return hasPermission(item.permission)
+      }
+
+      // No permission declared: hide it at the top level rather than exposing it.
+      if (isTopLevel) {
         return false
       }
       
@@ -739,7 +763,7 @@ const AdminSidebar = () => {
       if (item.items) {
         return {
           ...item,
-          items: filterMenuItems(item.items)
+          items: filterMenuItems(item.items, false)
         }
       }
       return item

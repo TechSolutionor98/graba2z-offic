@@ -9,6 +9,8 @@ import { useCart } from "../context/CartContext"
 import { useAuth } from "../context/AuthContext"
 import { useLanguage } from "../context/LanguageContext"
 import { useCurrency } from "../context/CurrencyContext"
+import { useLoyalty } from "../context/LoyaltyContext"
+import LoyaltyRedeemPanel from "../components/LoyaltyRedeemPanel"
 import { getProvincesForCountry } from "../utils/countryStates"
 import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Check, Edit } from "lucide-react"
 import { Dialog } from "@headlessui/react"
@@ -194,9 +196,14 @@ const Checkout = () => {
     couponDiscount,
     setCouponDiscount,
     removeFromCart,
+    loyaltyPointsToRedeem,
+    loyaltyDiscount,
+    applyLoyaltyRedemption,
+    clearLoyaltyRedemption,
   } = useCart()
   const { getLocalizedPath, isArabic } = useLanguage()
   const { formatPrice: formatCurrencyPrice, countries, currentCountry } = useCurrency()
+  const { isEnabled: loyaltyEnabled, refreshBalance: refreshLoyaltyBalance } = useLoyalty()
   const location = useLocation()
 
   const [tax, setTax] = useState(null)
@@ -445,7 +452,20 @@ const Checkout = () => {
     return sum + amount;
   }, 0) || 0;
   
-  const finalTotal = cartTotals.totalOfferPrice + protectionTotal + deliveryCharge + paymentChargesTotal - couponDiscount
+  // Points come off the goods only -- never delivery or payment fees -- so the panel is
+  // capped against this figure and the discount is clamped to it.
+  const loyaltyEligibleAmount = Math.max(0, cartTotals.totalOfferPrice + protectionTotal - couponDiscount)
+  const appliedLoyaltyDiscount = Math.min(loyaltyDiscount, loyaltyEligibleAmount)
+
+  const finalTotal = Math.max(
+    0,
+    cartTotals.totalOfferPrice +
+      protectionTotal +
+      deliveryCharge +
+      paymentChargesTotal -
+      couponDiscount -
+      appliedLoyaltyDiscount,
+  )
 
   // Coupon logic
   const handleApplyCoupon = async () => {
@@ -778,6 +798,7 @@ const Checkout = () => {
           return orderItem
         }),
         itemsPrice: cartTotal,
+        loyaltyPointsRedeemed: loyaltyPointsToRedeem,
         shippingPrice: deliveryCharge,
         deliveryChargeId: deliveryType === "home" ? (fallbackDelivery?._id || undefined) : undefined,
         totalPrice: finalTotal,
@@ -1142,6 +1163,7 @@ const Checkout = () => {
           return orderItem
         }),
         itemsPrice: cartTotal,
+        loyaltyPointsRedeemed: loyaltyPointsToRedeem,
         shippingPrice: deliveryCharge, // Include delivery charge
         deliveryChargeId: deliveryType === "home" ? (fallbackDelivery?._id || undefined) : undefined,
         totalPrice: finalTotal, // Include delivery charge + COD fees
@@ -1194,6 +1216,11 @@ const Checkout = () => {
       if (selectedPaymentMethod === "cod") {
         // For COD, order is created directly
         clearCart()
+        // The order just spent points and queued more as pending, so the header balance
+        // would otherwise show the pre-checkout figure. The redemption is cleared too, or
+        // the next basket would open with points already applied.
+        clearLoyaltyRedemption()
+        refreshLoyaltyBalance()
         localStorage.removeItem("guestInfo")
         localStorage.removeItem("savedShippingAddress")
         if (!token && guestInfo) {
@@ -2234,6 +2261,24 @@ const Checkout = () => {
                     </div>
                   )}
                 </div>
+
+                {loyaltyEnabled && (
+                  <div className="mb-3">
+                    <LoyaltyRedeemPanel
+                      eligibleAmountAed={loyaltyEligibleAmount}
+                      appliedPoints={loyaltyPointsToRedeem}
+                      onChange={applyLoyaltyRedemption}
+                      formatPrice={formatPrice}
+                    />
+                  </div>
+                )}
+
+                {appliedLoyaltyDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 mb-2">
+                    <span><TranslatedText>Points applied</TranslatedText></span>
+                    <span>- {formatPrice(appliedLoyaltyDiscount)}</span>
+                  </div>
+                )}
 
                 <div className="border-t pt-3 flex justify-between font-bold text-lg">
                   <span className="text-black"><TranslatedText>Total Amount</TranslatedText></span>

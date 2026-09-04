@@ -325,6 +325,11 @@ const Shop = () => {
   const { currentLanguage, isArabic } = useLanguage()
   const { formatPrice: formatCurrencyPrice } = useCurrency()
   const [products, setProducts] = useState([])
+  // How many products match the current filters, which is not the same as how many are
+  // loaded: the first paint holds one page from the server while the full catalogue is
+  // still downloading. Showing products.length there would report the page size as the
+  // category's size.
+  const [matchCount, setMatchCount] = useState(0)
   const [categories, setCategories] = useState([])
   const [brands, setBrands] = useState([])
   const [banners, setBanners] = useState([])
@@ -553,7 +558,11 @@ const Shop = () => {
     const filters = buildProductFilters(true)
     const queryParams = {
       page: 1,
-      limit: 30,
+      // The grid shows 15 and adds 15 per "Load More", and this first page is only in play
+      // until the background cache hydration replaces it with the full filtered list. Ask
+      // for the endpoint's maximum so a shopper clicking "Load More" during that second or
+      // two cannot run off the end and be told the category holds nothing more.
+      limit: 120,
       sortBy: filters.sortBy || "newest",
     }
 
@@ -833,6 +842,8 @@ const Shop = () => {
 
       if (isStaleRun()) return
       setProducts(filteredProducts)
+      // The cache holds the whole catalogue, so the filtered list *is* the match count.
+      setMatchCount(filteredProducts.length)
     } catch (err) {
       if (isStaleRun()) return
       setError("Error loading products")
@@ -865,6 +876,8 @@ const Shop = () => {
       const nextProducts = Array.isArray(data?.products) ? data.products : []
       setActualSearchQuery(searchQuery && searchQuery.trim() ? searchQuery.trim() : "")
       setProducts(nextProducts)
+      // The server knows the full match count even though it only sent one page of it.
+      setMatchCount(Number.isFinite(data?.totalCount) ? data.totalCount : nextProducts.length)
       syncAvailablePriceBounds(nextProducts)
     } catch (err) {
       if (isStaleRun()) return
@@ -944,6 +957,8 @@ const Shop = () => {
 
       if (isStaleRun()) return
       setProducts(filteredProducts)
+      // The cache holds the whole catalogue, so the filtered list *is* the match count.
+      setMatchCount(filteredProducts.length)
     } catch (err) {
       if (isStaleRun()) return
       await loadAndFilterProducts(runId)
@@ -2837,7 +2852,7 @@ const Shop = () => {
                   onClick={() => setIsMobileFilterOpen(false)}
                   className="w-full px-4 py-3 bg-lime-600 text-white rounded-lg hover:bg-lime-700 transition-colors font-semibold"
                 >
-                  <TranslatedText>Show</TranslatedText> {products.length} <TranslatedText>Products</TranslatedText>
+                  <TranslatedText>Show</TranslatedText> {Math.max(matchCount, products.length)} <TranslatedText>Products</TranslatedText>
                 </button>
                 <button
                   onClick={() => {
@@ -3883,7 +3898,7 @@ const Shop = () => {
                     })()
                   )}
                 </h1>
-                <p className="text-gray-600 mt-1">{products.length} <TranslatedText>products found</TranslatedText></p>
+                <p className="text-gray-600 mt-1">{Math.max(matchCount, products.length)} <TranslatedText>products found</TranslatedText></p>
               </div>
 
               <div className="hidden md:block mt-0 flex-shrink-0 relative z-20">
