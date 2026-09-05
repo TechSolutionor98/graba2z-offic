@@ -49,26 +49,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
        
 
-          // Meta Pixel
-          !(function (f, b, e, v, n, t, s) {
-            if (f.fbq) return
-            n = f.fbq = function () {
-              n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
-            }
-            if (!f._fbq) f._fbq = n
-            n.push = n
-            n.loaded = true
-            n.version = "2.0"
-            n.queue = []
-            t = b.createElement(e)
-            t.async = true
-            t.src = v
-            s = b.getElementsByTagName(e)[0]
-            s.parentNode.insertBefore(t, s)
-          })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js")
-          window.fbq("init", "1312683447240337")
-          window.fbq("track", "PageView")
-
           // ClickCease
           appendScript("https://www.clickcease.com/monitor/stat.js", "clickcease-script")
 
@@ -108,8 +88,29 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         })
       })()
     </script>
+    <!-- Meta Pixel Code -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1074503198288217');
+      fbq('track', 'PageView');
+    </script>
+    <!-- End Meta Pixel Code -->
   </head>
   <body>
+
+<!-- Meta Pixel Code (noscript) -->
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1074503198288217&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code (noscript) -->
+
 
 
 <!-- Google Tag Manager (noscript) -->
