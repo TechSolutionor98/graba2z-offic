@@ -798,6 +798,10 @@ const Checkout = () => {
           return orderItem
         }),
         itemsPrice: cartTotal,
+        // The server recomputes the discount from this code -- it never trusts the
+        // total we send -- so a coupon the shopper applied has to travel with the order
+        // or it is silently lost and the two sides disagree on what is owed.
+        couponCode: coupon?.code || undefined,
         loyaltyPointsRedeemed: loyaltyPointsToRedeem,
         shippingPrice: deliveryCharge,
         deliveryChargeId: deliveryType === "home" ? (fallbackDelivery?._id || undefined) : undefined,
@@ -1044,7 +1048,15 @@ const Checkout = () => {
         }
       }
     } catch (error) {
-      setError(error.response?.data?.message || error.message || "Failed to process order/payment. Please try again.")
+      setError(
+        error.response?.data?.message ||
+          // The payment endpoints report failures as `error`, the order endpoints as
+          // `message`. Without both, a real reason becomes "Request failed with status
+          // code 400" on screen.
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to process order/payment. Please try again.",
+      )
       setLoading(false)
     }
   }
@@ -1163,6 +1175,10 @@ const Checkout = () => {
           return orderItem
         }),
         itemsPrice: cartTotal,
+        // The server recomputes the discount from this code -- it never trusts the
+        // total we send -- so a coupon the shopper applied has to travel with the order
+        // or it is silently lost and the two sides disagree on what is owed.
+        couponCode: coupon?.code || undefined,
         loyaltyPointsRedeemed: loyaltyPointsToRedeem,
         shippingPrice: deliveryCharge, // Include delivery charge
         deliveryChargeId: deliveryType === "home" ? (fallbackDelivery?._id || undefined) : undefined,
@@ -1261,7 +1277,15 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error("Error processing order:", error)
-      setError(error.response?.data?.message || error.message || "Failed to process order. Please try again.")
+      setError(
+        error.response?.data?.message ||
+          // The payment endpoints report failures as `error`, the order endpoints as
+          // `message`. Without both, a real reason becomes "Request failed with status
+          // code 400" on screen.
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to process order. Please try again.",
+      )
     } finally {
       setLoading(false)
     }
