@@ -12,6 +12,7 @@ import TranslatedText from "../components/TranslatedText"
 import PromoPopup from "../components/PromoPopup"
 
 import config from "../config/config"
+import { resolveDeliveryCharge, selectDeliveryMethod, describeDeliveryBlock } from "../utils/deliveryCharge"
 import { useLoyalty } from "../context/LoyaltyContext"
 import LoyaltyEarnBadge from "../components/LoyaltyEarnBadge"
 import LoyaltyRedeemPanel from "../components/LoyaltyRedeemPanel"
@@ -401,9 +402,25 @@ const Cart = () => {
   // Calculate protection items total
   const protectionTotal = protectionItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   
-  const fallbackDelivery = selectedDelivery || deliveryOptions?.[0]
   const hasAdminDeliveryCharges = (deliveryOptions?.length || 0) > 0
-  const deliveryCharge = hasAdminDeliveryCharges ? Number(fallbackDelivery?.charge || 0) : 0
+
+  // The goods subtotal every delivery band is measured against -- items only, before any
+  // coupon or points. Same figure the checkout and the server use, so all three agree on
+  // the shipping.
+  const deliveryGoodsSubtotal = cartTotals.totalCurrentPrice + protectionTotal
+
+  // Resolved through the shared bands rather than read off the method, so a basket past
+  // the maximum shows free here exactly as it will at checkout.
+  const resolvedDelivery = useMemo(
+    () => selectDeliveryMethod(deliveryOptions || [], deliveryGoodsSubtotal, selectedDelivery?._id),
+    [deliveryOptions, deliveryGoodsSubtotal, selectedDelivery?._id],
+  )
+
+  const fallbackDelivery = resolvedDelivery.method || selectedDelivery || deliveryOptions?.[0]
+  const deliveryCharge = hasAdminDeliveryCharges ? resolvedDelivery.charge : 0
+
+  const deliveryBlocked = hasAdminDeliveryCharges && !resolvedDelivery.available
+  const deliveryBlockedMessage = deliveryBlocked ? describeDeliveryBlock(resolvedDelivery, formatPrice) : ""
   
   // Points only ever discount the goods -- never delivery, tax or fees -- so the panel is
   // capped against this figure and the discount is clamped to it.
@@ -764,18 +781,42 @@ const Cart = () => {
                         setSelectedDelivery(found)
                       }}
                     >
-                      {deliveryOptions.map(opt => (
-                        <option key={opt._id} value={opt._id}>
-                          {opt.name} ({formatPrice(Number(opt.charge || 0))}) - {opt.deliveryTime}
-                        </option>
-                      ))}
+                      {deliveryOptions.map(opt => {
+                        const quote = resolveDeliveryCharge(opt, deliveryGoodsSubtotal)
+                        const price = !quote.available
+                          ? `min ${formatPrice(quote.minRequired)}`
+                          : quote.isFree
+                            ? "Free"
+                            : formatPrice(quote.charge)
+                        return (
+                          <option key={opt._id} value={opt._id} disabled={!quote.available}>
+                            {opt.name} ({price}) - {opt.deliveryTime}
+                          </option>
+                        )
+                      })}
                     </select>
                   </div>
                 )}
-                {hasAdminDeliveryCharges && (
+                {hasAdminDeliveryCharges && !deliveryBlocked && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600"><TranslatedText>Shipping</TranslatedText></span>
-                    <span className="text-gray-900">{deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}</span>
+                    <span className="text-gray-600">
+                      <TranslatedText>Shipping</TranslatedText>
+                      {fallbackDelivery?.name ? ` (${fallbackDelivery.name})` : ""}
+                    </span>
+                    <span className={deliveryCharge === 0 ? "font-semibold text-green-600" : "text-gray-900"}>
+                      {deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Too small for every method configured. Said here so the shopper finds
+                    out in the cart rather than at the end of checkout. */}
+                {deliveryBlocked && (
+                  <div className="my-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-sm font-semibold text-amber-800">
+                      <TranslatedText>Delivery not available for this order</TranslatedText>
+                    </p>
+                    <p className="mt-0.5 text-xs text-amber-700">{deliveryBlockedMessage}</p>
                   </div>
                 )}
 
