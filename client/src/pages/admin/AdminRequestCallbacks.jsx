@@ -9,6 +9,7 @@ import {
   Download,
   Check,
   X,
+  Trash2,
   Ban,
   RotateCcw,
   Clock,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react"
 
 import AdminSidebar from "../../components/admin/AdminSidebar"
+import ConfirmDialog from "../../components/admin/ConfirmDialog"
 import { apiRequest } from "../../services/api"
 import { downloadCsv } from "../../utils/csvExport"
 import { useToast } from "../../context/ToastContext"
@@ -102,6 +104,7 @@ const AdminRequestCallbacks = () => {
   const [search, setSearch] = useState("")
   const [busyId, setBusyId] = useState(null)
   const [detailRequest, setDetailRequest] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
 
   const fetchRequests = async () => {
     setLoading(true)
@@ -150,6 +153,28 @@ const AdminRequestCallbacks = () => {
     } catch {
       setRequests(previous)
       showToast("Could not update the status. Please try again.", "error")
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const confirmDelete = async () => {
+    const id = deleteTarget?._id
+    if (!id) return
+    setDeleteTarget(null)
+    setBusyId(id)
+    try {
+      const token = localStorage.getItem("adminToken")
+      await apiRequest(`/api/request-callback/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setRequests((prev) => prev.filter((req) => req._id !== id))
+      // The detail modal may be showing the record that has just gone.
+      setDetailRequest((current) => (current && current._id === id ? null : current))
+      showToast("Callback request deleted", "success")
+    } catch {
+      showToast("Could not delete the request. Please try again.", "error")
     } finally {
       setBusyId(null)
     }
@@ -488,6 +513,14 @@ const AdminRequestCallbacks = () => {
                           Reopen
                         </button>
                       )}
+                      <button
+                        onClick={() => setDeleteTarget(req)}
+                        disabled={busyId === req._id}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -495,6 +528,16 @@ const AdminRequestCallbacks = () => {
             })}
           </div>
         )}
+
+        <ConfirmDialog
+          isOpen={Boolean(deleteTarget)}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={confirmDelete}
+          title="Delete callback request"
+          message={`Delete the request from ${deleteTarget?.name || "this customer"}? This cannot be undone. To keep the record but take it out of the queue, mark it as spam instead.`}
+          confirmText="Delete"
+          type="danger"
+        />
 
         {/* ---- Detail modal ---- */}
         {detailRequest && (
