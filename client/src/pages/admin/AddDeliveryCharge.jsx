@@ -8,6 +8,7 @@ import { ArrowLeft, Plus, X } from "lucide-react"
 import axios from "axios"
 
 import config from "../../config/config"
+import { getDeliveryTiers, resolveDeliveryCharge } from "../../utils/deliveryCharge"
 
 const AddDeliveryCharge = () => {
   const navigate = useNavigate()
@@ -26,6 +27,7 @@ const AddDeliveryCharge = () => {
     isInternational: false,
     applicableAreas: [""],
     isActive: true,
+    rules: [],
   })
   const [isEdit, setIsEdit] = useState(false);
 
@@ -64,6 +66,13 @@ const AddDeliveryCharge = () => {
             isInternational: typeof data.isInternational === "boolean" ? data.isInternational : (data.country && data.country !== "United Arab Emirates"),
             applicableAreas: data.applicableAreas && data.applicableAreas.length > 0 ? data.applicableAreas : [""],
             isActive: typeof data.isActive === "boolean" ? data.isActive : true,
+            rules: Array.isArray(data.rules)
+              ? data.rules.map((rule) => ({
+                  minOrderAmount: rule.minOrderAmount ?? "",
+                  maxOrderAmount: rule.maxOrderAmount ?? "",
+                  charge: rule.charge ?? "",
+                }))
+              : [],
           })
         } catch (error) {
           showToast(error.response?.data?.message || "Failed to fetch delivery charge", "error")
@@ -118,6 +127,23 @@ const AddDeliveryCharge = () => {
     }
   }
 
+  const updateRule = (index, field, value) => {
+    setFormData((prev) => {
+      const rules = [...prev.rules]
+      rules[index] = { ...rules[index], [field]: value }
+      return { ...prev, rules }
+    })
+  }
+
+  const addRule = () =>
+    setFormData((prev) => ({
+      ...prev,
+      rules: [...prev.rules, { minOrderAmount: "", maxOrderAmount: "", charge: "" }],
+    }))
+
+  const removeRule = (index) =>
+    setFormData((prev) => ({ ...prev, rules: prev.rules.filter((_, i) => i !== index) }))
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -141,6 +167,15 @@ const AddDeliveryCharge = () => {
         isInternational: formData.isInternational,
         applicableAreas: formData.applicableAreas.filter((area) => area.trim() !== ""),
         isActive: formData.isActive,
+        // Only bands with a charge are sent; the server drops the rest anyway. An empty
+        // array means "no bands", which puts the single charge above back in control.
+        rules: formData.rules
+          .filter((rule) => String(rule.charge).trim() !== "")
+          .map((rule) => ({
+            minOrderAmount: rule.minOrderAmount === "" ? 0 : Number.parseFloat(rule.minOrderAmount),
+            maxOrderAmount: rule.maxOrderAmount === "" ? null : Number.parseFloat(rule.maxOrderAmount),
+            charge: Number.parseFloat(rule.charge),
+          })),
       }
       if (isEdit) {
         await axios.put(`${config.API_URL}/api/delivery-charges/${id}`, deliveryChargeData, {
@@ -310,8 +345,90 @@ const AddDeliveryCharge = () => {
                     min="0"
                     placeholder="0.00"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Leave empty for no maximum</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Leave empty for no maximum. Above the maximum, delivery is free.
+                  </p>
                 </div>
+              </div>
+
+              {/* Bands. A shop that charges one price for small baskets and another for
+                  large ones needs more than a single figure, and this is where those go. */}
+              <div className="mt-6 border-t border-gray-200 pt-6">
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">Order value bands (optional)</h3>
+                    <p className="text-xs text-gray-500 mt-1 max-w-2xl">
+                      Charge different amounts depending on how big the order is. When you add bands they
+                      replace the single charge above. Below the smallest minimum the method cannot be used at
+                      all, and above the largest maximum delivery is free.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addRule}
+                    className="shrink-0 rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                  >
+                    + Add band
+                  </button>
+                </div>
+
+                {formData.rules.length === 0 ? (
+                  <p className="mt-4 rounded-md border border-dashed border-gray-300 p-4 text-center text-sm text-gray-500">
+                    No bands. The single charge above applies to every order that clears the minimum.
+                  </p>
+                ) : (
+                  <div className="mt-4 space-y-3">
+                    {formData.rules.map((rule, index) => (
+                      <div key={index} className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Order from (AED)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={rule.minOrderAmount}
+                            onChange={(e) => updateRule(index, "minOrderAmount", e.target.value)}
+                            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Order up to (AED)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={rule.maxOrderAmount}
+                            onChange={(e) => updateRule(index, "maxOrderAmount", e.target.value)}
+                            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="No limit"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Delivery charge (AED)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={rule.charge}
+                            onChange={(e) => updateRule(index, "charge", e.target.value)}
+                            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeRule(index)}
+                          className="rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <BandPreview rules={formData.rules} charge={formData.charge} minOrderAmount={formData.minOrderAmount} maxOrderAmount={formData.maxOrderAmount} />
               </div>
             </div>
 
@@ -440,6 +557,96 @@ const AddDeliveryCharge = () => {
           </form>
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * What the configuration above actually does, worked out with the same resolver the
+ * storefront and the order endpoint use.
+ *
+ * Bands are easy to get subtly wrong -- an overlap, a gap, a maximum left blank -- and the
+ * consequence is either a shopper charged the wrong shipping or an order that cannot be
+ * placed at all. Showing the outcome here means the mistake is visible before it is saved.
+ */
+const BandPreview = ({ rules, charge, minOrderAmount, maxOrderAmount }) => {
+  const method = {
+    charge: charge === "" ? 0 : Number(charge),
+    minOrderAmount: minOrderAmount === "" ? 0 : Number(minOrderAmount),
+    maxOrderAmount: maxOrderAmount === "" ? null : Number(maxOrderAmount),
+    rules: rules
+      .filter((rule) => String(rule.charge).trim() !== "")
+      .map((rule) => ({
+        minOrderAmount: rule.minOrderAmount === "" ? 0 : Number(rule.minOrderAmount),
+        maxOrderAmount: rule.maxOrderAmount === "" ? null : Number(rule.maxOrderAmount),
+        charge: Number(rule.charge),
+      })),
+  }
+
+  const tiers = getDeliveryTiers(method)
+  if (tiers.length === 0) return null
+
+  const lowestMin = tiers[0].minOrderAmount
+  const allBounded = tiers.every((tier) => tier.maxOrderAmount !== null)
+  const highestMax = tiers.reduce((max, tier) => Math.max(max, tier.maxOrderAmount ?? 0), 0)
+
+  // Sample either side of every boundary, so the row that changes behaviour is the row on
+  // screen rather than something the admin has to imagine.
+  const samples = new Set()
+  if (lowestMin > 0) samples.add(Math.max(0, lowestMin - 1))
+  for (const tier of tiers) {
+    samples.add(tier.minOrderAmount)
+    if (tier.maxOrderAmount !== null) samples.add(tier.maxOrderAmount)
+  }
+  if (allBounded) samples.add(highestMax + 1)
+
+  const rows = [...samples]
+    .sort((a, b) => a - b)
+    .map((subtotal) => ({ subtotal, ...resolveDeliveryCharge(method, subtotal) }))
+
+  const money = (n) => `AED ${Number(n).toFixed(2)}`
+
+  return (
+    <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+      <h4 className="text-sm font-semibold text-blue-900">What this will do</h4>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[380px] text-sm">
+          <thead>
+            <tr className="text-left text-xs font-semibold uppercase tracking-wide text-blue-800">
+              <th className="pb-2 pr-4">Order value</th>
+              <th className="pb-2">Delivery</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-blue-100">
+            {rows.map((row) => (
+              <tr key={row.subtotal}>
+                <td className="py-1.5 pr-4 text-blue-900">{money(row.subtotal)}</td>
+                <td className="py-1.5">
+                  {!row.available ? (
+                    <span className="font-semibold text-red-600">Cannot be delivered</span>
+                  ) : row.isFree ? (
+                    <span className="font-semibold text-green-700">Free</span>
+                  ) : (
+                    <span className="text-blue-900">{money(row.charge)}</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {lowestMin > 0 && (
+        <p className="mt-3 text-xs text-blue-800">
+          Orders under {money(lowestMin)} cannot use this method. If no other method covers them, those
+          orders cannot be placed for home delivery at all.
+        </p>
+      )}
+      {!allBounded && (
+        <p className="mt-1 text-xs text-blue-800">
+          One band has no maximum, so large orders keep being charged. Set a maximum on it to make delivery
+          free above that amount.
+        </p>
+      )}
     </div>
   )
 }

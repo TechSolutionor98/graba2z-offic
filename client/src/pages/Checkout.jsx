@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import axios from "axios"
@@ -14,6 +14,7 @@ import LoyaltyRedeemPanel from "../components/LoyaltyRedeemPanel"
 import { useReferral } from "../context/ReferralContext"
 import ReferralRewardPanel from "../components/ReferralRewardPanel"
 import { getProvincesForCountry } from "../utils/countryStates"
+import { resolveDeliveryCharge, selectDeliveryMethod, describeDeliveryBlock } from "../utils/deliveryCharge"
 import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Check, Edit } from "lucide-react"
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
@@ -448,9 +449,28 @@ const Checkout = () => {
   // Calculate protection items total
   const protectionTotal = protectionItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
-  const fallbackDelivery = selectedDelivery || deliveryOptions?.[0]
   const hasAdminDeliveryCharges = (deliveryOptions?.length || 0) > 0
-  const deliveryCharge = deliveryType === "home" && hasAdminDeliveryCharges ? Number(fallbackDelivery?.charge || 0) : 0
+
+  // The goods subtotal every delivery band is measured against. Items only -- the same
+  // figure the server derives from the database, so the two agree on the shipping.
+  // Discounts are deliberately excluded: a band is about the size of the basket.
+  const deliveryGoodsSubtotal = cartTotals.totalOfferPrice + protectionTotal
+
+  // Resolved through the shared rules, so what the shopper is quoted is what the order
+  // endpoint will charge. Honours their pick while it is still valid for this basket and
+  // otherwise falls to the cheapest usable method.
+  const resolvedDelivery = useMemo(
+    () => selectDeliveryMethod(deliveryOptions || [], deliveryGoodsSubtotal, selectedDelivery?._id),
+    [deliveryOptions, deliveryGoodsSubtotal, selectedDelivery?._id],
+  )
+
+  const fallbackDelivery = resolvedDelivery.method || selectedDelivery || deliveryOptions?.[0]
+  const deliveryCharge = deliveryType === "home" && hasAdminDeliveryCharges ? resolvedDelivery.charge : 0
+
+  // Home delivery is off the table for this basket -- too small for every method the shop
+  // has configured. Store pickup, which has no charge and no bands, stays available.
+  const deliveryBlocked = deliveryType === "home" && hasAdminDeliveryCharges && !resolvedDelivery.available
+  const deliveryBlockedMessage = deliveryBlocked ? describeDeliveryBlock(resolvedDelivery, formatPrice) : ""
 
   // Dynamic payment charges calculation
   const currentPaymentChargesData = selectedPaymentMethod ? paymentChargesList[selectedPaymentMethod] : null;
@@ -2088,7 +2108,7 @@ const Checkout = () => {
                           ? createOrderThenPay
                           : handleSubmit
                       }
-                      disabled={loading || !selectedPaymentMethod}
+                      disabled={loading || !selectedPaymentMethod || deliveryBlocked}
                       className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-6 py-3 disabled:opacity-50 flex items-center gap-2"
                     >
                       {loading ? (
@@ -2101,7 +2121,11 @@ const Checkout = () => {
                           <TranslatedText>Processing...</TranslatedText>
                         </>
                       ) : (
-                        `Place Order - ${formatPrice(finalTotal)}`
+                        deliveryBlocked ? (
+                          <TranslatedText>Order too small to deliver</TranslatedText>
+                        ) : (
+                          `Place Order - ${formatPrice(finalTotal)}`
+                        )
                       )}
                     </button>
                   </div>
@@ -2208,10 +2232,27 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {hasAdminDeliveryCharges && selectedPaymentMethod !== "cod" && (
+                {hasAdminDeliveryCharges && deliveryType === "home" && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600"><TranslatedText>Shipping</TranslatedText></span>
-                    <span className="text-black">{deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}</span>
+                    <span className="text-gray-600">
+                      <TranslatedText>Shipping</TranslatedText>
+                      {fallbackDelivery?.name ? ` (${fallbackDelivery.name})` : ""}
+                    </span>
+                    <span className={deliveryCharge === 0 ? "font-semibold text-green-600" : "text-black"}>
+                      {deliveryCharge === 0 ? <TranslatedText>Free</TranslatedText> : formatPrice(deliveryCharge)}
+                    </span>
+                  </div>
+                )}
+
+                {/* The basket is under the minimum on every method the shop has set up.
+                    Said here, in the summary, because that is where the shopper is looking
+                    at the total they cannot yet pay. */}
+                {deliveryBlocked && (
+                  <div className="my-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-sm font-semibold text-amber-800">
+                      <TranslatedText>Delivery not available for this order</TranslatedText>
+                    </p>
+                    <p className="mt-0.5 text-xs text-amber-700">{deliveryBlockedMessage}</p>
                   </div>
                 )}
 
@@ -2348,7 +2389,7 @@ const Checkout = () => {
                   <span className="text-black">{formatPrice(finalTotal)}</span>
                 </div>
 
-                {hasAdminDeliveryCharges && deliveryCharge === 0 && selectedPaymentMethod !== "cod" && (
+                {hasAdminDeliveryCharges && deliveryType === "home" && deliveryCharge === 0 && (
                   <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
                     <span className="text-lg">🎉</span>
                     <p className="text-sm text-green-700 font-medium"><TranslatedText>Free shipping is applied to this order.</TranslatedText></p>

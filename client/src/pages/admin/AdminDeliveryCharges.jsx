@@ -224,14 +224,51 @@ const AdminDeliveryCharges = () => {
                           </div>
                         </td>
                         <td className="py-4 px-6">
-                          <div className="font-medium text-gray-900">{formatPrice(charge.charge)}</div>
+                          {charge.rules?.length > 0 ? (
+                            <div className="text-sm">
+                              <div className="font-medium text-gray-900">
+                                {formatPrice(Math.min(...charge.rules.map((r) => r.charge)))} –{" "}
+                                {formatPrice(Math.max(...charge.rules.map((r) => r.charge)))}
+                              </div>
+                              <div className="text-xs text-blue-600">
+                                {charge.rules.length} band{charge.rules.length > 1 ? "s" : ""}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="font-medium text-gray-900">{formatPrice(charge.charge)}</div>
+                          )}
                         </td>
                         <td className="py-4 px-6">
                           <div className="text-sm text-gray-900">
-                            {charge.minOrderAmount > 0 && `Min: ${formatPrice(charge.minOrderAmount)}`}
-                            {charge.minOrderAmount > 0 && charge.maxOrderAmount && <br />}
-                            {charge.maxOrderAmount && `Max: ${formatPrice(charge.maxOrderAmount)}`}
-                            {charge.minOrderAmount === 0 && !charge.maxOrderAmount && "No limits"}
+                            {charge.rules?.length > 0 ? (
+                              <>
+                                {charge.rules.map((rule, index) => (
+                                  <div key={index} className="whitespace-nowrap">
+                                    {formatPrice(rule.minOrderAmount)}
+                                    {rule.maxOrderAmount ? ` – ${formatPrice(rule.maxOrderAmount)}` : "+"}
+                                    {": "}
+                                    <span className="font-medium">{formatPrice(rule.charge)}</span>
+                                  </div>
+                                ))}
+                                {charge.rules.every((rule) => rule.maxOrderAmount) && (
+                                  <div className="text-xs text-green-600 whitespace-nowrap">
+                                    Above {formatPrice(Math.max(...charge.rules.map((r) => r.maxOrderAmount)))}: free
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                {charge.minOrderAmount > 0 && `Min: ${formatPrice(charge.minOrderAmount)}`}
+                                {charge.minOrderAmount > 0 && charge.maxOrderAmount && <br />}
+                                {charge.maxOrderAmount && `Max: ${formatPrice(charge.maxOrderAmount)}`}
+                                {charge.maxOrderAmount && (
+                                  <div className="text-xs text-green-600">
+                                    Above {formatPrice(charge.maxOrderAmount)}: free
+                                  </div>
+                                )}
+                                {charge.minOrderAmount === 0 && !charge.maxOrderAmount && "No limits"}
+                              </>
+                            )}
                           </div>
                         </td>
                         <td className="py-4 px-6">
