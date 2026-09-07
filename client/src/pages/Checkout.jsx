@@ -11,6 +11,8 @@ import { useLanguage } from "../context/LanguageContext"
 import { useCurrency } from "../context/CurrencyContext"
 import { useLoyalty } from "../context/LoyaltyContext"
 import LoyaltyRedeemPanel from "../components/LoyaltyRedeemPanel"
+import { useReferral } from "../context/ReferralContext"
+import ReferralRewardPanel from "../components/ReferralRewardPanel"
 import { getProvincesForCountry } from "../utils/countryStates"
 import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Check, Edit } from "lucide-react"
 import { Dialog } from "@headlessui/react"
@@ -204,6 +206,14 @@ const Checkout = () => {
   const { getLocalizedPath, isArabic } = useLanguage()
   const { formatPrice: formatCurrencyPrice, countries, currentCountry } = useCurrency()
   const { isEnabled: loyaltyEnabled, refreshBalance: refreshLoyaltyBalance } = useLoyalty()
+  const {
+    isEnabled: referralEnabled,
+    selectedRewardId: referralRewardId,
+    referralDiscount,
+    applyReward: applyReferralReward,
+    clearReward: clearReferralReward,
+    refreshSummary: refreshReferralSummary,
+  } = useReferral()
   const location = useLocation()
 
   const [tax, setTax] = useState(null)
@@ -452,9 +462,14 @@ const Checkout = () => {
     return sum + amount;
   }, 0) || 0;
   
+  // A referral reward comes off the goods only -- never delivery or payment fees -- and
+  // only what is left after any coupon. Same order the server applies them in.
+  const referralEligibleAmount = Math.max(0, cartTotals.totalOfferPrice + protectionTotal - couponDiscount)
+  const appliedReferralDiscount = Math.min(referralDiscount, referralEligibleAmount)
+
   // Points come off the goods only -- never delivery or payment fees -- so the panel is
   // capped against this figure and the discount is clamped to it.
-  const loyaltyEligibleAmount = Math.max(0, cartTotals.totalOfferPrice + protectionTotal - couponDiscount)
+  const loyaltyEligibleAmount = Math.max(0, referralEligibleAmount - appliedReferralDiscount)
   const appliedLoyaltyDiscount = Math.min(loyaltyDiscount, loyaltyEligibleAmount)
 
   const finalTotal = Math.max(
@@ -464,6 +479,7 @@ const Checkout = () => {
       deliveryCharge +
       paymentChargesTotal -
       couponDiscount -
+      appliedReferralDiscount -
       appliedLoyaltyDiscount,
   )
 
@@ -802,6 +818,7 @@ const Checkout = () => {
         // total we send -- so a coupon the shopper applied has to travel with the order
         // or it is silently lost and the two sides disagree on what is owed.
         couponCode: coupon?.code || undefined,
+        referralRewardId: referralRewardId || undefined,
         loyaltyPointsRedeemed: loyaltyPointsToRedeem,
         shippingPrice: deliveryCharge,
         deliveryChargeId: deliveryType === "home" ? (fallbackDelivery?._id || undefined) : undefined,
@@ -1179,6 +1196,7 @@ const Checkout = () => {
         // total we send -- so a coupon the shopper applied has to travel with the order
         // or it is silently lost and the two sides disagree on what is owed.
         couponCode: coupon?.code || undefined,
+        referralRewardId: referralRewardId || undefined,
         loyaltyPointsRedeemed: loyaltyPointsToRedeem,
         shippingPrice: deliveryCharge, // Include delivery charge
         deliveryChargeId: deliveryType === "home" ? (fallbackDelivery?._id || undefined) : undefined,
@@ -1237,6 +1255,10 @@ const Checkout = () => {
         // the next basket would open with points already applied.
         clearLoyaltyRedemption()
         refreshLoyaltyBalance()
+        // The reward has been spent on this order. Clearing it stops the next basket
+        // opening with a discount the customer no longer holds.
+        clearReferralReward()
+        refreshReferralSummary()
         localStorage.removeItem("guestInfo")
         localStorage.removeItem("savedShippingAddress")
         if (!token && guestInfo) {
@@ -2285,6 +2307,23 @@ const Checkout = () => {
                     </div>
                   )}
                 </div>
+
+                {referralEnabled && (
+                  <ReferralRewardPanel
+                    eligibleAmountAed={referralEligibleAmount}
+                    selectedRewardId={referralRewardId}
+                    onApply={applyReferralReward}
+                    onClear={clearReferralReward}
+                    formatPrice={formatPrice}
+                  />
+                )}
+
+                {appliedReferralDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 mb-2">
+                    <span><TranslatedText>Referral discount</TranslatedText></span>
+                    <span>- {formatPrice(appliedReferralDiscount)}</span>
+                  </div>
+                )}
 
                 {loyaltyEnabled && (
                   <div className="mb-3">

@@ -38,6 +38,7 @@ import {
   Unlock,
   Globe,
   Award,
+  Gift,
 } from "lucide-react"
 
 const SEO_UNLOCK_TOKEN_KEY = "seoUnlockToken"
@@ -663,6 +664,16 @@ const AdminSidebar = () => {
         { title: "Programme Settings", path: "/admin/loyalty/settings" },
         { title: "Category Earning Rules", path: "/admin/loyalty/rules" },
         { title: "Customer Points", path: "/admin/loyalty/customers" },
+      ],
+    },
+    {
+      title: "Referrals",
+      icon: Gift,
+      dropdown: "referrals",
+      permission: "referrals",
+      items: [
+        { title: "Programme Settings", path: "/admin/referrals/settings" },
+        { title: "All Referrals", path: "/admin/referrals/list" },
       ],
     },
     {

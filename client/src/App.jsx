@@ -8,6 +8,7 @@ import { ToastProvider } from "./context/ToastContext"
 import { LanguageProvider } from "./context/LanguageContext"
 import { CurrencyProvider } from "./context/CurrencyContext"
 import { LoyaltyProvider } from "./context/LoyaltyContext"
+import { ReferralProvider } from "./context/ReferralContext"
 import LoyaltyRewardDialog from "./components/LoyaltyRewardDialog"
 
 // Import components
@@ -16,6 +17,7 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import ScrollToTop from "./components/ScrollToTop"
 import RedirectHandler from "./components/RedirectHandler"
 import ReturnPathTracker from "./components/ReturnPathTracker"
+import ReferralLinkCatcher from "./components/ReferralLinkCatcher"
 
 import { Helmet } from "react-helmet-async"
 import { useLocation } from "react-router-dom"
@@ -159,12 +161,14 @@ function App() {
           <WishlistProvider>
             <CurrencyProvider>
               <LoyaltyProvider>
+              <ReferralProvider>
               <Router>
                 <LanguageProvider>
                 <DefaultCanonical />
                 <ScrollToTop />
                 <LoyaltyRewardDialog />
                 <ReturnPathTracker />
+                <ReferralLinkCatcher />
                 <RedirectHandler />
                 <div className="App">
                   <Suspense fallback={lazyFallback}>
@@ -501,6 +505,7 @@ function App() {
               </div>
             </LanguageProvider>
           </Router>
+              </ReferralProvider>
               </LoyaltyProvider>
           </CurrencyProvider>
           </WishlistProvider>

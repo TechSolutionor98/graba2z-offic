@@ -1,10 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import axios from "axios"
+import { Gift } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
 import { useLanguage } from "../context/LanguageContext"
+import { useCurrency } from "../context/CurrencyContext"
 import TranslatedText from "../components/TranslatedText"
+import config from "../config/config"
+import { getPendingReferralCode, setPendingReferralCode, clearPendingReferralCode } from "../context/ReferralContext"
 
 const Register = () => {
   const { getLocalizedPath } = useLanguage()
@@ -21,6 +26,48 @@ const Register = () => {
 
   const navigate = useNavigate()
   const { register } = useAuth()
+  const { formatPrice } = useCurrency()
+  const [searchParams] = useSearchParams()
+
+  // The code the visitor arrived with, and what it is worth. Checked against the server so
+  // a mistyped or retired link says so on the form rather than silently signing somebody
+  // up with no discount.
+  const [referral, setReferral] = useState(null)
+
+  useEffect(() => {
+    // A code in the URL wins over one parked earlier in the session: it is the link the
+    // visitor is on right now.
+    const fromUrl = searchParams.get("ref")
+    if (fromUrl) setPendingReferralCode(fromUrl)
+
+    const code = fromUrl || getPendingReferralCode()
+    if (!code) return
+
+    let cancelled = false
+    axios
+      .get(`${config.API_URL}/api/referrals/validate/${encodeURIComponent(code)}`)
+      .then(({ data }) => {
+        if (cancelled) return
+        if (data?.valid) {
+          setReferral({ ...data, code: data.code })
+        } else {
+          // A dead link is not worth an error message on a signup form -- it just does
+          // not earn anything -- but it must not stay parked and mis-attribute a later
+          // registration either.
+          setReferral(null)
+          clearPendingReferralCode()
+        }
+      })
+      .catch(() => {
+        // The programme could be unreachable rather than the code wrong, so the code is
+        // left in place and still sent; the server decides.
+        if (!cancelled) setReferral(null)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [searchParams])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -84,11 +131,18 @@ const Register = () => {
 
     try {
       const normalizedEmail = formData.email.trim().toLowerCase()
+      const referralCode = referral?.code || getPendingReferralCode()
+
       await register({
         name: formData.name.trim(),
         email: normalizedEmail,
         password: formData.password,
+        ...(referralCode ? { referralCode } : {}),
       })
+
+      // The invite has been used. Leaving it parked would attribute the next person to
+      // register on this device to the same friend.
+      clearPendingReferralCode()
 
       // Keep email available even if route state is dropped (e.g. redirects/reloads)
       sessionStorage.setItem("pendingVerificationEmail", normalizedEmail)
@@ -131,6 +185,34 @@ const Register = () => {
                 </Link>
               </p>
             </div>
+
+            {/* An invited visitor is told what the link is worth before they fill anything
+                in -- it is the reason they clicked it. */}
+            {referral?.valid && (
+              <div className="rounded-xl border border-lime-200 bg-lime-50 p-4">
+                <div className="flex items-start gap-3">
+                  <Gift size={20} className="mt-0.5 shrink-0 text-lime-600" />
+                  <div className="min-w-0 text-sm">
+                    <p className="font-bold text-gray-900">
+                      {referral.referrerName} <TranslatedText>invited you</TranslatedText>
+                    </p>
+                    <p className="mt-0.5 text-gray-700">
+                      <TranslatedText>Sign up to get</TranslatedText>{" "}
+                      <strong className="text-lime-800">
+                        {referral.reward?.discountType === "fixed"
+                          ? formatPrice(referral.reward?.discountValue)
+                          : `${referral.reward?.discountValue}%`}{" "}
+                        <TranslatedText>off your first order</TranslatedText>
+                      </strong>
+                      {referral.reward?.discountType !== "fixed" && referral.reward?.maxDiscountAed > 0 && (
+                        <> ({`up to ${formatPrice(referral.reward.maxDiscountAed)}`})</>
+                      )}
+                      .
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
               {errors.submit && (

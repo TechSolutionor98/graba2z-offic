@@ -20,6 +20,7 @@ import {
   X, 
   Calendar,
   Layers,
+  Gift,
 } from "lucide-react"
 import { useToast } from "../context/ToastContext"
 import { useLanguage } from "../context/LanguageContext"
@@ -30,6 +31,8 @@ import config from "../config/config"
 import LoyaltyPointsPanel from "../components/LoyaltyPointsPanel"
 import GrabCoin from "../components/GrabCoin"
 import { useLoyalty } from "../context/LoyaltyContext"
+import ReferralPanel from "../components/ReferralPanel"
+import { useReferral } from "../context/ReferralContext"
 
 const API_BASE_URL = `${config.API_URL}/api`
 const UAE_STATES = ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Umm Al Quwain", "Ras Al Khaimah", "Fujairah"]
@@ -44,6 +47,7 @@ const Profile = () => {
   // Tabs state
   const [activeTab, setActiveTab] = useState("overview")
   const { isEnabled: loyaltyEnabled, settings: loyaltySettings } = useLoyalty()
+  const { isEnabled: referralEnabled, settings: referralSettings } = useReferral()
 
   // Profile data state
   const [profile, setProfile] = useState({
@@ -456,6 +460,20 @@ const Profile = () => {
             </button>
           )}
 
+          {referralEnabled && referralSettings.showInProfile !== false && (
+            <button
+              onClick={() => setActiveTab("referrals")}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm ${
+                activeTab === "referrals"
+                  ? "bg-lime-50 text-lime-700 border-l-4 border-lime-600"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent"
+              }`}
+            >
+              <Gift size={18} />
+              <span>{referralSettings.programmeName || "Refer a Friend"}</span>
+            </button>
+          )}
+
           <button
             onClick={() => setActiveTab("danger-zone")}
             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all font-semibold text-sm ${
@@ -474,6 +492,9 @@ const Profile = () => {
           
           {/* TAB: LOYALTY */}
           {activeTab === "loyalty" && loyaltyEnabled && <LoyaltyPointsPanel />}
+
+          {/* TAB: REFERRALS */}
+          {activeTab === "referrals" && referralEnabled && <ReferralPanel />}
 
           {/* TAB: OVERVIEW */}
           {activeTab === "overview" && (
