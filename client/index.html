@@ -13,12 +13,31 @@
 
 
 
+<!-- Internal-page guard.
+     This shell is served for every path, admin routes included, so each
+     marketing/analytics tag below has to opt out of the staff pages itself.
+     Without it the admin URLs (and the record ids in them) are reported to
+     GTM/GA4, staff sessions pollute the reports, and Clarity records replays
+     of order and customer screens. -->
+<script>
+  window.dataLayer = window.dataLayer || []
+  window.__grabatozInternalPage = (function () {
+    try {
+      return /^\/(admin|superadmin|grabiansadmin|grabiansuperadmin)(\/|$)/.test(
+        (window.location.pathname || "").toLowerCase()
+      )
+    } catch (e) {
+      return false
+    }
+  })()
+</script>
+
 <!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+<script>if(!window.__grabatozInternalPage){(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-NVQM623J');</script>
+})(window,document,'script','dataLayer','GTM-NVQM623J');}</script>
 <!-- End Google Tag Manager -->
 
 
@@ -45,6 +64,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
         function loadThirdParty() {
           if (loaded) return
+          if (window.__grabatozInternalPage) return
           loaded = true
 
        
@@ -90,6 +110,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </script>
     <!-- Meta Pixel Code -->
     <script>
+      if (!window.__grabatozInternalPage) {
       !function(f,b,e,v,n,t,s)
       {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
       n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -100,6 +121,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       'https://connect.facebook.net/en_US/fbevents.js');
       fbq('init', '1074503198288217');
       fbq('track', 'PageView');
+      }
     </script>
     <!-- End Meta Pixel Code -->
   </head>
@@ -121,17 +143,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 
 
-
-    <!-- Google Tag Manager (noscript) -->
-    <noscript>
-      <iframe
-        src="https://www.googletagmanager.com/ns.html?id=GTM-NVQM623J"
-        height="0"
-        width="0"
-        style="display: none; visibility: hidden"
-      ></iframe>
-    </noscript>
-    <!-- End Google Tag Manager (noscript) -->
 
     <!-- ClickCease noscript fallback -->
     <noscript>
