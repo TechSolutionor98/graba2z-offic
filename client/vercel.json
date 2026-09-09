@@ -56,6 +56,10 @@
             "destination": "https://api.grabatoz.ae/:key.txt"
         },
         {
+            "source": "/acer-products/:path*",
+            "destination": "https://api.grabatoz.ae/acer-products/:path*"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
