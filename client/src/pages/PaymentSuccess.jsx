@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { useLanguage } from "../context/LanguageContext"
 import axios from "axios"
 import config from "../config/config"
+import { pushPurchase } from "../utils/gtmTracking"
 
 const PaymentSuccess = () => {
   const navigate = useNavigate()
@@ -51,43 +52,45 @@ const PaymentSuccess = () => {
     const total = urlParams.get("total") || urlParams.get("amount")
     const paymentMethod = urlParams.get("payment_method") || "online_payment"
 
-    if (orderId) {
-      // Get cart items from localStorage for detailed tracking
-      const cartItems = JSON.parse(localStorage.getItem("cart") || "[]")
+    if (!orderId) return
 
-      // Enhanced purchase event with detailed ecommerce data
-      window.dataLayer = window.dataLayer || []
-      window.dataLayer.push({
-        event: "purchase",
-        ecommerce: {
-          transaction_id: orderId,
-          affiliation: "Graba2z Online Store",
-          currency: "AED",
-          value: Number.parseFloat(total) || 0,
-          tax: 0, // VAT is included in prices
-          shipping: 0, // Will be calculated based on order
-          payment_type: paymentMethod,
-          items: cartItems.map((item) => ({
-            item_id: item._id,
-            item_name: item.name,
-            item_category: item.parentCategory?.name || item.category?.name || "Uncategorized",
-            item_brand: item.brand?.name || "Unknown",
-            price: item.offerPrice && item.offerPrice > 0 ? item.offerPrice : item.price,
-            quantity: item.quantity,
-          })),
-        },
+    let cancelled = false
+
+    const run = async () => {
+      // Let the gateway status land first, so the order we report is the one
+      // the customer was actually charged for.
+      await syncNgeniusPaymentStatus(orderId, paymentMethod)
+
+      const order = await fetchOrderDetails(orderId)
+      if (cancelled) return
+
+      // The saved order is the source of truth. Only if it cannot be read do we
+      // fall back to the redirect amount and the cart still in localStorage.
+      const fallbackItems = JSON.parse(localStorage.getItem("cart") || "[]")
+
+      // pushPurchase ignores an order id it has already reported, so a refresh
+      // of this page never counts the conversion twice.
+      pushPurchase({
+        orderId,
+        value: order?.totalPrice ?? (Number.parseFloat(total) || 0),
+        items: order?.orderItems?.length ? order.orderItems : fallbackItems,
+        paymentMethod: order?.paymentMethod || paymentMethod,
+        shipping: order?.shippingPrice || 0,
+        tax: 0, // VAT is included in the prices
+        coupon: order?.couponCode || null,
+        currency: order?.currency || "AED",
       })
-
-      console.log("Enhanced purchase tracked:", orderId, "Items:", cartItems.length) // For debugging
 
       // Clear cart after successful purchase tracking
       localStorage.removeItem("cart")
       localStorage.removeItem("guestInfo")
       localStorage.removeItem("savedShippingAddress")
+    }
 
-      // Fetch order details for Google Customer Reviews
-      fetchOrderDetails(orderId)
-      syncNgeniusPaymentStatus(orderId, paymentMethod).finally(() => fetchOrderDetails(orderId))
+    run()
+
+    return () => {
+      cancelled = true
     }
   }, [location])
 
@@ -98,8 +101,10 @@ const PaymentSuccess = () => {
       
       const { data } = await axios.get(`${config.API_URL}/api/orders/${orderId}`, { headers })
       setOrderData(data)
+      return data
     } catch (error) {
       console.error("Error fetching order details:", error)
+      return null
     }
   }
 

@@ -19,6 +19,7 @@ import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
 import { getFullImageUrl } from "../utils/imageUtils"
+import { pushPurchase } from "../utils/gtmTracking"
 import TranslatedText from "../components/TranslatedText"
 import PhoneInput from 'react-phone-number-input'
 import PromoPopup from "../components/PromoPopup"
@@ -890,32 +891,8 @@ const Checkout = () => {
       const createdOrder = orderRes.data
       const orderId = createdOrder._id
 
-      if (selectedPaymentMethod === "cod") {
-        window.dataLayer = window.dataLayer || []
-        window.dataLayer.push({
-          event: "purchase",
-          ecommerce: {
-            transaction_id: orderId,
-            affiliation: "Graba2z Online Store",
-            currency: "AED",
-            value: finalTotal,
-            tax: 0, // VAT included in prices
-            shipping: deliveryCharge,
-            coupon: coupon?.code || undefined,
-            payment_type: "cash_on_delivery",
-            items: cartItems.map((item) => ({
-              item_id: item._id,
-              item_name: item.name,
-              item_category: item.parentCategory?.name || item.category?.name || "Uncategorized",
-              item_brand: item.brand?.name || "Unknown",
-              price: item.offerPrice && item.offerPrice > 0 ? item.offerPrice : item.price,
-              quantity: item.quantity,
-            })),
-          },
-        })
-
-        console.log("Purchase tracked (COD):", orderId) // For debugging
-      }
+      // Card / Tamara / Tabby orders are tracked on the payment success page,
+      // once the gateway has confirmed the charge.
 
       // Now initiate payment based on selected method
       if (selectedPaymentMethod === "card") {
@@ -976,7 +953,9 @@ const Checkout = () => {
           lang: "en",
           merchant_code: "AE",
           merchant_urls: {
-            success: `${window.location.origin}${getLocalizedPath("/orders")}?success=true`,
+            // The order id has to travel back, or the returning page cannot confirm
+            // the order or report the purchase to GTM.
+            success: `${window.location.origin}${getLocalizedPath("/orders")}?success=true&orderId=${orderId}&payment_method=tabby`,
             cancel: `${window.location.origin}${getLocalizedPath("/checkout")}`,
             failure: `${window.location.origin}${getLocalizedPath("/checkout")}?error=payment_failed`,
           },
@@ -1269,6 +1248,20 @@ const Checkout = () => {
 
       if (selectedPaymentMethod === "cod") {
         // For COD, order is created directly
+
+        // Fire the GA4/Google Ads purchase event while the cart is still in
+        // hand -- once clearCart() runs there is nothing left to report.
+        pushPurchase({
+          orderId: paymentResult?.order?._id,
+          value: finalTotal,
+          items: cartItems,
+          paymentMethod: "cod",
+          shipping: deliveryCharge,
+          tax: 0, // VAT is included in the prices
+          coupon: coupon?.code || null,
+          currency: currentCountry?.currencyCode || "AED",
+        })
+
         clearCart()
         // The order just spent points and queued more as pending, so the header balance
         // would otherwise show the pre-checkout figure. The redemption is cleared too, or

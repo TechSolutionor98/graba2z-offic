@@ -200,7 +200,135 @@ export const trackAddPaymentInfo = (cartItems, paymentMethod, totalValue, checko
 }
 
 /**
- * Track purchase event
+ * Purchase tracking
+ *
+ * Everything that completes an order goes through `pushPurchase`. One order id
+ * can only ever produce one `purchase` event, so a refresh of the success page
+ * or a second trip through the gateway redirect does not double-count the
+ * conversion in GA4 / Google Ads.
+ */
+const PURCHASE_LOG_KEY = "gtm_tracked_purchases"
+const PURCHASE_LOG_LIMIT = 20
+
+const readTrackedPurchases = () => {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(PURCHASE_LOG_KEY) || "[]")
+    return Array.isArray(stored) ? stored : []
+  } catch (error) {
+    // A blocked or full localStorage must not stop the conversion from firing.
+    return []
+  }
+}
+
+const rememberTrackedPurchase = (orderId) => {
+  try {
+    const next = [...readTrackedPurchases().filter((id) => id !== orderId), orderId].slice(-PURCHASE_LOG_LIMIT)
+    window.localStorage.setItem(PURCHASE_LOG_KEY, JSON.stringify(next))
+  } catch (error) {
+    // Ignore -- worst case the event can fire twice on a refresh.
+  }
+}
+
+/**
+ * Accepts either a cart item (_id / offerPrice / brand objects) or a saved
+ * order item (product / price) and returns a GA4 ecommerce item.
+ */
+const normalizePurchaseItem = (item) => {
+  if (!item) return null
+
+  const product = item.product && typeof item.product === "object" ? item.product : null
+  const productId =
+    item.item_id || item._id || product?._id || (typeof item.product === "string" ? item.product : undefined)
+  const unitPrice = item.offerPrice && item.offerPrice > 0 ? item.offerPrice : item.price
+
+  return {
+    item_id: productId ? String(productId) : undefined,
+    item_name: item.item_name || item.name || product?.name || "Unknown Product",
+    item_category:
+      item.parentCategory?.name ||
+      item.category?.name ||
+      product?.parentCategory?.name ||
+      product?.category?.name ||
+      "Uncategorized",
+    item_brand: item.brand?.name || product?.brand?.name || "Unknown",
+    price: Number(unitPrice) || 0,
+    quantity: Number(item.quantity) || 1,
+  }
+}
+
+/**
+ * Push the GA4 `purchase` event for a confirmed order.
+ *
+ * @param {Object} order
+ * @param {string} order.orderId       - Real order id, sent as transaction_id
+ * @param {number} order.value         - Amount actually charged
+ * @param {Array}  order.items         - Cart items or saved order items
+ * @param {string} [order.paymentMethod]
+ * @param {number} [order.shipping]
+ * @param {number} [order.tax]
+ * @param {string} [order.coupon]
+ * @param {string} [order.currency]
+ * @param {string} [order.affiliation]
+ * @returns {boolean} true when the event was pushed, false when skipped
+ */
+export const pushPurchase = ({
+  orderId,
+  value,
+  items = [],
+  paymentMethod = "unknown",
+  shipping = 0,
+  tax = 0,
+  coupon = null,
+  currency = "AED",
+  affiliation = "Graba2z Online Store",
+}) => {
+  try {
+    if (!orderId) {
+      console.warn("pushPurchase: no order id, purchase not tracked")
+      return false
+    }
+
+    const transactionId = String(orderId)
+    if (readTrackedPurchases().includes(transactionId)) {
+      return false
+    }
+
+    initializeDataLayer()
+
+    // Clear the previous ecommerce object first, otherwise GA4 merges the
+    // leftover add_payment_info payload into this purchase.
+    window.dataLayer.push({ ecommerce: null })
+
+    window.dataLayer.push({
+      event: "purchase",
+      ecommerce: {
+        transaction_id: transactionId,
+        affiliation,
+        currency,
+        value: Number(value) || 0,
+        tax: Number(tax) || 0,
+        shipping: Number(shipping) || 0,
+        coupon: coupon || undefined,
+        payment_type: paymentMethod,
+        items: items.map(normalizePurchaseItem).filter(Boolean),
+      },
+    })
+
+    rememberTrackedPurchase(transactionId)
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("GTM purchase tracked:", transactionId, value, items.length)
+    }
+
+    return true
+  } catch (error) {
+    console.error("Error tracking purchase:", error)
+    return false
+  }
+}
+
+/**
+ * Track purchase event (positional-argument wrapper around pushPurchase)
  * @param {string} orderId - Order ID
  * @param {number} orderTotal - Total order value
  * @param {Array} items - Array of purchased items
@@ -219,25 +347,17 @@ export const trackPurchase = (
   shippingCost = 0,
   couponCode = null,
   affiliation = "Graba2z Online Store",
-) => {
-  const trackingItems = Array.isArray(items) ? formatCartItemsForTracking(items) : []
-
-  if (trackingItems.length > 0) {
-    trackEvent("purchase", {
-      ecommerce: {
-        transaction_id: orderId,
-        affiliation: affiliation,
-        currency: "AED",
-        value: orderTotal,
-        tax: taxAmount,
-        shipping: shippingCost,
-        coupon: couponCode,
-        payment_type: paymentMethod,
-        items: trackingItems,
-      },
-    })
-  }
-}
+) =>
+  pushPurchase({
+    orderId,
+    value: orderTotal,
+    items: Array.isArray(items) ? items : [],
+    paymentMethod,
+    tax: taxAmount,
+    shipping: shippingCost,
+    coupon: couponCode,
+    affiliation,
+  })
 
 /**
  * Track search event
@@ -400,6 +520,7 @@ export default {
   trackBeginCheckout,
   trackAddPaymentInfo,
   trackPurchase,
+  pushPurchase,
   trackSearch,
   trackViewItemList,
   trackSelectItem,

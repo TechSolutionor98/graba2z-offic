@@ -14,6 +14,7 @@ import autoTable from "jspdf-autotable"
 import { useReactToPrint } from "react-to-print"
 import { getOrderCurrencySymbol } from "../utils/paymentUtils"
 import config from "../config/config"
+import { pushPurchase } from "../utils/gtmTracking"
 
 const UserOrders = () => {
   const location = useLocation()
@@ -93,7 +94,8 @@ const UserOrders = () => {
     if (success === "true" && orderId) {
       setSuccessMessage(`Order #${orderId.slice(-6)} has been placed successfully!`)
 
-      // Initialize Google Customer Reviews opt-in module
+      // Also reports the purchase to GTM -- a gateway that sends the customer
+      // back here (Tabby) has no other place to fire it.
       initializeGCROptIn(orderId)
 
       // Clear success message after 5 seconds
@@ -112,6 +114,20 @@ const UserOrders = () => {
       const token = localStorage.getItem("token")
       const { data: order } = await axios.get(`${config.API_URL}/api/orders/${orderId}`, {
         headers: { Authorization: `Bearer ${token}` }
+      })
+
+      // Safety net for orders whose gateway returns the customer straight to
+      // this page. pushPurchase skips an order id it has already reported, so a
+      // COD order tracked at checkout is never counted twice.
+      pushPurchase({
+        orderId: order._id,
+        value: order.totalPrice,
+        items: order.orderItems,
+        paymentMethod: order.paymentMethod || "unknown",
+        shipping: order.shippingPrice || 0,
+        tax: 0, // VAT is included in the prices
+        coupon: order.couponCode || null,
+        currency: order.currency || "AED",
       })
 
       // Load Google API platform script if not already loaded
