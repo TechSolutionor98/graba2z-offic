@@ -6,6 +6,8 @@ import { Gift, Save, Users, CheckCircle2, Clock, Wallet } from "lucide-react"
 import config from "../../config/config"
 import { describeApiError } from "../../utils/apiError"
 
+import ReferralTypesSection from "../../components/admin/ReferralTypesSection"
+
 // Order statuses a referral can be tied to. Kept in step with the enum on the order
 // model -- an admin choosing a status that does not exist would silently stop the
 // programme paying out.
@@ -179,7 +181,10 @@ const AdminReferralSettings = () => {
           </div>
         </Section>
 
-        <Section title="The invited friend's discount" subtitle={refereeExample}>
+        {/* Referral Types / Tiers Management */}
+        <ReferralTypesSection />
+
+        <Section title="Base Invited Friend's Discount" subtitle={`${refereeExample} (Default when no tier assigned)`}>
           <div className="grid md:grid-cols-3 gap-4">
             <Field label="Discount type">
               <select

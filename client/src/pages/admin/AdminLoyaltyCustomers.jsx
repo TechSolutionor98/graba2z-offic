@@ -117,7 +117,17 @@ const AdminLoyaltyCustomers = () => {
                 {customers.map((customer) => (
                   <tr key={customer._id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{customer.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-gray-900">{customer.name}</div>
+                        {customer.loyaltyType && (
+                          <span
+                            className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-xs"
+                            style={{ backgroundColor: customer.loyaltyType.color || "#10b981" }}
+                          >
+                            {customer.loyaltyType.name}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500">{customer.email}</div>
                     </td>
                     <td className="px-4 py-3 text-right font-semibold text-gray-900">

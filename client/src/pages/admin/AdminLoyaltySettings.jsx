@@ -5,6 +5,7 @@ import axios from "axios"
 import { Award, Save, AlertTriangle, TrendingUp, Users, Wallet, Clock } from "lucide-react"
 import config from "../../config/config"
 import { describeApiError } from "../../utils/apiError"
+import LoyaltyTypesSection from "../../components/admin/LoyaltyTypesSection"
 
 // Every rate on this screen is expressed against AED, the currency product prices are
 // stored in. Other countries derive from it through their exchange rate, so one setting
@@ -169,7 +170,10 @@ const AdminLoyaltySettings = () => {
           </div>
         </Section>
 
-        <Section title="Earning" subtitle={earnExample}>
+        {/* Loyalty Types / Tiers Management */}
+        <LoyaltyTypesSection />
+
+        <Section title="Base Earning Rules" subtitle={`${earnExample} (Default when no tier assigned)`}>
           <div className="grid md:grid-cols-3 gap-4">
             <Field label="Points per 1 AED spent" hint="The base rate. Categories and products can multiply it.">
               <input

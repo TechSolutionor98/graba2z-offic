@@ -129,17 +129,31 @@ const ReferralPanel = () => {
             <Gift size={22} />
           </div>
           <div className="min-w-0">
-            <h2 className="text-lg font-extrabold text-gray-900">{settings.programmeName || "Refer a Friend"}</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg font-extrabold text-gray-900">{settings.programmeName || "Refer a Friend"}</h2>
+              {summary?.tier && (
+                <span
+                  className="px-2.5 py-0.5 rounded-full text-xs font-bold text-white shadow-xs"
+                  style={{ backgroundColor: summary.tier.color || "#3b82f6" }}
+                >
+                  {summary.tier.name} Tier
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-sm text-gray-700">
               Your friend gets{" "}
               <strong className="text-lime-800">
-                {describeOffer(settings.refereeDiscountType, settings.refereeDiscountValue, settings.refereeMaxDiscountAed)}
+                {describeOffer(
+                  summary?.tier?.refereeDiscountValue ? "percentage" : settings.refereeDiscountType,
+                  summary?.tier?.refereeDiscountValue || settings.refereeDiscountValue,
+                  settings.refereeMaxDiscountAed,
+                )}
               </strong>{" "}
               when they sign up with your link. Once their first order is delivered, you get{" "}
               <strong className="text-lime-800">
                 {describeOffer(
-                  settings.referrerDiscountType,
-                  settings.referrerDiscountValue,
+                  summary?.tier?.referrerDiscountValue ? "percentage" : settings.referrerDiscountType,
+                  summary?.tier?.referrerDiscountValue || settings.referrerDiscountValue,
                   settings.referrerMaxDiscountAed,
                 )}
               </strong>{" "}

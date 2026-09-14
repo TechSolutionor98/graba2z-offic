@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import axios from "axios"
-import { Clock, TrendingUp, Info } from "lucide-react"
+import { Clock, TrendingUp, Info, Zap } from "lucide-react"
 import config from "../config/config"
 import { useLoyalty } from "../context/LoyaltyContext"
 import GrabCoin from "./GrabCoin"
@@ -69,7 +69,19 @@ const LoyaltyPointsPanel = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl md:text-2xl font-extrabold text-gray-900">My {pointsName}</h2>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h2 className="text-xl md:text-2xl font-extrabold text-gray-900">My {pointsName}</h2>
+        {data?.tier && (
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white shadow-xs"
+            style={{ backgroundColor: data.tier.color || "#10b981" }}
+          >
+            <Zap size={13} />
+            <span>{data.tier.name} Member</span>
+            {data.tier.earnMultiplier > 1 && <span>({data.tier.earnMultiplier}x Points)</span>}
+          </div>
+        )}
+      </div>
 
       <div className="grid sm:grid-cols-3 gap-3">
         <div className="rounded-xl bg-gradient-to-br from-lime-500 to-green-600 text-white p-5">

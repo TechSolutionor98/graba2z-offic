@@ -223,7 +223,17 @@ const AdminReferrals = () => {
               return (
                 <tr key={referral._id} className="align-top">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{referral.referrer?.name || "—"}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-medium text-gray-900">{referral.referrer?.name || "—"}</p>
+                      {referral.referrer?.referralType && (
+                        <span
+                          className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold text-white shadow-xs"
+                          style={{ backgroundColor: referral.referrer.referralType.color || "#3b82f6" }}
+                        >
+                          {referral.referrer.referralType.name}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500">{referral.referrer?.email}</p>
                     <p className="mt-0.5 font-mono text-xs text-gray-400">{referral.code}</p>
                   </td>
