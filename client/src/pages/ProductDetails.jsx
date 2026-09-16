@@ -3517,7 +3517,7 @@ const ProductDetails = () => {
                     <button
                       onClick={handleAddToCart}
                       disabled={product.stockStatus === "Out of Stock"}
-                      className=" bg-lime-500 hover:bg-lime-600 disabled:bg-gray-400 text-white py-3 px-9 rounded-lg font-medium transition-colors"
+                      className=" bg-btn-primary hover:bg-btn-primary-hover disabled:bg-gray-400 text-btn-primary-text py-3 px-9 rounded-lg font-medium transition-colors"
                     >
                       <ShoppingCart size={22} className="mr-2" />
                     </button>
@@ -3541,7 +3541,7 @@ const ProductDetails = () => {
                     </button>
                     <button
                       disabled={product.stockStatus === "Out of Stock"}
-                      className="hidden sm:block w-full ml-1 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-3 py-3 rounded-lg font-medium transition-colors"
+                      className="hidden sm:block w-full ml-1 bg-btn-secondary hover:bg-btn-secondary-hover disabled:bg-gray-400 border border-btn-secondary-border text-btn-secondary-text px-3 py-3 rounded-lg font-medium transition-colors"
                       onClick={handleBuyNow}
                     >
                       <TranslatedText>Buy Now</TranslatedText>
@@ -3551,7 +3551,7 @@ const ProductDetails = () => {
 
                 <button
                   disabled={product.stockStatus === "Out of Stock"}
-                  className=" md:hidden lg:hidden w-full ml-1 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-3 py-3 rounded-lg font-medium transition-colors"
+                  className=" md:hidden lg:hidden w-full ml-1 bg-btn-secondary hover:bg-btn-secondary-hover disabled:bg-gray-400 border border-btn-secondary-border text-btn-secondary-text px-3 py-3 rounded-lg font-medium transition-colors"
                   onClick={handleBuyNow}
                 >
                   <TranslatedText>Buy Now</TranslatedText>

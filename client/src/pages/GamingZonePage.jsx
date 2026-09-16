@@ -129,10 +129,10 @@ const PriceFilter = ({ min, max, onApply, initialRange }) => {
         max={max}
         value={range}
         onChange={handleSliderChange}
-        trackStyle={[{ backgroundColor: "#84cc16" }]}
+        trackStyle={[{ backgroundColor: "rgb(var(--brand-500))" }]}
         handleStyle={[
-          { backgroundColor: "#84cc16", borderColor: "#84cc16" },
-          { backgroundColor: "#84cc16", borderColor: "#84cc16" },
+          { backgroundColor: "rgb(var(--brand-500))", borderColor: "rgb(var(--brand-500))" },
+          { backgroundColor: "rgb(var(--brand-500))", borderColor: "rgb(var(--brand-500))" },
         ]}
         railStyle={{ backgroundColor: "#e5e7eb" }}
       />

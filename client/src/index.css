@@ -2,6 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+   Theme variables
+   ---------------------------------------------------------------------------
+   Every themeable colour in tailwind.config.js reads one of these. The values
+   below are the palette the site shipped with, so an untouched install -- or a
+   browser that never reaches /api/theme -- renders exactly as before.
+
+   ThemeProvider (src/context/ThemeContext.jsx) overwrites these on <html> at
+   runtime from the admin's saved theme. It does that on storefront routes only:
+   /admin and /superadmin always fall back to the values here, so a colour
+   picked badly in the admin panel can never make the admin panel unreadable.
+
+   Values are "r g b" channel triplets, not hex, because Tailwind needs
+   rgb(var(--x) / <alpha-value>) for opacity modifiers (bg-brand-500/40).
+   --------------------------------------------------------------------------- */
+:root {
+  /* Brand ramp -- Tailwind's stock `lime`, which `lime-*` and `brand-*` both use */
+  --brand-50: 247 254 231;
+  --brand-100: 236 252 203;
+  --brand-200: 217 249 157;
+  --brand-300: 190 242 100;
+  --brand-400: 163 230 53;
+  --brand-500: 132 204 22;
+  --brand-600: 101 163 13;
+  --brand-700: 77 124 15;
+  --brand-800: 63 98 18;
+  --brand-900: 54 83 20;
+  --brand-950: 26 46 5;
+
+  /* Header */
+  --header-bg: 255 255 255;
+  --header-text: 55 65 81;
+  --header-icon: 55 65 81;
+  --header-border: 0 0 0;
+  --header-search-bg: 132 204 22;
+  --header-search-hover-bg: 101 163 13;
+  --header-search-text: 255 255 255;
+  --header-badge-bg: 239 68 68;
+  --header-badge-text: 255 255 255;
+
+  /* Category navigation bar */
+  --nav-bg: 132 204 22;
+  --nav-text: 255 255 255;
+  --nav-hover-bg: 101 163 13;
+  --nav-hover-text: 255 255 255;
+  --nav-indicator: 255 255 255;
+  --nav-btn-bg: 255 255 255;
+  --nav-btn-text: 132 204 22;
+  --nav-dropdown-bg: 255 255 255;
+  --nav-dropdown-text: 55 65 81;
+  --nav-dropdown-hover-bg: 243 244 246;
+  --nav-dropdown-hover-text: 17 24 39;
+
+  /* Footer -- dark panel on desktop, white accordion on mobile */
+  --footer-bg: 31 31 57;
+  --footer-text: 255 255 255;
+  --footer-heading: 255 255 255;
+  --footer-link: 255 255 255;
+  --footer-link-hover: 163 230 53;
+  --footer-border: 229 231 235;
+  --footer-bottom-bg: 31 31 57;
+  --footer-bottom-text: 255 255 255;
+  --footer-mobile-bg: 255 255 255;
+  --footer-mobile-text: 55 65 81;
+  --footer-mobile-heading: 17 24 39;
+  --footer-mobile-link-hover: 249 115 22;
+
+  /* Buttons */
+  --btn-primary-bg: 132 204 22;
+  --btn-primary-hover-bg: 101 163 13;
+  --btn-primary-text: 255 255 255;
+  --btn-secondary-bg: 234 88 12;
+  --btn-secondary-hover-bg: 194 65 12;
+  --btn-secondary-text: 255 255 255;
+  --btn-secondary-border: 234 88 12;
+
+  /* Page surfaces and typography */
+  --page-bg: 255 255 255;
+  --page-surface: 249 250 251;
+  --page-text: 55 65 81;
+  --page-heading: 17 24 39;
+  --page-muted: 107 114 128;
+  --page-link: 101 163 13;
+  --page-link-hover: 77 124 15;
+  --page-border: 229 231 235;
+  --page-price: 220 38 38;
+  --page-old-price: 156 163 175;
+}
+
+/* Content links.
+   An element selector, so it only reaches links that carry no colour class of
+   their own -- any Tailwind `text-*` class has higher specificity and still
+   wins. That keeps this from repainting buttons and nav items that happen to be
+   anchors, while giving plain in-content links a themeable colour. */
+main a:not([class*="text-"]):not([class*="bg-"]) {
+  color: rgb(var(--page-link));
+}
+
+main a:not([class*="text-"]):not([class*="bg-"]):hover {
+  color: rgb(var(--page-link-hover));
+}
+
 /* RTL Support for Arabic Language */
 [dir="rtl"] {
   text-align: right;
@@ -132,10 +234,10 @@
   height: 72px;
   border-radius: 50%;
   border: 6px solid #e5e7eb;
-  border-top-color: #84cc16;
+  border-top-color: rgb(var(--brand-500));
   border-right-color: #16a34a;
   animation: home-loader-spin 0.9s linear infinite;
-  box-shadow: 0 0 0 8px rgba(132, 204, 22, 0.12);
+  box-shadow: 0 0 0 8px rgb(var(--brand-500) / 0.12);
 }
 
 @keyframes home-loader-spin {

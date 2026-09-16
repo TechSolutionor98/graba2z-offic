@@ -8,6 +8,7 @@ import config from "../config/config"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { generateShopURL } from "../utils/urlUtils"
 import { useAuth } from "../context/AuthContext"
+import { useTheme } from "../context/ThemeContext"
 import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
 import { useLanguage } from "../context/LanguageContext"
@@ -182,6 +183,7 @@ const MobileSubCategoryItem = ({
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
+  const { logos } = useTheme()
   const { cartCount } = useCart()
   const { wishlist } = useWishlist()
   const { currentLanguage, getLocalizedPath } = useLanguage()
@@ -862,13 +864,22 @@ const Navbar = () => {
   return (
     <>
       {/* Desktop Navbar - Hidden on Mobile */}
-      <header className="hidden md:block bg-white shadow-sm sticky top-0 pt-4 z-50 w-full">
+      <header className="hidden md:block bg-header-bg text-header-text shadow-sm sticky top-0 pt-4 z-50 w-full">
         <div className="w-full max-w-[1360px] mx-auto space-y-4">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 h-14 xl:h-18 2xl:h-20">
             {/* Logo - Exact Grabatoz Style */}
             <Link to={getLocalizedPath("/")} className="flex items-center space-x-2">
-              <div className="w-40 xl:w-44 2xl:w-48 h-auto flex items-center justify-center">
-                <img src="/admin-logo.svg" alt="Logo" width="176" height="60" className="w-full h-full" />
+              <div
+                className="h-auto flex items-center justify-center"
+                style={{ width: `${logos.headerDesktopWidth || 176}px` }}
+              >
+                <img
+                  src={logos.headerDesktop || "/admin-logo.svg"}
+                  alt={logos.altText || "Logo"}
+                  width={logos.headerDesktopWidth || 176}
+                  height="60"
+                  className="w-full h-full object-contain"
+                />
               </div>
             </Link>
 
@@ -913,7 +924,7 @@ const Navbar = () => {
                         </svg>
                       </span>
                     )}
-                    <button type="submit" className="px-3 xl:px-3.5 2xl:px-4 py-3 xl:py-3.5 2xl:py-4 bg-lime-500 text-white hover:bg-green-600">
+                    <button type="submit" className="px-3 xl:px-3.5 2xl:px-4 py-3 xl:py-3.5 2xl:py-4 bg-header-search text-header-search-text hover:bg-header-search-hover">
                       <Search className="w-4 h-4 xl:w-[18px] xl:h-[18px] 2xl:w-5 2xl:h-5" />
                     </button>
                   </div>
@@ -965,10 +976,10 @@ const Navbar = () => {
             {/* Right Side Icons - Exact Grabatoz Style */}
             <div className="flex items-center space-x-2 xl:space-x-3 2xl:space-x-4">
               {/* Wishlist */}
-              <Link to={getLocalizedPath("/wishlist")} className="relative p-2 xl:p-2.5 2xl:p-3 border border-black" aria-label="Wishlist">
-                <Heart className="w-[18px] h-[18px] xl:w-[19px] xl:h-[19px] 2xl:w-5 2xl:h-5 text-gray-600" />
+              <Link to={getLocalizedPath("/wishlist")} className="relative p-2 xl:p-2.5 2xl:p-3 border border-header-border" aria-label="Wishlist">
+                <Heart className="w-[18px] h-[18px] xl:w-[19px] xl:h-[19px] 2xl:w-5 2xl:h-5 text-header-icon" />
                 {wishlist.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 bg-header-badge text-header-badge-text text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                     {wishlist.length}
                   </span>
                 )}
@@ -978,36 +989,36 @@ const Navbar = () => {
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="p-2 xl:p-2.5 2xl:p-3 border border-black"
+                  className="p-2 xl:p-2.5 2xl:p-3 border border-header-border"
                   ref={profileButtonRef}
                 >
-                  <User className="w-[18px] h-[18px] xl:w-[19px] xl:h-[19px] 2xl:w-5 2xl:h-5 text-gray-600" />
+                  <User className="w-[18px] h-[18px] xl:w-[19px] xl:h-[19px] 2xl:w-5 2xl:h-5 text-header-icon" />
                 </button>
 
                 {isProfileOpen && (
                   <div
                     ref={profileRef}
-                    className="absolute right-0 w-48 py-2 mt-2 bg-white rounded-md shadow-xl z-20 border"
+                    className="absolute right-0 w-48 py-2 mt-2 bg-nav-dropdown text-nav-dropdown-text rounded-md shadow-xl z-20 border border-header-border"
                   >
                     {isAuthenticated ? (
                       <>
                         <Link
                           to={getLocalizedPath("/profile")}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-nav-dropdown-text hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           My Profile
                         </Link>
                         <Link
                           to={getLocalizedPath("/orders")}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-nav-dropdown-text hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           My Orders
                         </Link>
                         <Link
                           to={getLocalizedPath("/track-order")}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-nav-dropdown-text hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           Track Order
@@ -1015,7 +1026,7 @@ const Navbar = () => {
                         <hr className="my-1" />
                         <button
                           onClick={handleLogout}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block w-full text-left px-4 py-2 text-sm text-nav-dropdown-text hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text"
                         >
                           Logout
                         </button>
@@ -1024,21 +1035,21 @@ const Navbar = () => {
                       <>
                         <Link
                           to={getLocalizedPath("/login")}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-nav-dropdown-text hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           Login
                         </Link>
                         <Link
                           to={getLocalizedPath("/register")}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-nav-dropdown-text hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           Register
                         </Link>
                         <Link
                           to={getLocalizedPath("/track-order")}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="block px-4 py-2 text-sm text-nav-dropdown-text hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text"
                           onClick={() => setIsProfileOpen(false)}
                         >
                           Track Order
@@ -1051,9 +1062,9 @@ const Navbar = () => {
 
               {/* Cart */}
               <Link to={getLocalizedPath("/cart")} className="relative p-2 xl:p-2.5 2xl:p-3">
-                <ShoppingCart className="w-6 h-6 xl:w-7 xl:h-7 2xl:w-[30px] 2xl:h-[30px] text-gray-600" />
+                <ShoppingCart className="w-6 h-6 xl:w-7 xl:h-7 2xl:w-[30px] 2xl:h-[30px] text-header-icon" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 bg-header-badge text-header-badge-text text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                     {cartCount}
                   </span>
                 )}
@@ -1068,7 +1079,7 @@ const Navbar = () => {
           </div>
 
           {/* Navigation Menu - Dynamic Categories with Dropdowns */}
-          <div className="bg-lime-500 mt-3 xl:mt-3.5 2xl:mt-4 flex relative">
+          <div className="bg-nav-bg text-nav-text mt-3 xl:mt-3.5 2xl:mt-4 flex relative">
           <div className="w-full">
             <div className="grid grid-cols-[auto,auto,1fr,auto,auto] items-center h-10 xl:h-11 2xl:h-12 px-4 xl:px-8 2xl:px-12 gap-2 xl:gap-2.5 2xl:gap-3">
               {/* Toggle Button for All Categories */}
@@ -1087,7 +1098,7 @@ const Navbar = () => {
                 {/* Desktop Category Dropdown (horizontal cascade) */}
                 {isDesktopCategoryDropdownOpen && (
                   <div
-                    className="absolute left-0 top-full mt-2 bg-white shadow-2xl rounded-lg z-[70] border border-gray-200 overflow-hidden max-w-[calc(100vw-32px)]"
+                    className="absolute left-0 top-full mt-2 bg-nav-dropdown text-nav-dropdown-text shadow-2xl rounded-lg z-[70] border border-page-border overflow-hidden max-w-[calc(100vw-32px)]"
                     onMouseLeave={() => setDesktopCascadeIds([])}
                   >
                     <div className="flex max-h-[calc(100vh-160px)] overflow-x-auto">
@@ -1105,7 +1116,7 @@ const Navbar = () => {
                                   to={generateShopURL({ parentCategory: getNodeIdentifier(parentCategory) })}
                                   onMouseEnter={() => setDesktopCascadeIds([parentCategory._id])}
                                   onClick={closeDesktopCategoryDropdown}
-                                  className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-semibold text-gray-800 hover:bg-gray-100 transition ${
+                                  className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-semibold text-nav-dropdown-text hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text transition ${
                                     isActive ? "bg-gray-50" : ""
                                   }`}
                                 >
@@ -1182,7 +1193,7 @@ const Navbar = () => {
                                           })
                                         }}
                                         onClick={closeDesktopCategoryDropdown}
-                                        className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition ${
+                                        className={`flex items-center justify-between px-3 py-2.5 rounded-md text-sm text-nav-dropdown-text hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text transition ${
                                           isActive ? "bg-gray-50" : ""
                                         }`}
                                       >
@@ -1206,7 +1217,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={scrollPrev}
-                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full bg-white text-lime-500 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full bg-nav-btn text-nav-btn-text hover:opacity-80 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 disabled={!categoryScrollState.canScrollPrev}
                 aria-label="Previous categories"
               >
@@ -1224,7 +1235,7 @@ const Navbar = () => {
                     return (
                       <div
                         key={parentCategory._id}
-                        className="relative flex items-center h-full flex-shrink-0"
+                        className="relative flex items-center h-full flex-shrink-0 hover:bg-nav-hover transition-colors"
                         onMouseEnter={(e) => {
                           if (categoryTimeoutRef.current) {
                             clearTimeout(categoryTimeoutRef.current)
@@ -1258,19 +1269,19 @@ const Navbar = () => {
                       >
                         <Link
                           to={generateShopURL({ parentCategory: getNodeIdentifier(parentCategory) })}
-                          className={`text-white font-medium whitespace-nowrap text-[clamp(0.7rem,0.9vw,0.875rem)] px-1 py-2 text-center w-full leading-tight ${
+                          className={`text-nav-text hover:text-nav-hover-text font-medium whitespace-nowrap text-[clamp(0.7rem,0.9vw,0.875rem)] px-1 py-2 text-center w-full leading-tight ${
                             isActiveCategory ? "font-semibold" : ""
                           }`}
                         >
                           <TranslatedText text={parentCategory.name} sourceDoc={parentCategory} fieldName="name" />
                         </Link>
                         {isActiveCategory && (
-                          <span className="pointer-events-none absolute bottom-0 left-1 right-1 h-1.5 rounded-full bg-white shadow-sm" />
+                          <span className="pointer-events-none absolute bottom-0 left-1 right-1 h-1.5 rounded-full bg-nav-indicator shadow-sm" />
                         )}
                         {/* Mega menu panel: show all level-1 columns with their level-2 items at once */}
                         {hoveredCategory === parentCategory._id && categorySubCategories.length > 0 && (
                           <div
-                            className="fixed bg-white mt-1 shadow-2xl rounded-lg p-5 z-[60] border border-gray-100 overflow-y-auto"
+                            className="fixed bg-nav-dropdown text-nav-dropdown-text mt-1 shadow-2xl rounded-lg p-5 z-[60] border border-page-border overflow-y-auto"
                             role="menu"
                             aria-label={`${parentCategory.name} menu`}
                             style={{...getCategoryDropdownStyle(activeCategoryRect), maxWidth: 'calc(100vw - 32px)'}}
@@ -1401,20 +1412,20 @@ const Navbar = () => {
 
                   {/* Static Category - Add your custom category here */}
                   <div 
-                    className="relative flex items-center h-full flex-shrink-0"
+                    className="relative flex items-center h-full flex-shrink-0 hover:bg-nav-hover transition-colors"
                     onMouseEnter={() => setIsStaticCategoryHovered(true)}
                     onMouseLeave={() => setIsStaticCategoryHovered(false)}
                   >
                     <a
                       href={getLocalizedPath("/offers/gaming-zone")} // ← Change this to your custom link
-                      className={`text-white font-medium whitespace-nowrap text-[clamp(0.7rem,0.9vw,0.875rem)] px-1 py-2 text-center w-full leading-tight ${
+                      className={`text-nav-text hover:text-nav-hover-text font-medium whitespace-nowrap text-[clamp(0.7rem,0.9vw,0.875rem)] px-1 py-2 text-center w-full leading-tight ${
                         isStaticCategoryHovered ? "font-semibold" : ""
                       }`}
                     >
                       <TranslatedText>Gaming Zone</TranslatedText> {/* ← Change this to your desired name */}
                     </a>
                     {isStaticCategoryHovered && (
-                      <span className="pointer-events-none absolute bottom-0 left-1 right-1 h-1.5 rounded-full bg-white shadow-sm" />
+                      <span className="pointer-events-none absolute bottom-0 left-1 right-1 h-1.5 rounded-full bg-nav-indicator shadow-sm" />
                     )}
                   </div>
                 </div>
@@ -1422,7 +1433,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={scrollNext}
-                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full bg-white text-lime-500 hover:bg-gray-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="hidden md:inline-flex items-center justify-center w-8 h-8 xl:w-8.5 xl:h-8.5 2xl:w-9 2xl:h-9 rounded-full bg-nav-btn text-nav-btn-text hover:opacity-80 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 disabled={!categoryScrollState.canScrollNext}
                 aria-label="Next categories"
               >
@@ -1452,7 +1463,7 @@ const Navbar = () => {
     </header>
 
       {/* Mobile Navbar - Shown only on Mobile */}
-      <header className="md:hidden bg-white shadow-sm sticky top-0 z-50">
+      <header className="md:hidden bg-header-bg text-header-text shadow-sm sticky top-0 z-50">
         {/* Mobile Top Bar */}
         <div className="flex items-center justify-between px-4 py-3">
           {/* Hamburger Menu */}
@@ -1462,7 +1473,13 @@ const Navbar = () => {
 
           {/* Logo */}
           <Link to={getLocalizedPath("/")} className="flex items-center">
-            <img src="/admin-logo.svg" alt="Logo" width="132" height="32" className="h-8 w-auto" />
+            <img
+              src={logos.headerMobile || "/admin-logo.svg"}
+              alt={logos.altText || "Logo"}
+              width={logos.headerMobileWidth || 132}
+              height="32"
+              className="h-8 w-auto object-contain"
+            />
           </Link>
 
           {/* Search Icon */}
@@ -1531,7 +1548,7 @@ const Navbar = () => {
                       </svg>
                     </span>
                   )}
-                  <button type="submit" className="px-4 py-2 bg-lime-500 text-white rounded hover:bg-green-600">
+                  <button type="submit" className="px-4 py-2 bg-header-search text-header-search-text rounded hover:bg-header-search-hover">
                     <Search size={18} />
                   </button>
                 </div>
@@ -1596,7 +1613,7 @@ const Navbar = () => {
           {/* Drawer */}
           <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
             {/* Drawer Header */}
-            <div className="flex items-center justify-between p-4 bg-lime-500 text-white">
+            <div className="flex items-center justify-between p-4 bg-nav-bg text-nav-text">
               <div className="flex items-center">
                 <UserCircle size={24} className="text-white mr-2" />
                 {isAuthenticated ? (
@@ -1799,7 +1816,7 @@ const Navbar = () => {
           >
             <Heart size={20} className="" />
             {wishlist.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+              <span className="absolute -top-1 -right-1 bg-header-badge text-header-badge-text text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                 {wishlist.length}
               </span>
             )}

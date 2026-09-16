@@ -15,8 +15,8 @@
 
 .PhoneInputInput:focus {
   outline: none;
-  border-color: #84cc16;
-  box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.1);
+  border-color: rgb(var(--brand-500));
+  box-shadow: 0 0 0 3px rgb(var(--brand-500) / 0.1);
 }
 
 .PhoneInputCountry {

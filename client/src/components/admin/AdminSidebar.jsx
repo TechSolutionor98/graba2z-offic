@@ -719,6 +719,12 @@ const AdminSidebar = () => {
       permission: "settings",
     },
     {
+      title: "Website Appearance",
+      icon: Palette,
+      path: "/admin/appearance",
+      permission: "settings",
+    },
+    {
       title: "Admin Settings",
       icon: Settings,
       path: "/admin/settings",

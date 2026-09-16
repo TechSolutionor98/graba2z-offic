@@ -101,6 +101,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     description: "",
     shortDescription: "",
     buyingPrice: "",
+    wholesalePrice: "",
     price: "", // This will be the final calculated price (base + tax)
     offerPrice: "",
     discount: "",
@@ -426,6 +427,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           description: product.description || "",
           shortDescription: product.shortDescription || "",
           buyingPrice: product.buyingPrice || "",
+          wholesalePrice: product.wholesalePrice ?? "",
           price: product.price || "",
           offerPrice: product.offerPrice || "",
           discount: product.discount || "",
@@ -960,6 +962,12 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       setLoading(false)
       return
     }
+    // Wholesale price is optional, so only check it when something was typed.
+    if (String(formData.wholesalePrice).trim() !== "" && Number(formData.wholesalePrice) < 0) {
+      alert("Wholesale price cannot be less than 0.")
+      setLoading(false)
+      return
+    }
     try {
       let taxValue = formData.tax
       if (!taxValue || taxValue === "0" || taxValue === 0) {
@@ -983,6 +991,10 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         subCategory3: formData.subCategory3 || null,
         subCategory4: formData.subCategory4 || null,
         buyingPrice: Number.parseFloat(formData.buyingPrice) || 0,
+        wholesalePrice:
+          String(formData.wholesalePrice).trim() === ""
+            ? null
+            : Number.parseFloat(formData.wholesalePrice),
         price: finalBasePrice, // Save as-is (tax-inclusive; no re-add)
         offerPrice: finalOfferPrice, // Save as-is (tax-inclusive; no re-add)
         discount: Number.parseFloat(formData.discount) || 0,
@@ -1330,7 +1342,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         </div>
 
         {/* Pricing */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Buying Price{!product && <span className="text-red-500">*</span>}
@@ -1345,6 +1357,22 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               step="0.01"
               min="0"
               {...(!product ? { required: true } : {})}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Wholesale Price (AED) <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="number"
+              name="wholesalePrice"
+              value={formData.wholesalePrice}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Leave blank if not set"
+              step="0.01"
+              min="0"
             />
           </div>
 

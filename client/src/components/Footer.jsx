@@ -7,6 +7,8 @@ import { faPinterest } from "@fortawesome/free-brands-svg-icons"
 import { faTiktok } from "@fortawesome/free-brands-svg-icons"
 import { faYoutube } from "@fortawesome/free-brands-svg-icons"
 import { useState, useEffect } from "react"
+import { useTheme } from "../context/ThemeContext"
+
 import { generateShopURL } from "../utils/urlUtils"
 import { getCategoryTreeCached } from "../services/categoryTreeCache"
 import { useLanguage } from "../context/LanguageContext"
@@ -15,6 +17,7 @@ import NewsletterModal from "./NewsletterModal";
 import TranslatedText from "./TranslatedText";
 
 const Footer = ({ className = "" }) => {
+  const { logos } = useTheme()
   const { getLocalizedPath } = useLanguage()
   // State for mobile accordion sections
   const [openSections, setOpenSections] = useState({
@@ -129,14 +132,21 @@ const Footer = ({ className = "" }) => {
     <>
       {/* Desktop Footer - Hidden on mobile */}
       <footer className={`hidden md:block text-white  ${className}`}>
-        <div className="w-full bg-[#1F1F39]">
+        <div className="w-full bg-footer-bg text-footer-text">
           <div className="max-w-[1440px] mx-auto pt-8 pb-9 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
             <div className={`grid ${columnCount === 6 ? 'grid-cols-6' : 'grid-cols-5'} gap-4 lg:gap-6 xl:gap-8`}>
               {/* Column 1 - Newsletter Subscription */}
               <div className="col-span-1 flex flex-col">
                 {/* Logo and Heading */}
                 <h3 className="text-lg lg:text-xl xl:text-2xl font-bold mb-3 lg:mb-4">
-                  <img src="/logo.png" alt="Logo" width="128" height="44" className="w-24 lg:w-28 xl:w-32 h-auto" />
+                  <img
+                    src={logos.footer || "/logo.png"}
+                    alt={logos.altText || "Logo"}
+                    width={logos.footerWidth || 128}
+                    height="44"
+                    className="h-auto object-contain"
+                    style={{ width: `${logos.footerWidth || 128}px`, maxWidth: "100%" }}
+                  />
                 </h3>
                 {/* Text */}
                 <p className="text-xs lg:text-sm text-white mb-3 lg:mb-4"><TranslatedText>Subscribe to our newsletter</TranslatedText></p>
@@ -173,27 +183,27 @@ const Footer = ({ className = "" }) => {
 
                 {/* Social Icons */}
                 <div className="flex flex-wrap gap-2 lg:gap-3 pl-0 lg:pl-2">
-                  <a href="https://www.facebook.com/grabatozae/" target="_blank" className="text-white hover:text-lime-400">
+                  <a href="https://www.facebook.com/grabatozae/" target="_blank" className="text-white hover:text-footer-link-hover">
                     <Facebook className="w-4 h-4 lg:w-5 lg:h-5" />
                   </a>
-                  <a href="https://x.com/GrabAtoz" target="_blank" className="text-white hover:text-lime-400 transition-colors duration-200 ease-in-out" aria-label="X (Twitter)">
+                  <a href="https://x.com/GrabAtoz" target="_blank" className="text-white hover:text-footer-link-hover transition-colors duration-200 ease-in-out" aria-label="X (Twitter)">
                     <svg viewBox="0 0 24 24" className="w-4 h-4 lg:w-5 lg:h-5 fill-current" role="img">
                       <path d="M18.25 2h3.5l-7.66 8.73L24 22h-6.87l-5.02-6.58L6.3 22H2.8l8.2-9.34L0 2h7.04l4.54 6.02L18.25 2z" />
                     </svg>
                   </a>
-                  <a href="https://www.instagram.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
+                  <a href="https://www.instagram.com/grabatoz/" target="_blank" className="text-white hover:text-footer-link-hover">
                     <Instagram className="w-4 h-4 lg:w-5 lg:h-5" />
                   </a>
-                  <a href="https://www.linkedin.com/company/grabatozae" target="_blank" className="text-white hover:text-lime-400">
+                  <a href="https://www.linkedin.com/company/grabatozae" target="_blank" className="text-white hover:text-footer-link-hover">
                     <Linkedin className="w-4 h-4 lg:w-5 lg:h-5" />
                   </a>
-                  <a href="https://www.pinterest.com/grabatoz/" target="_blank" className="text-white hover:text-lime-400">
+                  <a href="https://www.pinterest.com/grabatoz/" target="_blank" className="text-white hover:text-footer-link-hover">
                     <FontAwesomeIcon icon={faPinterest} className="w-4 h-4 lg:w-5 lg:h-5" />
                   </a>
-                  <a href="https://www.tiktok.com/@grabatoz" target="_blank" className="text-white hover:text-lime-400">
+                  <a href="https://www.tiktok.com/@grabatoz" target="_blank" className="text-white hover:text-footer-link-hover">
                     <FontAwesomeIcon icon={faTiktok} className="w-4 h-4 lg:w-5 lg:h-5" />
                   </a>
-                  <a href="https://www.youtube.com/@grabAtoZ" target="_blank" className="text-white hover:text-lime-400">
+                  <a href="https://www.youtube.com/@grabAtoZ" target="_blank" className="text-white hover:text-footer-link-hover">
                     <FontAwesomeIcon icon={faYoutube} className="w-4 h-4 lg:w-5 lg:h-5" />
                   </a>
 
@@ -242,10 +252,10 @@ const Footer = ({ className = "" }) => {
 
               {/* Column 2 - Top Categories */}
               <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>Top Categories</TranslatedText></h3>
-                <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4 text-footer-heading"><TranslatedText>Top Categories</TranslatedText></h3>
+                <ul className="space-y-1 lg:space-y-1.5 text-footer-link text-[10px] lg:text-xs xl:text-sm">
                   <li>
-                    <Link to={getLocalizedPath("/offers/gaming-zone")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/offers/gaming-zone")} className="hover:text-footer-link-hover">
                       <TranslatedText>Gaming Zone</TranslatedText>
                     </Link>
                   </li>
@@ -254,7 +264,7 @@ const Footer = ({ className = "" }) => {
                     .slice(0, 9)
                     .map((category) => (
                     <li key={category._id}>
-                      <Link to={generateShopURL({ parentCategory: category.slug || category.name })} className="hover:text-lime-400">
+                      <Link to={generateShopURL({ parentCategory: category.slug || category.name })} className="hover:text-footer-link-hover">
                         <TranslatedText text={category.name} sourceDoc={category} fieldName="name" />
                       </Link>
                     </li>
@@ -264,8 +274,8 @@ const Footer = ({ className = "" }) => {
 
               {/* Column 3 - More Categories */}
               <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>More Categories</TranslatedText></h3>
-                <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4 text-footer-heading"><TranslatedText>More Categories</TranslatedText></h3>
+                <ul className="space-y-1 lg:space-y-1.5 text-footer-link text-[10px] lg:text-xs xl:text-sm">
                   {subCategories
                     .filter((subCategory) => {
                       const level = Number(subCategory.level || 1)
@@ -281,7 +291,7 @@ const Footer = ({ className = "" }) => {
                       <Link to={generateShopURL({
                         parentCategory: subCategory._footerParentCategorySlug || subCategory._footerParentCategoryName,
                         subcategory: subCategory.slug || subCategory.name
-                      })} className="hover:text-lime-400">
+                      })} className="hover:text-footer-link-hover">
                         <TranslatedText text={subCategory.name} sourceDoc={subCategory} fieldName="name" />
                       </Link>
                     </li>
@@ -291,46 +301,46 @@ const Footer = ({ className = "" }) => {
 
               {/* Column 4 - Support */}
               <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>Legal</TranslatedText></h3>
-                <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4 text-footer-heading"><TranslatedText>Legal</TranslatedText></h3>
+                <ul className="space-y-1 lg:space-y-1.5 text-footer-link text-[10px] lg:text-xs xl:text-sm">
                   <li>
-                    <Link to={getLocalizedPath("/refund-return")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/refund-return")} className="hover:text-footer-link-hover">
                       <TranslatedText>Refund and Return</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/cookies-policy")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/cookies-policy")} className="hover:text-footer-link-hover">
                       <TranslatedText>Cookies Policy</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/terms-conditions")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/terms-conditions")} className="hover:text-footer-link-hover">
                       <TranslatedText>Terms & Conditions</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/privacy-policy")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/privacy-policy")} className="hover:text-footer-link-hover">
                       <TranslatedText>Privacy Policy</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/disclaimer-policy")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/disclaimer-policy")} className="hover:text-footer-link-hover">
                       <TranslatedText>Disclaimer Policy</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/track-order")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/track-order")} className="hover:text-footer-link-hover">
                       <TranslatedText>Track Order</TranslatedText>
                     </Link>
                   </li>
 
                   <li>
-                    <Link to={getLocalizedPath("/voucher-terms")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/voucher-terms")} className="hover:text-footer-link-hover">
                       <TranslatedText>Voucher Terms</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/delivery-terms")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/delivery-terms")} className="hover:text-footer-link-hover">
                       <TranslatedText>Delivery Terms</TranslatedText>
                     </Link>
                   </li>
@@ -339,45 +349,45 @@ const Footer = ({ className = "" }) => {
 
               {/* Column 5 - Legal */}
               <div className="col-span-1 flex flex-col ml-8 lg:ml-10 xl:ml-14 2xl:ml-16">
-                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4"><TranslatedText>Support</TranslatedText></h3>
-                <ul className="space-y-1 lg:space-y-1.5 text-white text-[10px] lg:text-xs xl:text-sm">
+                <h3 className="text-sm lg:text-base xl:text-lg 2xl:text-xl font-semibold mb-2 lg:mb-3 xl:mb-4 text-footer-heading"><TranslatedText>Support</TranslatedText></h3>
+                <ul className="space-y-1 lg:space-y-1.5 text-footer-link text-[10px] lg:text-xs xl:text-sm">
                   <li>
-                    <Link to={getLocalizedPath("/shop")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/shop")} className="hover:text-footer-link-hover">
                       <TranslatedText>Shop</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/about")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/about")} className="hover:text-footer-link-hover">
                       <TranslatedText>About Us</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/contact")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/contact")} className="hover:text-footer-link-hover">
                       <TranslatedText>Contact Us</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/blogs")} rel="noopener noreferrer" className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/blogs")} rel="noopener noreferrer" className="hover:text-footer-link-hover">
                       <TranslatedText>Blog</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/login")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/login")} className="hover:text-footer-link-hover">
                       <TranslatedText>Login</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/register")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/register")} className="hover:text-footer-link-hover">
                       <TranslatedText>Register</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/wishlist")} className="hover:text-lime-400">
+                    <Link to={getLocalizedPath("/wishlist")} className="hover:text-footer-link-hover">
                       <TranslatedText>Wishlist</TranslatedText>
                     </Link>
                   </li>
                   <li>
-                    <Link to={getLocalizedPath("/cart")} className="hover:text-lime-400 font-semibold">
+                    <Link to={getLocalizedPath("/cart")} className="hover:text-footer-link-hover font-semibold">
                       <TranslatedText>Cart</TranslatedText>
                     </Link>
                   </li>
@@ -417,14 +427,14 @@ const Footer = ({ className = "" }) => {
       </section>
 
       {/* Mobile Footer - Only visible on mobile */}
-      <footer className="md:hidden bg-white">
+      <footer className="md:hidden bg-footer-mobile text-footer-mobile-text">
         {/* Categories Section */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-footer-border">
           <button
             onClick={() => toggleSection("categories")}
             className="w-full flex justify-between items-center p-4 text-left"
           >
-            <span className="text-lg font-semibold text-gray-900"><TranslatedText>Categories</TranslatedText></span>
+            <span className="text-lg font-semibold text-footer-mobile-heading"><TranslatedText>Categories</TranslatedText></span>
             {openSections.categories ? <Minus size={20} /> : <Plus size={20} />}
           </button>
           {openSections.categories && (
@@ -434,7 +444,7 @@ const Footer = ({ className = "" }) => {
                   <li key={cat._id}>
                     <Link
                       to={getLocalizedPath(`/shop/${encodeURIComponent(cat.slug || cat.name)}`)}
-                      className="text-gray-700 hover:text-orange-500"
+                      className="text-footer-mobile-text hover:text-footer-mobile-link-hover"
                     >
                       <TranslatedText text={cat.name} sourceDoc={cat} fieldName="name" />
                     </Link>
@@ -446,44 +456,44 @@ const Footer = ({ className = "" }) => {
         </div>
 
         {/* Legal Section */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-footer-border">
           <button
             onClick={() => toggleSection("legal")}
             className="w-full flex justify-between items-center p-4 text-left"
           >
-            <span className="text-lg font-semibold text-gray-900"><TranslatedText>Legal</TranslatedText></span>
+            <span className="text-lg font-semibold text-footer-mobile-heading"><TranslatedText>Legal</TranslatedText></span>
             {openSections.legal ? <Minus size={20} /> : <Plus size={20} />}
           </button>
           {openSections.legal && (
             <div className="px-4 pb-4">
               <ul className="space-y-3">
                 <li>
-                  <Link to={getLocalizedPath("/about")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/about")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>About Us</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/contact")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/contact")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Contact Us</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/blogs")} rel="noopener noreferrer" className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/blogs")} rel="noopener noreferrer" className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Blog</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/shop")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/shop")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Shop</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/login")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/login")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Login</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/register")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/register")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Register</TranslatedText>
                   </Link>
                 </li>
@@ -493,54 +503,54 @@ const Footer = ({ className = "" }) => {
         </div>
 
         {/* Support Section */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-footer-border">
           <button
             onClick={() => toggleSection("support")}
             className="w-full flex justify-between items-center p-4 text-left"
           >
-            <span className="text-lg font-semibold text-gray-900"><TranslatedText>Support</TranslatedText></span>
+            <span className="text-lg font-semibold text-footer-mobile-heading"><TranslatedText>Support</TranslatedText></span>
             {openSections.support ? <Minus size={20} /> : <Plus size={20} />}
           </button>
           {openSections.support && (
             <div className="px-4 pb-4">
               <ul className="space-y-3">
                 <li>
-                  <Link to={getLocalizedPath("/refund-return")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/refund-return")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Refund and Return</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/cookies-policy")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/cookies-policy")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Cookies Policy</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/terms-conditions")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/terms-conditions")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Terms & Conditions</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/privacy-policy")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/privacy-policy")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Privacy Policy</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/disclaimer-policy")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/disclaimer-policy")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Disclaimer Policy</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/track-order")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/track-order")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Track Order</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/wishlist")} className="text-gray-700 hover:text-orange-500">
+                  <Link to={getLocalizedPath("/wishlist")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover">
                     <TranslatedText>Wishlist</TranslatedText>
                   </Link>
                 </li>
                 <li>
-                  <Link to={getLocalizedPath("/cart")} className="text-gray-700 hover:text-orange-500 font-semibold">
+                  <Link to={getLocalizedPath("/cart")} className="text-footer-mobile-text hover:text-footer-mobile-link-hover font-semibold">
                     <TranslatedText>Cart</TranslatedText>
                   </Link>
                 </li>
@@ -550,18 +560,18 @@ const Footer = ({ className = "" }) => {
         </div>
 
         {/* Connect Section */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-footer-border">
           <button
             onClick={() => toggleSection("connect")}
             className="w-full flex justify-between items-center p-4 text-left"
           >
-            <span className="text-lg font-semibold text-gray-900"><TranslatedText>Connect</TranslatedText></span>
+            <span className="text-lg font-semibold text-footer-mobile-heading"><TranslatedText>Connect</TranslatedText></span>
             {openSections.connect ? <Minus size={20} /> : <Plus size={20} />}
           </button>
           {openSections.connect && (
             <div className="px-4 pb-4">
               <div className="mb-4">
-                {/* <h4 className="text-sm font-semibold text-gray-900 mb-3">Connect With Us</h4> */}
+                {/* <h4 className="text-sm font-semibold text-footer-mobile-heading mb-3">Connect With Us</h4> */}
                 <div className="flex space-x-4">
                   <a
                     href="https://www.facebook.com/grabatozae/"
@@ -624,7 +634,7 @@ const Footer = ({ className = "" }) => {
         </div>
 
         {/* Shop On The Go Section - Always Visible */}
-        <div className="bg-[#1F1F39] text-white p-6">
+        <div className="bg-footer-bottom text-footer-bottom-text p-6">
           <h3 className="text-xl font-bold text-center mb-4"><TranslatedText>Shop On The Go</TranslatedText></h3>
           <div className="flex justify-center space-x-4 mb-6 ">
             <a

@@ -6,7 +6,7 @@ import axios from "axios"
 import { useAuth } from "../context/AuthContext"
 import { useLanguage } from "../context/LanguageContext"
 import { useCart } from "../context/CartContext"
-import { CheckCircle, Clock, Package, Truck, AlertTriangle, Printer, Download, X, Eye, FileText, ShoppingBag, MapPin, CreditCard } from "lucide-react"
+import { CheckCircle, Clock, Package, Truck, AlertTriangle, Printer, Download, X, Eye, FileText, ShoppingBag, MapPin, CreditCard, Shield } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { Dialog, Transition } from "@headlessui/react"
 import jsPDF from "jspdf"
@@ -15,6 +15,7 @@ import { useReactToPrint } from "react-to-print"
 import { getOrderCurrencySymbol } from "../utils/paymentUtils"
 import config from "../config/config"
 import { pushPurchase } from "../utils/gtmTracking"
+import InvoiceComponent from "../components/admin/InvoiceComponent"
 
 const UserOrders = () => {
   const location = useLocation()

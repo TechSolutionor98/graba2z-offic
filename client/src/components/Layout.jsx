@@ -84,7 +84,7 @@ function Layout() {
       {isBlogPage ? <BlogNavbar /> : <Navbar />}
 
       {/* Main Content Area - Grows to fill space */}
-      <main className="flex-1 w-full">
+      <main className="flex-1 w-full bg-page-bg text-page-text">
         <StaticPageContentTranslator>
           <div className="w-full max-w-[1360px] mx-auto">
             <Outlet />

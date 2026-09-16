@@ -60,6 +60,7 @@ import AdminBingIndexer from "../pages/admin/AdminBingIndexer"
 import AdminArabicConversion from "../pages/admin/AdminArabicConversion"
 import AdminCountryManager from "../pages/admin/AdminCountryManager"
 import AdminSettings from "../pages/admin/AdminSettings"
+import AdminThemeSettings from "../pages/admin/AdminThemeSettings"
 import AdminSizes from "../pages/admin/AdminSizes"
 import AdminSubCategories from "../pages/admin/AdminSubCategories"
 import AdminSubCategories2 from "../pages/admin/AdminSubCategories2"
@@ -285,6 +286,7 @@ const AdminPortal = () => {
             <Route path="delivery-charges/add" element={<AddDeliveryCharge />} />
             <Route path="delivery-charges/edit/:id" element={<AddDeliveryCharge />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="appearance" element={<AdminThemeSettings />} />
 
             <Route path="blog-dashboard" element={<BlogDashboard />} />
             <Route path="blogs" element={<AdminBlogs />} />

@@ -57,6 +57,9 @@ function mapProductToRow(p) {
     category_level_4: categoryLevel4,
     brand: brandName,
     buyingPrice: p.buyingPrice ?? '',
+    // Optional: exports blank when unset, so a re-import round-trips it as
+    // "not set" instead of turning it into 0.
+    wholesalePrice: p.wholesalePrice ?? '',
     price: p.price ?? '',
     offerPrice: p.offerPrice ?? '',
     discount: p.discount ?? '',

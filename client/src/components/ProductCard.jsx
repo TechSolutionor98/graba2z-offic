@@ -82,7 +82,7 @@ const ProductCard = ({ product, offerPageName }) => {
     resolveProductCategoryInfo(product)
 
   return (
-    <div className="border p-2 h-[410px] flex flex-col justify-between bg-white">
+    <div className="border border-page-border p-2 h-[410px] flex flex-col justify-between bg-page-surface">
       <div className="relative mb-2 flex justify-center items-center" style={{height:190}}>
         <Link to={productUrl} className="w-full h-full flex items-center justify-center">
           <img
@@ -136,7 +136,7 @@ const ProductCard = ({ product, offerPageName }) => {
       </div>
       
       <Link to={productUrl}>
-        <h3 className="text-xs font-sm text-gray-900 line-clamp-3 hover:text-blue-600 h-[50px]">
+        <h3 className="text-xs font-sm text-page-heading line-clamp-3 hover:text-page-link h-[50px]">
           <TranslatedText text={product.name} sourceDoc={product} fieldName="name" />
         </h3>
       </Link>
@@ -152,11 +152,11 @@ const ProductCard = ({ product, offerPageName }) => {
       )}
       <div className="text-xs text-green-600"><TranslatedText>Inclusive VAT</TranslatedText></div>
       <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-x-2 gap-y-0">
-        <div className="text-red-600 font-bold text-sm">
+        <div className="text-page-price font-bold text-sm">
           {formatPrice(priceToShow)}
         </div>
         {showOldPrice && (
-          <div className="text-gray-400 line-through text-xs font-medium">
+          <div className="text-page-old-price line-through text-xs font-medium">
             {formatPrice(basePrice)}
           </div>
         )}
@@ -173,12 +173,12 @@ const ProductCard = ({ product, offerPageName }) => {
             />
           ))}
         </div>
-        <span className="text-xs text-gray-500 ml-1">({numReviews})</span>
+        <span className="text-xs text-page-muted ml-1">({numReviews})</span>
       </div>
       
       <button
         onClick={handleAddToCart}
-        className="w-full bg-lime-500 hover:bg-lime-400 border border-lime-300 hover:border-transparent text-black text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
+        className="w-full bg-btn-primary hover:bg-btn-primary-hover border border-btn-primary hover:border-transparent text-btn-primary-text text-xs font-medium py-2 px-1 rounded flex items-center justify-center gap-1 transition-all duration-100"
         disabled={stockStatus === "Out of Stock"}
       >
         <ShoppingBag size={12} />

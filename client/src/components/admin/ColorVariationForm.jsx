@@ -41,6 +41,7 @@ const ColorVariationForm = ({ colorVariations = [], onChange, displayType = "car
       image: "",
       galleryImages: [],
       buyingPrice: "",
+      wholesalePrice: "",
       price: "",
       offerPrice: "",
       sku: "",
@@ -278,7 +279,7 @@ const ColorVariationForm = ({ colorVariations = [], onChange, displayType = "car
 
                   {/* Pricing */}
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Buying Price (AED) <span className="text-gray-400 text-xs">(Optional)</span>
@@ -292,6 +293,22 @@ const ColorVariationForm = ({ colorVariations = [], onChange, displayType = "car
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
                         <p className="text-xs text-gray-500 mt-1">Your purchase cost</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Wholesale Price (AED) <span className="text-gray-400 text-xs">(Optional)</span>
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={variation.wholesalePrice ?? ""}
+                          onChange={(e) => updateColorVariation(index, "wholesalePrice", e.target.value)}
+                          placeholder="Leave blank if not set"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Leave empty if this variation has none</p>
                       </div>
 
                       <div>

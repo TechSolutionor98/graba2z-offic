@@ -32,6 +32,30 @@
   })()
 </script>
 
+<!-- Saved theme, applied before first paint.
+     ThemeProvider caches the admin's palette as ready-made CSS text, so the
+     first frame is already themed instead of flashing the shipped colours and
+     then swapping. The runtime provider re-applies (and resolves any per-page
+     rule) the moment React mounts, and its inline styles on <html> win over
+     this block -- so a stale cache is corrected, never stuck.
+
+     Skipped on staff pages: /admin keeps the shipped palette, always. -->
+<script>
+  (function () {
+    try {
+      if (window.__grabatozInternalPage) return
+      var css = window.localStorage.getItem("grabatoz-theme-css-v1")
+      if (!css) return
+      var style = document.createElement("style")
+      style.id = "grabatoz-theme-preload"
+      style.textContent = ":root{" + css + "}"
+      document.head.appendChild(style)
+    } catch (e) {
+      /* No storage, or a malformed cache: the stylesheet defaults stand. */
+    }
+  })()
+</script>
+
 <!-- Google Tag Manager -->
 <script>if(!window.__grabatozInternalPage){(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],

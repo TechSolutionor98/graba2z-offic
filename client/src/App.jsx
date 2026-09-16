@@ -9,6 +9,7 @@ import { LanguageProvider } from "./context/LanguageContext"
 import { CurrencyProvider } from "./context/CurrencyContext"
 import { LoyaltyProvider } from "./context/LoyaltyContext"
 import { ReferralProvider } from "./context/ReferralContext"
+import { ThemeProvider } from "./context/ThemeContext"
 import LoyaltyRewardDialog from "./components/LoyaltyRewardDialog"
 
 // Import components
@@ -163,6 +164,7 @@ function App() {
               <LoyaltyProvider>
               <ReferralProvider>
               <Router>
+                <ThemeProvider>
                 <LanguageProvider>
                 <DefaultCanonical />
                 <ScrollToTop />
@@ -504,6 +506,7 @@ function App() {
                 </Suspense>
               </div>
             </LanguageProvider>
+                </ThemeProvider>
           </Router>
               </ReferralProvider>
               </LoyaltyProvider>
