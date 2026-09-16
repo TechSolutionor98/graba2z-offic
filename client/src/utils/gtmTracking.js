@@ -257,6 +257,57 @@ const normalizePurchaseItem = (item) => {
 }
 
 /**
+ * Mirror a confirmed purchase to the Meta Pixel.
+ *
+ * Called only from `pushPurchase`, which already refuses an order id it has
+ * reported before -- so a refresh of the confirmation page, or a second trip
+ * through a gateway redirect, cannot double-count the conversion on Meta
+ * either. Guest and signed-in checkouts both arrive here, because both go
+ * through `pushPurchase`.
+ *
+ * `content_ids` carries the same product id GA4 sends. If the Meta catalogue
+ * is ever built from the Google Merchant feed, note that feed keys on
+ * `sku || _id` (server/routes/googleMerchantRoutes.js) -- the ids have to
+ * match or dynamic ads lose attribution, though the revenue still reports.
+ */
+const pushMetaPurchase = ({ transactionId, value, currency, items }) => {
+  try {
+    // The pixel is deliberately not loaded on staff pages
+    // (window.__grabatozInternalPage in index.html), and an ad blocker can
+    // remove it anywhere, so fbq is not guaranteed to exist.
+    if (typeof window === "undefined" || typeof window.fbq !== "function") return
+
+    const contents = items
+      .map((item) => ({
+        id: item.item_id,
+        quantity: Number(item.quantity) || 1,
+        item_price: Number(item.price) || 0,
+      }))
+      .filter((entry) => entry.id)
+
+    window.fbq(
+      "track",
+      "Purchase",
+      {
+        value: Number(value) || 0,
+        currency,
+        content_type: "product",
+        content_ids: contents.map((entry) => entry.id),
+        contents,
+        num_items: contents.reduce((count, entry) => count + entry.quantity, 0),
+      },
+      // The same id GA4 sends as transaction_id, so a future Conversions API
+      // server event de-duplicates against this browser event.
+      { eventID: transactionId },
+    )
+  } catch (error) {
+    // Meta is the secondary report. A failure here must never stop the GA4
+    // purchase from being recorded as sent.
+    console.error("Error tracking Meta purchase:", error)
+  }
+}
+
+/**
  * Push the GA4 `purchase` event for a confirmed order.
  *
  * @param {Object} order
@@ -299,6 +350,10 @@ export const pushPurchase = ({
     // leftover add_payment_info payload into this purchase.
     window.dataLayer.push({ ecommerce: null })
 
+    // One item list for both reports, so Google and Meta can never describe
+    // the same order with a different basket.
+    const purchaseItems = items.map(normalizePurchaseItem).filter(Boolean)
+
     window.dataLayer.push({
       event: "purchase",
       ecommerce: {
@@ -310,9 +365,11 @@ export const pushPurchase = ({
         shipping: Number(shipping) || 0,
         coupon: coupon || undefined,
         payment_type: paymentMethod,
-        items: items.map(normalizePurchaseItem).filter(Boolean),
+        items: purchaseItems,
       },
     })
+
+    pushMetaPurchase({ transactionId, value, currency, items: purchaseItems })
 
     rememberTrackedPurchase(transactionId)
 
