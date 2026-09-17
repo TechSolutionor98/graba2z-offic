@@ -260,6 +260,16 @@ export const adminAPI = {
       headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
       body: JSON.stringify(orderData),
     }),
+  getQuotation: (id) =>
+    apiRequest(`/api/admin/quotations/${id}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  updateQuotation: (id, payload) =>
+    apiRequest(`/api/admin/quotations/${id}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify(payload),
+    }),
   setQuotationStatus: (id, quotationStatus) =>
     apiRequest(`/api/admin/quotations/${id}/status`, {
       method: "PUT",

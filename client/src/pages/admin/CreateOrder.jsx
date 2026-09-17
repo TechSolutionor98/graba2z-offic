@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { adminAPI, categoriesAPI, apiRequest, productsAdminAPI } from "../../services/api"
-import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText, PauseCircle } from "lucide-react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
 const currency = (n) =>
   `AED ${(Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -33,6 +33,13 @@ const priceFor = (product, mode) => {
 
 export default function CreateOrder() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  // Set when a document was recalled from the Recent Quotation page: saving then
+  // updates that document instead of raising a second copy of it.
+  const recalledId = searchParams.get("id")
+  const [recalledDoc, setRecalledDoc] = useState(null)
+  const [loadingRecalled, setLoadingRecalled] = useState(Boolean(recalledId))
+  const [loadError, setLoadError] = useState("")
 
   const [mode, setMode] = useState("order")
   const [sendCustomerEmail, setSendCustomerEmail] = useState(false)
@@ -98,6 +105,69 @@ export default function CreateOrder() {
     () => Math.max(0, itemsGross + num(shippingPrice) - num(discountAmount)),
     [itemsGross, shippingPrice, discountAmount],
   )
+
+  useEffect(() => {
+    if (!recalledId) return
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        setLoadingRecalled(true)
+        setLoadError("")
+        const doc = await adminAPI.getQuotation(recalledId)
+        if (cancelled) return
+
+        setRecalledDoc(doc)
+        setMode(doc.stagedAs === "order" ? "order" : "quotation")
+        setShipping({
+          name: doc.shippingAddress?.name || "",
+          email: doc.shippingAddress?.email || "",
+          phone: doc.shippingAddress?.phone || "",
+          address: doc.shippingAddress?.address || "",
+          city: doc.shippingAddress?.city || "",
+          state: doc.shippingAddress?.state || "",
+          zipCode: doc.shippingAddress?.zipCode || "",
+        })
+        setSelectedUser(doc.user && typeof doc.user === "object" ? doc.user : null)
+        setItems(
+          (doc.orderItems || []).map((it, index) => {
+            const price = num(it.price)
+            const productId = typeof it.product === "object" ? it.product?._id : it.product
+            return {
+              key: productId || `recalled-${index}`,
+              product: productId || null,
+              name: it.name,
+              image: it.image || "/placeholder.svg",
+              price,
+              quantity: num(it.quantity) || 1,
+              sku: it.sku || (typeof it.product === "object" ? it.product?.sku : "") || "",
+              isCustom: !productId,
+              // The prices on a recalled document are the ones already agreed, so
+              // both modes resolve to them -- flipping the toggle cannot quietly
+              // reprice a quotation the customer has already seen.
+              regularPrice: price,
+              wholesalePrice: price,
+              hasWholesale: true,
+              priceEdited: false,
+            }
+          }),
+        )
+        setShippingPrice(num(doc.shippingPrice))
+        setDiscountAmount(num(doc.discountAmount))
+        setTaxRate(Number.isFinite(Number(doc.taxRate)) ? Number(doc.taxRate) : 5)
+        setPaymentMethod(doc.actualPaymentMethod || doc.paymentMethod || "cod")
+      } catch (e) {
+        if (!cancelled) setLoadError(e?.message || "Could not open this document.")
+      } finally {
+        if (!cancelled) setLoadingRecalled(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [recalledId])
 
   useEffect(() => {
     const t = setTimeout(async () => {
@@ -271,7 +341,7 @@ export default function CreateOrder() {
 
   const canSubmit = items.length > 0 && shipping.name && shipping.email && shipping.phone && shipping.address
 
-  const handleCreate = async () => {
+  const handleCreate = async (hold = false) => {
     try {
       if (updateUserProfile && selectedUser?._id) {
         await adminAPI.updateUser(selectedUser._id, {
@@ -288,8 +358,13 @@ export default function CreateOrder() {
       }
 
       const payload = {
-        userId: selectedUser?._id || null,
+        // Falls back to whoever the recalled document already belonged to, so
+        // reopening and saving never quietly detaches it from its customer.
+        userId: selectedUser?._id || recalledDoc?.user?._id || recalledDoc?.user || null,
         documentType: mode,
+        // Held documents stay on the Recent Quotation page marked On Hold until
+        // someone releases them.
+        quotationStatus: hold ? "Hold" : "Draft",
         sendCustomerEmail,
         orderItems: items.map((it) => ({
           name: it.name,
@@ -322,13 +397,17 @@ export default function CreateOrder() {
         status: "New",
       }
 
-      const created = await adminAPI.createOrder(payload)
+      const created = recalledId
+        ? await adminAPI.updateQuotation(recalledId, payload)
+        : await adminAPI.createOrder(payload)
       const label = mode === "quotation" ? "Quotation" : "Order"
       // Both modes stage the document. It only reaches the Orders queues when
       // an admin moves it across from the Recent Quotation page.
       alert(
-        `${label} created successfully. #${created?._id?.slice?.(-6) || ""}\n\n` +
-          "It is saved on the Recent Quotation page. Use \"Move to Orders\" there when it is ready to be fulfilled.",
+        `${label} ${recalledId ? "updated" : "created"} successfully. #${created?._id?.slice?.(-6) || ""}\n\n` +
+          (hold
+            ? 'It is saved on the Recent Quotation page and marked On Hold. Press "Release" there when it is live again.'
+            : 'It is saved on the Recent Quotation page. Use "Move to Orders" there when it is ready to be fulfilled.'),
       )
       navigate("/admin/orders/quotations")
     } catch (e) {
@@ -339,8 +418,39 @@ export default function CreateOrder() {
 
   return (
     <div className="ml-64 p-6">
+      {recalledId && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+          <div className="text-sm text-blue-900">
+            {loadingRecalled ? (
+              "Opening the saved document..."
+            ) : loadError ? (
+              <span className="text-red-700">{loadError}</span>
+            ) : (
+              <>
+                Editing <span className="font-semibold">#{String(recalledDoc?._id || "").slice(-6)}</span>
+                {recalledDoc?.quotationStatus === "Hold" && (
+                  <span className="ml-2 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
+                    On Hold
+                  </span>
+                )}
+                <span className="block text-xs text-blue-800">
+                  Saving updates this document. It will not create a second copy.
+                </span>
+              </>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/admin/orders/quotations")}
+            className="rounded border border-blue-300 px-3 py-1.5 text-sm text-blue-800 hover:bg-blue-100"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Create Order / Create Quotation</h1>
+        <h1 className="text-2xl font-bold">{recalledId ? "Edit Order / Quotation" : "Create Order / Create Quotation"}</h1>
         <div className="inline-flex rounded-md border overflow-hidden">
           <button
             type="button"
@@ -764,19 +874,52 @@ export default function CreateOrder() {
 
           <button
             disabled={!canSubmit}
-            onClick={handleCreate}
+            onClick={() => handleCreate(false)}
             className={`mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded text-white ${
               canSubmit ? "bg-lime-600 hover:bg-lime-700" : "bg-gray-400 cursor-not-allowed"
             }`}
             title={!canSubmit ? "Add at least one item and fill shipping details" : `Create ${mode}`}
           >
             <Save size={16} />
-            {mode === "quotation" ? "Create Quotation" : "Create Order"}
+            {recalledId
+              ? `Update ${mode === "quotation" ? "Quotation" : "Order"}`
+              : mode === "quotation"
+                ? "Create Quotation"
+                : "Create Order"}
+          </button>
+
+          <button
+            disabled={!canSubmit}
+            onClick={() => handleCreate(true)}
+            className={`mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded border ${
+              canSubmit
+                ? "border-orange-300 text-orange-700 hover:bg-orange-50"
+                : "border-gray-200 text-gray-400 cursor-not-allowed"
+            }`}
+            title={
+              !canSubmit
+                ? "Add at least one item and fill shipping details"
+                : "Save it parked on the Recent Quotation page"
+            }
+          >
+            <PauseCircle size={16} />
+            {recalledId ? "Save & keep On Hold" : "Save on Hold"}
           </button>
 
           <p className="text-xs text-gray-500 mt-2">
-            Saved to <span className="font-medium">Recent Quotation</span> first. It reaches the Orders queues
-            only when you move it there.
+            {recalledId ? (
+              <>
+                Saving keeps it on <span className="font-medium">Recent Quotation</span>. The plain save releases a
+                held document back to Draft; use <span className="font-medium">Save &amp; keep On Hold</span> to
+                leave it parked.
+              </>
+            ) : (
+              <>
+                Saved to <span className="font-medium">Recent Quotation</span> first. It reaches the Orders queues
+                only when you move it there. <span className="font-medium">Save on Hold</span> parks it there
+                instead, until you release it.
+              </>
+            )}
           </p>
 
           {discountAmount > 0 && (

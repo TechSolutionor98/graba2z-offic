@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { adminAPI } from "../../services/api"
-import { Search, Eye, RefreshCw, PauseCircle, PlayCircle, ArrowRightCircle } from "lucide-react"
+import { Search, Eye, RefreshCw, PauseCircle, PlayCircle, ArrowRightCircle, PencilLine } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import AdminOrderDetailsModal from "../../components/admin/AdminOrderDetailsModal"
 import { askToEmailCustomer } from "../../utils/customerEmail"
 
@@ -30,6 +31,7 @@ const statusLabel = (status) => {
 }
 
 export default function RecentQuotation() {
+  const navigate = useNavigate()
   const [quotations, setQuotations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -217,6 +219,14 @@ export default function RecentQuotation() {
 
                         {!isConverted && (
                           <>
+                            <button
+                              onClick={() => navigate(`/admin/orders/create?id=${q._id}`)}
+                              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700"
+                              title="Reopen this document on the Create Order/Quotation screen"
+                            >
+                              <PencilLine size={16} /> Recall
+                            </button>
+
                             {status === "Hold" ? (
                               <button
                                 onClick={() => changeStatus(q, "Draft")}
