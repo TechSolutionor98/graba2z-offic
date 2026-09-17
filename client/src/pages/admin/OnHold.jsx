@@ -13,6 +13,7 @@ import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getPaymentInfo, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
+import { askToEmailCustomer } from "../../utils/customerEmail"
 
 // Invoice Component for Printing - Using forwardRef
 const InvoiceComponent = forwardRef(({ order }, ref) => {
@@ -429,7 +430,8 @@ const OnHold = () => {
       
       await axios.put(
         `${config.API_URL}/api/admin/orders/${orderId}/status`,
-        { status: newStatus },
+        // Saving the status is not in question; the email is.
+        { status: newStatus, sendCustomerEmail: askToEmailCustomer(newStatus, orders.find((order) => order._id === orderId)) },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -560,7 +562,11 @@ const OnHold = () => {
 
       await axios.put(
         `${config.API_URL}/api/admin/orders/${orderId}/status`,
-        { status: "Processing" },
+        // Saving the status is not in question; the email is.
+        {
+          status: "Processing",
+          sendCustomerEmail: askToEmailCustomer("Processing", orders.find((order) => order._id === orderId)),
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,

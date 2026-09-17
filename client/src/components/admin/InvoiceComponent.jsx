@@ -2,6 +2,7 @@ import React, { forwardRef } from "react"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
+import { splitItemsVat, formatVatRateLabel } from "../../utils/vat"
 
 const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) => {
 
@@ -21,12 +22,23 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
   
   const baseSubtotal = computeBaseSubtotal(regularItems)
 
-  const { subtotal, shipping, tax, total, couponCode, couponDiscount, displaySubtotal, displayTotal, codFee,
+  const { subtotal, shipping, tax, total, vatRate, couponCode, couponDiscount, displaySubtotal, displayTotal, codFee,
     codShippingFee,
     isCOD,
     paymentCharges,
   } = getInvoiceBreakdown(order)
   const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
+
+  // Prices include VAT, so each line is split at this document's own rate. The
+  // column footers are summed from these same figures, so what is printed
+  // always adds up.
+  const vatLabel = formatVatRateLabel(vatRate)
+  const regularVat = splitItemsVat(regularItems, vatRate)
+  const protectionVat = splitItemsVat(protectionItems, vatRate)
+  const vatByKey = new Map(
+    [...regularVat.lines, ...protectionVat.lines].map((line) => [line.item, line]),
+  )
+  const lineVat = (item) => vatByKey.get(item) || { net: 0, vat: 0, gross: 0 }
 
   const currentDate = new Date().toLocaleDateString()
   const orderDate = new Date(order.createdAt).toLocaleDateString()
@@ -181,6 +193,8 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                   <th className="border border-lime-300 px-3 py-2 text-left text-sm font-bold">Product</th>
                   <th className="border border-lime-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
                   <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Price</th>
+                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Subtotal</th>
+                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">{vatLabel}</th>
                   <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Total</th>
                 </tr>
               </thead>
@@ -218,6 +232,12 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                         )}
                         <span className="font-semibold text-gray-900">{formatPrice(itemPrice)}</span>
                       </td>
+                      <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                        {formatPrice(lineVat(item).net)}
+                      </td>
+                      <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                        {formatPrice(lineVat(item).vat)}
+                      </td>
                       <td className="border border-lime-300 px-3 py-2 text-right text-sm font-semibold">
                         {showDiscount && (
                           <span className="block text-xs text-gray-400 font-normal line-through">
@@ -230,6 +250,22 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                   )
                 })}
               </tbody>
+              <tfoot>
+                <tr className="bg-lime-50 font-semibold">
+                  <td className="border border-lime-300 px-3 py-2 text-right text-sm" colSpan={3}>
+                    Totals
+                  </td>
+                  <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                    {formatPrice(regularVat.net)}
+                  </td>
+                  <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                    {formatPrice(regularVat.vat)}
+                  </td>
+                  <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                    {formatPrice(regularVat.gross)}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
@@ -245,6 +281,8 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                     <th className="border border-blue-300 px-3 py-2 text-left text-sm font-bold">Protection</th>
                     <th className="border border-blue-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
                     <th className="border border-blue-300 px-3 py-2 text-right text-sm font-bold">Price</th>
+                    <th className="border border-blue-300 px-3 py-2 text-right text-sm font-bold">Subtotal</th>
+                    <th className="border border-blue-300 px-3 py-2 text-right text-sm font-bold">{vatLabel}</th>
                     <th className="border border-blue-300 px-3 py-2 text-right text-sm font-bold">Total</th>
                   </tr>
                 </thead>
@@ -261,6 +299,12 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                         <td className="border border-blue-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
                         <td className="border border-blue-300 px-3 py-2 text-right text-sm font-semibold text-gray-900">
                           {formatPrice(itemPrice)}
+                        </td>
+                        <td className="border border-blue-300 px-3 py-2 text-right text-sm">
+                          {formatPrice(lineVat(item).net)}
+                        </td>
+                        <td className="border border-blue-300 px-3 py-2 text-right text-sm">
+                          {formatPrice(lineVat(item).vat)}
                         </td>
                         <td className="border border-blue-300 px-3 py-2 text-right text-sm font-semibold">
                           {formatPrice(lineTotal)}
@@ -285,7 +329,7 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-gray-600">Subtotal:</span>
+              <span className="text-gray-600">Subtotal (incl. VAT):</span>
               <span className="text-gray-900">{formatPrice(subtotal + (couponDiscount || 0))}</span>
             </div>
 

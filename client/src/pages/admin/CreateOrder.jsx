@@ -5,7 +5,31 @@ import { adminAPI, categoriesAPI, apiRequest, productsAdminAPI } from "../../ser
 import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
-const currency = (n) => `AED ${(Number(n) || 0).toLocaleString()}`
+const currency = (n) =>
+  `AED ${(Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+// Line prices are edited as free text, so "" and "9." have to read as numbers
+// without turning the running totals into NaN.
+const num = (v) => {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : 0
+}
+
+// Prices on this page are VAT-inclusive (the same figure the storefront shows),
+// so the tax is extracted from the line total rather than added on top.
+const PRICE_MODES = [
+  { id: "regular", label: "Regular price" },
+  { id: "wholesale", label: "Wholesale price" },
+]
+
+// Wholesale is optional per product -- fall back to the regular price rather
+// than billing zero for a product nobody has set a wholesale price on.
+const priceFor = (product, mode) => {
+  const regular = num(product?.offerPrice || product?.price || 0)
+  if (mode !== "wholesale") return regular
+  const wholesale = product?.wholesalePrice
+  return wholesale === null || wholesale === undefined || wholesale === "" ? regular : num(wholesale)
+}
 
 export default function CreateOrder() {
   const navigate = useNavigate()
@@ -41,11 +65,12 @@ export default function CreateOrder() {
     brand: "",
   })
   const [productResults, setProductResults] = useState([])
+  const [priceMode, setPriceMode] = useState("regular")
 
   // Order items and pricing
   const [items, setItems] = useState([])
   const [shippingPrice, setShippingPrice] = useState(0)
-  const [taxRate, setTaxRate] = useState(0)
+  const [taxRate, setTaxRate] = useState(5)
   const [discountAmount, setDiscountAmount] = useState(0)
   const [paymentMethod, setPaymentMethod] = useState("cod")
 
@@ -54,17 +79,24 @@ export default function CreateOrder() {
   const [customPrice, setCustomPrice] = useState("")
   const [customQuantity, setCustomQuantity] = useState(1)
 
-  const itemsPrice = useMemo(
-    () => items.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 0), 0),
+  // What the customer pays for the goods, VAT included -- the figure on the
+  // line rows.
+  const itemsGross = useMemo(
+    () => items.reduce((sum, it) => sum + num(it.price) * num(it.quantity), 0),
     [items],
   )
-  const taxPrice = useMemo(
-    () => (Number(taxRate) > 0 ? (itemsPrice * Number(taxRate)) / 100 : 0),
-    [itemsPrice, taxRate],
-  )
+  // The VAT already sitting inside itemsGross, backed out at the chosen rate.
+  const taxPrice = useMemo(() => {
+    const rate = num(taxRate)
+    if (rate <= 0) return 0
+    return itemsGross - itemsGross / (1 + rate / 100)
+  }, [itemsGross, taxRate])
+  // Goods before VAT. itemsNet + taxPrice === itemsGross, so the total below is
+  // unchanged by how the rate is set -- only the split moves.
+  const itemsNet = useMemo(() => itemsGross - taxPrice, [itemsGross, taxPrice])
   const totalPrice = useMemo(
-    () => Math.max(0, itemsPrice + Number(shippingPrice || 0) + taxPrice - Number(discountAmount || 0)),
-    [itemsPrice, shippingPrice, taxPrice, discountAmount],
+    () => Math.max(0, itemsGross + num(shippingPrice) - num(discountAmount)),
+    [itemsGross, shippingPrice, discountAmount],
   )
 
   useEffect(() => {
@@ -143,7 +175,7 @@ export default function CreateOrder() {
   }
 
   const addProduct = (p) => {
-    const price = Number(p.offerPrice || p.price || 0)
+    const price = priceFor(p, priceMode)
     const existing = items.find((it) => it.key === p._id)
     if (existing) {
       setItems((prev) => prev.map((it) => (it.key === p._id ? { ...it, quantity: (it.quantity || 0) + 1 } : it)))
@@ -159,6 +191,12 @@ export default function CreateOrder() {
           quantity: 1,
           sku: p.sku,
           isCustom: false,
+          // Kept so switching the price mode can re-price this line, and so an
+          // edited price can be told apart from the catalogue one.
+          regularPrice: priceFor(p, "regular"),
+          wholesalePrice: priceFor(p, "wholesale"),
+          hasWholesale: !(p?.wholesalePrice === null || p?.wholesalePrice === undefined || p?.wholesalePrice === ""),
+          priceEdited: false,
         },
       ])
     }
@@ -204,6 +242,33 @@ export default function CreateOrder() {
 
   const removeItem = (itemKey) => setItems((prev) => prev.filter((it) => it.key !== itemKey))
 
+  // An edited price lives on this document only. Nothing here writes back to
+  // the product, so the catalogue price is untouched.
+  const updateItemPrice = (itemKey, value) =>
+    setItems((prev) => prev.map((it) => (it.key === itemKey ? { ...it, price: value, priceEdited: true } : it)))
+
+  const resetItemPrice = (itemKey) =>
+    setItems((prev) =>
+      prev.map((it) =>
+        it.key === itemKey && !it.isCustom
+          ? { ...it, price: priceMode === "wholesale" ? it.wholesalePrice : it.regularPrice, priceEdited: false }
+          : it,
+      ),
+    )
+
+  // Switching the mode re-prices catalogue lines, but leaves a price the admin
+  // typed by hand alone -- that edit was deliberate.
+  const changePriceMode = (nextMode) => {
+    setPriceMode(nextMode)
+    setItems((prev) =>
+      prev.map((it) =>
+        it.isCustom || it.priceEdited
+          ? it
+          : { ...it, price: nextMode === "wholesale" ? it.wholesalePrice : it.regularPrice },
+      ),
+    )
+  }
+
   const canSubmit = items.length > 0 && shipping.name && shipping.email && shipping.phone && shipping.address
 
   const handleCreate = async () => {
@@ -230,7 +295,7 @@ export default function CreateOrder() {
           name: it.name,
           quantity: Number(it.quantity) || 1,
           image: it.image || "/placeholder.svg",
-          price: Number(it.price) || 0,
+          price: num(it.price),
           product: it.product || undefined,
         })),
         deliveryType: "home",
@@ -243,9 +308,12 @@ export default function CreateOrder() {
           state: shipping.state,
           zipCode: shipping.zipCode,
         },
-        itemsPrice: Number(itemsPrice.toFixed(2)),
+        itemsPrice: Number(itemsNet.toFixed(2)),
         shippingPrice: Number((Number(shippingPrice) || 0).toFixed(2)),
         taxPrice: Number(taxPrice.toFixed(2)),
+        // Sent so the invoice can split each line at this rate rather than
+        // assuming the store default.
+        taxRate: num(taxRate),
         discountAmount: Number((Number(discountAmount) || 0).toFixed(2)),
         totalPrice: Number(totalPrice.toFixed(2)),
         paymentMethod: paymentMethod === "tabby" ? "card" : paymentMethod,
@@ -256,12 +324,13 @@ export default function CreateOrder() {
 
       const created = await adminAPI.createOrder(payload)
       const label = mode === "quotation" ? "Quotation" : "Order"
-      alert(`${label} created successfully. #${created?._id?.slice?.(-6) || ""}`)
-      if (mode === "quotation") {
-        navigate("/admin/orders/quotations")
-      } else {
-        navigate("/admin/orders/new")
-      }
+      // Both modes stage the document. It only reaches the Orders queues when
+      // an admin moves it across from the Recent Quotation page.
+      alert(
+        `${label} created successfully. #${created?._id?.slice?.(-6) || ""}\n\n` +
+          "It is saved on the Recent Quotation page. Use \"Move to Orders\" there when it is ready to be fulfilled.",
+      )
+      navigate("/admin/orders/quotations")
     } catch (e) {
       console.error("[create-document] create error:", e)
       alert(e?.message || "Failed to create document")
@@ -377,22 +446,49 @@ export default function CreateOrder() {
               Update user profile with above details
             </label>
 
-            <label className="flex items-center gap-2 text-sm mt-2">
+            <label className="flex items-start gap-2 text-sm mt-2">
               <input
                 type="checkbox"
+                className="mt-1"
                 checked={sendCustomerEmail}
                 onChange={(e) => setSendCustomerEmail(e.target.checked)}
               />
-              Email Manually Set
+              <span>
+                Email the customer a copy
+                <span className="block text-xs text-gray-500">
+                  Leave unticked to save it without sending anything.
+                </span>
+              </span>
             </label>
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Package size={18} />
-            <h2 className="font-semibold">Products</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <Package size={18} />
+              <h2 className="font-semibold">Products</h2>
+            </div>
+            <div className="inline-flex rounded-md border overflow-hidden text-sm">
+              {PRICE_MODES.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => changePriceMode(m.id)}
+                  className={`px-3 py-1.5 ${
+                    priceMode === m.id ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
           </div>
+          <p className="text-xs text-gray-500 -mt-2 mb-3">
+            {priceMode === "wholesale"
+              ? "Products are added at their wholesale price. Anything without one falls back to the regular price."
+              : "Products are added at their regular price."}
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div className="relative md:col-span-3">
@@ -550,8 +646,32 @@ export default function CreateOrder() {
                           </button>
                         </div>
                       </td>
-                      <td className="py-2 text-right">{currency(it.price)}</td>
-                      <td className="py-2 text-right">{currency((it.price || 0) * (it.quantity || 0))}</td>
+                      <td className="py-2">
+                        <div className="flex flex-col items-end gap-1">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={it.price}
+                            onChange={(e) => updateItemPrice(it.key, e.target.value)}
+                            className="w-28 border rounded px-2 py-1 text-right"
+                            aria-label={`Price for ${it.name}`}
+                          />
+                          {it.priceEdited && !it.isCustom && (
+                            <button
+                              type="button"
+                              onClick={() => resetItemPrice(it.key)}
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              Edited &middot; reset
+                            </button>
+                          )}
+                          {!it.priceEdited && !it.isCustom && priceMode === "wholesale" && !it.hasWholesale && (
+                            <span className="text-xs text-amber-600">No wholesale price</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 text-right">{currency(num(it.price) * num(it.quantity))}</td>
                       <td className="py-2 text-right">
                         <button
                           type="button"
@@ -566,7 +686,8 @@ export default function CreateOrder() {
                   ))}
                   <tr>
                     <td colSpan={5} className="py-2 text-xs text-gray-500">
-                      Prices include VAT where applicable. You can add special discount below.
+                      Prices include VAT. Editing a price changes this document only &mdash; the product
+                      itself is never touched. You can add special discount below.
                     </td>
                   </tr>
                 </tbody>
@@ -579,8 +700,8 @@ export default function CreateOrder() {
           <h2 className="font-semibold mb-3">Totals</h2>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span>Items</span>
-              <span>{currency(itemsPrice)}</span>
+              <span>Items (excl. VAT)</span>
+              <span>{currency(itemsNet)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>Shipping</span>
@@ -594,7 +715,7 @@ export default function CreateOrder() {
               />
             </div>
             <div className="flex justify-between items-center">
-              <span>Tax rate (%)</span>
+              <span>Tax/Vat %</span>
               <input
                 type="number"
                 value={taxRate}
@@ -605,7 +726,7 @@ export default function CreateOrder() {
               />
             </div>
             <div className="flex justify-between">
-              <span>Tax</span>
+              <span>Tax/Vat</span>
               <span>{currency(taxPrice)}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -652,6 +773,11 @@ export default function CreateOrder() {
             <Save size={16} />
             {mode === "quotation" ? "Create Quotation" : "Create Order"}
           </button>
+
+          <p className="text-xs text-gray-500 mt-2">
+            Saved to <span className="font-medium">Recent Quotation</span> first. It reaches the Orders queues
+            only when you move it there.
+          </p>
 
           {discountAmount > 0 && (
             <p className="text-xs text-gray-500 mt-2">Note: Special discount will appear on the invoice.</p>

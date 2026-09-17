@@ -8,6 +8,7 @@ import { Search, Eye, Mail, RefreshCw, Package } from "lucide-react"
 import { useToast } from "../../context/ToastContext"
 
 import config from "../../config/config"
+import { askToEmailCustomer } from "../../utils/customerEmail"
 const ReceivedOrders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -97,7 +98,11 @@ const ReceivedOrders = () => {
 
       await axios.put(
         `${config.API_URL}/api/admin/orders/${orderId}/status`,
-        { status: "Confirmed" },
+        // Saving the status is not in question; the email is.
+        {
+          status: "Confirmed",
+          sendCustomerEmail: askToEmailCustomer("Confirmed", orders.find((order) => order._id === orderId)),
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,

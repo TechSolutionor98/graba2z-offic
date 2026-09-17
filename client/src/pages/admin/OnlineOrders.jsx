@@ -1535,6 +1535,7 @@ import config from "../../config/config"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 import { getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
+import { askToEmailCustomer, askToEmailCustomerBulk } from "../../utils/customerEmail"
 
 // Invoice Component for Printing - Using forwardRef
 const InvoiceComponent = forwardRef(({ order }, ref) => {
@@ -1952,7 +1953,10 @@ const OnlineOrders = () => {
       const token =
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
-      const updateData = { status }
+      // The status change is saved either way; this only decides whether the
+      // customer hears about it.
+      const targetOrder = orders.find((order) => order._id === orderId)
+      const updateData = { status, sendCustomerEmail: askToEmailCustomer(status, targetOrder) }
 
       // If status is "Delivered", automatically set payment as paid
       if (status === "Delivered") {
@@ -2132,11 +2136,15 @@ const OnlineOrders = () => {
       const token =
         localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
+      // Asked once for the whole batch rather than once per order, so a bulk
+      // update of fifty orders is one question, not fifty.
+      const notifyBulk = askToEmailCustomerBulk(bulkStatus, selectedOrders.length)
+
       await Promise.all(
         selectedOrders.map((orderId) =>
           axios.put(
             `${config.API_URL}/api/admin/orders/${orderId}/status`,
-            { status: bulkStatus },
+            { status: bulkStatus, sendCustomerEmail: notifyBulk },
             {
               headers: {
                 Authorization: `Bearer ${token}`,

@@ -20,6 +20,7 @@ import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } fr
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 import { paymentMethodChargeAPI, adminAPI } from "../../services/api"
 import InvoiceComponent from "./InvoiceComponent"
+import { askToEmailCustomer } from "../../utils/customerEmail"
 
 const orderStatusOptions = [
   "New",
@@ -157,7 +158,8 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
     try {
       setProcessingAction(true)
       const token = getToken()
-      const updateData = { status }
+      // Saving the status is not in question here; the email is.
+      const updateData = { status, sendCustomerEmail: askToEmailCustomer(status, order) }
 
       if (status === "Delivered") {
         updateData.isPaid = true

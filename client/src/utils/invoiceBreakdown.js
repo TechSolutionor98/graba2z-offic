@@ -1,4 +1,5 @@
 import { computeSaleSubtotal } from "./orderPricing"
+import { resolveVatRate, splitVatInclusive } from "./vat"
 
 
 export function getInvoiceBreakdown(order = {}) {
@@ -33,8 +34,11 @@ export function getInvoiceBreakdown(order = {}) {
   const codFee = Number(order.codFee || 0);
   const codShippingFee = Number(order.codShippingFee || 0);
 
-  const vatRate = 0.05
-  const derivedVat = subtotal > 0 ? Number((subtotal * vatRate).toFixed(2)) : 0
+  // Prices already include VAT, so it is taken out of the subtotal rather than
+  // charged on top of it -- adding it on top both overstated the VAT and made
+  // the invoice disagree with its own total.
+  const vatRate = resolveVatRate(order)
+  const derivedVat = subtotal > 0 ? Number(splitVatInclusive(subtotal, vatRate).vat.toFixed(2)) : 0
   const vat = tax > 0 ? tax : derivedVat
 
   const paymentCharges = Array.isArray(order.paymentCharges) ? order.paymentCharges : []
@@ -51,6 +55,7 @@ export function getInvoiceBreakdown(order = {}) {
     subtotal,
     shipping,
     tax: vat,
+    vatRate,
     total: displayTotal,
     manualDiscount,
     couponDiscount,
