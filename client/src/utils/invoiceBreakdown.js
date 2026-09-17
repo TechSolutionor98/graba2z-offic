@@ -41,13 +41,18 @@ export function getInvoiceBreakdown(order = {}) {
   const derivedVat = subtotal > 0 ? Number(splitVatInclusive(subtotal, vatRate).vat.toFixed(2)) : 0
   const vat = tax > 0 ? tax : derivedVat
 
+  // A referral reward and redeemed points both come off the order the customer
+  // pays, so an invoice that leaves them out shows a total nobody was charged.
+  const referralDiscount = Number(order.referralDiscountAmount || 0)
+  const loyaltyDiscount = Number(order.loyaltyDiscountAmount || 0)
+
   const paymentCharges = Array.isArray(order.paymentCharges) ? order.paymentCharges : []
   const hasPaymentCharges = paymentCharges.length > 0
   const paymentChargesTotal = paymentCharges.reduce((sum, charge) => sum + (Number(charge.amount) || 0), 0)
 
-  const calculatedTotal = hasPaymentCharges 
-    ? subtotal + shipping + paymentChargesTotal - couponDiscount
-    : subtotal + shipping + codFee + codShippingFee - couponDiscount
+  const calculatedTotal = hasPaymentCharges
+    ? subtotal + shipping + paymentChargesTotal - couponDiscount - referralDiscount - loyaltyDiscount
+    : subtotal + shipping + codFee + codShippingFee - couponDiscount - referralDiscount - loyaltyDiscount
     
   const displayTotal = calculatedTotal > storedTotal ? calculatedTotal : storedTotal
 
@@ -59,6 +64,8 @@ export function getInvoiceBreakdown(order = {}) {
     total: displayTotal,
     manualDiscount,
     couponDiscount,
+    referralDiscount,
+    loyaltyDiscount,
     couponCode,
     hasCoupon: hasActualCoupon && couponDiscount > 0,
     displaySubtotal: subtotal,

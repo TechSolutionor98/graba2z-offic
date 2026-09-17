@@ -22,7 +22,7 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
   
   const baseSubtotal = computeBaseSubtotal(regularItems)
 
-  const { subtotal, shipping, tax, total, vatRate, couponCode, couponDiscount, displaySubtotal, displayTotal, codFee,
+  const { subtotal, shipping, tax, total, vatRate, couponCode, couponDiscount, referralDiscount, loyaltyDiscount, displaySubtotal, displayTotal, codFee,
     codShippingFee,
     isCOD,
     paymentCharges,
@@ -346,6 +346,20 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                   {(couponCode || order.couponCode) ? `Coupon (${couponCode || order.couponCode})` : "Coupon Discount"}:
                 </span>
                 <span className="text-green-600">-{formatPrice(couponDiscount || order.discountAmount || 0)}</span>
+              </div>
+            )}
+
+            {referralDiscount > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Referral discount:</span>
+                <span className="text-green-600">-{formatPrice(referralDiscount)}</span>
+              </div>
+            )}
+
+            {loyaltyDiscount > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Points applied:</span>
+                <span className="text-green-600">-{formatPrice(loyaltyDiscount)}</span>
               </div>
             )}
 

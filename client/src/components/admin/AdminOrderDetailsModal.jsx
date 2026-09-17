@@ -601,6 +601,18 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                     )}
                   </>
                 )}
+                {selectedTotals.referralDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Referral discount:</span>
+                    <span className="text-green-600">-{formatPrice(selectedTotals.referralDiscount)}</span>
+                  </div>
+                )}
+                {selectedTotals.loyaltyDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Points applied:</span>
+                    <span className="text-green-600">-{formatPrice(selectedTotals.loyaltyDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">VAT (Included):</span>
                   <span className="text-gray-900">{formatPrice(selectedTotals.tax)}</span>
