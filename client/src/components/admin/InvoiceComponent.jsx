@@ -106,7 +106,40 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
       <div className="bg-white  border-l-4 pl-2 border-lime-500">
         <h3 className="text-2xl font-bold text-lime-800 mb-2 uppercase tracking-wide">📋 {isQuotation ? "Quotation Summary" : "Order Summary"}</h3>
 
-        {/* Addresses */}
+        {/* A collection has no delivery address, so the branch replaces the two
+            address panels entirely rather than leaving them reading "N/A". */}
+        {order.deliveryType === "pickup" ? (
+          <div className="mb-2 rounded-lg border-2 border-lime-200 bg-white px-3 py-1 relative">
+            <div className="absolute -top-3 left-3 bg-white px-2">
+              <h4 className="text-sm font-bold text-lime-700 uppercase">🏬 Collect From Store</h4>
+            </div>
+            <div className="pt-2 space-y-1 text-sm">
+              <p>
+                <strong>Branch:</strong> {order.pickupDetails?.location || "N/A"}
+              </p>
+              {order.pickupDetails?.storeAddress && (
+                <p>
+                  <strong>Address:</strong> {order.pickupDetails.storeAddress}
+                </p>
+              )}
+              {order.pickupDetails?.storePhone && (
+                <p>
+                  <strong>Branch phone:</strong> {order.pickupDetails.storePhone}
+                </p>
+              )}
+              <p>
+                <strong>Collected by:</strong> {order.shippingAddress?.name || order.user?.name || "N/A"}
+              </p>
+              <p>
+                <strong>Contact:</strong> {order.pickupDetails?.phone || order.shippingAddress?.phone || "N/A"}
+              </p>
+              <p>
+                <strong>Email:</strong>{" "}
+                {order.pickupDetails?.email || order.shippingAddress?.email || order.user?.email || "N/A"}
+              </p>
+            </div>
+          </div>
+        ) : (
         <div className="grid grid-cols-2 md:grid-cols-2 gap-6 mb-2">
           {/* Shipping Address */}
           <div className="bg-white border-2 border-lime-200 rounded-lg px-3 py-1 relative">
@@ -174,6 +207,7 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
             </div>
           </div>
         </div>
+        )}
 
         {/* Seller Comments */}
         {order.sellerComments && (

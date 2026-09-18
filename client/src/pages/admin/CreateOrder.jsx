@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { adminAPI, categoriesAPI, apiRequest, productsAdminAPI } from "../../services/api"
-import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText, PauseCircle } from "lucide-react"
+import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText, PauseCircle, Truck, Store } from "lucide-react"
+import { visibleStores, findStore } from "../../data/stores"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 const currency = (n) =>
@@ -63,6 +64,12 @@ export default function CreateOrder() {
     zipCode: "",
   })
   const [updateUserProfile, setUpdateUserProfile] = useState(false)
+
+  // Collection from a branch, the same choice the storefront checkout offers.
+  // A pickup order has no delivery address, so the address fields give way to a
+  // branch and a number to call when it is ready.
+  const [deliveryType, setDeliveryType] = useState("home")
+  const [pickupDetails, setPickupDetails] = useState({ storeId: "", phone: "" })
 
   // Products search/filters
   const [productQuery, setProductQuery] = useState("")
@@ -172,6 +179,11 @@ export default function CreateOrder() {
             }
           }),
         )
+        setDeliveryType(doc.deliveryType === "pickup" ? "pickup" : "home")
+        setPickupDetails({
+          storeId: doc.pickupDetails?.storeId || "",
+          phone: doc.pickupDetails?.phone || "",
+        })
         setShippingPrice(num(doc.shippingPrice))
         setDiscountAmount(num(doc.discountAmount))
         setTaxRate(Number.isFinite(Number(doc.taxRate)) ? Number(doc.taxRate) : 5)
@@ -359,7 +371,11 @@ export default function CreateOrder() {
     )
   }
 
-  const canSubmit = items.length > 0 && shipping.name && shipping.email && shipping.phone && shipping.address
+  const hasContact = shipping.name && shipping.email && shipping.phone
+  const canSubmit =
+    items.length > 0 &&
+    hasContact &&
+    (deliveryType === "pickup" ? Boolean(pickupDetails.storeId) : Boolean(shipping.address))
 
   // Parking a document leaves the admin ready for the next one, so the form is
   // cleared rather than the page navigated away from.
@@ -367,6 +383,8 @@ export default function CreateOrder() {
     setItems([])
     setSelectedUser(null)
     setShipping({ name: "", email: "", phone: "", address: "", city: "", state: "", zipCode: "" })
+    setDeliveryType("home")
+    setPickupDetails({ storeId: "", phone: "" })
     setShippingPrice(0)
     setDiscountAmount(0)
     setSendCustomerEmail(false)
@@ -408,7 +426,9 @@ export default function CreateOrder() {
           price: num(it.price),
           product: it.product || undefined,
         })),
-        deliveryType: "home",
+        deliveryType,
+        // The server keeps whichever half matches the delivery type and drops
+        // the other, so both are sent and it decides.
         shippingAddress: {
           name: shipping.name,
           email: shipping.email,
@@ -418,6 +438,20 @@ export default function CreateOrder() {
           state: shipping.state,
           zipCode: shipping.zipCode,
         },
+        pickupDetails:
+          deliveryType === "pickup"
+            ? {
+                // The branch name, address and phone are copied onto the order
+                // rather than referenced, so an order still reads correctly if a
+                // branch is later renamed or closed.
+                phone: pickupDetails.phone || shipping.phone,
+                location: findStore(pickupDetails.storeId)?.name || "",
+                storeId: pickupDetails.storeId,
+                storeAddress: findStore(pickupDetails.storeId)?.address || "",
+                storePhone: findStore(pickupDetails.storeId)?.phone || "",
+                email: shipping.email,
+              }
+            : undefined,
         itemsPrice: Number(itemsNet.toFixed(2)),
         shippingPrice: Number((Number(shippingPrice) || 0).toFixed(2)),
         taxPrice: Number(taxPrice.toFixed(2)),
@@ -530,9 +564,33 @@ export default function CreateOrder() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <User size={18} />
-            <h2 className="font-semibold">Users</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <User size={18} />
+              <h2 className="font-semibold">Users</h2>
+            </div>
+            <div className="inline-flex rounded-md border overflow-hidden text-sm">
+              <button
+                type="button"
+                onClick={() => setDeliveryType("home")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${
+                  deliveryType === "home" ? "bg-lime-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <Truck size={14} />
+                Home delivery
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeliveryType("pickup")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${
+                  deliveryType === "pickup" ? "bg-lime-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <Store size={14} />
+                Pick up from store
+              </button>
+            </div>
           </div>
           <div className="relative">
             <input
@@ -580,31 +638,78 @@ export default function CreateOrder() {
                 onChange={(e) => setShipping((s) => ({ ...s, phone: e.target.value }))}
                 className="border rounded px-3 py-2"
               />
-              <input
-                placeholder="Address"
-                value={shipping.address}
-                onChange={(e) => setShipping((s) => ({ ...s, address: e.target.value }))}
-                className="border rounded px-3 py-2 col-span-2"
-              />
-              <input
-                placeholder="City"
-                value={shipping.city}
-                onChange={(e) => setShipping((s) => ({ ...s, city: e.target.value }))}
-                className="border rounded px-3 py-2"
-              />
-              <input
-                placeholder="State"
-                value={shipping.state}
-                onChange={(e) => setShipping((s) => ({ ...s, state: e.target.value }))}
-                className="border rounded px-3 py-2"
-              />
-              <input
-                placeholder="Zip Code"
-                value={shipping.zipCode}
-                onChange={(e) => setShipping((s) => ({ ...s, zipCode: e.target.value }))}
-                className="border rounded px-3 py-2"
-              />
+              {deliveryType === "home" && (
+                <input
+                  placeholder="Address"
+                  value={shipping.address}
+                  onChange={(e) => setShipping((s) => ({ ...s, address: e.target.value }))}
+                  className="border rounded px-3 py-2 col-span-2"
+                />
+              )}
+              {deliveryType === "home" && (
+                <>
+                  <input
+                    placeholder="City"
+                    value={shipping.city}
+                    onChange={(e) => setShipping((s) => ({ ...s, city: e.target.value }))}
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    placeholder="State"
+                    value={shipping.state}
+                    onChange={(e) => setShipping((s) => ({ ...s, state: e.target.value }))}
+                    className="border rounded px-3 py-2"
+                  />
+                  <input
+                    placeholder="Zip Code"
+                    value={shipping.zipCode}
+                    onChange={(e) => setShipping((s) => ({ ...s, zipCode: e.target.value }))}
+                    className="border rounded px-3 py-2"
+                  />
+                </>
+              )}
             </div>
+
+            {deliveryType === "pickup" && (
+              <div className="mt-1 rounded-lg border border-lime-200 bg-lime-50/60 p-3">
+                <label className="block text-sm font-medium text-gray-800" htmlFor="pickup-store">
+                  Collect from
+                </label>
+                <select
+                  id="pickup-store"
+                  value={pickupDetails.storeId}
+                  onChange={(e) => setPickupDetails((p) => ({ ...p, storeId: e.target.value }))}
+                  className="mt-1 w-full rounded border bg-white px-3 py-2 text-sm"
+                >
+                  <option value="">Select a branch</option>
+                  {visibleStores().map((store) => (
+                    <option key={store.storeId} value={store.storeId}>
+                      {store.name}
+                    </option>
+                  ))}
+                </select>
+
+                {findStore(pickupDetails.storeId) && (
+                  <p className="mt-2 text-xs leading-relaxed text-gray-600">
+                    {findStore(pickupDetails.storeId).address}
+                    <span className="mt-0.5 block text-gray-500">
+                      Branch phone: {findStore(pickupDetails.storeId).phone}
+                    </span>
+                  </p>
+                )}
+
+                <input
+                  placeholder="Contact number for collection (optional)"
+                  value={pickupDetails.phone}
+                  onChange={(e) => setPickupDetails((p) => ({ ...p, phone: e.target.value }))}
+                  className="mt-2 w-full rounded border px-3 py-2 text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Left blank, the customer&apos;s phone above is used. No delivery address is needed for a
+                  collection.
+                </p>
+              </div>
+            )}
 
             <label className="flex items-center gap-2 text-sm mt-2">
               <input
