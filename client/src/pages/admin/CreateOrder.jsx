@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { adminAPI, categoriesAPI, apiRequest, productsAdminAPI } from "../../services/api"
 import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText, PauseCircle, Truck, Store } from "lucide-react"
 import { visibleStores, findStore } from "../../data/stores"
@@ -94,6 +94,7 @@ export default function CreateOrder() {
     brand: "",
   })
   const [productResults, setProductResults] = useState([])
+  const productSearchRef = useRef(null)
   const [priceMode, setPriceMode] = useState("regular")
 
   // Order items and pricing
@@ -287,32 +288,44 @@ export default function CreateOrder() {
     })
   }
 
+  // Adding a product clears the search and its suggestions, the same way picking
+  // a customer clears the user search. Focus stays in the box so the next
+  // product can be typed straight away.
+  const clearProductSearch = () => {
+    setProductQuery("")
+    setProductResults([])
+    productSearchRef.current?.focus()
+  }
+
   const addProduct = (p) => {
     const price = priceFor(p, priceMode)
     const existing = items.find((it) => it.key === p._id)
     if (existing) {
       setItems((prev) => prev.map((it) => (it.key === p._id ? { ...it, quantity: (it.quantity || 0) + 1 } : it)))
-    } else {
-      setItems((prev) => [
-        ...prev,
-        {
-          key: p._id,
-          product: p._id,
-          name: p.name,
-          image: p.image || "/placeholder.svg",
-          price,
-          quantity: 1,
-          sku: p.sku,
-          isCustom: false,
-          // Kept so switching the price mode can re-price this line, and so an
-          // edited price can be told apart from the catalogue one.
-          regularPrice: priceFor(p, "regular"),
-          wholesalePrice: priceFor(p, "wholesale"),
-          hasWholesale: !(p?.wholesalePrice === null || p?.wholesalePrice === undefined || p?.wholesalePrice === ""),
-          priceEdited: false,
-        },
-      ])
+      clearProductSearch()
+      return
     }
+
+    setItems((prev) => [
+      ...prev,
+      {
+        key: p._id,
+        product: p._id,
+        name: p.name,
+        image: p.image || "/placeholder.svg",
+        price,
+        quantity: 1,
+        sku: p.sku,
+        isCustom: false,
+        // Kept so switching the price mode can re-price this line, and so an
+        // edited price can be told apart from the catalogue one.
+        regularPrice: priceFor(p, "regular"),
+        wholesalePrice: priceFor(p, "wholesale"),
+        hasWholesale: !(p?.wholesalePrice === null || p?.wholesalePrice === undefined || p?.wholesalePrice === ""),
+        priceEdited: false,
+      },
+    ])
+    clearProductSearch()
   }
 
   const addCustomItem = () => {
@@ -781,6 +794,7 @@ export default function CreateOrder() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div className="relative md:col-span-3">
               <input
+                ref={productSearchRef}
                 type="text"
                 value={productQuery}
                 onChange={(e) => setProductQuery(e.target.value)}
