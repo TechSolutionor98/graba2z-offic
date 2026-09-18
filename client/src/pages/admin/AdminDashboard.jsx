@@ -7,6 +7,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar"
 import { ShoppingBag, Users, DollarSign, TrendingUp, ArrowUpRight, PackagePlus, ClipboardList, UserPlus } from "lucide-react"
 import { adminAPI } from "../../services/api"
 import { getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
+import { orderCustomerName } from "../../utils/orderCustomer"
 
 const AdminDashboard = () => {
   const { admin } = useAuth()
@@ -219,7 +220,7 @@ const AdminDashboard = () => {
                               </>
                             ) : (
                               <>
-                                <div className="text-sm text-[#1f2a27]">{order.shippingAddress?.name || "N/A"}</div>
+                                <div className="text-sm text-[#1f2a27]">{orderCustomerName(order) || "N/A"}</div>
                                 <div className="text-xs text-[#6b645a]">{order.shippingAddress?.email || "N/A"}</div>
                                 <div className="mt-1">
                                   <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800 uppercase">

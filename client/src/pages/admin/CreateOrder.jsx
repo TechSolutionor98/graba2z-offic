@@ -5,6 +5,7 @@ import { adminAPI, categoriesAPI, apiRequest, productsAdminAPI } from "../../ser
 import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText, PauseCircle, Truck, Store } from "lucide-react"
 import { visibleStores, findStore } from "../../data/stores"
 import { DEFAULT_VAT_RATE } from "../../utils/vat"
+import { orderCustomerName, orderCustomerEmail, orderCustomerPhone } from "../../utils/orderCustomer"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 const currency = (n) =>
@@ -51,6 +52,10 @@ export default function CreateOrder() {
   // updates that document instead of raising a second copy of it.
   const recalledId = searchParams.get("id")
   const [recalledDoc, setRecalledDoc] = useState(null)
+  // Everything the unmount auto-save needs, refreshed on every render. A cleanup
+  // function closes over the state it was created with, so the live values have
+  // to be parked somewhere it can read them.
+  const autoSaveRef = useRef({ enabled: false })
   // How many documents are parked. Drives the On Hold button in the header --
   // there is nothing to go and look at until at least one exists.
   const [heldCount, setHeldCount] = useState(0)
@@ -158,10 +163,14 @@ export default function CreateOrder() {
 
         setRecalledDoc(doc)
         setMode(doc.stagedAs === "order" ? "order" : "quotation")
+        // A collection has no shippingAddress -- the customer lives on
+        // pickupDetails instead -- so the contact fields are resolved rather
+        // than read from one place. Reading shippingAddress directly is why a
+        // recalled pickup document came back with an empty customer.
         setShipping({
-          name: doc.shippingAddress?.name || "",
-          email: doc.shippingAddress?.email || "",
-          phone: doc.shippingAddress?.phone || "",
+          name: orderCustomerName(doc),
+          email: orderCustomerEmail(doc),
+          phone: orderCustomerPhone(doc),
           address: doc.shippingAddress?.address || "",
           city: doc.shippingAddress?.city || "",
           state: doc.shippingAddress?.state || "",
@@ -418,6 +427,103 @@ export default function CreateOrder() {
     setFilters({ parentCategory: "", subcategory: "", brand: "" })
   }
 
+  // One shape for every way this document can be saved -- the buttons, and the
+  // auto-save that runs when the screen is left.
+  const buildPayload = (hold = false) => ({
+      // Falls back to whoever the recalled document already belonged to, so
+      // reopening and saving never quietly detaches it from its customer.
+      userId: selectedUser?._id || recalledDoc?.user?._id || recalledDoc?.user || null,
+      documentType: mode,
+      // Held documents stay on the Recent Quotation page marked On Hold until
+      // someone releases them.
+      quotationStatus: hold ? "Hold" : "Draft",
+      sendCustomerEmail,
+      orderItems: items.map((it) => ({
+        name: it.name,
+        quantity: Number(it.quantity) || 1,
+        image: it.image || "/placeholder.svg",
+        // The price the document actually charges, which is the catalogue
+        // price re-based to this document's VAT rate. Stored this way so the
+        // invoice's line totals add up to the order total at any rate.
+        price: Number(lineCharged(num(it.price), taxRate).toFixed(2)),
+        product: it.product || undefined,
+      })),
+      deliveryType,
+      // The server keeps whichever half matches the delivery type and drops
+      // the other, so both are sent and it decides.
+      shippingAddress: {
+        name: shipping.name,
+        email: shipping.email,
+        phone: shipping.phone,
+        address: shipping.address,
+        city: shipping.city,
+        state: shipping.state,
+        zipCode: shipping.zipCode,
+      },
+      pickupDetails:
+        deliveryType === "pickup"
+          ? {
+              // The branch name, address and phone are copied onto the order
+              // rather than referenced, so an order still reads correctly if a
+              // branch is later renamed or closed.
+              phone: pickupDetails.phone || shipping.phone,
+              // The customer travels with the collection, since there is no
+              // shipping address on this order to carry them.
+              name: shipping.name,
+              location: findStore(pickupDetails.storeId)?.name || "",
+              storeId: pickupDetails.storeId,
+              storeAddress: findStore(pickupDetails.storeId)?.address || "",
+              storePhone: findStore(pickupDetails.storeId)?.phone || "",
+              email: shipping.email,
+            }
+          : undefined,
+      itemsPrice: Number(itemsNet.toFixed(2)),
+      shippingPrice: Number((Number(shippingPrice) || 0).toFixed(2)),
+      taxPrice: Number(taxPrice.toFixed(2)),
+      // Sent so the invoice can split each line at this rate rather than
+      // assuming the store default.
+      taxRate: num(taxRate),
+      discountAmount: Number((Number(discountAmount) || 0).toFixed(2)),
+      totalPrice: Number(totalPrice.toFixed(2)),
+      paymentMethod: paymentMethod === "tabby" ? "card" : paymentMethod,
+      actualPaymentMethod: paymentMethod,
+      customerNotes: "",
+      status: "New",
+  })
+
+  // Saving without any of the on-screen feedback, for the moment the admin
+  // navigates away. It cannot await or report anything -- the screen is already
+  // going -- so it fires the request and lets it finish on its own.
+  const autoSaveOnLeave = () => {
+    const snapshot = autoSaveRef.current
+    if (!snapshot?.enabled) return
+
+    const payload = { ...snapshot.payload, quotationStatus: "Draft" }
+    const request = snapshot.recalledId
+      ? adminAPI.updateQuotation(snapshot.recalledId, payload)
+      : adminAPI.createOrder(payload)
+
+    request.catch((e) => console.error("[create-document] auto-save failed:", e))
+  }
+
+  // Refreshed every render so the unmount cleanup below reads live values.
+  // Nothing is auto-saved unless there is actually something worth keeping: a
+  // customer and at least one line. Opening the screen and clicking away must
+  // not litter Recent Quotation with empty drafts.
+  autoSaveRef.current = {
+    enabled: items.length > 0 && Boolean(shipping.name) && !autoSaveRef.current?.disabled,
+    disabled: autoSaveRef.current?.disabled || false,
+    recalledId,
+    payload: buildPayload(false),
+  }
+
+  useEffect(
+    () => () => {
+      autoSaveOnLeave()
+    },
+    [],
+  )
+
   const handleCreate = async (hold = false) => {
     try {
       if (updateUserProfile && selectedUser?._id) {
@@ -434,67 +540,11 @@ export default function CreateOrder() {
         })
       }
 
-      const payload = {
-        // Falls back to whoever the recalled document already belonged to, so
-        // reopening and saving never quietly detaches it from its customer.
-        userId: selectedUser?._id || recalledDoc?.user?._id || recalledDoc?.user || null,
-        documentType: mode,
-        // Held documents stay on the Recent Quotation page marked On Hold until
-        // someone releases them.
-        quotationStatus: hold ? "Hold" : "Draft",
-        sendCustomerEmail,
-        orderItems: items.map((it) => ({
-          name: it.name,
-          quantity: Number(it.quantity) || 1,
-          image: it.image || "/placeholder.svg",
-          // The price the document actually charges, which is the catalogue
-          // price re-based to this document's VAT rate. Stored this way so the
-          // invoice's line totals add up to the order total at any rate.
-          price: Number(lineCharged(num(it.price), taxRate).toFixed(2)),
-          product: it.product || undefined,
-        })),
-        deliveryType,
-        // The server keeps whichever half matches the delivery type and drops
-        // the other, so both are sent and it decides.
-        shippingAddress: {
-          name: shipping.name,
-          email: shipping.email,
-          phone: shipping.phone,
-          address: shipping.address,
-          city: shipping.city,
-          state: shipping.state,
-          zipCode: shipping.zipCode,
-        },
-        pickupDetails:
-          deliveryType === "pickup"
-            ? {
-                // The branch name, address and phone are copied onto the order
-                // rather than referenced, so an order still reads correctly if a
-                // branch is later renamed or closed.
-                phone: pickupDetails.phone || shipping.phone,
-                // The customer travels with the collection, since there is no
-                // shipping address on this order to carry them.
-                name: shipping.name,
-                location: findStore(pickupDetails.storeId)?.name || "",
-                storeId: pickupDetails.storeId,
-                storeAddress: findStore(pickupDetails.storeId)?.address || "",
-                storePhone: findStore(pickupDetails.storeId)?.phone || "",
-                email: shipping.email,
-              }
-            : undefined,
-        itemsPrice: Number(itemsNet.toFixed(2)),
-        shippingPrice: Number((Number(shippingPrice) || 0).toFixed(2)),
-        taxPrice: Number(taxPrice.toFixed(2)),
-        // Sent so the invoice can split each line at this rate rather than
-        // assuming the store default.
-        taxRate: num(taxRate),
-        discountAmount: Number((Number(discountAmount) || 0).toFixed(2)),
-        totalPrice: Number(totalPrice.toFixed(2)),
-        paymentMethod: paymentMethod === "tabby" ? "card" : paymentMethod,
-        actualPaymentMethod: paymentMethod,
-        customerNotes: "",
-        status: "New",
-      }
+      const payload = buildPayload(hold)
+
+      // Saved deliberately, so the auto-save must not fire again as this screen
+      // unmounts on the way to the next page.
+      autoSaveRef.current.disabled = true
 
       const created = recalledId
         ? await adminAPI.updateQuotation(recalledId, payload)
@@ -503,7 +553,7 @@ export default function CreateOrder() {
       // Both modes stage the document. It only reaches the Orders queues when
       // an admin moves it across from the Recent Quotation page.
       alert(
-        `${label} ${recalledId ? "updated" : "created"} successfully. #${created?._id?.slice?.(-6) || ""}\n\n` +
+        `${label} ${recalledId ? "saved" : "created"} successfully. #${created?._id?.slice?.(-6) || ""}\n\n` +
           (hold
             ? 'It is parked On Hold. Use the "On Hold" button at the top of this page to recall it.'
             : 'It is saved on the Recent Quotation page. Use "Move to Orders" there when it is ready to be fulfilled.'),
@@ -550,10 +600,15 @@ export default function CreateOrder() {
           </div>
           <button
             type="button"
-            onClick={() => navigate("/admin/orders/quotations")}
+            onClick={() => {
+              // Cancel means discard. Without this the auto-save would write the
+              // very edits the admin just backed out of.
+              autoSaveRef.current.disabled = true
+              navigate("/admin/orders/quotations")
+            }}
             className="rounded border border-blue-300 px-3 py-1.5 text-sm text-blue-800 hover:bg-blue-100"
           >
-            Cancel
+            Discard changes
           </button>
         </div>
       )}
@@ -1087,7 +1142,7 @@ export default function CreateOrder() {
           >
             <Save size={16} />
             {recalledId
-              ? `Update ${mode === "quotation" ? "Quotation" : "Order"}`
+              ? `Save ${mode === "quotation" ? "Quotation" : "Order"}`
               : mode === "quotation"
                 ? "Create Quotation"
                 : "Create Order"}
@@ -1116,13 +1171,15 @@ export default function CreateOrder() {
               <>
                 Saving keeps it on <span className="font-medium">Recent Quotation</span>. The plain save releases a
                 held document back to Draft; use <span className="font-medium">Save &amp; keep On Hold</span> to
-                leave it parked.
+                leave it parked. Leaving this page saves your changes as a Draft automatically &mdash; press
+                Discard changes to leave without saving.
               </>
             ) : (
               <>
                 Saved to <span className="font-medium">Recent Quotation</span> first. It reaches the Orders queues
                 only when you move it there. <span className="font-medium">Save on Hold</span> parks it there
-                instead, until you release it.
+                instead, until you release it. Leaving this page with a customer and at least one item saves it
+                as a Draft automatically, so nothing is lost.
               </>
             )}
           </p>
