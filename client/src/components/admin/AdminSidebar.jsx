@@ -558,21 +558,15 @@ const AdminSidebar = () => {
       ],
     },
     {
+      // The ten per-status pages became tabs on one Orders page, so this is a
+      // single link. Critical Orders stays separate: it is a view across
+      // statuses, not a status of its own.
       title: "Orders",
       icon: ShoppingCart,
       dropdown: "orders",
       permission: "orders",
       items: [
-        { title: "All Orders", path: "/admin/orders" },
-        { title: "New Orders", path: "/admin/orders/new" },
-        { title: "Confirmed", path: "/admin/orders/confirmed" },
-        { title: "Processing", path: "/admin/orders/processing" },
-        { title: "Ready for Shipment", path: "/admin/orders/ready-for-shipment" },
-        { title: "On the Way", path: "/admin/orders/on-the-way" },
-        { title: "Delivered", path: "/admin/orders/delivered" },
-        { title: "On Hold", path: "/admin/orders/on-hold" },
-        { title: "Cancelled", path: "/admin/orders/cancelled" },
-        { title: "Deleted", path: "/admin/orders/deleted" },
+        { title: "Orders", path: "/admin/orders" },
         { title: "Critical Orders", path: "/admin/orders/critical", icon: AlertTriangle, highlight: true },
       ],
     },

@@ -486,7 +486,7 @@ const ReadyForShipment = () => {
       // The status change is saved either way; this only decides whether the
       // customer hears about it.
       const targetOrder = orders.find((order) => order._id === orderId)
-      const updateData = { status, sendCustomerEmail: askToEmailCustomer(status, targetOrder) }
+      const updateData = { status, sendCustomerEmail: await askToEmailCustomer(status, targetOrder) }
       if (status === "Delivered") {
         updateData.isPaid = true
         updateData.paidAt = new Date().toISOString()
@@ -714,7 +714,7 @@ const ReadyForShipment = () => {
 
       // Asked once for the whole batch rather than once per order, so a bulk
       // update of fifty orders is one question, not fifty.
-      const notifyBulk = askToEmailCustomerBulk(bulkStatus, selectedOrders.length)
+      const notifyBulk = await askToEmailCustomerBulk(bulkStatus, selectedOrders.length)
 
       await Promise.all(
         selectedOrders.map((orderId) =>

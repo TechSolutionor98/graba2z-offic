@@ -159,7 +159,7 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
       setProcessingAction(true)
       const token = getToken()
       // Saving the status is not in question here; the email is.
-      const updateData = { status, sendCustomerEmail: askToEmailCustomer(status, order) }
+      const updateData = { status, sendCustomerEmail: await askToEmailCustomer(status, order) }
 
       if (status === "Delivered") {
         updateData.isPaid = true

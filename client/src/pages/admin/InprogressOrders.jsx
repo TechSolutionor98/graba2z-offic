@@ -97,7 +97,7 @@ const InprogressOrders = () => {
         // Saving the status is not in question; the email is.
         {
           status: "Ready for Shipment",
-          sendCustomerEmail: askToEmailCustomer("Ready for Shipment", orders.find((order) => order._id === orderId)),
+          sendCustomerEmail: await askToEmailCustomer("Ready for Shipment", orders.find((order) => order._id === orderId)),
         },
         {
           headers: {

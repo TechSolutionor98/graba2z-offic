@@ -101,7 +101,7 @@ const ReceivedOrders = () => {
         // Saving the status is not in question; the email is.
         {
           status: "Confirmed",
-          sendCustomerEmail: askToEmailCustomer("Confirmed", orders.find((order) => order._id === orderId)),
+          sendCustomerEmail: await askToEmailCustomer("Confirmed", orders.find((order) => order._id === orderId)),
         },
         {
           headers: {

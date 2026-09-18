@@ -107,7 +107,7 @@ const AdminOrders = () => {
       // The status change is saved either way; this only decides whether the
       // customer hears about it.
       const targetOrder = orders.find((order) => order._id === orderId)
-      const sendCustomerEmail = askToEmailCustomer(status, targetOrder)
+      const sendCustomerEmail = await askToEmailCustomer(status, targetOrder)
       await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/status`, { status, sendCustomerEmail }, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -157,7 +157,7 @@ const AdminOrders = () => {
       setProcessingAction(true)
       const token = localStorage.getItem('adminToken')
       const trackedOrder = orders.find((order) => order._id === orderId)
-      const sendCustomerEmail = askToEmailCustomer(`Tracking number ${trackingId}`, trackedOrder)
+      const sendCustomerEmail = await askToEmailCustomer(`Tracking number ${trackingId}`, trackedOrder)
       await axios.put(`${config.API_URL}/api/admin/orders/${orderId}/tracking`, { trackingId, sendCustomerEmail }, {
         headers: {
           Authorization: `Bearer ${token}`

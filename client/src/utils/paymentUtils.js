@@ -214,7 +214,13 @@ export const getOrderCurrencySymbol = (order) => {
  */
 export const formatOrderPrice = (price, order) => {
   const symbol = getOrderCurrencySymbol(order)
-  return `${symbol} ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+  // maximumFractionDigits matters as much as the minimum: without it
+  // toLocaleString allows a third decimal, and a VAT figure extracted from an
+  // inclusive price (1,680.9523...) printed as "AED 1,680.952" on the invoice.
+  return `${symbol} ${Number(price || 0).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
 }
 
 export default {

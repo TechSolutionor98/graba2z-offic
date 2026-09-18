@@ -100,7 +100,7 @@ export default function RecentQuotation() {
     try {
       setBusyId(quotation._id)
       setError("")
-      const sendCustomerEmail = askToEmailCustomer("Moved to Orders", quotation)
+      const sendCustomerEmail = await askToEmailCustomer("Moved to Orders", quotation)
       const response = await adminAPI.convertQuotation(quotation._id, { sendCustomerEmail })
       replaceRow(response?.quotation || { ...quotation, quotationStatus: "Converted" })
     } catch (e) {

@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom"
+import { Navigate, Route, Routes } from "react-router-dom"
 
 import AdminRoute from "../components/AdminRoute"
 import AdminHeader from "../components/admin/AdminHeader"
@@ -45,7 +45,6 @@ import AdminDeliveryCharges from "../pages/admin/AdminDeliveryCharges"
 import AdminEmailTemplates from "../pages/admin/AdminEmailTemplates"
 import AdminManagement from "../pages/admin/AdminManagement"
 import AdminNewsletter from "../pages/admin/AdminNewsletter"
-import AdminOrders from "../pages/admin/AdminOrders"
 import AdminProducts from "../pages/admin/AdminProducts"
 import AdminProductOptionManager from "../pages/admin/AdminProductOptionManager"
 import AdminRequestCallbacks from "../pages/admin/AdminRequestCallbacks"
@@ -89,11 +88,7 @@ import BlogDashboard from "../pages/admin/BlogDashboard"
 import BlogRating from "../pages/admin/BlogRating"
 import BlogTopics from "../pages/admin/BlogTopics"
 import BuyerProtectionAdmin from "../pages/admin/BuyerProtectionAdmin"
-import CancelledOrders from "../pages/admin/CancelledOrders"
-import ConfirmedOrders from "../pages/admin/ConfirmedOrders"
 import CriticalOrders from "../pages/admin/CriticalOrders"
-import DeletedOrders from "../pages/admin/DeletedOrders"
-import Delivered from "../pages/admin/Delivered"
 import EditBlog from "../pages/admin/EditBlog"
 import EditBlogBrand from "../pages/admin/EditBlogBrand"
 import EditBlogCategory from "../pages/admin/EditBlogCategory"
@@ -101,20 +96,13 @@ import EditBlogTopic from "../pages/admin/EditBlogTopic"
 import EditCategory from "../pages/admin/EditCategory"
 import EditSubCategory from "../pages/admin/EditSubCategory"
 import GamingZonePages from "../pages/admin/GamingZonePages"
-import InprogressOrders from "../pages/admin/InprogressOrders"
 import ManageBlogComments from "../pages/admin/ManageBlogComments"
-import NewOrders from "../pages/admin/NewOrders"
 import OfferPages from "../pages/admin/OfferPages"
-import OnHold from "../pages/admin/OnHold"
-import OnHoldOrders from "../pages/admin/OnHoldOrders"
-import OnTheWay from "../pages/admin/OnTheWay"
 import OnlineOrders from "../pages/admin/OnlineOrders"
 import PriceAdjustment from "../pages/admin/PriceAdjustment"
 import PriceAdjustmentReports from "../pages/admin/PriceAdjustmentReports"
-import ProcessingOrders from "../pages/admin/ProcessingOrders"
-import ReadyForShipment from "../pages/admin/ReadyForShipment"
 import RecentQuotation from "../pages/admin/RecentQuotation"
-import ReceivedOrders from "../pages/admin/ReceivedOrders"
+import Orders from "../pages/admin/Orders"
 import Rejected from "../pages/admin/Rejected"
 import ResetCache from "../pages/admin/ResetCache"
 import TrashCategories from "../pages/admin/TrashCategories"
@@ -137,13 +125,24 @@ const AdminPortal = () => {
             <Route path="products/bulk-add" element={<AddBulkProducts />} />
             <Route path="product-pm" element={<ProductPaymentMethods />} />
             <Route path="country-pm" element={<CountryPaymentMethods />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="orders/received" element={<ReceivedOrders />} />
-            <Route path="orders/in-progress" element={<InprogressOrders />} />
-            <Route path="orders/ready-for-shipment" element={<ReadyForShipment />} />
-            <Route path="orders/on-the-way" element={<OnTheWay />} />
-            <Route path="orders/delivered" element={<Delivered />} />
-            <Route path="orders/on-hold" element={<OnHold />} />
+            {/* One tabbed page replaced the ten per-status pages. The old paths
+                redirect to it with their tab preselected, so sidebar links,
+                bookmarks and anything deep-linking an order keep working. */}
+            <Route path="orders" element={<Orders />} />
+            <Route path="orders/new" element={<Navigate to="/admin/orders?status=New" replace />} />
+            <Route path="orders/confirmed" element={<Navigate to="/admin/orders?status=Confirmed" replace />} />
+            <Route path="orders/processing" element={<Navigate to="/admin/orders?status=Processing" replace />} />
+            <Route
+              path="orders/ready-for-shipment"
+              element={<Navigate to="/admin/orders?status=Ready%20for%20Shipment" replace />}
+            />
+            <Route path="orders/on-the-way" element={<Navigate to="/admin/orders?status=On%20the%20Way" replace />} />
+            <Route path="orders/delivered" element={<Navigate to="/admin/orders?status=Delivered" replace />} />
+            <Route path="orders/on-hold" element={<Navigate to="/admin/orders?status=On%20Hold" replace />} />
+            <Route path="orders/cancelled" element={<Navigate to="/admin/orders?status=Cancelled" replace />} />
+            <Route path="orders/deleted" element={<Navigate to="/admin/orders?status=Deleted" replace />} />
+            <Route path="orders/received" element={<Navigate to="/admin/orders?status=New" replace />} />
+            <Route path="orders/in-progress" element={<Navigate to="/admin/orders?status=Processing" replace />} />
             <Route path="orders/rejected" element={<Rejected />} />
             <Route path="orders/online" element={<OnlineOrders />} />
 
@@ -321,12 +320,6 @@ const AdminPortal = () => {
             <Route path="stock-adjustment/price-adjustment" element={<PriceAdjustment />} />
             <Route path="stock-adjustment/reports" element={<PriceAdjustmentReports />} />
 
-            <Route path="orders/new" element={<NewOrders />} />
-            <Route path="orders/confirmed" element={<ConfirmedOrders />} />
-            <Route path="orders/processing" element={<ProcessingOrders />} />
-            <Route path="orders/on-hold" element={<OnHoldOrders />} />
-            <Route path="orders/cancelled" element={<CancelledOrders />} />
-            <Route path="orders/deleted" element={<DeletedOrders />} />
             <Route path="orders/critical" element={<CriticalOrders />} />
 
             <Route path="orders/create" element={<CreateOrder />} />

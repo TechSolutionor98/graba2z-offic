@@ -431,7 +431,7 @@ const OnHold = () => {
       await axios.put(
         `${config.API_URL}/api/admin/orders/${orderId}/status`,
         // Saving the status is not in question; the email is.
-        { status: newStatus, sendCustomerEmail: askToEmailCustomer(newStatus, orders.find((order) => order._id === orderId)) },
+        { status: newStatus, sendCustomerEmail: await askToEmailCustomer(newStatus, orders.find((order) => order._id === orderId)) },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -565,7 +565,7 @@ const OnHold = () => {
         // Saving the status is not in question; the email is.
         {
           status: "Processing",
-          sendCustomerEmail: askToEmailCustomer("Processing", orders.find((order) => order._id === orderId)),
+          sendCustomerEmail: await askToEmailCustomer("Processing", orders.find((order) => order._id === orderId)),
         },
         {
           headers: {
