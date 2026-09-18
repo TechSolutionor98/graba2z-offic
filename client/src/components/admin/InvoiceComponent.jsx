@@ -3,6 +3,7 @@ import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 import { splitItemsVat, formatVatRateLabel } from "../../utils/vat"
+import { orderPickupStore } from "../../utils/orderCustomer"
 
 const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) => {
 
@@ -115,20 +116,21 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
             </div>
             <div className="pt-2 space-y-1 text-sm">
               <p>
-                <strong>Branch:</strong> {order.pickupDetails?.location || "N/A"}
+                <strong>Branch:</strong> {orderPickupStore(order).name || "N/A"}
               </p>
-              {order.pickupDetails?.storeAddress && (
+              {orderPickupStore(order).address && (
                 <p>
-                  <strong>Address:</strong> {order.pickupDetails.storeAddress}
+                  <strong>Address:</strong> {orderPickupStore(order).address}
                 </p>
               )}
-              {order.pickupDetails?.storePhone && (
+              {orderPickupStore(order).phone && (
                 <p>
-                  <strong>Branch phone:</strong> {order.pickupDetails.storePhone}
+                  <strong>Branch phone:</strong> {orderPickupStore(order).phone}
                 </p>
               )}
               <p>
-                <strong>Collected by:</strong> {order.shippingAddress?.name || order.user?.name || "N/A"}
+                <strong>Collected by:</strong>{" "}
+                {order.pickupDetails?.name || order.shippingAddress?.name || order.user?.name || "N/A"}
               </p>
               <p>
                 <strong>Contact:</strong> {order.pickupDetails?.phone || order.shippingAddress?.phone || "N/A"}

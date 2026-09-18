@@ -21,6 +21,7 @@ import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getOrderCountryNam
 import { paymentMethodChargeAPI, adminAPI } from "../../services/api"
 import InvoiceComponent from "./InvoiceComponent"
 import { askToEmailCustomer } from "../../utils/customerEmail"
+import { orderCustomerName, orderCustomerEmail, orderCustomerPhone, orderPickupStore } from "../../utils/orderCustomer"
 
 const orderStatusOptions = [
   "New",
@@ -683,18 +684,32 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                     </>
                   ) : order.pickupDetails ? (
                     <>
+                      {/* The customer comes first -- a collection has no
+                          shippingAddress, so this block was showing the branch and
+                          nothing about who the order is for. */}
                       <p>
-                        <span className="font-medium">Store Name:</span>{" "}
-                        {order.pickupDetails.location || "N/A"}
+                        <span className="font-medium">Name:</span> {orderCustomerName(order) || "N/A"}
                       </p>
                       <p>
-                        <span className="font-medium">Store Address:</span>{" "}
-                        {order.pickupDetails.storeAddress || "N/A"}
+                        <span className="font-medium">Email:</span> {orderCustomerEmail(order) || "N/A"}
                       </p>
                       <p>
-                        <span className="font-medium">Store Phone:</span>{" "}
-                        {order.pickupDetails.storePhone || "N/A"}
+                        <span className="font-medium">Phone:</span> {orderCustomerPhone(order) || "N/A"}
                       </p>
+                      <div className="mt-3 rounded-lg bg-lime-50 p-3 ring-1 ring-lime-200">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-lime-800">
+                          Collecting from
+                        </p>
+                        <p className="mt-1 font-medium text-gray-900">{orderPickupStore(order).name || "N/A"}</p>
+                        {orderPickupStore(order).address && (
+                          <p className="mt-0.5 text-sm text-gray-600">{orderPickupStore(order).address}</p>
+                        )}
+                        {orderPickupStore(order).phone && (
+                          <p className="mt-0.5 text-sm text-gray-600">
+                            Branch phone: {orderPickupStore(order).phone}
+                          </p>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <p>N/A</p>

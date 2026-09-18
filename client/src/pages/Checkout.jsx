@@ -826,6 +826,10 @@ const Checkout = () => {
         const store = STORES.find((s) => s.storeId === pickupDetails.storeId)
         orderData.pickupDetails = {
           phone: pickupDetails.phone,
+          // A collection has no shippingAddress, so the customer is recorded
+          // here or the order has no record of who placed it.
+          name: formData.name,
+          email: formData.email,
           location: store?.name || pickupDetails.location,
           storeId: pickupDetails.storeId,
           storeAddress: store?.address,
@@ -1180,6 +1184,10 @@ const Checkout = () => {
         const store = STORES.find((s) => s.storeId === pickupDetails.storeId)
         orderData.pickupDetails = {
           phone: pickupDetails.phone,
+          // A collection has no shippingAddress, so the customer is recorded
+          // here or the order has no record of who placed it.
+          name: formData.name,
+          email: formData.email,
           location: store?.name || pickupDetails.location,
           storeId: pickupDetails.storeId,
           storeAddress: store?.address,

@@ -472,6 +472,9 @@ export default function CreateOrder() {
                 // rather than referenced, so an order still reads correctly if a
                 // branch is later renamed or closed.
                 phone: pickupDetails.phone || shipping.phone,
+                // The customer travels with the collection, since there is no
+                // shipping address on this order to carry them.
+                name: shipping.name,
                 location: findStore(pickupDetails.storeId)?.name || "",
                 storeId: pickupDetails.storeId,
                 storeAddress: findStore(pickupDetails.storeId)?.address || "",

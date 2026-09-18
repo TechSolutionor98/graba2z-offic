@@ -6,6 +6,7 @@ import { Search, Eye, RefreshCw, PauseCircle, PlayCircle, ArrowRightCircle, Penc
 import { useNavigate, useSearchParams } from "react-router-dom"
 import AdminOrderDetailsModal from "../../components/admin/AdminOrderDetailsModal"
 import { askToEmailCustomer } from "../../utils/customerEmail"
+import { orderCustomerName, orderCustomerEmail, orderPickupBranch } from "../../utils/orderCustomer"
 
 const formatPrice = (price) => `AED ${Number(price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
 
@@ -117,8 +118,8 @@ export default function RecentQuotation() {
       if (statusFilter !== "all" && status !== statusFilter) return false
       if (!q) return true
       const id = it._id?.slice?.(-6)?.toLowerCase?.() || ""
-      const name = it.shippingAddress?.name?.toLowerCase?.() || ""
-      const email = it.shippingAddress?.email?.toLowerCase?.() || ""
+      const name = orderCustomerName(it).toLowerCase()
+      const email = orderCustomerEmail(it).toLowerCase()
       return id.includes(q) || name.includes(q) || email.includes(q)
     })
   }, [quotations, search, statusFilter])
@@ -204,8 +205,11 @@ export default function RecentQuotation() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <div>{q.shippingAddress?.name || "N/A"}</div>
-                      <div className="text-gray-500">{q.shippingAddress?.email || "N/A"}</div>
+                      <div>{orderCustomerName(q) || "N/A"}</div>
+                      <div className="text-gray-500">{orderCustomerEmail(q) || "N/A"}</div>
+                      {orderPickupBranch(q) && (
+                        <div className="mt-0.5 text-xs text-gray-500">Collect: {orderPickupBranch(q)}</div>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 text-xs rounded-full ${statusChipClass(status)}`}>

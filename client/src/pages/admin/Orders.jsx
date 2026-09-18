@@ -9,6 +9,7 @@ import { Search, Eye, Mail, ChevronDown, RefreshCw, X } from "lucide-react"
 import config from "../../config/config"
 import { getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 import { askToEmailCustomer, askToEmailCustomerBulk } from "../../utils/customerEmail"
+import { orderCustomerName, orderCustomerEmail, orderCustomerPhone, orderPickupBranch } from "../../utils/orderCustomer"
 
 // Every status an order can be moved to. Wider than the tab list below on
 // purpose: an order can be sent to Shipped or Returned even though neither has
@@ -165,9 +166,9 @@ export default function Orders() {
     return tabOrders.filter((order) => {
       const id = order._id?.toLowerCase?.() || ""
       const tracking = order.trackingId?.toLowerCase?.() || ""
-      const name = order.shippingAddress?.name?.toLowerCase?.() || ""
-      const email = order.shippingAddress?.email?.toLowerCase?.() || ""
-      const phone = order.shippingAddress?.phone?.toLowerCase?.() || ""
+      const name = orderCustomerName(order).toLowerCase()
+      const email = orderCustomerEmail(order).toLowerCase()
+      const phone = orderCustomerPhone(order).toLowerCase()
       return id.includes(q) || tracking.includes(q) || name.includes(q) || email.includes(q) || phone.includes(q)
     })
   }, [tabOrders, searchTerm])
@@ -458,16 +459,15 @@ export default function Orders() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {order.deliveryType === "pickup" ? (
-                          <>
-                            <div className="text-sm text-gray-900">{order.pickupDetails?.location || "N/A"}</div>
-                            <div className="text-sm text-gray-500">{order.pickupDetails?.phone || "N/A"}</div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="text-sm text-gray-900">{order.shippingAddress?.name || "N/A"}</div>
-                            <div className="text-sm text-gray-500">{order.shippingAddress?.email || "N/A"}</div>
-                          </>
+                        {/* The customer first, whichever half of the order carries
+                            them. The branch is extra detail, not a replacement for
+                            knowing whose order it is. */}
+                        <div className="text-sm text-gray-900">{orderCustomerName(order) || "N/A"}</div>
+                        <div className="text-sm text-gray-500">
+                          {orderCustomerEmail(order) || orderCustomerPhone(order) || "N/A"}
+                        </div>
+                        {orderPickupBranch(order) && (
+                          <div className="text-xs text-gray-500">🏬 {orderPickupBranch(order)}</div>
                         )}
                         <span className="mt-1 inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800 uppercase">
                           📍 {getOrderCountryName(order)}
