@@ -12,7 +12,7 @@ import { Dialog, Transition } from "@headlessui/react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { useReactToPrint } from "react-to-print"
-import { getOrderCurrencySymbol } from "../utils/paymentUtils"
+import { getOrderCurrencySymbol, getOrderCountryName } from "../utils/paymentUtils"
 import config from "../config/config"
 import { pushPurchase } from "../utils/gtmTracking"
 import InvoiceComponent from "../components/admin/InvoiceComponent"
@@ -227,25 +227,43 @@ const UserOrders = () => {
     }, 100)
   }
 
+  // Every status the order model can hold gets its own icon and colour, in the
+  // same palette the admin uses. Anything unmatched fell through to a warning
+  // triangle before, which is why a Confirmed or Delivered order was flagged as
+  // if something were wrong with it.
   const getStatusIcon = (status) => {
     switch (status) {
-      case "Processing": return <Clock className="h-5 w-5 text-yellow-600" />
-      case "Shipped": return <Package className="h-5 w-5 text-blue-600" />
-      case "Out for Delivery": return <Truck className="h-5 w-5 text-purple-600" />
-      case "Delivered": return <CheckCircle className="h-5 w-5 text-green-600" />
-      default: return <AlertTriangle className="h-5 w-5 text-gray-600" />
+      case "New": return <FileText className="h-4 w-4" />
+      case "Confirmed": return <CheckCircle className="h-4 w-4" />
+      case "Processing": return <Clock className="h-4 w-4" />
+      case "Ready for Shipment": return <Package className="h-4 w-4" />
+      case "Shipped":
+      case "On the Way":
+      case "Out for Delivery": return <Truck className="h-4 w-4" />
+      case "Delivered": return <CheckCircle className="h-4 w-4" />
+      case "On Hold": return <Clock className="h-4 w-4" />
+      case "Cancelled":
+      case "Returned":
+      case "Deleted": return <X className="h-4 w-4" />
+      default: return <Clock className="h-4 w-4" />
     }
   }
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Processing": return "bg-yellow-50 text-yellow-700 border-yellow-200"
-      case "Shipped": return "bg-blue-50 text-blue-700 border-blue-200"
-      case "Out for Delivery": return "bg-purple-50 text-purple-700 border-purple-200"
-      case "Delivered": return "bg-green-50 text-green-700 border-green-200"
+      case "New": return "bg-slate-100 text-slate-700 border-slate-200"
+      case "Confirmed": return "bg-lime-100 text-lime-800 border-lime-200"
+      case "Processing": return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "Ready for Shipment": return "bg-cyan-100 text-cyan-800 border-cyan-200"
+      case "Shipped": return "bg-purple-100 text-purple-800 border-purple-200"
+      case "On the Way": return "bg-blue-100 text-blue-800 border-blue-200"
+      case "Out for Delivery": return "bg-indigo-100 text-indigo-800 border-indigo-200"
+      case "Delivered": return "bg-green-100 text-green-800 border-green-200"
+      case "On Hold": return "bg-orange-100 text-orange-800 border-orange-200"
       case "Cancelled":
-      case "Deleted": return "bg-red-50 text-red-700 border-red-200"
-      default: return "bg-gray-50 text-gray-700 border-gray-200"
+      case "Returned":
+      case "Deleted": return "bg-red-100 text-red-800 border-red-200"
+      default: return "bg-gray-100 text-gray-700 border-gray-200"
     }
   }
 
@@ -363,10 +381,20 @@ const UserOrders = () => {
                           {getOrderCurrencySymbol(order)} {Number(order.totalPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
                       </div>
+                      <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 mb-1">Country</p>
+                        <p className="text-base font-medium text-gray-900 flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4 text-gray-400" />
+                          {getOrderCountryName(order)}
+                        </p>
+                      </div>
                     </div>
-                    <div className={`px-4 py-2 rounded-full border flex items-center gap-2 ${getStatusColor(order.status)}`}>
+                    <div
+                      className={`px-3.5 py-1.5 rounded-lg border flex items-center gap-2 font-semibold text-sm ${getStatusColor(order.status)}`}
+                    >
                       {getStatusIcon(order.status)}
-                      <span className="font-semibold text-sm tracking-wide">{order.status}</span>
+                      <span>{order.status}</span>
                     </div>
                   </div>
 
@@ -517,16 +545,61 @@ const UserOrders = () => {
                       {/* Modal Header */}
                       <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/80 sticky top-0 z-10">
                         <div>
-                          <Dialog.Title as="h3" className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                            Order Summary
-                            <span className={`px-3 py-1 rounded-full border text-xs font-semibold tracking-wide flex items-center gap-1 ${getStatusColor(selectedOrder.status)}`}>
+                          <Dialog.Title as="h3" className="text-xl font-bold text-gray-900 flex flex-wrap items-center gap-3">
+                            Order #{selectedOrder._id.slice(-6).toUpperCase()}
+                            <span
+                              className={`px-3 py-1 rounded-lg border text-xs font-semibold tracking-wide flex items-center gap-1.5 ${getStatusColor(selectedOrder.status)}`}
+                            >
                               {getStatusIcon(selectedOrder.status)}
                               {selectedOrder.status}
                             </span>
                           </Dialog.Title>
-                          <p className="text-sm text-gray-500 mt-1">
-                            Placed on {new Date(selectedOrder.createdAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                          </p>
+                          {/* The facts people look for first, before scrolling the items. */}
+                          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                            <span>
+                              Placed{" "}
+                              {new Date(selectedOrder.createdAt).toLocaleDateString("en-US", {
+                                weekday: "long",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3.5 w-3.5" />
+                              {getOrderCountryName(selectedOrder)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <CreditCard className="h-3.5 w-3.5" />
+                              {selectedOrder.paymentMethod}
+                              <span
+                                className={`ml-1 rounded px-1.5 py-0.5 text-xs font-medium ${
+                                  selectedOrder.isPaid ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                                }`}
+                              >
+                                {selectedOrder.isPaid ? "Paid" : "Pending"}
+                              </span>
+                            </span>
+                            <span className="flex items-center gap-1">
+                              {selectedOrder.deliveryType === "pickup" ? (
+                                <>
+                                  <ShoppingBag className="h-3.5 w-3.5" />
+                                  Collect from {selectedOrder.pickupDetails?.location || "store"}
+                                </>
+                              ) : (
+                                <>
+                                  <Truck className="h-3.5 w-3.5" />
+                                  Home delivery
+                                </>
+                              )}
+                            </span>
+                            {selectedOrder.trackingId && (
+                              <span className="flex items-center gap-1">
+                                <Package className="h-3.5 w-3.5" />
+                                Tracking {selectedOrder.trackingId}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <button
                           onClick={closeModal}
@@ -719,6 +792,18 @@ const UserOrders = () => {
 
                       {/* Modal Footer */}
                       <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-end gap-3 sticky bottom-0 z-10">
+                        {/* Reordering from inside the modal, so the customer does
+                            not have to close it and find the card again. */}
+                        <button
+                          onClick={() => {
+                            handleOrderAgain(selectedOrder)
+                            closeModal()
+                          }}
+                          className="inline-flex items-center justify-center px-5 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-xl font-medium hover:bg-gray-100 transition-all"
+                        >
+                          <ShoppingBag className="w-4 h-4 mr-2" />
+                          Order Again
+                        </button>
                         <button
                           onClick={() => triggerPrint(selectedOrder)}
                           className="inline-flex items-center justify-center px-5 py-2.5 bg-green-600 text-white border border-transparent rounded-xl font-medium hover:bg-green-700 transition-all shadow-sm"
