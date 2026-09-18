@@ -451,6 +451,7 @@ const ReferralTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="0.01"
                       min="0"
                       value={form.refereeDiscountValue}
                       onChange={(e) => setForm({ ...form, refereeDiscountValue: Number(e.target.value) })}
@@ -463,6 +464,7 @@ const ReferralTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="0.01"
                       min="0"
                       value={form.refereeMaxDiscountAed}
                       onChange={(e) => setForm({ ...form, refereeMaxDiscountAed: Number(e.target.value) })}
@@ -478,6 +480,7 @@ const ReferralTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="0.01"
                       min="0"
                       value={form.refereeMinOrderAed}
                       onChange={(e) => setForm({ ...form, refereeMinOrderAed: Number(e.target.value) })}
@@ -490,6 +493,7 @@ const ReferralTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="1"
                       min="0"
                       value={form.refereeExpiryDays}
                       onChange={(e) => setForm({ ...form, refereeExpiryDays: Number(e.target.value) })}
@@ -533,6 +537,7 @@ const ReferralTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="0.01"
                       min="0"
                       value={form.referrerDiscountValue}
                       onChange={(e) => setForm({ ...form, referrerDiscountValue: Number(e.target.value) })}
@@ -545,6 +550,7 @@ const ReferralTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="0.01"
                       min="0"
                       value={form.referrerMaxDiscountAed}
                       onChange={(e) => setForm({ ...form, referrerMaxDiscountAed: Number(e.target.value) })}
@@ -560,6 +566,7 @@ const ReferralTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="0.01"
                       min="0"
                       value={form.referrerMinOrderAed}
                       onChange={(e) => setForm({ ...form, referrerMinOrderAed: Number(e.target.value) })}
@@ -572,6 +579,7 @@ const ReferralTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="1"
                       min="0"
                       value={form.referrerExpiryDays}
                       onChange={(e) => setForm({ ...form, referrerExpiryDays: Number(e.target.value) })}
@@ -589,6 +597,7 @@ const ReferralTypesSection = ({ standalone = false }) => {
                   </label>
                   <input
                     type="number"
+                      step="0.01"
                     min="0"
                     placeholder="0 = any order"
                     value={form.qualifyMinOrderAed}
@@ -605,6 +614,7 @@ const ReferralTypesSection = ({ standalone = false }) => {
                   </label>
                   <input
                     type="number"
+                      step="1"
                     min="0"
                     placeholder="0 = unlimited"
                     value={form.maxQualifiedReferralsPerUser}

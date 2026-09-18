@@ -438,6 +438,7 @@ const LoyaltyTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="0.01"
                       min="0"
                       placeholder="Leave blank to use multiplier"
                       value={form.customEarnPointsPerAed}
@@ -464,6 +465,7 @@ const LoyaltyTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="0.01"
                       min="0"
                       placeholder="Default"
                       value={form.redeemPointsPerAed}
@@ -477,6 +479,7 @@ const LoyaltyTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="1"
                       min="0"
                       placeholder="Default"
                       value={form.minPointsToRedeem}
@@ -490,6 +493,7 @@ const LoyaltyTypesSection = ({ standalone = false }) => {
                     </label>
                     <input
                       type="number"
+                      step="0.01"
                       min="0"
                       max="100"
                       placeholder="Default"
