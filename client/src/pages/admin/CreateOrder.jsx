@@ -38,6 +38,9 @@ export default function CreateOrder() {
   // updates that document instead of raising a second copy of it.
   const recalledId = searchParams.get("id")
   const [recalledDoc, setRecalledDoc] = useState(null)
+  // How many documents are parked. Drives the On Hold button in the header --
+  // there is nothing to go and look at until at least one exists.
+  const [heldCount, setHeldCount] = useState(0)
   const [loadingRecalled, setLoadingRecalled] = useState(Boolean(recalledId))
   const [loadError, setLoadError] = useState("")
 
@@ -105,6 +108,23 @@ export default function CreateOrder() {
     () => Math.max(0, itemsGross + num(shippingPrice) - num(discountAmount)),
     [itemsGross, shippingPrice, discountAmount],
   )
+
+  useEffect(() => {
+    let cancelled = false
+    const loadHeldCount = async () => {
+      try {
+        const held = await adminAPI.getQuotations({ quotationStatus: "Hold" })
+        if (!cancelled) setHeldCount(Array.isArray(held) ? held.length : 0)
+      } catch (e) {
+        // Not worth an error on screen -- the button simply stays hidden.
+        console.error("[create-document] held count error:", e)
+      }
+    }
+    loadHeldCount()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (!recalledId) return
@@ -341,6 +361,21 @@ export default function CreateOrder() {
 
   const canSubmit = items.length > 0 && shipping.name && shipping.email && shipping.phone && shipping.address
 
+  // Parking a document leaves the admin ready for the next one, so the form is
+  // cleared rather than the page navigated away from.
+  const resetForm = () => {
+    setItems([])
+    setSelectedUser(null)
+    setShipping({ name: "", email: "", phone: "", address: "", city: "", state: "", zipCode: "" })
+    setShippingPrice(0)
+    setDiscountAmount(0)
+    setSendCustomerEmail(false)
+    setUpdateUserProfile(false)
+    setProductQuery("")
+    setProductResults([])
+    setFilters({ parentCategory: "", subcategory: "", brand: "" })
+  }
+
   const handleCreate = async (hold = false) => {
     try {
       if (updateUserProfile && selectedUser?._id) {
@@ -406,9 +441,19 @@ export default function CreateOrder() {
       alert(
         `${label} ${recalledId ? "updated" : "created"} successfully. #${created?._id?.slice?.(-6) || ""}\n\n` +
           (hold
-            ? 'It is saved on the Recent Quotation page and marked On Hold. Press "Release" there when it is live again.'
+            ? 'It is parked On Hold. Use the "On Hold" button at the top of this page to recall it.'
             : 'It is saved on the Recent Quotation page. Use "Move to Orders" there when it is ready to be fulfilled.'),
       )
+
+      // Parking a new document keeps the admin here, with the On Hold counter in
+      // the header now one higher and the form ready for the next one. Everything
+      // else goes to the staging list to be acted on.
+      if (hold && !recalledId) {
+        setHeldCount((count) => count + 1)
+        resetForm()
+        return
+      }
+
       navigate("/admin/orders/quotations")
     } catch (e) {
       console.error("[create-document] create error:", e)
@@ -451,7 +496,20 @@ export default function CreateOrder() {
 
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">{recalledId ? "Edit Order / Quotation" : "Create Order / Create Quotation"}</h1>
-        <div className="inline-flex rounded-md border overflow-hidden">
+        <div className="flex flex-wrap items-center gap-3">
+          {heldCount > 0 && (
+            <button
+              type="button"
+              onClick={() => navigate("/admin/orders/quotations?status=Hold")}
+              className="inline-flex items-center gap-2 rounded-md border border-orange-300 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-800 hover:bg-orange-100"
+              title="Open the documents parked on hold, to recall or release them"
+            >
+              <PauseCircle size={16} />
+              On Hold ({heldCount})
+            </button>
+          )}
+
+          <div className="inline-flex rounded-md border overflow-hidden">
           <button
             type="button"
             onClick={() => setMode("order")}
@@ -466,6 +524,7 @@ export default function CreateOrder() {
           >
             Create Quotation
           </button>
+          </div>
         </div>
       </div>
 

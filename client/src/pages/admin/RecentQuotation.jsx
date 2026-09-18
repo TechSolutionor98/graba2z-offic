@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { adminAPI } from "../../services/api"
 import { Search, Eye, RefreshCw, PauseCircle, PlayCircle, ArrowRightCircle, PencilLine } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import AdminOrderDetailsModal from "../../components/admin/AdminOrderDetailsModal"
 import { askToEmailCustomer } from "../../utils/customerEmail"
 
@@ -32,11 +32,17 @@ const statusLabel = (status) => {
 
 export default function RecentQuotation() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [quotations, setQuotations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
+  // Arriving from the On Hold button on the create screen opens straight onto
+  // that tab rather than making the admin find it.
+  const requestedStatus = searchParams.get("status")
+  const [statusFilter, setStatusFilter] = useState(
+    STATUS_TABS.some((tab) => tab.id === requestedStatus) ? requestedStatus : "all",
+  )
   const [busyId, setBusyId] = useState(null)
   const [selectedQuotation, setSelectedQuotation] = useState(null)
 
