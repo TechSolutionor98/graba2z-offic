@@ -352,7 +352,7 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-gray-600">Subtotal (incl. VAT):</span>
+              <span className="text-gray-600">{vatRate > 0 ? "Subtotal (incl. VAT):" : "Subtotal:"}</span>
               <span className="text-gray-900">{formatPrice(subtotal + (couponDiscount || 0))}</span>
             </div>
 
@@ -418,8 +418,11 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                 )}
               </>
             )}
+            {/* A zero-rated document is an exempt sale: the VAT was taken off the
+                price rather than being buried inside it, so saying "Included"
+                would be false. */}
             <div className="flex justify-between">
-              <span className="text-gray-600">VAT (Included):</span>
+              <span className="text-gray-600">{vatRate > 0 ? "VAT (Included):" : "VAT (Excluded):"}</span>
               <span className="text-gray-900">{formatPrice(tax)}</span>
             </div>
             <div className="border-t pt-2 flex justify-between">

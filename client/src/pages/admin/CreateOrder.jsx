@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { adminAPI, categoriesAPI, apiRequest, productsAdminAPI } from "../../services/api"
 import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText, PauseCircle, Truck, Store } from "lucide-react"
 import { visibleStores, findStore } from "../../data/stores"
+import { DEFAULT_VAT_RATE } from "../../utils/vat"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 const currency = (n) =>
@@ -16,8 +17,19 @@ const num = (v) => {
   return Number.isFinite(n) ? n : 0
 }
 
-// Prices on this page are VAT-inclusive (the same figure the storefront shows),
-// so the tax is extracted from the line total rather than added on top.
+// The price typed on a line is the catalogue figure, which already includes VAT
+// at the store's standard rate. Everything here works from the ex-VAT value
+// underneath it, so changing Tax/Vat % changes what is charged rather than just
+// relabelling the same total: at 5% a 100.00 line is charged 100.00, at 0% it is
+// charged 95.24, and at 10% it is 104.76.
+const CATALOGUE_VAT_RATE = DEFAULT_VAT_RATE
+
+// The ex-VAT value inside a catalogue price. 100.00 including 5% is 95.238...,
+// not 95.00 -- 5% of 95.00 would be 4.75, which would not add back to 100.
+const exVat = (inclusiveAmount) => num(inclusiveAmount) / (1 + CATALOGUE_VAT_RATE / 100)
+
+// What a line is actually charged once the document's own rate is applied.
+const lineCharged = (inclusiveAmount, rate) => exVat(inclusiveAmount) * (1 + num(rate) / 100)
 const PRICE_MODES = [
   { id: "regular", label: "Regular price" },
   { id: "wholesale", label: "Wholesale price" },
@@ -98,22 +110,21 @@ export default function CreateOrder() {
 
   // What the customer pays for the goods, VAT included -- the figure on the
   // line rows.
-  const itemsGross = useMemo(
+  // The lines as typed -- catalogue prices, VAT included at the standard rate.
+  const itemsListed = useMemo(
     () => items.reduce((sum, it) => sum + num(it.price) * num(it.quantity), 0),
     [items],
   )
-  // The VAT already sitting inside itemsGross, backed out at the chosen rate.
-  const taxPrice = useMemo(() => {
-    const rate = num(taxRate)
-    if (rate <= 0) return 0
-    return itemsGross - itemsGross / (1 + rate / 100)
-  }, [itemsGross, taxRate])
-  // Goods before VAT. itemsNet + taxPrice === itemsGross, so the total below is
-  // unchanged by how the rate is set -- only the split moves.
-  const itemsNet = useMemo(() => itemsGross - taxPrice, [itemsGross, taxPrice])
+  // The goods with the embedded VAT taken out. This does not move when the rate
+  // does; it is what the products cost before any tax.
+  const itemsNet = useMemo(() => exVat(itemsListed), [itemsListed])
+  // VAT at whatever rate this document is set to. Zero means an exempt sale, and
+  // the total below drops accordingly rather than quietly keeping the VAT.
+  const taxPrice = useMemo(() => itemsNet * (num(taxRate) / 100), [itemsNet, taxRate])
+  const itemsCharged = useMemo(() => itemsNet + taxPrice, [itemsNet, taxPrice])
   const totalPrice = useMemo(
-    () => Math.max(0, itemsGross + num(shippingPrice) - num(discountAmount)),
-    [itemsGross, shippingPrice, discountAmount],
+    () => Math.max(0, itemsCharged + num(shippingPrice) - num(discountAmount)),
+    [itemsCharged, shippingPrice, discountAmount],
   )
 
   useEffect(() => {
@@ -423,7 +434,10 @@ export default function CreateOrder() {
           name: it.name,
           quantity: Number(it.quantity) || 1,
           image: it.image || "/placeholder.svg",
-          price: num(it.price),
+          // The price the document actually charges, which is the catalogue
+          // price re-based to this document's VAT rate. Stored this way so the
+          // invoice's line totals add up to the order total at any rate.
+          price: Number(lineCharged(num(it.price), taxRate).toFixed(2)),
           product: it.product || undefined,
         })),
         deliveryType,
@@ -945,7 +959,9 @@ export default function CreateOrder() {
                           )}
                         </div>
                       </td>
-                      <td className="py-2 text-right">{currency(num(it.price) * num(it.quantity))}</td>
+                      <td className="py-2 text-right">
+                        {currency(lineCharged(num(it.price) * num(it.quantity), taxRate))}
+                      </td>
                       <td className="py-2 text-right">
                         <button
                           type="button"
@@ -960,8 +976,10 @@ export default function CreateOrder() {
                   ))}
                   <tr>
                     <td colSpan={5} className="py-2 text-xs text-gray-500">
-                      Prices include VAT. Editing a price changes this document only &mdash; the product
-                      itself is never touched. You can add special discount below.
+                      Prices are the catalogue figures, VAT included at {CATALOGUE_VAT_RATE}%. Change
+                      Tax/Vat % and the charged total re-bases to that rate &mdash; set it to 0 for an
+                      exempt sale and the VAT comes off. Editing a price changes this document only;
+                      the product itself is never touched.
                     </td>
                   </tr>
                 </tbody>
@@ -973,6 +991,12 @@ export default function CreateOrder() {
         <div className="bg-white rounded-lg shadow p-4">
           <h2 className="font-semibold mb-3">Totals</h2>
           <div className="space-y-2 text-sm">
+            {num(taxRate) !== CATALOGUE_VAT_RATE && (
+              <div className="flex justify-between text-gray-500">
+                <span>Listed (incl. {CATALOGUE_VAT_RATE}% VAT)</span>
+                <span className="line-through">{currency(itemsListed)}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span>Items (excl. VAT)</span>
               <span>{currency(itemsNet)}</span>
