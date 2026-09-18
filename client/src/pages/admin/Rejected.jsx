@@ -185,8 +185,11 @@ const Rejected = () => {
                         <div className="text-sm text-gray-500">{order.shippingAddress.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{new Date(order.updatedAt).toLocaleDateString()}</div>
-                        <div className="text-sm text-gray-500">{new Date(order.updatedAt).toLocaleTimeString()}</div>
+                        {/* createdAt, not updatedAt: updatedAt moves every time the
+                            order is saved, so a status change appeared to change the
+                            date the order was placed. */}
+                        <div className="text-sm text-gray-900">{new Date(order.createdAt).toLocaleDateString()}</div>
+                        <div className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleTimeString()}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span

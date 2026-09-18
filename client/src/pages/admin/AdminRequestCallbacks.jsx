@@ -1,22 +1,5 @@
 import { useEffect, useState, useMemo } from "react"
-import {
-  PhoneCall,
-  Mail,
-  MessageCircle,
-  Package,
-  Search,
-  RefreshCw,
-  Download,
-  Check,
-  X,
-  Trash2,
-  Ban,
-  RotateCcw,
-  Clock,
-  Inbox,
-  ExternalLink,
-  AlertTriangle,
-} from "lucide-react"
+import { PhoneCall, Mail, MessageCircle, Package, Search, RefreshCw, Download, Check, X, Trash2, Ban, RotateCcw, Clock, Inbox, ExternalLink, AlertTriangle, MessageSquare } from "lucide-react"
 
 import AdminSidebar from "../../components/admin/AdminSidebar"
 import ConfirmDialog from "../../components/admin/ConfirmDialog"
@@ -445,6 +428,16 @@ const AdminRequestCallbacks = () => {
                           )}
                         </div>
 
+                        {/* A request with no product came from the Contact Us page rather
+                            than a product page. Saying so beats rendering nothing, which
+                            reads as missing data. */}
+                        {!req.productName && (
+                          <div className="mt-2.5 flex items-center gap-1.5 text-sm text-gray-400">
+                            <MessageSquare className="h-4 w-4 shrink-0" />
+                            <span>General enquiry &mdash; no product attached</span>
+                          </div>
+                        )}
+
                         {req.productName && (
                           <div className="mt-2.5 flex items-start gap-1.5 text-sm">
                             <Package className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
@@ -634,6 +627,21 @@ const AdminRequestCallbacks = () => {
                     <p className="mt-2 text-xs text-gray-500">Country code: {detailRequest.countryCode}</p>
                   )}
                 </div>
+
+                {!detailRequest.productName && (
+                  <div>
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Product enquired about
+                    </h3>
+                    <div className="flex items-start gap-2 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-3">
+                      <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                      <p className="text-sm text-gray-500">
+                        None. This came through the Contact Us form, which asks only for a name, email
+                        and phone number &mdash; requests raised from a product page carry the product.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {detailRequest.productName && (
                   <div>
