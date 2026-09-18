@@ -1326,6 +1326,33 @@ const AddBulkProducts = () => {
                 </div>
               )}
 
+              {/* Rows that saved, but where something in them could not be applied --
+                  a barcode already in use, for instance. Reported rather than
+                  dropped quietly, since the sheet said one thing and the catalogue
+                  now says another. */}
+              {saveResult.results?.some((r) => r.notices?.length) && (
+                <div className="mt-3">
+                  <h4 className="font-medium text-amber-700 mb-2">Saved with changes:</h4>
+                  <div className="max-h-64 overflow-y-auto bg-amber-50 p-3 rounded">
+                    {saveResult.results
+                      .filter((r) => r.notices?.length)
+                      .map((r, i) => (
+                        <div
+                          key={i}
+                          className="text-sm text-amber-800 mb-2 pb-2 border-b border-amber-200 last:border-0"
+                        >
+                          <strong>{r.product?.name || `Product ${r.index + 1}`}</strong>
+                          {r.notices.map((notice, n) => (
+                            <div key={n} className="text-amber-700">
+                              {notice}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
               {saveResult.failed > 0 && saveResult.results && (
                 <div className="mt-3">
                   <h4 className="font-medium text-red-600 mb-2">Failed Products:</h4>
