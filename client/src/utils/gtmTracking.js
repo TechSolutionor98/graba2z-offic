@@ -285,11 +285,24 @@ const pushMetaPurchase = ({ transactionId, value, currency, items }) => {
       }))
       .filter((entry) => entry.id)
 
+    // Meta requires a value greater than zero and flags an account whose
+    // Purchase events all report the same figure. An order total that failed to
+    // load would otherwise arrive as a flat 0 on every such order, so fall back
+    // to the basket and, failing that, report nothing rather than a number that
+    // is not what the customer paid.
+    const basketTotal = contents.reduce((sum, entry) => sum + entry.item_price * entry.quantity, 0)
+    const reportedValue = Number(value) > 0 ? Number(value) : basketTotal
+
+    if (!(reportedValue > 0)) {
+      console.warn("Meta Purchase not sent: no order value", transactionId)
+      return
+    }
+
     window.fbq(
       "track",
       "Purchase",
       {
-        value: Number(value) || 0,
+        value: reportedValue,
         currency,
         content_type: "product",
         content_ids: contents.map((entry) => entry.id),

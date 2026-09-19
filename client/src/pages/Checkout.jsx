@@ -20,6 +20,7 @@ import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { pushPurchase } from "../utils/gtmTracking"
+import { readMetaAttribution } from "../utils/metaAttribution"
 import TranslatedText from "../components/TranslatedText"
 import PhoneInput from 'react-phone-number-input'
 import PromoPopup from "../components/PromoPopup"
@@ -807,6 +808,9 @@ const Checkout = () => {
         currencySymbol: currentCountry?.currencySymbol || currentCountry?.currencyCode || "AED",
         // Lets the server enforce the country payment method rules.
         countryCode: currentCountry?.code,
+        // The pixel cookies, so the server can report this sale to Meta as the
+        // same person the browser pixel reported.
+        metaAttribution: readMetaAttribution(),
       }
 
       if (deliveryType === "home") {
@@ -1164,6 +1168,9 @@ const Checkout = () => {
         currencySymbol: currentCountry?.currencySymbol || currentCountry?.currencyCode || "AED",
         // Lets the server enforce the country payment method rules.
         countryCode: currentCountry?.code,
+        // The pixel cookies, so the server can report this sale to Meta as the
+        // same person the browser pixel reported.
+        metaAttribution: readMetaAttribution(),
       }
 
       if (deliveryType === "home") {
