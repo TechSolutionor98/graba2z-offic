@@ -17,6 +17,31 @@ import config from "../config/config"
 import { pushPurchase } from "../utils/gtmTracking"
 import InvoiceComponent from "../components/admin/InvoiceComponent"
 
+// When an order was placed, in the shopper's own timezone.
+//
+// The date alone is not enough to tell two orders from the same day apart --
+// which is exactly when a customer goes looking for the timestamp. Kept as one
+// pair of helpers so the card and the details modal can never disagree about
+// the same order.
+const placedDate = (value, { weekday = false } = {}) => {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+
+  return date.toLocaleDateString("en-US", {
+    ...(weekday ? { weekday: "long" } : {}),
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+}
+
+const placedTime = (value) => {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+
+  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+}
+
 const UserOrders = () => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -372,7 +397,8 @@ const UserOrders = () => {
                       <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
                       <div>
                         <p className="text-sm font-medium text-gray-500 mb-1">Date Placed</p>
-                        <p className="text-base font-medium text-gray-900">{new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p className="text-base font-medium text-gray-900">{placedDate(order.createdAt)}</p>
+                        <p className="text-sm text-gray-500">{placedTime(order.createdAt)}</p>
                       </div>
                       <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
                       <div>
@@ -557,13 +583,8 @@ const UserOrders = () => {
                           {/* The facts people look for first, before scrolling the items. */}
                           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                             <span>
-                              Placed{" "}
-                              {new Date(selectedOrder.createdAt).toLocaleDateString("en-US", {
-                                weekday: "long",
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })}
+                              Placed {placedDate(selectedOrder.createdAt, { weekday: true })} at{" "}
+                              {placedTime(selectedOrder.createdAt)}
                             </span>
                             <span className="flex items-center gap-1">
                               <MapPin className="h-3.5 w-3.5" />
