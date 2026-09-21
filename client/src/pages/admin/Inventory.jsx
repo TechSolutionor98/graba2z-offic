@@ -41,10 +41,21 @@ const SORTS = [
   { value: "price-desc", label: "Price: high to low" },
 ]
 
+// The category tree below a parent category, outermost first.
+const SUBCATEGORY_LEVELS = [
+  { key: "category", label: "All subcategories" },
+  { key: "subCategory2", label: "All level 2" },
+  { key: "subCategory3", label: "All level 3" },
+  { key: "subCategory4", label: "All level 4" },
+]
+
 const DEFAULT_FILTERS = {
   search: "",
   parentCategory: "",
   category: "",
+  subCategory2: "",
+  subCategory3: "",
+  subCategory4: "",
   brand: "",
   stock: "all",
   pricing: "all",
@@ -52,6 +63,20 @@ const DEFAULT_FILTERS = {
   maxPrice: "",
   sort: "newest",
 }
+
+// Picking a level throws away everything below it: a level-3 subcategory
+// belongs to one level-2 parent, so leaving it selected after its parent
+// changes filters to a branch of the tree that does not exist.
+const CASCADE_RESETS = {
+  parentCategory: ["category", "subCategory2", "subCategory3", "subCategory4"],
+  category: ["subCategory2", "subCategory3", "subCategory4"],
+  subCategory2: ["subCategory3", "subCategory4"],
+  subCategory3: ["subCategory4"],
+}
+
+// A subcategory's parent arrives either populated or as a bare id.
+const parentSubCategoryId = (sub) =>
+  typeof sub?.parentSubCategory === "object" ? sub?.parentSubCategory?._id : sub?.parentSubCategory
 
 const money = (value) =>
   `AED ${(Number(value) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -111,9 +136,7 @@ const Inventory = () => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
-      // A subcategory belongs to one category, so keeping it selected after the
-      // category changes would filter to a pair that cannot match anything.
-      ...(key === "parentCategory" ? { category: "" } : {}),
+      ...Object.fromEntries((CASCADE_RESETS[key] || []).map((field) => [field, ""])),
     }))
     if (key !== "search") setPage(1)
   }
@@ -170,6 +193,9 @@ const Inventory = () => {
           search: debouncedSearch || undefined,
           parentCategory: filters.parentCategory || undefined,
           category: filters.category || undefined,
+          subCategory2: filters.subCategory2 || undefined,
+          subCategory3: filters.subCategory3 || undefined,
+          subCategory4: filters.subCategory4 || undefined,
           brand: filters.brand || undefined,
           stock: filters.stock,
           pricing: filters.pricing,
@@ -205,6 +231,9 @@ const Inventory = () => {
     debouncedSearch,
     filters.parentCategory,
     filters.category,
+    filters.subCategory2,
+    filters.subCategory3,
+    filters.subCategory4,
     filters.brand,
     filters.stock,
     filters.pricing,
@@ -214,14 +243,32 @@ const Inventory = () => {
     page,
   ])
 
-  // Only the subcategories under the chosen category, so the two dropdowns can
-  // never describe a combination that holds no products. With no category
-  // picked, every first-level subcategory is offered.
-  const visibleSubcategories = useMemo(() => {
-    const firstLevel = subcategories.filter((sub) => sub.level === 1)
-    if (!filters.parentCategory) return firstLevel
-    return firstLevel.filter((sub) => sub.category._id === filters.parentCategory)
-  }, [subcategories, filters.parentCategory])
+  // One dropdown per level of the category tree, each offering only what sits
+  // under the level above it -- so the row can never describe a branch that
+  // holds no products.
+  //
+  // Levels 3 and 4 fall back to the deepest level that *is* chosen rather than
+  // insisting on their immediate parent, because the catalogue does hang some
+  // deeper subcategories straight off a shallower one. The product list reads
+  // them the same way; the two pages have to offer the same options or the
+  // same filter gives different results on each.
+  const levelOptions = useMemo(() => {
+    const atLevel = (level, parentId) =>
+      subcategories.filter((sub) => sub.level === level && parentSubCategoryId(sub) === parentId)
+
+    const firstLevel = subcategories.filter(
+      (sub) => sub.level === 1 && (!filters.parentCategory || sub.category._id === filters.parentCategory),
+    )
+
+    if (!filters.category) return { category: firstLevel, subCategory2: [], subCategory3: [], subCategory4: [] }
+
+    return {
+      category: firstLevel,
+      subCategory2: atLevel(2, filters.category),
+      subCategory3: atLevel(3, filters.subCategory2 || filters.category),
+      subCategory4: atLevel(4, filters.subCategory3 || filters.subCategory2 || filters.category),
+    }
+  }, [subcategories, filters.parentCategory, filters.category, filters.subCategory2, filters.subCategory3])
 
   const hasFilters = useMemo(
     () => Object.keys(DEFAULT_FILTERS).some((key) => filters[key] !== DEFAULT_FILTERS[key]),
@@ -302,23 +349,28 @@ const Inventory = () => {
               ))}
             </select>
 
-            <select
-              value={filters.category}
-              onChange={(e) => setFilter("category", e.target.value)}
-              className={selectClass}
-              disabled={visibleSubcategories.length === 0}
-            >
-              <option value="">
-                {filters.parentCategory && visibleSubcategories.length === 0
-                  ? "No subcategories"
-                  : "All subcategories"}
-              </option>
-              {visibleSubcategories.map((subcategory) => (
-                <option key={subcategory._id} value={subcategory._id}>
-                  {subcategory.name}
-                </option>
-              ))}
-            </select>
+            {/* Each level appears only once the one above it has options, so
+                the bar stays short until someone actually drills in. */}
+            {SUBCATEGORY_LEVELS.map(({ key, label }) => {
+              const options = levelOptions[key]
+              if (options.length === 0 && !filters[key]) return null
+
+              return (
+                <select
+                  key={key}
+                  value={filters[key]}
+                  onChange={(e) => setFilter(key, e.target.value)}
+                  className={selectClass}
+                >
+                  <option value="">{label}</option>
+                  {options.map((subcategory) => (
+                    <option key={subcategory._id} value={subcategory._id}>
+                      {subcategory.name}
+                    </option>
+                  ))}
+                </select>
+              )
+            })}
 
             <select value={filters.brand} onChange={(e) => setFilter("brand", e.target.value)} className={selectClass}>
               <option value="">All brands</option>
