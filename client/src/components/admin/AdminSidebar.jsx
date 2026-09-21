@@ -39,6 +39,7 @@ import {
   Globe,
   Award,
   Gift,
+  Boxes,
 } from "lucide-react"
 
 const SEO_UNLOCK_TOKEN_KEY = "seoUnlockToken"
@@ -525,6 +526,12 @@ const AdminSidebar = () => {
           ],
         },
       ],
+    },
+    {
+      title: "Inventory",
+      icon: Boxes,
+      path: "/admin/inventory",
+      permission: "products",
     },
     {
       title: "Stock Adjustment",

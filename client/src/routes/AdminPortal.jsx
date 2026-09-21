@@ -46,6 +46,7 @@ import AdminEmailTemplates from "../pages/admin/AdminEmailTemplates"
 import AdminManagement from "../pages/admin/AdminManagement"
 import AdminNewsletter from "../pages/admin/AdminNewsletter"
 import AdminProducts from "../pages/admin/AdminProducts"
+import Inventory from "../pages/admin/Inventory"
 import AdminProductOptionManager from "../pages/admin/AdminProductOptionManager"
 import AdminRequestCallbacks from "../pages/admin/AdminRequestCallbacks"
 import AdminReviews from "../pages/admin/AdminReviews"
@@ -121,6 +122,7 @@ const AdminPortal = () => {
           <Routes>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="inventory" element={<Inventory />} />
             <Route path="products/add" element={<AddProduct />} />
             <Route path="products/bulk-add" element={<AddBulkProducts />} />
             <Route path="product-pm" element={<ProductPaymentMethods />} />
