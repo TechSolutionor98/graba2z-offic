@@ -44,6 +44,7 @@ const SORTS = [
 const DEFAULT_FILTERS = {
   search: "",
   parentCategory: "",
+  category: "",
   brand: "",
   stock: "all",
   pricing: "all",
@@ -101,12 +102,19 @@ const Inventory = () => {
   const [error, setError] = useState(null)
 
   const [categories, setCategories] = useState([])
+  const [subcategories, setSubcategories] = useState([])
   const [brands, setBrands] = useState([])
 
   const requestRef = useRef(0)
 
   const setFilter = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }))
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+      // A subcategory belongs to one category, so keeping it selected after the
+      // category changes would filter to a pair that cannot match anything.
+      ...(key === "parentCategory" ? { category: "" } : {}),
+    }))
     if (key !== "search") setPage(1)
   }
 
@@ -128,6 +136,15 @@ const Inventory = () => {
       .get(`${config.API_URL}/api/categories`, { headers })
       .then(({ data }) => setCategories(Array.isArray(data) ? data : []))
       .catch(() => setCategories([]))
+
+    axios
+      .get(`${config.API_URL}/api/subcategories`)
+      .then(({ data }) =>
+        // Rows without a parent reference cannot be placed under a category, so
+        // they would only ever show as orphans in the list.
+        setSubcategories(Array.isArray(data) ? data.filter((sub) => sub?.category?._id) : []),
+      )
+      .catch(() => setSubcategories([]))
 
     axios
       .get(`${config.API_URL}/api/brands`)
@@ -152,6 +169,7 @@ const Inventory = () => {
         params: {
           search: debouncedSearch || undefined,
           parentCategory: filters.parentCategory || undefined,
+          category: filters.category || undefined,
           brand: filters.brand || undefined,
           stock: filters.stock,
           pricing: filters.pricing,
@@ -186,6 +204,7 @@ const Inventory = () => {
   }, [
     debouncedSearch,
     filters.parentCategory,
+    filters.category,
     filters.brand,
     filters.stock,
     filters.pricing,
@@ -194,6 +213,15 @@ const Inventory = () => {
     filters.sort,
     page,
   ])
+
+  // Only the subcategories under the chosen category, so the two dropdowns can
+  // never describe a combination that holds no products. With no category
+  // picked, every first-level subcategory is offered.
+  const visibleSubcategories = useMemo(() => {
+    const firstLevel = subcategories.filter((sub) => sub.level === 1)
+    if (!filters.parentCategory) return firstLevel
+    return firstLevel.filter((sub) => sub.category._id === filters.parentCategory)
+  }, [subcategories, filters.parentCategory])
 
   const hasFilters = useMemo(
     () => Object.keys(DEFAULT_FILTERS).some((key) => filters[key] !== DEFAULT_FILTERS[key]),
@@ -270,6 +298,24 @@ const Inventory = () => {
               {categories.map((category) => (
                 <option key={category._id} value={category._id}>
                   {category.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filters.category}
+              onChange={(e) => setFilter("category", e.target.value)}
+              className={selectClass}
+              disabled={visibleSubcategories.length === 0}
+            >
+              <option value="">
+                {filters.parentCategory && visibleSubcategories.length === 0
+                  ? "No subcategories"
+                  : "All subcategories"}
+              </option>
+              {visibleSubcategories.map((subcategory) => (
+                <option key={subcategory._id} value={subcategory._id}>
+                  {subcategory.name}
                 </option>
               ))}
             </select>

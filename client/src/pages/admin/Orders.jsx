@@ -33,6 +33,24 @@ const PAYMENT_STATUS_OPTIONS = ["Paid", "Unpaid"]
 
 const sameStatus = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase()
 
+// What was actually ordered, for the line under the order id.
+//
+// Buyer protection is sold as its own line but is never what the order is
+// about, so it is skipped -- an order whose first row reads "Buyer Protection"
+// tells the office nothing. Only the first real product is named; the rest are
+// counted, because the column has room for one name and not for five.
+const orderSummaryItem = (order = {}) => {
+  const items = (order.orderItems || []).filter((item) => !item?.isProtection)
+  const first = items[0]
+  if (!first) return null
+
+  return {
+    name: first.name || first.product?.name || "Unnamed product",
+    sku: first.product?.sku || first.sku || "",
+    extra: items.length - 1,
+  }
+}
+
 // The tabs that replaced the ten separate pages. `match` decides which orders a
 // tab shows, so a tab can be broader than one stored value -- New also picks up
 // the legacy "Pending" and orders saved before status was required.
@@ -452,11 +470,37 @@ export default function Orders() {
                           aria-label={`Select order ${order._id.slice(-6)}`}
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 align-top">
                         <div className="text-sm font-medium text-lime-600">#{order._id.slice(-6)}</div>
                         {order.trackingId && (
                           <div className="text-xs text-gray-500">{order.trackingId}</div>
                         )}
+                        {/* What was ordered, capped at two lines so a long
+                            laptop title cannot push every other row down the
+                            page. The SKU sits under it because that is what
+                            gets typed into the warehouse system. */}
+                        {(() => {
+                          const summary = orderSummaryItem(order)
+                          if (!summary) return null
+
+                          return (
+                            <div className="mt-1.5 max-w-[220px]">
+                              <p className="line-clamp-2 text-xs leading-snug text-gray-700" title={summary.name}>
+                                {summary.name}
+                              </p>
+                              {summary.sku && (
+                                <p className="mt-0.5 font-mono text-[11px] leading-tight text-gray-400">
+                                  {summary.sku}
+                                </p>
+                              )}
+                              {summary.extra > 0 && (
+                                <p className="mt-0.5 text-[11px] leading-tight text-gray-400">
+                                  +{summary.extra} more item{summary.extra > 1 ? "s" : ""}
+                                </p>
+                              )}
+                            </div>
+                          )
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {/* The customer first, whichever half of the order carries
