@@ -39,11 +39,11 @@
       ::selection{background:#84cc16;color:#000}
       a{color:inherit}
       .bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#000}
-      .bg img{display:block;width:100%;height:100%;object-fit:cover;opacity:.35;filter:brightness(.75);transform:scale(1.05)}
+      .bg img{display:block;width:100%;height:100%;object-fit:cover;opacity:.27}
       .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,#000 0%,rgba(0,0,0,.8) 50%,rgba(0,0,0,.5) 100%)}
       main{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px}
-      .logo{display:block;height:80px;width:auto;margin:0 auto 32px;filter:drop-shadow(0 4px 16px rgba(255,255,255,.15))}
-      .panel{width:100%;max-width:1024px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:24px;backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);box-shadow:0 25px 50px -12px rgba(0,0,0,.5);text-align:center}
+      .logo{display:block;height:80px;width:auto;margin:0 auto 32px}
+      .panel{width:100%;max-width:1024px;background:rgba(40,40,40,.85);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.5);text-align:center}
       h1{font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
       .sub{color:#d1d5db;font-size:16px;font-weight:500;margin-bottom:32px}
       .row-wrap{position:relative;display:flex;align-items:center;width:100%}
@@ -53,7 +53,7 @@
       .arrow svg{width:24px;height:24px}
       .row{display:flex;gap:20px;overflow-x:auto;scroll-behavior:smooth;padding:16px 8px;width:100%;scrollbar-width:none;-ms-overflow-style:none}
       .row::-webkit-scrollbar{display:none}
-      .card{width:230px;flex:0 0 auto;border-radius:16px;padding:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;text-decoration:none;color:inherit;cursor:pointer;transition:transform .3s,background .3s,border-color .3s,box-shadow .3s}
+      .card{width:230px;flex:0 0 auto;border-radius:16px;padding:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);display:flex;flex-direction:column;align-items:center;text-decoration:none;color:inherit;cursor:pointer;transition:transform .3s,background .3s,border-color .3s,box-shadow .3s}
       .card:focus-visible{outline:2px solid #a3e635;outline-offset:2px}
       .card:hover{background:rgba(255,255,255,.25);border-color:#a3e635;transform:translateY(-6px);box-shadow:0 25px 50px -12px rgba(132,204,22,.2)}
       .flag{width:100%;height:112px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.2);box-shadow:0 10px 15px -3px rgba(0,0,0,.3);margin-bottom:16px;display:flex;align-items:center;justify-content:center}
@@ -91,6 +91,9 @@
         .arrow{left:-24px}
         .arrow.right{right:-24px}
         .cols{grid-template-columns:2fr 1fr 1fr 1fr}
+        .logo{filter:drop-shadow(0 4px 16px rgba(255,255,255,.15))}
+        .panel{background:rgba(255,255,255,.1);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px)}
+        .card{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
       }
     </style>
 {{SCHEMA}}
@@ -110,7 +113,7 @@
     </div>
 
     <main>
-      <img class="logo" src="/landing-logo.webp" width="270" height="80" alt="Grab A2Z" fetchpriority="high" decoding="async" />
+      <img class="logo" src="/landing-logo.webp" width="270" height="80" alt="Grab A2Z" fetchpriority="high" />
 
       <section class="panel">
         <h1>Original luxury electronics &amp; tech across the GCC</h1>
