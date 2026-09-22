@@ -95,21 +95,12 @@ const BannerSlider = ({ banners }) => {
     setCurrentSlide((prev) => (prev + 1) % banners.length)
   }
 
-  if (!banners || banners.length === 0) {
-    return (
-      <section className="relative w-full h-[170px] sm:h-[250px] md:h-[300px] lg:h-[310px] overflow-hidden">
-        {/* Empty rather than a grey block: the section already reserves the
-            height, so nothing moves when the banner loads. */}
-        <div className="w-full h-full" aria-hidden="true" />
-      </section>
-    )
-  }
-
-  const currentBanner = banners[currentSlide]
-  const currentBannerImage = currentBanner
-    ? normalizeBannerDisplayUrl(currentBanner.image) ||
-      "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp"
-    : "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp"
+  // Every hook runs on every render, including the empty-state render below.
+  // A hook placed after that return crashes React (#310) the moment the list
+  // goes from empty to filled, which is exactly what happens on first load.
+  const currentBanner = banners && banners.length ? banners[currentSlide] || banners[0] : null
+  // A banner with no image shows nothing. It is never swapped for a sample.
+  const currentBannerImage = currentBanner ? normalizeBannerDisplayUrl(currentBanner.image) || "" : ""
 
   useEffect(() => {
     if (!currentBanner) return
@@ -124,19 +115,32 @@ const BannerSlider = ({ banners }) => {
     })
   }, [currentBanner, currentSlide])
 
+  if (!banners || banners.length === 0) {
+    return (
+      <section className="relative w-full h-[170px] sm:h-[250px] md:h-[300px] lg:h-[310px] overflow-hidden">
+        {/* Empty rather than a grey block: the section already reserves the
+            height, so nothing moves when the banner loads. */}
+        <div className="w-full h-full" aria-hidden="true" />
+      </section>
+    )
+  }
+
+
   // Helper function to render banner content
   const renderBannerContent = () => {
     const content = (
       <>
-        <img
-          src={currentBannerImage}
-          alt={currentBanner?.title || "Banner"}
-          fetchPriority="high"
-          loading="eager"
-          width="1600"
-          height="620"
-          className="block w-full h-full bg-cover"
-        />
+        {currentBannerImage ? (
+          <img
+            src={currentBannerImage}
+            alt={currentBanner?.title || "Banner"}
+            fetchPriority="high"
+            loading="eager"
+            width="1600"
+            height="620"
+            className="block w-full h-full bg-cover"
+          />
+        ) : null}
         {/* Optional subtle overlay for better navigation visibility */}
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
       </>
