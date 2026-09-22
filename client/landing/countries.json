@@ -1,0 +1,44 @@
+[
+  {
+    "code": "AE",
+    "name": "UAE",
+    "nameAr": "الإمارات",
+    "flagSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 300\"><rect width=\"600\" height=\"100\" fill=\"#00732f\"/><rect y=\"100\" width=\"600\" height=\"100\" fill=\"#fff\"/><rect y=\"200\" width=\"600\" height=\"100\" fill=\"#000\"/><rect width=\"150\" height=\"300\" fill=\"#ff0000\"/></svg>",
+    "sortOrder": 1
+  },
+  {
+    "code": "SA",
+    "name": "Saudi Arabia",
+    "nameAr": "السعودية",
+    "flagSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 400\"><rect width=\"600\" height=\"400\" fill=\"#006c35\"/><text x=\"300\" y=\"210\" font-family=\"sans-serif\" font-weight=\"bold\" font-size=\"55\" fill=\"#fff\" text-anchor=\"middle\">السعودية</text><path d=\"M180 260 h240 v15 h-240 z\" fill=\"#fff\"/></svg>",
+    "sortOrder": 2
+  },
+  {
+    "code": "QA",
+    "name": "Qatar",
+    "nameAr": "قطر",
+    "flagSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 300\"><rect width=\"600\" height=\"300\" fill=\"#8d1b3d\"/><polygon points=\"0,0 150,0 200,16 150,33 200,50 150,66 200,83 150,100 200,116 150,133 200,150 150,166 200,183 150,200 200,216 150,233 200,250 150,266 200,283 150,300 0,300\" fill=\"#ffffff\"/></svg>",
+    "sortOrder": 3
+  },
+  {
+    "code": "OM",
+    "name": "Oman",
+    "nameAr": "عمان",
+    "flagSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 300\"><rect width=\"600\" height=\"100\" fill=\"#ffffff\"/><rect y=\"100\" width=\"600\" height=\"100\" fill=\"#db161b\"/><rect y=\"200\" width=\"600\" height=\"100\" fill=\"#008000\"/><rect width=\"150\" height=\"300\" fill=\"#db161b\"/></svg>",
+    "sortOrder": 4
+  },
+  {
+    "code": "BH",
+    "name": "Bahrain",
+    "nameAr": "البحرين",
+    "flagSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 360\"><rect width=\"600\" height=\"360\" fill=\"#ce1126\"/><polygon points=\"0,0 150,0 210,36 150,72 210,108 150,144 210,180 150,216 210,252 150,288 210,324 150,360 0,360\" fill=\"#ffffff\"/></svg>",
+    "sortOrder": 5
+  },
+  {
+    "code": "KW",
+    "name": "Kuwait",
+    "nameAr": "الكويت",
+    "flagSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 600 300\"><rect width=\"600\" height=\"100\" fill=\"#007a3d\"/><rect y=\"100\" width=\"600\" height=\"100\" fill=\"#ffffff\"/><rect y=\"200\" width=\"600\" height=\"100\" fill=\"#ce1126\"/><polygon points=\"0,0 150,100 150,200 0,300\" fill=\"#000000\"/></svg>",
+    "sortOrder": 6
+  }
+]

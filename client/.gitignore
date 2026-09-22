@@ -86,3 +86,5 @@ jspm_packages/
 
 # TernJS port file
 .tern-port 
+# Generated landing page (scripts/build-landing.mjs)
+public/index.html

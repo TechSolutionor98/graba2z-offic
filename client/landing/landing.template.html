@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{TITLE}}</title>
+    <meta name="description" content="{{DESCRIPTION}}" />
+    <meta name="keywords" content="{{KEYWORDS}}" />
+    <meta name="robots" content="{{ROBOTS}}" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="google-site-verification" content="gDHMgegtAvEL0xzDBjNjdXCy7OfBTQ5pvs8K9dPVvzQ" />
+    <meta name="google-site-verification" content="7L9SSyoDKttO_Mq86f7kYHZoCKnZ76rBW5tZZYyxg1Y" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="canonical" href="{{CANONICAL}}" />
+{{HREFLANG_LINKS}}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Grabatoz" />
+    <meta property="og:title" content="{{TITLE}}" />
+    <meta property="og:description" content="{{DESCRIPTION}}" />
+    <meta property="og:url" content="https://www.grabatoz.ae/" />
+    <meta property="og:image" content="https://www.grabatoz.ae/logo.png" />
+
+    <!-- The page is finished the moment the HTML arrives: the background photo,
+         the logo and the fonts start downloading with the document, not after
+         a script has run. Everything the eye sees is in this file. -->
+    <link rel="preload" as="image" href="/landing-bg-768.webp" media="(max-width: 767px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="/landing-bg-1600.webp" media="(min-width: 768px)" fetchpriority="high" />
+    <link rel="preload" as="image" href="/landing-logo.webp" fetchpriority="high" />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/poppins-latin-600-normal.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/poppins-latin-700-normal.woff2" crossorigin />
+
+    <style>
+      @font-face{font-family:Poppins;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/poppins-latin-400-normal.woff2) format("woff2")}
+      @font-face{font-family:Poppins;font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/poppins-latin-600-normal.woff2) format("woff2")}
+      @font-face{font-family:Poppins;font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/poppins-latin-700-normal.woff2) format("woff2")}
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      html{-webkit-text-size-adjust:100%}
+      body{min-height:100vh;background:#000;color:#fff;font-family:Poppins,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+      ::selection{background:#84cc16;color:#000}
+      a{color:inherit}
+      .bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#000}
+      .bg img{display:block;width:100%;height:100%;object-fit:cover;opacity:.35;filter:brightness(.75);transform:scale(1.05)}
+      .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,#000 0%,rgba(0,0,0,.8) 50%,rgba(0,0,0,.5) 100%)}
+      main{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px}
+      .logo{display:block;height:80px;width:auto;margin:0 auto 32px;filter:drop-shadow(0 4px 16px rgba(255,255,255,.15))}
+      .panel{width:100%;max-width:1024px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:24px;padding:24px;backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);box-shadow:0 25px 50px -12px rgba(0,0,0,.5);text-align:center}
+      h1{font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+      .sub{color:#d1d5db;font-size:16px;font-weight:500;margin-bottom:32px}
+      .row-wrap{position:relative;display:flex;align-items:center;width:100%}
+      .arrow{position:absolute;z-index:2;left:-16px;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,color .2s}
+      .arrow.right{left:auto;right:-16px}
+      .arrow:hover{background:#84cc16;color:#000}
+      .arrow svg{width:24px;height:24px}
+      .row{display:flex;gap:20px;overflow-x:auto;scroll-behavior:smooth;padding:16px 8px;width:100%;scrollbar-width:none;-ms-overflow-style:none}
+      .row::-webkit-scrollbar{display:none}
+      .card{width:230px;flex:0 0 auto;border-radius:16px;padding:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;text-decoration:none;color:inherit;cursor:pointer;transition:transform .3s,background .3s,border-color .3s,box-shadow .3s}
+      .card:focus-visible{outline:2px solid #a3e635;outline-offset:2px}
+      .card:hover{background:rgba(255,255,255,.25);border-color:#a3e635;transform:translateY(-6px);box-shadow:0 25px 50px -12px rgba(132,204,22,.2)}
+      .flag{width:100%;height:112px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.2);box-shadow:0 10px 15px -3px rgba(0,0,0,.3);margin-bottom:16px;display:flex;align-items:center;justify-content:center}
+      .flag svg{display:block;width:100%;height:100%}
+      .flag span{font-size:20px;font-weight:700}
+      .name{font-size:16px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+      .name-ar{font-size:12px;color:#a3e635;font-weight:600;font-family:"Noto Sans Arabic","Segoe UI",Tahoma,sans-serif;margin-top:2px}
+      .go{margin-top:16px;padding:8px 20px;border-radius:9999px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;font-weight:600;font-size:12px;transition:background .2s,color .2s}
+      .card:hover .go{background:#84cc16;color:#000}
+      footer{position:relative;z-index:1;width:100%;margin-top:48px;border-top:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.6);color:#d1d5db;font-size:14px}
+      .foot{max-width:1200px;margin:0 auto;padding:40px 16px 24px}
+      .cols{display:grid;grid-template-columns:1fr 1fr;gap:28px 20px}
+      .cols h2{font-size:14px;font-weight:700;color:#fff;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+      .cols ul{list-style:none}
+      .cols li{margin-bottom:8px}
+      .cols a{text-decoration:none;color:#d1d5db}
+      .cols a:hover{color:#a3e635}
+      .brand img{display:block;width:128px;height:auto}
+      .brand p{margin-top:14px;line-height:1.6}
+      .social{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+      .social a{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:#fff}
+      .social a:hover{background:#84cc16;color:#000;border-color:#84cc16}
+      .social svg{width:16px;height:16px;fill:currentColor}
+      .copy{margin-top:32px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-size:12px;color:#9ca3af}
+      .copy a{color:#9ca3af;text-decoration:none}
+      .copy a:hover{color:#a3e635}
+      @media (min-width:768px){
+        .logo{height:112px}
+        .panel{padding:40px}
+        h1{font-size:36px}
+        .sub{font-size:18px}
+        .card{width:250px}
+        .name{font-size:18px}
+        .name-ar{font-size:14px}
+        .arrow{left:-24px}
+        .arrow.right{right:-24px}
+        .cols{grid-template-columns:2fr 1fr 1fr 1fr}
+      }
+    </style>
+{{SCHEMA}}
+  </head>
+  <body>
+    <div class="bg" aria-hidden="true">
+      <img
+        src="/landing-bg-1600.webp"
+        srcset="/landing-bg-768.webp 768w, /landing-bg-1600.webp 1600w"
+        sizes="100vw"
+        width="1600"
+        height="1031"
+        alt=""
+        fetchpriority="high"
+        decoding="async"
+      />
+    </div>
+
+    <main>
+      <img class="logo" src="/landing-logo.webp" width="270" height="80" alt="Grab A2Z" fetchpriority="high" decoding="async" />
+
+      <section class="panel">
+        <h1>Original luxury electronics &amp; tech across the GCC</h1>
+        <p class="sub">Select your country to start shopping</p>
+
+        <div class="row-wrap">
+          <button type="button" class="arrow" id="prev" aria-label="Previous countries">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+
+          <div class="row" id="row">
+{{CARDS}}
+          </div>
+
+          <button type="button" class="arrow right" id="next" aria-label="Next countries">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer">
+      <div class="foot">
+        <div class="cols">
+          <div class="brand">
+            <img src="/logo.png" width="128" height="43" alt="Grabatoz" loading="lazy" decoding="async" />
+            <p>Original laptops, mobiles, gaming gear and electronics, delivered across the GCC. Genuine products, official warranty, fast delivery.</p>
+            <div class="social">
+              <a href="https://www.facebook.com/grabatozae/" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></a>
+              <a href="https://www.instagram.com/grabatoz/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.2.1 4.8 1.7 4.9 4.9.1 1.2.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 4 4 2.4 7.2 2.3c1.2-.1 1.6-.1 4.8-.1zM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4zm5.2-9.4a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></svg></a>
+              <a href="https://www.tiktok.com/@grabatoz" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M16.6 5.8A4.3 4.3 0 0 1 15.5 3h-3.1v12.4a2.6 2.6 0 1 1-2.6-2.6c.3 0 .5 0 .8.1V9.7a5.7 5.7 0 1 0 4.9 5.7V9.1a7.3 7.3 0 0 0 4.3 1.4V7.4a4.3 4.3 0 0 1-3.2-1.6z"/></svg></a>
+              <a href="https://www.youtube.com/@grabAtoZ" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><svg viewBox="0 0 24 24"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.4-1.6.5-3.2.5-4.8s-.1-3.2-.5-4.8zM9.7 15.1V8.9l6 3.1-6 3.1z"/></svg></a>
+              <a href="https://x.com/GrabAtoz" target="_blank" rel="noopener noreferrer" aria-label="X"><svg viewBox="0 0 24 24"><path d="M17.5 3h3.1l-6.8 7.7L21.8 21h-6.3l-4.9-6.4L5 21H1.9l7.3-8.3L1.5 3H8l4.4 5.9L17.5 3zm-1.1 16.2h1.7L7 4.7H5.1l11.3 14.5z"/></svg></a>
+              <a href="https://www.linkedin.com/company/grabatozae" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M20.4 20.4h-3.5v-5.6c0-1.3 0-3-1.9-3s-2.1 1.4-2.1 2.9v5.7H9.3V9h3.4v1.6c.5-.9 1.6-1.9 3.4-1.9 3.6 0 4.3 2.4 4.3 5.5v6.2zM5.3 7.4a2.1 2.1 0 1 1 0-4.1 2.1 2.1 0 0 1 0 4.1zM7.1 20.4H3.6V9h3.5v11.4zM22.2 0H1.8C.8 0 0 .8 0 1.7v20.5c0 1 .8 1.8 1.8 1.8h20.4c1 0 1.8-.8 1.8-1.8V1.7c0-1-.8-1.7-1.8-1.7z"/></svg></a>
+              <a href="https://www.pinterest.com/grabatoz/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest"><svg viewBox="0 0 24 24"><path d="M12 0a12 12 0 0 0-4.4 23.2c-.1-.9-.2-2.4 0-3.4l1.4-6s-.4-.7-.4-1.8c0-1.7 1-2.9 2.2-2.9 1 0 1.5.8 1.5 1.7 0 1-.7 2.6-1 4-.3 1.2.6 2.2 1.8 2.2 2.1 0 3.8-2.2 3.8-5.5 0-2.9-2.1-4.9-5-4.9a5.2 5.2 0 0 0-5.4 5.2c0 1 .4 2.1.9 2.7.1.1.1.2.1.4l-.3 1.4c-.1.2-.2.3-.4.2-1.5-.7-2.4-2.9-2.4-4.6 0-3.8 2.7-7.2 7.9-7.2 4.1 0 7.4 3 7.4 6.9 0 4.1-2.6 7.5-6.2 7.5-1.2 0-2.4-.6-2.8-1.4l-.7 2.9c-.3 1-1 2.4-1.5 3.2A12 12 0 1 0 12 0z"/></svg></a>
+            </div>
+          </div>
+          <div>
+            <h2>Shop</h2>
+            <ul>
+              <li><a href="/ae-en/shop">All products</a></li>
+              <li><a href="/ae-en/offers/gaming-zone">Gaming Zone</a></li>
+              <li><a href="/ae-en/blogs">Blogs</a></li>
+              <li><a href="/ae-en/track-order">Track order</a></li>
+              <li><a href="/ae-en/wishlist">Wishlist</a></li>
+              <li><a href="/ae-en/cart">Cart</a></li>
+            </ul>
+          </div>
+          <div>
+            <h2>Company</h2>
+            <ul>
+              <li><a href="/ae-en/about">About us</a></li>
+              <li><a href="/ae-en/contact">Contact us</a></li>
+              <li><a href="/ae-en/login">Sign in</a></li>
+              <li><a href="/ae-en/register">Create account</a></li>
+              <li><a href="/ae-en/delivery-terms">Delivery terms</a></li>
+              <li><a href="/ae-en/voucher-terms">Voucher terms</a></li>
+            </ul>
+          </div>
+          <div>
+            <h2>Legal</h2>
+            <ul>
+              <li><a href="/ae-en/privacy-policy">Privacy policy</a></li>
+              <li><a href="/ae-en/terms-conditions">Terms &amp; conditions</a></li>
+              <li><a href="/ae-en/refund-return">Refund &amp; return</a></li>
+              <li><a href="/ae-en/cookies-policy">Cookies policy</a></li>
+              <li><a href="/ae-en/disclaimer-policy">Disclaimer</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="copy">
+          <span>&copy; {{YEAR}} Grabatoz. All rights reserved.</span>
+          <span>Powered by <a href="https://techsolutionor.com" target="_blank" rel="noopener noreferrer">Tech Solutionor</a></span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Google Tag Manager and Meta Pixel (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NVQM623J" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1074503198288217&ev=PageView&noscript=1" alt="" /></noscript>
+
+    <script>
+      ;(function () {
+        // A tap on a country remembers the choice the same way the store does,
+        // then the link itself navigates. English is the default language; the
+        // store header switches to Arabic. No framework needed.
+        document.addEventListener("click", function (event) {
+          var link = event.target.closest("a.card")
+          if (!link) return
+          try {
+            window.localStorage.setItem("selected-country-code", link.getAttribute("data-country"))
+            window.localStorage.setItem("preferred-language", "en")
+          } catch (e) {
+            /* Private mode or storage blocked: the URL still carries the choice. */
+          }
+        })
+
+        var row = document.getElementById("row")
+        document.getElementById("prev").addEventListener("click", function () {
+          row.scrollBy({ left: -280, behavior: "smooth" })
+        })
+        document.getElementById("next").addEventListener("click", function () {
+          row.scrollBy({ left: 280, behavior: "smooth" })
+        })
+
+        // Marketing and analytics tags load only after the visitor does
+        // something. Until then the page has nothing to do but be visible.
+        window.dataLayer = window.dataLayer || []
+        var loaded = false
+        function addScript(src) {
+          var s = document.createElement("script")
+          s.async = true
+          s.src = src
+          document.head.appendChild(s)
+          return s
+        }
+        function loadThirdParty() {
+          if (loaded) return
+          loaded = true
+          // Google Tag Manager
+          window.dataLayer.push({ "gtm.start": new Date().getTime(), event: "gtm.js" })
+          addScript("https://www.googletagmanager.com/gtm.js?id=GTM-NVQM623J")
+          // Meta Pixel
+          !(function (f, b, e, v, n, t, s) {
+            if (f.fbq) return
+            n = f.fbq = function () {
+              n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            }
+            if (!f._fbq) f._fbq = n
+            n.push = n
+            n.loaded = !0
+            n.version = "2.0"
+            n.queue = []
+            t = b.createElement(e)
+            t.async = !0
+            t.src = v
+            s = b.getElementsByTagName(e)[0]
+            s.parentNode.insertBefore(t, s)
+          })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js")
+          window.fbq("init", "1074503198288217")
+          window.fbq("track", "PageView")
+          // Microsoft Clarity
+          ;(function (c, l, a, r, i) {
+            c[a] =
+              c[a] ||
+              function () {
+                ;(c[a].q = c[a].q || []).push(arguments)
+              }
+            addScript("https://www.clarity.ms/tag/" + i)
+          })(window, document, "clarity", "script", "sxs3x2ruvu")
+          // ClickCease
+          addScript("https://www.clickcease.com/monitor/stat.js")
+        }
+        ;["pointerdown", "keydown", "touchstart", "scroll"].forEach(function (name) {
+          window.addEventListener(name, loadThirdParty, { once: true, passive: true })
+        })
+      })()
+    </script>
+    <!-- Built {{BUILD_STAMP}} by scripts/build-landing.mjs. Do not edit; edit landing/landing.template.html. -->
+  </body>
+</html>

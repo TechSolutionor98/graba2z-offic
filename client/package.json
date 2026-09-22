@@ -5,9 +5,11 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
+        "build": "node scripts/build-landing.mjs && vite build",
         "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "predev": "node scripts/build-landing.mjs --offline",
+        "build:landing": "node scripts/build-landing.mjs"
     },
     "dependencies": {
         "@fontsource/poppins": "^5.2.6",
