@@ -178,7 +178,10 @@ export const getOrderCountryName = (order) => {
     return currencyMap[currency]
   }
 
-  return explicitCountry || order?.currency || "UAE"
+  // Falling back to the raw currency put "AED" in the country column of every
+  // order saved without a shipping country. The code goes through the same map
+  // as the branches above, so what comes out is always a country name.
+  return explicitCountry || currencyMap[currency] || "UAE"
 }
 
 /**

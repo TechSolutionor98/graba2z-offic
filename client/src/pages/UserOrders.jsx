@@ -577,6 +577,9 @@ const UserOrders = () => {
                               className={`px-3 py-1 rounded-lg border text-xs font-semibold tracking-wide flex items-center gap-1.5 ${getStatusColor(selectedOrder.status)}`}
                             >
                               {getStatusIcon(selectedOrder.status)}
+                              {/* Named, because "New" on its own reads as a
+                                  badge on the order rather than its status. */}
+                              <span className="font-medium opacity-70">Order Status:</span>
                               {selectedOrder.status}
                             </span>
                           </Dialog.Title>

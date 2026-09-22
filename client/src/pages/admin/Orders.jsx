@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useMemo } from "react"
 import axios from "axios"
-import { useLocation, useSearchParams } from "react-router-dom"
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import AdminOrderDetailsModal from "../../components/admin/AdminOrderDetailsModal"
 import AdminSidebar from "../../components/admin/AdminSidebar"
-import { Search, Eye, Mail, ChevronDown, RefreshCw, X } from "lucide-react"
+import { Search, Eye, Mail, PencilLine, ChevronDown, RefreshCw, X } from "lucide-react"
 import config from "../../config/config"
 import { getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 import { askToEmailCustomer, askToEmailCustomerBulk } from "../../utils/customerEmail"
@@ -93,6 +93,7 @@ const getToken = () =>
 
 export default function Orders() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [orders, setOrders] = useState([])
@@ -603,6 +604,16 @@ export default function Orders() {
                           title="View order details"
                         >
                           <Eye size={18} />
+                        </button>
+                        {/* Opens the order on the Create Order/Quotation screen,
+                            where every part of it -- customer, items, prices,
+                            delivery -- can be changed. */}
+                        <button
+                          onClick={() => navigate(`/admin/orders/create?id=${order._id}`)}
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                          title="Edit this order"
+                        >
+                          <PencilLine size={18} />
                         </button>
                         <button
                           onClick={() => setSelectedOrder(order)}

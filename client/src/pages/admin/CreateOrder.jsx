@@ -496,7 +496,13 @@ export default function CreateOrder() {
   // going -- so it fires the request and lets it finish on its own.
   const autoSaveOnLeave = () => {
     const snapshot = autoSaveRef.current
-    if (!snapshot?.enabled) return
+
+    // `disabled` is read here rather than relying on `enabled`, which is
+    // computed during render. A deliberate save sets disabled *after* the last
+    // render -- nothing re-renders between the save and navigating away -- so
+    // `enabled` is still true at unmount and the auto-save would file a second,
+    // identical document as a Draft beside the one just saved.
+    if (!snapshot?.enabled || snapshot.disabled) return
 
     const payload = { ...snapshot.payload, quotationStatus: "Draft" }
     const request = snapshot.recalledId
@@ -524,6 +530,14 @@ export default function CreateOrder() {
     [],
   )
 
+  // A document that has already reached the Orders queues -- either because it
+  // was moved there, or because this is the order itself. It stays fully
+  // editable; what changes is that there is no draft to park any more, and the
+  // edit has to reach the live order.
+  const isLiveOrder = recalledDoc?.documentType === "order"
+  const isConverted = recalledDoc?.quotationStatus === "Converted" || Boolean(recalledDoc?.convertedOrderId)
+  const editingLiveWork = isLiveOrder || isConverted
+
   const handleCreate = async (hold = false) => {
     try {
       if (updateUserProfile && selectedUser?._id) {
@@ -550,13 +564,26 @@ export default function CreateOrder() {
         ? await adminAPI.updateQuotation(recalledId, payload)
         : await adminAPI.createOrder(payload)
       const label = mode === "quotation" ? "Quotation" : "Order"
+
+      // A customer typed in by hand now gets an account, so the next document
+      // for them can be found through the user search above. The temp password
+      // is shown once and never again -- it is not stored in readable form.
+      const account = created?.customerAccount
+      const accountNote = account?.created
+        ? `\n\nA customer account was created for ${account.email}.\n` +
+          `Temporary password: ${account.tempPassword}\n` +
+          "They will be asked to change it when they first sign in. " +
+          "If you do not pass it on, they can use Forgot Password instead."
+        : ""
+
       // Both modes stage the document. It only reaches the Orders queues when
       // an admin moves it across from the Recent Quotation page.
       alert(
         `${label} ${recalledId ? "saved" : "created"} successfully. #${created?._id?.slice?.(-6) || ""}\n\n` +
           (hold
             ? 'It is parked On Hold. Use the "On Hold" button at the top of this page to recall it.'
-            : 'It is saved on the Recent Quotation page. Use "Move to Orders" there when it is ready to be fulfilled.'),
+            : 'It is saved on the Recent Quotation page. Use "Move to Orders" there when it is ready to be fulfilled.') +
+          accountNote,
       )
 
       // Parking a new document keeps the admin here, with the On Hold counter in
@@ -568,7 +595,8 @@ export default function CreateOrder() {
         return
       }
 
-      navigate("/admin/orders/quotations")
+      // Back to wherever this document actually lives.
+      navigate(isLiveOrder ? "/admin/orders" : "/admin/orders/quotations")
     } catch (e) {
       console.error("[create-document] create error:", e)
       alert(e?.message || "Failed to create document")
@@ -592,8 +620,15 @@ export default function CreateOrder() {
                     On Hold
                   </span>
                 )}
+                {editingLiveWork && (
+                  <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    {isLiveOrder ? "Live order" : "Moved to Orders"}
+                  </span>
+                )}
                 <span className="block text-xs text-blue-800">
-                  Saving updates this document. It will not create a second copy.
+                  {isConverted
+                    ? "Saving updates this document and the order made from it, so the two cannot disagree."
+                    : "Saving updates this document. It will not create a second copy."}
                 </span>
               </>
             )}
@@ -604,7 +639,7 @@ export default function CreateOrder() {
               // Cancel means discard. Without this the auto-save would write the
               // very edits the admin just backed out of.
               autoSaveRef.current.disabled = true
-              navigate("/admin/orders/quotations")
+              navigate(isLiveOrder ? "/admin/orders" : "/admin/orders/quotations")
             }}
             className="rounded border border-blue-300 px-3 py-1.5 text-sm text-blue-800 hover:bg-blue-100"
           >
@@ -1148,26 +1183,38 @@ export default function CreateOrder() {
                 : "Create Order"}
           </button>
 
-          <button
-            disabled={!canSubmit}
-            onClick={() => handleCreate(true)}
-            className={`mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded border ${
-              canSubmit
-                ? "border-orange-300 text-orange-700 hover:bg-orange-50"
-                : "border-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
-            title={
-              !canSubmit
-                ? "Add at least one item and fill shipping details"
-                : "Save it parked on the Recent Quotation page"
-            }
-          >
-            <PauseCircle size={16} />
-            {recalledId ? "Save & keep On Hold" : "Save on Hold"}
-          </button>
+          {/* Parking only makes sense for work that has not been sent to the
+              warehouse. A live order is already in a queue with its own status. */}
+          {!editingLiveWork && (
+            <button
+              disabled={!canSubmit}
+              onClick={() => handleCreate(true)}
+              className={`mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded border ${
+                canSubmit
+                  ? "border-orange-300 text-orange-700 hover:bg-orange-50"
+                  : "border-gray-200 text-gray-400 cursor-not-allowed"
+              }`}
+              title={
+                !canSubmit
+                  ? "Add at least one item and fill shipping details"
+                  : "Save it parked on the Recent Quotation page"
+              }
+            >
+              <PauseCircle size={16} />
+              {recalledId ? "Save & keep On Hold" : "Save on Hold"}
+            </button>
+          )}
 
           <p className="text-xs text-gray-500 mt-2">
-            {recalledId ? (
+            {editingLiveWork ? (
+              <>
+                {isLiveOrder
+                  ? "This is a live order. Saving updates it in place and leaves its status, payment state and tracking untouched."
+                  : "This document has been moved to Orders. Saving updates both it and the order made from it."}{" "}
+                Leaving this page saves your changes automatically &mdash; press Discard changes to leave without
+                saving.
+              </>
+            ) : recalledId ? (
               <>
                 Saving keeps it on <span className="font-medium">Recent Quotation</span>. The plain save releases a
                 held document back to Draft; use <span className="font-medium">Save &amp; keep On Hold</span> to

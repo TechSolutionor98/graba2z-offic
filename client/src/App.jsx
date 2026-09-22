@@ -2,6 +2,7 @@ import { lazyWithRetry } from "./utils/lazyWithRetry"
 import { lazy, Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
+import SetPasswordPrompt from "./components/SetPasswordPrompt"
 import { CartProvider } from "./context/CartContext"
 import { WishlistProvider } from "./context/WishlistContext"
 import { ToastProvider } from "./context/ToastContext"
@@ -172,6 +173,9 @@ function App() {
                 <ReturnPathTracker />
                 <ReferralLinkCatcher />
                 <RedirectHandler />
+                {/* Renders nothing unless the signed-in account is still on the
+                    temporary password an admin set for it. */}
+                <SetPasswordPrompt />
                 <div className="App">
                   <Suspense fallback={lazyFallback}>
                   <Routes>

@@ -286,6 +286,16 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Replace the temporary password an admin set when the account was opened.
+  // The stored user is updated in place so the prompt closes without a reload.
+  const setPassword = async (password) => {
+    await authAPI.setPassword(password)
+    dispatch({
+      type: AUTH_ACTIONS.UPDATE_PROFILE,
+      payload: { ...state.user, mustChangePassword: false },
+    })
+  }
+
   // Clear error function
   const clearError = () => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR })
@@ -354,6 +364,7 @@ export const AuthProvider = ({ children }) => {
     resendVerification,
     logout,
     updateProfile,
+    setPassword,
     clearError,
     hasPermission,
   }

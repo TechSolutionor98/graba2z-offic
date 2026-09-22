@@ -89,6 +89,14 @@ export const authAPI = {
       method: "PUT",
       body: JSON.stringify(profileData),
     }),
+
+  // Replaces a temporary password an admin set. Only accepted while the
+  // account is still flagged for it.
+  setPassword: (password) =>
+    apiRequest("/api/users/set-password", {
+      method: "PUT",
+      body: JSON.stringify({ password }),
+    }),
 }
 
 // Products API calls

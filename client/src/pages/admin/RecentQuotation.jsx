@@ -227,16 +227,23 @@ export default function RecentQuotation() {
                           <Eye size={16} /> View
                         </button>
 
+                        {/* A document stays editable after it has been moved
+                            to Orders. Saving it then updates the order made
+                            from it as well, so the two cannot disagree. */}
+                        <button
+                          onClick={() => navigate(`/admin/orders/create?id=${q._id}`)}
+                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700"
+                          title={
+                            isConverted
+                              ? "Edit this document and the order made from it"
+                              : "Reopen this document on the Create Order/Quotation screen"
+                          }
+                        >
+                          <PencilLine size={16} /> {isConverted ? "Edit" : "Recall"}
+                        </button>
+
                         {!isConverted && (
                           <>
-                            <button
-                              onClick={() => navigate(`/admin/orders/create?id=${q._id}`)}
-                              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700"
-                              title="Reopen this document on the Create Order/Quotation screen"
-                            >
-                              <PencilLine size={16} /> Recall
-                            </button>
-
                             {status === "Hold" ? (
                               <button
                                 onClick={() => changeStatus(q, "Draft")}
