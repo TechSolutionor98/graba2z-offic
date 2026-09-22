@@ -40,30 +40,6 @@ import config from "../config/config"
 
 
 const API_BASE_URL = `${config.API_URL}`
-const MOBILE_STATIC_HERO = {
-  title: "Grabatoz mobile hero",
-  image: "/mobile-home-hero.jpg",
-  link: "/product-category/electronics-home/projectors",
-}
-const FALLBACK_HERO_BANNER = {
-  title: "top again 1",
-  image: "https://api.grabatoz.ae/uploads//banners/banner-projector_final-1767447672755-684802807.webp",
-  buttonLink: "/product-category/electronics-home/projectors",
-  link: "/product-category/electronics-home/projectors",
-  deviceType: "desktop",
-}
-const LIGHT_BANNER_FALLBACK = "lenovo-banner-768x290.jpg"
-const LIGHT_ACCESSORIES_DESKTOP_FALLBACK = "lenovo-banner-768x290.jpg"
-const LIGHT_NETWORKING_DESKTOP_FALLBACK =
-  "https://res.cloudinary.com/dyfhsu5v6/image/upload/f_auto,q_68,w_1311,h_300,c_limit/v1753939592/networking_kr6uvk.png"
-const FALLBACK_HP_MOBILE = "11-mobile.webp"
-const FALLBACK_ACCESSORIES_MOBILE = "12-mobile.webp"
-const FALLBACK_NETWORKING_MOBILE = "13-mobile.webp"
-const FALLBACK_MSI_MOBILE = "14-mobile.webp"
-const FALLBACK_APPLE_MOBILE = "15-mobile.webp"
-const FALLBACK_ASUS_MOBILE = "laptop-2-mobile.webp"
-const FALLBACK_TOP_ELECTRONICS_MOBILE = "acer-banner-mobile.webp"
-const FALLBACK_TOP_CAMERA_MOBILE = "asus-banner-mobile.webp"
 
 const NOTIF_POPUP_KEY = "notif_popup_shown"
 const OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/
@@ -110,23 +86,6 @@ const getMobileSingleBannerProps = (image, fallbackSrc = "") =>
 
 const getCategoryBannerProps = (image, fallbackSrc = "") =>
   getHomeImageProps(image, fallbackSrc, "(max-width: 1023px) calc(100vw - 1.5rem), 1311px")
-
-const StaticMobileHero = ({ getLocalizedPath }) => (
-  <section className="relative w-full h-[170px] overflow-hidden md:hidden">
-    <Link to={getLocalizedPath(MOBILE_STATIC_HERO.link)} aria-label={MOBILE_STATIC_HERO.title} className="absolute inset-0">
-      <img
-        src={MOBILE_STATIC_HERO.image}
-        alt={MOBILE_STATIC_HERO.title}
-        fetchpriority="high"
-        loading="eager"
-        decoding="async"
-        width="720"
-        height="277"
-        className="block w-full h-full object-cover"
-      />
-    </Link>
-  </section>
-)
 
 const MobileDeferredContentPlaceholder = () => (
   <div className="md:hidden space-y-4 mt-4">
@@ -194,7 +153,6 @@ const Home = () => {
     }),
     [],
   )
-  const [showDynamicMobileHero, setShowDynamicMobileHero] = useState(false)
   const [showDeferredMobileContent, setShowDeferredMobileContent] = useState(false)
   const isMobileViewport = deviceType === "Mobile"
   const shouldRenderDeferredMobileContent = !isMobileViewport || showDeferredMobileContent
@@ -273,29 +231,20 @@ const Home = () => {
 
   useEffect(() => {
     if (!isMobileViewport) {
-      setShowDynamicMobileHero(true)
       setShowDeferredMobileContent(true)
       return
     }
-
-    setShowDynamicMobileHero(false)
     setShowDeferredMobileContent(false)
-
-    const cleanupHeroIdle = runWhenIdle(() => setShowDynamicMobileHero(true), 700)
     const cleanupDeferredIdle = runWhenIdle(() => setShowDeferredMobileContent(true), 1600)
 
     const revealDeferredContent = () => setShowDeferredMobileContent(true)
-    const revealHeroAndDeferred = () => {
-      setShowDynamicMobileHero(true)
-      setShowDeferredMobileContent(true)
-    }
+    const revealHeroAndDeferred = () => setShowDeferredMobileContent(true)
 
     window.addEventListener("scroll", revealDeferredContent, { once: true, passive: true })
     window.addEventListener("pointerdown", revealHeroAndDeferred, { once: true, passive: true })
     window.addEventListener("touchstart", revealHeroAndDeferred, { once: true, passive: true })
 
     return () => {
-      cleanupHeroIdle()
       cleanupDeferredIdle()
       window.removeEventListener("scroll", revealDeferredContent)
       window.removeEventListener("pointerdown", revealHeroAndDeferred)
@@ -869,17 +818,19 @@ const Home = () => {
     return getLocalizedPath(link)
   }
 
-  const handleBannerImageError = (e, bannerImage, finalFallback = LIGHT_BANNER_FALLBACK) => {
+  // A banner that will not load is hidden, never replaced with a sample image.
+  const hideBrokenImage = (e) => {
+    e.currentTarget.style.visibility = "hidden"
+  }
+
+  const handleBannerImageError = (e, bannerImage) => {
     const img = e.currentTarget
     if (!img.dataset.retryOriginal && bannerImage) {
       img.dataset.retryOriginal = "1"
       img.src = getFullImageUrl(bannerImage)
       return
     }
-    if (!img.dataset.retryFallback) {
-      img.dataset.retryFallback = "1"
-      img.src = finalFallback
-    }
+    hideBrokenImage(e)
   }
 
   if (error) {
@@ -986,15 +937,8 @@ const Home = () => {
           </div>
         </div>
       )}
-      {isMobileViewport ? (
-        showDynamicMobileHero && filteredHeroBanners.length > 0 ? (
-          <BannerSlider banners={filteredHeroBanners} />
-        ) : (
-          <StaticMobileHero getLocalizedPath={getLocalizedPath} />
-        )
-      ) : (
-        <BannerSlider banners={filteredHeroBanners.length ? filteredHeroBanners : [FALLBACK_HERO_BANNER]} />
-      )}
+      {/* Real hero banners only. While they load the slider holds the height and shows nothing. */}
+      <BannerSlider banners={filteredHeroBanners} />
       {/* Categories Section - Admin Controlled Slider */}
       <CategorySliderUpdated onCategoryClick={handleCategoryClick} />
 
@@ -1010,23 +954,15 @@ const Home = () => {
         {!isMobileViewport && <div className="hidden md:flex justify-between gap-4">
           {(() => {
             const banners = getBannersForSection("top-triple", "home-top-triple")
-            const fallbacks = [
-              { image: "lenovo-banner-768x290.jpg", link: "product-category/laptops", alt: "Lenovo Banner" },
-              { image: "acer-banner-768x290.jpg", link: "/product-category/electronics", alt: "Acer Banner" },
-              { image: "asus-banner-768x290.jpg", link: "/product-category/camera", alt: "Asus Banner" }
-            ]
-
-            // Merge banners with fallbacks - show banner if exists, else show fallback
             return [0, 1, 2].map((index) => {
               const banner = banners[index]
-              const fallback = fallbacks[index]
 
               return (
                 <div key={index} className="w-1/3 lg:w-1/3 h-[280px]">
                   {banner ? (
                     <Link to={getBannerLink(banner)} aria-label={banner.title || "View products"} className="block h-full">
                       <img
-                        src={getFullImageUrl(banner.image) || fallback.image}
+                        src={getFullImageUrl(banner.image)}
                         alt={banner.title || "Banner"}
                         fetchPriority={index === 0 ? "high" : "auto"}
                         loading={index === 0 ? "eager" : "lazy"}
@@ -1034,25 +970,10 @@ const Home = () => {
                         width="1200"
                         height="560"
                         className="block w-full h-full rounded-lg bg-cover hover:opacity-90 transition-opacity cursor-pointer"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = fallback.image;
-                        }}
+                        onError={hideBrokenImage}
                       />
                     </Link>
-                  ) : (
-                    <Link to={fallback.link} aria-label={fallback.alt} className="block h-full">
-                      <img
-                        src={fallback.image}
-                        alt={fallback.alt}
-                        loading="lazy"
-                        decoding="async"
-                        width="1200"
-                        height="560"
-                        className="block w-full h-full rounded-lg bg-cover hover:opacity-90 transition-opacity cursor-pointer"
-                      />
-                    </Link>
-                  )}
+                  ) : null}
                 </div>
               )
             })
@@ -1063,16 +984,9 @@ const Home = () => {
         <div className="md:hidden grid grid-cols-2 gap-3">
           {(() => {
             const banners = getBannersForSection("top-mobile", "home-top-triple")
-            const fallbacks = [
-              { image: FALLBACK_TOP_ELECTRONICS_MOBILE, link: "/product-category/electronics", alt: "Electronic Banner Mobile" },
-              { image: FALLBACK_TOP_CAMERA_MOBILE, link: "/product-category/camera", alt: "Camera Banner Mobile" },
-            ]
-
-            // Merge banners with fallbacks
             return [0, 1].map((index) => {
               const banner = banners[index]
-              const fallback = fallbacks[index]
-              const imageProps = getMobileHeroCardImageProps(banner?.image, fallback.image)
+              const imageProps = getMobileHeroCardImageProps(banner?.image)
 
               return (
                 <div key={index} className="h-[105px]">
@@ -1089,28 +1003,10 @@ const Home = () => {
                         width="800"
                         height="420"
                         className="block w-full h-full rounded-lg object-cover hover:opacity-95 transition-opacity cursor-pointer"
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.src = fallback.image
-                          e.target.removeAttribute("srcset")
-                          e.target.removeAttribute("sizes")
-                        }}
+                        onError={hideBrokenImage}
                       />
                     </Link>
-                  ) : (
-                    <Link to={fallback.link} aria-label={fallback.alt} className="block h-full">
-                      <img
-                        src={fallback.image}
-                        alt={fallback.alt}
-                        fetchPriority={index === 0 ? "high" : "auto"}
-                        loading="lazy"
-                        decoding="async"
-                        width="800"
-                        height="420"
-                        className="block w-full h-full rounded-lg object-cover hover:opacity-95 transition-opacity cursor-pointer"
-                      />
-                    </Link>
-                  )}
+                  ) : null}
                 </div>
               )
             })
@@ -1167,33 +1063,16 @@ const Home = () => {
             <img
               {...getMobileSingleBannerProps(
                 getBannersForSection("hp-mobile", "home-brand-single")[0].image,
-                FALLBACK_HP_MOBILE,
               )}
               alt={getBannersForSection("hp-mobile", "home-brand-single")[0].title || "HP Products Banner Mobile"}
               fetchPriority="high"
               loading="eager"
               decoding="async"
               className="w-full h-full bg-cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-              onError={(e) => {
-                e.target.onerror = null
-                e.target.src = FALLBACK_HP_MOBILE
-                e.target.removeAttribute("srcset")
-                e.target.removeAttribute("sizes")
-              }}
+              onError={hideBrokenImage}
             />
           </Link>
-        ) : (
-          <Link to={brandUrls.HP} aria-label="Browse HP products">
-            <img
-              src={FALLBACK_HP_MOBILE}
-              alt="HP Products Banner Mobile"
-              fetchPriority="high"
-              loading="eager"
-              decoding="async"
-              className="w-full h-full bg-cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-            />
-          </Link>
-        )}
+        ) : null}
       </div>
 
 
@@ -1218,15 +1097,7 @@ const Home = () => {
                       onError={(e) => handleBannerImageError(e, hpBanner.image)}
                     />
                   </Link>
-                ) : (
-                  <Link to={brandUrls.HP}>
-                    <img
-                      src={LIGHT_BANNER_FALLBACK}
-                      alt="HP Products Banner"
-                      className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                    />
-                  </Link>
-                )}
+                ) : null}
               </div>
               <div className="w-1/2">
                 {dellBanner ? (
@@ -1238,15 +1109,7 @@ const Home = () => {
                       onError={(e) => handleBannerImageError(e, dellBanner.image)}
                     />
                   </Link>
-                ) : (
-                  <Link to={brandUrls.Dell}>
-                    <img
-                      src={LIGHT_BANNER_FALLBACK}
-                      alt="Dell Products Banner"
-                      className="w-full h-full bg-cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                    />
-                  </Link>
-                )}
+                ) : null}
               </div>
             </>
           )
@@ -1328,40 +1191,15 @@ const Home = () => {
             <img
               {...getCategoryBannerProps(
                 getBannersForSection("accessories", "home-category-banner")[0].image,
-                FALLBACK_ACCESSORIES_MOBILE,
               )}
               alt={getBannersForSection("accessories", "home-category-banner")[0].title || "Accessories Promotion Banner"}
               loading="lazy"
               decoding="async"
               className="w-full h-full cover rounded-lg"
-              onError={(e) => {
-                e.target.onerror = null
-                if (window.innerWidth < 1024) {
-                  e.target.src = FALLBACK_ACCESSORIES_MOBILE
-                } else {
-                  e.target.src = LIGHT_ACCESSORIES_DESKTOP_FALLBACK
-                }
-                e.target.removeAttribute("srcset")
-                e.target.removeAttribute("sizes")
-              }}
+              onError={hideBrokenImage}
             />
           </Link>
-        ) : (
-          <Link to={getLocalizedPath("/product-category/accessories")}>
-            <img
-              src={FALLBACK_ACCESSORIES_MOBILE}
-              alt="Accessories Promotion Banner Mobile"
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full cover rounded-lg lg:hidden"
-            />
-            <img
-              src={LIGHT_ACCESSORIES_DESKTOP_FALLBACK}
-              alt="Accessories Promotion Banner Desktop"
-              className="w-full h-full cover rounded-lg hidden lg:block"
-            />
-          </Link>
-        )}
+        ) : null}
       </div>
 
       {/* Accessories Section - Mobile shows 2 products */}
@@ -1405,31 +1243,15 @@ const Home = () => {
             <img
               {...getMobileSingleBannerProps(
                 getBannersForSection("asus-mobile", "home-brand-single")[0].image,
-                FALLBACK_ASUS_MOBILE,
               )}
               alt={getBannersForSection("asus-mobile", "home-brand-single")[0].title || "ASUS Products Banner Mobile"}
               loading="lazy"
               decoding="async"
               className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-              onError={(e) => {
-                e.target.onerror = null
-                e.target.src = FALLBACK_ASUS_MOBILE
-                e.target.removeAttribute("srcset")
-                e.target.removeAttribute("sizes")
-              }}
+              onError={hideBrokenImage}
             />
           </Link>
-        ) : (
-          <Link to={brandUrls.ASUS} aria-label="Browse ASUS products">
-            <img
-              src={FALLBACK_ASUS_MOBILE}
-              alt="ASUS Products Banner Mobile"
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-            />
-          </Link>
-        )}
+        ) : null}
       </div>
 
       {/* Desktop Banner - Acer and ASUS (Dynamic) */}
@@ -1451,15 +1273,7 @@ const Home = () => {
                       onError={(e) => handleBannerImageError(e, acerBanner.image)}
                     />
                   </Link>
-                ) : (
-                  <Link to={brandUrls.Acer}>
-                    <img
-                      src={LIGHT_BANNER_FALLBACK}
-                      alt="Acer Products Banner"
-                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                    />
-                  </Link>
-                )}
+                ) : null}
               </div>
               <div className="w-1/2">
                 {asusBanner ? (
@@ -1471,15 +1285,7 @@ const Home = () => {
                       onError={(e) => handleBannerImageError(e, asusBanner.image)}
                     />
                   </Link>
-                ) : (
-                  <Link to={brandUrls.ASUS}>
-                    <img
-                      src={LIGHT_BANNER_FALLBACK}
-                      alt="ASUS Products Banner"
-                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                    />
-                  </Link>
-                )}
+                ) : null}
               </div>
             </>
           )
@@ -1557,49 +1363,6 @@ const Home = () => {
       {renderDynamicSection(5)}
 
       {/* Networking section hidden by request - keep commented, do not remove */}
-      {/*
-      <div className="mx-3 my-4 h-[160px] lg:h-[300px]">
-        {getBannersForSection("networking", "home-category-banner").length > 0 ? (
-          <Link to={getLocalizedPath(getBannersForSection("networking", "home-category-banner")[0].link || "/product-category/computers/networking")}>
-            <img
-              {...getCategoryBannerProps(
-                getBannersForSection("networking", "home-category-banner")[0].image,
-                FALLBACK_NETWORKING_MOBILE,
-              )}
-              alt={getBannersForSection("networking", "home-category-banner")[0].title || "Networking Banner"}
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full cover rounded-lg"
-              onError={(e) => {
-                e.target.onerror = null
-                if (window.innerWidth < 1024) {
-                  e.target.src = FALLBACK_NETWORKING_MOBILE
-                } else {
-                  e.target.src = LIGHT_NETWORKING_DESKTOP_FALLBACK
-                }
-                e.target.removeAttribute("srcset")
-                e.target.removeAttribute("sizes")
-              }}
-            />
-          </Link>
-        ) : (
-          <Link to={getLocalizedPath("/product-category/computers/networking")}>
-            <img
-              src={FALLBACK_NETWORKING_MOBILE}
-              alt="Networking Banner Mobile"
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full cover rounded-lg lg:hidden"
-            />
-            <img
-              src={LIGHT_NETWORKING_DESKTOP_FALLBACK}
-              alt="Networking Banner Desktop"
-              className="w-full h-full cover rounded-lg hidden lg:block"
-            />
-          </Link>
-        )}
-      </div>
-      */}
 
       {/*
       <section className="py-8 mx-3">
@@ -1643,31 +1406,15 @@ const Home = () => {
             <img
               {...getMobileSingleBannerProps(
                 getBannersForSection("msi-mobile", "home-brand-single")[0].image,
-                FALLBACK_MSI_MOBILE,
               )}
               alt={getBannersForSection("msi-mobile", "home-brand-single")[0].title || "MSI Products Banner Mobile"}
               loading="lazy"
               decoding="async"
               className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-              onError={(e) => {
-                e.target.onerror = null
-                e.target.src = FALLBACK_MSI_MOBILE
-                e.target.removeAttribute("srcset")
-                e.target.removeAttribute("sizes")
-              }}
+              onError={hideBrokenImage}
             />
           </Link>
-        ) : (
-          <Link to={brandUrls.MSI} aria-label="Browse MSI products">
-            <img
-              src={FALLBACK_MSI_MOBILE}
-              alt="MSI Products Banner Mobile"
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-            />
-          </Link>
-        )}
+        ) : null}
       </div>
 
       {/* Desktop Banner - MSI and Lenovo (Dynamic) */}
@@ -1689,15 +1436,7 @@ const Home = () => {
                       onError={(e) => handleBannerImageError(e, msiBanner.image)}
                     />
                   </Link>
-                ) : (
-                  <Link to={brandUrls.MSI}>
-                    <img
-                      src={LIGHT_BANNER_FALLBACK}
-                      alt="MSI Products Banner"
-                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                    />
-                  </Link>
-                )}
+                ) : null}
               </div>
               <div className="w-1/2">
                 {lenovoBanner ? (
@@ -1709,15 +1448,7 @@ const Home = () => {
                       onError={(e) => handleBannerImageError(e, lenovoBanner.image)}
                     />
                   </Link>
-                ) : (
-                  <Link to={brandUrls.Lenovo}>
-                    <img
-                      src={LIGHT_BANNER_FALLBACK}
-                      alt="Lenovo Products Banner"
-                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                    />
-                  </Link>
-                )}
+                ) : null}
               </div>
             </>
           )
@@ -1799,31 +1530,15 @@ const Home = () => {
             <img
               {...getMobileSingleBannerProps(
                 getBannersForSection("apple-mobile", "home-brand-single")[0].image,
-                FALLBACK_APPLE_MOBILE,
               )}
               alt={getBannersForSection("apple-mobile", "home-brand-single")[0].title || "Apple Products Banner Mobile"}
               loading="lazy"
               decoding="async"
               className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-              onError={(e) => {
-                e.target.onerror = null
-                e.target.src = FALLBACK_APPLE_MOBILE
-                e.target.removeAttribute("srcset")
-                e.target.removeAttribute("sizes")
-              }}
+              onError={hideBrokenImage}
             />
           </Link>
-        ) : (
-          <Link to={brandUrls.Apple} aria-label="Browse Apple products">
-            <img
-              src={FALLBACK_APPLE_MOBILE}
-              alt="Apple Products Banner Mobile"
-              loading="lazy"
-              decoding="async"
-              className="w-full h-full cover rounded-lg hover:opacity-95 transition-opacity cursor-pointer"
-            />
-          </Link>
-        )}
+        ) : null}
       </div>
 
       {/* Desktop Banner - Apple and Samsung (Dynamic) */}
@@ -1845,15 +1560,7 @@ const Home = () => {
                       onError={(e) => handleBannerImageError(e, appleBanner.image)}
                     />
                   </Link>
-                ) : (
-                  <Link to={brandUrls.Apple}>
-                    <img
-                      src={LIGHT_BANNER_FALLBACK}
-                      alt="Apple Products Banner"
-                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                    />
-                  </Link>
-                )}
+                ) : null}
               </div>
               <div className="w-1/2">
                 {samsungBanner ? (
@@ -1865,15 +1572,7 @@ const Home = () => {
                       onError={(e) => handleBannerImageError(e, samsungBanner.image)}
                     />
                   </Link>
-                ) : (
-                  <Link to={brandUrls.Samsung}>
-                    <img
-                      src={LIGHT_BANNER_FALLBACK}
-                      alt="Samsung Products Banner"
-                      className="w-full h-full cover rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                    />
-                  </Link>
-                )}
+                ) : null}
               </div>
             </>
           )
