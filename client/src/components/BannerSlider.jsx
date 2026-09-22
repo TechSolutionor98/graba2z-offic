@@ -98,7 +98,9 @@ const BannerSlider = ({ banners }) => {
   if (!banners || banners.length === 0) {
     return (
       <section className="relative w-full h-[170px] sm:h-[250px] md:h-[300px] lg:h-[310px] overflow-hidden">
-        <div className="w-full h-full bg-gray-200 animate-pulse" />
+        {/* Empty rather than a grey block: the section already reserves the
+            height, so nothing moves when the banner loads. */}
+        <div className="w-full h-full" aria-hidden="true" />
       </section>
     )
   }

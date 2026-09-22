@@ -68,7 +68,10 @@ export async function getCategoryTreeCached() {
   if (inflightPromise) return inflightPromise
 
   inflightPromise = axios
-    .get(`${config.API_URL}/api/categories/tree`)
+    // The menu needs names, slugs and structure. `lite` leaves out the long SEO
+    // copy, which was most of this response and is also what gets written into
+    // localStorage -- a menu should not cost the browser a 2 MB cache entry.
+    .get(`${config.API_URL}/api/categories/tree?lite=1`)
     .then((resp) => (Array.isArray(resp.data) ? resp.data : []))
     .then((data) => {
       writeCache(data)

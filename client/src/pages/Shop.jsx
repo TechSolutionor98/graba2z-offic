@@ -372,6 +372,58 @@ const Shop = () => {
   const [subCategory2Data, setSubCategory2Data] = useState(null)
   const [subCategory3Data, setSubCategory3Data] = useState(null)
   const [subCategory4Data, setSubCategory4Data] = useState(null)
+  // The long SEO copy for whichever category and subcategory this page is
+  // showing, keyed by id. Fetched on its own because the lists above no longer
+  // carry it -- sending every category's copy to draw one page's footer text
+  // was several megabytes per visit.
+  const [seoDocs, setSeoDocs] = useState({})
+
+  // Fetch that copy for the handful of records this page actually renders --
+  // the chosen category and the deepest chosen subcategory. A page shows at
+  // most five, against the 287 the lists used to carry.
+  useEffect(() => {
+    const categoryId = selectedCategory && selectedCategory !== "all" ? selectedCategory : null
+    const subIds = [
+      selectedSubCategories?.[0],
+      subCategory2Data?._id,
+      subCategory3Data?._id,
+      subCategory4Data?._id,
+    ].filter(Boolean)
+
+    // Anything already fetched stays; only what is missing is asked for.
+    const missingSubs = subIds.filter((id) => !seoDocs[id])
+    const missingCategory = categoryId && !seoDocs[categoryId] ? categoryId : null
+
+    if (!missingCategory && missingSubs.length === 0) return
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        const requests = []
+        if (missingCategory) requests.push(axios.get(`${API_BASE_URL}/api/categories/seo?ids=${missingCategory}`))
+        if (missingSubs.length)
+          requests.push(axios.get(`${API_BASE_URL}/api/subcategories/seo?ids=${missingSubs.join(",")}`))
+
+        const responses = await Promise.all(requests)
+        if (cancelled) return
+
+        const next = {}
+        for (const response of responses) {
+          for (const row of response.data || []) next[row._id] = row
+        }
+        if (Object.keys(next).length) setSeoDocs((current) => ({ ...current, ...next }))
+      } catch (error) {
+        // SEO copy is presentational. Losing it must not take the page with it.
+        console.error("Could not load category SEO content:", error)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, selectedSubCategories, subCategory2Data, subCategory3Data, subCategory4Data])
   const [stockFilters, setStockFilters] = useState({ inStock: true, outOfStock: false, onSale: false })
   const [minPrice, setMinPrice] = useState(PRICE_FILTER_MIN)
   const [isPriceFilterApplied, setIsPriceFilterApplied] = useState(false)
@@ -1241,7 +1293,10 @@ const Shop = () => {
   const fetchCategories = async () => {
     try {
       // Use the same tree endpoint as Navbar to ensure consistency
-      const { data } = await axios.get(`${API_BASE_URL}/api/categories/tree`)
+      // `lite` leaves out the long SEO copy, which is 1.8 MB of this response
+      // and is not used to draw a menu. The one category the page renders is
+      // fetched on its own below.
+      const { data } = await axios.get(`${API_BASE_URL}/api/categories/tree?lite=1`)
 
       const validCategories = data.filter((cat) => {
         const isValid =
@@ -1315,7 +1370,8 @@ const Shop = () => {
 
   const fetchAllSubcategories = async () => {
     try {
-      const { data } = await axios.get(`${API_BASE_URL}/api/subcategories`)
+      // Same again: 2 MB lighter, and the page fetches the SEO it needs by id.
+      const { data } = await axios.get(`${API_BASE_URL}/api/subcategories?lite=1`)
       const validSubCategories = data.filter((subCat) => {
         const isValid =
           subCat &&
@@ -2070,13 +2126,20 @@ const Shop = () => {
     setSortExplicitlyChosen(true)
   }
 
-  const categoryObj = categories.find((cat) => cat._id === selectedCategory)
-  const subcategoryObj =
+  const rawCategoryObj = categories.find((cat) => cat._id === selectedCategory)
+  const rawSubcategoryObj =
     selectedSubCategories.length > 0 ? subCategories.find((s) => s._id === selectedSubCategories[0]) : null
   const selectedBrandForSEO = selectedBrands.length === 1 ? brands.find((brand) => brand._id === selectedBrands[0]) : null
 
   // Determine which subcategory level to use for SEO (deepest level takes priority)
-  const activeSubcategoryForSEO = subCategory4Data || subCategory3Data || subCategory2Data || subcategoryObj
+  const rawActiveSubcategory = subCategory4Data || subCategory3Data || subCategory2Data || rawSubcategoryObj
+
+  // Put the fetched copy back on top of the lite record, so everything below
+  // reads one object exactly as it did when the lists carried every field.
+  const withSeo = (node) => (node ? { ...node, ...(seoDocs[node._id] || {}) } : node)
+  const categoryObj = withSeo(rawCategoryObj)
+  const subcategoryObj = withSeo(rawSubcategoryObj)
+  const activeSubcategoryForSEO = withSeo(rawActiveSubcategory)
 
   const seoContent = activeSubcategoryForSEO?.seoContent || categoryObj?.seoContent || ""
 

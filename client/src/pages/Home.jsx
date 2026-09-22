@@ -91,7 +91,9 @@ const runWhenIdle = (callback, timeout = 1200) => {
 }
 
 const MobileReservedSkeleton = ({ height = MOBILE_RESERVED_HEIGHTS.deferredSection, className = "" }) => (
-  <div className={`md:hidden mx-3 rounded-2xl bg-gray-100 animate-pulse ${className}`} style={{ height }} />
+  // Holds the space so the page does not jump when the real thing arrives,
+  // without showing a grey box while it waits.
+  <div className={`md:hidden mx-3 rounded-2xl ${className}`} style={{ height }} aria-hidden="true" />
 )
 
 const getHomeImageProps = (image, fallbackSrc = "", sizes = undefined) => ({
@@ -1136,7 +1138,7 @@ const Home = () => {
             style={{ minHeight: `${MOBILE_RESERVED_HEIGHTS.featuredProducts}px` }}
           >
             {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-[206px] rounded-xl bg-gray-100 animate-pulse" />
+              <div key={index} className="h-[206px] rounded-xl" aria-hidden="true" />
             ))}
           </div>
         ) : (
