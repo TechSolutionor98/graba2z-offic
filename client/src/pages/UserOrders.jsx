@@ -6,7 +6,7 @@ import axios from "axios"
 import { useAuth } from "../context/AuthContext"
 import { useLanguage } from "../context/LanguageContext"
 import { useCart } from "../context/CartContext"
-import { CheckCircle, Clock, Package, Truck, AlertTriangle, Printer, Download, X, Eye, FileText, ShoppingBag, MapPin, CreditCard, Shield } from "lucide-react"
+import { CheckCircle, Clock, Package, Truck, AlertTriangle, Printer, Download, X, Eye, FileText, ShoppingBag, MapPin, CreditCard, Shield, Phone, Mail } from "lucide-react"
 import { getFullImageUrl } from "../utils/imageUtils"
 import { Dialog, Transition } from "@headlessui/react"
 import jsPDF from "jspdf"
@@ -568,69 +568,87 @@ const UserOrders = () => {
                 <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-2xl transition-all">
                   {selectedOrder && (
                     <div className="flex flex-col max-h-[90vh]">
-                      {/* Modal Header */}
-                      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/80 sticky top-0 z-10">
-                        <div>
-                          <Dialog.Title as="h3" className="text-xl font-bold text-gray-900 flex flex-wrap items-center gap-3">
-                            Order #{selectedOrder._id.slice(-6).toUpperCase()}
+                      {/* Modal Header: the order's identity on one line, then the
+                          facts a customer checks first -- each with its own label,
+                          so nothing has to be guessed from an icon, and each shown
+                          exactly once. */}
+                      <div className="border-b border-gray-100 bg-gray-50/80 sticky top-0 z-10">
+                        <div className="px-6 pt-5 pb-4 flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <Dialog.Title as="h3" className="text-xl font-bold text-gray-900">
+                              Order #{selectedOrder._id.slice(-6).toUpperCase()}
+                            </Dialog.Title>
+                            <p className="mt-1 text-sm text-gray-500 flex items-center gap-1.5">
+                              <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span>
+                                Placed {placedDate(selectedOrder.createdAt, { weekday: true })} at{" "}
+                                {placedTime(selectedOrder.createdAt)}
+                              </span>
+                            </p>
+                          </div>
+                          <button
+                            onClick={closeModal}
+                            aria-label="Close"
+                            className="p-2 -mr-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition flex-shrink-0"
+                          >
+                            <X className="w-6 h-6" />
+                          </button>
+                        </div>
+
+                        <div className="px-6 pb-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-1.5">Status</p>
                             <span
-                              className={`px-3 py-1 rounded-lg border text-xs font-semibold tracking-wide flex items-center gap-1.5 ${getStatusColor(selectedOrder.status)}`}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold ${getStatusColor(selectedOrder.status)}`}
                             >
                               {getStatusIcon(selectedOrder.status)}
-                              {/* Named, because "New" on its own reads as a
-                                  badge on the order rather than its status. */}
-                              <span className="font-medium opacity-70">Order Status:</span>
                               {selectedOrder.status}
                             </span>
-                          </Dialog.Title>
-                          {/* The facts people look for first, before scrolling the items. */}
-                          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
-                            <span>
-                              Placed {placedDate(selectedOrder.createdAt, { weekday: true })} at{" "}
-                              {placedTime(selectedOrder.createdAt)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {getOrderCountryName(selectedOrder)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <CreditCard className="h-3.5 w-3.5" />
-                              {selectedOrder.paymentMethod}
+                          </div>
+
+                          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-1.5">Delivery</p>
+                            <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                              {selectedOrder.deliveryType === "pickup" ? (
+                                <>
+                                  <ShoppingBag className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                  Store pickup
+                                </>
+                              ) : (
+                                <>
+                                  <Truck className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                  Home delivery
+                                </>
+                              )}
+                            </p>
+                          </div>
+
+                          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-1.5">Payment</p>
+                            <p className="text-sm font-semibold text-gray-900 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                              <CreditCard className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                              <span>{selectedOrder.paymentMethod}</span>
                               <span
-                                className={`ml-1 rounded px-1.5 py-0.5 text-xs font-medium ${
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                                   selectedOrder.isPaid ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
                                 }`}
                               >
                                 {selectedOrder.isPaid ? "Paid" : "Pending"}
                               </span>
-                            </span>
-                            <span className="flex items-center gap-1">
-                              {selectedOrder.deliveryType === "pickup" ? (
-                                <>
-                                  <ShoppingBag className="h-3.5 w-3.5" />
-                                  Collect from {selectedOrder.pickupDetails?.location || "store"}
-                                </>
-                              ) : (
-                                <>
-                                  <Truck className="h-3.5 w-3.5" />
-                                  Home delivery
-                                </>
-                              )}
-                            </span>
-                            {selectedOrder.trackingId && (
-                              <span className="flex items-center gap-1">
-                                <Package className="h-3.5 w-3.5" />
-                                Tracking {selectedOrder.trackingId}
+                            </p>
+                          </div>
+
+                          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-1.5">Store</p>
+                            <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                              <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                              <span>
+                                {getOrderCountryName(selectedOrder)}
+                                <span className="font-normal text-gray-500"> · {getOrderCurrencySymbol(selectedOrder)}</span>
                               </span>
-                            )}
+                            </p>
                           </div>
                         </div>
-                        <button
-                          onClick={closeModal}
-                          className="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
-                        >
-                          <X className="w-6 h-6" />
-                        </button>
                       </div>
 
                       {/* Modal Body - Scrollable */}
@@ -780,36 +798,82 @@ const UserOrders = () => {
                                   <span className="font-bold text-gray-900">Total</span>
                                   <span className="text-xl font-bold text-green-600">{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.totalPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
-                                <div className="mt-4 flex items-center justify-center gap-2 px-3 py-2 bg-white rounded-lg border border-gray-200">
-                                  <CreditCard className="w-4 h-4 text-gray-500" />
-                                  <span className="font-medium text-gray-700">{selectedOrder.paymentMethod}</span>
-                                  <span className={`text-xs px-2 py-0.5 rounded-full ${selectedOrder.isPaid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                    {selectedOrder.isPaid ? 'Paid' : 'Pending'}
-                                  </span>
-                                </div>
                               </div>
                             </div>
 
-                            {/* Shipping Address */}
-                            <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                              <h4 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-red-500" />
-                                Shipping Address
-                              </h4>
-                              <div className="text-sm text-gray-600 space-y-1">
-                                <p className="font-medium text-gray-900">{selectedOrder.shippingAddress?.name || user?.name}</p>
-                                <p>{selectedOrder.shippingAddress?.address}</p>
-                                <p>{selectedOrder.shippingAddress?.city}{selectedOrder.shippingAddress?.state ? `, ${selectedOrder.shippingAddress.state}` : ''}</p>
-                                <p className="pt-2 flex items-center gap-2">
-                                  <span className="w-4 flex justify-center">📞</span> 
-                                  {selectedOrder.shippingAddress?.phone}
-                                </p>
-                                <p className="flex items-center gap-2">
-                                  <span className="w-4 flex justify-center">✉️</span> 
-                                  {selectedOrder.shippingAddress?.email || user?.email}
-                                </p>
+                            {/* Where it goes: the delivery address, or the store the
+                                customer collects from. */}
+                            {selectedOrder.deliveryType === "pickup" ? (
+                              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                                <h4 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                  <ShoppingBag className="w-4 h-4 text-green-600" />
+                                  Pickup Details
+                                </h4>
+                                <div className="text-sm text-gray-600 space-y-1">
+                                  <p className="font-medium text-gray-900">{selectedOrder.pickupDetails?.location || "Store pickup"}</p>
+                                  {selectedOrder.pickupDetails?.storeAddress && <p>{selectedOrder.pickupDetails.storeAddress}</p>}
+                                  {selectedOrder.pickupDetails?.storePhone && (
+                                    <p className="flex items-center gap-2">
+                                      <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                      {selectedOrder.pickupDetails.storePhone}
+                                    </p>
+                                  )}
+                                  <p className="pt-3 text-xs font-medium uppercase tracking-wide text-gray-500">Collected by</p>
+                                  <p className="font-medium text-gray-900">
+                                    {selectedOrder.pickupDetails?.name || selectedOrder.shippingAddress?.name || user?.name}
+                                  </p>
+                                  {(selectedOrder.pickupDetails?.phone || selectedOrder.shippingAddress?.phone) && (
+                                    <p className="flex items-center gap-2">
+                                      <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                      {selectedOrder.pickupDetails?.phone || selectedOrder.shippingAddress?.phone}
+                                    </p>
+                                  )}
+                                  {(selectedOrder.pickupDetails?.email || selectedOrder.shippingAddress?.email || user?.email) && (
+                                    <p className="flex items-center gap-2">
+                                      <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                      {selectedOrder.pickupDetails?.email || selectedOrder.shippingAddress?.email || user?.email}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                            </div>
+                            ) : (
+                              <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                                <h4 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                  <MapPin className="w-4 h-4 text-red-500" />
+                                  Shipping Address
+                                </h4>
+                                <div className="text-sm text-gray-600 space-y-1">
+                                  <p className="font-medium text-gray-900">{selectedOrder.shippingAddress?.name || user?.name}</p>
+                                  {selectedOrder.shippingAddress?.address && <p>{selectedOrder.shippingAddress.address}</p>}
+                                  {(selectedOrder.shippingAddress?.city || selectedOrder.shippingAddress?.state || selectedOrder.shippingAddress?.zipCode) && (
+                                    <p>
+                                      {[selectedOrder.shippingAddress?.city, selectedOrder.shippingAddress?.state].filter(Boolean).join(", ")}
+                                      {selectedOrder.shippingAddress?.zipCode ? ` ${selectedOrder.shippingAddress.zipCode}` : ""}
+                                    </p>
+                                  )}
+                                  {selectedOrder.shippingAddress?.country && <p>{selectedOrder.shippingAddress.country}</p>}
+                                  {selectedOrder.shippingAddress?.phone && (
+                                    <p className="pt-2 flex items-center gap-2">
+                                      <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                      {selectedOrder.shippingAddress.phone}
+                                    </p>
+                                  )}
+                                  {(selectedOrder.shippingAddress?.email || user?.email) && (
+                                    <p className="flex items-center gap-2">
+                                      <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                      {selectedOrder.shippingAddress?.email || user?.email}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {selectedOrder.customerNotes && (
+                              <div className="bg-amber-50 rounded-xl p-5 border border-amber-100">
+                                <h4 className="text-sm font-bold text-amber-900 mb-1">Your note</h4>
+                                <p className="text-sm text-amber-900/80 whitespace-pre-line">{selectedOrder.customerNotes}</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
