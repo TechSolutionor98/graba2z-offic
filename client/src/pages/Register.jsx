@@ -9,7 +9,7 @@ import { useLanguage } from "../context/LanguageContext"
 import { useCurrency } from "../context/CurrencyContext"
 import TranslatedText from "../components/TranslatedText"
 import config from "../config/config"
-import { getPendingReferralCode, setPendingReferralCode, clearPendingReferralCode } from "../context/ReferralContext"
+import { useReferral, getPendingReferralCode, setPendingReferralCode, clearPendingReferralCode } from "../context/ReferralContext"
 
 const Register = () => {
   const { getLocalizedPath } = useLanguage()
@@ -27,12 +27,55 @@ const Register = () => {
   const navigate = useNavigate()
   const { register } = useAuth()
   const { formatPrice } = useCurrency()
+  const { isEnabled: referralEnabled } = useReferral()
   const [searchParams] = useSearchParams()
 
   // The code the visitor arrived with, and what it is worth. Checked against the server so
   // a mistyped or retired link says so on the form rather than silently signing somebody
   // up with no discount.
   const [referral, setReferral] = useState(null)
+
+  // A code that arrived on a link (or was parked from one earlier in the session) fills
+  // the field and locks it: the invite is the reason the visitor is here. Otherwise the
+  // field is free for a code a friend passed on by hand.
+  const [linkCode, setLinkCode] = useState("")
+  const [manualCode, setManualCode] = useState("")
+  // idle | checking | valid | invalid -- for the code in the field, whichever way it got there.
+  const [codeStatus, setCodeStatus] = useState("idle")
+
+  const checkReferralCode = (code, { fromLink }) => {
+    let cancelled = false
+    setCodeStatus("checking")
+    axios
+      .get(`${config.API_URL}/api/referrals/validate/${encodeURIComponent(code)}`)
+      .then(({ data }) => {
+        if (cancelled) return
+        if (data?.valid) {
+          setReferral({ ...data, code: data.code })
+          setCodeStatus("valid")
+        } else {
+          setReferral(null)
+          setCodeStatus("invalid")
+          // A dead link is not worth an error message -- it just does not earn anything --
+          // but it must not stay parked and mis-attribute a later registration either.
+          if (fromLink) {
+            clearPendingReferralCode()
+            setLinkCode("")
+          }
+        }
+      })
+      .catch(() => {
+        // The programme could be unreachable rather than the code wrong, so the code is
+        // left in place and still sent; the server decides.
+        if (!cancelled) {
+          setReferral(null)
+          setCodeStatus("idle")
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }
 
   useEffect(() => {
     // A code in the URL wins over one parked earlier in the session: it is the link the
@@ -43,31 +86,29 @@ const Register = () => {
     const code = fromUrl || getPendingReferralCode()
     if (!code) return
 
-    let cancelled = false
-    axios
-      .get(`${config.API_URL}/api/referrals/validate/${encodeURIComponent(code)}`)
-      .then(({ data }) => {
-        if (cancelled) return
-        if (data?.valid) {
-          setReferral({ ...data, code: data.code })
-        } else {
-          // A dead link is not worth an error message on a signup form -- it just does
-          // not earn anything -- but it must not stay parked and mis-attribute a later
-          // registration either.
-          setReferral(null)
-          clearPendingReferralCode()
-        }
-      })
-      .catch(() => {
-        // The programme could be unreachable rather than the code wrong, so the code is
-        // left in place and still sent; the server decides.
-        if (!cancelled) setReferral(null)
-      })
-
-    return () => {
-      cancelled = true
-    }
+    setLinkCode(code.toUpperCase())
+    return checkReferralCode(code, { fromLink: true })
   }, [searchParams])
+
+  // A hand-typed code is checked once the visitor pauses, so the form can say who it
+  // belongs to and what it is worth before they submit.
+  useEffect(() => {
+    if (linkCode) return
+    const code = manualCode.trim()
+    if (!code) {
+      setReferral(null)
+      setCodeStatus("idle")
+      return
+    }
+    let cancel = () => {}
+    const timer = setTimeout(() => {
+      cancel = checkReferralCode(code, { fromLink: false })
+    }, 500)
+    return () => {
+      clearTimeout(timer)
+      cancel()
+    }
+  }, [manualCode, linkCode])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -127,11 +168,18 @@ const Register = () => {
       return
     }
 
+    // A typed code that was not recognised is not silently dropped: the visitor typed it
+    // to get something, so they are told before the account exists without it.
+    if (!linkCode && manualCode.trim() && codeStatus === "invalid") {
+      setErrors((prev) => ({ ...prev, referralCode: "That referral code was not recognised. Check it or leave the field empty." }))
+      return
+    }
+
     setLoading(true)
 
     try {
       const normalizedEmail = formData.email.trim().toLowerCase()
-      const referralCode = referral?.code || getPendingReferralCode()
+      const referralCode = referral?.code || (linkCode ? getPendingReferralCode() : manualCode.trim().toUpperCase())
 
       await register({
         name: formData.name.trim(),
@@ -384,6 +432,63 @@ const Register = () => {
                     {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
                   </div>
                 </div>
+
+                {referralEnabled && (
+                  <div>
+                    <label htmlFor="referralCode" className="block text-sm font-medium text-gray-700">
+                      <TranslatedText>Referral code</TranslatedText>{" "}
+                      <span className="font-normal text-gray-400">
+                        (<TranslatedText>optional</TranslatedText>)
+                      </span>
+                    </label>
+                    <div className="mt-1 relative">
+                      <Gift size={16} className="pointer-events-none absolute inset-y-0 left-3 my-auto text-lime-600" />
+                      <input
+                        id="referralCode"
+                        name="referralCode"
+                        type="text"
+                        autoComplete="off"
+                        autoCapitalize="characters"
+                        spellCheck={false}
+                        value={linkCode || manualCode}
+                        readOnly={Boolean(linkCode)}
+                        onChange={(e) => {
+                          setManualCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+                          if (errors.referralCode) setErrors((prev) => ({ ...prev, referralCode: "" }))
+                        }}
+                        className={`appearance-none relative block w-full pl-9 pr-3 py-2 border font-mono uppercase tracking-wider ${
+                          errors.referralCode || codeStatus === "invalid"
+                            ? "border-red-300"
+                            : codeStatus === "valid"
+                              ? "border-green-400"
+                              : "border-gray-300"
+                        } ${linkCode ? "bg-gray-50 text-gray-700 cursor-not-allowed" : "text-gray-900"} placeholder-gray-500 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm`}
+                        placeholder="Enter a friend's code"
+                      />
+                    </div>
+                    {linkCode ? (
+                      <p className="mt-1 text-xs text-gray-500">
+                        <TranslatedText>Applied from your invite link.</TranslatedText>
+                      </p>
+                    ) : codeStatus === "checking" ? (
+                      <p className="mt-1 text-xs text-gray-500">
+                        <TranslatedText>Checking your code…</TranslatedText>
+                      </p>
+                    ) : codeStatus === "invalid" || errors.referralCode ? (
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors.referralCode || <TranslatedText>That referral code was not recognised.</TranslatedText>}
+                      </p>
+                    ) : codeStatus === "valid" ? (
+                      <p className="mt-1 text-xs text-green-700">
+                        <TranslatedText>Code applied. Your discount is shown above.</TranslatedText>
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs text-gray-500">
+                        <TranslatedText>Have a friend's code? Enter it to get a discount on your first order.</TranslatedText>
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div>

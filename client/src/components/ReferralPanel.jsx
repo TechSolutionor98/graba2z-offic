@@ -79,6 +79,22 @@ const ReferralPanel = () => {
   const link = summary?.link || ""
   const code = summary?.code || ""
 
+  // The figures in the banner come from the server's view of this customer's tier
+  // (assigned, else the programme default), which is exactly what a reward will carry.
+  // The base settings only stand in while the summary is still loading.
+  const refereeOffer = summary?.offer?.referee || {
+    discountType: settings.refereeDiscountType,
+    discountValue: settings.refereeDiscountValue,
+    maxDiscountAed: settings.refereeMaxDiscountAed,
+    minOrderAed: settings.refereeMinOrderAed,
+  }
+  const referrerOffer = summary?.offer?.referrer || {
+    discountType: settings.referrerDiscountType,
+    discountValue: settings.referrerDiscountValue,
+    maxDiscountAed: settings.referrerMaxDiscountAed,
+    minOrderAed: settings.referrerMinOrderAed,
+  }
+
   const handleCopy = async () => {
     if (!link) return
     try {
@@ -143,21 +159,15 @@ const ReferralPanel = () => {
             <p className="mt-1 text-sm text-gray-700">
               Your friend gets{" "}
               <strong className="text-lime-800">
-                {describeOffer(
-                  summary?.tier?.refereeDiscountValue ? "percentage" : settings.refereeDiscountType,
-                  summary?.tier?.refereeDiscountValue || settings.refereeDiscountValue,
-                  settings.refereeMaxDiscountAed,
-                )}
+                {describeOffer(refereeOffer.discountType, refereeOffer.discountValue, refereeOffer.maxDiscountAed)}
               </strong>{" "}
-              when they sign up with your link. Once their first order is delivered, you get{" "}
+              when they sign up with your link
+              {refereeOffer.minOrderAed > 0 ? ` (on orders over ${formatPrice(refereeOffer.minOrderAed)})` : ""}. Once
+              their first order is delivered, you get{" "}
               <strong className="text-lime-800">
-                {describeOffer(
-                  summary?.tier?.referrerDiscountValue ? "percentage" : settings.referrerDiscountType,
-                  summary?.tier?.referrerDiscountValue || settings.referrerDiscountValue,
-                  settings.referrerMaxDiscountAed,
-                )}
+                {describeOffer(referrerOffer.discountType, referrerOffer.discountValue, referrerOffer.maxDiscountAed)}
               </strong>{" "}
-              on your next order.
+              on your next order{referrerOffer.minOrderAed > 0 ? ` over ${formatPrice(referrerOffer.minOrderAed)}` : ""}.
             </p>
           </div>
         </div>
@@ -358,6 +368,7 @@ const RewardList = ({ title, emptyBody, rewards, describeOffer, formatPrice }) =
                 </p>
                 <p className="text-xs text-gray-500">
                   {reward.description}
+                  {reward.code ? ` · code ${reward.code}` : ""}
                   {reward.minOrderAed > 0 ? ` · min. order ${formatPrice(reward.minOrderAed)}` : ""}
                   {reward.firstOrderOnly ? " · first order only" : ""}
                   {reward.expiresAt && reward.status === "active" ? ` · expires ${formatDate(reward.expiresAt)}` : ""}

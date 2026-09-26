@@ -76,7 +76,8 @@ const ReferralRewardPanel = ({ eligibleAmountAed, selectedRewardId, onApply, onC
 
   const describe = (reward) => {
     const headline = reward.discountType === "fixed" ? formatPrice(reward.discountValue) : `${reward.discountValue}%`
-    return reward.role === "referee" ? `${headline} welcome discount` : `${headline} referral reward`
+    const label = reward.role === "referee" ? `${headline} welcome discount` : `${headline} referral reward`
+    return reward.code ? `${label} · ${reward.code}` : label
   }
 
   return (

@@ -184,7 +184,7 @@ const AdminReferralSettings = () => {
         {/* Referral Types / Tiers Management */}
         <ReferralTypesSection />
 
-        <Section title="Base Invited Friend's Discount" subtitle={`${refereeExample} (Default when no tier assigned)`}>
+        <Section title="Base Invited Friend's Discount" subtitle={`${refereeExample} (Used only when the inviter has no tier and no default tier exists)`}>
           <div className="grid md:grid-cols-3 gap-4">
             <Field label="Discount type">
               <select

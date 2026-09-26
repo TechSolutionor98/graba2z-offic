@@ -769,19 +769,42 @@ const UserOrders = () => {
                                 )}
                                 {selectedOrder.discountAmount > 0 && (
                                   <div className="flex justify-between text-green-600">
-                                    <span>Discount</span>
+                                    <span>
+                                      Coupon discount
+                                      {selectedOrder.couponCode && (
+                                        <span className="ml-1.5 rounded bg-green-50 px-1.5 py-0.5 font-mono text-xs">{selectedOrder.couponCode}</span>
+                                      )}
+                                    </span>
                                     <span className="font-medium">-{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.discountAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                   </div>
                                 )}
                                 {selectedOrder.referralDiscountAmount > 0 && (
                                   <div className="flex justify-between text-green-600">
-                                    <span>Referral discount</span>
+                                    <span>
+                                      {selectedOrder.referralRewardRole === "referee" ? "Referral welcome discount" : "Referral reward"}
+                                      {selectedOrder.referralDiscountValue > 0 && (
+                                        <span className="ml-1.5 text-xs text-green-700/80">
+                                          (
+                                          {selectedOrder.referralDiscountType === "fixed"
+                                            ? `${getOrderCurrencySymbol(selectedOrder)} ${Number(selectedOrder.referralDiscountValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} off`
+                                            : `${selectedOrder.referralDiscountValue}% off`}
+                                          )
+                                        </span>
+                                      )}
+                                    </span>
                                     <span className="font-medium">-{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.referralDiscountAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                   </div>
                                 )}
                                 {selectedOrder.loyaltyDiscountAmount > 0 && (
                                   <div className="flex justify-between text-green-600">
-                                    <span>Points applied</span>
+                                    <span>
+                                      Grabian Points applied
+                                      {selectedOrder.loyaltyPointsRedeemed > 0 && (
+                                        <span className="ml-1.5 text-xs text-green-700/80">
+                                          ({Number(selectedOrder.loyaltyPointsRedeemed).toLocaleString()} points)
+                                        </span>
+                                      )}
+                                    </span>
                                     <span className="font-medium">-{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.loyaltyDiscountAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                   </div>
                                 )}

@@ -12,8 +12,9 @@ import { useCurrency } from "../context/CurrencyContext"
 import { useLoyalty } from "../context/LoyaltyContext"
 import LoyaltyRedeemPanel from "../components/LoyaltyRedeemPanel"
 import { useReferral } from "../context/ReferralContext"
-import ReferralRewardPanel from "../components/ReferralRewardPanel"
+import ReferralRewardCheckbox from "../components/ReferralRewardCheckbox"
 import { getProvincesForCountry } from "../utils/countryStates"
+import AddressAutocomplete from "../components/AddressAutocomplete"
 import { resolveDeliveryCharge, selectDeliveryMethod, describeDeliveryBlock } from "../utils/deliveryCharge"
 import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Check, Edit } from "lucide-react"
 import { Dialog } from "@headlessui/react"
@@ -29,6 +30,22 @@ import '../styles/phoneInput.css'
 
 import config from "../config/config"
 import { STORES } from "../data/stores"
+// One look for every field in the address modal.
+const addressLabelClass = "mb-1.5 block text-sm font-medium text-gray-700"
+const addressInputClass =
+  "h-11 w-full rounded-lg border border-gray-300 bg-white px-3.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-200"
+const addressSelectClass = addressInputClass + " appearance-none pr-9"
+
+// The phone inputs store numbers in international form (+971501234567). Older saved
+// profiles may still hold a bare local number, so the code is added only when missing.
+const withDialCode = (phone, dial = "+971") => {
+  const raw = String(phone || "").trim().replace(/[\s-]/g, "")
+  if (!raw) return ""
+  if (raw.startsWith("+")) return raw
+  if (raw.startsWith("00")) return `+${raw.slice(2)}`
+  return `${dial}${raw.replace(/^0+/, "")}`
+}
+
 const UAE_STATES = ["Abu Dhabi", "Ajman", "Al Ain", "Dubai", "Fujairah", "Ras Al Khaimah", "Sharjah", "Umm al-Qaywain"]
 
 
@@ -134,6 +151,32 @@ const renderPaymentLogos = (id) => {
       return null;
   }
 };
+
+// A completed checkout step shown folded on the payment step: number, title and a
+// one-line readback in the header, the full editable form underneath when opened.
+const ReviewSection = ({ number, title, summary, open, onToggle, children }) => (
+  <div className={`rounded-2xl border bg-white ${open ? "border-lime-400 shadow-sm" : "border-gray-200"}`}>
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="w-full flex items-center gap-3 px-4 py-3 text-left"
+    >
+      <span className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-lime-500 text-white text-sm font-bold">
+        {number}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold text-gray-900">{title}</span>
+        {!open && <span className="block truncate text-sm text-gray-500">{summary}</span>}
+      </span>
+      <span className="flex-shrink-0 inline-flex items-center gap-1 text-sm font-medium text-lime-700">
+        <TranslatedText>{open ? "Close" : "Change"}</TranslatedText>
+        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </span>
+    </button>
+    {open && <div className="border-t border-gray-100 px-4 py-4">{children}</div>}
+  </div>
+)
 
 const Checkout = () => {
   const navigate = useNavigate()
@@ -263,6 +306,9 @@ const Checkout = () => {
   })
   const [selectedStore, setSelectedStore] = useState(null)
   const [step, setStep] = useState(1)
+  // On the payment step the two earlier steps sit folded above the payment methods;
+  // this is the one currently opened for editing (1, 2 or null).
+  const [openReviewStep, setOpenReviewStep] = useState(null)
   const [showAllItems, setShowAllItems] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("")
   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(["card", "cod"])
@@ -575,7 +621,7 @@ const Checkout = () => {
       consumer: {
         first_name: formData.name.split(" ")[0] || "Customer",
         last_name: formData.name.split(" ").slice(1).join(" ") || "User",
-        phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
+        phone_number: withDialCode(formData.phone),
         email: formData.email,
       },
       billing_address: {
@@ -585,7 +631,7 @@ const Checkout = () => {
         last_name: formData.name.split(" ").slice(1).join(" ") || "User",
         line1: formData.address || "Dubai, UAE",
         line2: "",
-        phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
+        phone_number: withDialCode(formData.phone),
         region: formData.state || "Dubai",
       },
       shipping_address: {
@@ -595,7 +641,7 @@ const Checkout = () => {
         last_name: formData.name.split(" ").slice(1).join(" ") || "User",
         line1: formData.address || "Dubai, UAE",
         line2: "",
-        phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
+        phone_number: withDialCode(formData.phone),
         region: formData.state || "Dubai",
       },
       items: cartItems.map((item) => ({
@@ -638,7 +684,7 @@ const Checkout = () => {
         currency: "AED",
         description: `Order payment for ${cartItems.length} items`,
         buyer: {
-          phone: `+971${formData.phone}`,
+          phone: withDialCode(formData.phone),
           email: formData.email,
           name: formData.name,
         },
@@ -876,7 +922,7 @@ const Checkout = () => {
             currency: "AED",
             description: `Order payment for ${cartItems.length} items`,
             buyer: {
-              phone: `+971${formData.phone.replace('+971', '')}`,
+              phone: withDialCode(formData.phone),
               email: formData.email,
               name: formData.name,
             },
@@ -963,7 +1009,7 @@ const Checkout = () => {
           consumer: {
             first_name: formData.name.split(" ")[0] || "Customer",
             last_name: formData.name.split(" ").slice(1).join(" ") || "User",
-            phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
+            phone_number: withDialCode(formData.phone),
             email: formData.email,
           },
           billing_address: {
@@ -973,7 +1019,7 @@ const Checkout = () => {
             last_name: formData.name.split(" ").slice(1).join(" ") || "User",
             line1: formData.address || "Dubai, UAE",
             line2: "",
-            phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
+            phone_number: withDialCode(formData.phone),
             region: formData.state || "Dubai",
           },
           shipping_address: {
@@ -983,7 +1029,7 @@ const Checkout = () => {
             last_name: formData.name.split(" ").slice(1).join(" ") || "User",
             line1: formData.address || "Dubai, UAE",
             line2: "",
-            phone_number: formData.phone.startsWith("+971") ? formData.phone : `+971${formData.phone}`,
+            phone_number: withDialCode(formData.phone),
             region: formData.state || "Dubai",
           },
           items: cartItems.map((item) => ({
@@ -1422,6 +1468,11 @@ const Checkout = () => {
       }
     }
     setError(null)
+    // Edited from the folded section on the payment step: stay there and fold it up.
+    if (step === 3) {
+      setOpenReviewStep(null)
+      return
+    }
     setStep(2)
   }
 
@@ -1573,67 +1624,10 @@ const Checkout = () => {
   const itemsToShow = showAllItems ? regularCartItems : regularCartItems.slice(0, 2)
   const remainingItemsCount = regularCartItems.length - 2
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8 px-6">
-        <nav className="text-sm text-gray-500 mb-4">
-          <TranslatedText>Home</TranslatedText> <span className="mx-2">›</span> <span className="font-semibold text-black"><TranslatedText>Checkout</TranslatedText></span>
-        </nav>
-
-        <div className="grid grid-cols-1 lg:grid-cols-5">
-          <div className="lg:col-span-3 p-2 ">
-            {/* Always horizontal stepper, even on mobile */}
-            <div className="flex flex-row items-center gap-2 sm:gap-4 md:gap-8 w-full overflow-x-auto mb-8">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span
-                  className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 1 ? "bg-lime-500" : "bg-gray-300"}`}
-                >
-                  01
-                </span>
-                <span className="font-semibold text-xs sm:text-sm md:text-base"><TranslatedText>Shipping Details</TranslatedText></span>
-              </div>
-              <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span
-                  className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 2 ? "bg-lime-500" : "bg-gray-300"}`}
-                >
-                  02
-                </span>
-                <span
-                  className={
-                    step >= 2
-                      ? "font-semibold text-xs sm:text-sm md:text-base"
-                      : "text-gray-400 text-xs sm:text-sm md:text-base"
-                  }
-                >
-                  <TranslatedText>Summary</TranslatedText>
-                </span>
-              </div>
-              <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span
-                  className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 3 ? "bg-lime-500" : "bg-gray-300"}`}
-                >
-                  03
-                </span>
-                <span
-                  className={
-                    step >= 3
-                      ? "font-semibold text-xs sm:text-sm md:text-base"
-                      : "text-gray-400 text-xs sm:text-sm md:text-base"
-                  }
-                >
-                  <TranslatedText>Payment Method</TranslatedText>
-                </span>
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>
-            )}
-
-            {/* Delivery type selection: Only show on step 1 */}
-            {step === 1 && (
+  // ---- The three steps' bodies, as functions so the payment step can show the first
+  //      two folded up and still editable. `inline` swaps the navigation buttons for
+  //      Save/Done and drops what the folded section already shows.
+  const renderDeliveryTypeRadios = () => (
               <div className="flex gap-8 mb-6">
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -1658,10 +1652,10 @@ const Checkout = () => {
                   <span className="font-semibold text-lg"><TranslatedText>Pickup From Store</TranslatedText></span>
                 </label>
               </div>
-            )}
-            <div className="rounded-2xl">
-              {step === 1 && (
-                <>
+  )
+
+  const renderShippingForm = (inline = false) => (
+    <>
                   {deliveryType === "home" && (
                     <form onSubmit={handleContinueToSummary}>
                       <h3 className="font-bold text-lg mb-4"><TranslatedText>Contact Details</TranslatedText></h3>
@@ -1682,7 +1676,7 @@ const Checkout = () => {
                           <PhoneInput
                             international
                             defaultCountry="AE"
-                            value={formData.phone ? (formData.phone.startsWith('+') ? formData.phone : `+971${formData.phone}`) : ''}
+                            value={withDialCode(formData.phone)}
                             onChange={(value) => setFormData({ ...formData, phone: value || '' })}
                             className="w-full -mt-2 rounded-lg px-4 py-3"
                             placeholder="Enter phone number"
@@ -1796,19 +1790,27 @@ const Checkout = () => {
                       )}
 
                       <div className="mt-8 flex gap-4 ">
-                        <button
-                          type="button"
-                          onClick={() => navigate("/cart")}
-                          className="flex-1 border border-gray-300 hover:bg-gray-100 text-gray-700 bg-red-500 font-semibold lg:py-3 lg:px-6 py-2 px-3 rounded-lg transition duration-300"
-                        >
-                          <TranslatedText>Back to Cart</TranslatedText>
-                        </button>
+                        {!inline && (
+                          <button
+                            type="button"
+                            onClick={() => navigate("/cart")}
+                            className="flex-1 border border-gray-300 hover:bg-gray-100 text-gray-700 bg-red-500 font-semibold lg:py-3 lg:px-6 py-2 px-3 rounded-lg transition duration-300"
+                          >
+                            <TranslatedText>Back to Cart</TranslatedText>
+                          </button>
+                        )}
                         <button
                           type="submit"
                           className="flex-1 bg-lime-500 hover:bg-lime-600 text-white font-semibold lg:py-3 lg:px-6 py-2 px-3 rounded-lg transition duration-300"
                         >
-                          <span className="block lg:hidden"><TranslatedText>Continue Summary</TranslatedText></span> {/* Mobile */}
-                          <span className="hidden lg:block"><TranslatedText>Continue to Summary</TranslatedText></span> {/* Desktop */}
+                          {inline ? (
+                            <TranslatedText>Save changes</TranslatedText>
+                          ) : (
+                            <>
+                              <span className="block lg:hidden"><TranslatedText>Continue Summary</TranslatedText></span> {/* Mobile */}
+                              <span className="hidden lg:block"><TranslatedText>Continue to Summary</TranslatedText></span> {/* Desktop */}
+                            </>
+                          )}
                         </button>
                       </div>
                     </form>
@@ -1904,15 +1906,19 @@ const Checkout = () => {
                         className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3 disabled:opacity-50"
                         disabled={!pickupDetails.phone || !pickupDetails.storeId}
                       >
-                        <TranslatedText>Continue</TranslatedText>
+                        {inline ? <TranslatedText>Save changes</TranslatedText> : <TranslatedText>Continue</TranslatedText>}
                       </button>
                     </form>
                   )}
-                </>
-              )}
+    </>
+  )
 
-              {step === 2 && (
-                <div>
+  const renderSummaryContent = (inline = false) => (
+    <div>
+                  {/* Inline on the payment step the delivery details already sit in the
+                      section above, so only the notes are repeated. */}
+                  {!inline && (
+                    <>
                   <h3 className="font-bold text-lg mb-4"><TranslatedText>Order Summary</TranslatedText></h3>
                   <div className="mb-6">
                     <h4 className="font-semibold mb-2"><TranslatedText>Delivery Details</TranslatedText></h4>
@@ -1922,7 +1928,7 @@ const Checkout = () => {
                         <div className="text-sm text-gray-600 mt-1">
                           {formData.name && <div>{formData.name}</div>}
                           <div>{formData.email}</div>
-                          <div>+971{formData.phone}</div>
+                          <div>{withDialCode(formData.phone)}</div>
                           <div>{formData.address}</div>
                           <div>
                             {formData.city}, {formData.state} {formData.zipCode}
@@ -1933,7 +1939,7 @@ const Checkout = () => {
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <div className="font-medium"><TranslatedText>Store Pickup</TranslatedText></div>
                         <div className="text-sm text-gray-600 mt-1">
-                          <div><TranslatedText>Phone:</TranslatedText> +971{pickupDetails.phone}</div>
+                          <div><TranslatedText>Phone:</TranslatedText> {withDialCode(pickupDetails.phone)}</div>
                           {selectedStore && (
                             <>
                               <div className="font-medium mt-2">{selectedStore.name}</div>
@@ -1945,6 +1951,8 @@ const Checkout = () => {
                       </div>
                     )}
                   </div>
+                    </>
+                  )}
 
                   <div className="mb-6">
                     <h4 className="font-semibold mb-2"><TranslatedText>Order Notes (Optional)</TranslatedText></h4>
@@ -1962,25 +1970,136 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  {inline ? (
                     <button
-                      onClick={() => setStep(1)}
-                      className="border border-gray-300 text-gray-700 rounded-lg px-8 py-3"
-                    >
-                      <TranslatedText>Back</TranslatedText>
-                    </button>
-                    <button
-                      onClick={handleContinueToPayment}
+                      type="button"
+                      onClick={() => setOpenReviewStep(null)}
                       className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3"
                     >
-                      <TranslatedText>Continue to Payment</TranslatedText>
+                      <TranslatedText>Done</TranslatedText>
                     </button>
-                  </div>
-                </div>
-              )}
+                  ) : (
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setStep(1)}
+                        className="border border-gray-300 text-gray-700 rounded-lg px-8 py-3"
+                      >
+                        <TranslatedText>Back</TranslatedText>
+                      </button>
+                      <button
+                        onClick={handleContinueToPayment}
+                        className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3"
+                      >
+                        <TranslatedText>Continue to Payment</TranslatedText>
+                      </button>
+                    </div>
+                  )}
+    </div>
+  )
+
+  // One-line readbacks for the folded sections on the payment step.
+  const shippingSummary =
+    deliveryType === "home"
+      ? ["Home delivery", formData.name, formData.address, [formData.city, formData.state].filter(Boolean).join(", ")]
+          .filter(Boolean)
+          .join(" · ")
+      : ["Store pickup", selectedStore?.name, withDialCode(pickupDetails.phone)].filter(Boolean).join(" · ")
+  const notesSummary = customerNotes.trim() ? `Note: ${customerNotes.trim()}` : "No order notes"
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8 px-6">
+        <nav className="text-sm text-gray-500 mb-4">
+          <TranslatedText>Home</TranslatedText> <span className="mx-2">›</span> <span className="font-semibold text-black"><TranslatedText>Checkout</TranslatedText></span>
+        </nav>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5">
+          <div className="lg:col-span-3 p-2 ">
+            {/* Always horizontal stepper, even on mobile. Hidden on the payment step, where
+                the two completed steps are shown as folded cards instead. */}
+            {step !== 3 && (
+            <div className="flex flex-row items-center gap-2 sm:gap-4 md:gap-8 w-full overflow-x-auto mb-8">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span
+                  className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 1 ? "bg-lime-500" : "bg-gray-300"}`}
+                >
+                  01
+                </span>
+                <span className="font-semibold text-xs sm:text-sm md:text-base"><TranslatedText>Shipping Details</TranslatedText></span>
+              </div>
+              <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span
+                  className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 2 ? "bg-lime-500" : "bg-gray-300"}`}
+                >
+                  02
+                </span>
+                <span
+                  className={
+                    step >= 2
+                      ? "font-semibold text-xs sm:text-sm md:text-base"
+                      : "text-gray-400 text-xs sm:text-sm md:text-base"
+                  }
+                >
+                  <TranslatedText>Summary</TranslatedText>
+                </span>
+              </div>
+              <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span
+                  className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 3 ? "bg-lime-500" : "bg-gray-300"}`}
+                >
+                  03
+                </span>
+                <span
+                  className={
+                    step >= 3
+                      ? "font-semibold text-xs sm:text-sm md:text-base"
+                      : "text-gray-400 text-xs sm:text-sm md:text-base"
+                  }
+                >
+                  <TranslatedText>Payment Method</TranslatedText>
+                </span>
+              </div>
+            </div>
+            )}
+
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>
+            )}
+
+            {step === 1 && renderDeliveryTypeRadios()}
+            <div className="rounded-2xl">
+              {step === 1 && renderShippingForm(false)}
+
+              {step === 2 && renderSummaryContent(false)}
 
               {step === 3 && (
                 <div>
+                  {/* Steps 1 and 2, folded. Opening one shows the same form the customer
+                      filled in, editable right here without leaving the payment step. */}
+                  <div className="mb-8 space-y-3">
+                    <ReviewSection
+                      number="01"
+                      title={<TranslatedText>Shipping Details</TranslatedText>}
+                      summary={shippingSummary}
+                      open={openReviewStep === 1}
+                      onToggle={() => setOpenReviewStep(openReviewStep === 1 ? null : 1)}
+                    >
+                      {renderDeliveryTypeRadios()}
+                      {renderShippingForm(true)}
+                    </ReviewSection>
+                    <ReviewSection
+                      number="02"
+                      title={<TranslatedText>Summary</TranslatedText>}
+                      summary={notesSummary}
+                      open={openReviewStep === 2}
+                      onToggle={() => setOpenReviewStep(openReviewStep === 2 ? null : 2)}
+                    >
+                      {renderSummaryContent(true)}
+                    </ReviewSection>
+                  </div>
+
                   <h3 className="font-bold text-lg mb-6"><TranslatedText>Payment Method</TranslatedText></h3>
 
                   <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white mb-6">
@@ -2309,13 +2428,15 @@ const Checkout = () => {
                 </div>
 
                 {referralEnabled && (
-                  <ReferralRewardPanel
+                  <div className="mb-3">
+                  <ReferralRewardCheckbox
                     eligibleAmountAed={referralEligibleAmount}
                     selectedRewardId={referralRewardId}
                     onApply={applyReferralReward}
                     onClear={clearReferralReward}
                     formatPrice={formatPrice}
                   />
+                  </div>
                 )}
 
                 {appliedReferralDiscount > 0 && (
@@ -2374,156 +2495,201 @@ const Checkout = () => {
 
         {/* Address Modal for Home Delivery */}
         <Dialog as={Fragment} open={showAddressModal} onClose={() => setShowAddressModal(false)}>
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-            <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl mx-4 relative">
-              {/* Close (X) icon */}
-              <button
-                type="button"
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
-                onClick={() => setShowAddressModal(false)}
-                aria-label="Close"
-              >
-                <X />
-              </button>
-              <h3 className="font-bold text-2xl mb-6">
-                <TranslatedText>{editingAddressId ? "Edit Address Details" : "Address Details"}</TranslatedText>
-              </h3>
-              <form onSubmit={handleAddressModalSubmit}>
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Address Label</TranslatedText> *</label>
-                  <input
-                    type="text"
-                    className="w-full border rounded-lg px-4 py-3"
-                    value={addressDetails.name}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, name: e.target.value })}
-                    placeholder="e.g. Home, Office, Work"
-                    required
-                  />
-                </div>
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
+            {/* Header and footer stay put; only the fields scroll, so the buttons are always
+                reachable however small the screen is. */}
+            <Dialog.Panel className="flex w-full max-w-xl max-h-[92vh] sm:max-h-[90vh] flex-col overflow-hidden rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                <Dialog.Title className="text-lg font-bold text-gray-900">
+                  <TranslatedText>{editingAddressId ? "Edit Address" : "Add Address"}</TranslatedText>
+                </Dialog.Title>
+                <button
+                  type="button"
+                  className="-mr-2 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  onClick={() => setShowAddressModal(false)}
+                  aria-label="Close"
+                >
+                  <X size={20} />
+                </button>
+              </div>
 
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Phone</TranslatedText> *</label>
-                  <input
-                    type="text"
-                    className="w-full border rounded-lg px-4 py-3"
-                    value={addressDetails.phone}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, phone: e.target.value })}
-                    placeholder="e.g. 50XXXXXXX"
-                    required
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Country</TranslatedText> *</label>
-                  <select
-                    className="w-full border rounded-lg px-4 py-3"
-                    value={addressDetails.country || currentCountry?.name || "UAE"}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, country: e.target.value, state: "" })}
-                    required
-                  >
-                    {(countries || []).map((c) => (
-                      <option key={c.code} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Address Street</TranslatedText> *</label>
-                  <input
-                    type="text"
-                    className="w-full border rounded-lg px-4 py-3"
-                    value={addressDetails.address}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, address: e.target.value })}
-                    placeholder="Street name, Villa/Apartment details"
-                    required
-                  />
-                </div>
-
-                <div className="flex gap-4 mb-4">
-                  <div className="w-1/2">
-                    <label className="block text-gray-700 font-medium mb-1"><TranslatedText>State/Province</TranslatedText> *</label>
-                    {(() => {
-                      const selectedCountryName = addressDetails.country || currentCountry?.name || "UAE"
-                      const provinces = getProvincesForCountry(selectedCountryName)
-                      if (provinces && provinces.length > 0) {
-                        return (
-                          <select
-                            className="w-full border rounded-lg px-4 py-3"
-                            value={addressDetails.state}
-                            onChange={(e) => setAddressDetails({ ...addressDetails, state: e.target.value })}
-                            required
-                          >
-                            <option value="">Select State / Province</option>
-                            {provinces.map((prov) => (
-                              <option key={prov} value={prov}>
-                                {prov}
-                              </option>
-                            ))}
-                          </select>
-                        )
-                      }
-                      return (
-                        <input
-                          type="text"
-                          className="w-full border rounded-lg px-4 py-3"
-                          value={addressDetails.state}
-                          onChange={(e) => setAddressDetails({ ...addressDetails, state: e.target.value })}
-                          placeholder="State / Province"
-                          required
-                        />
-                      )
-                    })()}
+              <form onSubmit={handleAddressModalSubmit} className="flex min-h-0 flex-1 flex-col">
+                <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={addressLabelClass}>
+                        <TranslatedText>Address Label</TranslatedText> <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={addressInputClass}
+                        value={addressDetails.name}
+                        onChange={(e) => setAddressDetails({ ...addressDetails, name: e.target.value })}
+                        placeholder="Home, Office…"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className={addressLabelClass}>
+                        <TranslatedText>Phone</TranslatedText> <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        className={addressInputClass}
+                        value={addressDetails.phone}
+                        onChange={(e) => setAddressDetails({ ...addressDetails, phone: e.target.value })}
+                        placeholder="50XXXXXXX"
+                        required
+                      />
+                    </div>
                   </div>
-                  <div className="w-1/2">
-                    <label className="block text-gray-700 font-medium mb-1"><TranslatedText>City</TranslatedText> *</label>
-                    <input
-                      type="text"
-                      className="w-full border rounded-lg px-4 py-3"
-                      value={addressDetails.city}
-                      onChange={(e) => setAddressDetails({ ...addressDetails, city: e.target.value })}
-                      placeholder="City"
+
+                  <div className="mt-4">
+                    <label className={addressLabelClass}>
+                      <TranslatedText>Country</TranslatedText> <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        className={addressSelectClass}
+                        value={addressDetails.country || currentCountry?.name || "UAE"}
+                        onChange={(e) => setAddressDetails({ ...addressDetails, country: e.target.value, state: "" })}
+                        required
+                      >
+                        {(countries || []).map((c) => (
+                          <option key={c.code} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className={addressLabelClass}>
+                      <TranslatedText>Street / Building</TranslatedText> <span className="text-red-500">*</span>
+                    </label>
+                    <AddressAutocomplete
+                      value={addressDetails.address}
+                      onChange={(v) => setAddressDetails({ ...addressDetails, address: v })}
+                      onSelect={(sel) =>
+                        setAddressDetails({
+                          ...addressDetails,
+                          address: sel.address,
+                          city: sel.city || addressDetails.city,
+                          state: sel.state || addressDetails.state,
+                          zipCode: sel.zipCode || addressDetails.zipCode,
+                        })
+                      }
+                      countryName={addressDetails.country || currentCountry?.name || "UAE"}
+                      countryCode={(countries || []).find((c) => c.name === (addressDetails.country || currentCountry?.name))?.code || currentCountry?.code}
+                      inputClassName={addressInputClass}
+                      placeholder="Start typing your street or building"
                       required
                     />
+                    <p className="mt-1.5 text-xs text-gray-500">
+                      <TranslatedText>Pick your street or building from the list, then add your villa or flat number.</TranslatedText>
+                    </p>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={addressLabelClass}>
+                        <TranslatedText>State / Emirate</TranslatedText> <span className="text-red-500">*</span>
+                      </label>
+                      {(() => {
+                        const selectedCountryName = addressDetails.country || currentCountry?.name || "UAE"
+                        const provinces = getProvincesForCountry(selectedCountryName)
+                        if (provinces && provinces.length > 0) {
+                          return (
+                            <div className="relative">
+                              <select
+                                className={addressSelectClass}
+                                value={addressDetails.state}
+                                onChange={(e) => setAddressDetails({ ...addressDetails, state: e.target.value })}
+                                required
+                              >
+                                <option value="">Select</option>
+                                {provinces.map((prov) => (
+                                  <option key={prov} value={prov}>
+                                    {prov}
+                                  </option>
+                                ))}
+                              </select>
+                              <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            </div>
+                          )
+                        }
+                        return (
+                          <input
+                            type="text"
+                            className={addressInputClass}
+                            value={addressDetails.state}
+                            onChange={(e) => setAddressDetails({ ...addressDetails, state: e.target.value })}
+                            placeholder="State / Province"
+                            required
+                          />
+                        )
+                      })()}
+                    </div>
+                    <div>
+                      <label className={addressLabelClass}>
+                        <TranslatedText>City</TranslatedText> <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={addressInputClass}
+                        value={addressDetails.city}
+                        onChange={(e) => setAddressDetails({ ...addressDetails, city: e.target.value })}
+                        placeholder="City"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className={addressLabelClass}>
+                        <TranslatedText>Post Code</TranslatedText>{" "}
+                        <span className="font-normal text-gray-400">
+                          (<TranslatedText>optional</TranslatedText>)
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        className={addressInputClass}
+                        value={addressDetails.zipCode}
+                        onChange={(e) => setAddressDetails({ ...addressDetails, zipCode: e.target.value })}
+                        placeholder="00000"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2.5 self-end rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={addressDetails.isDefault}
+                        onChange={(e) => setAddressDetails({ ...addressDetails, isDefault: e.target.checked })}
+                        className="h-4 w-4 rounded border-gray-300 text-lime-600 focus:ring-lime-500"
+                      />
+                      <TranslatedText>Set as default address</TranslatedText>
+                    </label>
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-1"><TranslatedText>Zip Code / Post Code</TranslatedText></label>
-                  <input
-                    type="text"
-                    className="w-full border rounded-lg px-4 py-3"
-                    value={addressDetails.zipCode}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, zipCode: e.target.value })}
-                    placeholder="00000"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 mb-6">
-                  <input
-                    type="checkbox"
-                    checked={addressDetails.isDefault}
-                    onChange={(e) => setAddressDetails({ ...addressDetails, isDefault: e.target.checked })}
-                    className="accent-lime-500"
-                  />
-                  <span><TranslatedText>Set as Default Address</TranslatedText></span>
-                </div>
-
-                <div className="flex gap-4">
+                <div className="flex justify-end gap-3 border-t border-gray-100 bg-gray-50 px-6 py-4">
                   <button
                     type="button"
                     onClick={() => setShowAddressModal(false)}
-                    className="border border-gray-300 text-gray-700 rounded-lg px-8 py-3"
+                    className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
                     <TranslatedText>Cancel</TranslatedText>
                   </button>
-                  <button type="submit" className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3">
+                  <button type="submit" className="rounded-lg bg-lime-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-lime-700">
                     <TranslatedText>Save Address</TranslatedText>
                   </button>
                 </div>
               </form>
-            </div>
+            </Dialog.Panel>
           </div>
         </Dialog>
         <PromoPopup pageKey="checkout" delayMs={3000} />

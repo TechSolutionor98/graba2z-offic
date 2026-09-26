@@ -26,6 +26,7 @@ import { useToast } from "../context/ToastContext"
 import { useLanguage } from "../context/LanguageContext"
 import { useCurrency } from "../context/CurrencyContext"
 import { getProvincesForCountry } from "../utils/countryStates"
+import AddressAutocomplete from "../components/AddressAutocomplete"
 import axios from "axios"
 import config from "../config/config"
 import LoyaltyPointsPanel from "../components/LoyaltyPointsPanel"
@@ -880,14 +881,24 @@ const Profile = () => {
 
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Address Street *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Street name, Villa/Apartment details"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none text-sm animate-none"
+                <AddressAutocomplete
                   value={addressDetails.address}
-                  onChange={(e) => setAddressDetails({ ...addressDetails, address: e.target.value })}
+                  onChange={(v) => setAddressDetails({ ...addressDetails, address: v })}
+                  onSelect={(s) =>
+                    setAddressDetails({
+                      ...addressDetails,
+                      address: s.address,
+                      city: s.city || addressDetails.city,
+                      state: s.state || addressDetails.state,
+                      zipCode: s.zipCode || addressDetails.zipCode,
+                    })
+                  }
+                  countryName={addressDetails.country || currentCountry?.name || "UAE"}
+                  countryCode={(countries || []).find((c) => c.name === (addressDetails.country || currentCountry?.name))?.code || currentCountry?.code}
+                  inputClassName="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none text-sm"
+                  required
                 />
+                <p className="mt-1 text-xs text-gray-500">Start typing your street or building and pick it from the list, then add your villa or flat number.</p>
               </div>
 
               <div className="grid grid-cols-3 gap-4">

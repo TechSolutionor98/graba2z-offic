@@ -376,14 +376,28 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
 
             {referralDiscount > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Referral discount:</span>
+                <span className="text-gray-600">
+                  {order.referralRewardRole === "referee" ? "Referral welcome discount" : "Referral reward"}
+                  {Number(order.referralDiscountValue) > 0 && (
+                    <span className="ml-1 text-xs text-gray-500">
+                      ({order.referralDiscountType === "fixed" ? `AED ${Number(order.referralDiscountValue).toFixed(2)} off` : `${order.referralDiscountValue}% off`})
+                    </span>
+                  )}
+                  :
+                </span>
                 <span className="text-green-600">-{formatPrice(referralDiscount)}</span>
               </div>
             )}
 
             {loyaltyDiscount > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Points applied:</span>
+                <span className="text-gray-600">
+                  Grabian Points applied
+                  {Number(order.loyaltyPointsRedeemed) > 0 && (
+                    <span className="ml-1 text-xs text-gray-500">({Number(order.loyaltyPointsRedeemed).toLocaleString()} points)</span>
+                  )}
+                  :
+                </span>
                 <span className="text-green-600">-{formatPrice(loyaltyDiscount)}</span>
               </div>
             )}
