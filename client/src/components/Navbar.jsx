@@ -892,16 +892,16 @@ const Navbar = () => {
             </Link>
 
             {/* Search Bar - Exact Grabatoz Style */}
-            <div className="flex-1 max-w-2xl xl:max-w-3xl justify-center items-center px-6 xl:px-20 2xl:px-28">
+            <div className="flex-1 max-w-3xl xl:max-w-4xl justify-center items-center px-3 xl:px-5 2xl:px-6">
               <form onSubmit={handleSearch} className="relative">
                 <div className="">
-                  <div className="flex items-center gap-2 m-1">
+                  <div className="flex items-center rounded-lg border border-gray-300 overflow-hidden focus-within:border-lime-500 focus-within:ring-2 focus-within:ring-lime-100">
                     <input
                       type="text"
-                      placeholder={currentLanguage.code === "ar" ? "بحث" : "Search"}
+                      placeholder={currentLanguage.code === "ar" ? "بحث عن المنتجات" : "Search products here"}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-3 xl:pl-4 pr-3 xl:pr-4 py-2 xl:py-2.5 2xl:py-3 border border-gray-300 focus:outline-none focus:border-lime-500 w-[75%] xl:w-[78%] 2xl:w-[80%] text-sm xl:text-base"
+                      className="flex-1 min-w-0 pl-4 pr-3 py-2.5 xl:py-3 text-sm xl:text-base focus:outline-none"
                       ref={searchInputRef}
                       onFocus={() => {
                         if (searchResults.length > 0) setShowSearchDropdown(true)
@@ -909,7 +909,7 @@ const Navbar = () => {
                     />
                     {/* Loading spinner */}
                     {searchLoading && (
-                      <span className="absolute right-36 top-1/2 transform -translate-y-1/2">
+                      <span className="pr-2 flex items-center">
                         <svg
                           className="animate-spin h-5 w-5 text-lime-500"
                           xmlns="http://www.w3.org/2000/svg"
@@ -932,8 +932,8 @@ const Navbar = () => {
                         </svg>
                       </span>
                     )}
-                    <button type="submit" className="px-3 xl:px-3.5 2xl:px-4 py-3 xl:py-3.5 2xl:py-4 bg-header-search text-header-search-text hover:bg-header-search-hover">
-                      <Search className="w-4 h-4 xl:w-[18px] xl:h-[18px] 2xl:w-5 2xl:h-5" />
+                    <button type="submit" className="flex items-center justify-center px-5 py-2.5 xl:py-3 bg-header-search text-header-search-text hover:bg-header-search-hover" aria-label="Search">
+                      <Search className="w-5 h-5" />
                     </button>
                   </div>
                   {/* Autocomplete Dropdown */}
@@ -981,50 +981,61 @@ const Navbar = () => {
               </form>
             </div>
 
-            {/* Right Side Icons - Exact Grabatoz Style */}
-            <div className="flex items-center space-x-2 xl:space-x-3 2xl:space-x-4">
-              {/* Download Our App — opens the QR modal */}
-              <button
-                type="button"
-                onClick={() => setIsDownloadAppOpen(true)}
-                className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3 py-2 text-sm font-bold text-gray-800 transition hover:bg-gray-50"
-                aria-label="Download our app"
-              >
-                <Smartphone className="w-[18px] h-[18px]" />
-                <span className="hidden lg:inline whitespace-nowrap"><TranslatedText>Download Our App</TranslatedText></span>
-              </button>
-
-              {/* Refer a Friend — opens the referral modal */}
+            {/* Right Side Icons */}
+            <div className="flex items-center gap-4 xl:gap-5 2xl:gap-6">
+              {/* Refer & Earn — icon + two-line label (matches Download Our App) */}
               {referralEnabled && (
                 <button
                   type="button"
                   onClick={() => setIsReferralOpen(true)}
-                  className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-lime-500 bg-lime-50 px-3 py-2 text-sm font-bold text-lime-700 transition hover:bg-lime-100"
+                  className="hidden md:flex items-center gap-2 text-header-text transition hover:text-lime-600"
                   aria-label="Refer a friend"
                 >
-                  <Gift className="w-[18px] h-[18px]" />
-                  <span className="hidden lg:inline whitespace-nowrap"><TranslatedText>Refer &amp; Earn</TranslatedText></span>
+                  <Gift className="w-6 h-6 xl:w-[26px] xl:h-[26px] text-header-icon" />
+                  <span className="hidden lg:flex flex-col text-left leading-tight">
+                    <span className="text-[11px] text-gray-500"><TranslatedText>Refer &amp;</TranslatedText></span>
+                    <span className="text-[13px] font-semibold whitespace-nowrap"><TranslatedText>Earn</TranslatedText></span>
+                  </span>
                 </button>
               )}
 
-              {/* Wishlist */}
-              <Link to={getLocalizedPath("/wishlist")} className="relative p-2 xl:p-2.5 2xl:p-3 border border-header-border" aria-label="Wishlist">
-                <Heart className="w-[18px] h-[18px] xl:w-[19px] xl:h-[19px] 2xl:w-5 2xl:h-5 text-header-icon" />
-                {wishlist.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-header-badge text-header-badge-text text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                    {wishlist.length}
-                  </span>
-                )}
-              </Link>
+              {/* Download Our App — icon + two-line label */}
+              <button
+                type="button"
+                onClick={() => setIsDownloadAppOpen(true)}
+                className="hidden md:flex items-center gap-2 text-header-text transition hover:text-lime-600"
+                aria-label="Download our app"
+              >
+                <Smartphone className="w-6 h-6 xl:w-[26px] xl:h-[26px] text-header-icon" />
+                <span className="hidden lg:flex flex-col text-left leading-tight">
+                  <span className="text-[11px] text-gray-500"><TranslatedText>Download</TranslatedText></span>
+                  <span className="text-[13px] font-semibold whitespace-nowrap"><TranslatedText>Our App</TranslatedText></span>
+                </span>
+              </button>
 
-              {/* Profile */}
+              {/* Country + Language */}
+              <div className="flex items-center gap-3">
+                <CountrySwitcher />
+                <LanguageSelector />
+              </div>
+
+              {/* Account — icon + two-line label */}
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="p-2 xl:p-2.5 2xl:p-3 border border-header-border"
+                  className="flex items-center gap-2 text-header-text transition hover:text-lime-600"
                   ref={profileButtonRef}
+                  aria-label="Account"
                 >
-                  <User className="w-[18px] h-[18px] xl:w-[19px] xl:h-[19px] 2xl:w-5 2xl:h-5 text-header-icon" />
+                  <User className="w-6 h-6 xl:w-[26px] xl:h-[26px] text-header-icon" />
+                  <span className="hidden lg:flex flex-col text-left leading-tight">
+                    <span className="text-[11px] text-gray-500 whitespace-nowrap">
+                      {isAuthenticated ? <TranslatedText>Hello</TranslatedText> : <TranslatedText>Hello, Sign in</TranslatedText>}
+                    </span>
+                    <span className="text-[13px] font-semibold whitespace-nowrap">
+                      {isAuthenticated ? (user?.name?.split(" ")[0] || "Account") : <TranslatedText>Account</TranslatedText>}
+                    </span>
+                  </span>
                 </button>
 
                 {isProfileOpen && (
@@ -1115,21 +1126,25 @@ const Navbar = () => {
                 )}
               </div>
 
-              {/* Cart */}
-              <Link to={getLocalizedPath("/cart")} className="relative p-2 xl:p-2.5 2xl:p-3">
-                <ShoppingCart className="w-6 h-6 xl:w-7 xl:h-7 2xl:w-[30px] 2xl:h-[30px] text-header-icon" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-header-badge text-header-badge-text text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                    {cartCount}
+              {/* Wishlist */}
+              <Link to={getLocalizedPath("/wishlist")} className="relative text-header-icon transition hover:text-lime-600" aria-label="Wishlist">
+                <Heart className="w-6 h-6 xl:w-[26px] xl:h-[26px]" />
+                {wishlist.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-header-badge text-header-badge-text text-[10px] rounded-full h-[18px] min-w-[18px] px-1 flex items-center justify-center font-bold">
+                    {wishlist.length}
                   </span>
                 )}
               </Link>
 
-              {/* Country and language pickers, independent of each other */}
-              <div className="flex items-center gap-2">
-                <CountrySwitcher />
-                <LanguageSelector />
-              </div>
+              {/* Cart */}
+              <Link to={getLocalizedPath("/cart")} className="relative text-header-icon transition hover:text-lime-600" aria-label="Cart">
+                <ShoppingCart className="w-7 h-7 xl:w-[30px] xl:h-[30px]" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-header-badge text-header-badge-text text-[10px] rounded-full h-[18px] min-w-[18px] px-1 flex items-center justify-center font-bold">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
             </div>
           </div>
 

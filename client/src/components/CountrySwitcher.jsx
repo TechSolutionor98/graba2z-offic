@@ -58,7 +58,7 @@ const CountrySwitcher = ({ className = "" }) => {
           )}
         </span>
         <span dir="ltr">
-          {currentCountry?.code || "AE"} ({currentCountry?.currencyCode || "AED"})
+          {currentCountry?.code || "AE"}
         </span>
         <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
