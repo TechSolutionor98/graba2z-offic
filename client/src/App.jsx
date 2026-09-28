@@ -17,6 +17,7 @@ import LoyaltyRewardDialog from "./components/LoyaltyRewardDialog"
 import Layout from "./components/Layout"
 import ProtectedRoute from "./components/ProtectedRoute"
 import ScrollToTop from "./components/ScrollToTop"
+import DisableNumberInputScroll from "./components/DisableNumberInputScroll"
 import RedirectHandler from "./components/RedirectHandler"
 import ReturnPathTracker from "./components/ReturnPathTracker"
 import ReferralLinkCatcher from "./components/ReferralLinkCatcher"
@@ -169,6 +170,7 @@ function App() {
                 <LanguageProvider>
                 <DefaultCanonical />
                 <ScrollToTop />
+                <DisableNumberInputScroll />
                 <LoyaltyRewardDialog />
                 <ReturnPathTracker />
                 <ReferralLinkCatcher />
