@@ -42,25 +42,25 @@ const CountrySwitcher = ({ className = "" }) => {
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors text-xs font-semibold text-gray-700 shadow-sm"
+        className="flex items-center gap-1.5 rounded-lg border border-lime-500 px-2.5 py-1.5 text-sm font-semibold text-header-text transition hover:bg-lime-50"
         aria-label="Select country and currency"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <span className="w-5 h-3.5 rounded overflow-hidden inline-flex items-center justify-center border border-gray-200 shrink-0">
+        <span className="w-6 h-4 rounded overflow-hidden inline-flex items-center justify-center border border-gray-200 shrink-0">
           {currentCountry?.flagSvg ? (
             <span
               className="w-full h-full [&>svg]:w-full [&>svg]:h-full [&>svg]:object-cover"
               dangerouslySetInnerHTML={{ __html: currentCountry.flagSvg }}
             />
           ) : (
-            <Globe className="w-3.5 h-3.5 text-gray-600" />
+            <Globe className="w-4 h-4 text-gray-600" />
           )}
         </span>
         <span dir="ltr">
           {currentCountry?.code || "AE"}
         </span>
-        <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (

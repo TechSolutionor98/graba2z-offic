@@ -895,13 +895,13 @@ const Navbar = () => {
             <div className="flex-1 max-w-3xl xl:max-w-4xl justify-center items-center px-3 xl:px-5 2xl:px-6">
               <form onSubmit={handleSearch} className="relative">
                 <div className="">
-                  <div className="flex items-center rounded-lg border border-gray-300 overflow-hidden focus-within:border-lime-500 focus-within:ring-2 focus-within:ring-lime-100">
+                  <div className="flex items-stretch rounded-xl border border-gray-300 overflow-hidden focus-within:border-lime-500 focus-within:ring-2 focus-within:ring-lime-100">
                     <input
                       type="text"
                       placeholder={currentLanguage.code === "ar" ? "بحث عن المنتجات" : "Search products here"}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="flex-1 min-w-0 pl-4 pr-3 py-2.5 xl:py-3 text-sm xl:text-base focus:outline-none"
+                      className="flex-1 min-w-0 bg-transparent pl-4 pr-2 py-2.5 xl:py-3 text-sm xl:text-base focus:outline-none"
                       ref={searchInputRef}
                       onFocus={() => {
                         if (searchResults.length > 0) setShowSearchDropdown(true)
@@ -909,7 +909,7 @@ const Navbar = () => {
                     />
                     {/* Loading spinner */}
                     {searchLoading && (
-                      <span className="pr-2 flex items-center">
+                      <span className="pr-1 flex items-center">
                         <svg
                           className="animate-spin h-5 w-5 text-lime-500"
                           xmlns="http://www.w3.org/2000/svg"
@@ -932,7 +932,7 @@ const Navbar = () => {
                         </svg>
                       </span>
                     )}
-                    <button type="submit" className="flex items-center justify-center px-5 py-2.5 xl:py-3 bg-header-search text-header-search-text hover:bg-header-search-hover" aria-label="Search">
+                    <button type="submit" className="flex items-center justify-center px-6 bg-header-search text-header-search-text hover:bg-header-search-hover" aria-label="Search">
                       <Search className="w-5 h-5" />
                     </button>
                   </div>
@@ -1138,7 +1138,7 @@ const Navbar = () => {
 
               {/* Cart */}
               <Link to={getLocalizedPath("/cart")} className="relative text-header-icon transition hover:text-lime-600" aria-label="Cart">
-                <ShoppingCart className="w-7 h-7 xl:w-[30px] xl:h-[30px]" />
+                <ShoppingCart className="w-6 h-6 xl:w-[26px] xl:h-[26px]" />
                 {cartCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-header-badge text-header-badge-text text-[10px] rounded-full h-[18px] min-w-[18px] px-1 flex items-center justify-center font-bold">
                     {cartCount}

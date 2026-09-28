@@ -13,6 +13,32 @@ const ReferralContext = createContext(null)
 // and localStorage would keep attributing signups to it weeks later on a shared device.
 const PENDING_CODE_KEY = "pending-referral-code"
 
+// The programme's public settings are cached so the navbar knows on the very next load
+// whether "Refer & Earn" should show -- without it the button was absent on first paint and
+// then popped in once the fetch returned, shifting the whole header.
+const SETTINGS_CACHE_KEY = "referral-settings-cache"
+
+const readCachedSettings = () => {
+  try {
+    const raw = localStorage.getItem(SETTINGS_CACHE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {
+    /* storage unavailable */
+  }
+  // No cached value yet (first ever visit): assume the programme is on so the header renders
+  // complete on first paint and "Refer & Earn" does not flash in. The settings fetch corrects
+  // this within a moment and caches the real value, so every later load is exact.
+  return { isEnabled: true }
+}
+
+const cacheSettings = (settings) => {
+  try {
+    localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(settings))
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 const toNumber = (value, fallback = 0) => {
   const n = Number(value)
   return Number.isFinite(n) ? n : fallback
@@ -48,7 +74,7 @@ export const clearPendingReferralCode = () => {
 export const ReferralProvider = ({ children }) => {
   const { isAuthenticated } = useAuth()
 
-  const [settings, setSettings] = useState({ isEnabled: false })
+  const [settings, setSettings] = useState(readCachedSettings)
   const [summary, setSummary] = useState(null)
   const [loadingSummary, setLoadingSummary] = useState(false)
 
@@ -61,11 +87,13 @@ export const ReferralProvider = ({ children }) => {
   const fetchSettings = useCallback(async () => {
     try {
       const { data } = await axios.get(`${config.API_URL}/api/referrals/settings`)
-      setSettings(data?.settings || { isEnabled: false })
+      const next = data?.settings || { isEnabled: false }
+      setSettings(next)
+      cacheSettings(next)
     } catch {
-      // A referral outage must not break the storefront: fall back to "programme off",
-      // which simply hides every referral affordance.
-      setSettings({ isEnabled: false })
+      // A referral outage must not break the storefront. Keep the last known settings from
+      // cache rather than forcing "off", so the header does not flicker on a transient error.
+      setSettings(readCachedSettings())
     }
   }, [])
 
