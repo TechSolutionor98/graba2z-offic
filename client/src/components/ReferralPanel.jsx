@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Copy, Check, Share2, Gift, Users, Clock, CheckCircle2, XCircle, Ticket } from "lucide-react"
+import { Copy, Check, Share2, Gift, Users, Clock, CheckCircle2, XCircle } from "lucide-react"
 import { useReferral } from "../context/ReferralContext"
 import { useCurrency } from "../context/CurrencyContext"
 
@@ -62,7 +62,6 @@ const ReferralPanel = () => {
 
   const invites = summary?.invites || []
   const rewards = summary?.rewards || []
-  const stats = summary?.stats
 
   // The thank-you rewards are the ones the customer earned by inviting; the welcome
   // discount they were given is shown separately so the two are never confused.
@@ -139,8 +138,9 @@ const ReferralPanel = () => {
   return (
     <div className="space-y-6">
       {/* ---- The offer ---- */}
-      <div className="rounded-2xl border border-lime-200 bg-lime-50 p-5 md:p-6">
-        <div className="flex items-start gap-3">
+      <div className="rounded-2xl border-2 border-lime-300 bg-gradient-to-br from-lime-50 to-lime-100/70 p-5 shadow-sm md:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
           <div className="rounded-xl bg-lime-600 p-2 text-white">
             <Gift size={22} />
           </div>
@@ -170,6 +170,18 @@ const ReferralPanel = () => {
               on your next order{referrerOffer.minOrderAed > 0 ? ` over ${formatPrice(referrerOffer.minOrderAed)}` : ""}.
             </p>
           </div>
+          </div>
+
+          {/* Referral code highlight — kept prominent so it is easy to read and share. */}
+          {code && (
+            <div className="hidden shrink-0 rounded-xl border border-lime-300 bg-white px-4 py-3 text-right shadow-sm sm:block">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-lime-700">Your code</p>
+              <p className="font-mono text-xl font-extrabold leading-tight tracking-wider text-lime-700 lg:text-2xl">
+                {code}
+              </p>
+              <p className="text-[11px] text-gray-500">share to earn</p>
+            </div>
+          )}
         </div>
 
         {/* ---- The link ---- */}
@@ -213,16 +225,6 @@ const ReferralPanel = () => {
           )}
         </div>
       </div>
-
-      {/* ---- Headline numbers ---- */}
-      {stats && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard icon={Users} label="Invited" value={stats.total} />
-          <StatCard icon={Clock} label="Waiting" value={stats.pending} tone="text-amber-600" />
-          <StatCard icon={CheckCircle2} label="Counted" value={stats.qualified} tone="text-green-600" />
-          <StatCard icon={Ticket} label="Rewards ready" value={stats.activeRewards} tone="text-lime-600" />
-        </div>
-      )}
 
       {/* ---- Tabs ---- */}
       <div className="flex gap-2 border-b border-gray-200">
@@ -327,16 +329,6 @@ const ReferralPanel = () => {
     </div>
   )
 }
-
-const StatCard = ({ icon: Icon, label, value, tone = "text-gray-900" }) => (
-  <div className="rounded-xl border border-gray-200 p-4">
-    <div className="flex items-center gap-2 text-gray-500">
-      <Icon size={14} />
-      <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
-    </div>
-    <p className={`mt-1 text-2xl font-extrabold ${tone}`}>{value}</p>
-  </div>
-)
 
 const EmptyState = ({ icon: Icon, title, body }) => (
   <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center">

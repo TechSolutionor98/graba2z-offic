@@ -80,6 +80,7 @@ import AdminLoyaltyCustomers from "../pages/admin/AdminLoyaltyCustomers"
 import AdminReferralSettings from "../pages/admin/AdminReferralSettings"
 import AdminReferralTypes from "../pages/admin/AdminReferralTypes"
 import AdminReferrals from "../pages/admin/AdminReferrals"
+import AdminPushNotifications from "../pages/admin/AdminPushNotifications"
 import AppDiscountForm from "../pages/admin/AppDiscountForm"
 import PopupSettings from "../pages/admin/PopupSettings"
 import PopupForm from "../pages/admin/PopupForm"
@@ -253,6 +254,7 @@ const AdminPortal = () => {
             <Route path="loyalty/customers" element={<AdminLoyaltyCustomers />} />
             <Route path="referrals" element={<AdminReferrals />} />
             <Route path="referrals/settings" element={<AdminReferralSettings />} />
+            <Route path="push-notifications" element={<AdminPushNotifications />} />
             <Route path="referrals/types" element={<AdminReferralTypes />} />
             <Route path="referrals/list" element={<AdminReferrals />} />
             <Route path="app-discount-settings/add" element={<AppDiscountForm />} />

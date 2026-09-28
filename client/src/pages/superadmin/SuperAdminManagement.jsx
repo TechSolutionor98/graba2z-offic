@@ -648,6 +648,7 @@ const PermissionsModal = ({ admin, permissionsList, onClose, onSave, saving }) =
       { key: "seoSettings", label: "SEO Settings & Redirects" },
       { key: "emailTemplates", label: "Email Templates" },
       { key: "newsletter", label: "Newsletter Subscribers" },
+      { key: "pushNotifications", label: "Push Notifications (App)" },
     ],
     "System Settings": [
       { key: "cache", label: "Reset Cache" },

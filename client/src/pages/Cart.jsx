@@ -276,6 +276,9 @@ const Cart = () => {
         code: trimmed,
         cartItems: cartApiItems,
       })
+      // A coupon and a referral reward can never apply together -- only one at a
+      // time. Applying a coupon drops any referral reward so the total never counts both.
+      clearReferralReward()
       setCoupon(data.coupon)
       setCouponDiscount(data.discountAmount)
       setCouponInput(trimmed)
@@ -907,6 +910,12 @@ const Cart = () => {
                           <TranslatedText>Remove</TranslatedText>
                         </button>
                       </div>
+                    ) : referralRewardId ? (
+                      // Only one discount at a time: a referral reward is applied, so the
+                      // coupon field is blocked until that reward is removed.
+                      <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                        <TranslatedText>Remove your referral discount to use a coupon.</TranslatedText>
+                      </p>
                     ) : (
                       <div className="flex gap-2">
                         <input
@@ -935,8 +944,9 @@ const Cart = () => {
                     {couponError && <p className="mt-1.5 text-xs text-red-600">{couponError}</p>}
                   </div>
 
-                  {/* Referral discount: a checkbox per reward, named by its code. */}
-                  {referralEnabled && (
+                  {/* Referral discount: a checkbox per reward, named by its code.
+                      Only one discount at a time -- hidden while a coupon is applied. */}
+                  {referralEnabled && !coupon && (
                     <ReferralRewardCheckbox
                       eligibleAmountAed={referralEligibleAmount}
                       selectedRewardId={referralRewardId}

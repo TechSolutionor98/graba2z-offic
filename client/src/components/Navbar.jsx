@@ -12,6 +12,9 @@ import { useTheme } from "../context/ThemeContext"
 import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
 import { useLanguage } from "../context/LanguageContext"
+import { useReferral } from "../context/ReferralContext"
+import ReferralModal from "./ReferralModal"
+import DownloadAppModal from "./DownloadAppModal"
 import LanguageSelector from "./LanguageSelector"
 import CountrySwitcher from "./CountrySwitcher"
 import TranslatedText from "./TranslatedText"
@@ -32,6 +35,8 @@ import {
   ChevronRight,
   Truck,
   ChevronLeft,
+  Gift,
+  Smartphone,
 } from "lucide-react"
 import axios from "axios"
 import { getCategoryTreeCached } from "../services/categoryTreeCache"
@@ -187,9 +192,12 @@ const Navbar = () => {
   const { cartCount } = useCart()
   const { wishlist } = useWishlist()
   const { currentLanguage, getLocalizedPath } = useLanguage()
+  const { isEnabled: referralEnabled } = useReferral()
   const navigate = useNavigate()
   const location = useLocation()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isReferralOpen, setIsReferralOpen] = useState(false)
+  const [isDownloadAppOpen, setIsDownloadAppOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState([])
   const [showSearchDropdown, setShowSearchDropdown] = useState(false)
@@ -975,6 +983,30 @@ const Navbar = () => {
 
             {/* Right Side Icons - Exact Grabatoz Style */}
             <div className="flex items-center space-x-2 xl:space-x-3 2xl:space-x-4">
+              {/* Download Our App — opens the QR modal */}
+              <button
+                type="button"
+                onClick={() => setIsDownloadAppOpen(true)}
+                className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3 py-2 text-sm font-bold text-gray-800 transition hover:bg-gray-50"
+                aria-label="Download our app"
+              >
+                <Smartphone className="w-[18px] h-[18px]" />
+                <span className="hidden lg:inline whitespace-nowrap"><TranslatedText>Download Our App</TranslatedText></span>
+              </button>
+
+              {/* Refer a Friend — opens the referral modal */}
+              {referralEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setIsReferralOpen(true)}
+                  className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-lime-500 bg-lime-50 px-3 py-2 text-sm font-bold text-lime-700 transition hover:bg-lime-100"
+                  aria-label="Refer a friend"
+                >
+                  <Gift className="w-[18px] h-[18px]" />
+                  <span className="hidden lg:inline whitespace-nowrap"><TranslatedText>Refer &amp; Earn</TranslatedText></span>
+                </button>
+              )}
+
               {/* Wishlist */}
               <Link to={getLocalizedPath("/wishlist")} className="relative p-2 xl:p-2.5 2xl:p-3 border border-header-border" aria-label="Wishlist">
                 <Heart className="w-[18px] h-[18px] xl:w-[19px] xl:h-[19px] 2xl:w-5 2xl:h-5 text-header-icon" />
@@ -1000,6 +1032,29 @@ const Navbar = () => {
                     ref={profileRef}
                     className="absolute right-0 w-48 py-2 mt-2 bg-nav-dropdown text-nav-dropdown-text rounded-md shadow-xl z-20 border border-header-border"
                   >
+                    {referralEnabled && (
+                      <button
+                        onClick={() => {
+                          setIsProfileOpen(false)
+                          setIsReferralOpen(true)
+                        }}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-lime-700 hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text"
+                      >
+                        <Gift className="w-4 h-4" />
+                        <TranslatedText>Refer &amp; Earn</TranslatedText>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false)
+                        setIsDownloadAppOpen(true)
+                      }}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text"
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      <TranslatedText>Download Our App</TranslatedText>
+                    </button>
+                    <hr className="my-1" />
                     {isAuthenticated ? (
                       <>
                         <Link
@@ -1833,6 +1888,12 @@ const Navbar = () => {
           </Link>
         </div>
       </nav>
+
+      {/* Refer a Friend modal (opened from the navbar pill / profile menu) */}
+      <ReferralModal open={isReferralOpen} onClose={() => setIsReferralOpen(false)} />
+
+      {/* Download Our App modal (QR + store badges) */}
+      <DownloadAppModal open={isDownloadAppOpen} onClose={() => setIsDownloadAppOpen(false)} />
     </>
   )
 }

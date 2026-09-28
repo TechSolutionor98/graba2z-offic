@@ -309,6 +309,12 @@ const Checkout = () => {
   // On the payment step the two earlier steps sit folded above the payment methods;
   // this is the one currently opened for editing (1, 2 or null).
   const [openReviewStep, setOpenReviewStep] = useState(null)
+  // The accordion: which stacked section is open (1 Delivery · 2 Order notes · 3 Payment).
+  // Only one is open at a time, Amazon-style; saving a section opens the next.
+  const [openSection, setOpenSection] = useState(1)
+  // On the delivery step the saved-address grid stays hidden -- only the chosen address
+  // shows -- until the shopper taps "Change" to pick another.
+  const [showAddressList, setShowAddressList] = useState(false)
   const [showAllItems, setShowAllItems] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("")
   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(["card", "cod"])
@@ -515,6 +521,9 @@ const Checkout = () => {
         code: couponInput,
         cartItems: cartApiItems,
       })
+      // A coupon and a referral reward can never apply together -- only one at a
+      // time. Applying a coupon drops any referral reward so the total never counts both.
+      clearReferralReward()
       setCoupon(data.coupon)
       setCouponDiscount(data.discountAmount)
       setCouponError("")
@@ -1338,6 +1347,48 @@ const Checkout = () => {
     }
   }
 
+  // The single "Place your order" action for the stacked layout. It runs the same checks
+  // the old step flow enforced at each transition -- the step gate is gone, so card / Tabby
+  // / Tamara (which go through createOrderThenPay and do NOT self-validate) must be gated
+  // here, or an order could be created with a missing address or no payment method.
+  const handlePlaceOrder = (e) => {
+    if (e && typeof e.preventDefault === "function") e.preventDefault()
+    if (cartItems.length === 0) {
+      setError("Your cart is empty")
+      return
+    }
+    if (!validatePayment()) return
+
+    if (selectedPaymentMethod === "cod") {
+      // handleSubmit runs the full home/pickup validation itself, then creates the COD
+      // order directly -- exactly as the old step-3 "Place Order" button did.
+      handleSubmit(e || { preventDefault() {} })
+      return
+    }
+
+    // Card / Tabby / Tamara go through createOrderThenPay, which does NOT self-validate.
+    // Mirror the lighter checks the old step-1 gate enforced before payment was reachable
+    // (email + phone + address for home; phone + store for pickup) -- deliberately not the
+    // stricter validateHomeDelivery, so an optional post code never blocks these methods.
+    if (deliveryType === "home") {
+      if (!formData.email || !formData.phone) {
+        setError("Please fill in email and phone number")
+        return
+      }
+      if (!formData.address) {
+        setShowAddressModal(true)
+        return
+      }
+    } else if (deliveryType === "pickup") {
+      if (!pickupDetails.phone || !pickupDetails.storeId) {
+        setError("Please fill in phone number and select a store")
+        return
+      }
+    }
+    setError(null)
+    createOrderThenPay()
+  }
+
   const handleEditAddressClick = (e, addr) => {
     e.stopPropagation()
     setEditingAddressId(addr._id)
@@ -1478,6 +1529,33 @@ const Checkout = () => {
 
   const handleContinueToPayment = () => {
     setStep(3)
+  }
+
+  // Save the delivery section of the stacked accordion: validate the essentials, run the
+  // existing backend save, collapse this section and open the next one (Order notes).
+  const handleSaveDelivery = (e) => {
+    if (e && typeof e.preventDefault === "function") e.preventDefault()
+    if (deliveryType === "home") {
+      if (!formData.email || !formData.phone) {
+        setError("Please fill in email and phone number")
+        return
+      }
+      if (!formData.address) {
+        setShowAddressModal(true)
+        return
+      }
+    } else if (deliveryType === "pickup") {
+      if (!pickupDetails.phone || !pickupDetails.storeId) {
+        setError("Please fill in phone number and select a store")
+        return
+      }
+    }
+    setError(null)
+    // Reuse the existing side effects (saves phone/address to the profile for logged-in
+    // users). It re-validates the same way and its internal setStep is harmless here.
+    handleContinueToSummary(e || { preventDefault() {} })
+    setShowAddressList(false)
+    setOpenSection(2)
   }
 
   const handleStoreSelection = (store) => {
@@ -1654,7 +1732,7 @@ const Checkout = () => {
               </div>
   )
 
-  const renderShippingForm = (inline = false) => (
+  const renderShippingForm = (inline = false, hideActions = false) => (
     <>
                   {deliveryType === "home" && (
                     <form onSubmit={handleContinueToSummary}>
@@ -1686,7 +1764,21 @@ const Checkout = () => {
 
                       {user && savedAddresses.length > 0 && (
                         <div className="mb-6 bg-gray-50/50 border border-gray-200 p-4 rounded-xl">
-                          <h4 className="font-semibold text-gray-800 mb-3"><TranslatedText>Select Saved Address</TranslatedText></h4>
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-gray-800"><TranslatedText>Delivery Address</TranslatedText></h4>
+                            <button
+                              type="button"
+                              onClick={() => setShowAddressList((v) => !v)}
+                              className="text-sm font-bold text-lime-600 hover:text-lime-700"
+                            >
+                              <TranslatedText>{showAddressList ? "Done" : "Change"}</TranslatedText>
+                            </button>
+                          </div>
+
+                          {/* Collapsed by default: only the chosen address shows. "Change"
+                              reveals the full list to pick another or add one. */}
+                          {showAddressList ? (
+                            <>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {savedAddresses.map((addr) => {
                               const isSelected = formData.address === addr.address && formData.city === addr.city
@@ -1702,6 +1794,7 @@ const Checkout = () => {
                                       zipCode: addr.zipCode,
                                       country: addr.country || currentCountry?.name || "UAE",
                                     }))
+                                    setShowAddressList(false)
                                   }}
                                   className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
                                     isSelected
@@ -1733,7 +1826,7 @@ const Checkout = () => {
                               )
                             })}
                           </div>
-                          
+
                           <button
                             type="button"
                             onClick={() => {
@@ -1753,6 +1846,29 @@ const Checkout = () => {
                             <Plus size={16} />
                             <TranslatedText>Add New Address</TranslatedText>
                           </button>
+                            </>
+                          ) : formData.address ? (
+                            <div className="rounded-xl border-2 border-lime-600 bg-lime-50/20 p-4">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-gray-800 text-sm">
+                                  {savedAddresses.find((a) => a.address === formData.address && a.city === formData.city)?.name || formData.name || "Selected address"}
+                                </span>
+                                <span className="bg-lime-600 text-white rounded-full p-0.5">
+                                  <Check className="h-3 w-3" />
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 mt-1">{formData.address}</p>
+                              <p className="text-sm text-gray-500">{formData.city}, {formData.state} {formData.zipCode}</p>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setShowAddressList(true)}
+                              className="w-full rounded-xl border-2 border-dashed border-gray-300 p-4 text-sm font-semibold text-gray-600 hover:border-lime-400 hover:text-lime-700"
+                            >
+                              <TranslatedText>Select a delivery address</TranslatedText>
+                            </button>
+                          )}
                         </div>
                       )}
 
@@ -1789,6 +1905,7 @@ const Checkout = () => {
                         </div>
                       )}
 
+                      {!hideActions && (
                       <div className="mt-8 flex gap-4 ">
                         {!inline && (
                           <button
@@ -1813,6 +1930,7 @@ const Checkout = () => {
                           )}
                         </button>
                       </div>
+                      )}
                     </form>
                   )}
 
@@ -1901,6 +2019,7 @@ const Checkout = () => {
                         </div>
                       </div>
 
+                      {!hideActions && (
                       <button
                         type="submit"
                         className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3 disabled:opacity-50"
@@ -1908,12 +2027,13 @@ const Checkout = () => {
                       >
                         {inline ? <TranslatedText>Save changes</TranslatedText> : <TranslatedText>Continue</TranslatedText>}
                       </button>
+                      )}
                     </form>
                   )}
     </>
   )
 
-  const renderSummaryContent = (inline = false) => (
+  const renderSummaryContent = (inline = false, hideActions = false) => (
     <div>
                   {/* Inline on the payment step the delivery details already sit in the
                       section above, so only the notes are repeated. */}
@@ -1970,7 +2090,7 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  {inline ? (
+                  {!hideActions && (inline ? (
                     <button
                       type="button"
                       onClick={() => setOpenReviewStep(null)}
@@ -1993,7 +2113,7 @@ const Checkout = () => {
                         <TranslatedText>Continue to Payment</TranslatedText>
                       </button>
                     </div>
-                  )}
+                  ))}
     </div>
   )
 
@@ -2005,6 +2125,8 @@ const Checkout = () => {
           .join(" · ")
       : ["Store pickup", selectedStore?.name, withDialCode(pickupDetails.phone)].filter(Boolean).join(" · ")
   const notesSummary = customerNotes.trim() ? `Note: ${customerNotes.trim()}` : "No order notes"
+  const paymentSummary =
+    PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod)?.name || "Choose how you'd like to pay"
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -2013,96 +2135,62 @@ const Checkout = () => {
           <TranslatedText>Home</TranslatedText> <span className="mx-2">›</span> <span className="font-semibold text-black"><TranslatedText>Checkout</TranslatedText></span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5">
-          <div className="lg:col-span-3 p-2 ">
-            {/* Always horizontal stepper, even on mobile. Hidden on the payment step, where
-                the two completed steps are shown as folded cards instead. */}
-            {step !== 3 && (
-            <div className="flex flex-row items-center gap-2 sm:gap-4 md:gap-8 w-full overflow-x-auto mb-8">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span
-                  className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 1 ? "bg-lime-500" : "bg-gray-300"}`}
-                >
-                  01
-                </span>
-                <span className="font-semibold text-xs sm:text-sm md:text-base"><TranslatedText>Shipping Details</TranslatedText></span>
-              </div>
-              <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span
-                  className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 2 ? "bg-lime-500" : "bg-gray-300"}`}
-                >
-                  02
-                </span>
-                <span
-                  className={
-                    step >= 2
-                      ? "font-semibold text-xs sm:text-sm md:text-base"
-                      : "text-gray-400 text-xs sm:text-sm md:text-base"
-                  }
-                >
-                  <TranslatedText>Summary</TranslatedText>
-                </span>
-              </div>
-              <div className="h-0.5 w-4 sm:w-8 bg-gray-300" />
-              <div className="flex items-center gap-1 sm:gap-2">
-                <span
-                  className={`w-8 h-8 flex items-center justify-center rounded-full text-white font-bold ${step >= 3 ? "bg-lime-500" : "bg-gray-300"}`}
-                >
-                  03
-                </span>
-                <span
-                  className={
-                    step >= 3
-                      ? "font-semibold text-xs sm:text-sm md:text-base"
-                      : "text-gray-400 text-xs sm:text-sm md:text-base"
-                  }
-                >
-                  <TranslatedText>Payment Method</TranslatedText>
-                </span>
-              </div>
-            </div>
-            )}
-
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>
             )}
 
-            {step === 1 && renderDeliveryTypeRadios()}
-            <div className="rounded-2xl">
-              {step === 1 && renderShippingForm(false)}
+            {/* 1 — Delivery details */}
+            <ReviewSection
+              number="1"
+              title={<TranslatedText>Delivery details</TranslatedText>}
+              summary={shippingSummary}
+              open={openSection === 1}
+              onToggle={() => setOpenSection(openSection === 1 ? null : 1)}
+            >
+              {renderDeliveryTypeRadios()}
+              {renderShippingForm(true, true)}
+              <div className="mt-6">
+                <button
+                  type="button"
+                  onClick={handleSaveDelivery}
+                  className="w-full sm:w-auto bg-lime-500 hover:bg-lime-600 text-white font-semibold rounded-lg px-8 py-3"
+                >
+                  <TranslatedText>Save &amp; continue</TranslatedText>
+                </button>
+              </div>
+            </ReviewSection>
 
-              {step === 2 && renderSummaryContent(false)}
+            {/* 2 — Order notes */}
+            <ReviewSection
+              number="2"
+              title={<TranslatedText>Order notes (optional)</TranslatedText>}
+              summary={notesSummary}
+              open={openSection === 2}
+              onToggle={() => setOpenSection(openSection === 2 ? null : 2)}
+            >
+              {renderSummaryContent(true, true)}
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => setOpenSection(3)}
+                  className="w-full sm:w-auto bg-lime-500 hover:bg-lime-600 text-white font-semibold rounded-lg px-8 py-3"
+                >
+                  <TranslatedText>Save &amp; continue</TranslatedText>
+                </button>
+              </div>
+            </ReviewSection>
 
-              {step === 3 && (
-                <div>
-                  {/* Steps 1 and 2, folded. Opening one shows the same form the customer
-                      filled in, editable right here without leaving the payment step. */}
-                  <div className="mb-8 space-y-3">
-                    <ReviewSection
-                      number="01"
-                      title={<TranslatedText>Shipping Details</TranslatedText>}
-                      summary={shippingSummary}
-                      open={openReviewStep === 1}
-                      onToggle={() => setOpenReviewStep(openReviewStep === 1 ? null : 1)}
-                    >
-                      {renderDeliveryTypeRadios()}
-                      {renderShippingForm(true)}
-                    </ReviewSection>
-                    <ReviewSection
-                      number="02"
-                      title={<TranslatedText>Summary</TranslatedText>}
-                      summary={notesSummary}
-                      open={openReviewStep === 2}
-                      onToggle={() => setOpenReviewStep(openReviewStep === 2 ? null : 2)}
-                    >
-                      {renderSummaryContent(true)}
-                    </ReviewSection>
-                  </div>
-
-                  <h3 className="font-bold text-lg mb-6"><TranslatedText>Payment Method</TranslatedText></h3>
-
-                  <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white mb-6">
+            {/* 3 — Payment method */}
+            <ReviewSection
+              number="3"
+              title={<TranslatedText>Payment method</TranslatedText>}
+              summary={paymentSummary}
+              open={openSection === 3}
+              onToggle={() => setOpenSection(openSection === 3 ? null : 3)}
+            >
+                  <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white">
                     {PAYMENT_METHODS.filter(method => allowedPaymentMethods.includes(method.id)).map((method) => {
                       const isSelected = selectedPaymentMethod === method.id;
                       return (
@@ -2170,51 +2258,12 @@ const Checkout = () => {
                       );
                     })}
                   </div>
-
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setStep(2)}
-                      className="border border-gray-300 text-gray-700 rounded-lg px-8 py-3"
-                    >
-                      <TranslatedText>Back</TranslatedText>
-                    </button>
-                    <button
-                      onClick={
-                        selectedPaymentMethod === "card" ||
-                          selectedPaymentMethod === "tamara" ||
-                          selectedPaymentMethod === "tabby"
-                          ? createOrderThenPay
-                          : handleSubmit
-                      }
-                      disabled={loading || !selectedPaymentMethod || deliveryBlocked}
-                      className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-6 py-3 disabled:opacity-50 flex items-center gap-2"
-                    >
-                      {loading ? (
-                        <>
-                          <img
-                            src="/g.png"
-                            alt="Loading..."
-                            style={{ width: 24, height: 24, animation: "bounce 1s infinite" }}
-                          />
-                          <TranslatedText>Processing...</TranslatedText>
-                        </>
-                      ) : (
-                        deliveryBlocked ? (
-                          <TranslatedText>Order too small to deliver</TranslatedText>
-                        ) : (
-                          `Place Order - ${formatPrice(finalTotal)}`
-                        )
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            </ReviewSection>
           </div>
 
           {/* Order Summary Sidebar */}
-          <div className="lg:col-span-2 mt-4">
-            <div className="rounded-lg shadow-md shadow-lime-500 p-4 lg:mx-9 sticky top-4">
+          <div className="lg:col-span-1 mt-4">
+            <div className="rounded-lg border border-gray-200 shadow-sm p-4 sticky top-4">
               <div className="flex items-center mb-6">
                 <div className="bg-lime-100 p-2 rounded-full">
                   <Truck className="h-8 w-8 text-lime-600" />
@@ -2387,47 +2436,58 @@ const Checkout = () => {
 
                 {/* Coupon Section */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      className="flex-1 border rounded-lg px-3 py-2 text-sm"
-                      placeholder="Enter coupon code"
-                      value={coupon ? coupon.code : couponInput}
-                      onChange={(e) => setCouponInput(e.target.value)}
-                      disabled={!!coupon}
-                    />
-                    {!coupon ? (
-                      <button
-                        className="bg-lime-500 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
-                        onClick={handleApplyCoupon}
-                        disabled={couponLoading || !couponInput}
-                      >
-                        {couponLoading ? <TranslatedText>Applying...</TranslatedText> : <TranslatedText>Apply</TranslatedText>}
-                      </button>
-                    ) : (
-                      <button
-                        className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm"
-                        onClick={() => {
-                          setCoupon(null)
-                          setCouponDiscount(0)
-                          setCouponInput("")
-                          setCouponError("")
-                        }}
-                      >
-                        <TranslatedText>Remove</TranslatedText>
-                      </button>
-                    )}
-                  </div>
-                  {couponError && <div className="text-red-500 text-xs">{couponError}</div>}
-                  {coupon && (
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span><TranslatedText>Coupon:</TranslatedText> {coupon.code}</span>
-                      <span>- {formatPrice(couponDiscount)}</span>
-                    </div>
+                  {!coupon && referralRewardId ? (
+                    // Only one discount at a time: a referral reward is applied, so the
+                    // coupon field is blocked until that reward is removed.
+                    <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                      <TranslatedText>Remove your referral discount to use a coupon.</TranslatedText>
+                    </p>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          className="flex-1 border rounded-lg px-3 py-2 text-sm"
+                          placeholder="Enter coupon code"
+                          value={coupon ? coupon.code : couponInput}
+                          onChange={(e) => setCouponInput(e.target.value)}
+                          disabled={!!coupon}
+                        />
+                        {!coupon ? (
+                          <button
+                            className="bg-lime-500 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+                            onClick={handleApplyCoupon}
+                            disabled={couponLoading || !couponInput}
+                          >
+                            {couponLoading ? <TranslatedText>Applying...</TranslatedText> : <TranslatedText>Apply</TranslatedText>}
+                          </button>
+                        ) : (
+                          <button
+                            className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm"
+                            onClick={() => {
+                              setCoupon(null)
+                              setCouponDiscount(0)
+                              setCouponInput("")
+                              setCouponError("")
+                            }}
+                          >
+                            <TranslatedText>Remove</TranslatedText>
+                          </button>
+                        )}
+                      </div>
+                      {couponError && <div className="text-red-500 text-xs">{couponError}</div>}
+                      {coupon && (
+                        <div className="flex justify-between text-sm text-green-600">
+                          <span><TranslatedText>Coupon:</TranslatedText> {coupon.code}</span>
+                          <span>- {formatPrice(couponDiscount)}</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
-                {referralEnabled && (
+                {/* Referral discount -- only one discount at a time, hidden while a coupon is applied. */}
+                {referralEnabled && !coupon && (
                   <div className="mb-3">
                   <ReferralRewardCheckbox
                     eligibleAmountAed={referralEligibleAmount}
@@ -2476,6 +2536,32 @@ const Checkout = () => {
                   </div>
                 )}
               </div>
+
+              {/* Place order — the single action for the stacked (Amazon-style) layout. It
+                  validates then routes to createOrderThenPay (card/Tabby/Tamara) or the COD
+                  flow, exactly as the old step-3 buttons did. */}
+              <button
+                onClick={handlePlaceOrder}
+                disabled={loading || !selectedPaymentMethod || deliveryBlocked}
+                className="mt-6 w-full bg-lime-500 hover:bg-lime-600 text-white font-bold rounded-lg px-6 py-3 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <img
+                      src="/g.png"
+                      alt="Loading..."
+                      style={{ width: 24, height: 24, animation: "bounce 1s infinite" }}
+                    />
+                    <TranslatedText>Processing...</TranslatedText>
+                  </>
+                ) : deliveryBlocked ? (
+                  <TranslatedText>Order too small to deliver</TranslatedText>
+                ) : !selectedPaymentMethod ? (
+                  <TranslatedText>Select a payment method</TranslatedText>
+                ) : (
+                  `Place your order - ${formatPrice(finalTotal)}`
+                )}
+              </button>
 
               <div className="mt-6 bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-start">

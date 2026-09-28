@@ -40,6 +40,7 @@ import {
   Award,
   Gift,
   Boxes,
+  BellRing,
 } from "lucide-react"
 
 const SEO_UNLOCK_TOKEN_KEY = "seoUnlockToken"
@@ -588,6 +589,12 @@ const AdminSidebar = () => {
         { title: "Approved Reviews", path: "/admin/reviews/approved" },
         { title: "Rejected Reviews", path: "/admin/reviews/rejected" },
       ],
+    },
+    {
+      title: "Push Notifications",
+      icon: BellRing,
+      path: "/admin/push-notifications",
+      permission: "pushNotifications",
     },
     {
       title: "Request Callbacks",

@@ -154,3 +154,64 @@ Website popup reads:
 - `VITE_IOS_APP_URL`
 
 Set these in client environment so Play Store / App Store buttons are active.
+
+## 9) Push Notifications (Firebase Cloud Messaging)
+
+Admins write notifications in the Grabatoz admin panel and the API sends them through
+Firebase Cloud Messaging. The app must use the **same Firebase project** whose service
+account key is configured on the API server (ask the Grabatoz team for the
+`google-services.json` / `GoogleService-Info.plist` of that project).
+
+### Register the device token
+Call this on every app launch, and again right after login (with the bearer token) so the
+token is attached to the customer's account.
+
+- `POST /api/notifications/devices`
+- Header (optional): `Authorization: Bearer <token>`
+
+```json
+{
+  "token": "<FCM registration token>",
+  "platform": "android",
+  "country": "AE",
+  "language": "en",
+  "appVersion": "1.4.0",
+  "deviceName": "Samsung S24"
+}
+```
+
+`platform` is `android` or `ios`. `country` is the store the app is set to (AE, SA, QA,
+OM, BH, KW). `language` is `en` or `ar`; Arabic devices receive the Arabic copy when the
+admin wrote one.
+
+### Unregister on logout (or when the user turns notifications off)
+- `DELETE /api/notifications/devices/<token>`
+
+### Handle a tap
+Every push carries this `data` payload (all values are strings):
+
+```json
+{
+  "notificationId": "665f…",
+  "screen": "product",
+  "targetId": "hp-laptop-15-fd1134nia",
+  "url": "",
+  "imageUrl": "https://…"
+}
+```
+
+`screen` is one of `none`, `home`, `product`, `category`, `offer`, `orders`, `cart`, `url`.
+Open the matching screen; for `product` / `category` / `offer` use `targetId` (a slug or
+id), for `url` open `url` in the in-app browser.
+
+### Notification inbox screen
+So customers can re-read notifications they dismissed:
+
+- `GET /api/notifications/inbox?platform=android&country=AE&lang=en&page=1&limit=20`
+- Header (optional): `Authorization: Bearer <token>` — adds notifications targeted at that customer.
+
+Response: `{ notifications: [{ id, title, body, imageUrl, action: { screen, targetId, url }, sentAt }], page, limit, total, hasMore }`.
+
+### Testing
+Show the device's FCM token on a hidden debug screen. An admin pastes it into
+Admin → Push Notifications → "Send a test to one phone".
