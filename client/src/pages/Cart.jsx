@@ -495,7 +495,7 @@ const Cart = () => {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <Link to={productHref(item)} title={item.name} className="block">
-                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 leading-snug line-clamp-2 hover:text-lime-700 transition">
+                  <h3 className="text-sm font-semibold text-gray-900 leading-snug line-clamp-2 hover:text-lime-700 transition">
                     <TranslatedText text={item.name} />
                   </h3>
                 </Link>
@@ -595,7 +595,7 @@ const Cart = () => {
                 )}
               </div>
               <div className="text-right">
-                <p className="text-[15px] sm:text-xl font-bold text-gray-900 whitespace-nowrap">{formatPrice(itemTotal)}</p>
+                <p className="text-sm sm:text-base font-bold text-gray-900 whitespace-nowrap">{formatPrice(itemTotal)}</p>
                 {pricingDetails.hasDiscount && (
                   <p className="text-xs sm:text-sm font-medium text-green-600">
                     <TranslatedText>Total Save</TranslatedText>: {formatPrice(pricingDetails.savings * item.quantity)}
@@ -621,41 +621,7 @@ const Cart = () => {
 
   return (
     <div className="bg-gray-50 min-h-[60vh]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10 pb-28 lg:pb-10">
-        {/* Page header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-            <TranslatedText>Shopping Cart</TranslatedText>
-            {!isEmpty && (
-              <span className="ml-2 text-base font-normal text-gray-500">
-                ({itemCount} {itemCount === 1 ? <TranslatedText>item</TranslatedText> : <TranslatedText>items</TranslatedText>})
-              </span>
-            )}
-          </h1>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={handleOpenCouponsModal}
-              className="inline-flex items-center gap-2 rounded-lg bg-yellow-400 px-3 py-2 text-sm font-medium text-black hover:bg-yellow-500 transition"
-            >
-              <Gift size={16} />
-              <TranslatedText>Available Coupons</TranslatedText>
-            </button>
-            <Link
-              to={getLocalizedPath("/")}
-              className="inline-flex items-center gap-2 rounded-lg bg-lime-600 px-3 py-2 text-sm font-medium text-white hover:bg-lime-700 transition"
-            >
-              <ArrowLeft size={16} />
-              <span className="hidden sm:inline">
-                <TranslatedText>Continue Shopping</TranslatedText>
-              </span>
-              <span className="sm:hidden">
-                <TranslatedText>Shop</TranslatedText>
-              </span>
-            </Link>
-          </div>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 pb-28 lg:pb-10 text-sm">
         {isEmpty ? (
           <div className="bg-white rounded-2xl border border-gray-100 px-6 py-16 text-center">
             <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-lime-50">
@@ -679,6 +645,12 @@ const Cart = () => {
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-6 lg:gap-8 items-start">
             {/* Cart items */}
             <div className="min-w-0 space-y-5">
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
+                <TranslatedText>Shopping Cart</TranslatedText>
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  ({itemCount} {itemCount === 1 ? <TranslatedText>item</TranslatedText> : <TranslatedText>items</TranslatedText>})
+                </span>
+              </h1>
               {/* Bundles first */}
               {Object.values(grouped).map((bundle) => {
                 const bundleTotals = calculateBundleTotals(bundle.items)
@@ -734,13 +706,32 @@ const Cart = () => {
                   <ul className="divide-y divide-gray-100">{filteredStandaloneItems.map((item) => renderItem(item, false, null))}</ul>
                 </div>
               )}
+
+              {/* Actions under the products */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-1">
+                <Link
+                  to={getLocalizedPath("/")}
+                  className="inline-flex items-center gap-2 rounded-lg bg-lime-600 px-3 py-2 text-sm font-medium text-white hover:bg-lime-700 transition"
+                >
+                  <ArrowLeft size={16} />
+                  <TranslatedText>Continue Shopping</TranslatedText>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleOpenCouponsModal}
+                  className="inline-flex items-center gap-2 rounded-lg bg-yellow-400 px-3 py-2 text-sm font-medium text-black hover:bg-yellow-500 transition"
+                >
+                  <Gift size={16} />
+                  <TranslatedText>Available Coupons</TranslatedText>
+                </button>
+              </div>
             </div>
 
-            {/* Order summary */}
-            <aside className="lg:sticky lg:top-24">
+            {/* Order summary — pinned while the products scroll */}
+            <aside className="lg:sticky lg:top-[130px] lg:self-start">
               <div className="bg-white rounded-2xl border border-gray-200 shadow-md shadow-lime-100">
                 <div className="px-5 py-4 border-b border-gray-100">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-base font-semibold text-gray-900">
                     <TranslatedText>Order Summary</TranslatedText>
                   </h2>
                 </div>
@@ -889,106 +880,37 @@ const Cart = () => {
                     value={<CheckCircle2 size={16} className="inline text-green-600" />}
                   />
 
-                  {/* Coupon */}
-                  <div className="border-t border-gray-100 pt-3">
-                    <label className="mb-1.5 flex items-center gap-1.5 text-sm text-gray-600">
-                      <Tag size={15} className="text-gray-400" />
-                      <TranslatedText>Coupon code</TranslatedText>
-                    </label>
-                    {coupon ? (
-                      <div className="flex items-center justify-between gap-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Check size={16} className="text-green-600 flex-shrink-0" />
-                          <span className="font-mono text-sm font-semibold text-green-800 truncate">{coupon.code}</span>
-                          <span className="text-sm text-green-700 whitespace-nowrap">- {formatPrice(couponDiscount)}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleRemoveCoupon}
-                          className="rounded-md bg-white px-2 py-1 text-xs font-medium text-red-600 border border-red-200 hover:bg-red-50"
-                        >
-                          <TranslatedText>Remove</TranslatedText>
-                        </button>
-                      </div>
-                    ) : referralRewardId ? (
-                      // Only one discount at a time: a referral reward is applied, so the
-                      // coupon field is blocked until that reward is removed.
-                      <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500">
-                        <TranslatedText>Remove your referral discount to use a coupon.</TranslatedText>
-                      </p>
-                    ) : (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase placeholder:normal-case focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-200"
-                          placeholder="Enter coupon code"
-                          value={couponInput}
-                          onChange={(e) => {
-                            setCouponInput(e.target.value)
-                            if (couponError) setCouponError("")
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && couponInput.trim() && !couponLoading) handleApplyCoupon()
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="rounded-lg bg-lime-600 px-4 py-2 text-sm font-semibold text-white hover:bg-lime-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          onClick={handleApplyCoupon}
-                          disabled={couponLoading || !couponInput.trim()}
-                        >
-                          {couponLoading ? <TranslatedText>Applying...</TranslatedText> : <TranslatedText>Apply</TranslatedText>}
-                        </button>
-                      </div>
-                    )}
-                    {couponError && <p className="mt-1.5 text-xs text-red-600">{couponError}</p>}
-                  </div>
-
-                  {/* Referral discount: a checkbox per reward, named by its code.
-                      Only one discount at a time -- hidden while a coupon is applied. */}
-                  {referralEnabled && !coupon && (
-                    <ReferralRewardCheckbox
-                      eligibleAmountAed={referralEligibleAmount}
-                      selectedRewardId={referralRewardId}
-                      onApply={applyReferralReward}
-                      onClear={clearReferralReward}
-                      formatPrice={formatPrice}
+                  {/* Applied discounts shown read-only. The controls live on the checkout
+                      page (or the Available Coupons modal); the cart total already reflects
+                      them, so they must appear here too. */}
+                  {coupon && (
+                    <SummaryRow
+                      label={
+                        <span className="inline-flex items-center gap-2">
+                          <TranslatedText>Coupon</TranslatedText>
+                          <span className="font-mono text-xs font-semibold text-green-700">{coupon.code}</span>
+                          <button
+                            type="button"
+                            onClick={handleRemoveCoupon}
+                            className="text-xs font-medium text-red-600 hover:underline"
+                          >
+                            <TranslatedText>Remove</TranslatedText>
+                          </button>
+                        </span>
+                      }
+                      value={`- ${formatPrice(couponDiscount)}`}
+                      tone="text-green-600"
                     />
                   )}
+
                   {appliedReferralDiscount > 0 && (
                     <SummaryRow label={<TranslatedText>Referral discount</TranslatedText>} value={`- ${formatPrice(appliedReferralDiscount)}`} tone="text-green-600" />
                   )}
 
-                  {/* Points: what the shopper holds, then the control to spend it. */}
-                  {loyaltyEnabled && loyaltyBalance > 0 && (
-                    <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm">
-                      <span className="flex items-center gap-2 text-gray-700">
-                        <GrabCoin size={18} />
-                        <TranslatedText>Your balance</TranslatedText>
-                      </span>
-                      <span className="font-semibold text-gray-900">
-                        {formatPoints(loyaltyBalance, { withName: false })}
-                        {loyaltyPending > 0 && (
-                          <span className="ml-1 font-normal text-xs text-gray-500">
-                            (+{formatPoints(loyaltyPending, { withName: false })} <TranslatedText>pending</TranslatedText>)
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  )}
-
-                  {loyaltyEnabled && (
-                    <LoyaltyRedeemPanel
-                      eligibleAmountAed={loyaltyEligibleAmount}
-                      appliedPoints={loyaltyPointsToRedeem}
-                      onChange={applyLoyaltyRedemption}
-                      formatPrice={formatPrice}
-                    />
-                  )}
-
                   {appliedLoyaltyDiscount > 0 && (
-                    <SummaryRow label={<TranslatedText>Points applied</TranslatedText>} value={`- ${formatPrice(appliedLoyaltyDiscount)}`} tone="text-green-600" />
+                    <SummaryRow label={<TranslatedText>Grabian Points applied</TranslatedText>} value={`- ${formatPrice(appliedLoyaltyDiscount)}`} tone="text-green-600" />
                   )}
+
                 </div>
 
                 {/* Total and checkout */}
@@ -997,7 +919,7 @@ const Cart = () => {
                     <span className="text-base font-semibold text-gray-900">
                       <TranslatedText>Total Amount</TranslatedText>
                     </span>
-                    <span className="text-2xl font-bold text-gray-900 whitespace-nowrap">{formatPrice(totalWithDeliveryTaxCoupon)}</span>
+                    <span className="text-lg font-bold text-gray-900 whitespace-nowrap">{formatPrice(totalWithDeliveryTaxCoupon)}</span>
                   </div>
 
                   {hasAdminDeliveryCharges && !deliveryBlocked && deliveryCharge === 0 && (

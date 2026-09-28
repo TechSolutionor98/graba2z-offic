@@ -16,7 +16,7 @@ import ReferralRewardCheckbox from "../components/ReferralRewardCheckbox"
 import { getProvincesForCountry } from "../utils/countryStates"
 import AddressAutocomplete from "../components/AddressAutocomplete"
 import { resolveDeliveryCharge, selectDeliveryMethod, describeDeliveryBlock } from "../utils/deliveryCharge"
-import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Check, Edit } from "lucide-react"
+import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Minus, Trash2, Gift, Percent, Copy, Check, Ticket } from "lucide-react"
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
 import { getFullImageUrl } from "../utils/imageUtils"
@@ -31,7 +31,7 @@ import '../styles/phoneInput.css'
 import config from "../config/config"
 import { STORES } from "../data/stores"
 // One look for every field in the address modal.
-const addressLabelClass = "mb-1.5 block text-sm font-medium text-gray-700"
+const addressLabelClass = "mb-1 block text-xs font-medium text-gray-700"
 const addressInputClass =
   "h-11 w-full rounded-lg border border-gray-300 bg-white px-3.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-200"
 const addressSelectClass = addressInputClass + " appearance-none pr-9"
@@ -155,26 +155,25 @@ const renderPaymentLogos = (id) => {
 // A completed checkout step shown folded on the payment step: number, title and a
 // one-line readback in the header, the full editable form underneath when opened.
 const ReviewSection = ({ number, title, summary, open, onToggle, children }) => (
-  <div className={`rounded-2xl border bg-white ${open ? "border-lime-400 shadow-sm" : "border-gray-200"}`}>
+  <div className={`rounded-xl border bg-white ${open ? "border-lime-400 shadow-sm" : "border-gray-200"}`}>
     <button
       type="button"
       onClick={onToggle}
       aria-expanded={open}
-      className="w-full flex items-center gap-3 px-4 py-3 text-left"
+      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left"
     >
-      <span className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-lime-500 text-white text-sm font-bold">
+      <span className="w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full bg-lime-500 text-white text-xs font-bold">
         {number}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block font-semibold text-gray-900">{title}</span>
-        {!open && <span className="block truncate text-sm text-gray-500">{summary}</span>}
+        <span className="block text-sm font-bold text-gray-900">{title}</span>
+        {!open && <span className="mt-0.5 block text-[13px] text-gray-500">{summary}</span>}
       </span>
-      <span className="flex-shrink-0 inline-flex items-center gap-1 text-sm font-medium text-lime-700">
+      <span className="flex-shrink-0 text-sm font-medium text-lime-700">
         <TranslatedText>{open ? "Close" : "Change"}</TranslatedText>
-        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </span>
     </button>
-    {open && <div className="border-t border-gray-100 px-4 py-4">{children}</div>}
+    {open && <div className="border-t border-gray-100 px-4 py-3">{children}</div>}
   </div>
 )
 
@@ -195,6 +194,7 @@ const Checkout = () => {
     couponDiscount,
     setCouponDiscount,
     removeFromCart,
+    updateQuantity,
     loyaltyPointsToRedeem,
     loyaltyDiscount,
     applyLoyaltyRedemption,
@@ -384,6 +384,20 @@ const Checkout = () => {
   const [couponLoading, setCouponLoading] = useState(false)
   const [couponError, setCouponError] = useState("")
 
+  // "Available Coupons" modal — the public list of coupons a shopper can browse and apply.
+  const [showCouponsModal, setShowCouponsModal] = useState(false)
+  const [publicCoupons, setPublicCoupons] = useState([])
+  const [loadingCoupons, setLoadingCoupons] = useState(false)
+  const [couponModalError, setCouponModalError] = useState(null)
+  const [couponCopied, setCouponCopied] = useState(null)
+
+  const COUPON_COLORS = [
+    { main: "bg-gradient-to-r from-yellow-50 to-yellow-100", stub: "bg-yellow-300", border: "border-yellow-300", text: "text-yellow-800" },
+    { main: "bg-gradient-to-r from-blue-50 to-blue-100", stub: "bg-blue-300", border: "border-blue-300", text: "text-blue-800" },
+    { main: "bg-gradient-to-r from-green-50 to-green-100", stub: "bg-green-300", border: "border-green-300", text: "text-green-800" },
+    { main: "bg-gradient-to-r from-purple-50 to-purple-100", stub: "bg-purple-300", border: "border-purple-300", text: "text-purple-800" },
+  ]
+
   // Tax is included in prices, no separate calculation needed
   const taxAmount = "included"
 
@@ -508,8 +522,10 @@ const Checkout = () => {
       appliedLoyaltyDiscount,
   )
 
-  // Coupon logic
-  const handleApplyCoupon = async () => {
+  // Coupon logic. Takes the code so the coupons modal can apply one directly.
+  const applyCouponCode = async (code) => {
+    const trimmed = String(code || "").trim()
+    if (!trimmed) return false
     setCouponLoading(true)
     setCouponError("")
     try {
@@ -518,7 +534,7 @@ const Checkout = () => {
         .filter((item) => !item.isProtection)
         .map((item) => ({ product: item._id, qty: item.quantity }))
       const { data } = await axios.post(`${config.API_URL}/api/coupons/validate`, {
-        code: couponInput,
+        code: trimmed,
         cartItems: cartApiItems,
       })
       // A coupon and a referral reward can never apply together -- only one at a
@@ -526,14 +542,51 @@ const Checkout = () => {
       clearReferralReward()
       setCoupon(data.coupon)
       setCouponDiscount(data.discountAmount)
+      setCouponInput(trimmed)
       setCouponError("")
+      return true
     } catch (err) {
       setCoupon(null)
       setCouponDiscount(0)
       setCouponError(err.response?.data?.message || "Invalid coupon")
+      return false
     } finally {
       setCouponLoading(false)
     }
+  }
+
+  const handleApplyCoupon = () => applyCouponCode(couponInput)
+
+  // Available Coupons modal
+  const handleOpenCouponsModal = async () => {
+    setShowCouponsModal(true)
+    setLoadingCoupons(true)
+    setCouponModalError(null)
+    try {
+      const response = await axios.get(`${config.API_URL}/api/coupons`)
+      setPublicCoupons(response.data)
+    } catch (error) {
+      console.error("Error fetching coupons:", error)
+      setCouponModalError("Failed to load coupons")
+    } finally {
+      setLoadingCoupons(false)
+    }
+  }
+
+  const handleCloseCouponsModal = () => {
+    setShowCouponsModal(false)
+    setCouponCopied(null)
+  }
+
+  const handleCopyCoupon = (couponCode, couponId) => {
+    navigator.clipboard.writeText(couponCode)
+    setCouponCopied(couponId)
+    setTimeout(() => setCouponCopied(null), 2000)
+  }
+
+  const handleUseCoupon = async (couponCode) => {
+    const ok = await applyCouponCode(couponCode)
+    if (ok) handleCloseCouponsModal()
   }
 
   const handleChange = (e) => {
@@ -1657,6 +1710,16 @@ const Checkout = () => {
     }
   }, [deliveryType])
 
+  // Switching to pickup with no store chosen yet auto-selects the first available store, so
+  // the shopper lands on a usable selection instead of an empty picker.
+  useEffect(() => {
+    if (deliveryType !== "pickup" || pickupDetails.storeId) return
+    const first = STORES.find((s) => s.visible !== false)
+    if (first) handleStoreSelection(first)
+    // handleStoreSelection is stable within a render; re-running on its identity is unwanted.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deliveryType])
+
   const bounceStyle = {
     animation: "bounce 1s infinite",
   }
@@ -1691,7 +1754,7 @@ const Checkout = () => {
       <div className="max-w-5xl mx-auto px-4 py-10 text-center">
         <h2 className="text-2xl font-bold mb-4"><TranslatedText>Your cart is empty</TranslatedText></h2>
         <p className="text-gray-600 mb-6"><TranslatedText>Add some items to your cart before checkout.</TranslatedText></p>
-        <button onClick={() => navigate(getLocalizedPath("/"))} className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3">
+        <button onClick={() => navigate(getLocalizedPath("/"))} className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-6 py-2">
           <TranslatedText>Continue Shopping</TranslatedText>
         </button>
       </div>
@@ -1716,7 +1779,7 @@ const Checkout = () => {
                     onChange={() => setDeliveryType("home")}
                     className="accent-lime-500 mr-2"
                   />
-                  <span className="font-semibold text-lg"><TranslatedText>Home Delivery</TranslatedText></span>
+                  <span className="font-semibold text-sm"><TranslatedText>Home Delivery</TranslatedText></span>
                 </label>
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -1727,7 +1790,7 @@ const Checkout = () => {
                     onChange={() => setDeliveryType("pickup")}
                     className="accent-lime-500 mr-2"
                   />
-                  <span className="font-semibold text-lg"><TranslatedText>Pickup From Store</TranslatedText></span>
+                  <span className="font-semibold text-sm"><TranslatedText>Pickup From Store</TranslatedText></span>
                 </label>
               </div>
   )
@@ -1736,16 +1799,16 @@ const Checkout = () => {
     <>
                   {deliveryType === "home" && (
                     <form onSubmit={handleContinueToSummary}>
-                      <h3 className="font-bold text-lg mb-4"><TranslatedText>Contact Details</TranslatedText></h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <h3 className="font-bold text-sm mb-3"><TranslatedText>Contact Details</TranslatedText></h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <label className="block text-sm font-medium mb-1"><TranslatedText>E-mail</TranslatedText> *</label>
+                          <label className="block text-xs font-medium mb-1"><TranslatedText>E-mail</TranslatedText> *</label>
                           <input
                             type="email"
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            className="w-full border rounded-lg px-4 py-3"
+                            className="w-full border rounded-lg px-3 py-2 text-sm"
                             required
                           />
                         </div>
@@ -1756,124 +1819,140 @@ const Checkout = () => {
                             defaultCountry="AE"
                             value={withDialCode(formData.phone)}
                             onChange={(value) => setFormData({ ...formData, phone: value || '' })}
-                            className="w-full -mt-2 rounded-lg px-4 py-3"
+                            className="w-full -mt-2 rounded-lg px-3 py-2 text-sm"
                             placeholder="Enter phone number"
                           />
                         </div>
                       </div>
 
+                      {/* Amazon-style address block: only the chosen address shows; "Change"
+                          reveals the full list to pick another, edit, or add one. */}
                       {user && savedAddresses.length > 0 && (
-                        <div className="mb-6 bg-gray-50/50 border border-gray-200 p-4 rounded-xl">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold text-gray-800"><TranslatedText>Delivery Address</TranslatedText></h4>
-                            <button
-                              type="button"
-                              onClick={() => setShowAddressList((v) => !v)}
-                              className="text-sm font-bold text-lime-600 hover:text-lime-700"
-                            >
-                              <TranslatedText>{showAddressList ? "Done" : "Change"}</TranslatedText>
-                            </button>
-                          </div>
-
-                          {/* Collapsed by default: only the chosen address shows. "Change"
-                              reveals the full list to pick another or add one. */}
-                          {showAddressList ? (
+                        <div className="mb-4">
+                          {!showAddressList ? (
                             <>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {savedAddresses.map((addr) => {
-                              const isSelected = formData.address === addr.address && formData.city === addr.city
-                              return (
-                                <div
-                                  key={addr._id}
-                                  onClick={() => {
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      address: addr.address,
-                                      city: addr.city,
-                                      state: addr.state,
-                                      zipCode: addr.zipCode,
-                                      country: addr.country || currentCountry?.name || "UAE",
-                                    }))
-                                    setShowAddressList(false)
-                                  }}
-                                  className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                                    isSelected
-                                      ? "border-lime-600 bg-lime-50/20"
-                                      : "border-gray-200 hover:border-gray-300 bg-white"
-                                  }`}
+                              <div className="mb-2 flex items-center justify-between">
+                                <h4 className="text-sm font-bold text-gray-900">
+                                  <TranslatedText>Delivery address</TranslatedText>
+                                </h4>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowAddressList(true)}
+                                  className="text-sm font-semibold text-lime-700 hover:underline"
                                 >
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="font-bold text-gray-800 text-xs">{addr.name}</span>
-                                    <div className="flex items-center gap-1.5">
-                                      <button
-                                        type="button"
-                                        onClick={(e) => handleEditAddressClick(e, addr)}
-                                        className="p-1 text-gray-400 hover:text-lime-600 rounded transition-colors"
-                                        title="Edit Address"
-                                      >
-                                        <Edit className="h-3.5 w-3.5" />
-                                      </button>
-                                      {isSelected && (
-                                        <span className="bg-lime-600 text-white rounded-full p-0.5">
-                                          <Check className="h-3 w-3" />
-                                        </span>
+                                  <TranslatedText>Change</TranslatedText>
+                                </button>
+                              </div>
+                              {(() => {
+                                const selectedAddr =
+                                  savedAddresses.find(
+                                    (a) => a.address === formData.address && a.city === formData.city,
+                                  ) || savedAddresses[0]
+                                if (!selectedAddr) return null
+                                return (
+                                  <div className="flex items-start gap-3 rounded-xl border-2 border-lime-500 bg-lime-50/40 p-3">
+                                    <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 border-lime-600">
+                                      <span className="h-2.5 w-2.5 rounded-full bg-lime-600" />
+                                    </span>
+                                    <div className="min-w-0">
+                                      <p className="font-bold text-gray-900">{selectedAddr.name}</p>
+                                      <p className="text-sm text-gray-700">
+                                        {[selectedAddr.address, selectedAddr.city, selectedAddr.state, selectedAddr.country]
+                                          .filter(Boolean)
+                                          .join(", ")}
+                                      </p>
+                                      {selectedAddr.phone && (
+                                        <p className="text-sm text-gray-700">
+                                          <TranslatedText>Phone number:</TranslatedText> {selectedAddr.phone}
+                                        </p>
                                       )}
                                     </div>
                                   </div>
-                                  <p className="text-xs text-gray-600 line-clamp-2">{addr.address}</p>
-                                  <p className="text-xs text-gray-500 mt-1">{addr.city}, {addr.state}</p>
-                                </div>
-                              )
-                            })}
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingAddressId(null)
-                              setAddressDetails({
-                                address: "",
-                                zip: "",
-                                country: currentCountry?.name || "UAE",
-                                state: "",
-                                city: "",
-                                isDefault: false,
-                              })
-                              setShowAddressModal(true)
-                            }}
-                            className="flex items-center gap-1.5 text-lime-600 hover:text-lime-700 font-bold text-sm mt-3"
-                          >
-                            <Plus size={16} />
-                            <TranslatedText>Add New Address</TranslatedText>
-                          </button>
+                                )
+                              })()}
                             </>
-                          ) : formData.address ? (
-                            <div className="rounded-xl border-2 border-lime-600 bg-lime-50/20 p-4">
-                              <div className="flex items-center justify-between">
-                                <span className="font-bold text-gray-800 text-sm">
-                                  {savedAddresses.find((a) => a.address === formData.address && a.city === formData.city)?.name || formData.name || "Selected address"}
-                                </span>
-                                <span className="bg-lime-600 text-white rounded-full p-0.5">
-                                  <Check className="h-3 w-3" />
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-600 mt-1">{formData.address}</p>
-                              <p className="text-sm text-gray-500">{formData.city}, {formData.state} {formData.zipCode}</p>
-                            </div>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={() => setShowAddressList(true)}
-                              className="w-full rounded-xl border-2 border-dashed border-gray-300 p-4 text-sm font-semibold text-gray-600 hover:border-lime-400 hover:text-lime-700"
-                            >
-                              <TranslatedText>Select a delivery address</TranslatedText>
-                            </button>
+                            <>
+                              <h4 className="mb-3 text-sm font-bold text-gray-900">
+                                <TranslatedText>Delivery addresses</TranslatedText> ({savedAddresses.length})
+                              </h4>
+                              <div className="space-y-1">
+                                {savedAddresses.map((addr) => {
+                                  const isSelected = formData.address === addr.address && formData.city === addr.city
+                                  return (
+                                    <label
+                                      key={addr._id}
+                                      className="flex cursor-pointer items-start gap-3 rounded-lg p-2 hover:bg-gray-50"
+                                    >
+                                      <input
+                                        type="radio"
+                                        name="deliveryAddress"
+                                        checked={isSelected}
+                                        onChange={() => {
+                                          setFormData((prev) => ({
+                                            ...prev,
+                                            address: addr.address,
+                                            city: addr.city,
+                                            state: addr.state,
+                                            zipCode: addr.zipCode,
+                                            country: addr.country || currentCountry?.name || "UAE",
+                                          }))
+                                          // Amazon collapses back to the chosen address once picked.
+                                          setShowAddressList(false)
+                                        }}
+                                        className="mt-1 h-4 w-4 shrink-0 accent-lime-600"
+                                      />
+                                      <div className="min-w-0">
+                                        <p className="font-bold text-gray-900">{addr.name}</p>
+                                        <p className="text-sm text-gray-700">
+                                          {[addr.address, addr.city, addr.state, addr.country].filter(Boolean).join(", ")}
+                                        </p>
+                                        {addr.phone && (
+                                          <p className="text-sm text-gray-700">
+                                            <TranslatedText>Phone number:</TranslatedText> {addr.phone}
+                                          </p>
+                                        )}
+                                        <div className="mt-1 flex items-center gap-2 text-sm">
+                                          <button
+                                            type="button"
+                                            onClick={(e) => handleEditAddressClick(e, addr)}
+                                            className="font-semibold text-lime-700 hover:underline"
+                                          >
+                                            <TranslatedText>Edit address</TranslatedText>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </label>
+                                  )
+                                })}
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingAddressId(null)
+                                  setAddressDetails({
+                                    address: "",
+                                    zip: "",
+                                    country: currentCountry?.name || "UAE",
+                                    state: "",
+                                    city: "",
+                                    isDefault: false,
+                                  })
+                                  setShowAddressModal(true)
+                                }}
+                                className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-lime-700 hover:underline"
+                              >
+                                <Plus size={16} />
+                                <TranslatedText>Add a new delivery address</TranslatedText>
+                              </button>
+                            </>
                           )}
                         </div>
                       )}
 
                       {formData.address && (!user || savedAddresses.length === 0) && (
-                        <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+                        <div className="mb-4 bg-gray-50 p-3 rounded-lg">
                           <h4 className="font-semibold mb-1"><TranslatedText>Shipping Address</TranslatedText></h4>
                           <div className="text-gray-700">{formData.address}</div>
                           <div className="text-gray-700">
@@ -1936,23 +2015,23 @@ const Checkout = () => {
 
                   {deliveryType === "pickup" && (
                     <form onSubmit={handleContinueToSummary}>
-                      <h3 className="font-bold text-lg mb-4"><TranslatedText>Where do you want to pick up?</TranslatedText></h3>
+                      <h3 className="font-bold text-sm mb-3"><TranslatedText>Where do you want to pick up?</TranslatedText></h3>
 
-                      <div className="mb-6">
-                        <label className="block text-sm font-medium mb-1"><TranslatedText>Phone number</TranslatedText> *</label>
+                      <div className="mb-4">
+                        <label className="block text-xs font-medium mb-1"><TranslatedText>Phone number</TranslatedText> *</label>
                         <div className="max-w-md">
                           <PhoneInput
                             international
                             defaultCountry="AE"
                             value={pickupDetails.phone}
                             onChange={(value) => setPickupDetails({ ...pickupDetails, phone: value || '' })}
-                            className="w-full border rounded-lg px-4 py-3"
+                            className="w-full border rounded-lg px-3 py-2 text-sm"
                             placeholder="Enter phone number"
                           />
                         </div>
                       </div>
 
-                      <div className="mb-6">
+                      <div className="mb-4">
                         <h4 className="font-semibold mb-4 flex items-center gap-2">
                           <MapPin className="h-5 w-5 text-lime-500" />
                           <TranslatedText>Select Store</TranslatedText> *
@@ -2022,7 +2101,7 @@ const Checkout = () => {
                       {!hideActions && (
                       <button
                         type="submit"
-                        className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3 disabled:opacity-50"
+                        className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-6 py-2 disabled:opacity-50"
                         disabled={!pickupDetails.phone || !pickupDetails.storeId}
                       >
                         {inline ? <TranslatedText>Save changes</TranslatedText> : <TranslatedText>Continue</TranslatedText>}
@@ -2039,11 +2118,11 @@ const Checkout = () => {
                       section above, so only the notes are repeated. */}
                   {!inline && (
                     <>
-                  <h3 className="font-bold text-lg mb-4"><TranslatedText>Order Summary</TranslatedText></h3>
-                  <div className="mb-6">
+                  <h3 className="font-bold text-sm mb-3"><TranslatedText>Order Summary</TranslatedText></h3>
+                  <div className="mb-4">
                     <h4 className="font-semibold mb-2"><TranslatedText>Delivery Details</TranslatedText></h4>
                     {deliveryType === "home" ? (
-                      <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="bg-gray-50 p-3 rounded-lg">
                         <div className="font-medium"><TranslatedText>Home Delivery</TranslatedText></div>
                         <div className="text-sm text-gray-600 mt-1">
                           {formData.name && <div>{formData.name}</div>}
@@ -2056,7 +2135,7 @@ const Checkout = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="bg-gray-50 p-3 rounded-lg">
                         <div className="font-medium"><TranslatedText>Store Pickup</TranslatedText></div>
                         <div className="text-sm text-gray-600 mt-1">
                           <div><TranslatedText>Phone:</TranslatedText> {withDialCode(pickupDetails.phone)}</div>
@@ -2074,14 +2153,14 @@ const Checkout = () => {
                     </>
                   )}
 
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <h4 className="font-semibold mb-2"><TranslatedText>Order Notes (Optional)</TranslatedText></h4>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <label className="block text-sm font-medium mb-2"><TranslatedText>Add a note to your order:</TranslatedText></label>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <label className="block text-xs font-medium mb-2"><TranslatedText>Add a note to your order:</TranslatedText></label>
                       <textarea
                         value={customerNotes}
                         onChange={(e) => setCustomerNotes(e.target.value)}
-                        className="w-full border rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
+                        className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-transparent"
                         rows="3"
                         placeholder="Special delivery instructions, gift message, or any other notes..."
                         maxLength="500"
@@ -2094,7 +2173,7 @@ const Checkout = () => {
                     <button
                       type="button"
                       onClick={() => setOpenReviewStep(null)}
-                      className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3"
+                      className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-6 py-2"
                     >
                       <TranslatedText>Done</TranslatedText>
                     </button>
@@ -2102,13 +2181,13 @@ const Checkout = () => {
                     <div className="flex gap-4">
                       <button
                         onClick={() => setStep(1)}
-                        className="border border-gray-300 text-gray-700 rounded-lg px-8 py-3"
+                        className="border border-gray-300 text-gray-700 rounded-lg px-6 py-2"
                       >
                         <TranslatedText>Back</TranslatedText>
                       </button>
                       <button
                         onClick={handleContinueToPayment}
-                        className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-8 py-3"
+                        className="bg-lime-500 hover:bg-lime-600 text-white rounded-lg px-6 py-2"
                       >
                         <TranslatedText>Continue to Payment</TranslatedText>
                       </button>
@@ -2118,25 +2197,75 @@ const Checkout = () => {
   )
 
   // One-line readbacks for the folded sections on the payment step.
-  const shippingSummary =
+  // The collapsed delivery card: the two delivery choices as radio pills (the picked one
+  // filled) plus the chosen address / store on the line below -- a readback, not a control;
+  // tapping the card (or "Change") reopens the section to edit it.
+  const deliveryDetailLine =
     deliveryType === "home"
-      ? ["Home delivery", formData.name, formData.address, [formData.city, formData.state].filter(Boolean).join(", ")]
-          .filter(Boolean)
-          .join(" · ")
-      : ["Store pickup", selectedStore?.name, withDialCode(pickupDetails.phone)].filter(Boolean).join(" · ")
+      ? formData.address
+        ? [formData.address, formData.city, formData.state, formData.country].filter(Boolean).join(", ")
+        : "No delivery address selected yet"
+      : selectedStore
+        ? [selectedStore.name, selectedStore.address].filter(Boolean).join(" · ")
+        : "No pickup store selected yet"
+  const deliveryRadioDot = (active) => (
+    <span
+      className={`grid h-4 w-4 place-items-center rounded-full border-2 ${active ? "border-lime-600" : "border-gray-300"}`}
+    >
+      {active && <span className="h-2 w-2 rounded-full bg-lime-600" />}
+    </span>
+  )
+  // The Home Delivery / Pickup toggle, shown in the collapsed card too. It uses clickable
+  // spans (not inputs) so it stays valid inside the section-header button; stopPropagation
+  // keeps a tap from also toggling the accordion.
+  const deliveryTypeToggle = (
+    <span className="flex flex-wrap items-center gap-x-5 gap-y-1">
+      <span
+        onClick={(e) => {
+          e.stopPropagation()
+          setDeliveryType("home")
+        }}
+        className={`inline-flex cursor-pointer items-center gap-1.5 font-semibold ${deliveryType === "home" ? "text-gray-900" : "text-gray-500"}`}
+      >
+        {deliveryRadioDot(deliveryType === "home")}
+        <TranslatedText>Home Delivery</TranslatedText>
+      </span>
+      <span
+        onClick={(e) => {
+          e.stopPropagation()
+          setDeliveryType("pickup")
+        }}
+        className={`inline-flex cursor-pointer items-center gap-1.5 font-semibold ${deliveryType === "pickup" ? "text-gray-900" : "text-gray-500"}`}
+      >
+        {deliveryRadioDot(deliveryType === "pickup")}
+        <TranslatedText>Pickup From Store</TranslatedText>
+      </span>
+    </span>
+  )
+  const deliverySummaryNode = (
+    <span className="block">
+      {deliveryTypeToggle}
+      {deliveryType === "home" && formData.name && (
+        <span className="mt-1 block text-gray-600">
+          <TranslatedText>Delivering to</TranslatedText> {formData.name}
+        </span>
+      )}
+      <span className="mt-0.5 block truncate text-gray-500">{deliveryDetailLine}</span>
+    </span>
+  )
   const notesSummary = customerNotes.trim() ? `Note: ${customerNotes.trim()}` : "No order notes"
   const paymentSummary =
     PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod)?.name || "Choose how you'd like to pay"
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8 px-6">
-        <nav className="text-sm text-gray-500 mb-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-sm">
+      <div className="mb-5 px-2 sm:px-4">
+        <nav className="text-xs text-gray-500 mb-3">
           <TranslatedText>Home</TranslatedText> <span className="mx-2">›</span> <span className="font-semibold text-black"><TranslatedText>Checkout</TranslatedText></span>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 space-y-3">
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div>
             )}
@@ -2145,7 +2274,7 @@ const Checkout = () => {
             <ReviewSection
               number="1"
               title={<TranslatedText>Delivery details</TranslatedText>}
-              summary={shippingSummary}
+              summary={deliverySummaryNode}
               open={openSection === 1}
               onToggle={() => setOpenSection(openSection === 1 ? null : 1)}
             >
@@ -2155,7 +2284,7 @@ const Checkout = () => {
                 <button
                   type="button"
                   onClick={handleSaveDelivery}
-                  className="w-full sm:w-auto bg-lime-500 hover:bg-lime-600 text-white font-semibold rounded-lg px-8 py-3"
+                  className="w-full sm:w-auto bg-lime-500 hover:bg-lime-600 text-white font-semibold rounded-lg px-6 py-2"
                 >
                   <TranslatedText>Save &amp; continue</TranslatedText>
                 </button>
@@ -2175,7 +2304,7 @@ const Checkout = () => {
                 <button
                   type="button"
                   onClick={() => setOpenSection(3)}
-                  className="w-full sm:w-auto bg-lime-500 hover:bg-lime-600 text-white font-semibold rounded-lg px-8 py-3"
+                  className="w-full sm:w-auto bg-lime-500 hover:bg-lime-600 text-white font-semibold rounded-lg px-6 py-2"
                 >
                   <TranslatedText>Save &amp; continue</TranslatedText>
                 </button>
@@ -2190,6 +2319,95 @@ const Checkout = () => {
               open={openSection === 3}
               onToggle={() => setOpenSection(openSection === 3 ? null : 3)}
             >
+                  {/* Offers & rewards — coupon, referral reward and Grabian Points sit above
+                      the payment options; the totals they change show in the Order Summary. */}
+                  <div className="mb-4 border-b border-gray-100 pb-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
+                    {/* Gift card / promo code (Amazon-style) */}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Plus size={18} className="shrink-0 text-gray-400" />
+                        <label className="text-sm font-bold text-gray-900">
+                          <TranslatedText>Enter a gift card or promotional code</TranslatedText>
+                        </label>
+                      </div>
+                      {!coupon && referralRewardId ? (
+                        <p className="mt-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                          <TranslatedText>Remove your referral discount to use a coupon.</TranslatedText>
+                        </p>
+                      ) : (
+                        <>
+                          <div className="mt-2 flex items-center gap-2">
+                            <input
+                              type="text"
+                              className="flex-1 rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-100"
+                              placeholder="Enter code"
+                              value={coupon ? coupon.code : couponInput}
+                              onChange={(e) => setCouponInput(e.target.value)}
+                              disabled={!!coupon}
+                            />
+                            {!coupon ? (
+                              <button
+                                type="button"
+                                className="rounded-full border border-gray-300 px-6 py-2.5 text-sm font-semibold text-gray-800 transition hover:bg-gray-50 disabled:opacity-50"
+                                onClick={handleApplyCoupon}
+                                disabled={couponLoading || !couponInput}
+                              >
+                                {couponLoading ? <TranslatedText>Applying...</TranslatedText> : <TranslatedText>Apply</TranslatedText>}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="rounded-full border border-red-300 px-6 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                                onClick={() => {
+                                  setCoupon(null)
+                                  setCouponDiscount(0)
+                                  setCouponInput("")
+                                  setCouponError("")
+                                }}
+                              >
+                                <TranslatedText>Remove</TranslatedText>
+                              </button>
+                            )}
+                          </div>
+                          {couponError && <div className="mt-1 text-xs text-red-500">{couponError}</div>}
+                          <button
+                            type="button"
+                            onClick={handleOpenCouponsModal}
+                            className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-lime-700 hover:underline"
+                          >
+                            <Ticket size={16} />
+                            <TranslatedText>Available Coupons</TranslatedText>
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Grabian Points — sits beside the coupon in the second column */}
+                    {loyaltyEnabled && (
+                      <LoyaltyRedeemPanel
+                        eligibleAmountAed={loyaltyEligibleAmount}
+                        appliedPoints={loyaltyPointsToRedeem}
+                        onChange={applyLoyaltyRedemption}
+                        formatPrice={formatPrice}
+                      />
+                    )}
+                    </div>
+
+                    {/* Referral reward (full width) -- only one discount at a time, hidden while a coupon is applied. */}
+                    {referralEnabled && !coupon && (
+                      <div className="mt-4">
+                        <ReferralRewardCheckbox
+                          eligibleAmountAed={referralEligibleAmount}
+                          selectedRewardId={referralRewardId}
+                          onApply={applyReferralReward}
+                          onClear={clearReferralReward}
+                          formatPrice={formatPrice}
+                        />
+                      </div>
+                    )}
+                  </div>
+
                   <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white">
                     {PAYMENT_METHODS.filter(method => allowedPaymentMethods.includes(method.id)).map((method) => {
                       const isSelected = selectedPaymentMethod === method.id;
@@ -2204,7 +2422,7 @@ const Checkout = () => {
                         >
                           {/* Header row */}
                           <div
-                            className={`flex items-center justify-between p-4 cursor-pointer select-none ${
+                            className={`flex items-center justify-between px-4 py-2.5 cursor-pointer select-none ${
                               isSelected ? "bg-[#f4f8ff]/50" : "hover:bg-gray-50/50"
                             }`}
                             onClick={() => handlePaymentMethodSelect(method.id)}
@@ -2220,7 +2438,7 @@ const Checkout = () => {
                                   <div className="w-5 h-5 rounded-full border-2 border-gray-300 bg-white" />
                                 )}
                               </div>
-                              <span className="font-semibold text-gray-900 text-sm sm:text-base">
+                              <span className="font-semibold text-gray-900 text-sm">
                                 <TranslatedText>{method.name}</TranslatedText>
                               </span>
                             </div>
@@ -2233,7 +2451,7 @@ const Checkout = () => {
 
                           {/* Expandable redirect message */}
                           {isSelected && (
-                            <div className="bg-gray-50 border-t border-gray-200 px-12 py-4">
+                            <div className="bg-gray-50 border-t border-gray-200 px-10 py-3">
                               <p className="text-sm font-medium text-gray-700">
                                 <TranslatedText>{method.description}</TranslatedText>
                               </p>
@@ -2259,74 +2477,142 @@ const Checkout = () => {
                     })}
                   </div>
             </ReviewSection>
-          </div>
 
-          {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1 mt-4">
-            <div className="rounded-lg border border-gray-200 shadow-sm p-4 sticky top-4">
-              <div className="flex items-center mb-6">
-                <div className="bg-lime-100 p-2 rounded-full">
-                  <Truck className="h-8 w-8 text-lime-600" />
-                </div>
-                <div className="ml-3">
-                  <h2 className="text-lg font-bold text-black"><TranslatedText>Order Summary</TranslatedText></h2>
-                  <p className="text-sm text-black"><TranslatedText>Review your order</TranslatedText></p>
-                </div>
+            {/* Review items — the products in this order, with quantity controls. */}
+            <section className="rounded-lg border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-100 px-4 py-2.5 sm:px-5">
+                <h2 className="text-sm font-bold text-gray-900">
+                  <TranslatedText>Review your items</TranslatedText>
+                </h2>
               </div>
-
-              <div className="space-y-3 mb-6">
-                {itemsToShow.map((item) => (
-                  <div key={item._id} className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <div className="flex items-center">
-                      <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
+              <div className="divide-y divide-gray-100">
+                {regularCartItems.map((item) => {
+                  const atMax = item.maxPurchaseQty && item.quantity >= item.maxPurchaseQty
+                  const pd = getItemPricingDetails(item)
+                  return (
+                    <div key={item._id} className="flex gap-3 px-4 py-3 sm:px-5">
+                      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-white">
                         <img
-                          src={getFullImageUrl(item.image) || "/placeholder.svg?height=48&width=48"}
+                          src={getFullImageUrl(item.image) || "/placeholder.svg?height=64&width=64"}
                           alt={item.name}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain"
                         />
                       </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-black truncate max-w-32"><TranslatedText text={item.name} /></h3>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-900 line-clamp-2">
+                          <TranslatedText text={item.name} />
+                        </p>
                         {item.selectedColorData && (
-                          <p className="text-xs text-purple-600 font-medium">
+                          <p className="mt-0.5 text-xs text-purple-600 font-medium">
                             <TranslatedText>Color:</TranslatedText> {item.selectedColorData.color}
                           </p>
                         )}
                         {item.selectedDosData && (
-                          <p className="text-xs text-blue-600 font-medium">
+                          <p className="mt-0.5 text-xs text-blue-600 font-medium">
                             <TranslatedText>OS:</TranslatedText> {item.selectedDosData.dosType}
                           </p>
                         )}
-                        <p className="text-xs text-black"><TranslatedText>Qty:</TranslatedText> {item.quantity}</p>
+
+                        {/* Per-item price breakdown */}
+                        <div className="mt-1.5 max-w-[16rem] space-y-0.5 text-xs">
+                          {pd.hasDiscount && (
+                            <div className="flex justify-between gap-6">
+                              <span className="text-gray-500"><TranslatedText>Sale Price</TranslatedText></span>
+                              <span className="text-gray-400 line-through">{formatPrice(pd.basePrice * item.quantity)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between gap-6">
+                            <span className="text-gray-500"><TranslatedText>Our Offer Price</TranslatedText></span>
+                            <span className="font-semibold text-red-600">{formatPrice(pd.currentPrice * item.quantity)}</span>
+                          </div>
+                          {pd.hasDiscount && (
+                            <div className="flex justify-between gap-6 text-green-600">
+                              <span><TranslatedText>You Save</TranslatedText></span>
+                              <span className="font-semibold">- {formatPrice(pd.savings * item.quantity)}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Quantity controls */}
+                        <div className="mt-2 inline-flex items-center rounded-full border border-gray-300">
+                          <button
+                            type="button"
+                            aria-label={item.quantity > 1 ? "Decrease quantity" : "Remove item"}
+                            onClick={() =>
+                              item.quantity > 1 ? updateQuantity(item._id, item.quantity - 1) : removeFromCart(item._id)
+                            }
+                            className="grid h-7 w-8 place-items-center text-gray-600 hover:text-gray-900"
+                          >
+                            {item.quantity > 1 ? <Minus size={14} /> : <Trash2 size={14} />}
+                          </button>
+                          <span className="min-w-[1.75rem] text-center text-sm font-semibold text-gray-900">
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Increase quantity"
+                            onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                            disabled={atMax}
+                            className="grid h-7 w-8 place-items-center text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <span className="text-sm font-medium text-black">
-                      {formatPrice(getItemPrice(item) * item.quantity)}
-                    </span>
-                  </div>
-                ))}
-
-                {/* Show/Hide More Items Button */}
-                {cartItems.length > 2 && (
-                  <button
-                    onClick={toggleShowAllItems}
-                    className="w-full text-center text-sm text-black  py-2 flex items-center justify-center gap-1 transition-colors"
-                  >
-                    {showAllItems ? (
-                      <>
-                        <ChevronUp className="h-4 w-4" />
-                        <TranslatedText>Show less</TranslatedText>
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="h-4 w-4" />+{remainingItemsCount} <TranslatedText>more items</TranslatedText>
-                      </>
-                    )}
-                  </button>
-                )}
+                  )
+                })}
               </div>
 
-              <div className="space-y-3">
+              {/* Place order footer (Amazon-style) at the end of the items list */}
+              <div className="border-t border-gray-100 px-4 py-4 sm:px-5">
+                <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-center sm:justify-between">
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-gray-900">
+                      <TranslatedText>Order total</TranslatedText> {formatPrice(finalTotal)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      <TranslatedText>By placing your order, you agree to our Terms &amp; Conditions.</TranslatedText>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePlaceOrder}
+                    disabled={loading || !selectedPaymentMethod || deliveryBlocked}
+                    className="rounded-lg bg-lime-500 px-6 py-2.5 text-sm font-bold text-white hover:bg-lime-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <img src="/g.png" alt="Loading..." style={{ width: 20, height: 20, animation: "bounce 1s infinite" }} />
+                        <TranslatedText>Processing...</TranslatedText>
+                      </>
+                    ) : deliveryBlocked ? (
+                      <TranslatedText>Order too small to deliver</TranslatedText>
+                    ) : !selectedPaymentMethod ? (
+                      <TranslatedText>Select a payment method</TranslatedText>
+                    ) : (
+                      <TranslatedText>Place your order</TranslatedText>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* Order Summary Sidebar */}
+          <div className="lg:col-span-1 mt-4">
+            <div className="rounded-lg border border-gray-200 shadow-sm p-4 lg:sticky lg:top-[130px] text-sm">
+              <div className="flex items-center mb-4">
+                <div className="bg-lime-100 p-1.5 rounded-full">
+                  <Truck className="h-5 w-5 text-lime-600" />
+                </div>
+                <div className="ml-2.5">
+                  <h2 className="text-base font-bold text-black"><TranslatedText>Your Invoice</TranslatedText></h2>
+                  <p className="text-xs text-gray-500"><TranslatedText>Review your order</TranslatedText></p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 {/* Detailed Price Breakdown */}
                 {cartTotals.totalBasePrice > cartTotals.totalOfferPrice && (
                   <>
@@ -2434,97 +2720,30 @@ const Checkout = () => {
                   <span className="text-gray-600">✓</span>
                 </div>
 
-                {/* Coupon Section */}
-                <div className="space-y-2">
-                  {!coupon && referralRewardId ? (
-                    // Only one discount at a time: a referral reward is applied, so the
-                    // coupon field is blocked until that reward is removed.
-                    <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500">
-                      <TranslatedText>Remove your referral discount to use a coupon.</TranslatedText>
-                    </p>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          className="flex-1 border rounded-lg px-3 py-2 text-sm"
-                          placeholder="Enter coupon code"
-                          value={coupon ? coupon.code : couponInput}
-                          onChange={(e) => setCouponInput(e.target.value)}
-                          disabled={!!coupon}
-                        />
-                        {!coupon ? (
-                          <button
-                            className="bg-lime-500 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
-                            onClick={handleApplyCoupon}
-                            disabled={couponLoading || !couponInput}
-                          >
-                            {couponLoading ? <TranslatedText>Applying...</TranslatedText> : <TranslatedText>Apply</TranslatedText>}
-                          </button>
-                        ) : (
-                          <button
-                            className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm"
-                            onClick={() => {
-                              setCoupon(null)
-                              setCouponDiscount(0)
-                              setCouponInput("")
-                              setCouponError("")
-                            }}
-                          >
-                            <TranslatedText>Remove</TranslatedText>
-                          </button>
-                        )}
-                      </div>
-                      {couponError && <div className="text-red-500 text-xs">{couponError}</div>}
-                      {coupon && (
-                        <div className="flex justify-between text-sm text-green-600">
-                          <span><TranslatedText>Coupon:</TranslatedText> {coupon.code}</span>
-                          <span>- {formatPrice(couponDiscount)}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {/* Referral discount -- only one discount at a time, hidden while a coupon is applied. */}
-                {referralEnabled && !coupon && (
-                  <div className="mb-3">
-                  <ReferralRewardCheckbox
-                    eligibleAmountAed={referralEligibleAmount}
-                    selectedRewardId={referralRewardId}
-                    onApply={applyReferralReward}
-                    onClear={clearReferralReward}
-                    formatPrice={formatPrice}
-                  />
+                {/* Discounts applied here as read-only rows -- the coupon field, referral
+                    reward and Grabian Points controls live in the Payment method step. */}
+                {coupon && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span><TranslatedText>Coupon:</TranslatedText> {coupon.code}</span>
+                    <span>- {formatPrice(couponDiscount)}</span>
                   </div>
                 )}
 
                 {appliedReferralDiscount > 0 && (
-                  <div className="flex justify-between text-sm text-green-600 mb-2">
+                  <div className="flex justify-between text-sm text-green-600">
                     <span><TranslatedText>Referral discount</TranslatedText></span>
                     <span>- {formatPrice(appliedReferralDiscount)}</span>
                   </div>
                 )}
 
-                {loyaltyEnabled && (
-                  <div className="mb-3">
-                    <LoyaltyRedeemPanel
-                      eligibleAmountAed={loyaltyEligibleAmount}
-                      appliedPoints={loyaltyPointsToRedeem}
-                      onChange={applyLoyaltyRedemption}
-                      formatPrice={formatPrice}
-                    />
-                  </div>
-                )}
-
                 {appliedLoyaltyDiscount > 0 && (
-                  <div className="flex justify-between text-sm text-green-600 mb-2">
+                  <div className="flex justify-between text-sm text-green-600">
                     <span><TranslatedText>Points applied</TranslatedText></span>
                     <span>- {formatPrice(appliedLoyaltyDiscount)}</span>
                   </div>
                 )}
 
-                <div className="border-t pt-3 flex justify-between font-bold text-lg">
+                <div className="border-t pt-3 flex justify-between font-bold text-base">
                   <span className="text-black"><TranslatedText>Total Amount</TranslatedText></span>
                   <span className="text-black">{formatPrice(finalTotal)}</span>
                 </div>
@@ -2543,7 +2762,7 @@ const Checkout = () => {
               <button
                 onClick={handlePlaceOrder}
                 disabled={loading || !selectedPaymentMethod || deliveryBlocked}
-                className="mt-6 w-full bg-lime-500 hover:bg-lime-600 text-white font-bold rounded-lg px-6 py-3 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="mt-4 w-full bg-lime-500 hover:bg-lime-600 text-white font-bold rounded-lg px-6 py-2.5 text-sm disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -2778,6 +2997,110 @@ const Checkout = () => {
             </Dialog.Panel>
           </div>
         </Dialog>
+
+        {/* Available Coupons modal */}
+        {showCouponsModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
+            onClick={handleCloseCouponsModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="checkout-coupons-title"
+          >
+            <div
+              className="bg-white w-full sm:max-w-2xl max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <h2 id="checkout-coupons-title" className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Gift size={18} className="text-amber-500" />
+                  <TranslatedText>Available Coupons</TranslatedText>
+                </h2>
+                <button
+                  type="button"
+                  className="p-2 -mr-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  onClick={handleCloseCouponsModal}
+                  aria-label="Close"
+                >
+                  <X size={22} />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto px-5 py-4">
+                {loadingCoupons ? (
+                  <div className="flex justify-center items-center h-32">
+                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500"></div>
+                  </div>
+                ) : couponModalError ? (
+                  <div className="text-red-600 text-center py-8">{couponModalError}</div>
+                ) : publicCoupons.length === 0 ? (
+                  <div className="text-gray-500 text-center py-8">
+                    <TranslatedText>No coupons available at the moment.</TranslatedText>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {publicCoupons.map((item, idx) => {
+                      const color = COUPON_COLORS[idx % COUPON_COLORS.length]
+                      const categories =
+                        item.categories && item.categories.length > 0
+                          ? item.categories.map((cat) => cat.name || cat).join(", ")
+                          : "All Categories"
+                      const isApplied = coupon?.code === item.code
+                      return (
+                        <div key={item._id || idx} className={`flex rounded-xl border ${color.border} overflow-hidden`}>
+                          {/* Stub */}
+                          <div className={`flex flex-col items-center justify-center px-3 py-3 ${color.stub} min-w-[84px] text-center`}>
+                            <span className="text-[10px] font-semibold tracking-widest text-gray-700">GIFT COUPON</span>
+                            <span className={`mt-1 text-xl font-bold leading-none ${color.text} flex items-center`}>
+                              {item.discountType === "percentage" && <Percent className="w-4 h-4 mr-0.5" />}
+                              {item.discountType === "percentage" ? `${item.discountValue}%` : `AED ${item.discountValue}`}
+                            </span>
+                            <span className="mt-1 text-[10px] font-semibold tracking-widest text-gray-700">OFF</span>
+                          </div>
+                          {/* Body */}
+                          <div className={`flex-1 min-w-0 ${color.main} px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3`}>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[11px] font-semibold tracking-widest text-gray-500">PROMO CODE</p>
+                              <div className="mt-1 flex items-center gap-2 flex-wrap">
+                                <span className={`inline-block bg-white border ${color.border} rounded-md px-2.5 py-1 font-mono text-sm font-bold ${color.text} tracking-widest`}>
+                                  {item.code}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                                  onClick={() => handleCopyCoupon(item.code, item._id)}
+                                >
+                                  {couponCopied === item._id ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+                                  {couponCopied === item._id ? "Copied!" : "Copy"}
+                                </button>
+                              </div>
+                              {item.description && <p className="mt-1.5 text-xs text-gray-700">{item.description}</p>}
+                              <p className="mt-1 text-[11px] text-gray-500">
+                                Min: AED {item.minOrderAmount || 0} · Valid: {new Date(item.validFrom).toLocaleDateString()} -{" "}
+                                {new Date(item.validUntil).toLocaleDateString()}
+                              </p>
+                              <p className="text-[11px] font-semibold text-gray-700">{categories}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleUseCoupon(item.code)}
+                              disabled={couponLoading || isApplied}
+                              className="self-start sm:self-center whitespace-nowrap rounded-lg bg-gray-900 px-4 py-2 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isApplied ? <TranslatedText>Applied</TranslatedText> : <TranslatedText>Apply</TranslatedText>}
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+                {couponError && showCouponsModal && <p className="mt-3 text-xs text-red-600 text-center">{couponError}</p>}
+              </div>
+            </div>
+          </div>
+        )}
+
         <PromoPopup pageKey="checkout" delayMs={3000} />
       </div>
     </div>
