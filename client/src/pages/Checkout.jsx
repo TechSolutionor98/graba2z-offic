@@ -10,9 +10,10 @@ import { useAuth } from "../context/AuthContext"
 import { useLanguage } from "../context/LanguageContext"
 import { useCurrency } from "../context/CurrencyContext"
 import { useLoyalty } from "../context/LoyaltyContext"
-import LoyaltyRedeemPanel from "../components/LoyaltyRedeemPanel"
+import LoyaltyRedeemModal from "../components/LoyaltyRedeemModal"
+import GrabCoin from "../components/GrabCoin"
 import { useReferral } from "../context/ReferralContext"
-import ReferralRewardCheckbox from "../components/ReferralRewardCheckbox"
+import ReferralRewardModal from "../components/ReferralRewardModal"
 import { getProvincesForCountry } from "../utils/countryStates"
 import AddressAutocomplete from "../components/AddressAutocomplete"
 import { resolveDeliveryCharge, selectDeliveryMethod, describeDeliveryBlock } from "../utils/deliveryCharge"
@@ -317,6 +318,10 @@ const Checkout = () => {
   const [showAddressList, setShowAddressList] = useState(false)
   // The item pending removal from the review list, shown in a confirmation modal.
   const [itemToDelete, setItemToDelete] = useState(null)
+  // "Use Grabian Points" modal, opened from the payment section.
+  const [showPointsModal, setShowPointsModal] = useState(false)
+  // "Use Referral Discount" modal, opened from the payment section.
+  const [showReferralModal, setShowReferralModal] = useState(false)
   const [showAllItems, setShowAllItems] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("")
   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(["card", "cod"])
@@ -2332,9 +2337,8 @@ const Checkout = () => {
                   {/* Offers & rewards — coupon, referral reward and Grabian Points sit above
                       the payment options; the totals they change show in the Order Summary. */}
                   <div className="mb-4 border-b border-gray-100 pb-4">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
-                    {/* Gift card / promo code (Amazon-style) */}
-                    <div>
+                    {/* Gift card / promo code (Amazon-style) — kept to half width. */}
+                    <div className="md:w-1/2">
                       <div className="flex items-center gap-2">
                         <Plus size={18} className="shrink-0 text-gray-400" />
                         <label className="text-sm font-bold text-gray-900">
@@ -2381,40 +2385,68 @@ const Checkout = () => {
                             )}
                           </div>
                           {couponError && <div className="mt-1 text-xs text-red-500">{couponError}</div>}
-                          <button
-                            type="button"
-                            onClick={handleOpenCouponsModal}
-                            className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-lime-700 hover:underline"
-                          >
-                            <Ticket size={16} />
-                            <TranslatedText>Available Coupons</TranslatedText>
-                          </button>
                         </>
                       )}
                     </div>
 
-                    {/* Grabian Points — sits beside the coupon in the second column */}
-                    {loyaltyEnabled && (
-                      <LoyaltyRedeemPanel
-                        eligibleAmountAed={loyaltyEligibleAmount}
-                        appliedPoints={loyaltyPointsToRedeem}
-                        onChange={applyLoyaltyRedemption}
-                        formatPrice={formatPrice}
-                      />
-                    )}
+                    {/* Quick links: available coupons + use Grabian Points (opens a modal). */}
+                    <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+                      {!(!coupon && referralRewardId) && (
+                        <button
+                          type="button"
+                          onClick={handleOpenCouponsModal}
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-lime-700 hover:underline"
+                        >
+                          <Ticket size={16} />
+                          <TranslatedText>Available Coupons</TranslatedText>
+                        </button>
+                      )}
+                      {loyaltyEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => setShowPointsModal(true)}
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-700 hover:underline"
+                        >
+                          <GrabCoin size={16} />
+                          <TranslatedText>Use Grabian Points</TranslatedText>
+                          {loyaltyPointsToRedeem > 0 && (
+                            <span className="ml-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
+                              − {formatPrice(appliedLoyaltyDiscount)}
+                            </span>
+                          )}
+                        </button>
+                      )}
+                      {/* Referral discount — one discount at a time, so hidden while a coupon is applied. */}
+                      {referralEnabled && !coupon && (
+                        <button
+                          type="button"
+                          onClick={() => setShowReferralModal(true)}
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-lime-700 hover:underline"
+                        >
+                          <Gift size={16} />
+                          <TranslatedText>Use Referral Discount</TranslatedText>
+                          {referralRewardId && appliedReferralDiscount > 0 && (
+                            <span className="ml-1 rounded-full bg-lime-100 px-2 py-0.5 text-xs font-bold text-lime-700">
+                              − {formatPrice(appliedReferralDiscount)}
+                            </span>
+                          )}
+                        </button>
+                      )}
                     </div>
 
-                    {/* Referral reward (full width) -- only one discount at a time, hidden while a coupon is applied. */}
+                    {/* Sync + apply referral rewards. Mounted whenever a referral discount is
+                        allowed (no coupon) so a basket change keeps the value correct; the link
+                        above opens it. */}
                     {referralEnabled && !coupon && (
-                      <div className="mt-4">
-                        <ReferralRewardCheckbox
-                          eligibleAmountAed={referralEligibleAmount}
-                          selectedRewardId={referralRewardId}
-                          onApply={applyReferralReward}
-                          onClear={clearReferralReward}
-                          formatPrice={formatPrice}
-                        />
-                      </div>
+                      <ReferralRewardModal
+                        open={showReferralModal}
+                        onClose={() => setShowReferralModal(false)}
+                        eligibleAmountAed={referralEligibleAmount}
+                        selectedRewardId={referralRewardId}
+                        onApply={applyReferralReward}
+                        onClear={clearReferralReward}
+                        formatPrice={formatPrice}
+                      />
                     )}
                   </div>
 
@@ -3112,6 +3144,16 @@ const Checkout = () => {
             </Dialog.Panel>
           </div>
         </Dialog>
+
+        {/* Use Grabian Points modal */}
+        <LoyaltyRedeemModal
+          open={showPointsModal}
+          onClose={() => setShowPointsModal(false)}
+          eligibleAmountAed={loyaltyEligibleAmount}
+          appliedPoints={loyaltyPointsToRedeem}
+          onChange={applyLoyaltyRedemption}
+          formatPrice={formatPrice}
+        />
 
         {/* Available Coupons modal */}
         {showCouponsModal && (
