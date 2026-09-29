@@ -315,6 +315,8 @@ const Checkout = () => {
   // On the delivery step the saved-address grid stays hidden -- only the chosen address
   // shows -- until the shopper taps "Change" to pick another.
   const [showAddressList, setShowAddressList] = useState(false)
+  // The item pending removal from the review list, shown in a confirmation modal.
+  const [itemToDelete, setItemToDelete] = useState(null)
   const [showAllItems, setShowAllItems] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("")
   const [allowedPaymentMethods, setAllowedPaymentMethods] = useState(["card", "cod"])
@@ -1677,6 +1679,14 @@ const Checkout = () => {
 
           const defaultAddr = userAddresses.find((a) => a.isDefault) || userAddresses[0]
 
+          // Returning shopper who already has a usable delivery address skips straight
+          // to the payment step; a new shopper stays on step 1 to enter one. Only jump
+          // if the shopper hasn't already moved off the default section themselves.
+          const hasUsableAddress = userAddresses.some((a) => a.address && a.city)
+          if (hasUsableAddress) {
+            setOpenSection((cur) => (cur === 1 ? 3 : cur))
+          }
+
           // Fill formData and pickupDetails.phone
           setFormData((prev) => ({
             ...prev,
@@ -2294,7 +2304,7 @@ const Checkout = () => {
             {/* 2 — Order notes */}
             <ReviewSection
               number="2"
-              title={<TranslatedText>Order notes (optional)</TranslatedText>}
+              title={<TranslatedText>Delivery Notes / Delivery Instruction</TranslatedText>}
               summary={notesSummary}
               open={openSection === 2}
               onToggle={() => setOpenSection(openSection === 2 ? null : 2)}
@@ -2485,12 +2495,24 @@ const Checkout = () => {
                   <TranslatedText>Review your items</TranslatedText>
                 </h2>
               </div>
-              <div className="divide-y divide-gray-100">
+              <div className="flex flex-col lg:flex-row">
+              <div className="divide-y divide-gray-100 lg:flex-1 lg:min-w-0">
                 {regularCartItems.map((item) => {
                   const atMax = item.maxPurchaseQty && item.quantity >= item.maxPurchaseQty
                   const pd = getItemPricingDetails(item)
                   return (
-                    <div key={item._id} className="flex gap-3 px-4 py-3 sm:px-5">
+                    <div key={item._id} className="relative flex gap-3 px-4 py-3 sm:px-5">
+                      {/* Delete lives on its own in the top-right corner, behind a
+                          confirmation, so it can never be hit by tapping the minus. */}
+                      <button
+                        type="button"
+                        aria-label="Delete item"
+                        title="Delete item"
+                        onClick={() => setItemToDelete(item)}
+                        className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-600 sm:right-4"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                       <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-white">
                         <img
                           src={getFullImageUrl(item.image) || "/placeholder.svg?height=64&width=64"}
@@ -2499,7 +2521,7 @@ const Checkout = () => {
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-gray-900 line-clamp-2">
+                        <p className="pr-8 text-sm font-semibold text-gray-900 line-clamp-2">
                           <TranslatedText text={item.name} />
                         </p>
                         {item.selectedColorData && (
@@ -2533,17 +2555,17 @@ const Checkout = () => {
                           )}
                         </div>
 
-                        {/* Quantity controls */}
+                        {/* Quantity controls — minus only lowers quantity; at 1 it is
+                            disabled, deletion is the separate corner button. */}
                         <div className="mt-2 inline-flex items-center rounded-full border border-gray-300">
                           <button
                             type="button"
-                            aria-label={item.quantity > 1 ? "Decrease quantity" : "Remove item"}
-                            onClick={() =>
-                              item.quantity > 1 ? updateQuantity(item._id, item.quantity - 1) : removeFromCart(item._id)
-                            }
-                            className="grid h-7 w-8 place-items-center text-gray-600 hover:text-gray-900"
+                            aria-label="Decrease quantity"
+                            onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                            className="grid h-7 w-8 place-items-center text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
-                            {item.quantity > 1 ? <Minus size={14} /> : <Trash2 size={14} />}
+                            <Minus size={14} />
                           </button>
                           <span className="min-w-[1.75rem] text-center text-sm font-semibold text-gray-900">
                             {item.quantity}
@@ -2562,6 +2584,54 @@ const Checkout = () => {
                     </div>
                   )
                 })}
+              </div>
+
+              {/* Delivery options — sits to the right of the products (Amazon-style). */}
+              {deliveryType === "home" && hasAdminDeliveryCharges && (
+                <div className="border-t border-gray-100 p-4 sm:p-5 lg:border-t-0 lg:border-l lg:w-72 lg:flex-shrink-0">
+                  <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+                    <Truck size={15} className="text-gray-500" />
+                    <TranslatedText>Delivery Options</TranslatedText>
+                  </label>
+                  <div className="space-y-2">
+                    {deliveryOptions.map((opt) => {
+                      const quote = resolveDeliveryCharge(opt, deliveryGoodsSubtotal)
+                      const isSelected = (selectedDelivery?._id || fallbackDelivery?._id) === opt._id
+                      const priceLabel = !quote.available
+                        ? `min ${formatPrice(quote.minRequired)}`
+                        : quote.isFree
+                          ? "Free"
+                          : formatPrice(quote.charge)
+                      return (
+                        <label
+                          key={opt._id}
+                          className={`flex cursor-pointer items-start gap-2 rounded-lg border p-2.5 text-sm ${
+                            isSelected ? "border-lime-500 bg-lime-50" : "border-gray-200 hover:border-gray-300"
+                          } ${!quote.available ? "cursor-not-allowed opacity-50" : ""}`}
+                        >
+                          <input
+                            type="radio"
+                            name="checkoutDeliveryOption"
+                            className="mt-0.5 accent-lime-600"
+                            checked={isSelected}
+                            disabled={!quote.available}
+                            onChange={() => setSelectedDelivery(opt)}
+                          />
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-medium text-gray-900">{opt.name}</span>
+                            {opt.deliveryTime && (
+                              <span className="block text-xs text-gray-500">{opt.deliveryTime}</span>
+                            )}
+                          </span>
+                          <span className={`whitespace-nowrap font-semibold ${quote.isFree ? "text-green-600" : "text-gray-900"}`}>
+                            {priceLabel}
+                          </span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               </div>
 
               {/* Place order footer (Amazon-style) at the end of the items list */}
@@ -2994,6 +3064,51 @@ const Checkout = () => {
                   </button>
                 </div>
               </form>
+            </Dialog.Panel>
+          </div>
+        </Dialog>
+
+        {/* Delete-item confirmation */}
+        <Dialog as={Fragment} open={Boolean(itemToDelete)} onClose={() => setItemToDelete(null)}>
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
+            <Dialog.Panel className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl bg-white p-5 shadow-2xl">
+              <div className="flex items-start gap-3">
+                <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-red-50 text-red-600">
+                  <Trash2 size={18} />
+                </div>
+                <div className="min-w-0">
+                  <Dialog.Title className="text-base font-bold text-gray-900">
+                    <TranslatedText>Remove item?</TranslatedText>
+                  </Dialog.Title>
+                  <p className="mt-1 text-sm text-gray-600">
+                    <TranslatedText>Are you sure you want to delete this product from your order?</TranslatedText>
+                  </p>
+                  {itemToDelete && (
+                    <p className="mt-2 line-clamp-2 text-xs font-medium text-gray-500">
+                      <TranslatedText text={itemToDelete.name} />
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setItemToDelete(null)}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                  <TranslatedText>Cancel</TranslatedText>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (itemToDelete) removeFromCart(itemToDelete._id)
+                    setItemToDelete(null)
+                  }}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                >
+                  <TranslatedText>Delete</TranslatedText>
+                </button>
+              </div>
             </Dialog.Panel>
           </div>
         </Dialog>

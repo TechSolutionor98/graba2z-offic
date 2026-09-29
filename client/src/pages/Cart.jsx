@@ -31,7 +31,7 @@ import TranslatedText from "../components/TranslatedText"
 import PromoPopup from "../components/PromoPopup"
 
 import config from "../config/config"
-import { resolveDeliveryCharge, selectDeliveryMethod, describeDeliveryBlock } from "../utils/deliveryCharge"
+import { selectDeliveryMethod, describeDeliveryBlock } from "../utils/deliveryCharge"
 import { useLoyalty } from "../context/LoyaltyContext"
 import LoyaltyEarnBadge from "../components/LoyaltyEarnBadge"
 import LoyaltyRedeemPanel from "../components/LoyaltyRedeemPanel"
@@ -777,37 +777,8 @@ const Cart = () => {
                     />
                   )}
 
-                  {/* Delivery options */}
-                  {deliveryOptions.length > 0 && (
-                    <div className="pt-1">
-                      <label className="mb-1.5 flex items-center gap-1.5 text-sm text-gray-600">
-                        <Truck size={15} className="text-gray-400" />
-                        <TranslatedText>Delivery Options</TranslatedText>
-                      </label>
-                      <select
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-lime-500 focus:outline-none focus:ring-2 focus:ring-lime-200"
-                        value={selectedDelivery?._id || deliveryOptions[0]?._id || ""}
-                        onChange={(e) => {
-                          const found = deliveryOptions.find((opt) => opt._id === e.target.value)
-                          setSelectedDelivery(found)
-                        }}
-                      >
-                        {deliveryOptions.map((opt) => {
-                          const quote = resolveDeliveryCharge(opt, deliveryGoodsSubtotal)
-                          const price = !quote.available
-                            ? `min ${formatPrice(quote.minRequired)}`
-                            : quote.isFree
-                              ? "Free"
-                              : formatPrice(quote.charge)
-                          return (
-                            <option key={opt._id} value={opt._id} disabled={!quote.available}>
-                              {opt.name} ({price}) - {opt.deliveryTime}
-                            </option>
-                          )
-                        })}
-                      </select>
-                    </div>
-                  )}
+                  {/* Delivery method is chosen on the checkout page (beside the products);
+                      the cart only shows the resulting shipping line below. */}
                   {hasAdminDeliveryCharges && !deliveryBlocked && (
                     <SummaryRow
                       label={
