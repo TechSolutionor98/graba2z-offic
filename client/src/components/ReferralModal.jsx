@@ -15,9 +15,19 @@ import TranslatedText from "./TranslatedText"
  * page on their profile.
  */
 const ReferralModal = ({ open, onClose }) => {
-  const { isEnabled } = useReferral()
+  const { isEnabled, summary } = useReferral()
   const { isAuthenticated } = useAuth()
   const { getLocalizedPath } = useLanguage()
+
+  // Headline referral numbers from the customer's summary.
+  const invites = summary?.invites || []
+  const rewards = summary?.rewards || []
+  const stats = {
+    invited: invites.length,
+    pending: invites.filter((i) => i.status === "pending").length,
+    successful: invites.filter((i) => i.status === "qualified").length,
+    rewards: rewards.filter((r) => r.role === "referrer").length,
+  }
 
   // Escape closes, and the body must not scroll behind the modal.
   useEffect(() => {
@@ -44,7 +54,7 @@ const ReferralModal = ({ open, onClose }) => {
       onClick={onClose}
     >
       <div
-        className="relative my-8 w-full max-w-lg rounded-2xl bg-white shadow-2xl"
+        className="relative my-6 w-full max-w-md rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -56,17 +66,36 @@ const ReferralModal = ({ open, onClose }) => {
           <X size={20} />
         </button>
 
-        <div className="p-4 sm:p-6">
-          <ReferralOfferCard onNavigate={onClose} />
+        <div className="p-3 sm:p-4">
+          <ReferralOfferCard onNavigate={onClose} showHero descriptionAtBottom />
 
           {isAuthenticated && (
-            <Link
-              to={getLocalizedPath("/profile")}
-              onClick={onClose}
-              className="mt-4 block w-full rounded-xl border border-gray-200 py-2.5 text-center text-sm font-bold text-gray-700 transition hover:bg-gray-50"
-            >
-              <TranslatedText>See invites &amp; rewards</TranslatedText>
-            </Link>
+            <>
+              {/* Headline referral numbers */}
+              <div className="mt-3 grid grid-cols-4 divide-x divide-gray-200 rounded-xl border border-gray-200 bg-gray-50 text-center">
+                {[
+                  { label: "Invited", value: stats.invited },
+                  { label: "Pending", value: stats.pending },
+                  { label: "Successful", value: stats.successful },
+                  { label: "Rewards", value: stats.rewards },
+                ].map((s) => (
+                  <div key={s.label} className="px-1 py-2.5">
+                    <p className="text-lg font-extrabold leading-none text-gray-900">{s.value}</p>
+                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                      <TranslatedText>{s.label}</TranslatedText>
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <Link
+                to={getLocalizedPath("/profile")}
+                onClick={onClose}
+                className="mt-3 block w-full rounded-xl border border-gray-200 py-2 text-center text-sm font-bold text-gray-700 transition hover:bg-gray-50"
+              >
+                <TranslatedText>See invites &amp; rewards</TranslatedText>
+              </Link>
+            </>
           )}
         </div>
       </div>
