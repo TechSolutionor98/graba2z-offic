@@ -2352,7 +2352,7 @@ const Checkout = () => {
                       <div className="flex items-center gap-2">
                         <Plus size={18} className="shrink-0 text-gray-400" />
                         <label className="text-sm font-bold text-gray-900">
-                          <TranslatedText>Enter a gift card or promotional code</TranslatedText>
+                          <TranslatedText>Enter coupon code</TranslatedText>
                         </label>
                       </div>
                       {blockCoupon ? (
