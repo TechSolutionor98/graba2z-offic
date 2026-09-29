@@ -1840,7 +1840,7 @@ const Checkout = () => {
                                   onClick={() => setShowAddressList(true)}
                                   className="text-sm font-semibold text-lime-700 hover:underline"
                                 >
-                                  <TranslatedText>Change</TranslatedText>
+                                  <TranslatedText>Change / Edit</TranslatedText>
                                 </button>
                               </div>
                               {(() => {

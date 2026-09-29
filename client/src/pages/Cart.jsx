@@ -736,7 +736,7 @@ const Cart = () => {
                   </h2>
                 </div>
 
-                <div className="px-5 py-4 space-y-3">
+                <div className="px-5 py-4 space-y-2">
                   {/* Price breakdown */}
                   {cartTotals.totalSavings > 0 ? (
                     <>
@@ -749,7 +749,7 @@ const Cart = () => {
                         value={<span className="text-red-600">{formatPrice(cartTotals.totalCurrentPrice)}</span>}
                       />
                       <SummaryRow label={<TranslatedText>Total Savings</TranslatedText>} value={`- ${formatPrice(cartTotals.totalSavings)}`} tone="text-green-600" />
-                      <div className="border-t border-gray-100 pt-3">
+                      <div className="border-t border-gray-100 pt-2">
                         <SummaryRow
                           label={
                             <>
@@ -841,7 +841,7 @@ const Cart = () => {
 
                   {/* Protection plans */}
                   {protectionItems.length > 0 && (
-                    <div className="border-t border-gray-100 pt-3">
+                    <div className="border-t border-gray-100 pt-2">
                       <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-900">
                         <Shield size={15} className="text-blue-600" />
                         <TranslatedText>Protection Plans</TranslatedText>
