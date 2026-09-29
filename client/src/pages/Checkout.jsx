@@ -518,6 +518,15 @@ const Checkout = () => {
   const loyaltyEligibleAmount = Math.max(0, referralEligibleAmount - appliedReferralDiscount)
   const appliedLoyaltyDiscount = Math.min(loyaltyDiscount, loyaltyEligibleAmount)
 
+  // Only ONE discount may be active at a time: coupon OR referral OR Grabian Points.
+  // Each control is blocked while another is applied.
+  const couponApplied = !!coupon
+  const referralApplied = !!referralRewardId
+  const pointsApplied = loyaltyPointsToRedeem > 0
+  const blockCoupon = !couponApplied && (referralApplied || pointsApplied)
+  const blockReferral = !referralApplied && (couponApplied || pointsApplied)
+  const blockPoints = !pointsApplied && (couponApplied || referralApplied)
+
   const finalTotal = Math.max(
     0,
     cartTotals.totalOfferPrice +
@@ -544,9 +553,10 @@ const Checkout = () => {
         code: trimmed,
         cartItems: cartApiItems,
       })
-      // A coupon and a referral reward can never apply together -- only one at a
-      // time. Applying a coupon drops any referral reward so the total never counts both.
+      // Only ONE discount at a time: coupon, referral OR Grabian Points. Applying a coupon
+      // drops any referral reward and any redeemed points so the total never counts two.
       clearReferralReward()
+      clearLoyaltyRedemption()
       setCoupon(data.coupon)
       setCouponDiscount(data.discountAmount)
       setCouponInput(trimmed)
@@ -2345,9 +2355,13 @@ const Checkout = () => {
                           <TranslatedText>Enter a gift card or promotional code</TranslatedText>
                         </label>
                       </div>
-                      {!coupon && referralRewardId ? (
+                      {blockCoupon ? (
                         <p className="mt-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500">
-                          <TranslatedText>Remove your referral discount to use a coupon.</TranslatedText>
+                          {pointsApplied ? (
+                            <TranslatedText>Remove your Grabian Points to use a coupon.</TranslatedText>
+                          ) : (
+                            <TranslatedText>Remove your referral discount to use a coupon.</TranslatedText>
+                          )}
                         </p>
                       ) : (
                         <>
@@ -2389,9 +2403,10 @@ const Checkout = () => {
                       )}
                     </div>
 
-                    {/* Quick links: available coupons + use Grabian Points (opens a modal). */}
+                    {/* Quick links: only ONE discount at a time — coupon, Grabian Points or
+                        referral. Each link is hidden/disabled while another is applied. */}
                     <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-                      {!(!coupon && referralRewardId) && (
+                      {!blockCoupon && (
                         <button
                           type="button"
                           onClick={handleOpenCouponsModal}
@@ -2401,7 +2416,7 @@ const Checkout = () => {
                           <TranslatedText>Available Coupons</TranslatedText>
                         </button>
                       )}
-                      {loyaltyEnabled && (
+                      {loyaltyEnabled && !blockPoints && (
                         <button
                           type="button"
                           onClick={() => setShowPointsModal(true)}
@@ -2416,8 +2431,8 @@ const Checkout = () => {
                           )}
                         </button>
                       )}
-                      {/* Referral discount — one discount at a time, so hidden while a coupon is applied. */}
-                      {referralEnabled && !coupon && (
+                      {/* Referral discount — hidden while a coupon or points are applied. */}
+                      {referralEnabled && !blockReferral && (
                         <button
                           type="button"
                           onClick={() => setShowReferralModal(true)}
@@ -2435,9 +2450,8 @@ const Checkout = () => {
                     </div>
 
                     {/* Sync + apply referral rewards. Mounted whenever a referral discount is
-                        allowed (no coupon) so a basket change keeps the value correct; the link
-                        above opens it. */}
-                    {referralEnabled && !coupon && (
+                        allowed so a basket change keeps the value correct; the link opens it. */}
+                    {referralEnabled && !blockReferral && (
                       <ReferralRewardModal
                         open={showReferralModal}
                         onClose={() => setShowReferralModal(false)}

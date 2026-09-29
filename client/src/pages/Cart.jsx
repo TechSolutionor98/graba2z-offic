@@ -276,9 +276,10 @@ const Cart = () => {
         code: trimmed,
         cartItems: cartApiItems,
       })
-      // A coupon and a referral reward can never apply together -- only one at a
-      // time. Applying a coupon drops any referral reward so the total never counts both.
+      // Only ONE discount at a time: coupon, referral OR Grabian Points. Applying a coupon
+      // drops any referral reward and any redeemed points so the total never counts two.
       clearReferralReward()
+      applyLoyaltyRedemption(0, 0)
       setCoupon(data.coupon)
       setCouponDiscount(data.discountAmount)
       setCouponInput(trimmed)
