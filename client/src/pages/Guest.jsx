@@ -5,20 +5,12 @@ import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 import '../styles/phoneInput.css'
 import config from "../config/config"
-
-const UAE_STATES = [
-  "Abu Dhabi",
-  "Ajman",
-  "Al Ain",
-  "Dubai",
-  "Fujairah",
-  "Ras Al Khaimah",
-  "Sharjah",
-  "Umm al-Qaywain",
-]
+import { useCurrency } from "../context/CurrencyContext"
+import { getProvincesForCountry } from "../utils/countryStates"
 
 const Guest = () => {
   const navigate = useNavigate()
+  const { countries, currentCountry } = useCurrency()
   const [guestInfo, setGuestInfo] = useState({
     name: "",
     email: "",
@@ -27,7 +19,7 @@ const Guest = () => {
     zipCode: "",
     state: "",
     city: "",
-    country: "UAE",
+    country: currentCountry?.name || "UAE",
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -41,8 +33,13 @@ const Guest = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    // Changing country invalidates the chosen state/region, so clear it.
+    if (name === "country") {
+      setGuestInfo({ ...guestInfo, country: value, state: "" })
+      return
+    }
     setGuestInfo({ ...guestInfo, [name]: value })
-    
+
     // Reset verification if email changes
     if (name === "email" && value !== originalEmail) {
       setVerificationSent(false)
@@ -109,7 +106,7 @@ const Guest = () => {
   }
 
   const validate = () => {
-    if (!guestInfo.name || !guestInfo.email || !guestInfo.phone || !guestInfo.address || !guestInfo.zipCode || !guestInfo.state || !guestInfo.city) {
+    if (!guestInfo.name || !guestInfo.email || !guestInfo.phone || !guestInfo.address || !guestInfo.state || !guestInfo.city || !guestInfo.country) {
       setError("Please fill in all required fields.")
       return false
     }
@@ -282,7 +279,7 @@ const Guest = () => {
                   <label htmlFor="guest-phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
                   <PhoneInput
                     international
-                    defaultCountry="AE"
+                    defaultCountry={currentCountry?.code || "AE"}
                     value={guestInfo.phone}
                     onChange={handlePhoneChange}
                     className="w-full"
@@ -303,22 +300,57 @@ const Guest = () => {
                     placeholder="Enter your address"
                   />
                 </div>
+                {/* Country — every supported nation, not just UAE. */}
+                <div>
+                  <label htmlFor="guest-country" className="block text-sm font-medium text-gray-700 mb-1">Country *</label>
+                  <select
+                    id="guest-country"
+                    name="country"
+                    required
+                    value={guestInfo.country}
+                    onChange={handleChange}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
+                  >
+                    {(countries || []).map((c) => (
+                      <option key={c.code} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
                 <div className="flex gap-4">
                   <div className="w-1/2">
                     <label htmlFor="guest-state" className="block text-sm font-medium text-gray-700 mb-1">State/Region *</label>
-                    <select
-                      id="guest-state"
-                      name="state"
-                      required
-                      value={guestInfo.state}
-                      onChange={handleChange}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
-                    >
-                      <option value="">Select State</option>
-                      {UAE_STATES.map((state) => (
-                        <option key={state} value={state}>{state}</option>
-                      ))}
-                    </select>
+                    {(() => {
+                      const provinces = getProvincesForCountry(guestInfo.country) || []
+                      if (provinces.length > 0) {
+                        return (
+                          <select
+                            id="guest-state"
+                            name="state"
+                            required
+                            value={guestInfo.state}
+                            onChange={handleChange}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
+                          >
+                            <option value="">Select State</option>
+                            {provinces.map((state) => (
+                              <option key={state} value={state}>{state}</option>
+                            ))}
+                          </select>
+                        )
+                      }
+                      return (
+                        <input
+                          id="guest-state"
+                          name="state"
+                          type="text"
+                          required
+                          value={guestInfo.state}
+                          onChange={handleChange}
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
+                          placeholder="State / Region"
+                        />
+                      )
+                    })()}
                   </div>
                   <div className="w-1/2">
                     <label htmlFor="guest-city" className="block text-sm font-medium text-gray-700 mb-1">City *</label>
@@ -334,33 +366,19 @@ const Guest = () => {
                     />
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="w-1/2">
-                    <label htmlFor="guest-zip" className="block text-sm font-medium text-gray-700 mb-1">Zip Code *</label>
-                    <input
-                      id="guest-zip"
-                      name="zipCode"
-                      type="text"
-                      required
-                      value={guestInfo.zipCode}
-                      onChange={handleChange}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
-                      placeholder="Zip Code"
-                    />
-                  </div>
-                  <div className="w-1/2">
-                    <label htmlFor="guest-country" className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                    <select
-                      id="guest-country"
-                      name="country"
-                      value={guestInfo.country}
-                      onChange={handleChange}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
-                      disabled
-                    >
-                      <option value="UAE">UAE</option>
-                    </select>
-                  </div>
+                <div className="w-1/2 pr-2">
+                  <label htmlFor="guest-zip" className="block text-sm font-medium text-gray-700 mb-1">
+                    Zip Code <span className="font-normal text-gray-400">(optional)</span>
+                  </label>
+                  <input
+                    id="guest-zip"
+                    name="zipCode"
+                    type="text"
+                    value={guestInfo.zipCode}
+                    onChange={handleChange}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
+                    placeholder="Zip Code"
+                  />
                 </div>
               </div>
               <button
@@ -379,11 +397,11 @@ const Guest = () => {
           </div>
         </div>
         {/* Right: Image */}
-        <div className="hidden lg:flex items-center justify-center md:block md:w-1/2 bg-white relative">
+        <div className="hidden md:flex md:w-1/2 items-center justify-center bg-white relative">
           <img
             src="/guest.jpg"
             alt="Guest Visual"
-            className="w-full h-[300px] cover object-center"
+            className="w-full h-full max-h-[520px] object-cover object-center"
           />
         </div>
       </div>
