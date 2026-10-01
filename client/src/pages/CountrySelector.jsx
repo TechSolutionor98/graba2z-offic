@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useCurrency } from "../context/CurrencyContext"
 import { useLanguage } from "../context/LanguageContext"
 import StaticRouteSEO from "../components/StaticRouteSEO"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 import Footer from "../components/Footer"
 
 export default function CountrySelector() {
@@ -13,7 +12,6 @@ export default function CountrySelector() {
   const { countries, changeCountry, loading } = useCurrency()
   const { switchLanguage } = useLanguage()
   const [hoveredCode, setHoveredCode] = useState(null)
-  const sliderRef = useRef(null)
 
   const handleSelectCountry = (e, countryCode, langCode) => {
     if (e) {
@@ -28,18 +26,6 @@ export default function CountrySelector() {
       window.location.assign(targetSlug)
     } else {
       navigate(targetSlug)
-    }
-  }
-
-  const scrollLeft = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -280, behavior: "smooth" })
-    }
-  }
-
-  const scrollRight = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 280, behavior: "smooth" })
     }
   }
 
@@ -85,94 +71,71 @@ export default function CountrySelector() {
               <div className="w-12 h-12 border-4 border-lime-400 border-t-transparent rounded-full animate-spin mx-auto" />
             </div>
           ) : (
-            <div className="relative w-full flex items-center">
-              {/* Left Slider Navigation Arrow */}
-              <button
-                onClick={scrollLeft}
-                aria-label="Previous countries"
-                className="absolute -left-4 md:-left-6 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-lime-500 hover:text-black text-white border border-white/20 flex items-center justify-center transition-all duration-200 shadow-lg backdrop-blur-md"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
+            /* Responsive grid: 2 columns on mobile, more on wider screens — every country
+               shown at once, no slider. */
+            <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 py-2">
+              {countries.map((country) => {
+                const isHovered = hoveredCode === country.code
 
-              {/* Single-Row Horizontal Slider */}
-              <div
-                ref={sliderRef}
-                className="flex flex-row gap-5 overflow-x-auto scroll-smooth py-4 px-2 w-full no-scrollbar focus:outline-none"
-                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-              >
-                {countries.map((country) => {
-                  const isHovered = hoveredCode === country.code
-
-                  return (
-                    <div
-                      key={country.code}
-                      onMouseEnter={() => setHoveredCode(country.code)}
-                      onMouseLeave={() => setHoveredCode(null)}
-                      onClick={(e) => handleSelectCountry(e, country.code, "en")}
-                      className={`w-[230px] md:w-[250px] shrink-0 rounded-2xl p-5 transition-all duration-300 backdrop-blur-md border flex flex-col items-center justify-between text-center min-h-[220px] cursor-pointer ${
-                        isHovered
-                          ? "bg-white/25 border-lime-400 shadow-2xl shadow-lime-500/20 -translate-y-1.5 scale-102"
-                          : "bg-white/10 border-white/20 hover:border-white/40"
-                      }`}
-                    >
-                      {/* Flag Container */}
-                      <div className="w-full h-28 rounded-xl overflow-hidden shadow-lg border border-white/20 mb-4 flex items-center justify-center bg-transparent group-hover:scale-105 transition-transform duration-300">
-                        {country.flagSvg ? (
-                          <div
-                            className="w-full h-full [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:object-cover"
-                            dangerouslySetInnerHTML={{
-                              __html: country.flagSvg.includes("preserveAspectRatio")
-                                ? country.flagSvg
-                                : country.flagSvg.replace("<svg", '<svg preserveAspectRatio="none"')
-                            }}
-                          />
-                        ) : (
-                          <span className="text-xl font-bold text-white">{country.code}</span>
-                        )}
-                      </div>
-
-                      {/* Country Name */}
-                      <div className="mb-4 space-y-0.5">
-                        <h3 className="text-base md:text-lg font-bold text-white tracking-widest uppercase">
-                          {country.name}
-                        </h3>
-                        <p className="text-xs md:text-sm text-lime-400 font-semibold dir-rtl font-arabic">
-                          {country.nameAr}
-                        </p>
-                      </div>
-
-                      {/* Language Selection Buttons */}
-                      <div className="w-full flex items-center justify-center gap-2 mt-auto relative z-30">
-                        <button
-                          type="button"
-                          onClick={(e) => handleSelectCountry(e, country.code, "en")}
-                          className="flex-1 py-2 px-3 rounded-full bg-white/20 hover:bg-lime-500 hover:text-black text-white font-semibold text-xs transition-all duration-200 border border-white/20 hover:border-lime-400 shadow-sm cursor-pointer relative z-30"
-                        >
-                          English
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => handleSelectCountry(e, country.code, "ar")}
-                          className="flex-1 py-2 px-3 rounded-full bg-white/20 hover:bg-lime-500 hover:text-black text-white font-semibold text-xs transition-all duration-200 border border-white/20 hover:border-lime-400 shadow-sm font-arabic dir-rtl cursor-pointer relative z-30"
-                        >
-                          العربية
-                        </button>
-                      </div>
+                return (
+                  <div
+                    key={country.code}
+                    onMouseEnter={() => setHoveredCode(country.code)}
+                    onMouseLeave={() => setHoveredCode(null)}
+                    onClick={(e) => handleSelectCountry(e, country.code, "en")}
+                    className={`w-full rounded-2xl p-4 sm:p-5 transition-all duration-300 backdrop-blur-md border flex flex-col items-center justify-between text-center cursor-pointer ${
+                      isHovered
+                        ? "bg-white/25 border-lime-400 shadow-2xl shadow-lime-500/20 -translate-y-1.5 scale-102"
+                        : "bg-white/10 border-white/20 hover:border-white/40"
+                    }`}
+                  >
+                    {/* Flag Container */}
+                    <div className="w-full aspect-[3/2] rounded-xl overflow-hidden shadow-lg border border-white/20 mb-3 sm:mb-4 flex items-center justify-center bg-transparent">
+                      {country.flagSvg ? (
+                        <div
+                          className="w-full h-full [&>svg]:w-full [&>svg]:h-full [&>svg]:block [&>svg]:object-cover"
+                          dangerouslySetInnerHTML={{
+                            __html: country.flagSvg.includes("preserveAspectRatio")
+                              ? country.flagSvg
+                              : country.flagSvg.replace("<svg", '<svg preserveAspectRatio="none"')
+                          }}
+                        />
+                      ) : (
+                        <span className="text-xl font-bold text-white">{country.code}</span>
+                      )}
                     </div>
-                  )
-                })}
-              </div>
 
-              {/* Right Slider Navigation Arrow */}
-              <button
-                onClick={scrollRight}
-                aria-label="Next countries"
-                className="absolute -right-4 md:-right-6 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-lime-500 hover:text-black text-white border border-white/20 flex items-center justify-center transition-all duration-200 shadow-lg backdrop-blur-md"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
+                    {/* Country Name */}
+                    <div className="mb-3 sm:mb-4 space-y-0.5">
+                      <h3 className="text-sm sm:text-lg font-bold text-white tracking-widest uppercase">
+                        {country.name}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-lime-400 font-semibold dir-rtl font-arabic">
+                        {country.nameAr}
+                      </p>
+                    </div>
+
+                    {/* Language Selection Buttons */}
+                    <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 mt-auto relative z-30">
+                      <button
+                        type="button"
+                        onClick={(e) => handleSelectCountry(e, country.code, "en")}
+                        className="flex-1 py-2 px-3 rounded-full bg-white/20 hover:bg-lime-500 hover:text-black text-white font-semibold text-xs transition-all duration-200 border border-white/20 hover:border-lime-400 shadow-sm cursor-pointer relative z-30"
+                      >
+                        English
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleSelectCountry(e, country.code, "ar")}
+                        className="flex-1 py-2 px-3 rounded-full bg-white/20 hover:bg-lime-500 hover:text-black text-white font-semibold text-xs transition-all duration-200 border border-white/20 hover:border-lime-400 shadow-sm font-arabic dir-rtl cursor-pointer relative z-30"
+                      >
+                        العربية
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
