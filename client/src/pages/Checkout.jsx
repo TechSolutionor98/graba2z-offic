@@ -15,6 +15,7 @@ import GrabCoin from "../components/GrabCoin"
 import { useReferral } from "../context/ReferralContext"
 import ReferralRewardModal from "../components/ReferralRewardModal"
 import { getProvincesForCountry } from "../utils/countryStates"
+import { DEFAULT_VAT_RATE } from "../utils/vat"
 import AddressAutocomplete from "../components/AddressAutocomplete"
 import { resolveDeliveryCharge, selectDeliveryMethod, describeDeliveryBlock } from "../utils/deliveryCharge"
 import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Minus, Trash2, Gift, Percent, Copy, Check, Ticket } from "lucide-react"
@@ -260,6 +261,18 @@ const Checkout = () => {
     fetchPaymentCharges()
   }, [currentCountry?.code])
 
+  // The VAT rate charged on delivery/handling fees. Same source and same fallback as
+  // the server, so the amount shown here is the amount the order is created with.
+  useEffect(() => {
+    axios
+      .get(`${config.API_URL}/api/settings`)
+      .then(({ data }) => {
+        const rate = Number(data?.taxRate)
+        setStoreVatRate(Number.isFinite(rate) && rate > 0 ? rate : DEFAULT_VAT_RATE)
+      })
+      .catch(() => setStoreVatRate(DEFAULT_VAT_RATE))
+  }, [])
+
   // Fetch country-specific delivery options when country changes or on mount
   useEffect(() => {
     const activeCountry = formData.country || currentCountry?.name || "United Arab Emirates"
@@ -318,6 +331,9 @@ const Checkout = () => {
   const [showAddressList, setShowAddressList] = useState(false)
   // The item pending removal from the review list, shown in a confirmation modal.
   const [itemToDelete, setItemToDelete] = useState(null)
+  // The store's VAT rate, used to charge VAT on delivery and handling fees. Read from
+  // the same public settings the order endpoint uses so both totals agree.
+  const [storeVatRate, setStoreVatRate] = useState(DEFAULT_VAT_RATE)
   // "Use Grabian Points" modal, opened from the payment section.
   const [showPointsModal, setShowPointsModal] = useState(false)
   // "Use Referral Discount" modal, opened from the payment section.
@@ -527,12 +543,21 @@ const Checkout = () => {
   const blockReferral = !referralApplied && (couponApplied || pointsApplied)
   const blockPoints = !pointsApplied && (couponApplied || referralApplied)
 
+  // Product prices already carry their VAT, but delivery and handling fees are held
+  // exclusive of it, so VAT on those two is added on top. The rate comes from the same
+  // public settings the order endpoint reads, so this total and the one the server
+  // recalculates can never disagree -- a mismatch would charge the card a different
+  // amount from the order it is paying for.
+  const feesExcludingVat = deliveryCharge + paymentChargesTotal
+  const feesVat = Number(((feesExcludingVat * storeVatRate) / 100).toFixed(2))
+
   const finalTotal = Math.max(
     0,
     cartTotals.totalOfferPrice +
       protectionTotal +
       deliveryCharge +
-      paymentChargesTotal -
+      paymentChargesTotal +
+      feesVat -
       couponDiscount -
       appliedReferralDiscount -
       appliedLoyaltyDiscount,

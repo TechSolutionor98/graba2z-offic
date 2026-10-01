@@ -2,7 +2,7 @@ import React, { forwardRef } from "react"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
-import { splitItemsVat, formatVatRateLabel } from "../../utils/vat"
+import { splitItemsVat, formatVatRateLabel, splitVatInclusive } from "../../utils/vat"
 import { orderPickupStore } from "../../utils/orderCustomer"
 
 const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) => {
@@ -27,8 +27,36 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
     codShippingFee,
     isCOD,
     paymentCharges,
+    hasPaymentCharges,
+    paymentChargesTotal,
   } = getInvoiceBreakdown(order)
   const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
+
+  // Prices, and the fees added to them, are VAT-inclusive. The VAT line therefore
+  // *states* the tax already contained in the total rather than charging it again --
+  // adding 5% on top here would bill the customer more than they actually paid. Taking
+  // it from displayTotal is what makes the stated VAT cover the shipping and
+  // COD/Tabby/Tamara handling fees as well as the goods.
+  // Stored prices are VAT-inclusive, so a line shown "without VAT" has it taken back out.
+  const exVat = (amount) => splitVatInclusive(Number(amount) || 0, vatRate).net
+
+  const feesTotal = hasPaymentCharges
+    ? paymentChargesTotal
+    : isCOD
+      ? Number(codFee || 0) + Number(codShippingFee || 0)
+      : 0
+
+  // Items are shown without VAT; delivery and handling fees are shown as charged, which
+  // is also without VAT. The VAT row is therefore whatever is left between those lines
+  // and the total actually charged -- so it covers the items plus, on orders placed
+  // since fees became VAT-able, the fees too.
+  //
+  // Deriving it rather than recomputing it is deliberate: an older order whose fees were
+  // never charged VAT still prints the exact amount its customer paid.
+  const itemsNetShown = exVat(subtotal + (couponDiscount || 0))
+  const discountsNetShown =
+    exVat(couponDiscount || order.discountAmount || 0) + exVat(referralDiscount) + exVat(loyaltyDiscount)
+  const vatShown = Math.max(0, displayTotal - (itemsNetShown - discountsNetShown) - shipping - feesTotal)
 
   // Prices include VAT, so each line is split at this document's own rate. The
   // column footers are summed from these same figures, so what is printed
@@ -279,22 +307,6 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                   )
                 })}
               </tbody>
-              <tfoot>
-                <tr className="bg-lime-50 font-semibold">
-                  <td className="border border-lime-300 px-3 py-2 text-right text-sm" colSpan={2}>
-                    Totals
-                  </td>
-                  <td className="border border-lime-300 px-3 py-2 text-right text-sm">
-                    {formatPrice(regularVat.net)}
-                  </td>
-                  <td className="border border-lime-300 px-3 py-2 text-right text-sm">
-                    {formatPrice(regularVat.vat)}
-                  </td>
-                  <td className="border border-lime-300 px-3 py-2 text-right text-sm">
-                    {formatPrice(regularVat.gross)}
-                  </td>
-                </tr>
-              </tfoot>
             </table>
           </div>
         </div>
@@ -343,62 +355,65 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
           </div>
         )}
 
-        {/* Total Amount */}
-        <div className="bg-lime-50 border-2 border-lime-200 rounded-lg p-4">
-          <h4 className="text-lg font-bold text-lime-800 mb-2 uppercase">💰 Total Amount</h4>
-          <div className="space-y-2">
+        {/* Total Amount — the breakdown sits on white so only the figure that was
+            actually charged carries the highlight. */}
+        <div className="border-2 border-lime-200 rounded-lg overflow-hidden">
+          <div className="bg-white p-4 space-y-2">
             {baseSubtotal > 0 && (
-              <div className="flex justify-between text-gray-500">
+              <div className="flex justify-between text-black">
                 <span>Base Price:</span>
-                <span className="line-through">{formatPrice(baseSubtotal)}</span>
+                <span className="line-through">{formatPrice(exVat(baseSubtotal))}</span>
               </div>
             )}
+
             <div className="flex justify-between">
-              <span className="text-gray-600">{vatRate > 0 ? "Subtotal (incl. VAT):" : "Subtotal:"}</span>
-              <span className="text-gray-900">{formatPrice(subtotal + (couponDiscount || 0))}</span>
+              <span className="text-black">
+                Offer Price / Subtotal <span className="text-xs text-black">(without VAT)</span>:
+              </span>
+              <span className="text-black">{formatPrice(exVat(subtotal + (couponDiscount || 0)))}</span>
             </div>
 
             {derivedDiscount > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Offer Discount:</span>
-                <span className="text-green-600">-{formatPrice(derivedDiscount)}</span>
+                <span className="text-black">Discount:</span>
+                <span className="text-green-600">-{formatPrice(exVat(derivedDiscount))}</span>
               </div>
             )}
 
             {(couponDiscount > 0 || (order.couponCode && order.discountAmount > 0)) && (
               <div className="flex justify-between">
-                <span className="text-gray-600">
+                <span className="text-black">
                   {(couponCode || order.couponCode) ? `Coupon (${couponCode || order.couponCode})` : "Coupon Discount"}:
                 </span>
-                <span className="text-green-600">-{formatPrice(couponDiscount || order.discountAmount || 0)}</span>
+                <span className="text-green-600">-{formatPrice(exVat(couponDiscount || order.discountAmount || 0))}</span>
               </div>
             )}
 
             {referralDiscount > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">
+                <span className="text-black">
                   {order.referralRewardRole === "referee" ? "Referral welcome discount" : "Referral reward"}
                   {Number(order.referralDiscountValue) > 0 && (
-                    <span className="ml-1 text-xs text-gray-500">
+                    <span className="ml-1 text-xs text-black">
                       ({order.referralDiscountType === "fixed" ? `AED ${Number(order.referralDiscountValue).toFixed(2)} off` : `${order.referralDiscountValue}% off`})
                     </span>
                   )}
                   :
                 </span>
-                <span className="text-green-600">-{formatPrice(referralDiscount)}</span>
+                <span className="text-green-600">-{formatPrice(exVat(referralDiscount))}</span>
               </div>
             )}
 
             {loyaltyDiscount > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">
+                <span className="text-black">
                   Grabian Points applied
                   {Number(order.loyaltyPointsRedeemed) > 0 && (
-                    <span className="ml-1 text-xs text-gray-500">({Number(order.loyaltyPointsRedeemed).toLocaleString()} points)</span>
+                    <span className="ml-1 text-xs text-black">({Number(order.loyaltyPointsRedeemed).toLocaleString()} points)</span>
                   )}
                   :
                 </span>
-                <span className="text-green-600">-{formatPrice(loyaltyDiscount)}</span>
+                <span className="text-green-600">-{formatPrice(exVat(loyaltyDiscount))}</span>
               </div>
             )}
 
@@ -407,44 +422,54 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
               (!(paymentCharges?.length > 0) && isCOD && codShippingFee > 0)
             )) && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Shipping:</span>
-                <span className="text-gray-900">{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
+                <span className="text-black">Shipping Charges <span className="text-xs text-black">(excl. VAT)</span>:</span>
+                <span className="text-black">{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
               </div>
             )}
             {paymentCharges?.length > 0 ? (
               paymentCharges.map((charge, idx) => (
                 <div key={idx} className="flex justify-between">
-                  <span className="text-gray-700 text-sm">💰 {charge.name}:</span>
-                  <span className="text-gray-700 text-sm">{formatPrice(charge.amount)}</span>
+                  <span className="text-black text-sm">💰 {charge.name} <span className="text-xs text-black">(excl. VAT)</span>:</span>
+                  <span className="text-black text-sm">{formatPrice(charge.amount)}</span>
                 </div>
               ))
             ) : (
               <>
                 {isCOD && codFee > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-yellow-700 text-sm">💰 COD Handling Fee (Non-Refundable):</span>
-                    <span className="text-yellow-700 text-sm">{formatPrice(codFee)}</span>
+                    <span className="text-black text-sm">💰 COD Handling Fee (non-refundable, excl. VAT):</span>
+                    <span className="text-black text-sm">{formatPrice(codFee)}</span>
                   </div>
                 )}
                 {isCOD && codShippingFee > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-yellow-700 text-sm">🚚 COD Shipping Fee:</span>
-                    <span className="text-yellow-700 text-sm">{formatPrice(codShippingFee)}</span>
+                    <span className="text-black text-sm">🚚 COD Shipping Fee (non-refundable, excl. VAT):</span>
+                    <span className="text-black text-sm">{formatPrice(codShippingFee)}</span>
                   </div>
                 )}
               </>
             )}
-            {/* A zero-rated document is an exempt sale: the VAT was taken off the
-                price rather than being buried inside it, so saying "Included"
-                would be false. */}
+            {/* The VAT covers the goods *and* every fee added to them, so the base it
+                was worked out from is named rather than left for the reader to guess.
+                A zero-rated document is an exempt sale: the VAT was taken off the price
+                rather than being buried inside it, so saying "Included" would be false. */}
             <div className="flex justify-between">
-              <span className="text-gray-600">{vatRate > 0 ? "VAT (Included):" : "VAT (Excluded):"}</span>
-              <span className="text-gray-900">{formatPrice(tax)}</span>
+              <span className="text-black">
+                {vatRate > 0 ? (
+                  <>
+                    {vatLabel}{" "}
+                    <span className="text-xs text-black">(items + fees)</span>:
+                  </>
+                ) : (
+                  "VAT (Excluded):"
+                )}
+              </span>
+              <span className="text-black">{formatPrice(vatRate > 0 ? vatShown : tax)}</span>
             </div>
-            <div className="border-t pt-2 flex justify-between">
-              <span className="text-lg font-semibold text-gray-900">Total:</span>
-              <span className="text-lg font-bold text-lime-600">{formatPrice(displayTotal)}</span>
-            </div>
+          </div>
+          <div className="bg-lime-50 border-t-2 border-lime-200 px-4 py-3 flex justify-between">
+            <span className="text-lg font-semibold text-black">Total Amount:</span>
+            <span className="text-lg font-bold text-lime-600">{formatPrice(displayTotal)}</span>
           </div>
         </div>
 
