@@ -6,11 +6,27 @@ import config from "../config/config"
 
 const DYNAMIC_PATH_PATTERNS = [/^\/product\//i, /^\/offers\//i, /^\/gaming-zone\//i, /^\/blogs\/.+/i, /^\/shop(\/|$)/i, /^\/product-category(\/|$)/i]
 
+// Storefront URLs are prefixed "<country>-<lang>", e.g. /ae-en, /sa-ar. Every country
+// uses the same page definitions, so the prefix is stripped before the lookup and the
+// country is sent separately to pick that country's SEO.
+const COUNTRY_LANG_PREFIX = /^\/([a-z]{2})-(en|ar)(?=\/|$)/i
+
 const normalizePath = (pathname = "") => {
   const withSlash = String(pathname || "").startsWith("/") ? String(pathname || "") : `/${pathname || ""}`
-  const strippedLang = withSlash.replace(/^\/(ae-en|ae-ar)(?=\/|$)/i, "") || "/"
+  const strippedLang = withSlash.replace(COUNTRY_LANG_PREFIX, "") || "/"
   const noTrailing = strippedLang.length > 1 ? strippedLang.replace(/\/+$/, "") : strippedLang
   return noTrailing || "/"
+}
+
+const countryFromPath = (pathname = "") => {
+  const withSlash = String(pathname || "").startsWith("/") ? String(pathname || "") : `/${pathname || ""}`
+  const match = withSlash.match(COUNTRY_LANG_PREFIX)
+  if (match) return match[1].toUpperCase()
+  try {
+    return localStorage.getItem("selected-country-code") || ""
+  } catch {
+    return ""
+  }
 }
 
 const isDynamicPath = (path) => DYNAMIC_PATH_PATTERNS.some((pattern) => pattern.test(path))
@@ -20,6 +36,7 @@ export default function StaticRouteSEO() {
   const [seoData, setSeoData] = useState(null)
 
   const normalizedPath = useMemo(() => normalizePath(location.pathname), [location.pathname])
+  const countryCode = useMemo(() => countryFromPath(location.pathname), [location.pathname])
 
   useEffect(() => {
     let mounted = true
@@ -34,7 +51,7 @@ export default function StaticRouteSEO() {
     const fetchSeo = async () => {
       try {
         const response = await axios.get(`${config.API_URL}/api/seo-pages/public-by-path`, {
-          params: { path: normalizedPath },
+          params: { path: normalizedPath, country: countryCode || undefined },
         })
 
         if (!mounted) return
@@ -56,7 +73,7 @@ export default function StaticRouteSEO() {
     return () => {
       mounted = false
     }
-  }, [normalizedPath])
+  }, [normalizedPath, countryCode])
 
   if (!seoData) return null
 

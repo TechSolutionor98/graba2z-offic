@@ -217,17 +217,17 @@ const Home = () => {
   }, [])
 
   useEffect(() => {
+    // The SEO block is per country, falling back to the default when that country has
+    // none of its own.
     axios
-      .get(`${API_BASE_URL}/api/seo-pages/public/home`)
+      .get(`${API_BASE_URL}/api/seo-pages/public/home`, { params: { country: activeCountryCode } })
       .then((res) => {
-        if (res.data?.seo?.seoContent) {
-          setHomeSeoContent(res.data.seo.seoContent)
-        }
+        setHomeSeoContent(res.data?.seo?.seoContent || "")
       })
       .catch((err) => {
         console.error("Error loading home page SEO content:", err)
       })
-  }, [])
+  }, [activeCountryCode])
 
   useEffect(() => {
     if (!isMobileViewport) {

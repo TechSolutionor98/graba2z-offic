@@ -10,11 +10,19 @@ import { getSeoUnlockTokenIfValid, isSeoUnlockTokenValid } from "../../utils/seo
 
 const ROBOTS_OPTIONS = ["index, follow", "noindex, follow", "index, nofollow", "noindex, nofollow"]
 
+// An empty country code is the default record every country falls back to.
+const DEFAULT_COUNTRY = ""
+
 const AdminHomePageSEO = () => {
   const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [isSeoUnlocked, setIsSeoUnlocked] = useState(isSeoUnlockTokenValid)
+
+  // Which country's home-page SEO is being edited, and what it inherits when blank.
+  const [countries, setCountries] = useState([])
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY)
+  const [inherited, setInherited] = useState(null)
 
   const [formData, setFormData] = useState({
     title: "",
@@ -50,24 +58,43 @@ const AdminHomePageSEO = () => {
     }
   }, [])
 
+  // The country list drives the tabs. A failure here is not fatal -- the default record
+  // can still be edited.
+  useEffect(() => {
+    axios
+      .get(`${config.API_URL}/api/countries/public`)
+      .then(({ data }) => {
+        const list = Array.isArray(data) ? data : data?.countries || []
+        setCountries(list.filter((c) => c && c.code))
+      })
+      .catch(() => setCountries([]))
+  }, [])
+
+  // The admin endpoint returns this country's own values raw (blank = inherits) plus the
+  // values it would inherit. The public one merges them, which would bake the defaults
+  // into the country row on save.
   const fetchHomePageSEO = async () => {
     try {
       setLoading(true)
-      const { data } = await axios.get(`${config.API_URL}/api/seo-pages/public/home`)
-      if (data && data.seo) {
-        setFormData({
-          title: data.seo.title || "",
-          description: data.seo.description || "",
-          keywords: data.seo.keywords || "",
-          canonicalUrl: data.seo.canonicalUrl || "/",
-          robots: data.seo.robots || "index, follow",
-          customSchema: data.seo.customSchema || "",
-          ogTitle: data.seo.ogTitle || "",
-          ogDescription: data.seo.ogDescription || "",
-          ogImage: data.seo.ogImage || "",
-          seoContent: data.seo.seoContent || "",
-        })
-      }
+      const { data } = await axios.get(`${config.API_URL}/api/seo-pages/static`, {
+        headers: getAuthHeaders(),
+        params: { country: countryCode || undefined },
+      })
+      const entry = (data?.staticPages || []).find((page) => page.pageKey === "home")
+      const seo = entry?.seo || {}
+      setInherited(entry?.inheritedSeo || null)
+      setFormData({
+        title: seo.title || "",
+        description: seo.description || "",
+        keywords: seo.keywords || "",
+        canonicalUrl: seo.canonicalUrl || (countryCode ? "" : "/"),
+        robots: seo.robots || "index, follow",
+        customSchema: seo.customSchema || "",
+        ogTitle: seo.ogTitle || "",
+        ogDescription: seo.ogDescription || "",
+        ogImage: seo.ogImage || "",
+        seoContent: seo.seoContent || "",
+      })
     } catch (error) {
       console.error("Error fetching home page SEO:", error)
       showToast("Failed to load Home Page SEO settings", "error")
@@ -78,7 +105,9 @@ const AdminHomePageSEO = () => {
 
   useEffect(() => {
     fetchHomePageSEO()
-  }, [])
+    // Switching country reloads that country's record.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countryCode])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -86,6 +115,12 @@ const AdminHomePageSEO = () => {
       ...prev,
       [name]: value,
     }))
+  }
+
+  // While editing a country, show what an empty field would inherit from the default.
+  const placeholderFor = (field, fallback) => {
+    const value = countryCode ? inherited?.[field] : ""
+    return value ? `Inherits: ${value}` : fallback
   }
 
   const handleEditorChange = (newContent) => {
@@ -107,9 +142,12 @@ const AdminHomePageSEO = () => {
       await axios.put(
         `${config.API_URL}/api/seo-pages/static/home`,
         formData,
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders(), params: { country: countryCode || undefined } }
       )
-      showToast("Home Page SEO content saved successfully!", "success")
+      const label = countryCode
+        ? countries.find((c) => c.code === countryCode)?.name || countryCode
+        : "all countries"
+      showToast(`Home Page SEO saved for ${label}!`, "success")
     } catch (error) {
       console.error("Error saving home page SEO:", error)
       showToast(error.response?.data?.message || "Failed to save Home Page SEO settings", "error")
@@ -130,7 +168,7 @@ const AdminHomePageSEO = () => {
               Home Page SEO
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Manage metadata & rich SEO content displayed above the footer on the home page.
+              Manage metadata &amp; rich SEO content for each country's home page.
             </p>
           </div>
 
@@ -155,6 +193,54 @@ const AdminHomePageSEO = () => {
               {saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
+        </div>
+
+        {/* Country tabs — one home-page SEO record per country, plus a default that any
+            country without its own record inherits. */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Globe className="w-4 h-4 text-slate-500" />
+            <h2 className="text-sm font-bold text-slate-900">Country</h2>
+            <span className="text-xs text-slate-500">
+              Editing {countryCode ? `the ${countryCode} home page` : "the default used by every country"}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setCountryCode(DEFAULT_COUNTRY)}
+              disabled={saving}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold border transition disabled:opacity-50 ${
+                countryCode === DEFAULT_COUNTRY
+                  ? "bg-lime-600 text-white border-lime-600"
+                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+              }`}
+            >
+              Default (all countries)
+            </button>
+            {countries.map((country) => (
+              <button
+                key={country.code}
+                type="button"
+                onClick={() => setCountryCode(country.code)}
+                disabled={saving}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold border transition disabled:opacity-50 ${
+                  countryCode === country.code
+                    ? "bg-lime-600 text-white border-lime-600"
+                    : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                {country.name} ({country.code})
+              </button>
+            ))}
+          </div>
+          {countryCode && (
+            <p className="mt-3 text-xs text-slate-500">
+              Leave a field empty to inherit it from the default record. Anything you fill in here
+              is used only on <span className="font-semibold">/{countryCode.toLowerCase()}-en</span> and{" "}
+              <span className="font-semibold">/{countryCode.toLowerCase()}-ar</span>.
+            </p>
+          )}
         </div>
 
         {!isSeoUnlocked && (
@@ -214,7 +300,7 @@ const AdminHomePageSEO = () => {
                     value={formData.title}
                     onChange={handleInputChange}
                     disabled={!isSeoUnlocked}
-                    placeholder="e.g., Buy Laptops & Electronics Online in UAE | Grabatoz"
+                    placeholder={placeholderFor("title", "e.g., Buy Laptops & Electronics Online in UAE | Grabatoz")}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lime-500 focus:border-lime-500 disabled:bg-slate-100"
                   />
                 </div>
@@ -229,7 +315,7 @@ const AdminHomePageSEO = () => {
                     value={formData.description}
                     onChange={handleInputChange}
                     disabled={!isSeoUnlocked}
-                    placeholder="Enter meta description for search engines..."
+                    placeholder={placeholderFor("description", "Enter meta description for search engines...")}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lime-500 focus:border-lime-500 disabled:bg-slate-100"
                   />
                 </div>
@@ -244,7 +330,7 @@ const AdminHomePageSEO = () => {
                     value={formData.keywords}
                     onChange={handleInputChange}
                     disabled={!isSeoUnlocked}
-                    placeholder="laptops, electronics, gaming pc, dubai online shop"
+                    placeholder={placeholderFor("keywords", "laptops, electronics, gaming pc, dubai online shop")}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lime-500 focus:border-lime-500 disabled:bg-slate-100"
                   />
                 </div>
@@ -303,7 +389,7 @@ const AdminHomePageSEO = () => {
                     value={formData.ogTitle}
                     onChange={handleInputChange}
                     disabled={!isSeoUnlocked}
-                    placeholder="Title for Facebook, Twitter, WhatsApp sharing"
+                    placeholder={placeholderFor("ogTitle", "Title for Facebook, Twitter, WhatsApp sharing")}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lime-500 focus:border-lime-500 disabled:bg-slate-100"
                   />
                 </div>
@@ -318,7 +404,7 @@ const AdminHomePageSEO = () => {
                     value={formData.ogImage}
                     onChange={handleInputChange}
                     disabled={!isSeoUnlocked}
-                    placeholder="https://www.grabatoz.ae/banner.jpg"
+                    placeholder={placeholderFor("ogImage", "https://www.grabatoz.ae/banner.jpg")}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lime-500 focus:border-lime-500 disabled:bg-slate-100"
                   />
                 </div>
@@ -333,7 +419,7 @@ const AdminHomePageSEO = () => {
                     value={formData.ogDescription}
                     onChange={handleInputChange}
                     disabled={!isSeoUnlocked}
-                    placeholder="Description for social cards..."
+                    placeholder={placeholderFor("ogDescription", "Description for social cards...")}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-lime-500 focus:border-lime-500 disabled:bg-slate-100"
                   />
                 </div>
