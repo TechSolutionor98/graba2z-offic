@@ -268,8 +268,8 @@ const QuotationInvoiceComponent = forwardRef(({ order, showStatus, isQuotation =
               <thead>
                 <tr className="bg-lime-100">
                   <th className="border border-lime-300 px-3 py-2 text-left text-sm font-bold">Product</th>
-                  <th className="border border-lime-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
                   <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Unit Price</th>
+                  <th className="border border-lime-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
                   {showVatColumns && (
                     <>
                       <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Subtotal</th>
@@ -300,10 +300,10 @@ const QuotationInvoiceComponent = forwardRef(({ order, showStatus, isQuotation =
                           </div>
                         )}
                       </td>
-                      <td className="border border-lime-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
                       <td className="border border-lime-300 px-3 py-2 text-right text-sm">
                         {formatPrice(Number(item.price) || 0)}
                       </td>
+                      <td className="border border-lime-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
                       {showVatColumns && (
                         <>
                           <td className="border border-lime-300 px-3 py-2 text-right text-sm">
