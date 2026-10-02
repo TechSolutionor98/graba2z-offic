@@ -3,6 +3,30 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------------
+   Number inputs
+   ---------------------------------------------------------------------------
+   The browser's stepper arrows are hidden everywhere. They sit on top of the
+   value in narrow fields, and a stray click nudges a price or a quantity
+   without anyone noticing -- the same reason wheel-scrolling is disabled on
+   these fields (see components/DisableNumberInputScroll.jsx).
+
+   Typing, arrow keys, min/max and step validation all still work; only the
+   spinner chrome is gone. Where stepping matters the screen provides its own
+   -/+ buttons (cart, checkout, create order).
+   --------------------------------------------------------------------------- */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+  appearance: textfield;
+}
+
+/* ---------------------------------------------------------------------------
    Theme variables
    ---------------------------------------------------------------------------
    Every themeable colour in tailwind.config.js reads one of these. The values
