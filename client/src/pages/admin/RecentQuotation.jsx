@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { adminAPI } from "../../services/api"
-import { Search, Eye, RefreshCw, PauseCircle, PlayCircle, ArrowRightCircle, PencilLine } from "lucide-react"
+import { Search, Eye, RefreshCw, PauseCircle, PlayCircle, ArrowRightCircle, PencilLine, Trash2 } from "lucide-react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import AdminOrderDetailsModal from "../../components/admin/AdminOrderDetailsModal"
 import { askToEmailCustomer } from "../../utils/customerEmail"
@@ -79,6 +79,25 @@ export default function RecentQuotation() {
       replaceRow(updated)
     } catch (e) {
       setError(e?.message || "Could not change the status. Please try again.")
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  // Deleting is a soft delete server-side, but it is still a document disappearing
+  // from the list, so it is confirmed first and names what is going.
+  const deleteQuotation = async (quotation) => {
+    const ref = `#${String(quotation._id).slice(-6)}`
+    const who = quotation.shippingAddress?.name || quotation.shippingAddress?.fullName || "this customer"
+    if (!window.confirm(`Delete quotation ${ref} for ${who}? It will be removed from this list.`)) return
+
+    try {
+      setBusyId(quotation._id)
+      setError("")
+      await adminAPI.deleteQuotation(quotation._id)
+      setQuotations((prev) => prev.filter((q) => q._id !== quotation._id))
+    } catch (e) {
+      setError(e?.message || "Could not delete this quotation. Please try again.")
     } finally {
       setBusyId(null)
     }
@@ -274,6 +293,15 @@ export default function RecentQuotation() {
                             </button>
                           </>
                         )}
+
+                        <button
+                          onClick={() => deleteQuotation(q)}
+                          disabled={busy}
+                          className="inline-flex items-center gap-1 text-red-600 hover:text-red-700 disabled:opacity-50"
+                          title="Delete this quotation"
+                        >
+                          <Trash2 size={16} /> Delete
+                        </button>
                       </div>
                     </td>
                   </tr>

@@ -284,6 +284,11 @@ export const adminAPI = {
       headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
       body: JSON.stringify({ quotationStatus }),
     }),
+  deleteQuotation: (id) =>
+    apiRequest(`/api/admin/quotations/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
   convertQuotation: (id, payload = {}) =>
     apiRequest(`/api/admin/quotations/${id}/convert`, {
       method: "POST",
