@@ -41,6 +41,18 @@ const AUDIENCES = [
   { value: "users", label: "Specific customers" },
 ]
 
+// Mirrors server/utils/pushSounds.js. The server is the authority -- it validates the
+// id and serves its own list -- but carrying a copy here means the picker still works
+// when the API is an older build that does not return `sounds` yet.
+const FALLBACK_SOUNDS = [
+  { id: "default", label: "Default (system tone)" },
+  { id: "chime", label: "Chime" },
+  { id: "ding", label: "Ding" },
+  { id: "cash", label: "Cash register (offers)" },
+  { id: "alert", label: "Alert" },
+  { id: "silent", label: "Silent (no sound)" },
+]
+
 const EMPTY = {
   title: "",
   body: "",
@@ -381,10 +393,10 @@ const AdminPushNotifications = () => {
 
           <Field
             label="Notification sound"
-            hint="The tone the phone plays. The audio file must be bundled in the mobile app — anything missing there falls back to the default tone."
+            hint="The tone the phone plays. Requires the sound to be bundled in the app."
           >
             <select className={inputClass} value={form.sound} onChange={(e) => set({ sound: e.target.value })}>
-              {(status?.sounds?.length ? status.sounds : [{ id: "default", label: "Default (system tone)" }]).map((s) => (
+              {(status?.sounds?.length ? status.sounds : FALLBACK_SOUNDS).map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.label}
                 </option>
