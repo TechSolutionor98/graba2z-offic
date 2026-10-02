@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { adminAPI, categoriesAPI, apiRequest, productsAdminAPI } from "../../services/api"
 import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText, PauseCircle, Truck, Store } from "lucide-react"
 import { visibleStores, findStore } from "../../data/stores"
-import { DEFAULT_VAT_RATE } from "../../utils/vat"
 import { orderCustomerName, orderCustomerEmail, orderCustomerPhone } from "../../utils/orderCustomer"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
@@ -18,19 +17,13 @@ const num = (v) => {
   return Number.isFinite(n) ? n : 0
 }
 
-// The price typed on a line is the catalogue figure, which already includes VAT
-// at the store's standard rate. Everything here works from the ex-VAT value
-// underneath it, so changing Tax/Vat % changes what is charged rather than just
-// relabelling the same total: at 5% a 100.00 line is charged 100.00, at 0% it is
-// charged 95.24, and at 10% it is 104.76.
-const CATALOGUE_VAT_RATE = DEFAULT_VAT_RATE
-
-// The ex-VAT value inside a catalogue price. 100.00 including 5% is 95.238...,
-// not 95.00 -- 5% of 95.00 would be 4.75, which would not add back to 100.
-const exVat = (inclusiveAmount) => num(inclusiveAmount) / (1 + CATALOGUE_VAT_RATE / 100)
-
-// What a line is actually charged once the document's own rate is applied.
-const lineCharged = (inclusiveAmount, rate) => exVat(inclusiveAmount) * (1 + num(rate) / 100)
+// The price typed on a line is the NET figure -- what the goods cost before tax. It is
+// shown back exactly as typed, and VAT is added on top at this document's own rate. So a
+// 4,000.00 line stays 4,000.00 under "Total without VAT", and at 5% it is charged 4,200.00.
+//
+// Order items are stored VAT-inclusive, because that is what every invoice in the admin
+// splits its per-line VAT back out of.
+const lineCharged = (netAmount, rate) => num(netAmount) * (1 + num(rate) / 100)
 const PRICE_MODES = [
   { id: "regular", label: "Regular price" },
   { id: "wholesale", label: "Wholesale price" },
@@ -106,7 +99,17 @@ export default function CreateOrder() {
   const [items, setItems] = useState([])
   const [shippingPrice, setShippingPrice] = useState(0)
   const [taxRate, setTaxRate] = useState(5)
-  const [discountAmount, setDiscountAmount] = useState(0)
+  // Lets the rate be picked from the usual two instead of typed every time; anything
+  // else is still possible through "Custom".
+  const [taxCustom, setTaxCustom] = useState(false)
+  // A discount can be entered either as money off or as a percentage of the goods.
+  // Only the resolved money figure is ever sent -- the mode is a data-entry aid.
+  const [discountMode, setDiscountMode] = useState("amount")
+  const [discountInput, setDiscountInput] = useState(0)
+  // One free-form extra line (handling, packing, surcharge...). It travels as a payment
+  // charge, so the invoice lists it beside any other fee without a special case.
+  const [additionalChargeName, setAdditionalChargeName] = useState("Additional charges")
+  const [additionalCharge, setAdditionalCharge] = useState(0)
   const [paymentMethod, setPaymentMethod] = useState("cod")
 
   // Custom line item
@@ -121,17 +124,40 @@ export default function CreateOrder() {
     () => items.reduce((sum, it) => sum + num(it.price) * num(it.quantity), 0),
     [items],
   )
-  // The goods with the embedded VAT taken out. This does not move when the rate
-  // does; it is what the products cost before any tax.
-  const itemsNet = useMemo(() => exVat(itemsListed), [itemsListed])
+  // Typed prices are already net, so nothing is taken out here.
+  const itemsNet = itemsListed
   // VAT at whatever rate this document is set to. Zero means an exempt sale, and
   // the total below drops accordingly rather than quietly keeping the VAT.
-  const taxPrice = useMemo(() => itemsNet * (num(taxRate) / 100), [itemsNet, taxRate])
-  const itemsCharged = useMemo(() => itemsNet + taxPrice, [itemsNet, taxPrice])
-  const totalPrice = useMemo(
-    () => Math.max(0, itemsCharged + num(shippingPrice) - num(discountAmount)),
-    [itemsCharged, shippingPrice, discountAmount],
+  // A percentage discount comes off the goods before VAT -- which is how it reads on
+  // screen ("10% off the items"), not a slice of the shipping or the tax.
+  const discountAmount = useMemo(
+    () =>
+      discountMode === "percent"
+        ? Math.max(0, itemsNet * (num(discountInput) / 100))
+        : Math.max(0, num(discountInput)),
+    [discountMode, discountInput, itemsNet],
   )
+
+  const additionalChargesTotal = useMemo(() => Math.max(0, num(additionalCharge)), [additionalCharge])
+
+  // What the VAT is actually charged on: the goods after any discount, plus delivery
+  // and any extra charge. Both of those are held exclusive of VAT here, exactly as on a
+  // customer order. Taxing the undiscounted goods would overstate the VAT, and leaving
+  // the charges out would undercharge it.
+  const taxableBase = useMemo(
+    () => Math.max(0, itemsNet - discountAmount + num(shippingPrice) + additionalChargesTotal),
+    [itemsNet, discountAmount, shippingPrice, additionalChargesTotal],
+  )
+  const taxPrice = useMemo(() => taxableBase * (num(taxRate) / 100), [taxableBase, taxRate])
+  // Same shape the server recomputes with:
+  // itemsPrice + shipping + charges + tax - discount === taxableBase + tax.
+  const totalPrice = useMemo(() => taxableBase + taxPrice, [taxableBase, taxPrice])
+
+  // The rate picker falls back to "Custom" for anything that is not one of the two
+  // presets, so a rate like 0.01 shows its own input rather than a blank select.
+  const isPresetRate = num(taxRate) === 0 || num(taxRate) === 5
+  const taxSelectValue = taxCustom || !isPresetRate ? "custom" : String(num(taxRate))
+  const showTaxInput = taxCustom || !isPresetRate
 
   useEffect(() => {
     let cancelled = false
@@ -206,8 +232,16 @@ export default function CreateOrder() {
           phone: doc.pickupDetails?.phone || "",
         })
         setShippingPrice(num(doc.shippingPrice))
-        setDiscountAmount(num(doc.discountAmount))
-        setTaxRate(Number.isFinite(Number(doc.taxRate)) ? Number(doc.taxRate) : 5)
+        // Only the money figure is stored, so a recalled document always reopens in
+        // amount mode -- the percentage that produced it is not recoverable.
+        setDiscountMode("amount")
+        setDiscountInput(num(doc.discountAmount))
+        const savedCharge = Array.isArray(doc.paymentCharges) ? doc.paymentCharges[0] : null
+        setAdditionalChargeName(savedCharge?.name || "Additional charges")
+        setAdditionalCharge(num(savedCharge?.amount))
+        const savedRate = Number.isFinite(Number(doc.taxRate)) ? Number(doc.taxRate) : 5
+        setTaxRate(savedRate)
+        setTaxCustom(savedRate !== 0 && savedRate !== 5)
         setPaymentMethod(doc.actualPaymentMethod || doc.paymentMethod || "cod")
       } catch (e) {
         if (!cancelled) setLoadError(e?.message || "Could not open this document.")
@@ -367,6 +401,12 @@ export default function CreateOrder() {
     setCustomQuantity(1)
   }
 
+  /** Type a quantity directly. Blank is allowed while typing; it settles to 1 on blur. */
+  const setQty = (itemKey, raw) => {
+    const next = raw === "" ? "" : Math.max(1, Math.floor(Number(raw) || 1))
+    setItems((prev) => prev.map((it) => (it.key === itemKey ? { ...it, quantity: next } : it)))
+  }
+
   const updateQty = (itemKey, delta) => {
     setItems((prev) =>
       prev
@@ -419,7 +459,11 @@ export default function CreateOrder() {
     setDeliveryType("home")
     setPickupDetails({ storeId: "", phone: "" })
     setShippingPrice(0)
-    setDiscountAmount(0)
+    setDiscountMode("amount")
+    setDiscountInput(0)
+    setAdditionalChargeName("Additional charges")
+    setAdditionalCharge(0)
+    setTaxCustom(false)
     setSendCustomerEmail(false)
     setUpdateUserProfile(false)
     setProductQuery("")
@@ -483,7 +527,16 @@ export default function CreateOrder() {
       // Sent so the invoice can split each line at this rate rather than
       // assuming the store default.
       taxRate: num(taxRate),
-      discountAmount: Number((Number(discountAmount) || 0).toFixed(2)),
+      discountAmount: Number(discountAmount.toFixed(2)),
+      paymentCharges:
+        additionalChargesTotal > 0
+          ? [
+              {
+                name: additionalChargeName.trim() || "Additional charges",
+                amount: Number(additionalChargesTotal.toFixed(2)),
+              },
+            ]
+          : [],
       totalPrice: Number(totalPrice.toFixed(2)),
       paymentMethod: paymentMethod === "tabby" ? "card" : paymentMethod,
       actualPaymentMethod: paymentMethod,
@@ -1035,7 +1088,16 @@ export default function CreateOrder() {
                           <button type="button" onClick={() => updateQty(it.key, -1)} className="p-1 border rounded">
                             <Minus size={14} />
                           </button>
-                          <span className="w-8 text-center">{it.quantity}</span>
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={it.quantity}
+                            onChange={(e) => setQty(it.key, e.target.value)}
+                            onBlur={(e) => setQty(it.key, e.target.value === "" ? 1 : e.target.value)}
+                            onWheel={(e) => e.currentTarget.blur()}
+                            className="w-16 border rounded px-2 py-1 text-center"
+                          />
                           <button type="button" onClick={() => updateQty(it.key, 1)} className="p-1 border rounded">
                             <Plus size={14} />
                           </button>
@@ -1067,7 +1129,7 @@ export default function CreateOrder() {
                         </div>
                       </td>
                       <td className="py-2 text-right">
-                        {currency(lineCharged(num(it.price) * num(it.quantity), taxRate))}
+                        {currency(num(it.price) * num(it.quantity))}
                       </td>
                       <td className="py-2 text-right">
                         <button
@@ -1083,10 +1145,10 @@ export default function CreateOrder() {
                   ))}
                   <tr>
                     <td colSpan={5} className="py-2 text-xs text-gray-500">
-                      Prices are the catalogue figures, VAT included at {CATALOGUE_VAT_RATE}%. Change
-                      Tax/Vat % and the charged total re-bases to that rate &mdash; set it to 0 for an
-                      exempt sale and the VAT comes off. Editing a price changes this document only;
-                      the product itself is never touched.
+                      Prices are entered without VAT &mdash; the figures above are the net amounts.
+                      VAT is added on top at the Tax/Vat rate beside the totals; set it to 0 for an
+                      exempt sale. Editing a price changes this document only; the product itself is
+                      never touched.
                     </td>
                   </tr>
                 </tbody>
@@ -1098,56 +1160,119 @@ export default function CreateOrder() {
         <div className="bg-white rounded-lg shadow p-4">
           <h2 className="font-semibold mb-3">Totals</h2>
           <div className="space-y-2 text-sm">
-            {num(taxRate) !== CATALOGUE_VAT_RATE && (
-              <div className="flex justify-between text-gray-500">
-                <span>Listed (incl. {CATALOGUE_VAT_RATE}% VAT)</span>
-                <span className="line-through">{currency(itemsListed)}</span>
-              </div>
-            )}
             <div className="flex justify-between">
-              <span>Items (excl. VAT)</span>
+              <span>Total without VAT</span>
               <span>{currency(itemsNet)}</span>
             </div>
+
+            {/* Discount — money off, or a percentage of the goods. */}
+            <div className="flex justify-between items-center gap-2">
+              <span className="flex items-center gap-1">
+                <Percent size={14} />
+                Discount
+              </span>
+              <div className="flex items-center gap-1">
+                <select
+                  value={discountMode}
+                  onChange={(e) => setDiscountMode(e.target.value)}
+                  className="border rounded px-1 py-1 text-xs bg-white"
+                >
+                  <option value="amount">AED</option>
+                  <option value="percent">%</option>
+                </select>
+                <input
+                  type="number"
+                  value={discountInput}
+                  onChange={(e) => setDiscountInput(e.target.value)}
+                  onWheel={(e) => e.currentTarget.blur()}
+                  className="w-24 border rounded px-2 py-1 text-right"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+            {discountMode === "percent" && discountAmount > 0 && (
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>{num(discountInput)}% of items</span>
+                <span>- {currency(discountAmount)}</span>
+              </div>
+            )}
+
             <div className="flex justify-between items-center">
-              <span>Shipping</span>
+              <span>
+                Shipping charges <span className="text-xs text-gray-500">(excl. VAT)</span>
+              </span>
               <input
                 type="number"
                 value={shippingPrice}
                 onChange={(e) => setShippingPrice(e.target.value)}
+                onWheel={(e) => e.currentTarget.blur()}
                 className="w-28 border rounded px-2 py-1 text-right"
                 min="0"
                 step="0.01"
               />
             </div>
-            <div className="flex justify-between items-center">
-              <span>Tax/Vat %</span>
+
+            {/* Additional charges — one free-form extra line, shown on the invoice. */}
+            <div className="flex justify-between items-center gap-2">
+              <input
+                type="text"
+                value={additionalChargeName}
+                onChange={(e) => setAdditionalChargeName(e.target.value)}
+                placeholder="Additional charges"
+                className="min-w-0 flex-1 border rounded px-2 py-1 text-sm"
+              />
               <input
                 type="number"
-                value={taxRate}
-                onChange={(e) => setTaxRate(e.target.value)}
+                value={additionalCharge}
+                onChange={(e) => setAdditionalCharge(e.target.value)}
+                onWheel={(e) => e.currentTarget.blur()}
                 className="w-28 border rounded px-2 py-1 text-right"
                 min="0"
                 step="0.01"
               />
+            </div>
+
+            {/* VAT — pick the usual rates, or type any other. */}
+            <div className="flex justify-between items-center gap-2">
+              <span>Tax/Vat</span>
+              <div className="flex items-center gap-1">
+                <select
+                  value={taxSelectValue}
+                  onChange={(e) => {
+                    if (e.target.value === "custom") {
+                      setTaxCustom(true)
+                    } else {
+                      setTaxCustom(false)
+                      setTaxRate(Number(e.target.value))
+                    }
+                  }}
+                  className="border rounded px-1 py-1 text-xs bg-white"
+                >
+                  <option value="0">0% (exempt)</option>
+                  <option value="5">5% (standard)</option>
+                  <option value="custom">Custom</option>
+                </select>
+                {showTaxInput && (
+                  <input
+                    type="number"
+                    value={taxRate}
+                    onChange={(e) => setTaxRate(e.target.value)}
+                    onWheel={(e) => e.currentTarget.blur()}
+                    className="w-20 border rounded px-2 py-1 text-right"
+                    min="0"
+                    step="0.01"
+                  />
+                )}
+              </div>
             </div>
             <div className="flex justify-between">
-              <span>Tax/Vat</span>
+              <span className="text-gray-600 text-xs">
+                VAT on items after discount + charges
+              </span>
               <span>{currency(taxPrice)}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="flex items-center gap-1">
-                <Percent size={14} />
-                Special discount
-              </span>
-              <input
-                type="number"
-                value={discountAmount}
-                onChange={(e) => setDiscountAmount(e.target.value)}
-                className="w-28 border rounded px-2 py-1 text-right"
-                min="0"
-                step="0.01"
-              />
-            </div>
+
             <div className="flex justify-between items-center py-1">
               <span>Payment Method</span>
               <select
@@ -1161,8 +1286,9 @@ export default function CreateOrder() {
                 <option value="tamara">Tamara (Split Payments)</option>
               </select>
             </div>
+
             <div className="border-t pt-2 flex justify-between font-semibold">
-              <span>Total</span>
+              <span>Total Amount</span>
               <span>{currency(totalPrice)}</span>
             </div>
           </div>
