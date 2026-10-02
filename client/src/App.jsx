@@ -60,6 +60,8 @@ const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"))
 const PromotionalPage = lazyWithRetry(() => import("./pages/PromotionalPage"))
 const BackToSchoolProfessional = lazyWithRetry(() => import("./pages/BackToSchoolProfessional"))
 const VoucherTerms = lazyWithRetry(() => import("./pages/VoucherTerms"))
+const ReferralProgramTerms = lazyWithRetry(() => import("./pages/ReferralProgramTerms"))
+const GrabianPointsTerms = lazyWithRetry(() => import("./pages/GrabianPointsTerms"))
 const DeliveryTerms = lazyWithRetry(() => import("./pages/DeliveryTerms"))
 const OfferPage = lazyWithRetry(() => import("./pages/OfferPage"))
 const GamingZonePage = lazyWithRetry(() => import("./pages/GamingZonePage"))
@@ -277,6 +279,8 @@ function App() {
                     <Route path="green-friday-promotional" element={<PromotionalPage />} />
                     <Route path="backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
                     <Route path="voucher-terms" element={<VoucherTerms />} />
+                    <Route path="referral-program-terms" element={<ReferralProgramTerms />} />
+                    <Route path="grabian-points-terms" element={<GrabianPointsTerms />} />
                     <Route path="delivery-terms" element={<DeliveryTerms />} />
                     <Route path="offers/:slug" element={<OfferPage />} />
                     <Route path="gaming-zone/:slug" element={<GamingZonePage />} />
@@ -374,6 +378,8 @@ function App() {
                     <Route path="green-friday-promotional" element={<PromotionalPage />} />
                     <Route path="backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
                     <Route path="voucher-terms" element={<VoucherTerms />} />
+                    <Route path="referral-program-terms" element={<ReferralProgramTerms />} />
+                    <Route path="grabian-points-terms" element={<GrabianPointsTerms />} />
                     <Route path="delivery-terms" element={<DeliveryTerms />} />
                     <Route path="offers/:slug" element={<OfferPage />} />
                     <Route path="gaming-zone/:slug" element={<GamingZonePage />} />
@@ -470,6 +476,8 @@ function App() {
                     <Route path="green-friday-promotional" element={<PromotionalPage />} />
                     <Route path="backtoschool-acer-professional" element={<BackToSchoolProfessional />} />
                     <Route path="voucher-terms" element={<VoucherTerms />} />
+                    <Route path="referral-program-terms" element={<ReferralProgramTerms />} />
+                    <Route path="grabian-points-terms" element={<GrabianPointsTerms />} />
                     <Route path="delivery-terms" element={<DeliveryTerms />} />
                     <Route path="offers/:slug" element={<OfferPage />} />
                     <Route path="gaming-zone/:slug" element={<GamingZonePage />} />

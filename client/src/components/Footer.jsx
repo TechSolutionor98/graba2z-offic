@@ -344,6 +344,16 @@ const Footer = ({ className = "" }) => {
                       <TranslatedText>Delivery Terms</TranslatedText>
                     </Link>
                   </li>
+                  <li>
+                    <Link to={getLocalizedPath("/referral-program-terms")} className="hover:text-footer-link-hover">
+                      <TranslatedText>Referral Programme Terms</TranslatedText>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to={getLocalizedPath("/grabian-points-terms")} className="hover:text-footer-link-hover">
+                      <TranslatedText>Grabian Points Terms</TranslatedText>
+                    </Link>
+                  </li>
                 </ul>
               </div>
 
