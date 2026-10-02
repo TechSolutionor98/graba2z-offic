@@ -1,11 +1,17 @@
+// The invoice for documents raised on the Create Order/Quotation screen.
+//
+// Deliberately a separate file from InvoiceComponent: a storefront order and an
+// admin-raised document describe different things. Here the price an admin typed is
+// the agreed price -- there is no catalogue "was" price behind it -- so this one never
+// shows a saving it had to infer. Changing one invoice no longer disturbs the other.
 import React, { forwardRef } from "react"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
-import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
+import { computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 import { splitItemsVat, formatVatRateLabel, splitVatInclusive } from "../../utils/vat"
 import { orderPickupStore } from "../../utils/orderCustomer"
 
-const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) => {
+const QuotationInvoiceComponent = forwardRef(({ order, showStatus, isQuotation = true }, ref) => {
 
   const formatPrice = (price) => {
     return formatOrderPrice(price, order)
@@ -30,7 +36,11 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
     hasPaymentCharges,
     paymentChargesTotal,
   } = getInvoiceBreakdown(order)
-  const derivedDiscount = deriveBaseDiscount(baseSubtotal, subtotal)
+  // Only a base price stamped on the line itself counts here. The shared helper also
+  // falls back to the linked product's catalogue price, which on an admin document
+  // turns any price typed below catalogue into a discount the admin never gave.
+  const hasStampedBase = regularItems.some((item) => Number(item?.basePrice) > 0)
+  const derivedDiscount = hasStampedBase ? deriveBaseDiscount(baseSubtotal, subtotal) : 0
 
   // Prices, and the fees added to them, are VAT-inclusive. The VAT line therefore
   // *states* the tax already contained in the total rather than charging it again --
@@ -62,6 +72,9 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
   // column footers are summed from these same figures, so what is printed
   // always adds up.
   const vatLabel = formatVatRateLabel(vatRate)
+  // On an exempt (0%) document the net, the VAT and the total are all the same
+  // figure, so those two columns say nothing and are dropped.
+  const showVatColumns = vatRate > 0
   const regularVat = splitItemsVat(regularItems, vatRate)
   const protectionVat = splitItemsVat(protectionItems, vatRate)
   const vatByKey = new Map(
@@ -256,18 +269,20 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                 <tr className="bg-lime-100">
                   <th className="border border-lime-300 px-3 py-2 text-left text-sm font-bold">Product</th>
                   <th className="border border-lime-300 px-3 py-2 text-center text-sm font-bold">Qty</th>
-                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Subtotal</th>
-                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">{vatLabel}</th>
+                  <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Unit Price</th>
+                  {showVatColumns && (
+                    <>
+                      <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Subtotal</th>
+                      <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">{vatLabel}</th>
+                    </>
+                  )}
                   <th className="border border-lime-300 px-3 py-2 text-right text-sm font-bold">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {regularItems.map((item, index) => {
-                  const basePrice = resolveOrderItemBasePrice(item)
-                  const itemPrice = Number(item.price) || basePrice
-                  const showDiscount = basePrice > itemPrice
-                  const lineTotal = itemPrice * (item.quantity || 0)
-                  const baseTotal = basePrice * (item.quantity || 0)
+                  // The price the admin typed is the only price this document has.
+                  const lineTotal = (Number(item.price) || 0) * (item.quantity || 0)
 
                   return (
                     <tr key={index} className="hover:bg-lime-50">
@@ -284,24 +299,23 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                             💻 OS: {item.selectedDosData.dosType}
                           </div>
                         )}
-                        {showDiscount && (
-                          <div className="text-xs text-gray-500">Base: {formatPrice(basePrice)}</div>
-                        )}
                       </td>
                       <td className="border border-lime-300 px-3 py-2 text-center text-sm">{item.quantity}</td>
                       <td className="border border-lime-300 px-3 py-2 text-right text-sm">
-                        {formatPrice(lineVat(item).net)}
+                        {formatPrice(Number(item.price) || 0)}
                       </td>
-                      <td className="border border-lime-300 px-3 py-2 text-right text-sm">
-                        {formatPrice(lineVat(item).vat)}
-                      </td>
+                      {showVatColumns && (
+                        <>
+                          <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                            {formatPrice(lineVat(item).net)}
+                          </td>
+                          <td className="border border-lime-300 px-3 py-2 text-right text-sm">
+                            {formatPrice(lineVat(item).vat)}
+                          </td>
+                        </>
+                      )}
                       <td className="border border-lime-300 px-3 py-2 text-right text-sm font-semibold">
-                        {showDiscount && (
-                          <span className="block text-xs text-gray-400 font-normal line-through">
-                            {formatPrice(baseTotal)}
-                          </span>
-                        )}
-                        <span>{formatPrice(lineTotal)}</span>
+                        {formatPrice(lineTotal)}
                       </td>
                     </tr>
                   )
@@ -422,8 +436,8 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
               (!(paymentCharges?.length > 0) && isCOD && codShippingFee > 0)
             )) && (
               <div className="flex justify-between">
-                <span className="text-black">Shipping Charges <span className="text-xs text-black">(excl. VAT)</span>:</span>
-                <span className="text-black">{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
+                <span className="text-black">Shipping Charges:</span>
+                <span className="text-black">{formatPrice(shipping)}</span>
               </div>
             )}
             {paymentCharges?.length > 0 ? (
@@ -518,4 +532,4 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
   )
 })
 
-export default InvoiceComponent
+export default QuotationInvoiceComponent

@@ -20,6 +20,7 @@ import { resolveOrderItemBasePrice, computeBaseSubtotal, deriveBaseDiscount } fr
 import { getPaymentMethodDisplay, getPaymentMethodBadgeColor, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
 import { paymentMethodChargeAPI, adminAPI } from "../../services/api"
 import InvoiceComponent from "./InvoiceComponent"
+import QuotationInvoiceComponent from "./QuotationInvoiceComponent"
 import { askToEmailCustomer } from "../../utils/customerEmail"
 import { orderCustomerName, orderCustomerEmail, orderCustomerPhone, orderPickupStore } from "../../utils/orderCustomer"
 
@@ -466,7 +467,9 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                 {order.orderItems?.filter(item => !item.isProtection && !item.protectionData && !item.protectionFor).map((item, index) => {
                   const basePrice = resolveOrderItemBasePrice(item)
                   const salePrice = Number(item.price) || basePrice
-                  const showDiscount = basePrice > salePrice
+                  // On a quotation the price the admin typed IS the price; there is no
+                  // catalogue "was" behind it, so no struck-through figure is shown.
+                  const showDiscount = !isQuotation && basePrice > salePrice
                   const lineTotal = salePrice * (item.quantity || 0)
                   const baseTotal = basePrice * (item.quantity || 0)
 
@@ -552,7 +555,7 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
             <div className="bg-gray-50 border rounded-lg p-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Total Amount</h3>
               <div className="space-y-2">
-                {selectedBaseSubtotal > 0 && (
+                {!isQuotation && selectedBaseSubtotal > selectedTotals.subtotal && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Base Price:</span>
                     <span className="text-gray-400 line-through">{formatPrice(selectedBaseSubtotal)}</span>
@@ -907,7 +910,11 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
 
       {/* Hidden Invoice Component for Printing */}
       <div style={{ display: "none" }}>
-        <InvoiceComponent order={order} ref={printComponentRef} isQuotation={isQuotation} />
+        {isQuotation ? (
+          <QuotationInvoiceComponent order={order} ref={printComponentRef} isQuotation />
+        ) : (
+          <InvoiceComponent order={order} ref={printComponentRef} />
+        )}
       </div>
 
       {/* Notification Modal */}

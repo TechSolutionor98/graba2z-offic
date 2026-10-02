@@ -486,10 +486,15 @@ export default function CreateOrder() {
         name: it.name,
         quantity: Number(it.quantity) || 1,
         image: it.image || "/placeholder.svg",
-        // The price the document actually charges, which is the catalogue
-        // price re-based to this document's VAT rate. Stored this way so the
-        // invoice's line totals add up to the order total at any rate.
+        // The price the document actually charges: the net price typed here with
+        // this document's VAT added. Stored VAT-inclusive so the invoice's line
+        // totals add up to the order total at any rate.
         price: Number(lineCharged(num(it.price), taxRate).toFixed(2)),
+        // Stamped equal to the charged price on purpose. The price an admin types
+        // IS the agreed price -- there is no RRP behind it. Without this the
+        // invoice falls back to the product's catalogue price to find a "base",
+        // and anything typed below catalogue shows up as a discount nobody gave.
+        basePrice: Number(lineCharged(num(it.price), taxRate).toFixed(2)),
         product: it.product || undefined,
       })),
       deliveryType,
@@ -1249,7 +1254,7 @@ export default function CreateOrder() {
                   }}
                   className="border rounded px-1 py-1 text-xs bg-white"
                 >
-                  <option value="0">0% (exempt)</option>
+                  <option value="0">Without VAT</option>
                   <option value="5">5% (standard)</option>
                   <option value="custom">Custom</option>
                 </select>
