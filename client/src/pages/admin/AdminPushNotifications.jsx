@@ -47,6 +47,7 @@ const EMPTY = {
   titleAr: "",
   bodyAr: "",
   imageUrl: "",
+  sound: "default",
   action: { screen: "none", targetId: "", url: "" },
   audience: { type: "all", platform: "android", country: "AE", users: [] },
   scheduledAt: "",
@@ -250,6 +251,7 @@ const AdminPushNotifications = () => {
       titleAr: row.titleAr || "",
       bodyAr: row.bodyAr || "",
       imageUrl: row.imageUrl || "",
+      sound: row.sound || "default",
       action: { screen: row.action?.screen || "none", targetId: row.action?.targetId || "", url: row.action?.url || "" },
       audience: {
         type: row.audience?.type || "all",
@@ -271,7 +273,7 @@ const AdminPushNotifications = () => {
       setBusy("test")
       const { data } = await axios.post(
         `${config.API_URL}/api/notifications/admin/test`,
-        { title: form.title || "Test notification", body: form.body || "Hello from Grabatoz", imageUrl: form.imageUrl, action: form.action, token: testToken.trim() },
+        { title: form.title || "Test notification", body: form.body || "Hello from Grabatoz", imageUrl: form.imageUrl, sound: form.sound, action: form.action, token: testToken.trim() },
         authHeader,
       )
       if (data.sent > 0) flash("Test sent")
@@ -376,6 +378,19 @@ const AdminPushNotifications = () => {
               <textarea className={inputClass} dir="rtl" rows={3} maxLength={500} value={form.bodyAr} onChange={(e) => set({ bodyAr: e.target.value })} />
             </Field>
           </div>
+
+          <Field
+            label="Notification sound"
+            hint="The tone the phone plays. The audio file must be bundled in the mobile app — anything missing there falls back to the default tone."
+          >
+            <select className={inputClass} value={form.sound} onChange={(e) => set({ sound: e.target.value })}>
+              {(status?.sounds?.length ? status.sounds : [{ id: "default", label: "Default (system tone)" }]).map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </Field>
 
           <Field label="Image URL (optional)" hint="Shown as a large picture in the notification. Use a public https link, ideally 2:1.">
             <div className="flex gap-3">

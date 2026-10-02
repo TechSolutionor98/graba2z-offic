@@ -45,18 +45,24 @@ const ReferralOfferCard = ({ onNavigate, showHero = false, descriptionAtBottom =
 
   // The figures come from the server's view of this customer's tier (assigned, else the
   // programme default). The base settings only stand in while the summary is still loading.
-  const refereeOffer = summary?.offer?.referee || {
-    discountType: settings.refereeDiscountType,
-    discountValue: settings.refereeDiscountValue,
-    maxDiscountAed: settings.refereeMaxDiscountAed,
-    minOrderAed: settings.refereeMinOrderAed,
-  }
-  const referrerOffer = summary?.offer?.referrer || {
-    discountType: settings.referrerDiscountType,
-    discountValue: settings.referrerDiscountValue,
-    maxDiscountAed: settings.referrerMaxDiscountAed,
-    minOrderAed: settings.referrerMinOrderAed,
-  }
+  // Order matters: this customer's own tier first, then the programme's default tier
+  // (which is what a signed-out visitor would get if they joined), and only then the
+  // raw base settings. Skipping the middle step made the signed-out card advertise
+  // different numbers from the signed-in one.
+  const refereeOffer = summary?.offer?.referee ||
+    settings.offer?.referee || {
+      discountType: settings.refereeDiscountType,
+      discountValue: settings.refereeDiscountValue,
+      maxDiscountAed: settings.refereeMaxDiscountAed,
+      minOrderAed: settings.refereeMinOrderAed,
+    }
+  const referrerOffer = summary?.offer?.referrer ||
+    settings.offer?.referrer || {
+      discountType: settings.referrerDiscountType,
+      discountValue: settings.referrerDiscountValue,
+      maxDiscountAed: settings.referrerMaxDiscountAed,
+      minOrderAed: settings.referrerMinOrderAed,
+    }
 
   const handleCopy = async () => {
     if (!link) return
