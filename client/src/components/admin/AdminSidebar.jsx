@@ -132,7 +132,8 @@ const AdminSidebar = () => {
     if (
       (path.includes("/admin/orders") &&
         !path.includes("/admin/orders/create") &&
-        !path.includes("/admin/orders/quotations")) ||
+        !path.includes("/admin/orders/quotations") &&
+        !path.includes("/admin/orders/wholesale")) ||
       path.includes("/admin/orders/new") ||
       path.includes("/admin/orders/online") ||
       path.includes("/admin/orders/received") ||
@@ -150,7 +151,15 @@ const AdminSidebar = () => {
       newOpenDropdowns.orders = true
     }
 
-    if (path.includes("/admin/orders/create") || path.includes("/admin/orders/quotations")) {
+    // Wholesale Orders lives in this group even though its path sits under
+    // /admin/orders, so it is named here as well as excluded from the Orders rule
+    // above. Without both, following the link collapses the group it was clicked in
+    // and opens the wrong one.
+    if (
+      path.includes("/admin/orders/create") ||
+      path.includes("/admin/orders/quotations") ||
+      path.includes("/admin/orders/wholesale")
+    ) {
       newOpenDropdowns.createOrderQuotation = true
     }
 
