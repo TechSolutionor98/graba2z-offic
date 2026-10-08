@@ -105,6 +105,7 @@ import PriceAdjustment from "../pages/admin/PriceAdjustment"
 import PriceAdjustmentReports from "../pages/admin/PriceAdjustmentReports"
 import RecentQuotation from "../pages/admin/RecentQuotation"
 import Orders from "../pages/admin/Orders"
+import WholesaleOrders from "../pages/admin/WholesaleOrders"
 import Rejected from "../pages/admin/Rejected"
 import ResetCache from "../pages/admin/ResetCache"
 import TrashCategories from "../pages/admin/TrashCategories"
@@ -132,6 +133,7 @@ const AdminPortal = () => {
                 redirect to it with their tab preselected, so sidebar links,
                 bookmarks and anything deep-linking an order keep working. */}
             <Route path="orders" element={<Orders />} />
+            <Route path="orders/wholesale" element={<WholesaleOrders />} />
             <Route path="orders/new" element={<Navigate to="/admin/orders?status=New" replace />} />
             <Route path="orders/confirmed" element={<Navigate to="/admin/orders?status=Confirmed" replace />} />
             <Route path="orders/processing" element={<Navigate to="/admin/orders?status=Processing" replace />} />

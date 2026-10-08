@@ -910,8 +910,18 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
 
       {/* Hidden Invoice Component for Printing */}
       <div style={{ display: "none" }}>
-        {isQuotation ? (
-          <QuotationInvoiceComponent order={order} ref={printComponentRef} isQuotation />
+        {/* A quotation and the wholesale order raised from it are the same trade
+            document at two stages, so both print on the trade template. A storefront
+            order keeps the retail invoice. */}
+        {isQuotation || order.sourceQuotationId ? (
+          <QuotationInvoiceComponent
+            order={order}
+            ref={printComponentRef}
+            /* Boolean(), not the raw prop: the Orders screen passes nothing, and an
+               undefined here would fall through to the component's `= true` default
+               and print a wholesale order as a quotation. */
+            isQuotation={Boolean(isQuotation)}
+          />
         ) : (
           <InvoiceComponent order={order} ref={printComponentRef} />
         )}

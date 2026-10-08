@@ -563,6 +563,7 @@ const AdminSidebar = () => {
       items: [
         { title: "Create Order/Quotation", path: "/admin/orders/create" },
         { title: "Recent Quotation", path: "/admin/orders/quotations" },
+        { title: "Wholesale Orders", path: "/admin/orders/wholesale" },
       ],
     },
     {

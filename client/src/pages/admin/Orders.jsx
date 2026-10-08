@@ -91,7 +91,12 @@ const statusChipClass = (status) => {
 const getToken = () =>
   localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
-export default function Orders() {
+/**
+ * The orders screen. Retail by default; `wholesale` shows the orders raised from
+ * quotations instead. The two lists are mutually exclusive server-side, so the same
+ * screen can serve both without either showing the other's rows.
+ */
+export default function Orders({ wholesale = false }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -136,7 +141,7 @@ export default function Orders() {
       }
 
       const { data } = await axios.get(`${config.API_URL}/api/admin/orders`, {
-        params: { includeDeleted: true },
+        params: { includeDeleted: true, ...(wholesale ? { wholesale: true } : {}) },
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
 
@@ -152,7 +157,9 @@ export default function Orders() {
 
   useEffect(() => {
     fetchOrders()
-  }, [])
+    // Refetch if the screen is reused for the other list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wholesale])
 
   // Notifications elsewhere in the admin link straight to one order.
   useEffect(() => {
@@ -300,7 +307,7 @@ export default function Orders() {
       <div className="p-8 ml-64">
         <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{wholesale ? "Wholesale Orders" : "Orders"}</h1>
             <p className="text-gray-600 mt-1">Every order in one place. Switch status with the tabs below.</p>
           </div>
           <button

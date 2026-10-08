@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { adminAPI } from "../../services/api"
-import { Search, Eye, RefreshCw, PauseCircle, PlayCircle, ArrowRightCircle, PencilLine, Trash2 } from "lucide-react"
+import { Search, Eye, RefreshCw, PauseCircle, PlayCircle, ArrowRightCircle, PencilLine, Trash2, MoreHorizontal } from "lucide-react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import AdminOrderDetailsModal from "../../components/admin/AdminOrderDetailsModal"
 import { askToEmailCustomer } from "../../utils/customerEmail"
@@ -46,6 +46,26 @@ export default function RecentQuotation() {
   )
   const [busyId, setBusyId] = useState(null)
   const [selectedQuotation, setSelectedQuotation] = useState(null)
+  // Which row has its actions menu open. Only one at a time.
+  const [openMenuId, setOpenMenuId] = useState(null)
+
+  // A menu left open behind a click elsewhere (or a scroll) is a trap, so any click
+  // outside it and the Escape key close it.
+  useEffect(() => {
+    if (!openMenuId) return
+    const close = (event) => {
+      if (!event.target.closest?.("[data-row-menu]")) setOpenMenuId(null)
+    }
+    const onKey = (event) => {
+      if (event.key === "Escape") setOpenMenuId(null)
+    }
+    document.addEventListener("mousedown", close)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", close)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [openMenuId])
 
   const fetchQuotations = async () => {
     try {
@@ -238,7 +258,7 @@ export default function RecentQuotation() {
                     <td className="px-4 py-3">{new Date(q.createdAt).toLocaleDateString()}</td>
                     <td className="px-4 py-3 text-right">{formatPrice(q.totalPrice)}</td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-3">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setSelectedQuotation(q)}
                           className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700"
@@ -246,62 +266,95 @@ export default function RecentQuotation() {
                           <Eye size={16} /> View
                         </button>
 
-                        {/* A document stays editable after it has been moved
-                            to Orders. Saving it then updates the order made
-                            from it as well, so the two cannot disagree. */}
-                        <button
-                          onClick={() => navigate(`/admin/orders/create?id=${q._id}`)}
-                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700"
-                          title={
-                            isConverted
-                              ? "Edit this document and the order made from it"
-                              : "Reopen this document on the Create Order/Quotation screen"
-                          }
-                        >
-                          <PencilLine size={16} /> {isConverted ? "Edit" : "Recall"}
-                        </button>
+                        {/* Everything that changes the document sits behind one menu, so a
+                            long row of links cannot be clicked by accident. */}
+                        <div className="relative" data-row-menu>
+                          <button
+                            onClick={() => setOpenMenuId(openMenuId === q._id ? null : q._id)}
+                            disabled={busy}
+                            aria-haspopup="menu"
+                            aria-expanded={openMenuId === q._id}
+                            title="More actions"
+                            className="inline-flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                          >
+                            <MoreHorizontal size={16} />
+                          </button>
 
-                        {!isConverted && (
-                          <>
-                            {status === "Hold" ? (
-                              <button
-                                onClick={() => changeStatus(q, "Draft")}
-                                disabled={busy}
-                                className="inline-flex items-center gap-1 text-gray-700 hover:text-gray-900 disabled:opacity-50"
-                                title="Put this document back in the working pile"
-                              >
-                                <PlayCircle size={16} /> Release
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => changeStatus(q, "Hold")}
-                                disabled={busy}
-                                className="inline-flex items-center gap-1 text-orange-600 hover:text-orange-700 disabled:opacity-50"
-                                title="Park this document without moving it to Orders"
-                              >
-                                <PauseCircle size={16} /> Hold
-                              </button>
-                            )}
-
-                            <button
-                              onClick={() => moveToOrders(q)}
-                              disabled={busy}
-                              className="inline-flex items-center gap-1 text-lime-700 hover:text-lime-800 disabled:opacity-50"
-                              title="Create a real order from this document"
+                          {openMenuId === q._id && (
+                            <div
+                              role="menu"
+                              className="absolute right-0 z-20 mt-1 w-56 overflow-hidden rounded-md border border-gray-200 bg-white py-1 text-left shadow-lg"
                             >
-                              <ArrowRightCircle size={16} /> Move to Orders
-                            </button>
-                          </>
-                        )}
+                              <button
+                                role="menuitem"
+                                onClick={() => {
+                                  setOpenMenuId(null)
+                                  navigate(`/admin/orders/create?id=${q._id}`)
+                                }}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                              >
+                                <PencilLine size={15} className="text-blue-600" />
+                                {isConverted ? "Edit" : "Recall"}
+                              </button>
 
-                        <button
-                          onClick={() => deleteQuotation(q)}
-                          disabled={busy}
-                          className="inline-flex items-center gap-1 text-red-600 hover:text-red-700 disabled:opacity-50"
-                          title="Delete this quotation"
-                        >
-                          <Trash2 size={16} /> Delete
-                        </button>
+                              {!isConverted && (
+                                <>
+                                  {status === "Hold" ? (
+                                    <button
+                                      role="menuitem"
+                                      onClick={() => {
+                                        setOpenMenuId(null)
+                                        changeStatus(q, "Draft")
+                                      }}
+                                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                    >
+                                      <PlayCircle size={15} className="text-gray-700" />
+                                      Release
+                                    </button>
+                                  ) : (
+                                    <button
+                                      role="menuitem"
+                                      onClick={() => {
+                                        setOpenMenuId(null)
+                                        changeStatus(q, "Hold")
+                                      }}
+                                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                    >
+                                      <PauseCircle size={15} className="text-orange-600" />
+                                      Hold
+                                    </button>
+                                  )}
+
+                                  <button
+                                    role="menuitem"
+                                    onClick={() => {
+                                      setOpenMenuId(null)
+                                      moveToOrders(q)
+                                    }}
+                                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                  >
+                                    <ArrowRightCircle size={15} className="text-lime-700" />
+                                    Move to Orders
+                                  </button>
+                                </>
+                              )}
+
+                              <div className="my-1 border-t border-gray-100" />
+
+                              <button
+                                role="menuitem"
+                                onClick={() => {
+                                  setOpenMenuId(null)
+                                  deleteQuotation(q)
+                                }}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                              >
+                                <Trash2 size={15} />
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>

@@ -110,6 +110,9 @@ export default function CreateOrder() {
   // charge, so the invoice lists it beside any other fee without a special case.
   const [additionalChargeName, setAdditionalChargeName] = useState("Additional charges")
   const [additionalCharge, setAdditionalCharge] = useState(0)
+  // Printed on the document when on. Off by default: a cash sale should not
+  // advertise a transfer account.
+  const [showBankDetails, setShowBankDetails] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState("cod")
 
   // Custom line item
@@ -242,6 +245,7 @@ export default function CreateOrder() {
         const savedRate = Number.isFinite(Number(doc.taxRate)) ? Number(doc.taxRate) : 5
         setTaxRate(savedRate)
         setTaxCustom(savedRate !== 0 && savedRate !== 5)
+        setShowBankDetails(Boolean(doc.showBankDetails))
         setPaymentMethod(doc.actualPaymentMethod || doc.paymentMethod || "cod")
       } catch (e) {
         if (!cancelled) setLoadError(e?.message || "Could not open this document.")
@@ -464,6 +468,7 @@ export default function CreateOrder() {
     setAdditionalChargeName("Additional charges")
     setAdditionalCharge(0)
     setTaxCustom(false)
+    setShowBankDetails(false)
     setSendCustomerEmail(false)
     setUpdateUserProfile(false)
     setProductQuery("")
@@ -532,6 +537,7 @@ export default function CreateOrder() {
       // Sent so the invoice can split each line at this rate rather than
       // assuming the store default.
       taxRate: num(taxRate),
+      showBankDetails,
       discountAmount: Number(discountAmount.toFixed(2)),
       paymentCharges:
         additionalChargesTotal > 0
@@ -909,6 +915,21 @@ export default function CreateOrder() {
                 Email the customer a copy
                 <span className="block text-xs text-gray-500">
                   Leave unticked to save it without sending anything.
+                </span>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2 text-sm mt-2">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={showBankDetails}
+                onChange={(e) => setShowBankDetails(e.target.checked)}
+              />
+              <span>
+                Show bank details on receipt
+                <span className="block text-xs text-gray-500">
+                  Prints our account details on the printed document.
                 </span>
               </span>
             </label>
