@@ -21,7 +21,10 @@ const AdminLogin = () => {
     const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: value,
+      // An address typed with a capital -- or with a space picked up from autofill --
+      // is the same address, so the field settles it as you type rather than failing
+      // the sign-in. The password is left exactly as entered.
+      [name]: name === "email" ? value.trim().toLowerCase() : value,
     })
   }
 
