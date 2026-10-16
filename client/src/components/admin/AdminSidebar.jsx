@@ -41,6 +41,7 @@ import {
   Gift,
   Boxes,
   BellRing,
+  MessageCircle,
 } from "lucide-react"
 
 const SEO_UNLOCK_TOKEN_KEY = "seoUnlockToken"
@@ -76,6 +77,7 @@ const AdminSidebar = () => {
     makes: false,
     manufacturers: false,
     soldBy: false,
+    inventory: false,
     stockAdjustment: false,
     createOrderQuotation: false,
     seoSettings: false,
@@ -189,6 +191,10 @@ const AdminSidebar = () => {
 
     if (path.includes("/admin/stock-adjustment")) {
       newOpenDropdowns.stockAdjustment = true
+    }
+
+    if (path.includes("/admin/inventory")) {
+      newOpenDropdowns.inventory = true
     }
 
     // SEO Settings dropdown auto-open
@@ -540,8 +546,12 @@ const AdminSidebar = () => {
     {
       title: "Inventory",
       icon: Boxes,
-      path: "/admin/inventory",
+      dropdown: "inventory",
       permission: "products",
+      items: [
+        { title: "Store Stats", path: "/admin/inventory/store-stats" },
+        { title: "Create Labels", path: "/admin/inventory/create-labels" },
+      ],
     },
     {
       title: "Stock Adjustment",
@@ -605,6 +615,12 @@ const AdminSidebar = () => {
       icon: BellRing,
       path: "/admin/push-notifications",
       permission: "pushNotifications",
+    },
+    {
+      title: "WhatsApp",
+      icon: MessageCircle,
+      path: "/admin/whatsapp",
+      permission: "whatsapp",
     },
     {
       title: "Request Callbacks",

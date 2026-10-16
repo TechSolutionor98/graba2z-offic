@@ -46,7 +46,8 @@ import AdminEmailTemplates from "../pages/admin/AdminEmailTemplates"
 import AdminManagement from "../pages/admin/AdminManagement"
 import AdminNewsletter from "../pages/admin/AdminNewsletter"
 import AdminProducts from "../pages/admin/AdminProducts"
-import Inventory from "../pages/admin/Inventory"
+import StoreStats from "../pages/admin/StoreStats"
+import CreateLabels from "../pages/admin/CreateLabels"
 import AdminProductOptionManager from "../pages/admin/AdminProductOptionManager"
 import AdminRequestCallbacks from "../pages/admin/AdminRequestCallbacks"
 import AdminReviews from "../pages/admin/AdminReviews"
@@ -81,6 +82,7 @@ import AdminReferralSettings from "../pages/admin/AdminReferralSettings"
 import AdminReferralTypes from "../pages/admin/AdminReferralTypes"
 import AdminReferrals from "../pages/admin/AdminReferrals"
 import AdminPushNotifications from "../pages/admin/AdminPushNotifications"
+import AdminWhatsApp from "../pages/admin/AdminWhatsApp"
 import AppDiscountForm from "../pages/admin/AppDiscountForm"
 import PopupSettings from "../pages/admin/PopupSettings"
 import PopupForm from "../pages/admin/PopupForm"
@@ -124,7 +126,11 @@ const AdminPortal = () => {
           <Routes>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
-            <Route path="inventory" element={<Inventory />} />
+            {/* Store Stats replaced the old single Inventory page. The old
+                path redirects, so sidebar links and bookmarks keep working. */}
+            <Route path="inventory/store-stats" element={<StoreStats />} />
+            <Route path="inventory/create-labels" element={<CreateLabels />} />
+            <Route path="inventory" element={<Navigate to="/admin/inventory/store-stats" replace />} />
             <Route path="products/add" element={<AddProduct />} />
             <Route path="products/bulk-add" element={<AddBulkProducts />} />
             <Route path="product-pm" element={<ProductPaymentMethods />} />
@@ -257,6 +263,7 @@ const AdminPortal = () => {
             <Route path="referrals" element={<AdminReferrals />} />
             <Route path="referrals/settings" element={<AdminReferralSettings />} />
             <Route path="push-notifications" element={<AdminPushNotifications />} />
+            <Route path="whatsapp" element={<AdminWhatsApp />} />
             <Route path="referrals/types" element={<AdminReferralTypes />} />
             <Route path="referrals/list" element={<AdminReferrals />} />
             <Route path="app-discount-settings/add" element={<AppDiscountForm />} />

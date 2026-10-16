@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext"
 const routePermissions = {
   "/admin/dashboard": "dashboard",
   "/admin/products": "products",
+  "/admin/inventory": "products",
   "/admin/products/add": "products",
   "/admin/products/bulk-add": "products",
   "/admin/categories": "categories",
@@ -60,6 +61,7 @@ const routePermissions = {
   "/admin/newsletter-subscribers": "newsletter",
   "/admin/request-callbacks": "requestCallbacks",
   "/admin/push-notifications": "pushNotifications",
+  "/admin/whatsapp": "whatsapp",
   "/admin/bulk-purchase": "bulkPurchase",
   "/admin/buyer-protection": "buyerProtection",
   "/admin/stock-adjustment": "stockAdjustment",
@@ -115,6 +117,7 @@ const permissionDefaultRoutes = {
   newsletter: "/admin/newsletter-subscribers",
   requestCallbacks: "/admin/request-callbacks",
   pushNotifications: "/admin/push-notifications",
+  whatsapp: "/admin/whatsapp",
   bulkPurchase: "/admin/bulk-purchase",
   buyerProtection: "/admin/buyer-protection",
   stockAdjustment: "/admin/stock-adjustment",
@@ -137,7 +140,7 @@ const getFirstPermittedRoute = (hasPermission) => {
     "dashboard", "products", "categories", "subcategories", "brands",
     "orders", "users", "reviews", "blogs", "banners", "homeSections",
     "offerPages", "gamingZone", "coupons", "deliveryCharges", "settings",
-    "emailTemplates", "newsletter", "pushNotifications", "requestCallbacks", "bulkPurchase",
+    "emailTemplates", "newsletter", "pushNotifications", "whatsapp", "requestCallbacks", "bulkPurchase",
     "buyerProtection", "stockAdjustment", "seoSettings", "cache",
     "volumes", "warranty", "colors", "units", "tax", "sizes",
     "adminManagement", "activityLogs"
