@@ -647,24 +647,40 @@ const Checkout = () => {
     })
   }
 
+  // Name the field that is missing. "Please fill in all required fields" sends
+  // the customer back to a form that looks complete to them, with nothing marked
+  // and no way to tell what we objected to.
+  const listMissing = (fields) =>
+    fields.filter(([value]) => !String(value ?? "").trim()).map(([, label]) => label)
+
   const validateHomeDelivery = () => {
-    if (
-      !formData.email ||
-      !formData.phone ||
-      !formData.address ||
-      !formData.city ||
-      !formData.state ||
-      !formData.zipCode
-    ) {
-      setError("Please fill in all required fields")
+    // The post code is not checked. It is marked optional on the address form
+    // because the UAE has no postal codes, and the server does not require it
+    // either -- demanding it here only blocked the cash-on-delivery path while
+    // card and instalments went through.
+    const missing = listMissing([
+      [formData.email, "email address"],
+      [formData.phone, "phone number"],
+      [formData.address, "street address"],
+      [formData.city, "city"],
+      [formData.state, "state or emirate"],
+    ])
+
+    if (missing.length > 0) {
+      setError(`Please add your ${missing.join(", ")}.`)
       return false
     }
     return true
   }
 
   const validatePickup = () => {
-    if (!pickupDetails.phone || !pickupDetails.storeId) {
-      setError("Please fill in phone number and select a store")
+    const missing = listMissing([
+      [pickupDetails.phone, "phone number"],
+      [pickupDetails.storeId, "collection branch"],
+    ])
+
+    if (missing.length > 0) {
+      setError(`Please add your ${missing.join(" and ")}.`)
       return false
     }
     return true
