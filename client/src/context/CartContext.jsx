@@ -577,8 +577,11 @@ export const CartProvider = ({ children }) => {
   }, [cartItems.length, loyaltyPointsToRedeem])
 
   // Enhanced addToCart function with bundle price support
+  // `silent` suppresses the toast for callers that confirm the add themselves --
+  // the product page shows a sheet with "View cart" on it, and a toast on top of
+  // that is the same news told twice.
   const addToCart = useCallback(
-    (product, quantity = 1, bundleId = null) => {
+    (product, quantity = 1, bundleId = null, { silent = false } = {}) => {
       console.log(`🛒 Adding to cart:`, {
         productName: product.name,
         productId: product._id,
@@ -687,12 +690,14 @@ export const CartProvider = ({ children }) => {
       }
 
       // Show success toast
-      setTimeout(() => {
-        const message = product.bundleDiscount
-          ? `Added ${product.name} to cart with bundle discount!`
-          : `Added ${product.name} to cart`
-        showToast(message, "success")
-      }, 100)
+      if (!silent) {
+        setTimeout(() => {
+          const message = product.bundleDiscount
+            ? `Added ${product.name} to cart with bundle discount!`
+            : `Added ${product.name} to cart`
+          showToast(message, "success")
+        }, 100)
+      }
     },
     [cartItems, showToast],
   )

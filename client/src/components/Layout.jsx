@@ -10,13 +10,16 @@ import StaticPageContentTranslator from "./StaticPageContentTranslator"
 const Footer = lazyWithRetry(() => import("./Footer"))
 const BlogFooter = lazyWithRetry(() => import("./BlogFooter"))
 
-function WhatsAppButton() {
+function WhatsAppButton({ raised = false }) {
   return (
     <a
       href="https://wa.me/971505033860"
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-24 md:bottom-20 right-4 z-50"
+      // Raised on pages with a sticky action bar, which occupies the space this
+      // normally floats in. Left where it is, it lands on top of Buy Now or
+      // Checkout and swallows the tap.
+      className={`fixed ${raised ? "bottom-[150px]" : "bottom-24"} md:bottom-20 right-4 z-50`}
       aria-label="Chat on WhatsApp"
       style={{ transition: 'transform 0.2s' }}
     >
@@ -41,6 +44,12 @@ function Layout() {
   // Check if current path is a blog page (with or without language prefix)
   // Matches: /blogs, /blogs/slug, /ae-en/blogs, /ae-en/blogs/slug, /ar/blogs, etc.
   const isBlogPage = location.pathname.match(/^\/([a-z]{2}(-[a-z]{2})?\/)?blogs(\/|$)/i)
+  // The pages that carry a sticky action bar on a phone: the product page's
+  // Buy Now / Add to Cart, and the cart's total and Checkout. Both put a button
+  // exactly where the WhatsApp bubble floats.
+  const hasStickyActionBar = location.pathname.match(
+    /^\/([a-z]{2}(-[a-z]{2})?\/)?(product\/|cart$|cart\/)/i,
+  )
 
   useEffect(() => {
     const handleResize = () => {
@@ -100,7 +109,7 @@ function Layout() {
       )}
 
       {/* WhatsApp Button */}
-      {showDeferredChrome && <WhatsAppButton />}
+      {showDeferredChrome && <WhatsAppButton raised={Boolean(hasStickyActionBar)} />}
     </div>
   )
 }

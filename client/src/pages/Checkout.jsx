@@ -18,7 +18,7 @@ import { getProvincesForCountry } from "../utils/countryStates"
 import { DEFAULT_VAT_RATE } from "../utils/vat"
 import AddressAutocomplete from "../components/AddressAutocomplete"
 import { resolveDeliveryCharge, selectDeliveryMethod, describeDeliveryBlock } from "../utils/deliveryCharge"
-import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Minus, Trash2, Gift, Percent, Copy, Check, Ticket } from "lucide-react"
+import { Truck, Shield, MapPin, ChevronDown, ChevronUp, Banknote, Clock, X, Plus, Minus, Trash2, Gift, Percent, Copy, Check, Ticket, Pencil, StickyNote, CreditCard } from "lucide-react"
 import { Dialog } from "@headlessui/react"
 import { Fragment } from "react"
 import { getFullImageUrl } from "../utils/imageUtils"
@@ -156,8 +156,18 @@ const renderPaymentLogos = (id) => {
 
 // A completed checkout step shown folded on the payment step: number, title and a
 // one-line readback in the header, the full editable form underneath when opened.
-const ReviewSection = ({ number, title, summary, open, onToggle, children }) => (
-  <div className={`rounded-xl border bg-white ${open ? "border-lime-400 shadow-sm" : "border-gray-200"}`}>
+// `extra` renders full width ABOVE the header, open or closed.
+// It is the choice the rest of the section depends on, so it reads first; and it
+// needs the whole card width, which the summary column -- wedged between the step
+// badge and Change, about 230px on a phone -- cannot give it.
+// Which steps of the checkout accordion are open when the page loads. More than
+// one can be open at once -- notes and payment are both short, and making the
+// shopper open payment by hand to see what it holds is a tap for nothing.
+const DEFAULT_OPEN_SECTIONS = [2, 3]
+
+const ReviewSection = ({ id, number, title, summary, extra, open, onToggle, children }) => (
+  <div id={id} className={`scroll-mt-4 rounded-xl border bg-white ${open ? "border-lime-400 shadow-sm" : "border-gray-200"}`}>
+    {extra && <div className="px-4 pt-3">{extra}</div>}
     <button
       type="button"
       onClick={onToggle}
@@ -319,13 +329,39 @@ const Checkout = () => {
     storeId: "",
   })
   const [selectedStore, setSelectedStore] = useState(null)
+  // Phone only: whether the branch panel is showing. Open while a branch is
+  // being chosen; Done closes it, leaving the chosen branch on the section
+  // header summary. Tapping Pickup From Store opens it again.
+  const [showStorePicker, setShowStorePicker] = useState(true)
   const [step, setStep] = useState(1)
   // On the payment step the two earlier steps sit folded above the payment methods;
   // this is the one currently opened for editing (1, 2 or null).
   const [openReviewStep, setOpenReviewStep] = useState(null)
   // The accordion: which stacked section is open (1 Delivery · 2 Order notes · 3 Payment).
   // Only one is open at a time, Amazon-style; saving a section opens the next.
-  const [openSection, setOpenSection] = useState(1)
+  const [openSections, setOpenSections] = useState(DEFAULT_OPEN_SECTIONS)
+  const isSectionOpen = (n) => openSections.includes(n)
+  const toggleSection = (n) =>
+    setOpenSections((cur) => (cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]))
+  const closeSection = (n) => setOpenSections((cur) => cur.filter((x) => x !== n))
+  // Open a step and scroll it into view. Opening alone is not enough: the summary
+  // that carries the Edit buttons sits well below the steps, so the panel would
+  // expand off-screen and look like the tap did nothing.
+  const editSection = (n) => {
+    setOpenSections((cur) => (cur.includes(n) ? cur : [...cur, n]))
+    // After paint, or the element is still collapsed when its position is read.
+    requestAnimationFrame(() => {
+      document.getElementById(`checkout-step-${n}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }
+
+  // Finish one step and move to the next, leaving whatever else is open alone.
+  const advanceSection = (from, to) =>
+    setOpenSections((cur) => Array.from(new Set([...cur.filter((x) => x !== from), to])))
+  // True while the shopper has not opened or closed anything themselves, so the
+  // code below can steer them without overriding a choice they made.
+  const isUntouchedSections = (cur) =>
+    cur.length === DEFAULT_OPEN_SECTIONS.length && DEFAULT_OPEN_SECTIONS.every((n) => cur.includes(n))
   // On the delivery step the saved-address grid stays hidden -- only the chosen address
   // shows -- until the shopper taps "Change" to pick another.
   const [showAddressList, setShowAddressList] = useState(false)
@@ -1666,7 +1702,7 @@ const Checkout = () => {
     // users). It re-validates the same way and its internal setStep is harmless here.
     handleContinueToSummary(e || { preventDefault() {} })
     setShowAddressList(false)
-    setOpenSection(2)
+    advanceSection(1, 2)
   }
 
   const handleStoreSelection = (store) => {
@@ -1735,12 +1771,17 @@ const Checkout = () => {
 
           const defaultAddr = userAddresses.find((a) => a.isDefault) || userAddresses[0]
 
-          // Returning shopper who already has a usable delivery address skips straight
-          // to the payment step; a new shopper stays on step 1 to enter one. Only jump
-          // if the shopper hasn't already moved off the default section themselves.
-          const hasUsableAddress = userAddresses.some((a) => a.address && a.city)
-          if (hasUsableAddress) {
-            setOpenSection((cur) => (cur === 1 ? 3 : cur))
+          // Where a returning shopper lands. The address that will actually be used
+          // is the default one, so that is the one judged complete -- any address on
+          // file is not the same thing as the one checkout is about to use.
+          //
+          // Complete: nothing to fill in at step 1, so they stay on the default
+          // section. Incomplete or missing: step 1 opens so the address can be
+          // entered. Either way, a shopper who has already opened a section
+          // themselves is left where they put it.
+          const hasUsableAddress = Boolean(defaultAddr?.address && defaultAddr?.city)
+          if (!hasUsableAddress) {
+            setOpenSections((cur) => (isUntouchedSections(cur) ? [1, ...cur] : cur))
           }
 
           // Fill formData and pickupDetails.phone
@@ -1834,8 +1875,11 @@ const Checkout = () => {
   // ---- The three steps' bodies, as functions so the payment step can show the first
   //      two folded up and still editable. `inline` swaps the navigation buttons for
   //      Save/Done and drops what the folded section already shows.
+  // Desktop only. On a phone the same choice sits above the section header as a
+  // pair of buttons, and showing both meant the control moved and changed shape
+  // depending on whether the section happened to be open.
   const renderDeliveryTypeRadios = () => (
-              <div className="flex gap-8 mb-6">
+              <div className="hidden md:flex gap-8 mb-6">
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="radio"
@@ -2097,7 +2141,10 @@ const Checkout = () => {
                         </div>
                       </div>
 
-                      <div className="mb-4">
+                      {/* Desktop only -- the phone picks its branch above the
+                          header, where the map fits and the cards are sized for
+                          a narrow screen. */}
+                      <div className="mb-4 hidden md:block">
                         <h4 className="font-semibold mb-4 flex items-center gap-2">
                           <MapPin className="h-5 w-5 text-lime-500" />
                           <TranslatedText>Select Store</TranslatedText> *
@@ -2284,29 +2331,141 @@ const Checkout = () => {
   // The Home Delivery / Pickup toggle, shown in the collapsed card too. It uses clickable
   // spans (not inputs) so it stays valid inside the section-header button; stopPropagation
   // keeps a tap from also toggling the accordion.
+  const selectDelivery = (type) => (e) => {
+    e.stopPropagation()
+    setDeliveryType(type)
+    if (type === "pickup") setShowStorePicker(true)
+  }
+
+  // Phone: two buttons on their own full-width row under the header, the same
+  // shape and height as the Add to Cart / Buy Now pair on the product page.
+  // Real buttons, because out here they are not nested inside the header button.
+  const deliveryTypeButtons = (
+    <div className="md:hidden">
+      <div className="flex items-stretch gap-2" role="radiogroup" aria-label="Delivery method">
+        {[
+          { type: "home", label: "Home Delivery" },
+          { type: "pickup", label: "Pickup From Store" },
+        ].map(({ type, label }) => (
+          <button
+            key={type}
+            type="button"
+            role="radio"
+            aria-checked={deliveryType === type}
+            onClick={selectDelivery(type)}
+            className={`flex h-12 flex-1 items-center justify-center rounded-lg border-2 px-2 text-center text-sm font-semibold leading-tight transition-colors ${
+              deliveryType === type
+                ? "border-lime-600 bg-lime-600 text-white"
+                : "border-gray-300 bg-white text-gray-700"
+            }`}
+          >
+            <TranslatedText>{label}</TranslatedText>
+          </button>
+        ))}
+      </div>
+
+      {/* Choosing collection raises the question "from where?" immediately, so
+          the branch is picked here rather than only inside the opened section.
+          These are the same store cards the opened section uses, driven by the
+          same handleStoreSelection -- one picker in two places, not two pickers
+          that can disagree. Done closes the panel; the chosen branch stays on
+          the section header summary underneath. */}
+      {deliveryType === "pickup" && showStorePicker && (
+        <div className="mt-2 space-y-2">
+          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <MapPin className="h-4 w-4 text-lime-500" />
+            <TranslatedText>Collect from</TranslatedText>
+          </p>
+
+          {STORES.filter((store) => store.visible !== false).map((store) => (
+            <div
+              key={store.storeId}
+              className={`rounded-lg border-2 p-3 transition-all ${
+                pickupDetails.storeId === store.storeId
+                  ? "border-lime-500 bg-lime-50"
+                  : "border-gray-200 bg-white"
+              }`}
+            >
+              <label className="flex cursor-pointer items-start gap-2.5">
+                <input
+                  type="radio"
+                  name="store-mobile"
+                  checked={pickupDetails.storeId === store.storeId}
+                  onChange={() => handleStoreSelection(store)}
+                  className="mt-0.5 h-4 w-4 flex-shrink-0 accent-lime-500"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-gray-900">{store.name}</span>
+                  <span className="mt-0.5 block text-xs leading-relaxed text-gray-600">{store.address}</span>
+                  <span className="mt-1 block text-xs font-medium text-lime-600">{store.phone}</span>
+                </span>
+              </label>
+            </div>
+          ))}
+
+          {/* The map of whichever branch is selected. An address alone does not
+              tell anyone whether a branch is the one near them; the map does it
+              at a glance. */}
+          {selectedStore?.mapEmbedUrl && (
+            <div className="overflow-hidden rounded-lg border-2 border-gray-200">
+              <iframe
+                className="h-48 w-full border-0"
+                src={selectedStore.mapEmbedUrl}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                title={`Map of ${selectedStore.name}`}
+              />
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  `${selectedStore.name} ${selectedStore.address}`,
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block border-t border-gray-200 bg-white px-3 py-2.5 text-center text-sm font-semibold text-lime-700"
+              >
+                <TranslatedText>Get directions</TranslatedText>
+              </a>
+            </div>
+          )}
+
+          {selectedStore && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowStorePicker(false)
+                closeSection(1)
+              }}
+              className="h-12 w-full rounded-lg bg-lime-600 text-base font-semibold text-white transition-colors hover:bg-lime-700"
+            >
+              <TranslatedText>Done</TranslatedText>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
   const deliveryTypeToggle = (
-    <span className="flex flex-wrap items-center gap-x-5 gap-y-1">
-      <span
-        onClick={(e) => {
-          e.stopPropagation()
-          setDeliveryType("home")
-        }}
-        className={`inline-flex cursor-pointer items-center gap-1.5 font-semibold ${deliveryType === "home" ? "text-gray-900" : "text-gray-500"}`}
-      >
-        {deliveryRadioDot(deliveryType === "home")}
-        <TranslatedText>Home Delivery</TranslatedText>
+    <>
+      {/* Desktop keeps the inline radios it has always had. */}
+      <span className="hidden flex-wrap items-center gap-x-5 gap-y-1 md:flex">
+        <span
+          onClick={selectDelivery("home")}
+          className={`inline-flex cursor-pointer items-center gap-1.5 font-semibold ${deliveryType === "home" ? "text-gray-900" : "text-gray-500"}`}
+        >
+          {deliveryRadioDot(deliveryType === "home")}
+          <TranslatedText>Home Delivery</TranslatedText>
+        </span>
+        <span
+          onClick={selectDelivery("pickup")}
+          className={`inline-flex cursor-pointer items-center gap-1.5 font-semibold ${deliveryType === "pickup" ? "text-gray-900" : "text-gray-500"}`}
+        >
+          {deliveryRadioDot(deliveryType === "pickup")}
+          <TranslatedText>Pickup From Store</TranslatedText>
+        </span>
       </span>
-      <span
-        onClick={(e) => {
-          e.stopPropagation()
-          setDeliveryType("pickup")
-        }}
-        className={`inline-flex cursor-pointer items-center gap-1.5 font-semibold ${deliveryType === "pickup" ? "text-gray-900" : "text-gray-500"}`}
-      >
-        {deliveryRadioDot(deliveryType === "pickup")}
-        <TranslatedText>Pickup From Store</TranslatedText>
-      </span>
-    </span>
+    </>
   )
   const deliverySummaryNode = (
     <span className="block">
@@ -2320,6 +2479,68 @@ const Checkout = () => {
     </span>
   )
   const notesSummary = customerNotes.trim() ? `Note: ${customerNotes.trim()}` : "No order notes"
+  // Everything that is not a product: where it goes, what to do on arrival, how
+  // it is paid for. Each of the three steps above holds one of these, but by the
+  // time the shopper reaches the invoice those steps are collapsed headers well
+  // off the top of the screen -- so the last thing read before Place Order
+  // restates all three, with a way straight back to whichever part is wrong.
+  const orderDetailRows = [
+    {
+      step: 1,
+      icon: MapPin,
+      label: deliveryType === "home" ? "Delivering to" : "Collecting from",
+      lines:
+        deliveryType === "home"
+          ? [formData.name, deliveryDetailLine, withDialCode(formData.phone), formData.email]
+          : [selectedStore?.name, selectedStore?.address, withDialCode(pickupDetails.phone)],
+    },
+    {
+      step: 2,
+      icon: StickyNote,
+      label: "Order note",
+      lines: [customerNotes.trim() || "No order notes"],
+    },
+    {
+      step: 3,
+      icon: CreditCard,
+      label: "Paying by",
+      lines: [
+        PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod)?.name || "No payment method chosen yet",
+      ],
+    },
+  ]
+
+  const orderDetailsBlock = (
+    <div className="mb-4 divide-y divide-gray-100 rounded-lg border border-gray-200">
+      {orderDetailRows.map(({ step, icon: Icon, label, lines }) => (
+        <div key={step} className="flex items-start gap-2.5 px-3 py-2.5">
+          <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-lime-600" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+              <TranslatedText>{label}</TranslatedText>
+            </p>
+            {lines.filter(Boolean).map((line, index) => (
+              <p
+                key={index}
+                className={`${index === 0 ? "mt-0.5 font-medium text-gray-900" : "text-gray-600"} break-words text-xs leading-snug`}
+              >
+                {line}
+              </p>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => editSection(step)}
+            className="flex flex-shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-lime-700 hover:bg-lime-50"
+          >
+            <Pencil size={12} />
+            <TranslatedText>Edit</TranslatedText>
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+
   const paymentSummary =
     PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod)?.name || "Choose how you'd like to pay"
 
@@ -2338,11 +2559,13 @@ const Checkout = () => {
 
             {/* 1 — Delivery details */}
             <ReviewSection
+              id="checkout-step-1"
               number="1"
               title={<TranslatedText>Delivery details</TranslatedText>}
               summary={deliverySummaryNode}
-              open={openSection === 1}
-              onToggle={() => setOpenSection(openSection === 1 ? null : 1)}
+              extra={deliveryTypeButtons}
+              open={isSectionOpen(1)}
+              onToggle={() => toggleSection(1)}
             >
               {renderDeliveryTypeRadios()}
               {renderShippingForm(true, true)}
@@ -2359,17 +2582,18 @@ const Checkout = () => {
 
             {/* 2 — Order notes */}
             <ReviewSection
+              id="checkout-step-2"
               number="2"
               title={<TranslatedText>Delivery Notes / Delivery Instruction</TranslatedText>}
               summary={notesSummary}
-              open={openSection === 2}
-              onToggle={() => setOpenSection(openSection === 2 ? null : 2)}
+              open={isSectionOpen(2)}
+              onToggle={() => toggleSection(2)}
             >
               {renderSummaryContent(true, true)}
               <div className="mt-2">
                 <button
                   type="button"
-                  onClick={() => setOpenSection(3)}
+                  onClick={() => advanceSection(2, 3)}
                   className="w-full sm:w-auto bg-lime-500 hover:bg-lime-600 text-white font-semibold rounded-lg px-6 py-2"
                 >
                   <TranslatedText>Save &amp; continue</TranslatedText>
@@ -2379,11 +2603,12 @@ const Checkout = () => {
 
             {/* 3 — Payment method */}
             <ReviewSection
+              id="checkout-step-3"
               number="3"
               title={<TranslatedText>Payment method</TranslatedText>}
               summary={paymentSummary}
-              open={openSection === 3}
-              onToggle={() => setOpenSection(openSection === 3 ? null : 3)}
+              open={isSectionOpen(3)}
+              onToggle={() => toggleSection(3)}
             >
                   {/* Offers & rewards — coupon, referral reward and Grabian Points sit above
                       the payment options; the totals they change show in the Order Summary. */}
@@ -2768,6 +2993,8 @@ const Checkout = () => {
                   <p className="text-xs text-gray-500"><TranslatedText>Review your order</TranslatedText></p>
                 </div>
               </div>
+
+              {orderDetailsBlock}
 
               <div className="space-y-2">
                 {/* Detailed Price Breakdown */}

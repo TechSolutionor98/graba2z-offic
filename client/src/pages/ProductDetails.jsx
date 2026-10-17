@@ -130,6 +130,9 @@ const ProductDetails = () => {
   const [selectedBundleItems, setSelectedBundleItems] = useState({})
 
   const [showTabbyModal, setShowTabbyModal] = useState(false)
+  // Set when something has just gone into the basket, so the page can confirm it
+  // in a sheet instead of a toast that slides past the top of the screen.
+  const [addedToCart, setAddedToCart] = useState(null)
   const [showTamaraModal, setShowTamaraModal] = useState(false)
   const [showVideoModal, setShowVideoModal] = useState(false)
   
@@ -829,7 +832,16 @@ const ProductDetails = () => {
     )
   }
 
-  const handleAddToCart = () => {
+  // Matches Tailwind's `md` breakpoint exactly, so what the JavaScript decides and
+  // what the CSS shows can never disagree. Read at the moment of the tap rather
+  // than held in state, so a resize or a rotate cannot leave it stale.
+  const isPhoneViewport = () =>
+    typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches
+
+  // `announce` is off when Buy Now calls this, because that goes straight to the
+  // basket -- confirming an add and then navigating away from the confirmation
+  // is just a flash of a panel nobody can read.
+  const handleAddToCart = ({ announce = true } = {}) => {
     // Check stock status based on selected color, DOS variation, or main product
     const currentColor = getCurrentColor()
     const currentDos = getCurrentDos()
@@ -897,7 +909,9 @@ const ProductDetails = () => {
     
     // Add main product to cart
     const qtyToUse = (quantity === "" || isNaN(quantity) || quantity < 1) ? 1 : quantity
-    addToCart(productToAdd, qtyToUse)
+    const useSheet = announce && isPhoneViewport()
+
+    addToCart(productToAdd, qtyToUse, null, { silent: useSheet })
     
     // Add selected protections to cart as separate items linked to the product
     if (selectedProtections.length > 0) {
@@ -913,13 +927,26 @@ const ProductDetails = () => {
           countInStock: 999, // Protection plans don't have stock limits
           quantity: 1, // Always 1 per product
         }
-        addToCart(protectionItem, 1)
+        addToCart(protectionItem, 1, null, { silent: useSheet })
+      })
+    }
+
+    if (useSheet) {
+      setAddedToCart({
+        name: product.name,
+        image: baseImageUrl,
+        quantity: qtyToUse,
+        // finalPrice, not the catalogue price: a colour or OS variation changes
+        // what this line actually costs, and the sheet has to agree with the cart.
+        unitPrice: finalPrice,
+        lineTotal: finalPrice * qtyToUse,
+        protections: selectedProtections.length,
       })
     }
   }
 
   const handleBuyNow = () => {
-    handleAddToCart()
+    handleAddToCart({ announce: false })
     navigate("/cart")
   }
 
@@ -2378,8 +2405,11 @@ const ProductDetails = () => {
     return null;
   } // end getDiscountBadge
 
+  // The sticky bar below is 64px tall, so the page ends 64px higher on a phone.
+  // That is the bar's own height only -- the bottom navigation underneath it is
+  // a condition every page already lives with. Desktop has no bar and no padding.
   return (
-    <div className="bg-white min-h-screen" itemScope itemType="https://schema.org/Product">
+    <div className="bg-white min-h-screen pb-16 md:pb-0" itemScope itemType="https://schema.org/Product">
       <SEO 
         title={pdTitle} 
         description={pdDescription} 
@@ -3485,7 +3515,73 @@ const ProductDetails = () => {
 
               {/* Quantity and Add to Cart */}
               <div className="space-y-4 mb-6">
-                <div className="flex items-center space-x-2 ">
+                {/* ------------------------------------------------------------
+                    Phone layout. Quantity and Wishlist split the row in half, the
+                    same shape as the Buy Now / Add to Cart pair pinned at the foot
+                    of the screen, so the page reads as one set of controls.
+                    Add to cart and Buy Now are not here -- the sticky bar has them.
+                    ------------------------------------------------------------ */}
+                <div className="flex items-center gap-2 md:hidden">
+                  <div className="flex h-12 flex-1 items-center overflow-hidden rounded-lg border-2 border-black bg-yellow-300">
+                    <button
+                      onClick={() => handleQuantityChange(-1)}
+                      className="flex h-full items-center px-3 text-gray-700 transition-colors hover:text-red-600 disabled:opacity-40"
+                      disabled={quantity === "" || quantity <= 1}
+                      aria-label="Reduce quantity"
+                    >
+                      <Minus size={16} />
+                    </button>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={handleQuantityInput}
+                      onBlur={handleQuantityBlur}
+                      onKeyDown={handleQuantityKeyDown}
+                      className="h-full min-w-0 flex-1 border-l-2 border-r-2 border-black bg-transparent text-center font-semibold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      min="1"
+                      max={product.maxPurchaseQty || 10}
+                      aria-label="Quantity"
+                    />
+                    <button
+                      onClick={() => handleQuantityChange(1)}
+                      className="flex h-full items-center px-3 text-gray-700 transition-colors hover:text-green-600 disabled:opacity-40"
+                      disabled={quantity !== "" && quantity >= (product.maxPurchaseQty || 10)}
+                      aria-label="Increase quantity"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+
+                  {/* Labelled, because at half-width a bare heart is a large empty
+                      box that says nothing about what tapping it does. */}
+                  <button
+                    onClick={() =>
+                      isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
+                    }
+                    className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-lg border-2 text-sm font-semibold transition-colors ${
+                      isInWishlist(product._id)
+                        ? "border-red-500 bg-red-500 text-white hover:bg-red-600"
+                        : "border-red-500 bg-white text-red-600 hover:bg-red-50"
+                    }`}
+                    aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
+                  >
+                    <Heart
+                      size={20}
+                      className={isInWishlist(product._id) ? "fill-white text-white" : "fill-red-500 text-red-500"}
+                    />
+                    {isInWishlist(product._id) ? (
+                      <TranslatedText>Saved</TranslatedText>
+                    ) : (
+                      <TranslatedText>Wishlist</TranslatedText>
+                    )}
+                  </button>
+                </div>
+
+                {/* ------------------------------------------------------------
+                    Desktop layout, unchanged. There is no sticky bar at this
+                    width, so this row keeps all four controls exactly as before.
+                    ------------------------------------------------------------ */}
+                <div className="hidden md:flex items-center space-x-2 ">
                   <div className="flex items-center border-2 border-black  rounded-lg bg-yellow-300">
                     <button
                       onClick={() => handleQuantityChange(-1)}
@@ -3515,7 +3611,7 @@ const ProductDetails = () => {
 
                   <div className="flex items-center  w-full ">
                     <button
-                      onClick={handleAddToCart}
+                      onClick={() => handleAddToCart()}
                       disabled={product.stockStatus === "Out of Stock"}
                       className=" bg-btn-primary hover:bg-btn-primary-hover disabled:bg-gray-400 text-btn-primary-text py-3 px-9 rounded-lg font-medium transition-colors"
                     >
@@ -3541,7 +3637,7 @@ const ProductDetails = () => {
                     </button>
                     <button
                       disabled={product.stockStatus === "Out of Stock"}
-                      className="hidden sm:block w-full ml-1 bg-btn-secondary hover:bg-btn-secondary-hover disabled:bg-gray-400 border border-btn-secondary-border text-btn-secondary-text px-3 py-3 rounded-lg font-medium transition-colors"
+                      className="w-full ml-1 bg-btn-secondary hover:bg-btn-secondary-hover disabled:bg-gray-400 border border-btn-secondary-border text-btn-secondary-text px-3 py-3 rounded-lg font-medium transition-colors"
                       onClick={handleBuyNow}
                     >
                       <TranslatedText>Buy Now</TranslatedText>
@@ -3549,13 +3645,6 @@ const ProductDetails = () => {
                   </div>
                 </div>
 
-                <button
-                  disabled={product.stockStatus === "Out of Stock"}
-                  className=" md:hidden lg:hidden w-full ml-1 bg-btn-secondary hover:bg-btn-secondary-hover disabled:bg-gray-400 border border-btn-secondary-border text-btn-secondary-text px-3 py-3 rounded-lg font-medium transition-colors"
-                  onClick={handleBuyNow}
-                >
-                  <TranslatedText>Buy Now</TranslatedText>
-                </button>
               </div>
 
               <div className="grid grid-cols-3 gap-4 py-4 text-center">
@@ -4660,9 +4749,139 @@ const ProductDetails = () => {
         </div>
       )}
 
+      {/* Confirmation of an add, as a sheet rather than a toast.
+          A toast slides in at the top of the screen, which on a phone is the one
+          place the thumb is not and the eye has already left -- and it takes the
+          only route to the basket away with it when it fades. This stays until it
+          is dismissed, and carries the two things anyone wants next. */}
+      {addedToCart && (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/40"
+            onClick={() => setAddedToCart(null)}
+            aria-hidden="true"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Added to cart"
+            className="fixed inset-x-0 bottom-0 z-[61] rounded-t-2xl bg-white p-5 pb-6 shadow-[0_-8px_30px_rgba(0,0,0,0.18)]"
+            style={{ animation: "sheetUp 0.25s cubic-bezier(0.32, 0.72, 0, 1) both" }}
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-gray-300" />
+
+            {/* Sized to be read at a glance from arm's length, which is how a
+                phone is actually held -- at the body text size it read as a note
+                rather than as confirmation that the tap had worked. */}
+            <div className="flex items-center gap-2.5">
+              <CheckCircle size={28} className="shrink-0 text-green-600" />
+              <p className="flex-1 text-xl font-bold text-gray-900">
+                <TranslatedText>Added to cart</TranslatedText>
+              </p>
+              <button
+                onClick={() => setAddedToCart(null)}
+                className="shrink-0 rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="mt-4 flex items-start gap-3.5 rounded-xl bg-gray-50 p-3.5">
+              <img
+                src={getFullImageUrl(addedToCart.image) || "/placeholder.svg"}
+                alt=""
+                className="h-20 w-20 shrink-0 rounded-lg bg-white object-contain ring-1 ring-gray-200"
+                onError={(e) => {
+                  e.currentTarget.src = "/placeholder.svg"
+                }}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 text-[15px] font-medium leading-snug text-gray-900">{addedToCart.name}</p>
+                <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <span className="text-lg font-bold text-gray-900">{formatPrice(addedToCart.lineTotal)}</span>
+                  {addedToCart.quantity > 1 && (
+                    <span className="text-xs text-gray-500">
+                      {addedToCart.quantity} × {formatPrice(addedToCart.unitPrice)}
+                    </span>
+                  )}
+                </div>
+                {addedToCart.protections > 0 && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    + {addedToCart.protections}{" "}
+                    <TranslatedText>protection plan added</TranslatedText>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-center gap-2.5">
+              <button
+                onClick={() => setAddedToCart(null)}
+                className="h-[52px] flex-1 rounded-lg border-2 border-gray-300 bg-white text-base font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                <TranslatedText>Close</TranslatedText>
+              </button>
+              <button
+                onClick={() => {
+                  setAddedToCart(null)
+                  navigate("/cart")
+                }}
+                className="flex h-[52px] flex-1 items-center justify-center gap-2 rounded-lg bg-btn-primary text-base font-semibold text-btn-primary-text transition-colors hover:bg-btn-primary-hover"
+              >
+                <ShoppingCart size={18} />
+                <TranslatedText>View Cart</TranslatedText>
+              </button>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes sheetUp {
+              from { opacity: 0; transform: translateY(100%); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+        </>
+      )}
+
       {showTamaraModal && <TamaraModal amount={getEffectivePrice()} onClose={() => setShowTamaraModal(false)} />}
       {showTabbyModal && <TabbyModal amount={getEffectivePrice()} onClose={() => setShowTabbyModal(false)} />}
       <PromoPopup pageKey="product" delayMs={3000} />
+
+      {/* Sticky buy bar -- phones only.
+          A product page is long, and the real Add to cart sits near the top. On a
+          phone the customer scrolls past it within a swipe and then has nothing to
+          tap until they scroll all the way back. This keeps both actions under the
+          thumb the whole way down.
+
+          It sits ABOVE the app's bottom navigation rather than over it: that bar is
+          72px tall and fixed at bottom-0, so covering it would take away Home, Cart
+          and Account while someone is deciding whether to buy. */}
+      <div
+        className="md:hidden fixed inset-x-0 bottom-[72px] z-30 border-t border-gray-200 bg-white/95 backdrop-blur px-3 py-2.5 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
+      >
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleBuyNow}
+            disabled={product.stockStatus === "Out of Stock"}
+            className="flex-1 rounded-lg border border-btn-secondary-border bg-btn-secondary px-3 py-3 text-sm font-semibold text-btn-secondary-text transition-colors hover:bg-btn-secondary-hover disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-400 disabled:text-white"
+          >
+            {product.stockStatus === "Out of Stock" ? (
+              <TranslatedText>Out of Stock</TranslatedText>
+            ) : (
+              <TranslatedText>Buy Now</TranslatedText>
+            )}
+          </button>
+          <button
+            onClick={() => handleAddToCart()}
+            disabled={product.stockStatus === "Out of Stock"}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-btn-primary px-3 py-3 text-sm font-semibold text-btn-primary-text transition-colors hover:bg-btn-primary-hover disabled:cursor-not-allowed disabled:bg-gray-400"
+          >
+            <ShoppingCart size={18} />
+            <TranslatedText>Add to Cart</TranslatedText>
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

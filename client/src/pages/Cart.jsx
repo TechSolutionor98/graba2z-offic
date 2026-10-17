@@ -1041,11 +1041,13 @@ const Cart = () => {
         <PromoPopup pageKey="cart" delayMs={3000} />
       </div>
 
-      {/* Phone: total and checkout always in reach, above the bottom navigation and
-          clear of the WhatsApp bubble at bottom-24 right-4. */}
+      {/* Phone: total and checkout always in reach, above the bottom navigation.
+          The WhatsApp bubble is lifted clear of this bar in Layout rather than
+          dodged here -- it is 72px wide at right-4, so the pr-16 that used to
+          hold it off was 8px short and it sat on the corner of Checkout. */}
       {!isEmpty && (
         <div className="lg:hidden fixed inset-x-0 bottom-[72px] md:bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 pr-16 md:pr-0">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div>
               <p className="text-[11px] uppercase tracking-wide text-gray-500">
                 <TranslatedText>Total Amount</TranslatedText> · <TranslatedText>VAT Included</TranslatedText>
