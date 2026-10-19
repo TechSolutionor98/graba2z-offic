@@ -950,13 +950,12 @@ const ProductDetails = () => {
     navigate("/cart")
   }
 
+  // No upper limit: a customer may buy as many as they want. One is the floor,
+  // because zero of something is not an order.
   const handleQuantityChange = (delta) => {
     setQuantity((prev) => {
       const current = (prev === "" || isNaN(prev)) ? 1 : prev
-      const newQuantity = current + delta
-      if (newQuantity < 1) return 1
-      if (newQuantity > (product.maxPurchaseQty || 10)) return product.maxPurchaseQty || 10
-      return newQuantity
+      return Math.max(1, current + delta)
     })
   }
 
@@ -969,14 +968,7 @@ const ProductDetails = () => {
     const num = parseInt(valStr, 10)
     if (isNaN(num)) return
 
-    const maxQty = product.maxPurchaseQty || 10
-    if (num < 1) {
-      setQuantity(1)
-    } else if (num > maxQty) {
-      setQuantity(maxQty)
-    } else {
-      setQuantity(num)
-    }
+    setQuantity(num < 1 ? 1 : num)
   }
 
   const handleQuantityBlur = () => {
@@ -3539,13 +3531,11 @@ const ProductDetails = () => {
                       onKeyDown={handleQuantityKeyDown}
                       className="h-full min-w-0 flex-1 border-l-2 border-r-2 border-black bg-transparent text-center font-semibold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       min="1"
-                      max={product.maxPurchaseQty || 10}
                       aria-label="Quantity"
                     />
                     <button
                       onClick={() => handleQuantityChange(1)}
                       className="flex h-full items-center px-3 text-gray-700 transition-colors hover:text-green-600 disabled:opacity-40"
-                      disabled={quantity !== "" && quantity >= (product.maxPurchaseQty || 10)}
                       aria-label="Increase quantity"
                     >
                       <Plus size={16} />
@@ -3598,12 +3588,10 @@ const ProductDetails = () => {
                       onKeyDown={handleQuantityKeyDown}
                       className="w-16 py-2 text-center font-medium border-l border-r border-black bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       min="1"
-                      max={product.maxPurchaseQty || 10}
                     />
                     <button
                       onClick={() => handleQuantityChange(1)}
                       className="px-3 py-2 text-gray-600 hover:text-green-600  transition-colors"
-                      disabled={quantity !== "" && quantity >= (product.maxPurchaseQty || 10)}
                     >
                       <Plus size={16} />
                     </button>

@@ -2810,7 +2810,6 @@ const Checkout = () => {
               <div className="flex flex-col lg:flex-row">
               <div className="divide-y divide-gray-100 lg:flex-1 lg:min-w-0">
                 {regularCartItems.map((item) => {
-                  const atMax = item.maxPurchaseQty && item.quantity >= item.maxPurchaseQty
                   const pd = getItemPricingDetails(item)
                   return (
                     <div key={item._id} className="relative flex gap-3 px-4 py-3 sm:px-5">
@@ -2869,25 +2868,24 @@ const Checkout = () => {
 
                         {/* Quantity controls — minus only lowers quantity; at 1 it is
                             disabled, deletion is the separate corner button. */}
-                        <div className="mt-2 inline-flex items-center rounded-full border border-gray-300">
+                        <div className="mt-2 inline-flex items-center overflow-hidden rounded-full border border-gray-300">
                           <button
                             type="button"
                             aria-label="Decrease quantity"
                             onClick={() => updateQuantity(item._id, item.quantity - 1)}
                             disabled={item.quantity <= 1}
-                            className="grid h-7 w-8 place-items-center text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="grid h-7 w-8 place-items-center bg-red-500 text-white hover:bg-red-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                           >
                             <Minus size={14} />
                           </button>
-                          <span className="min-w-[1.75rem] text-center text-sm font-semibold text-gray-900">
+                          <span className="min-w-[2rem] px-1 text-center text-sm font-semibold text-gray-900">
                             {item.quantity}
                           </span>
                           <button
                             type="button"
                             aria-label="Increase quantity"
                             onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                            disabled={atMax}
-                            className="grid h-7 w-8 place-items-center text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="grid h-7 w-8 place-items-center bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                           >
                             <Plus size={14} />
                           </button>

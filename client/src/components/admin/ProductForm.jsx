@@ -113,7 +113,6 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
     targetCountries: ["ALL"],
     countryStock: { AE: 0, SA: 0, QA: 0, OM: 0, BH: 0, KW: 0 },
     lowStockWarning: "5",
-    maxPurchaseQty: "10",
     weight: "",
     unit: "piece",
     tax: "0",
@@ -447,7 +446,6 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
             return stockMap
           })(),
           lowStockWarning: product.lowStockWarning || "5",
-          maxPurchaseQty: product.maxPurchaseQty || "10",
           weight: product.weight || "",
           unit: product.unit || "piece",
           tax:
@@ -1005,7 +1003,6 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           countInStock: Number(count) || 0,
         })),
         lowStockWarning: Number.parseInt(formData.lowStockWarning) || 5,
-        maxPurchaseQty: Number.parseInt(formData.maxPurchaseQty) || 10,
         weight: Number.parseFloat(formData.weight) || 0,
         tax: taxValue,
         series: formData.series || undefined,
@@ -1798,19 +1795,6 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="5"
               min="0"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Max Purchase Quantity</label>
-            <input
-              type="number"
-              name="maxPurchaseQty"
-              value={formData.maxPurchaseQty}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="10"
-              min="1"
             />
           </div>
 

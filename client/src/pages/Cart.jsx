@@ -90,12 +90,12 @@ const CartQuantityInput = ({ value, onChange, max }) => {
   }
 
   return (
-    <div className="inline-flex items-center rounded-lg border border-gray-300 bg-white">
+    <div className="inline-flex items-center overflow-hidden rounded-lg border border-gray-300 bg-white">
       <button
         type="button"
         onClick={handleDecrease}
         aria-label="Decrease quantity"
-        className="h-9 w-8 sm:w-9 flex items-center justify-center rounded-l-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="h-9 w-8 sm:w-9 flex items-center justify-center rounded-l-lg bg-red-500 text-white hover:bg-red-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
         disabled={value <= 1}
       >
         <Minus size={15} />
@@ -115,7 +115,7 @@ const CartQuantityInput = ({ value, onChange, max }) => {
         type="button"
         onClick={handleIncrease}
         aria-label="Increase quantity"
-        className="h-9 w-8 sm:w-9 flex items-center justify-center rounded-r-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="h-9 w-8 sm:w-9 flex items-center justify-center rounded-r-lg bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
         disabled={max ? value >= max : false}
       >
         <Plus size={15} />
@@ -474,7 +474,6 @@ const Cart = () => {
   const renderItem = (item, isInBundle = false, bundleId = null) => {
     const pricingDetails = getItemPricingDetails(item)
     const itemTotal = getItemTotal(item)
-    const atMax = item.maxPurchaseQty && item.quantity >= item.maxPurchaseQty
 
     return (
       <li key={`${item._id}-${bundleId || "standalone"}`} className="px-4 py-4 sm:px-5 sm:py-5">
@@ -584,16 +583,11 @@ const Cart = () => {
             {/* Quantity and line total */}
             <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
               <div>
+                {/* No upper limit: a customer may buy as many as they want. */}
                 <CartQuantityInput
                   value={item.quantity}
                   onChange={(newQty) => handleQuantityChange(item._id, newQty, bundleId)}
-                  max={item.maxPurchaseQty}
                 />
-                {atMax && (
-                  <p className="mt-1 text-[11px] text-gray-500">
-                    <TranslatedText>Max</TranslatedText> {item.maxPurchaseQty}
-                  </p>
-                )}
               </div>
               <div className="text-right">
                 <p className="text-sm sm:text-base font-bold text-gray-900 whitespace-nowrap">{formatPrice(itemTotal)}</p>
