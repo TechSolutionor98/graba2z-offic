@@ -58,16 +58,29 @@ const ProductPicker = ({ onPick, onClose }) => {
     const timer = setTimeout(() => {
       axios
         .get(`${config.API_URL}/api/products/admin`, {
-          params: { search: term.trim(), limit: 12 },
+          // `light=1` skips the description-text search, which is an unindexed
+          // scan of every product's spec blurb. An older server ignores the
+          // parameter and simply stays slow; it never breaks.
+          params: { search: term.trim(), limit: 12, light: 1 },
           headers: { Authorization: `Bearer ${getAdminToken()}` },
+          // Without this the request waits for ever, and the panel sits on
+          // "Searching…" with nothing to tell the person it has given up.
+          timeout: 20000,
         })
         .then((r) => {
           if (cancelled) return
           const list = Array.isArray(r.data) ? r.data : r.data?.products || []
           setRows(list)
         })
-        .catch(() => {
-          if (!cancelled) setError("The catalogue could not be searched.")
+        .catch((err) => {
+          if (cancelled) return
+          if (err?.code === "ECONNABORTED") {
+            setError("That search took too long. Try a shorter term, or part of the SKU.")
+          } else if (err?.response?.status === 401) {
+            setError("Your session has expired. Sign in again.")
+          } else {
+            setError("The catalogue could not be searched.")
+          }
         })
         .finally(() => {
           if (!cancelled) setLoading(false)
