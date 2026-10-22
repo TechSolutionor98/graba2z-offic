@@ -18,6 +18,9 @@ const AdminNewsletter = () => {
   const [showSendModal, setShowSendModal] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  // Templates no longer carry a subject of their own -- whoever sends one
+  // chooses it here.
+  const [subject, setSubject] = useState("");
   const [previewHtml, setPreviewHtml] = useState("");
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState("");
@@ -86,6 +89,7 @@ const AdminNewsletter = () => {
       await axios.post(`${API}/api/newsletter/bulk-send`, {
         userIds: selected,
         templateId: selectedTemplate,
+        subject,
       });
       setSendResult("Emails sent successfully!");
     } catch (err) {
@@ -189,6 +193,15 @@ const AdminNewsletter = () => {
                   )) : null}
                 </select>
               </div>
+              <div className="mb-4">
+                <label className="block mb-1">Subject line</label>
+                <input
+                  className="border rounded px-2 py-1 w-full"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="Up to 30% off this weekend"
+                />
+              </div>
               {previewHtml && (
                 <div
                   className="mb-4 border rounded bg-gray-50"
@@ -216,7 +229,7 @@ const AdminNewsletter = () => {
                 </button>
                 <button
                   className="px-4 py-2 bg-lime-500 text-white rounded disabled:opacity-50"
-                  disabled={!selectedTemplate || sending}
+                  disabled={!selectedTemplate || !subject.trim() || sending}
                   onClick={handleSendBulk}
                 >
                   {sending ? "Sending..." : "Send"}

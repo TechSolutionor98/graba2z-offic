@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useLayoutEffect, useRef } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../../context/AuthContext"
 import { adminAPI } from "../../services/api"
 import { clearSeoUnlockStorage, isSeoUnlockTokenValid } from "../../utils/seoUnlock"
 import {
+  Megaphone,
   LayoutDashboard,
   Package,
   Users,
@@ -44,12 +45,24 @@ import {
   MessageCircle,
 } from "lucide-react"
 
+// Every admin page renders its own copy of this sidebar, so moving between
+// pages destroys the menu and builds a new one -- and a brand new element
+// starts scrolled to the top. Clicking an entry near the bottom therefore threw
+// the menu back to the top every time. Remembering the position is what keeps
+// the entry you just clicked where you left it.
+const SIDEBAR_SCROLL_KEY = "adminSidebarScroll"
+
 const SEO_UNLOCK_TOKEN_KEY = "seoUnlockToken"
 const SEO_UNLOCK_EXPIRES_AT_KEY = "seoUnlockExpiresAt"
 
 const AdminSidebar = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const navRef = useRef(null)
+  // Restoring is allowed only in the moment after mount. Past that the person
+  // is scrolling the menu themselves, and moving it under them would be worse
+  // than the problem this fixes.
+  const restoreUntil = useRef(0)
   const { adminLogout, isSuperAdmin, hasPermission } = useAuth()
   const [isSeoUnlocked, setIsSeoUnlocked] = useState(() => isSeoUnlockTokenValid())
   const [seoUnlockExpiresAt, setSeoUnlockExpiresAt] = useState(localStorage.getItem(SEO_UNLOCK_EXPIRES_AT_KEY) || "")
@@ -78,6 +91,7 @@ const AdminSidebar = () => {
     manufacturers: false,
     soldBy: false,
     inventory: false,
+    bulkMails: false,
     stockAdjustment: false,
     createOrderQuotation: false,
     seoSettings: false,
@@ -195,6 +209,10 @@ const AdminSidebar = () => {
 
     if (path.includes("/admin/inventory")) {
       newOpenDropdowns.inventory = true
+    }
+
+    if (path.includes("/admin/email-templates") || path.includes("/admin/campaigns")) {
+      newOpenDropdowns.bulkMails = true
     }
 
     // SEO Settings dropdown auto-open
@@ -723,10 +741,14 @@ const AdminSidebar = () => {
       ],
     },
     {
-      title: "Email Templates",
-      icon: Settings,
-      path: "/admin/email-templates",
+      title: "Bulk Mails",
+      icon: Megaphone,
+      dropdown: "bulkMails",
       permission: "emailTemplates",
+      items: [
+        { title: "Email Template", path: "/admin/email-templates" },
+        { title: "Create Campaign", path: "/admin/campaigns" },
+      ],
     },
     {
       title: "Newsletter Subscribers",
@@ -893,6 +915,28 @@ const AdminSidebar = () => {
     }
   }
 
+  const restoreScroll = () => {
+    const nav = navRef.current
+    if (!nav || Date.now() > restoreUntil.current) return
+
+    const saved = Number(sessionStorage.getItem(SIDEBAR_SCROLL_KEY) || 0)
+    if (saved > 0 && nav.scrollTop !== saved) nav.scrollTop = saved
+  }
+
+  // Before the first paint, so the menu is never seen jumping.
+  useLayoutEffect(() => {
+    restoreUntil.current = Date.now() + 1000
+    restoreScroll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Again once the dropdown for the current page has opened: the menu is taller
+  // then, and a position past the collapsed height would have been clamped.
+  useEffect(() => {
+    restoreScroll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openDropdowns])
+
   return (
     <div className="w-64 bg-white shadow-lg h-[133.33vh] overflow-hidden fixed left-0 top-0 z-50 flex flex-col">
       <div className="p-6 border-b flex-shrink-0">
@@ -922,7 +966,11 @@ const AdminSidebar = () => {
         )}
       </div>
 
-      <nav className="mt-6 pb-20 flex-1 overflow-y-auto">
+      <nav
+        ref={navRef}
+        onScroll={(e) => sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(e.currentTarget.scrollTop))}
+        className="mt-6 pb-20 flex-1 overflow-y-auto"
+      >
         {filteredMenuItems.map((item, index) => (
           <div key={index}>
             {item.dropdown ? (

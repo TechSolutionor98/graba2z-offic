@@ -58,6 +58,7 @@ const routePermissions = {
   "/admin/settings": "settings",
   "/admin/appearance": "settings",
   "/admin/email-templates": "emailTemplates",
+  "/admin/campaigns": "emailTemplates",
   "/admin/newsletter-subscribers": "newsletter",
   "/admin/request-callbacks": "requestCallbacks",
   "/admin/push-notifications": "pushNotifications",

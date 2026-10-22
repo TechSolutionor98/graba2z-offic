@@ -43,6 +43,7 @@ import AdminColors from "../pages/admin/AdminColors"
 import AdminDashboard from "../pages/admin/AdminDashboard"
 import AdminDeliveryCharges from "../pages/admin/AdminDeliveryCharges"
 import AdminEmailTemplates from "../pages/admin/AdminEmailTemplates"
+import AdminCampaigns from "../pages/admin/AdminCampaigns"
 import AdminManagement from "../pages/admin/AdminManagement"
 import AdminNewsletter from "../pages/admin/AdminNewsletter"
 import AdminProducts from "../pages/admin/AdminProducts"
@@ -320,6 +321,7 @@ const AdminPortal = () => {
             <Route path="bulk-purchase" element={<AdminBulkPurchase />} />
             <Route path="buyer-protection" element={<BuyerProtectionAdmin />} />
             <Route path="email-templates" element={<AdminEmailTemplates />} />
+            <Route path="campaigns" element={<AdminCampaigns />} />
             <Route path="newsletter-subscribers" element={<AdminNewsletter />} />
             <Route path="reset-cache" element={<ResetCache />} />
             <Route path="arabic-conversion" element={<AdminArabicConversion />} />

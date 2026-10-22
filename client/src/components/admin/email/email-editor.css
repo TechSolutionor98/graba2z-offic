@@ -1,0 +1,50 @@
+/*
+ * Undo the blog editor's global TipTap styling, for this editor only.
+ *
+ * src/components/TipTapEditor.css is loaded globally by the blog screens, and
+ * once it is in the page its rules apply to every .ProseMirror in the admin
+ * bundle -- including the one inside the email canvas. It sets a 200px
+ * min-height, 1rem of padding, and forces every paragraph to 16px grey text
+ * with half-rem margins.
+ *
+ * All of that is right for a blog post and wrong here. This editor sits inside
+ * the email preview, where a block has to look exactly as it will be sent: a
+ * 30px bold heading must stay a 30px bold heading while it is being typed, and
+ * the box must be the height of the text, not 200px of empty space.
+ *
+ * The selectors carry one extra class so they already beat the global ones on
+ * specificity, and every declaration is marked !important as well. That is not
+ * belt and braces for its own sake: the sheet being overridden belongs to
+ * another feature, and a later change there -- an id selector, an !important of
+ * its own -- would otherwise silently break the email canvas rather than the
+ * blog editor, where it would be noticed.
+ */
+
+.email-inline-editor .ProseMirror {
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+/* Everything inherits from the wrapper, which carries the block's own styling. */
+.email-inline-editor .ProseMirror p,
+.email-inline-editor .ProseMirror li,
+.email-inline-editor .ProseMirror h1,
+.email-inline-editor .ProseMirror h2,
+.email-inline-editor .ProseMirror h3,
+.email-inline-editor .ProseMirror h4,
+.email-inline-editor .ProseMirror h5,
+.email-inline-editor .ProseMirror h6 {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-weight: inherit !important;
+  font-family: inherit !important;
+  color: inherit !important;
+  margin: 0 !important;
+}
+
+/* Lists keep their markers; only the typography is handed back. */
+.email-inline-editor .ProseMirror ul,
+.email-inline-editor .ProseMirror ol {
+  margin: 0 !important;
+  padding-left: 1.5rem !important;
+}
