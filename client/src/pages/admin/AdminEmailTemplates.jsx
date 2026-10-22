@@ -100,12 +100,6 @@ const AdminEmailTemplates = () => {
   // "mine" is what the shop has saved; "defaults" is the set it keeps ready.
   const [tab, setTab] = useState("defaults")
   const [category, setCategory] = useState("All")
-  // The send report.
-  const [logs, setLogs] = useState({ rows: [], total: 0, pages: 1, sent: 0, failed: 0 })
-  const [logSearch, setLogSearch] = useState("")
-  const [logStatus, setLogStatus] = useState("all")
-  const [logPage, setLogPage] = useState(1)
-  const [logsLoading, setLogsLoading] = useState(false)
   const [libraryOpen, setLibraryOpen] = useState(false)
   // The import panel: paste markup, upload a file, or read a web address.
   const [importWay, setImportWay] = useState("paste")
@@ -141,37 +135,6 @@ const AdminEmailTemplates = () => {
 
   const API = config.API_URL
   const authHeader = { headers: { Authorization: `Bearer ${getAdminToken()}` } }
-
-  useEffect(() => {
-    if (tab !== "report" || editing) return undefined
-    let cancelled = false
-    setLogsLoading(true)
-    const timer = setTimeout(() => {
-      axios
-        .get(`${API}/api/email-templates/logs`, {
-          ...authHeader,
-          params: { search: logSearch, status: logStatus, page: logPage, limit: 50 },
-        })
-        .then((r) => {
-          if (!cancelled) setLogs(r.data)
-        })
-        .catch(() => {
-          if (!cancelled) setLogs({ rows: [], total: 0, pages: 1, sent: 0, failed: 0 })
-        })
-        .finally(() => {
-          if (!cancelled) setLogsLoading(false)
-        })
-    }, 250)
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, editing, logSearch, logStatus, logPage])
-
-  useEffect(() => {
-    setLogPage(1)
-  }, [logSearch, logStatus])
 
   const fetchTemplates = useCallback(async () => {
     setLoading(true)
@@ -871,7 +834,6 @@ const AdminEmailTemplates = () => {
               {[
                 { id: "defaults", label: `Default Templates (${EMAIL_PRESETS.length})` },
                 { id: "mine", label: `My Templates${templates.length ? ` (${templates.length})` : ""}` },
-                { id: "report", label: "Report" },
               ].map(({ id, label }) => (
                 <button
                   key={id}
@@ -904,125 +866,6 @@ const AdminEmailTemplates = () => {
             {loading && tab === "mine" ? (
               <div className="flex h-48 items-center justify-center">
                 <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-t-2 border-lime-500" />
-              </div>
-            ) : tab === "report" ? (
-              <div className="rounded-xl border border-gray-200 bg-white">
-                <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 p-3">
-                  <div className="relative min-w-[220px] flex-1">
-                    <input
-                      value={logSearch}
-                      onChange={(e) => setLogSearch(e.target.value)}
-                      placeholder="Search an address, subject or template"
-                      className={inputClass}
-                    />
-                  </div>
-                  {[
-                    { key: "all", label: `All (${logs.sent + logs.failed})` },
-                    { key: "sent", label: `Sent (${logs.sent})` },
-                    { key: "failed", label: `Failed (${logs.failed})` },
-                  ].map((option) => (
-                    <button
-                      key={option.key}
-                      type="button"
-                      onClick={() => setLogStatus(option.key)}
-                      className={`rounded-lg px-3 py-2 text-xs font-semibold ${
-                        logStatus === option.key ? "bg-lime-50 text-lime-700" : "text-gray-500 hover:bg-gray-50"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-
-                {logsLoading ? (
-                  <p className="p-10 text-center text-sm text-gray-500">Loading…</p>
-                ) : logs.rows.length === 0 ? (
-                  <div className="py-16 text-center">
-                    <Mail size={30} className="mx-auto text-gray-300" />
-                    <p className="mt-2 text-sm font-medium text-gray-600">Nothing sent yet</p>
-                    <p className="mt-1 text-xs text-gray-400">
-                      Every email this shop sends is recorded here — tests, campaigns and order mail.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-400">
-                            <th className="p-3">To</th>
-                            <th className="p-3">Subject</th>
-                            <th className="p-3">From</th>
-                            <th className="p-3">Source</th>
-                            <th className="p-3">When</th>
-                            <th className="p-3">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {logs.rows.map((row) => (
-                            <tr key={row._id} className="border-b border-gray-100 last:border-b-0">
-                              <td className="p-3 font-medium text-gray-900">{row.to}</td>
-                              <td className="max-w-[260px] truncate p-3 text-gray-700">{row.subject || "—"}</td>
-                              <td className="p-3 text-xs text-gray-500">{row.from || row.sender || "—"}</td>
-                              <td className="p-3 text-xs text-gray-500">
-                                {row.source || "—"}
-                                {row.templateName && (
-                                  <span className="block truncate text-gray-400">{row.templateName}</span>
-                                )}
-                              </td>
-                              <td className="whitespace-nowrap p-3 text-xs text-gray-500">
-                                {new Date(row.createdAt).toLocaleString()}
-                              </td>
-                              <td className="p-3">
-                                <span
-                                  className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                    row.status === "sent"
-                                      ? "bg-lime-100 text-lime-700"
-                                      : "bg-red-100 text-red-700"
-                                  }`}
-                                >
-                                  {row.status}
-                                </span>
-                                {row.error && (
-                                  <span className="mt-0.5 block max-w-[220px] truncate text-[11px] text-red-600">
-                                    {row.error}
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {logs.pages > 1 && (
-                      <div className="flex items-center justify-between border-t border-gray-200 p-3 text-xs text-gray-500">
-                        <span>{logs.total} in total</span>
-                        <span className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            disabled={logPage <= 1}
-                            onClick={() => setLogPage((n) => n - 1)}
-                            className="rounded border border-gray-300 px-2 py-1 disabled:opacity-40"
-                          >
-                            Back
-                          </button>
-                          <span>
-                            {logPage} of {logs.pages}
-                          </span>
-                          <button
-                            type="button"
-                            disabled={logPage >= logs.pages}
-                            onClick={() => setLogPage((n) => n + 1)}
-                            className="rounded border border-gray-300 px-2 py-1 disabled:opacity-40"
-                          >
-                            Next
-                          </button>
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )}
               </div>
             ) : tab === "defaults" ? (
               EMAIL_PRESETS.length === 0 ? (

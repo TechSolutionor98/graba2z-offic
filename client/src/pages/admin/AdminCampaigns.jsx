@@ -5,7 +5,6 @@ import axios from "axios"
 import {
   AlertTriangle,
   ArrowLeft,
-  Ban,
   Check,
   Copy,
   Loader2,
@@ -22,6 +21,7 @@ import {
 } from "lucide-react"
 
 import AdminSidebar from "../../components/admin/AdminSidebar"
+import BulkMailReport from "../../components/admin/email/BulkMailReport"
 import config from "../../config/config"
 import { describeApiError } from "../../utils/apiError"
 
@@ -130,7 +130,8 @@ const AdminCampaigns = () => {
   const [recipients, setRecipients] = useState([])
   const [recipientFilter, setRecipientFilter] = useState("all")
   const [confirmSend, setConfirmSend] = useState(false)
-  const [suppression, setSuppression] = useState(null)
+  // "campaigns" is the list; "report" is what has been sent and who opted out.
+  const [view, setView] = useState("campaigns")
   // The address picker.
   const [addresses, setAddresses] = useState({ rows: [], total: 0, pages: 1, allMatching: [] })
   const [addressSearch, setAddressSearch] = useState("")
@@ -464,15 +465,6 @@ const AdminCampaigns = () => {
     }
   }
 
-  const openSuppression = async () => {
-    try {
-      const { data } = await axios.get(`${API}/api/campaigns/suppression/list`, authHeader)
-      setSuppression(Array.isArray(data) ? data : [])
-    } catch (e) {
-      setError(describeApiError(e, "The unsubscribe list could not be loaded"))
-    }
-  }
-
   // -------------------------------------------------------------- render
 
   const chosenTemplate = templates.find((t) => t._id === form.template)
@@ -504,16 +496,8 @@ const AdminCampaigns = () => {
               </p>
             </div>
 
-            {!editing && (
+            {!editing && view === "campaigns" && (
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={openSuppression}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  <Ban size={16} />
-                  Unsubscribed
-                </button>
                 <button
                   type="button"
                   onClick={startNew}
@@ -525,6 +509,28 @@ const AdminCampaigns = () => {
               </div>
             )}
           </div>
+
+          {!editing && (
+            <div className="mb-5 flex gap-1 border-b border-gray-200">
+              {[
+                { id: "campaigns", label: "Campaigns" },
+                { id: "report", label: "Report" },
+              ].map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setView(id)}
+                  className={`-mb-px border-b-2 px-4 py-2 text-sm font-semibold ${
+                    view === id
+                      ? "border-lime-500 text-lime-700"
+                      : "border-transparent text-gray-500 hover:text-gray-800"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -546,7 +552,9 @@ const AdminCampaigns = () => {
           )}
 
           {/* ------------------------------------------------------- editor */}
-          {editing ? (
+          {!editing && view === "report" ? (
+            <BulkMailReport />
+          ) : editing ? (
             <div className="space-y-5">
               <button
                 type="button"
@@ -1245,38 +1253,6 @@ const AdminCampaigns = () => {
         </div>
       )}
 
-      {/* --------------------------------------------- unsubscribed people */}
-      {suppression && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-xl bg-white">
-            <div className="flex items-center justify-between border-b border-gray-200 p-5">
-              <div>
-                <h3 className="font-bold text-gray-900">Unsubscribed</h3>
-                <p className="text-xs text-gray-500">
-                  These people are never sent a campaign. The list cannot be edited here.
-                </p>
-              </div>
-              <button type="button" onClick={() => setSuppression(null)} className="text-gray-400 hover:text-gray-700">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-5">
-              {suppression.length === 0 ? (
-                <p className="py-10 text-center text-sm text-gray-500">Nobody has unsubscribed.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {suppression.map((row) => (
-                    <li key={row._id} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
-                      <span className="text-sm text-gray-800">{row.email}</span>
-                      <span className="text-xs capitalize text-gray-500">{row.reason}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
