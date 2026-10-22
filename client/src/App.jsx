@@ -16,6 +16,7 @@ import LoyaltyRewardDialog from "./components/LoyaltyRewardDialog"
 // Import components
 import Layout from "./components/Layout"
 import ProtectedRoute from "./components/ProtectedRoute"
+import EmailPreferences from "./pages/EmailPreferences"
 import ScrollToTop from "./components/ScrollToTop"
 import DisableNumberInputScroll from "./components/DisableNumberInputScroll"
 import RedirectHandler from "./components/RedirectHandler"
@@ -311,6 +312,14 @@ function App() {
                       }
                     />
                     <Route
+                      path="email-preferences"
+                      element={
+                        <ProtectedRoute>
+                          <EmailPreferences />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="wishlist"
                       element={
                         <ProtectedRoute>
@@ -410,6 +419,14 @@ function App() {
                       }
                     />
                     <Route
+                      path="email-preferences"
+                      element={
+                        <ProtectedRoute>
+                          <EmailPreferences />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="wishlist"
                       element={
                         <ProtectedRoute>
@@ -504,6 +521,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <UserOrders />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="email-preferences"
+                      element={
+                        <ProtectedRoute>
+                          <EmailPreferences />
                         </ProtectedRoute>
                       }
                     />

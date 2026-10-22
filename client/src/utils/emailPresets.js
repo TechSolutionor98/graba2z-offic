@@ -17,10 +17,11 @@ const b = (type, patch = {}) => ({ ...createBlock(type), ...patch })
 const column = (...blocks) => ({ ...emptyColumn(), blocks })
 
 const SITE = "https://www.grabatoz.ae"
-// Not /logo.png -- that one is the white version for dark backgrounds, and it
-// disappears against the light panels an email uses. Not the .webp either:
-// Outlook renders mail with Word's engine, which cannot display WebP at all.
-const LOGO = `${SITE}/email-logo.png`
+// Set to this address on request. Two things to know about it: it is an SVG,
+// which Gmail strips and Outlook cannot render, and it is the white version, so
+// where it does render it is invisible on a light background.
+// `${SITE}/email-logo.png` is the PNG colour version if the logo stops showing.
+const LOGO = `${SITE}/admin-logo.svg`
 const BRAND = "#84cc16"
 const INK = "#111827"
 const ADDRESS = "GrabAtoZ, Shop 2, Building 716, Khalid Bin Waleed Road, Al Souq Al Kabeer, Bur Dubai, Dubai"
@@ -36,7 +37,7 @@ const footer = () =>
     company: "GrabAtoZ",
     address: ADDRESS.replace("GrabAtoZ, ", ""),
     links: [
-      { id: "help", text: "Help", href: `${SITE}/contact` },
+      { id: "help", text: "Help", href: `${SITE}/ae-en/disclaimer-policy` },
       { id: "support", text: "Support", href: `${SITE}/contact` },
       { id: "privacy", text: "Privacy statement", href: `${SITE}/privacy-policy` },
     ],

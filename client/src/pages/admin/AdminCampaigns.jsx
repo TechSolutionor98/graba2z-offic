@@ -67,6 +67,42 @@ const emptyCampaign = {
   sender: "support",
 }
 
+/**
+ * Where an unfinished campaign is kept between visits.
+ *
+ * Putting a campaign together means choosing an audience, a template and a
+ * subject, and leaving the page used to throw all of it away. This holds the
+ * work in the browser until it is saved as a real draft, sent, or abandoned
+ * deliberately.
+ */
+const WIP_KEY = "campaignInProgress"
+
+const readWip = () => {
+  try {
+    const raw = sessionStorage.getItem(WIP_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    // A corrupted or unreadable value must not stop the page loading.
+    return null
+  }
+}
+
+const writeWip = (value) => {
+  try {
+    sessionStorage.setItem(WIP_KEY, JSON.stringify(value))
+  } catch {
+    /* private browsing, or storage full -- losing the resume is not worth an error */
+  }
+}
+
+const clearWip = () => {
+  try {
+    sessionStorage.removeItem(WIP_KEY)
+  } catch {
+    /* nothing to do */
+  }
+}
+
 const getAdminToken = () =>
   localStorage.getItem("adminToken") || localStorage.getItem("token") || localStorage.getItem("authToken")
 
@@ -255,6 +291,16 @@ const AdminCampaigns = () => {
   const setMode = (mode) =>
     setForm({ ...form, audience: { ...form.audience, mode } })
 
+  // Only a campaign that does not exist on the server yet: one already saved is
+  // recovered by opening it, and keeping a second copy here would let the two
+  // disagree.
+  useEffect(() => {
+    if (editing !== "new") return
+    const empty = !form.name.trim() && !form.subject.trim() && !form.template && !form.audience.sources.length
+    if (empty) clearWip()
+    else writeWip(form)
+  }, [editing, form])
+
   const toggleSource = (key) => {
     const chosen = form.audience.sources.includes(key)
       ? form.audience.sources.filter((s) => s !== key)
@@ -265,10 +311,19 @@ const AdminCampaigns = () => {
   // -------------------------------------------------------------- actions
 
   const startNew = () => {
-    setForm(emptyCampaign)
+    const resumed = readWip()
+    setForm(resumed ? { ...emptyCampaign, ...resumed } : emptyCampaign)
     setAudience(null)
     setEditing("new")
     setError("")
+    setNotice(resumed ? "Picked up where you left off. Clear it with Discard if you would rather start fresh." : "")
+  }
+
+  /** Throw the unfinished campaign away and begin again. */
+  const discardWip = () => {
+    clearWip()
+    setForm(emptyCampaign)
+    setAudience(null)
     setNotice("")
   }
 
@@ -293,6 +348,8 @@ const AdminCampaigns = () => {
   }
 
   const closeEditor = () => {
+    // Deliberately not cleared: leaving the editor is exactly when somebody
+    // wants their work still here when they come back.
     setEditing(null)
     setForm(emptyCampaign)
     setAudience(null)
@@ -315,6 +372,8 @@ const AdminCampaigns = () => {
           : await axios.put(`${API}/api/campaigns/${editing}`, payload, authHeader)
 
       await fetchCampaigns()
+      // It exists on the server now, so the browser copy would only go stale.
+      clearWip()
       if (editing === "new") setEditing(data._id)
       if (!thenSend) setNotice("Campaign saved.")
       return data._id || editing
@@ -899,6 +958,15 @@ const AdminCampaigns = () => {
                 >
                   {saving ? "Saving…" : "Save draft"}
                 </button>
+                {editing === "new" && (
+                  <button
+                    type="button"
+                    onClick={discardWip}
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-800"
+                  >
+                    Discard
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setConfirmSend(true)}
