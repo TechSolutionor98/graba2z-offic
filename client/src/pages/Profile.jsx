@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import EmailSubscriptionCard from "../components/EmailSubscriptionCard"
 import { useAuth } from "../context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { 
@@ -562,6 +563,13 @@ const Profile = () => {
                     <span className="text-xs text-gray-500 font-medium block">Account Type</span>
                     <span className="font-bold text-gray-800 text-sm md:text-base">{user?.isAdmin ? "Administrator" : "Customer"}</span>
                   </div>
+                </div>
+
+                {/* Somebody who unsubscribed gets no more email, so there is no
+                    link left for them to follow. This is where they turn it
+                    back on. */}
+                <div className="md:col-span-2">
+                  <EmailSubscriptionCard />
                 </div>
               </div>
             </div>

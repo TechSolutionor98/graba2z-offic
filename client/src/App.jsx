@@ -1,4 +1,5 @@
 import { lazyWithRetry } from "./utils/lazyWithRetry"
+import UnsubscribePage from "./pages/UnsubscribePage"
 import { lazy, Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
@@ -260,6 +261,8 @@ function App() {
                     <Route path="register" element={<Register />} />
                     <Route path="verify-email" element={<EmailVerification />} />
                     <Route path="track-order" element={<TrackOrder />} />
+                    <Route path="unsubscribe/:token" element={<UnsubscribePage mode="unsubscribe" />} />
+                    <Route path="resubscribe/:token" element={<UnsubscribePage mode="resubscribe" />} />
                     <Route path="about" element={<About />} />
                     <Route path="blogs" element={<BlogList />} />
                     <Route path="blogs/:slug" element={<BlogPost />} />
@@ -367,6 +370,8 @@ function App() {
                     <Route path="register" element={<Register />} />
                     <Route path="verify-email" element={<EmailVerification />} />
                     <Route path="track-order" element={<TrackOrder />} />
+                    <Route path="unsubscribe/:token" element={<UnsubscribePage mode="unsubscribe" />} />
+                    <Route path="resubscribe/:token" element={<UnsubscribePage mode="resubscribe" />} />
                     <Route path="about" element={<About />} />
                     <Route path="blogs" element={<BlogList />} />
                     <Route path="blogs/:slug" element={<BlogPost />} />
@@ -473,6 +478,8 @@ function App() {
                     <Route path="register" element={<Register />} />
                     <Route path="verify-email" element={<EmailVerification />} />
                     <Route path="track-order" element={<TrackOrder />} />
+                    <Route path="unsubscribe/:token" element={<UnsubscribePage mode="unsubscribe" />} />
+                    <Route path="resubscribe/:token" element={<UnsubscribePage mode="resubscribe" />} />
                     <Route path="about" element={<About />} />
                     <Route path="blogs" element={<BlogList />} />
                     <Route path="blogs/:slug" element={<BlogPost />} />

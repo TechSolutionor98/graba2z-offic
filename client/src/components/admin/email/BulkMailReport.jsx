@@ -276,9 +276,9 @@ const BulkMailReport = () => {
                   />
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
-                  These people are never sent a campaign. Put someone back on only if they have asked you to —
-                  they can also do it themselves from the link in any of our emails, or by using the subscribe
-                  box on the site.
+                  These people are never sent a campaign. Put someone back on only if they have asked you to.
+                  They can also do it themselves: from <span className="font-medium">Email Preferences</span> in
+                  their account menu, or by entering their address in the subscribe box on the site.
                 </p>
               </div>
 

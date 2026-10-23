@@ -29,6 +29,7 @@ import {
   Home,
   Grid3X3,
   UserCircle,
+  Mail,
   HelpCircle,
   Package,
   ChevronDown,
@@ -1089,6 +1090,16 @@ const Navbar = () => {
                         >
                           Track Order
                         </Link>
+                        {/* The only way somebody who unsubscribed can turn our
+                            email back on by themselves: they receive no more
+                            emails, so there is no link left to follow. */}
+                        <Link
+                          to={getLocalizedPath("/email-preferences")}
+                          className="block px-4 py-2 text-sm text-nav-dropdown-text hover:bg-nav-dropdown-hover hover:text-nav-dropdown-hover-text"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          Email Preferences
+                        </Link>
                         <hr className="my-1" />
                         <button
                           onClick={handleLogout}
@@ -1736,6 +1747,14 @@ const Navbar = () => {
                 >
                   <Truck size={20} className="mr-3" />
                   <strong><TranslatedText>Track Order</TranslatedText></strong>
+                </Link>
+                <Link
+                  to={getLocalizedPath("/email-preferences")}
+                  className="flex items-center py-3 text-gray-700 hover:bg-gray-50 rounded-lg px-2"
+                  onClick={closeMobileMenu}
+                >
+                  <Mail size={20} className="mr-3" />
+                  <strong><TranslatedText>Email Preferences</TranslatedText></strong>
                 </Link>
                 <Link
                   to={getLocalizedPath("/help")}
