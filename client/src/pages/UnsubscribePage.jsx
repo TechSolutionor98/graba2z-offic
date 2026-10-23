@@ -39,20 +39,26 @@ const UnsubscribePage = ({ mode = "unsubscribe" }) => {
   const [working, setWorking] = useState(false)
   const [done, setDone] = useState(false)
   const [invalid, setInvalid] = useState(false)
+  // Already in the state this page would put them in -- say so rather than
+  // asking them to confirm something that has already happened.
+  const [already, setAlready] = useState(false)
   const [error, setError] = useState("")
 
   const API = config.API_URL
   const base = `${API}/api/campaigns/${mode}/${encodeURIComponent(token || "")}`
 
-  // Reading the page tells us whose address it is. It changes nothing: the
-  // endpoint behind this only renders, and the decision is made below.
+  // Asks the server whose address this token refers to. It changes nothing --
+  // the decision is made by the button below.
   useEffect(() => {
     axios
-      .get(base, { headers: { Accept: "text/html" } })
+      .get(base, { headers: { Accept: "application/json" } })
       .then((r) => {
-        const found = String(r.data || "").match(/>([^<>\s@]+@[^<>\s@]+)</)
-        if (found) setEmail(found[1])
-        else setInvalid(true)
+        if (r.data?.email) {
+          setEmail(r.data.email)
+          setAlready(mode === "unsubscribe" ? r.data.subscribed === false : r.data.subscribed === true)
+        } else {
+          setInvalid(true)
+        }
       })
       .catch(() => setInvalid(true))
       .finally(() => setLoading(false))
@@ -142,6 +148,27 @@ const UnsubscribePage = ({ mode = "unsubscribe" }) => {
   }
 
   const leaving = mode === "unsubscribe"
+
+  if (already) {
+    return (
+      <div className={`${card} text-center`}>
+        <h1 className="text-xl font-bold text-gray-900">
+          {leaving ? "You are already unsubscribed" : "You are already subscribed"}
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-gray-500">
+          {leaving
+            ? `We are not sending marketing email to ${email}.`
+            : `We are sending our offers and news to ${email}.`}
+        </p>
+        <a
+          href={leaving ? `/resubscribe/${encodeURIComponent(token)}` : "/"}
+          className="mt-5 inline-block rounded-lg bg-lime-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-lime-600"
+        >
+          {leaving ? "Subscribe me again" : "Go to the shop"}
+        </a>
+      </div>
+    )
+  }
 
   return (
     <div className={card}>
