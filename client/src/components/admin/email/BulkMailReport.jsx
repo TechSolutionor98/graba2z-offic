@@ -42,6 +42,8 @@ const BulkMailReport = () => {
   const [gonePage, setGonePage] = useState(1)
 
   const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState("")
+  const [notice, setNotice] = useState("")
 
   const API = config.API_URL
   const authHeader = { headers: { Authorization: `Bearer ${getAdminToken()}` } }
@@ -85,6 +87,28 @@ const BulkMailReport = () => {
     setGonePage(1)
   }, [goneSearch])
 
+  /**
+   * Put somebody back on the list, because they asked.
+   *
+   * One named address at a time and nothing else: an opt-out is only ever
+   * undone at the person's own request, so there is no way to do it in bulk.
+   */
+  const resubscribe = async (email) => {
+    if (!window.confirm(`Put ${email} back on the list?\n\nOnly do this if they have asked you to.`)) return
+    setBusy(email)
+    setError("")
+    setNotice("")
+    try {
+      const { data } = await axios.delete(`${API}/api/campaigns/suppression`, { ...authHeader, params: { email } })
+      setNotice(data.message)
+      setGone({ ...gone, rows: gone.rows.filter((r) => r.email !== email), total: Math.max(0, gone.total - 1) })
+    } catch (e) {
+      setError(describeApiError(e, "That did not work"))
+    } finally {
+      setBusy("")
+    }
+  }
+
   const pager = (page, pages, total, setPage) =>
     pages > 1 && (
       <div className="flex items-center justify-between border-t border-gray-200 p-3 text-xs text-gray-500">
@@ -118,6 +142,10 @@ const BulkMailReport = () => {
       <p className="mb-4 text-sm text-gray-500">
         Every email this shop has sent, and everyone who has opted out of marketing.
       </p>
+
+      {notice && (
+        <p className="mb-4 rounded-lg border border-lime-200 bg-lime-50 px-4 py-3 text-sm text-lime-800">{notice}</p>
+      )}
 
       {error && (
             <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
@@ -247,6 +275,11 @@ const BulkMailReport = () => {
                     className={`${inputClass} pl-9`}
                   />
                 </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  These people are never sent a campaign. Put someone back on only if they have asked you to —
+                  they can also do it themselves from the link in any of our emails, or by using the subscribe
+                  box on the site.
+                </p>
               </div>
 
               {loading ? (
@@ -269,6 +302,7 @@ const BulkMailReport = () => {
                           <th className="p-3">On which lists</th>
                           <th className="p-3">Why</th>
                           <th className="p-3">When</th>
+                          <th className="p-3" />
                         </tr>
                       </thead>
                       <tbody>
@@ -291,9 +325,22 @@ const BulkMailReport = () => {
                                 <span className="text-xs text-gray-400">Not on any list</span>
                               )}
                             </td>
-                            <td className="p-3 text-xs capitalize text-gray-500">{row.reason || "unsubscribed"}</td>
+                            <td className="p-3 text-xs text-gray-500">
+                              <span className="capitalize">{row.reason || "unsubscribed"}</span>
+                              {row.note && <span className="block text-gray-400">&ldquo;{row.note}&rdquo;</span>}
+                            </td>
                             <td className="whitespace-nowrap p-3 text-xs text-gray-500">
                               {row.createdAt ? new Date(row.createdAt).toLocaleString() : "—"}
+                            </td>
+                            <td className="p-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => resubscribe(row.email)}
+                                disabled={busy === row.email}
+                                className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                              >
+                                {busy === row.email ? "Working…" : "Put back on"}
+                              </button>
                             </td>
                           </tr>
                         ))}
