@@ -848,34 +848,77 @@ const AdminCampaigns = () => {
                     There are no finished templates yet. Build one under Email Templates first.
                   </p>
                 ) : (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {templates.map((template) => {
-                      const on = form.template === template._id
-                      return (
-                        <button
-                          key={template._id}
-                          type="button"
-                          onClick={() => setForm({ ...form, template: template._id })}
-                          className={`overflow-hidden rounded-lg border text-left transition ${
-                            on ? "border-lime-500 ring-2 ring-lime-100" : "border-gray-200 hover:border-gray-300"
-                          }`}
-                        >
-                          <div className="h-28 overflow-hidden bg-gray-50">
-                            <iframe
-                              title={template.name}
-                              srcDoc={template.html}
-                              sandbox=""
-                              scrolling="no"
-                              className="pointer-events-none h-[280px] w-[400px] origin-top-left scale-[0.37] border-0"
-                            />
+                  /* The list on the left, the whole email on the right. Picking
+                     a template without seeing it full size means finding the
+                     mistake in somebody's inbox. */
+                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {templates.map((template) => {
+                        const on = form.template === template._id
+                        return (
+                          <button
+                            key={template._id}
+                            type="button"
+                            onClick={() => setForm({ ...form, template: template._id })}
+                            className={`overflow-hidden rounded-lg border text-left transition ${
+                              on ? "border-lime-500 ring-2 ring-lime-100" : "border-gray-200 hover:border-gray-300"
+                            }`}
+                          >
+                            <div className="h-28 overflow-hidden bg-gray-50">
+                              <iframe
+                                title={template.name}
+                                srcDoc={template.html}
+                                sandbox=""
+                                scrolling="no"
+                                className="pointer-events-none h-[280px] w-[400px] origin-top-left scale-[0.37] border-0"
+                              />
+                            </div>
+                            <div className="border-t border-gray-100 p-3">
+                              <p className="truncate text-sm font-semibold text-gray-900">{template.name}</p>
+                              <p className="truncate text-xs text-gray-500">{template.subject}</p>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    {/* Sticky, so the preview stays beside the list while it is
+                        scrolled rather than sliding off the top. */}
+                    <div className="lg:sticky lg:top-4 lg:self-start">
+                      {chosenTemplate ? (
+                        <div className="overflow-hidden rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-3 py-2">
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-semibold text-gray-900">{chosenTemplate.name}</p>
+                              <p className="truncate text-[11px] text-gray-500">
+                                {form.subject.trim() || chosenTemplate.subject || "No subject yet"}
+                              </p>
+                            </div>
+                            <span className="shrink-0 rounded-full bg-lime-100 px-2 py-0.5 text-[11px] font-semibold text-lime-700">
+                              Preview
+                            </span>
                           </div>
-                          <div className="border-t border-gray-100 p-3">
-                            <p className="truncate text-sm font-semibold text-gray-900">{template.name}</p>
-                            <p className="truncate text-xs text-gray-500">{template.subject}</p>
-                          </div>
-                        </button>
-                      )
-                    })}
+                          {/* Scrolls on its own so a long email can be read
+                              through without moving the page. */}
+                          <iframe
+                            title={`${chosenTemplate.name} preview`}
+                            srcDoc={chosenTemplate.html}
+                            sandbox=""
+                            className="h-[520px] w-full border-0 bg-white"
+                          />
+                          <p className="border-t border-gray-200 bg-gray-50 px-3 py-2 text-[11px] leading-snug text-gray-500">
+                            Merge fields like <span className="font-mono">{"{{first_name}}"}</span> are filled in
+                            per person when it sends.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex h-[300px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-6 text-center">
+                          <Mail size={26} className="text-gray-400" />
+                          <p className="mt-2 text-sm font-semibold text-gray-600">Pick a template</p>
+                          <p className="mt-1 text-xs text-gray-400">It will be shown here as the customer sees it.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </section>
