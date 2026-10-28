@@ -48,11 +48,8 @@
       h1{font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
       .sub{color:#d1d5db;font-size:16px;font-weight:500;margin-bottom:18px}
       .row-wrap{position:relative;display:flex;align-items:center;width:100%}
-      /* Mobile: a 2-column grid, no arrows. Desktop switches to a slider below. */
-      .arrow{display:none}
-      .arrow svg{width:24px;height:24px}
+      /* Every country is shown at once: two columns on mobile, three from 768px up. */
       .row{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding:8px 0;width:100%}
-      .row::-webkit-scrollbar{display:none}
       .card{width:auto;border-radius:16px;padding:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);display:flex;flex-direction:column;align-items:center;text-decoration:none;color:inherit;cursor:pointer;transition:transform .3s,background .3s,border-color .3s,box-shadow .3s}
       .card:focus-visible{outline:2px solid #a3e635;outline-offset:2px}
       .card:hover{background:rgba(255,255,255,.25);border-color:#a3e635;transform:translateY(-6px);box-shadow:0 25px 50px -12px rgba(132,204,22,.2)}
@@ -86,12 +83,9 @@
         .panel{padding:40px;border:1px solid rgba(255,255,255,.2);border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.5)}
         h1{font-size:36px;margin-bottom:8px}
         .sub{font-size:18px;margin-bottom:32px}
-        /* Desktop: horizontal slider with arrows. */
-        .row{display:flex;grid-template-columns:none;gap:20px;overflow-x:auto;scroll-behavior:smooth;padding:16px 8px;scrollbar-width:none;-ms-overflow-style:none}
-        .card{width:250px;flex:0 0 auto;padding:20px}
-        .arrow{display:flex;position:absolute;z-index:2;left:-24px;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,.2);align-items:center;justify-content:center;cursor:pointer;transition:background .2s,color .2s}
-        .arrow.right{left:auto;right:-24px}
-        .arrow:hover{background:#84cc16;color:#000}
+        /* Desktop: three to a row, every country visible without scrolling. */
+        .row{grid-template-columns:repeat(3,1fr);gap:20px;padding:16px 8px}
+        .card{padding:20px}
         .name{font-size:18px}
         .name-ar{font-size:14px}
         .cols{grid-template-columns:2fr 1fr 1fr 1fr}
@@ -124,17 +118,9 @@
         <p class="sub">Select your country to start shopping</p>
 
         <div class="row-wrap">
-          <button type="button" class="arrow" id="prev" aria-label="Previous countries">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-
           <div class="row" id="row">
 {{CARDS}}
           </div>
-
-          <button type="button" class="arrow right" id="next" aria-label="Next countries">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
         </div>
       </section>
     </main>
@@ -214,19 +200,6 @@
             /* Private mode or storage blocked: the URL still carries the choice. */
           }
         })
-
-        // Slider arrows (desktop only; hidden on mobile where the grid shows all).
-        var row = document.getElementById("row")
-        var prev = document.getElementById("prev")
-        var next = document.getElementById("next")
-        if (row && prev && next) {
-          prev.addEventListener("click", function () {
-            row.scrollBy({ left: -280, behavior: "smooth" })
-          })
-          next.addEventListener("click", function () {
-            row.scrollBy({ left: 280, behavior: "smooth" })
-          })
-        }
 
         // Marketing and analytics tags load only after the visitor does
         // something. Until then the page has nothing to do but be visible.

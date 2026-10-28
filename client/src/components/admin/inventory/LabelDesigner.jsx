@@ -5,6 +5,8 @@ import { Info, Printer, X } from "lucide-react"
 
 import {
   DEFAULT_LABEL_SETTINGS,
+  LABEL_PRESETS,
+  PAPER_MODES,
   LABEL_GAP_MM,
   LIMITS,
   USABLE_WIDTH_MM,
@@ -145,18 +147,76 @@ const LabelDesigner = ({ open, onClose, items, settings, onSettingsChange }) => 
           {/* ---- Controls ---- */}
           <div className="space-y-5">
             <section className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Size</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Paper</h3>
+
+              {/* A thermal printer stops at the end of each sticker, so the page
+                  has to be one label. Sending it an A4 page prints the top-left
+                  corner of the A4 and discards the rest. */}
+              <div className="grid grid-cols-2 gap-2">
+                {PAPER_MODES.map((mode) => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => set({ paperMode: mode.id })}
+                    className={`rounded-lg border px-3 py-2 text-left transition ${
+                      settings.paperMode === mode.id
+                        ? "border-lime-500 bg-lime-50 ring-1 ring-lime-500"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                  >
+                    <span className="block text-sm font-medium text-gray-900">{mode.label}</span>
+                    <span className="block text-xs text-gray-500">{mode.hint}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <span className="mb-1.5 block text-sm font-medium text-gray-700">Common sizes</span>
+                <div className="flex flex-wrap gap-2">
+                  {LABEL_PRESETS.map((preset) => {
+                    const { id, label, ...values } = preset
+                    const active = settings.paperMode === values.paperMode
+                      && Number(settings.widthMm) === values.widthMm
+                      && Number(settings.heightMm) === values.heightMm
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => set(values)}
+                        className={`rounded-full border px-3 py-1 text-xs transition ${
+                          active
+                            ? "border-lime-500 bg-lime-50 text-lime-800"
+                            : "border-gray-300 text-gray-600 hover:border-gray-400"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <h3 className="pt-1 text-sm font-semibold uppercase tracking-wide text-gray-500">Size</h3>
               <Measure label="Label width" settingKey="widthMm" value={settings.widthMm} onChange={(v) => set({ widthMm: v })} />
               <Measure label="Label height" settingKey="heightMm" value={settings.heightMm} onChange={(v) => set({ heightMm: v })} />
 
               {/* A read-out, not a setting. Offering "labels per row" as well as
-                  a width lets the two contradict each other. */}
+                  a width lets the two contradict each other. On a roll there is
+                  no row to speak of: one sticker is one page. */}
               <div className="flex items-start gap-2 rounded-lg bg-gray-50 p-3 text-xs text-gray-600">
                 <Info size={14} className="mt-0.5 shrink-0 text-gray-400" />
-                <span>
-                  <strong className="text-gray-900">{perRow} per row</strong> on A4 at this width — {USABLE_WIDTH_MM}mm of
-                  usable page with a {LABEL_GAP_MM}mm gap. Set the width to match your paper and the fit follows.
-                </span>
+                {settings.paperMode === "roll" ? (
+                  <span>
+                    <strong className="text-gray-900">One label per page</strong> — the page is set to{" "}
+                    {settings.widthMm} × {settings.heightMm}mm so the printer stops at the end of each sticker. In the
+                    print dialog choose your label printer and leave the paper size as it offers it; do not pick A4.
+                  </span>
+                ) : (
+                  <span>
+                    <strong className="text-gray-900">{perRow} per row</strong> on A4 at this width — {USABLE_WIDTH_MM}mm of
+                    usable page with a {LABEL_GAP_MM}mm gap. Set the width to match your paper and the fit follows.
+                  </span>
+                )}
               </div>
             </section>
 
@@ -303,7 +363,8 @@ const LabelDesigner = ({ open, onClose, items, settings, onSettingsChange }) => 
                     />
                   </div>
                   <p className="mt-3 text-center text-xs text-gray-500">
-                    {settings.widthMm} × {settings.heightMm}mm · {perRow} per row · {sample.name}
+                    {settings.widthMm} × {settings.heightMm}mm ·{" "}
+                    {settings.paperMode === "roll" ? "one per page" : `${perRow} per row`} · {sample.name}
                   </p>
                 </>
               ) : (

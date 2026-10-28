@@ -18,19 +18,50 @@ export const USABLE_WIDTH_MM = PAGE_WIDTH_MM - PAGE_MARGIN_MM * 2
 // What each control may be set to. The sliders and the number boxes share these,
 // so a figure typed off the packet is clamped to the same range the slider offers.
 export const LIMITS = {
-  widthMm: { min: 20, max: 200, step: 1 },
-  heightMm: { min: 10, max: 150, step: 1 },
+  widthMm: { min: 20, max: 200, step: 0.05 },
+  heightMm: { min: 10, max: 150, step: 0.05 },
   barcodeHeightMm: { min: 5, max: 60, step: 1 },
   moduleWidthMm: { min: 0.15, max: 0.8, step: 0.01 },
 }
 
+/**
+ * Where the labels are going.
+ *
+ * "sheet" is A4 full of stickers in a normal printer. "roll" is a thermal label
+ * printer, where the paper IS the label: the page has to be the size of one
+ * sticker, because the printer stops at the end of each one. Sending an A4 page
+ * to a 1.25 x 0.75 inch label prints the top-left corner of the A4 and throws
+ * the rest away -- which looks like a smudge in the corner and blank stickers.
+ */
+export const PAPER_MODES = [
+  { id: "sheet", label: "A4 sheet", hint: "Sticker sheets in a normal printer" },
+  { id: "roll", label: "Label roll", hint: "Thermal printer, one label at a time" },
+]
+
+const inch = (n) => Math.round(n * 25.4 * 100) / 100
+
+/** Sizes off the packet, so nobody has to convert inches by hand. */
+export const LABEL_PRESETS = [
+  // At 19mm tall there is no room for a product name as well as a readable
+  // barcode, so this preset leaves it off rather than clipping it.
+  { id: "1.25x0.75", label: '1.25" x 0.75"', paperMode: "roll", widthMm: inch(1.25), heightMm: inch(0.75), barcodeHeightMm: 7, moduleWidthMm: 0.25, showProductName: false },
+  { id: "2x1", label: '2" x 1"', paperMode: "roll", widthMm: inch(2), heightMm: inch(1), barcodeHeightMm: 9, moduleWidthMm: 0.3 },
+  { id: "50x25", label: "50 x 25mm", paperMode: "roll", widthMm: 50, heightMm: 25, barcodeHeightMm: 10, moduleWidthMm: 0.33 },
+  { id: "50x30", label: "50 x 30mm", paperMode: "sheet", widthMm: 50, heightMm: 30, barcodeHeightMm: 12, moduleWidthMm: 0.33 },
+]
+
+// The label stock actually in use: 1.25 x 0.75 inch on a thermal roll. Starting
+// anywhere else means the first print of the day comes out on the wrong paper,
+// and nothing here is remembered between visits -- the designer opens on these
+// values every time.
 export const DEFAULT_LABEL_SETTINGS = {
-  widthMm: 50,
-  heightMm: 30,
-  barcodeHeightMm: 12,
+  paperMode: "roll",
+  widthMm: 31.75,
+  heightMm: 19.05,
+  barcodeHeightMm: 7,
   // The width of the narrowest bar. Raising it is the fix for a scanner that
   // struggles; see the note on the designer panel.
-  moduleWidthMm: 0.33,
+  moduleWidthMm: 0.25,
 
   showCompany: true,
   // "name" by default: a logo at 5mm on a thermal printer usually comes out as a
@@ -39,7 +70,8 @@ export const DEFAULT_LABEL_SETTINGS = {
   companyName: "GrabAtoZ",
   logoUrl: "",
 
-  showProductName: true,
+  // No room for a product name beside a scannable barcode at 19mm tall.
+  showProductName: false,
   showSku: false,
   showBarcode: true,
   showCode: true,
@@ -150,8 +182,26 @@ export function buildLabelHtml(product, settings) {
 
 /** The stylesheet for a sheet of labels at real size. */
 export function buildLabelCss(settings) {
+  const roll = settings.paperMode === "roll"
+
+  // On a roll the page IS the label: its own size, no margin, one per page, and
+  // no border -- a thermal printer cannot print a hairline at the very edge and
+  // the paper is already cut to shape.
+  const page = roll
+    ? `@page { size: ${settings.widthMm}mm ${settings.heightMm}mm; margin: 0; }`
+    : `@page { size: A4; margin: ${PAGE_MARGIN_MM}mm; }`
+
+  const sheet = roll
+    ? `.sheet { display: block; }`
+    : `.sheet {
+      display: flex;
+      flex-wrap: wrap;
+      gap: ${LABEL_GAP_MM}mm;
+      align-content: flex-start;
+    }`
+
   return `
-    @page { size: A4; margin: ${PAGE_MARGIN_MM}mm; }
+    ${page}
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -159,17 +209,12 @@ export function buildLabelCss(settings) {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .sheet {
-      display: flex;
-      flex-wrap: wrap;
-      gap: ${LABEL_GAP_MM}mm;
-      align-content: flex-start;
-    }
+    ${sheet}
     .lbl {
       width: ${settings.widthMm}mm;
       height: ${settings.heightMm}mm;
-      border: 0.2mm solid #d4d4d4;
-      padding: 1mm;
+      border: ${roll ? "0" : "0.2mm solid #d4d4d4"};
+      padding: ${roll ? "0.6mm" : "1mm"};
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -180,7 +225,9 @@ export function buildLabelCss(settings) {
       /* A label split down the middle by a page break is a wasted sticker. */
       break-inside: avoid;
       page-break-inside: avoid;
+      ${roll ? "break-after: page; page-break-after: always;" : ""}
     }
+    ${roll ? ".lbl:last-child { break-after: auto; page-break-after: auto; }" : ""}
     .lbl-company { font-size: 2.6mm; font-weight: 700; letter-spacing: 0.1mm; }
     .lbl-logo { max-height: 5mm; max-width: 80%; object-fit: contain; }
     .lbl-name {

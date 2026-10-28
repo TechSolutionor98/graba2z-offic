@@ -60,6 +60,14 @@
             "destination": "https://api.grabatoz.ae/acer-products/:path*"
         },
         {
+            "source": "/ae-en/product/:slug",
+            "destination": "/api/product-page?slug=:slug&lang=en"
+        },
+        {
+            "source": "/ae-ar/product/:slug",
+            "destination": "/api/product-page?slug=:slug&lang=ar"
+        },
+        {
             "source": "/(.*)",
             "destination": "/app.html"
         }
@@ -110,5 +118,11 @@
                 }
             ]
         }
-    ]
+    ],
+    "functions": {
+        "api/product-page.js": {
+            "includeFiles": "dist/app.html",
+            "maxDuration": 10
+        }
+    }
 }
