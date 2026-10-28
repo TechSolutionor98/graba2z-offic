@@ -42,8 +42,8 @@
       .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,#000 0%,rgba(0,0,0,.8) 50%,rgba(0,0,0,.5) 100%)}
       main{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 16px 32px}
       .logo{display:block;height:80px;width:auto;margin:0 auto 14px}
-      /* Mobile: the content sits straight on the background -- no card, no border, no
-         blur. The panel look comes back at 768px and up. */
+      /* The content sits straight on the background at every width -- no card, no
+         border, no blur. The photo behind it is the backdrop. */
       .panel{width:100%;max-width:1024px;background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;text-align:center}
       h1{font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
       .sub{color:#d1d5db;font-size:16px;font-weight:500;margin-bottom:18px}
@@ -78,19 +78,27 @@
       .copy a{color:#9ca3af;text-decoration:none}
       .copy a:hover{color:#a3e635}
       @media (min-width:768px){
-        main{padding:32px 16px}
-        .logo{height:112px;margin:0 auto 32px}
-        .panel{padding:40px;border:1px solid rgba(255,255,255,.2);border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,.5)}
-        h1{font-size:36px;margin-bottom:8px}
-        .sub{font-size:18px;margin-bottom:32px}
-        /* Desktop: three to a row, every country visible without scrolling. */
-        .row{grid-template-columns:repeat(3,1fr);gap:20px;padding:16px 8px}
-        .card{padding:20px}
-        .name{font-size:18px}
-        .name-ar{font-size:14px}
+        main{padding:20px 16px}
+        /* The heading block is sized against the viewport HEIGHT, not a fixed
+           number of pixels. A laptop screen leaves roughly 780px of page once
+           the browser's own chrome is taken off, and a logo big enough for a
+           desktop monitor pushes the bottom row of countries off that. */
+        .logo{height:clamp(60px,9vh,96px);margin:0 auto clamp(10px,1.6vh,20px)}
+        .panel{padding:0}
+        h1{font-size:clamp(21px,2.7vh,28px);margin-bottom:5px}
+        .sub{font-size:clamp(13px,1.7vh,15px);margin-bottom:clamp(12px,2.2vh,24px)}
+        /* Three to a row. Tying the grid's width to the viewport height is what
+           keeps both rows on screen: a shorter window narrows the grid, which
+           narrows the cards, which shortens them -- the flags are a fixed 3:2,
+           so height follows width. */
+        .row{grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.6vh,18px);padding:0;max-width:min(780px,86vh);margin:0 auto}
+        .card{padding:clamp(10px,1.4vh,14px);border-radius:14px}
+        .flag{border-radius:10px;margin-bottom:clamp(6px,1.2vh,10px)}
+        .name{font-size:clamp(13px,1.8vh,15px)}
+        .name-ar{font-size:clamp(11px,1.4vh,12px)}
+        .go{margin-top:clamp(7px,1.3vh,12px);padding:clamp(5px,.8vh,7px) 18px;font-size:11px}
         .cols{grid-template-columns:2fr 1fr 1fr 1fr}
         .logo{filter:drop-shadow(0 4px 16px rgba(255,255,255,.15))}
-        .panel{background:rgba(255,255,255,.1);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px)}
         .card{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
       }
     </style>
