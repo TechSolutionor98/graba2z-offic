@@ -25,15 +25,41 @@ const CURRENCY = "AED"
 let shellCache = null
 const SHELL_PATHS = ["dist/app.html", "public/app.html", "app.html"]
 
+// Is this actually our application shell?
+//
+// Every candidate is checked, not just the ones read off disk. A fetch that
+// returns 200 has not necessarily returned the shell: a deployment with Vercel
+// Authentication switched on answers a request for its own pages with the
+// Vercel login page, at status 200. Served without this check, that login page
+// became the product page -- correct <title>, Vercel's sign-in form below it.
+//
+// The test is the built bundle. The source app.html points at /src/main.jsx and
+// would not boot in production; a login page references neither.
+const isAppShell = (html) =>
+  typeof html === "string" && html.includes("/assets/") && html.includes('id="root"')
+
+const fetchShell = async (url) => {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 4000)
+  try {
+    const res = await fetch(url, { headers: { "x-shell-fetch": "1" } })
+    if (!res.ok) return null
+    const html = await res.text()
+    return isAppShell(html) ? html : null
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 const readShell = async () => {
   if (shellCache) return shellCache
+
   for (const rel of SHELL_PATHS) {
     try {
-      const file = path.join(process.cwd(), rel)
-      const html = fs.readFileSync(file, "utf8")
-      // The source app.html points at /src/main.jsx and would not boot in
-      // production. Only accept a shell that references a built bundle.
-      if (html.includes("/assets/")) {
+      const html = fs.readFileSync(path.join(process.cwd(), rel), "utf8")
+      if (isAppShell(html)) {
         shellCache = html
         return shellCache
       }
@@ -41,12 +67,20 @@ const readShell = async () => {
       /* try the next location */
     }
   }
-  // Last resort: ask the deployment for its own static shell.
-  const host = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : SITE
-  const res = await fetch(`${host}/app.html`, { headers: { "x-shell-fetch": "1" } })
-  if (!res.ok) throw new Error(`shell ${res.status}`)
-  shellCache = await res.text()
-  return shellCache
+
+  // Not on disk, so ask over HTTP -- the public site first. The deployment's own
+  // VERCEL_URL is the wrong place to ask: it is the one address that deployment
+  // protection guards, so it answers with a login page instead of the shell.
+  for (const url of [`${SITE}/app.html`, process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/app.html` : null]) {
+    if (!url) continue
+    const html = await fetchShell(url)
+    if (html) {
+      shellCache = html
+      return shellCache
+    }
+  }
+
+  throw new Error("no valid app shell from disk, site or deployment")
 }
 
 const esc = (s) =>
@@ -140,21 +174,26 @@ const buildHead = (p, lang, url) => {
 }
 
 export default async function handler(req, res) {
+  const requested = new URL(req.url, SITE)
+  const lang = requested.searchParams.get("lang") === "ar" ? "ar" : "en"
+  const slug = requested.searchParams.get("slug") || ""
+
   let shell = ""
   try {
     shell = await readShell()
   } catch (err) {
-    // Without a shell there is nothing to serve. Let the platform fall back to
-    // the static file rather than returning a broken page.
+    // No trustworthy shell. Bounce back to this same product page with the flag
+    // that makes the rewrite in vercel.json skip this function, so the visitor
+    // gets the ordinary single-page app at the right address -- exactly what the
+    // site served before this function existed -- rather than a broken page.
     console.error("product-page: no shell available", err)
-    res.setHeader("Location", "/app.html")
+    res.setHeader("Cache-Control", "no-store")
+    res.setHeader("Location", `/ae-${lang}/product/${encodeURIComponent(slug)}?__shell=1`)
     return res.status(302).end()
   }
 
   try {
-    const url = new URL(req.url, SITE)
-    const lang = url.searchParams.get("lang") === "ar" ? "ar" : "en"
-    const slug = url.searchParams.get("slug") || ""
+    const url = requested
     if (!slug) throw new Error("no slug")
 
     const api = `${API}/api/products/slug/${encodeURIComponent(slug)}`

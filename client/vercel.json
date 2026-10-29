@@ -61,11 +61,23 @@
         },
         {
             "source": "/ae-en/product/:slug",
-            "destination": "/api/product-page?slug=:slug&lang=en"
+            "destination": "/api/product-page?slug=:slug&lang=en",
+            "missing": [
+                {
+                    "type": "query",
+                    "key": "__shell"
+                }
+            ]
         },
         {
             "source": "/ae-ar/product/:slug",
-            "destination": "/api/product-page?slug=:slug&lang=ar"
+            "destination": "/api/product-page?slug=:slug&lang=ar",
+            "missing": [
+                {
+                    "type": "query",
+                    "key": "__shell"
+                }
+            ]
         },
         {
             "source": "/(.*)",

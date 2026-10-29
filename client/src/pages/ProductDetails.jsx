@@ -129,6 +129,11 @@ const ProductDetails = () => {
   const [frequentlyBoughtLoading, setFrequentlyBoughtLoading] = useState(true)
   const [selectedBundleItems, setSelectedBundleItems] = useState({})
 
+  // "Out of Stock" is the only status that blocks a sale -- "In Stock" and "PreOrder"
+  // are both buyable. Same rule the main Add to Cart button follows, so the bundle
+  // cannot sell what the button beside it refuses to.
+  const isSoldOut = (item) => item?.stockStatus === "Out of Stock"
+
   const [showTabbyModal, setShowTabbyModal] = useState(false)
   // Set when something has just gone into the basket, so the page can confirm it
   // in a sheet instead of a toast that slides past the top of the screen.
@@ -624,6 +629,11 @@ const ProductDetails = () => {
 
   // Function to handle bundle item selection
   const handleBundleItemToggle = (itemId) => {
+    // The checkbox is already disabled for these; this is the rule itself rather than
+    // the appearance of it, so a stale render cannot tick one.
+    const target = itemId === product?._id ? product : frequentlyBought.find((p) => p._id === itemId)
+    if (isSoldOut(target)) return
+
     console.log("Toggling bundle item:", itemId)
     setSelectedBundleItems((prev) => {
       const newState = {
@@ -635,18 +645,31 @@ const ProductDetails = () => {
     })
   }
 
+  // What is actually in the bundle right now. Sold-out items are excluded here rather
+  // than at each call site, so the price shown, the count on the button and what lands
+  // in the basket are the same three things.
+  const selectedBundleIds = () => {
+    const ids = []
+    if (selectedBundleItems[product?._id] && !isSoldOut(product)) ids.push(product._id)
+    frequentlyBought.forEach((item) => {
+      if (selectedBundleItems[item._id] && !isSoldOut(item)) ids.push(item._id)
+    })
+    return ids
+  }
+
   // Function to calculate total bundle price
   const calculateBundleTotal = () => {
+    const inBundle = new Set(selectedBundleIds())
     let total = 0
 
     // Add current product if selected (no discount on main product)
-    if (selectedBundleItems[product._id]) {
+    if (inBundle.has(product._id)) {
       total += product.offerPrice && product.offerPrice > 0 ? product.offerPrice : product.price
     }
 
     // Add selected bundle items with 25% discount
     frequentlyBought.forEach((item) => {
-      if (selectedBundleItems[item._id]) {
+      if (inBundle.has(item._id)) {
         const originalPrice = item.offerPrice && item.offerPrice > 0 ? item.offerPrice : item.price
         const discountedPrice = calculateDiscountedPrice(originalPrice, 25)
         total += discountedPrice
@@ -658,11 +681,12 @@ const ProductDetails = () => {
 
   // New function to calculate savings
   const calculateBundleSavings = () => {
+    const inBundle = new Set(selectedBundleIds())
     let originalTotal = 0
     let discountedTotal = 0
 
     // Add current product if selected
-    if (selectedBundleItems[product._id]) {
+    if (inBundle.has(product._id)) {
       const productPrice = product.offerPrice && product.offerPrice > 0 ? product.offerPrice : product.price
       originalTotal += productPrice
       discountedTotal += productPrice
@@ -670,7 +694,7 @@ const ProductDetails = () => {
 
     // Add selected bundle items
     frequentlyBought.forEach((item) => {
-      if (selectedBundleItems[item._id]) {
+      if (inBundle.has(item._id)) {
         const originalPrice = item.offerPrice && item.offerPrice > 0 ? item.offerPrice : item.price
         const discountedPrice = calculateDiscountedPrice(originalPrice, 25)
         originalTotal += originalPrice
@@ -712,7 +736,7 @@ const ProductDetails = () => {
       return null
     }
 
-    const selectedCount = Object.values(selectedBundleItems).filter(Boolean).length
+    const selectedCount = selectedBundleIds().length
     const bundleTotals = calculateBundleSavings()
 
     return (
@@ -723,11 +747,15 @@ const ProductDetails = () => {
         </div>
 
         <div className="space-y-4">
-          {/* Current Product - Always Selected */}
-          <div className="flex items-center space-x-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          {/* Current Product - included unless it is sold out */}
+          <div
+            className={`flex items-center space-x-4 p-4 border rounded-lg ${
+              isSoldOut(product) ? "bg-gray-50 border-gray-200 opacity-70" : "bg-yellow-50 border-yellow-200"
+            }`}
+          >
             <input
               type="checkbox"
-              checked={true}
+              checked={!isSoldOut(product)}
               disabled={true}
               className="w-5 h-5 text-yellow-600 bg-gray-100 border-gray-300 rounded focus:ring-yellow-500 focus:ring-2"
             />
@@ -741,7 +769,13 @@ const ProductDetails = () => {
               <p className="text-yellow-600 font-semibold">
                 {formatPrice(product.offerPrice && product.offerPrice > 0 ? product.offerPrice : product.price)}
               </p>
-              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full"><TranslatedText>Current Item</TranslatedText></span>
+              {isSoldOut(product) ? (
+                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">
+                  <TranslatedText>Out of stock</TranslatedText>
+                </span>
+              ) : (
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full"><TranslatedText>Current Item</TranslatedText></span>
+              )}
             </div>
           </div>
 
@@ -754,13 +788,16 @@ const ProductDetails = () => {
             return (
               <div
                 key={item._id}
-                className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                className={`flex items-center space-x-4 p-4 border border-gray-200 rounded-lg ${
+                  isSoldOut(item) ? "bg-gray-50 opacity-70" : "hover:bg-gray-50"
+                }`}
               >
                 <input
                   type="checkbox"
-                  checked={selectedBundleItems[item._id] || false}
+                  checked={(selectedBundleItems[item._id] && !isSoldOut(item)) || false}
+                  disabled={isSoldOut(item)}
                   onChange={() => handleBundleItemToggle(item._id)}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <img
                   src={getFullImageUrl(item.image) || "/placeholder.svg"}
@@ -775,6 +812,11 @@ const ProductDetails = () => {
                     <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium"><TranslatedText>Save</TranslatedText> 25%</span>
                   </div>
                   <p className="text-sm text-green-600 font-medium"><TranslatedText>You save</TranslatedText> {formatPrice(savings)}</p>
+                  {isSoldOut(item) && (
+                    <span className="inline-block mt-1 text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-medium">
+                      <TranslatedText>Out of stock</TranslatedText>
+                    </span>
+                  )}
 
                   {/* Show original offer details if any */}
                   {item.offerPrice && item.offerPrice > 0 && item.offerPrice < item.price && (
@@ -1800,7 +1842,7 @@ const ProductDetails = () => {
 
             const isRelevantPrice = p.price > 0 && p.price < 2000;
 
-            return matchesKeywords && !isExcluded && isRelevantPrice;
+            return matchesKeywords && !isExcluded && isRelevantPrice && !isSoldOut(p);
           });
 
           if (relevantProduct) {
@@ -1854,7 +1896,7 @@ const ProductDetails = () => {
 
                 const isRelevantPrice = p.price > 0 && p.price < 2000;
 
-                return matchesKeywords && !isExcluded && isRelevantPrice;
+                return matchesKeywords && !isExcluded && isRelevantPrice && !isSoldOut(p);
               });
 
               if (relevantProduct) {
@@ -1899,13 +1941,15 @@ const ProductDetails = () => {
 
     setFrequentlyBought(complementaryProducts);
 
-    // Auto-select current product + found accessories
-    const autoSelectedItems = {
-      [product._id]: true,
-    };
+    // Auto-select current product + found accessories, skipping anything sold out:
+    // a pre-ticked box is what let an out-of-stock product reach the basket.
+    const autoSelectedItems = {};
+    if (!isSoldOut(product)) {
+      autoSelectedItems[product._id] = true;
+    }
 
     complementaryProducts.forEach(item => {
-      autoSelectedItems[item._id] = true;
+      if (!isSoldOut(item)) autoSelectedItems[item._id] = true;
     });
 
     setSelectedBundleItems(autoSelectedItems);
@@ -2025,9 +2069,12 @@ const ProductDetails = () => {
 
     const selectedItems = []
     const bundleId = `bundle_${product._id}_${Date.now()}`
+    // Re-read stock at the moment of adding rather than trusting the boxes drawn
+    // earlier: the page can sit open while the last one sells.
+    const inBundle = new Set(selectedBundleIds())
 
     // Add current product if selected (no discount)
-    if (selectedBundleItems[product._id]) {
+    if (inBundle.has(product._id)) {
       selectedItems.push({
         ...product,
         bundleId,
@@ -2038,7 +2085,7 @@ const ProductDetails = () => {
 
     // Add selected bundle items with 25% discount
     frequentlyBought.forEach((item) => {
-      if (selectedBundleItems[item._id]) {
+      if (inBundle.has(item._id)) {
         const originalPrice = item.offerPrice && item.offerPrice > 0 ? item.offerPrice : item.price
         const discountedPrice = calculateDiscountedPrice(originalPrice, 25)
 
@@ -2056,6 +2103,14 @@ const ProductDetails = () => {
 
     if (selectedItems.length === 0) {
       showToast("No items selected", "error")
+      return
+    }
+
+    // Last gate before the basket. Nothing above should be able to get a sold-out item
+    // this far, so if one arrives, say which and stop rather than quietly dropping it.
+    const soldOut = selectedItems.find(isSoldOut)
+    if (soldOut) {
+      showToast(`${soldOut.name} is out of stock`, "error")
       return
     }
 

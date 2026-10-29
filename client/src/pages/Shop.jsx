@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { ChevronDown, ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react"
 import axios from "axios"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
@@ -10,7 +10,7 @@ import { useCurrency } from "../context/CurrencyContext"
 import HomeStyleProductCard from "../components/HomeStyleProductCard"
 import ProductSchema from "../components/ProductSchema"
 import SEO from "../components/SEO"
-import productCache, { scoreSearchRelevance } from "../services/productCache"
+import productCache, { rankProductsBySearch } from "../services/productCache"
 import { generateShopURL, parseShopURL, createSlug } from "../utils/urlUtils"
 import { createMetaDescription, generateSEOTitle } from "../utils/seoHelpers"
 import { getFullImageUrl } from "../utils/imageUtils"
@@ -23,6 +23,10 @@ import "rc-slider/assets/index.css"
 import Slider from "rc-slider"
 
 const API_BASE_URL = `${config.API_URL}`
+// No stock filter at all -- every status shown. Frozen at module scope so the memo
+// below returns the same object every time and the effects watching it stay still.
+const EVERY_STOCK_STATUS = Object.freeze({ inStock: false, outOfStock: false, onSale: false })
+
 const DEFAULT_PRICE_RANGE = [0, Number.POSITIVE_INFINITY]
 const PRICE_FILTER_MIN = 0
 const PRICE_FILTER_MAX = 20000
@@ -335,7 +339,14 @@ const Shop = () => {
   const [banners, setBanners] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [searchQuery, setSearchQuery] = useState("")
+  // Seeded from the URL on the very first render, not left empty for an effect to fill
+  // in afterwards. Starting empty meant the first request to the server carried no
+  // search but did carry the default "In Stock" filter, so a freshly opened search
+  // result briefly showed the whole in-stock catalogue, newest first -- a page of
+  // phones under a heading naming the product someone had actually typed.
+  const [searchQuery, setSearchQuery] = useState(
+    () => parseShopURL(location.pathname, location.search).search || "",
+  )
   const [actualSearchQuery, setActualSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedBrands, setSelectedBrands] = useState([])
@@ -424,7 +435,20 @@ const Shop = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, selectedSubCategories, subCategory2Data, subCategory3Data, subCategory4Data])
-  const [stockFilters, setStockFilters] = useState({ inStock: true, outOfStock: false, onSale: false })
+  // What the shopper picked, which is not always what gets applied -- see below.
+  const [stockFilterChoice, setStockFilterChoice] = useState({ inStock: true, outOfStock: false, onSale: false })
+  const [stockFilterExplicitlyChosen, setStockFilterExplicitlyChosen] = useState(false)
+
+  // "In Stock" is on by default as a browsing convenience: a category page full of
+  // things nobody can buy is not much of a shop. A search is the opposite case -- a
+  // shopper typing a product's exact name wants that product, and letting a filter
+  // they never set hide it is how an exact search came back without its own answer.
+  // Once they pick a stock filter themselves it is honoured, search or no search.
+  const stockFilters = useMemo(
+    () =>
+      hasActiveSearch && !stockFilterExplicitlyChosen ? EVERY_STOCK_STATUS : stockFilterChoice,
+    [hasActiveSearch, stockFilterExplicitlyChosen, stockFilterChoice],
+  )
   const [minPrice, setMinPrice] = useState(PRICE_FILTER_MIN)
   const [isPriceFilterApplied, setIsPriceFilterApplied] = useState(false)
   const [priceFilterApplyCount, setPriceFilterApplyCount] = useState(0)
@@ -800,19 +824,10 @@ const Shop = () => {
       return []
     }
 
-    // Scored with the same rules as the server search (scoreSearchRelevance), so the
-    // offline path cannot answer "Keyboard" with a laptop whose spec list mentions one.
-    const matchAndRank = (term) => {
-      const normalized = String(term || "").toLowerCase().trim()
-      if (!normalized) return []
-      const termWords = normalized.split(/\s+/).filter(Boolean)
-
-      return baseFilteredProducts
-        .map((product) => ({ product, relevance: scoreSearchRelevance(product, normalized, termWords) }))
-        .filter((entry) => entry.relevance !== null)
-        .sort((a, b) => b.relevance - a.relevance || new Date(b.product.createdAt) - new Date(a.product.createdAt))
-        .map((entry) => entry.product)
-    }
+    // Scored with the same rules as the server search, so the offline path cannot answer
+    // "Keyboard" with a laptop whose spec list mentions one -- and a pasted product title
+    // reaches the same product here as it does on the server.
+    const matchAndRank = (term) => rankProductsBySearch(baseFilteredProducts, term).map((entry) => entry.product)
 
     const words = searchTerm.trim().split(/\s+/)
 
@@ -1992,7 +2007,8 @@ const Shop = () => {
   }
 
   const handleStockFilterChange = (key) => {
-    setStockFilters((prev) => {
+    setStockFilterExplicitlyChosen(true)
+    setStockFilterChoice(() => {
       const newState = { inStock: false, outOfStock: false, onSale: false }
       newState[key] = true
       return newState
@@ -2000,7 +2016,8 @@ const Shop = () => {
   }
 
   const handleAllProductsFilter = () => {
-    setStockFilters({ inStock: false, outOfStock: false, onSale: false })
+    setStockFilterExplicitlyChosen(true)
+    setStockFilterChoice({ inStock: false, outOfStock: false, onSale: false })
   }
 
   const handleSearchChange = (e) => {
@@ -2041,7 +2058,8 @@ const Shop = () => {
     resetPriceFilter()
     setSearchQuery("")
     setActualSearchQuery("")
-    setStockFilters({ inStock: false, outOfStock: false, onSale: false })
+    setStockFilterExplicitlyChosen(false)
+    setStockFilterChoice({ inStock: false, outOfStock: false, onSale: false })
     navigate("/shop")
   }
 
@@ -2431,7 +2449,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Stock</TranslatedText>:</span> <TranslatedText>In Stock</TranslatedText>
                         </span>
                         <button
-                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          onClick={handleAllProductsFilter}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -2444,7 +2462,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Stock</TranslatedText>:</span> <TranslatedText>Out of Stock</TranslatedText>
                         </span>
                         <button
-                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          onClick={handleAllProductsFilter}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -2457,7 +2475,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Stock</TranslatedText>:</span> <TranslatedText>On Sale</TranslatedText>
                         </span>
                         <button
-                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          onClick={handleAllProductsFilter}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -3157,7 +3175,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Stock</TranslatedText>:</span> <TranslatedText>In Stock</TranslatedText>
                         </span>
                         <button
-                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          onClick={handleAllProductsFilter}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -3171,7 +3189,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Stock</TranslatedText>:</span> <TranslatedText>Out of Stock</TranslatedText>
                         </span>
                         <button
-                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          onClick={handleAllProductsFilter}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×
@@ -3185,7 +3203,7 @@ const Shop = () => {
                           <span className="font-semibold"><TranslatedText>Stock</TranslatedText>:</span> <TranslatedText>On Sale</TranslatedText>
                         </span>
                         <button
-                          onClick={() => setStockFilters({ inStock: false, outOfStock: false, onSale: false })}
+                          onClick={handleAllProductsFilter}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           ×

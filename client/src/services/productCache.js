@@ -496,7 +496,9 @@ import config from "../config/config.js"
 // Keyboard, ..."), so being *in* the Keyboards category counts for far more than a
 // mention buried in a name. Without that, a search for "Keyboard" returns laptops.
 const RELEVANCE_WEIGHTS = {
+  nameExact: 200,
   namePrefix: 120,
+  nameCoverage: 60,
   nameAllTerms: 35,
   namePerTerm: 5,
   categoryAllTerms: 80,
@@ -504,6 +506,55 @@ const RELEVANCE_WEIGHTS = {
   codeAllTerms: 90,
   tagAllTerms: 30,
   tagAnyTerm: 12,
+}
+
+// A pasted product title drags its punctuation along: "S25 plus,", "MagSafe,", "Blue".
+// Matched literally those never find a product whose own title reads "S25 plus and
+// MagSafe Charging", so the comma comes off before anything is compared. Punctuation
+// *inside* a word stays, because "anti-slip" and "6.8-inch" are single words.
+const normalizeSearchToken = (token) =>
+  String(token || "")
+    .replace(/^[^\p{L}\p{N}]+/u, "")
+    .replace(/[^\p{L}\p{N}]+$/u, "")
+
+// Words that sit in almost every product title and so tell the ranking nothing. Dropping
+// them is what lets a pasted title find the right colour: scoring "for" as a match is
+// what let a Black case tie with the Blue one actually being searched for.
+const SEARCH_STOPWORDS = new Set([
+  "a", "an", "and", "for", "from", "in", "of", "on", "or", "the", "to", "with", "&",
+])
+
+// Short queries are precise instructions: "crownyx screen protector" means all three
+// words. A pasted product title is not -- it is one product's exact wording, and the
+// catalogue's wording for that same product differs by a word or two. Demanding every
+// word of a 20-word title rejects the one product being looked for.
+const PARTIAL_MATCH_MIN_TERMS = 4
+const PARTIAL_MATCH_RATIO = 0.6
+
+const requiredTermHits = (termCount) => {
+  if (termCount < PARTIAL_MATCH_MIN_TERMS) return termCount
+  return Math.max(PARTIAL_MATCH_MIN_TERMS, Math.ceil(termCount * PARTIAL_MATCH_RATIO))
+}
+
+const normalizeSearchText = (text) =>
+  String(text || "")
+    .toLowerCase()
+    .split(/\s+/)
+    .map(normalizeSearchToken)
+    .filter(Boolean)
+    .join(" ")
+
+// The query reduced to the words that will actually be matched. Every caller goes through
+// this, so the scorer and whatever called it always agree on what was asked for.
+export const searchTermsOf = (searchTerm) => {
+  const raw = String(searchTerm || "")
+    .toLowerCase()
+    .split(/\s+/)
+    .map(normalizeSearchToken)
+    .filter(Boolean)
+  const meaningful = raw.filter((word) => !SEARCH_STOPWORDS.has(word))
+  // Someone searching "the" still has to be searching for something.
+  return meaningful.length > 0 ? meaningful : raw
 }
 
 const searchTextOf = (...values) =>
@@ -531,7 +582,10 @@ const containsWord = (text, term) => {
 }
 
 // Returns the relevance score for a product, or null when it does not match at all.
-export const scoreSearchRelevance = (product, searchTerm, words) => {
+//
+// `allowPartial` relaxes "every word must land" to requiredTermHits(). Callers turn it on
+// only once the strict pass found nothing -- see rankProductsBySearch.
+export const scoreSearchRelevance = (product, searchTerm, words, { allowPartial = false } = {}) => {
   if (!product || !Array.isArray(words) || words.length === 0) return null
 
   const name = searchTextOf(product.name, product.nameAr, product.slug)
@@ -552,16 +606,25 @@ export const scoreSearchRelevance = (product, searchTerm, words) => {
   )
   const brand = searchTextOf(product.brand)
 
-  // Every term still has to land somewhere, or this is not a match at all.
+  // Enough of the query has to land for this to be a match: every word normally, or
+  // requiredTermHits() of them on a widened pass.
   const haystack = `${name} ${codes} ${tags} ${categories} ${brand}`
-  if (!words.every((word) => containsWord(haystack, word) || codes.includes(word))) return null
+  const termHits = words.filter((word) => containsWord(haystack, word) || codes.includes(word)).length
+  if (termHits < (allowPartial ? requiredTermHits(words.length) : words.length)) return null
 
   const nameTermHits = words.filter((word) => containsWord(name, word)).length
   let score = RELEVANCE_WEIGHTS.namePerTerm * nameTermHits
 
+  // This product IS what was typed, give or take punctuation and capitals.
+  if (normalizeSearchText(product.name) === normalizeSearchText(searchTerm)) {
+    score += RELEVANCE_WEIGHTS.nameExact
+  }
   if (String(product.name || "").toLowerCase().trimStart().startsWith(searchTerm)) {
     score += RELEVANCE_WEIGHTS.namePrefix
   }
+  // How much of the query this name accounts for. A title carrying 17 of the 19 words
+  // asked for beats one carrying 16 -- the whole point of letting partial matches in.
+  score += Math.round((RELEVANCE_WEIGHTS.nameCoverage * nameTermHits) / words.length)
   if (nameTermHits === words.length) score += RELEVANCE_WEIGHTS.nameAllTerms
   if (words.every((word) => codes.includes(word))) score += RELEVANCE_WEIGHTS.codeAllTerms
 
@@ -576,6 +639,30 @@ export const scoreSearchRelevance = (product, searchTerm, words) => {
   return score
 }
 
+
+// Rank a list of products against a query: strictly first, widened only if that found
+// nothing. Keeping it in one place is what stops the Shop page and the cache filter
+// below from answering the same search two different ways.
+export const rankProductsBySearch = (products, searchTerm) => {
+  const term = String(searchTerm || "").toLowerCase().trim()
+  const words = searchTermsOf(term)
+  if (!term || words.length === 0 || !Array.isArray(products)) return []
+
+  const scoreAll = (allowPartial) =>
+    products
+      .map((product) => ({ product, relevance: scoreSearchRelevance(product, term, words, { allowPartial }) }))
+      .filter((entry) => entry.relevance !== null)
+
+  // Every word first, so an exact search keeps giving its exact answer. Only when that
+  // finds nothing does the search widen to products carrying most of the query -- which
+  // is what a pasted product title needs, and what turns a dead end into suggestions.
+  const strict = scoreAll(false)
+  const scored = strict.length > 0 ? strict : scoreAll(true)
+
+  return scored.sort(
+    (a, b) => b.relevance - a.relevance || new Date(b.product.createdAt) - new Date(a.product.createdAt),
+  )
+}
 
 class ProductCacheService {
   constructor() {
@@ -1039,21 +1126,6 @@ class ProductCacheService {
       })
     }
 
-    // Filter by search query
-    if (filters.search && filters.search.trim()) {
-      const searchTerm = filters.search.toLowerCase().trim()
-      const words = searchTerm.split(/\s+/).filter(Boolean)
-
-      // Score every product so the sort below can order by how well it matches.
-      filteredProducts = filteredProducts
-        .map((product) => ({ product, relevance: scoreSearchRelevance(product, searchTerm, words) }))
-        .filter((entry) => entry.relevance !== null)
-        .map((entry) => {
-          entry.product._searchRelevance = entry.relevance
-          return entry.product
-        })
-    }
-
     // Filter by price range
     if (filters.priceRange && Array.isArray(filters.priceRange)) {
       const [minPrice, maxPrice] = filters.priceRange
@@ -1116,8 +1188,30 @@ class ProductCacheService {
       }
     }
 
-    // Sort products - Always prioritize in-stock products first
+    // Filter by search query -- last, so it scores what is actually left.
+    //
+    // Ranked before the stock and price filters, the decision to widen a search that
+    // matched nothing was made against products those filters were about to remove: a
+    // shopper filtering to "In Stock" got a blank page instead of the in-stock near
+    // misses. The Shop page and the server both search within the filtered set; this
+    // was the one place that did not.
+    if (filters.search && filters.search.trim()) {
+      // Score every product so the sort below can order by how well it matches.
+      filteredProducts = rankProductsBySearch(filteredProducts, filters.search).map((entry) => {
+        entry.product._searchRelevance = entry.relevance
+        return entry.product
+      })
+    }
+
+    // Sort products - in-stock first, except when ranking a search.
     filteredProducts.sort((a, b) => {
+      // A shopper who typed a product's name wants that product, not the nearest thing
+      // still on the shelf, so how well it matches outranks whether it is in stock.
+      if (filters.sortBy === "relevance") {
+        const relevanceDiff = (b._searchRelevance || 0) - (a._searchRelevance || 0)
+        if (relevanceDiff !== 0) return relevanceDiff
+      }
+
       const aInStock = getStockBucket(a) === "in"
       const bInStock = getStockBucket(b) === "in"
 
@@ -1128,8 +1222,6 @@ class ProductCacheService {
 
       // If both have same stock status, apply secondary sorting
       if (filters.sortBy === "relevance") {
-        const relevanceDiff = (b._searchRelevance || 0) - (a._searchRelevance || 0)
-        if (relevanceDiff !== 0) return relevanceDiff
         return new Date(b.createdAt) - new Date(a.createdAt)
       }
 
