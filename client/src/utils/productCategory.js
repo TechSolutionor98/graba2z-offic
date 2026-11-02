@@ -126,8 +126,20 @@ export const getProductEffectiveStock = (product, countryCode) => {
   }
 
   const numCount = Number(count) || 0
-  const isOutOfStock = numCount <= 0 || product.stockStatus === "Out of Stock"
-  const stockStatus = isOutOfStock ? "Out of Stock" : (product.stockStatus || "In Stock")
+
+  // The status the admin set decides, which is the same rule the server applies in
+  // buildPublicStockFilterCondition: a product marked In Stock is in stock whatever
+  // the count says, and one marked Out of Stock stays out whatever the count says.
+  // The count only speaks when no status was set at all.
+  //
+  // This used to read `numCount <= 0 || stockStatus === "Out of Stock"`. That made the
+  // offer page the only screen on the site calling a product out of stock while the
+  // category listing, the product page, the offer page's own stock filter and the
+  // order route all called the same product in stock -- 71 live products at the time,
+  // every one of them marked In Stock with a count of 0.
+  const declared = String(product.stockStatus || "").trim()
+  const stockStatus = declared || (numCount > 0 ? "In Stock" : "Out of Stock")
+  const isOutOfStock = stockStatus === "Out of Stock"
 
   return {
     countInStock: numCount,

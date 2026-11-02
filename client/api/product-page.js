@@ -192,6 +192,10 @@ export default async function handler(req, res) {
     return res.status(302).end()
   }
 
+  // Set only when the API says plainly that this product does not exist, which is
+  // a different thing from the API being slow or broken. See the catch below.
+  let gone = false
+
   try {
     const url = requested
     if (!slug) throw new Error("no slug")
@@ -201,6 +205,10 @@ export default async function handler(req, res) {
     const timer = setTimeout(() => ctrl.abort(), 4000)
     const resp = await fetch(api, { signal: ctrl.signal, headers: { accept: "application/json" } })
     clearTimeout(timer)
+    if (resp.status === 404) {
+      gone = true
+      throw new Error("api 404")
+    }
     if (!resp.ok) throw new Error(`api ${resp.status}`)
 
     const body = await resp.json()
@@ -219,11 +227,20 @@ export default async function handler(req, res) {
     res.setHeader("Cache-Control", "public, max-age=0, s-maxage=600, stale-while-revalidate=86400")
     return res.status(200).send(html)
   } catch (err) {
-    // A missing product, a slow API, anything at all: serve what the site
-    // served before. The page still works, it just has no server-side head.
-    console.error("product-page: serving plain shell -", err?.message || err)
+    // Either way the visitor gets the ordinary single-page app, which shows its own
+    // "not found" screen. Only the status code differs, and only Google reads it.
+    //
+    // A product that has been taken off the shop has to answer 404. Answering 200
+    // with an empty page is a soft 404: Google keeps the address in its index,
+    // goes on crawling it, and files it as a fault against the site.
+    //
+    // Every other failure -- a slow API, a 500, a dropped connection -- keeps 200.
+    // A timeout is not evidence that a product is gone, and returning 404 for one
+    // would drop live products out of the index over a momentary wobble.
+    const status = gone ? 404 : 200
+    console.error(`product-page: serving plain shell (${status}) -`, err?.message || err)
     res.setHeader("Content-Type", "text/html; charset=utf-8")
     res.setHeader("Cache-Control", "public, max-age=0, must-revalidate")
-    return res.status(200).send(shell)
+    return res.status(status).send(shell)
   }
 }
