@@ -28,6 +28,10 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  // The address to verify, set only when sign-in failed because the email was
+  // never confirmed. Empty the rest of the time, so a wrong password does not
+  // get offered a verification link it has no use for.
+  const [verifyEmail, setVerifyEmail] = useState("")
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -65,9 +69,13 @@ const Login = () => {
         navigate(redirectTo, { replace: true })
       } else {
         setError(result.message)
+        // An account that exists but was never verified is a dead end without
+        // somewhere to go, so remember the address and offer to send a new code.
+        setVerifyEmail(result.requiresVerification ? result.email || loginData.email : "")
       }
     } catch (error) {
       setError("An unexpected error occurred. Please try again.")
+      setVerifyEmail("")
     } finally {
       setLoading(false)
     }
@@ -84,7 +92,15 @@ const Login = () => {
             </div>
             {error && (
               <div className="p-4 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100 animate-fade-in">
-                {error}
+                <div>{error}</div>
+                {verifyEmail && (
+                  <Link
+                    to={getLocalizedPath(`/verify-email?email=${encodeURIComponent(verifyEmail)}`)}
+                    className="mt-2 inline-block font-semibold text-green-700 underline underline-offset-2 hover:text-green-800"
+                  >
+                    <TranslatedText>Verify here</TranslatedText>
+                  </Link>
+                )}
               </div>
             )}
             <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

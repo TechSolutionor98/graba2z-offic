@@ -211,7 +211,14 @@ export const AuthProvider = ({ children }) => {
         type: AUTH_ACTIONS.LOGIN_FAILURE,
         payload: error.message,
       })
-      return { success: false, message: error.message }
+      return {
+        success: false,
+        message: error.message,
+        // An unverified account is not a wrong password, and the form has to be
+        // able to tell the difference to offer the verification link.
+        requiresVerification: Boolean(error.data?.requiresVerification),
+        email: error.data?.email || credentials?.email || "",
+      }
     }
   }
 

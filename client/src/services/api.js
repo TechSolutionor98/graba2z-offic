@@ -35,7 +35,14 @@ const apiRequest = async (endpoint, options = {}) => {
     const response = await fetch(url, config)
     const data = await response.json()
     if (!response.ok) {
-      throw new Error(data.message || "Something went wrong")
+      // The body travels with the error, not just its message. A failure can carry
+      // state the caller needs to act on -- `requiresVerification` on a sign-in,
+      // for instance, is what lets the form offer a "Verify here" link instead of
+      // leaving the customer stuck on a dead end.
+      const error = new Error(data.message || "Something went wrong")
+      error.status = response.status
+      error.data = data
+      throw error
     }
     return data
   } catch (error) {
