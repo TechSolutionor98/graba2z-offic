@@ -1,3 +1,8 @@
+> **Superseded by [`COUPONS-POINTS-REFERRALS-API.md`](./COUPONS-POINTS-REFERRALS-API.md)**,
+> which covers these two programmes plus coupons, the checkout call that applies
+> all three, and the known divergences between validating a discount and
+> actually getting it. Prefer that file; this one is kept for reference.
+
 # Grabian Points & Referrals — API guide for the app
 
 Two separate programmes with separate endpoints. They are **not** interchangeable:
