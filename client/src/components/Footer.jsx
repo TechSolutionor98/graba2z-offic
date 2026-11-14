@@ -33,6 +33,7 @@ const Footer = ({ className = "" }) => {
   const [columnCount, setColumnCount] = useState(5)
   const googlePlayLink = "https://play.google.com/store/apps/details?id=ae.grabatoz1.grabatoz1"
   const appStoreLink = "https://www.apple.com/app-store/"
+  const currentYear = new Date().getFullYear()
 
   // Update column count based on screen width and zoom level
   useEffect(() => {
@@ -413,7 +414,7 @@ const Footer = ({ className = "" }) => {
         <div className="max-w-[1440px] mx-auto flex flex-row justify-between items-center gap-3 lg:gap-6 xl:gap-8 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2 lg:py-3">
           {/* 1st Column: Text */}
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] lg:text-xs xl:text-sm font-bold whitespace-nowrap"> 2025 Grabatoz Powered By Crown Excel</p>
+            <p className="text-[10px] lg:text-xs xl:text-sm font-bold whitespace-nowrap"> {currentYear} Grabatoz Powered By Crown Excel</p>
           </div>
 
           {/* 2nd Column: Image */}
@@ -674,7 +675,7 @@ const Footer = ({ className = "" }) => {
 
           {/* Copyright */}
           <div className="text-center text-sm text-gray-300">
-            <p> 2025 Grabatoz powered by Crown Excel.</p>
+            <p> {currentYear} Grabatoz powered by Crown Excel.</p>
             <p className="mt-1">Develop By <a href="https://techsolutionor.com" target="_blank" rel="noopener noreferrer">Tech Solutionor</a></p>
           </div>
         </div>
