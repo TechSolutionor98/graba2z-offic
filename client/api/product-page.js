@@ -117,14 +117,50 @@ const plain = (html, max) => {
   return t.length > max ? `${t.slice(0, max - 1)}…` : t
 }
 
+/**
+ * An admin-entered SEO field, ready to put in a tag.
+ *
+ * Blank and whitespace-only come back as "" so `||` falls through to the next
+ * choice -- a field the admin cleared must not win over the product's own text.
+ * The cap is a guard rail, not a style rule: at least one product carries a
+ * 2,000-character ogTitle pasted in by accident, and a <title> that long is
+ * worse for search than no override at all.
+ */
+const clean = (value, max = 320) => {
+  const t = String(value ?? "").replace(/\s+/g, " ").trim()
+  if (!t) return ""
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t
+}
+
 const buildHead = (p, lang, url) => {
   const money = pricing(p)
   const arabic = lang === "ar"
   const name = (arabic && p.nameAr) || p.name || ""
-  const description =
-    plain((arabic && p.descriptionAr) || p.shortDescription || p.description || name, 300)
   const brand = typeof p.brand === "object" ? p.brand?.name : p.brand
-  const title = p.metaTitle || `${name} | Grab A to Z`
+
+  // What the admin typed in the SEO tab wins over anything derived from the
+  // product itself.
+  //
+  // This used to read `p.metaTitle` and `p.metaDescription`, which are not fields
+  // on the product -- the schema calls them `seoTitle` and `seoDescription`. Both
+  // were therefore always undefined, every page silently fell back to the raw
+  // product name and a truncated feature list, and nothing an admin wrote in the
+  // SEO tab ever reached Google or an SEO extension. The old names are still
+  // accepted last in case anything really carries them.
+  const seoTitle = clean(p.seoTitle) || clean(p.metaTitle)
+  const seoDescription = clean(p.seoDescription) || clean(p.metaDescription)
+
+  // The fallback, used only when the SEO tab was left empty.
+  const derived = plain((arabic && p.descriptionAr) || p.shortDescription || p.description || name, 300)
+
+  const title = seoTitle || `${name} | Grab A to Z`
+  const description = seoDescription || derived
+
+  // Open Graph has its own fields, and falls back to the SEO ones, then to the
+  // product. A social card and a search result are allowed to read differently.
+  const ogTitle = clean(p.ogTitle) || title
+  const ogDescription = clean(p.ogDescription) || description
+  const ogImage = clean(p.ogImage) || p.image
 
   const product = {
     "@context": "https://schema.org/",
@@ -153,14 +189,19 @@ const buildHead = (p, lang, url) => {
 
   const tags = [
     `<title>${esc(title)}</title>`,
-    `<meta name="description" content="${esc(p.metaDescription || description)}" />`,
-    `<link rel="canonical" href="${esc(url)}" />`,
+    `<meta name="description" content="${esc(description)}" />`,
+    clean(p.seoKeywords) ? `<meta name="keywords" content="${esc(clean(p.seoKeywords))}" />` : "",
+    `<link rel="canonical" href="${esc(clean(p.seoCanonicalUrl) || url)}" />`,
+    clean(p.seoRobots) ? `<meta name="robots" content="${esc(clean(p.seoRobots))}" />` : "",
     `<meta property="og:type" content="product" />`,
-    `<meta property="og:title" content="${esc(title)}" />`,
-    `<meta property="og:description" content="${esc(description)}" />`,
+    `<meta property="og:title" content="${esc(ogTitle)}" />`,
+    `<meta property="og:description" content="${esc(ogDescription)}" />`,
     `<meta property="og:url" content="${esc(url)}" />`,
-    p.image ? `<meta property="og:image" content="${esc(p.image)}" />` : "",
+    ogImage ? `<meta property="og:image" content="${esc(ogImage)}" />` : "",
     `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:title" content="${esc(ogTitle)}" />`,
+    `<meta name="twitter:description" content="${esc(ogDescription)}" />`,
+    ogImage ? `<meta name="twitter:image" content="${esc(ogImage)}" />` : "",
   ]
   if (money) {
     tags.push(
