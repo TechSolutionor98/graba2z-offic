@@ -16,7 +16,7 @@ import { orderPickupStore } from "../../utils/orderCustomer"
 const COMPANY = {
   name: "CROWN EXCEL GENERAL TRADING LLC",
   address: "Dubai, United Arab Emirates",
-  phone: "+971 50 860 4360",
+  phone: "+971 4 354 0566",
   email: "orders@grabatoz.com",
   website: "https://www.grabatoz.com",
   trn: "100349772200003",

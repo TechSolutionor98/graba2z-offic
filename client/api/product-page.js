@@ -187,21 +187,32 @@ const buildHead = (p, lang, url) => {
       : {}),
   }
 
+  // `data-rh="true"` marks a tag as belonging to react-helmet-async, which is what
+  // the app uses on the client.
+  //
+  // Without it the page ends up with two of every tag: this one, written into the
+  // shell, and Helmet's own, added when the app hydrates. Helmet only clears tags
+  // carrying its marker, so it left these in place and added duplicates beside
+  // them. Two `<meta name="description">` tags is a real defect even when both say
+  // the same thing -- a crawler or an SEO extension picks one, and which one is
+  // not defined anywhere. Marked, Helmet replaces these instead of doubling them.
+  const rh = `data-rh="true"`
+
   const tags = [
-    `<title>${esc(title)}</title>`,
-    `<meta name="description" content="${esc(description)}" />`,
-    clean(p.seoKeywords) ? `<meta name="keywords" content="${esc(clean(p.seoKeywords))}" />` : "",
-    `<link rel="canonical" href="${esc(clean(p.seoCanonicalUrl) || url)}" />`,
-    clean(p.seoRobots) ? `<meta name="robots" content="${esc(clean(p.seoRobots))}" />` : "",
-    `<meta property="og:type" content="product" />`,
-    `<meta property="og:title" content="${esc(ogTitle)}" />`,
-    `<meta property="og:description" content="${esc(ogDescription)}" />`,
-    `<meta property="og:url" content="${esc(url)}" />`,
-    ogImage ? `<meta property="og:image" content="${esc(ogImage)}" />` : "",
-    `<meta name="twitter:card" content="summary_large_image" />`,
-    `<meta name="twitter:title" content="${esc(ogTitle)}" />`,
-    `<meta name="twitter:description" content="${esc(ogDescription)}" />`,
-    ogImage ? `<meta name="twitter:image" content="${esc(ogImage)}" />` : "",
+    `<title ${rh}>${esc(title)}</title>`,
+    `<meta ${rh} name="description" content="${esc(description)}" />`,
+    clean(p.seoKeywords) ? `<meta ${rh} name="keywords" content="${esc(clean(p.seoKeywords))}" />` : "",
+    `<link ${rh} rel="canonical" href="${esc(clean(p.seoCanonicalUrl) || url)}" />`,
+    clean(p.seoRobots) ? `<meta ${rh} name="robots" content="${esc(clean(p.seoRobots))}" />` : "",
+    `<meta ${rh} property="og:type" content="product" />`,
+    `<meta ${rh} property="og:title" content="${esc(ogTitle)}" />`,
+    `<meta ${rh} property="og:description" content="${esc(ogDescription)}" />`,
+    `<meta ${rh} property="og:url" content="${esc(url)}" />`,
+    ogImage ? `<meta ${rh} property="og:image" content="${esc(ogImage)}" />` : "",
+    `<meta ${rh} name="twitter:card" content="summary_large_image" />`,
+    `<meta ${rh} name="twitter:title" content="${esc(ogTitle)}" />`,
+    `<meta ${rh} name="twitter:description" content="${esc(ogDescription)}" />`,
+    ogImage ? `<meta ${rh} name="twitter:image" content="${esc(ogImage)}" />` : "",
   ]
   if (money) {
     tags.push(

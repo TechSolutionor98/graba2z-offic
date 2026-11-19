@@ -2363,16 +2363,24 @@ const ProductDetails = () => {
 
   // SEO: Use custom SEO fields if provided, otherwise fall back to auto-generated values
   const pdTitle = product.seoTitle || `${product.name} — Grabatoz`
+  // Kept deliberately identical to buildHead() in client/api/product-page.js.
+  //
+  // The same page is described twice -- once in the shell the server sends, once
+  // by Helmet after hydration -- and the two used different rules: the server
+  // took 300 characters of the full description, this took 160 of the short one.
+  // For any product without a seoDescription the two therefore disagreed, and
+  // which one a crawler recorded depended on whether it ran the JavaScript. That
+  // is exactly how a description can look correct on the site and wrong in an
+  // SEO tool. Change one of these and change the other.
   const pdDescription =
     product.seoDescription ||
-    (product.shortDescription &&
-      String(product.shortDescription)
-        .replace(/<[^>]+>/g, "")
-        .slice(0, 160)) ||
-    (product.description &&
-      String(product.description)
-        .replace(/<[^>]+>/g, "")
-        .slice(0, 160)) ||
+    (() => {
+      const t = String(product.shortDescription || product.description || product.name || "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+      return t.length > 300 ? `${t.slice(0, 299)}…` : t
+    })() ||
     `${product.name} available at Grabatoz.`
 
   const pdCanonicalPath = product.seoCanonicalUrl || getLocalizedPath(`/product/${encodeURIComponent(product.slug || product._id)}`)
