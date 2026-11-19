@@ -18,7 +18,7 @@ const COMPANY = {
   address: "Dubai, United Arab Emirates",
   phone: "+971 4 354 0566",
   email: "orders@grabatoz.com",
-  website: "https://www.grabatoz.com",
+  website: "www.grabatoz.com",
   trn: "100349772200003",
 }
 
@@ -263,12 +263,9 @@ const QuotationInvoiceComponent = forwardRef(({ order, showStatus, isQuotation =
           <div className="min-w-0 flex-1 text-sm font-semibold leading-5">
             <p>{COMPANY.name}</p>
             <p>{COMPANY.address}</p>
-            <p>
-              Mobile: {COMPANY.phone} Email:
-            </p>
-            <p>
-              {COMPANY.email} {COMPANY.website}
-            </p>
+            <p>Tel: {COMPANY.phone}</p>
+            <p>Email: {COMPANY.email}</p>
+            <p>Website: {COMPANY.website}</p>
           </div>
 
           {/* Right: the storefront the document came from. */}
