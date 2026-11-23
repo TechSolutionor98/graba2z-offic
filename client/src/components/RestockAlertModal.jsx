@@ -12,6 +12,7 @@ import { useToast } from "../context/ToastContext"
 import { useLanguage } from "../context/LanguageContext"
 import { backInStockAPI } from "../services/api"
 import TranslatedText from "./TranslatedText"
+import { getFullImageUrl } from "../utils/imageUtils"
 
 const WHATSAPP_COMPANY_NUMBER = "971505033860"
 const LIVE_SITE_URL = "https://www.grabatoz.ae"
@@ -102,7 +103,17 @@ const RestockAlertModal = ({
     ? product.offerPrice
     : product?.price || 0
 
-  const displayImage = selectedColor?.image || product?.image || "/placeholder.png"
+  const rawImage =
+    selectedDos?.image ||
+    selectedColor?.image ||
+    product?.image ||
+    (Array.isArray(product?.galleryImages) && product.galleryImages.find(Boolean)) ||
+    (Array.isArray(product?.images) && (product.images[0]?.url || product.images[0])) ||
+    product?.mainImage ||
+    product?.thumbnail ||
+    ""
+
+  const displayImage = getFullImageUrl(rawImage) || "/logo.png"
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -139,6 +150,7 @@ const RestockAlertModal = ({
         selectedColor: selectedColor?.color || "",
         selectedDos: selectedDos?.dosType || "",
         selectedOption: selectedOption || "",
+        image: rawImage,
       }
 
       await backInStockAPI.subscribe(payload)
@@ -229,7 +241,8 @@ const RestockAlertModal = ({
               alt={product.name}
               className="w-16 h-16 object-contain rounded-lg bg-white p-1 border border-gray-200 shrink-0"
               onError={(e) => {
-                e.target.src = "/placeholder.png"
+                e.target.onerror = null
+                e.target.src = "/logo.png"
               }}
             />
             <div className="min-w-0 flex-1">
