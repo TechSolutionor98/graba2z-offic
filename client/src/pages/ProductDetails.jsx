@@ -33,8 +33,10 @@ import {
   Mail,
   Percent,
   CheckCircle,
+  Bell,
 } from "lucide-react"
-import { productsAPI } from "../services/api.js"
+import { productsAPI, backInStockAPI } from "../services/api.js"
+import RestockAlertModal from "../components/RestockAlertModal"
 import { trackProductView } from "../utils/gtmTracking"
 import { generateShopURL } from "../utils/urlUtils"
 import { isProductVisibleInCountry, getProductEffectiveStock } from "../utils/productCategory"
@@ -140,6 +142,8 @@ const ProductDetails = () => {
   const [addedToCart, setAddedToCart] = useState(null)
   const [showTamaraModal, setShowTamaraModal] = useState(false)
   const [showVideoModal, setShowVideoModal] = useState(false)
+  const [isRestockModalOpen, setIsRestockModalOpen] = useState(false)
+  const [isRestockAlertActive, setIsRestockAlertActive] = useState(false)
   
   // Buyer Protection state
   const [selectedProtections, setSelectedProtections] = useState([])
@@ -266,6 +270,39 @@ const ProductDetails = () => {
     }
     return null
   }
+
+  // Current active variations and stock check
+  const currentColor = getCurrentColor()
+  const currentDos = getCurrentDos()
+
+  const isCurrentOutOfStock = Boolean(
+    product?.stockStatus === "Out of Stock" ||
+    (product?.countInStock !== undefined && Number(product.countInStock) <= 0 && product?.stockStatus !== "PreOrder") ||
+    (currentColor && Number(currentColor.countInStock) <= 0) ||
+    (currentDos && Number(currentDos.countInStock) <= 0)
+  )
+
+  // Check if current user is subscribed to restock alert for this product/variant
+  useEffect(() => {
+    if (!product?._id) return
+    const checkAlertStatus = async () => {
+      const email = user?.email || (typeof window !== "undefined" ? localStorage.getItem("userEmail") : null)
+      if (!email) return
+      try {
+        const variantText = [
+          currentColor?.color ? `Color: ${currentColor.color}` : null,
+          currentDos?.dosType ? `OS: ${currentDos.dosType}` : null,
+        ]
+          .filter(Boolean)
+          .join(" | ")
+        const res = await backInStockAPI.checkStatus(product._id, { email, variant: variantText })
+        setIsRestockAlertActive(Boolean(res?.isSubscribed))
+      } catch {
+        // Silently ignore check failure
+      }
+    }
+    checkAlertStatus()
+  }, [product?._id, user?.email, selectedColorIndex, selectedDosIndex])
 
   // Helper function to check if a URL is a YouTube URL
   const isYouTubeUrl = (url) => {
@@ -3660,40 +3697,78 @@ const ProductDetails = () => {
                     </button>
                   </div>
 
-                  <div className="flex items-center  w-full ">
-                    <button
-                      onClick={() => handleAddToCart()}
-                      disabled={product.stockStatus === "Out of Stock"}
-                      className=" bg-btn-primary hover:bg-btn-primary-hover disabled:bg-gray-400 text-btn-primary-text py-3 px-9 rounded-lg font-medium transition-colors"
-                    >
-                      <ShoppingCart size={22} className="mr-2" />
-                    </button>
-                    {/* Heart btn */}
-                    <button
-                      onClick={() =>
-                        isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
-                      }
-                      className={`ml-1 flex items-center px-9 py-3 rounded-lg border transition-colors ${
-                        isInWishlist(product._id)
-                          ? "bg-red-500 border-red-500 hover:bg-red-600"
-                          : "bg-white border-red-500 hover:bg-gray-50"
-                      }`}
-                      aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
-                    >
-                      <Heart
-                        size={20}
-                        className={isInWishlist(product._id) ? "text-red-500 fill-white" : "text-white fill-red-400"}
-                      />
-                      <span className="">{isInWishlist(product._id) ? "" : ""}</span>
-                    </button>
-                    <button
-                      disabled={product.stockStatus === "Out of Stock"}
-                      className="w-full ml-1 bg-btn-secondary hover:bg-btn-secondary-hover disabled:bg-gray-400 border border-btn-secondary-border text-btn-secondary-text px-3 py-3 rounded-lg font-medium transition-colors"
-                      onClick={handleBuyNow}
-                    >
-                      <TranslatedText>Buy Now</TranslatedText>
-                    </button>
-                  </div>
+                  {isCurrentOutOfStock ? (
+                    <div className="flex items-center w-full gap-2">
+                      {/* Heart btn */}
+                      <button
+                        onClick={() =>
+                          isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
+                        }
+                        className={`flex items-center justify-center px-4 py-3 rounded-lg border transition-colors shrink-0 ${
+                          isInWishlist(product._id)
+                            ? "bg-red-500 border-red-500 hover:bg-red-600"
+                            : "bg-white border-red-500 hover:bg-gray-50"
+                        }`}
+                        aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
+                      >
+                        <Heart
+                          size={20}
+                          className={isInWishlist(product._id) ? "text-red-500 fill-white" : "text-white fill-red-400"}
+                        />
+                      </button>
+
+                      {isRestockAlertActive ? (
+                        <div className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-green-50 border border-green-200 text-green-700 font-bold text-sm">
+                          <CheckCircle size={18} className="text-green-600" />
+                          <span><TranslatedText>Alert Active - We'll Notify You</TranslatedText></span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsRestockModalOpen(true)}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-lime-500 hover:bg-lime-600 active:scale-[0.99] text-slate-900 font-bold text-sm shadow-md transition-all"
+                        >
+                          <Bell size={18} />
+                          <span><TranslatedText>Notify Me When Available</TranslatedText></span>
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center  w-full ">
+                      <button
+                        onClick={() => handleAddToCart()}
+                        disabled={product.stockStatus === "Out of Stock"}
+                        className=" bg-btn-primary hover:bg-btn-primary-hover disabled:bg-gray-400 text-btn-primary-text py-3 px-9 rounded-lg font-medium transition-colors"
+                      >
+                        <ShoppingCart size={22} className="mr-2" />
+                      </button>
+                      {/* Heart btn */}
+                      <button
+                        onClick={() =>
+                          isInWishlist(product._id) ? removeFromWishlist(product._id) : addToWishlist(product)
+                        }
+                        className={`ml-1 flex items-center px-9 py-3 rounded-lg border transition-colors ${
+                          isInWishlist(product._id)
+                            ? "bg-red-500 border-red-500 hover:bg-red-600"
+                            : "bg-white border-red-500 hover:bg-gray-50"
+                        }`}
+                        aria-label={isInWishlist(product._id) ? "Remove from wishlist" : "Add to wishlist"}
+                      >
+                        <Heart
+                          size={20}
+                          className={isInWishlist(product._id) ? "text-red-500 fill-white" : "text-white fill-red-400"}
+                        />
+                        <span className="">{isInWishlist(product._id) ? "" : ""}</span>
+                      </button>
+                      <button
+                        disabled={product.stockStatus === "Out of Stock"}
+                        className="w-full ml-1 bg-btn-secondary hover:bg-btn-secondary-hover disabled:bg-gray-400 border border-btn-secondary-border text-btn-secondary-text px-3 py-3 rounded-lg font-medium transition-colors"
+                        onClick={handleBuyNow}
+                      >
+                        <TranslatedText>Buy Now</TranslatedText>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
               </div>
@@ -4624,6 +4699,9 @@ const ProductDetails = () => {
                       <PhoneInput
                         international
                         defaultCountry="AE"
+                        addInternationalOption={false}
+                        countryCallingCodeEditable={false}
+                        limitMaxLength={true}
                         value={phoneValue}
                         onChange={setPhoneValue}
                         className="flex-1"
@@ -4912,27 +4990,57 @@ const ProductDetails = () => {
         className="md:hidden fixed inset-x-0 bottom-[72px] z-30 border-t border-gray-200 bg-white/95 backdrop-blur px-3 py-2.5 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
       >
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleBuyNow}
-            disabled={product.stockStatus === "Out of Stock"}
-            className="flex-1 rounded-lg border border-btn-secondary-border bg-btn-secondary px-3 py-3 text-sm font-semibold text-btn-secondary-text transition-colors hover:bg-btn-secondary-hover disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-400 disabled:text-white"
-          >
-            {product.stockStatus === "Out of Stock" ? (
-              <TranslatedText>Out of Stock</TranslatedText>
+          {isCurrentOutOfStock ? (
+            isRestockAlertActive ? (
+              <div className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-3 text-sm font-bold text-green-700">
+                <CheckCircle size={18} className="text-green-600" />
+                <span><TranslatedText>Alert Active - We'll Notify You</TranslatedText></span>
+              </div>
             ) : (
-              <TranslatedText>Buy Now</TranslatedText>
-            )}
-          </button>
-          <button
-            onClick={() => handleAddToCart()}
-            disabled={product.stockStatus === "Out of Stock"}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-btn-primary px-3 py-3 text-sm font-semibold text-btn-primary-text transition-colors hover:bg-btn-primary-hover disabled:cursor-not-allowed disabled:bg-gray-400"
-          >
-            <ShoppingCart size={18} />
-            <TranslatedText>Add to Cart</TranslatedText>
-          </button>
+              <button
+                type="button"
+                onClick={() => setIsRestockModalOpen(true)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-lime-500 px-3 py-3 text-sm font-bold text-slate-900 shadow transition-colors hover:bg-lime-600"
+              >
+                <Bell size={18} />
+                <span><TranslatedText>Notify Me When Available</TranslatedText></span>
+              </button>
+            )
+          ) : (
+            <>
+              <button
+                onClick={handleBuyNow}
+                disabled={product.stockStatus === "Out of Stock"}
+                className="flex-1 rounded-lg border border-btn-secondary-border bg-btn-secondary px-3 py-3 text-sm font-semibold text-btn-secondary-text transition-colors hover:bg-btn-secondary-hover disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-400 disabled:text-white"
+              >
+                {product.stockStatus === "Out of Stock" ? (
+                  <TranslatedText>Out of Stock</TranslatedText>
+                ) : (
+                  <TranslatedText>Buy Now</TranslatedText>
+                )}
+              </button>
+              <button
+                onClick={() => handleAddToCart()}
+                disabled={product.stockStatus === "Out of Stock"}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-btn-primary px-3 py-3 text-sm font-semibold text-btn-primary-text transition-colors hover:bg-btn-primary-hover disabled:cursor-not-allowed disabled:bg-gray-400"
+              >
+                <ShoppingCart size={18} />
+                <TranslatedText>Add to Cart</TranslatedText>
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Restock Alert Modal */}
+      <RestockAlertModal
+        isOpen={isRestockModalOpen}
+        onClose={() => setIsRestockModalOpen(false)}
+        product={product}
+        selectedColor={currentColor}
+        selectedDos={currentDos}
+        onSubscribed={() => setIsRestockAlertActive(true)}
+      />
     </div>
   )
 }

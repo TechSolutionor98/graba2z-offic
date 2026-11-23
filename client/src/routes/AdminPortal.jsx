@@ -51,6 +51,7 @@ import StoreStats from "../pages/admin/StoreStats"
 import CreateLabels from "../pages/admin/CreateLabels"
 import AdminProductOptionManager from "../pages/admin/AdminProductOptionManager"
 import AdminRequestCallbacks from "../pages/admin/AdminRequestCallbacks"
+import AdminNotifyMe from "../pages/admin/AdminNotifyMe"
 import AdminReviews from "../pages/admin/AdminReviews"
 import AdminReviewsApproved from "../pages/admin/AdminReviewsApproved"
 import AdminReviewsPending from "../pages/admin/AdminReviewsPending"
@@ -318,6 +319,7 @@ const AdminPortal = () => {
             <Route path="blog-rating" element={<BlogRating />} />
 
             <Route path="request-callbacks" element={<AdminRequestCallbacks />} />
+            <Route path="notify-me" element={<AdminNotifyMe />} />
             <Route path="bulk-purchase" element={<AdminBulkPurchase />} />
             <Route path="buyer-protection" element={<BuyerProtectionAdmin />} />
             <Route path="email-templates" element={<AdminEmailTemplates />} />

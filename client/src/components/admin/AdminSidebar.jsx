@@ -42,6 +42,7 @@ import {
   Gift,
   Boxes,
   BellRing,
+  Bell,
   MessageCircle,
 } from "lucide-react"
 
@@ -645,6 +646,12 @@ const AdminSidebar = () => {
       icon: Phone,
       path: "/admin/request-callbacks",
       permission: "requestCallbacks",
+    },
+    {
+      title: "Restock Alerts",
+      icon: Bell,
+      path: "/admin/notify-me",
+      permission: "notifyMe",
     },
     {
       title: "Bulk Purchase",

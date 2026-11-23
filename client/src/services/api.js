@@ -620,6 +620,46 @@ export const countryPaymentMethodsAPI = {
     }),
 }
 
+// Back in stock notification API
+export const backInStockAPI = {
+  subscribe: (data) =>
+    apiRequest("/api/back-in-stock/subscribe", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  checkStatus: (productId, params = {}) => {
+    const qs = new URLSearchParams(params).toString()
+    return apiRequest(`/api/back-in-stock/status/${productId}${qs ? `?${qs}` : ""}`)
+  },
+  unsubscribe: (data) =>
+    apiRequest("/api/back-in-stock/unsubscribe", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  getAdminList: (params = {}) => {
+    const qs = new URLSearchParams(params).toString()
+    return apiRequest(`/api/back-in-stock/admin/list${qs ? `?${qs}` : ""}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+  },
+  triggerProductAlerts: (productId, force = false) =>
+    apiRequest(`/api/back-in-stock/admin/trigger/${productId}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+      body: JSON.stringify({ force }),
+    }),
+  triggerSingleAlert: (id) =>
+    apiRequest(`/api/back-in-stock/admin/trigger-single/${id}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+  deleteSubscription: (id) =>
+    apiRequest(`/api/back-in-stock/admin/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    }),
+}
+
 export { apiRequest }
 export default {
   authAPI,
@@ -636,4 +676,5 @@ export default {
   paymentMethodChargeAPI,
   productPaymentMethodsAPI,
   countryPaymentMethodsAPI,
+  backInStockAPI,
 }
