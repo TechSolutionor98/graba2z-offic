@@ -13,7 +13,8 @@ import { useLanguage } from "../context/LanguageContext"
 import { backInStockAPI } from "../services/api"
 import TranslatedText from "./TranslatedText"
 
-const WHATSAPP_COMPANY_NUMBER = "923257847744"
+const WHATSAPP_COMPANY_NUMBER = "971505033860"
+const LIVE_SITE_URL = "https://www.grabatoz.ae"
 
 const phoneMetadata = new Metadata(metadata)
 
@@ -155,7 +156,7 @@ const RestockAlertModal = ({
       }
 
       // Instant WhatsApp chat redirection with bilingual pre-filled message (Direct Web on desktop, App on mobile)
-      const productUrl = `${window.location.origin}/product/${encodeURIComponent(product.slug || product._id)}`
+      const productUrl = `${LIVE_SITE_URL}/product/${encodeURIComponent(product.slug || product._id)}`
       const waMessage = [
         "*RESTOCK ALERT REQUEST*",
         "*طلب إشعار توفر المنتج*",
