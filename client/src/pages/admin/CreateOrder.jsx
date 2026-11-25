@@ -24,6 +24,48 @@ const num = (v) => {
 // Order items are stored VAT-inclusive, because that is what every invoice in the admin
 // splits its per-line VAT back out of.
 const lineCharged = (netAmount, rate) => num(netAmount) * (1 + num(rate) / 100)
+
+// The inverse, for reopening a saved document.
+//
+// A stored line price already carries this document's VAT, but the box on this
+// screen holds the NET price, so the rate has to come back off as the document
+// loads. Without this step every re-open read a VAT-inclusive price as though it
+// were net and added the VAT a second time: a 6,000 line came back as 6,300, then
+// 6,615, growing by the rate each time the document was opened -- and because this
+// screen saves itself when the admin navigates away, it grew even if nothing was
+// touched and nothing was saved by hand.
+const lineNet = (chargedAmount, rate) => {
+  const factor = 1 + num(rate) / 100
+  if (factor <= 0) return num(chargedAmount)
+  return Math.round((num(chargedAmount) / factor) * 100) / 100
+}
+
+/**
+ * Does this document store its line prices with VAT in them?
+ *
+ * Documents saved before line prices were stored VAT-inclusive hold net prices,
+ * and taking the rate off those would quietly undercharge them. They are told
+ * apart by their own figures rather than by a date, which nothing records:
+ * `itemsPrice` is the net goods total under either convention, so whichever
+ * reading of the line prices reproduces it is the one that document was saved
+ * with.
+ */
+const storedPricesIncludeVat = (doc, rate) => {
+  const factor = 1 + num(rate) / 100
+  // At 0% the two conventions are the same number, so there is nothing to decide.
+  if (factor === 1) return false
+
+  const items = Array.isArray(doc?.orderItems) ? doc.orderItems : []
+  const lineSum = items.reduce((sum, it) => sum + num(it.price) * (num(it.quantity) || 1), 0)
+  const storedNet = num(doc?.itemsPrice)
+
+  // Nothing to compare against -- read it as the current save writes it.
+  if (lineSum <= 0 || storedNet <= 0) return true
+
+  const asInclusive = Math.abs(lineSum / factor - storedNet)
+  const asNet = Math.abs(lineSum - storedNet)
+  return asInclusive <= asNet
+}
 const PRICE_MODES = [
   { id: "regular", label: "Regular price" },
   { id: "wholesale", label: "Wholesale price" },
@@ -206,9 +248,15 @@ export default function CreateOrder() {
           zipCode: doc.shippingAddress?.zipCode || "",
         })
         setSelectedUser(doc.user && typeof doc.user === "object" ? doc.user : null)
+        // Resolved here rather than further down, because the line prices below
+        // cannot be read without knowing the rate that was applied to them.
+        const savedRate = Number.isFinite(Number(doc.taxRate)) ? Number(doc.taxRate) : 5
+        const pricesIncludeVat = storedPricesIncludeVat(doc, savedRate)
+
         setItems(
           (doc.orderItems || []).map((it, index) => {
-            const price = num(it.price)
+            // Back to the net figure this screen edits in. See lineNet above.
+            const price = pricesIncludeVat ? lineNet(it.price, savedRate) : num(it.price)
             const productId = typeof it.product === "object" ? it.product?._id : it.product
             return {
               key: productId || `recalled-${index}`,
@@ -242,7 +290,6 @@ export default function CreateOrder() {
         const savedCharge = Array.isArray(doc.paymentCharges) ? doc.paymentCharges[0] : null
         setAdditionalChargeName(savedCharge?.name || "Additional charges")
         setAdditionalCharge(num(savedCharge?.amount))
-        const savedRate = Number.isFinite(Number(doc.taxRate)) ? Number(doc.taxRate) : 5
         setTaxRate(savedRate)
         setTaxCustom(savedRate !== 0 && savedRate !== 5)
         setShowBankDetails(Boolean(doc.showBankDetails))
