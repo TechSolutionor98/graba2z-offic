@@ -225,6 +225,18 @@ const buildHead = (p, lang, url) => {
   return tags.filter(Boolean).join("\n    ")
 }
 
+// The block of default share tags app.html carries, markers included.
+//
+// Those defaults describe the shop in general and exist for pages that have
+// nothing better to say. A product page has something better, so the block is
+// replaced rather than added to -- left in place it would leave the document
+// with two <title> tags and two of every og: tag, and which one a crawler
+// reads is not defined anywhere.
+//
+// Matched by the comment markers, not by the tags themselves: the wording
+// inside app.html is free to change without this stopping to work.
+const DEFAULT_SHARE_TAGS = /[ \t]*<!-- default-share-tags -->[\s\S]*?<!-- \/default-share-tags -->\n?/
+
 export default async function handler(req, res) {
   const requested = new URL(req.url, SITE)
   const lang = requested.searchParams.get("lang") === "ar" ? "ar" : "en"
@@ -270,10 +282,14 @@ export default async function handler(req, res) {
     const canonical = `${SITE}/ae-${lang}/product/${slug}`
     const head = buildHead(product, lang, canonical)
 
-    // Replace the empty placeholder title; everything else is added beside it.
-    const html = shell.includes("<title></title>")
-      ? shell.replace("<title></title>", head)
-      : shell.replace("</head>", `    ${head}\n  </head>`)
+    // Swap this page's tags in for the shell's defaults. The two older branches
+    // stay as fallbacks: a shell fetched from a previous deploy (see readShell)
+    // may still be the version with the empty <title> and no default block.
+    const html = DEFAULT_SHARE_TAGS.test(shell)
+      ? shell.replace(DEFAULT_SHARE_TAGS, `    ${head}\n`)
+      : shell.includes("<title></title>")
+        ? shell.replace("<title></title>", head)
+        : shell.replace("</head>", `    ${head}\n  </head>`)
 
     res.setHeader("Content-Type", "text/html; charset=utf-8")
     res.setHeader("Cache-Control", "public, max-age=0, s-maxage=600, stale-while-revalidate=86400")
