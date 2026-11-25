@@ -184,43 +184,70 @@ export const getOrderCountryName = (order) => {
   return explicitCountry || currencyMap[currency] || "UAE"
 }
 
+// Units of each currency to one AED, used only for orders placed before the rate
+// was stamped on the order itself. Kept in step with DEFAULT_AED_RATES in
+// server/services/exchangeRateService.js.
+const FALLBACK_AED_RATES = {
+  AED: 1,
+  SAR: 1.021,
+  QAR: 0.991,
+  BHD: 0.1026,
+  OMR: 0.1048,
+  KWD: 0.0835,
+}
+
 /**
- * Resolve order currency symbol dynamically (e.g. QAR, KWD, SAR, AED)
+ * The currency this order was placed in, as the order itself recorded it.
+ *
+ * It is read from the order's own fields and never guessed from the shipping
+ * country. Amounts are stored in AED, so the currency now decides what the figure
+ * is multiplied by, not just what letters sit in front of it -- and a guess that
+ * comes out wrong no longer mislabels a total, it rewrites it. A Bahrain order
+ * that was genuinely placed in AED would have been divided by ten.
+ *
  * @param {Object} order
  * @returns {string}
  */
 export const getOrderCurrencySymbol = (order) => {
-  if (order?.currencySymbol && order.currencySymbol !== "AED") {
-    return order.currencySymbol
-  }
-  if (order?.currency && order.currency !== "AED") {
-    return order.currency
-  }
-  const countryName = getOrderCountryName(order)
-  if (countryName) {
-    const cUpper = String(countryName).toUpperCase()
-    if (cUpper.includes("KUWAIT") || cUpper.includes("KW")) return "KWD"
-    if (cUpper.includes("QATAR") || cUpper.includes("QA")) return "QAR"
-    if (cUpper.includes("SAUDI") || cUpper.includes("SA")) return "SAR"
-    if (cUpper.includes("OMAN") || cUpper.includes("OM")) return "OMR"
-    if (cUpper.includes("BAHRAIN") || cUpper.includes("BH")) return "BHD"
-    if (cUpper.includes("EGYPT") || cUpper.includes("EG")) return "EGP"
-  }
-  return order?.currencySymbol || order?.currency || "AED"
+  const recorded = String(order?.currencySymbol || order?.currency || "").trim().toUpperCase()
+  return recorded || "AED"
 }
 
 /**
- * Format order price using order's currency / currencySymbol
- * @param {number} price
+ * Units of the order's currency to one AED.
+ *
+ * Orders placed from now on carry the rate of the day, so reprinting one years
+ * later still shows what the customer was quoted. Older orders have no rate and
+ * fall back to a reference table, which makes their figure an approximation at
+ * current rates rather than a record of what was charged.
+ *
+ * @param {Object} order
+ * @returns {number}
+ */
+export const getOrderExchangeRate = (order) => {
+  const stored = Number(order?.exchangeRate)
+  if (Number.isFinite(stored) && stored > 0) return stored
+  return FALLBACK_AED_RATES[getOrderCurrencySymbol(order)] || 1
+}
+
+/**
+ * Format an order amount in the currency the customer placed it in.
+ *
+ * The amount passed in is AED, because that is how every order is stored, so it
+ * is converted before it is printed. At an AED order's rate of 1 this is exactly
+ * what it always was.
+ *
+ * @param {number} price AED
  * @param {Object} order
  * @returns {string}
  */
 export const formatOrderPrice = (price, order) => {
   const symbol = getOrderCurrencySymbol(order)
+  const converted = (Number(price) || 0) * getOrderExchangeRate(order)
   // maximumFractionDigits matters as much as the minimum: without it
   // toLocaleString allows a third decimal, and a VAT figure extracted from an
   // inclusive price (1,680.9523...) printed as "AED 1,680.952" on the invoice.
-  return `${symbol} ${Number(price || 0).toLocaleString(undefined, {
+  return `${symbol} ${converted.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`
@@ -234,5 +261,6 @@ export default {
   getPaymentInfo,
   getOrderCountryName,
   getOrderCurrencySymbol,
+  getOrderExchangeRate,
   formatOrderPrice,
 }

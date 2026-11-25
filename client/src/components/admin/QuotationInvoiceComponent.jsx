@@ -7,7 +7,7 @@
 import React, { forwardRef } from "react"
 import { getInvoiceBreakdown } from "../../utils/invoiceBreakdown"
 import { computeBaseSubtotal, deriveBaseDiscount } from "../../utils/orderPricing"
-import { getPaymentMethodDisplay, getOrderCountryName, formatOrderPrice } from "../../utils/paymentUtils"
+import { getPaymentMethodDisplay, getOrderCountryName, formatOrderPrice, getOrderCurrencySymbol, getOrderExchangeRate } from "../../utils/paymentUtils"
 import { splitItemsVat, formatVatRateLabel, splitVatInclusive } from "../../utils/vat"
 import { orderPickupStore } from "../../utils/orderCustomer"
 
@@ -227,10 +227,17 @@ const QuotationInvoiceComponent = forwardRef(({ order, showStatus, isQuotation =
     phone: addr.phone || "",
   }
 
-  // The item columns are headed "... AED", so repeating the currency in every cell
+  // Every amount on an order is stored in AED, so a column cell is converted exactly
+  // as the totals below it are -- the same rate, applied in the same place. Leaving
+  // this one unconverted was what would have printed AED line figures under a BHD
+  // footer on the same page.
+  const orderRate = getOrderExchangeRate(order)
+  // The item columns are headed "... <currency>", so repeating it in every cell
   // only crowds them. The totals below still print it.
   const amountOnly = (value) =>
-    Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    ((Number(value) || 0) * orderRate).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  // What those column headings say, so they follow the order rather than assuming AED.
+  const currencyLabel = getOrderCurrencySymbol(order)
 
   const currentDate = new Date().toLocaleDateString()
   const orderDate = new Date(order.createdAt).toLocaleDateString()
@@ -305,28 +312,38 @@ const QuotationInvoiceComponent = forwardRef(({ order, showStatus, isQuotation =
               </Th>
               <Th>
                 <span className="block">U.Price</span>
-                <span className="block">AED</span>
+                <span className="block">{currencyLabel}</span>
                 <Ar>سعر الوحدة</Ar>
               </Th>
+              {/* The same unit price with this document's VAT on it. Dropped on an
+                  exempt document for the same reason as the TAX and SUBTOTAL
+                  columns: at 0% it repeats the column beside it. */}
+              {showVatColumns && (
+                <Th>
+                  <span className="block">U.Price inc Vat</span>
+                  <span className="block">{currencyLabel}</span>
+                  <Ar>سعر الوحدة شامل الضريبة</Ar>
+                </Th>
+              )}
               <Th>
                 <span className="block">QUANTITY</span>
                 <Ar>الكمية</Ar>
               </Th>
               <Th>
                 <span className="block">TOTAL</span>
-                <span className="block">AED</span>
+                <span className="block">{currencyLabel}</span>
                 <Ar>الإجمالي</Ar>
               </Th>
               {showVatColumns && (
                 <>
                   <Th>
                     <span className="block">TAX</span>
-                    <span className="block">AED</span>
+                    <span className="block">{currencyLabel}</span>
                     <Ar>الضريبة</Ar>
                   </Th>
                   <Th>
                     <span className="block">SUBTOTAL</span>
-                    <span className="block">AED</span>
+                    <span className="block">{currencyLabel}</span>
                     <Ar>المجموع الفرعي</Ar>
                   </Th>
                 </>
@@ -338,6 +355,9 @@ const QuotationInvoiceComponent = forwardRef(({ order, showStatus, isQuotation =
               const split = lineVat(item)
               const qty = Number(item.quantity) || 0
               const unitNet = qty > 0 ? split.net / qty : split.net
+              // Divided out of the line rather than multiplied up from the net unit
+              // price, so this column and the SUBTOTAL column can never round apart.
+              const unitGross = qty > 0 ? split.gross / qty : split.gross
               return (
                 <tr key={index} className="border-b border-lime-200">
                   <td className="border-x border-lime-200 px-3 py-2 text-sm">
@@ -359,6 +379,9 @@ const QuotationInvoiceComponent = forwardRef(({ order, showStatus, isQuotation =
                     )}
                   </td>
                   <td className="border-r border-lime-200 px-3 py-2 text-right text-sm">{amountOnly(unitNet)}</td>
+                  {showVatColumns && (
+                    <td className="border-r border-lime-200 px-3 py-2 text-right text-sm">{amountOnly(unitGross)}</td>
+                  )}
                   <td className="border-r border-lime-200 px-3 py-2 text-center text-sm">{item.quantity} Pc</td>
                   <td className="border-r border-lime-200 px-3 py-2 text-right text-sm">{amountOnly(split.net)}</td>
                   {showVatColumns && (

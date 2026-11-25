@@ -5,6 +5,7 @@ import { adminAPI, categoriesAPI, apiRequest, productsAdminAPI } from "../../ser
 import { Search, User, Package, Percent, Plus, Minus, Trash2, Save, FileText, PauseCircle, Truck, Store } from "lucide-react"
 import { visibleStores, findStore } from "../../data/stores"
 import { orderCustomerName, orderCustomerEmail, orderCustomerPhone } from "../../utils/orderCustomer"
+import { formatVatRateLabel } from "../../utils/vat"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 const currency = (n) =>
@@ -471,13 +472,56 @@ export default function CreateOrder() {
   // An edited price lives on this document only. Nothing here writes back to
   // the product, so the catalogue price is untouched.
   const updateItemPrice = (itemKey, value) =>
-    setItems((prev) => prev.map((it) => (it.key === itemKey ? { ...it, price: value, priceEdited: true } : it)))
+    setItems((prev) =>
+      prev.map((it) =>
+        it.key === itemKey ? { ...it, price: value, grossInput: undefined, priceEdited: true } : it,
+      ),
+    )
+
+  // The same line, typed the other way round: the VAT-inclusive price.
+  //
+  // The net price stays the figure this document is built on -- it is what the
+  // totals add up and what the save sends -- so a gross price is converted the
+  // moment it is typed rather than kept as a second source of truth that could
+  // disagree with it. `grossInput` holds the raw keystrokes only while the box
+  // is being used, so typing "7000" is not fought by a reformat after every
+  // character; on blur it is dropped and the column goes back to showing the
+  // net price with this document's rate on it.
+  const updateItemGrossPrice = (itemKey, value) =>
+    setItems((prev) =>
+      prev.map((it) =>
+        it.key === itemKey
+          ? {
+              ...it,
+              grossInput: value,
+              price: value === "" ? "" : String(lineNet(value, taxRate)),
+              priceEdited: true,
+            }
+          : it,
+      ),
+    )
+
+  const settleItemGrossPrice = (itemKey) =>
+    setItems((prev) => prev.map((it) => (it.key === itemKey ? { ...it, grossInput: undefined } : it)))
+
+  // What the VAT-inclusive box shows: the keystrokes if it is being typed in,
+  // otherwise the net price with this document's rate added.
+  const grossPriceValue = (it) => {
+    if (it.grossInput !== undefined && it.grossInput !== null) return it.grossInput
+    if (it.price === "" || it.price === null || it.price === undefined) return ""
+    return String(Math.round(lineCharged(num(it.price), taxRate) * 100) / 100)
+  }
 
   const resetItemPrice = (itemKey) =>
     setItems((prev) =>
       prev.map((it) =>
         it.key === itemKey && !it.isCustom
-          ? { ...it, price: priceMode === "wholesale" ? it.wholesalePrice : it.regularPrice, priceEdited: false }
+          ? {
+              ...it,
+              price: priceMode === "wholesale" ? it.wholesalePrice : it.regularPrice,
+              grossInput: undefined,
+              priceEdited: false,
+            }
           : it,
       ),
     )
@@ -490,7 +534,11 @@ export default function CreateOrder() {
       prev.map((it) =>
         it.isCustom || it.priceEdited
           ? it
-          : { ...it, price: nextMode === "wholesale" ? it.wholesalePrice : it.regularPrice },
+          : {
+              ...it,
+              price: nextMode === "wholesale" ? it.wholesalePrice : it.regularPrice,
+              grossInput: undefined,
+            },
       ),
     )
   }
@@ -1144,6 +1192,7 @@ export default function CreateOrder() {
                     <th className="text-left py-2">Product</th>
                     <th className="text-center py-2">Qty</th>
                     <th className="text-right py-2">Price</th>
+                    <th className="text-right py-2">Price with VAT</th>
                     <th className="text-right py-2">Total</th>
                     <th className="py-2" />
                   </tr>
@@ -1201,6 +1250,22 @@ export default function CreateOrder() {
                           )}
                         </div>
                       </td>
+                      <td className="py-2">
+                        <div className="flex flex-col items-end gap-1">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={grossPriceValue(it)}
+                            onChange={(e) => updateItemGrossPrice(it.key, e.target.value)}
+                            onBlur={() => settleItemGrossPrice(it.key)}
+                            onWheel={(e) => e.currentTarget.blur()}
+                            className="w-28 border rounded px-2 py-1 text-right"
+                            aria-label={`Price including VAT for ${it.name}`}
+                          />
+                          <span className="text-xs text-gray-500">{formatVatRateLabel(taxRate)}</span>
+                        </div>
+                      </td>
                       <td className="py-2 text-right">
                         {currency(num(it.price) * num(it.quantity))}
                       </td>
@@ -1217,11 +1282,13 @@ export default function CreateOrder() {
                     </tr>
                   ))}
                   <tr>
-                    <td colSpan={5} className="py-2 text-xs text-gray-500">
-                      Prices are entered without VAT &mdash; the figures above are the net amounts.
-                      VAT is added on top at the Tax/Vat rate beside the totals; set it to 0 for an
-                      exempt sale. Editing a price changes this document only; the product itself is
-                      never touched.
+                    <td colSpan={6} className="py-2 text-xs text-gray-500">
+                      <strong>Price</strong> is the net amount, before VAT, and <strong>Total</strong>
+                      {" "}is that price times the quantity. Type into either price box &mdash; filling
+                      in <strong>Price with VAT</strong> works out the net price behind it, so a figure
+                      agreed with the customer &quot;all in&quot; can be entered as it was agreed. Both
+                      follow the Tax/Vat rate beside the totals; set it to 0 for an exempt sale. Editing
+                      a price changes this document only; the product itself is never touched.
                     </td>
                   </tr>
                 </tbody>
