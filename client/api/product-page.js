@@ -237,6 +237,20 @@ const buildHead = (p, lang, url) => {
 // inside app.html is free to change without this stopping to work.
 const DEFAULT_SHARE_TAGS = /[ \t]*<!-- default-share-tags -->[\s\S]*?<!-- \/default-share-tags -->\n?/
 
+// Slugs that are a bug somewhere upstream rather than a product.
+//
+// These arrive when something built a link out of a value it did not have --
+// `/product/${product.slug}` where slug was missing gives "/product/null", and
+// a crawler that saw it once asks for it forever after. No product can be named
+// any of these, so forwarding them to the API is a guaranteed wasted round trip
+// on every single request. One log file held 257 of them, more than any real
+// product, all of them reaching the database to be told nothing is there.
+//
+// Treated as genuinely gone, which is both true and useful: 404 is the honest
+// answer, and the 404 path is cached, so the CDN absorbs the repeats instead of
+// waking this function and the origin API every time.
+const INVALID_SLUGS = new Set(["null", "undefined", "nan", "none", "false", "[object object]"])
+
 export default async function handler(req, res) {
   const requested = new URL(req.url, SITE)
   const lang = requested.searchParams.get("lang") === "ar" ? "ar" : "en"
@@ -263,6 +277,10 @@ export default async function handler(req, res) {
   try {
     const url = requested
     if (!slug) throw new Error("no slug")
+    if (INVALID_SLUGS.has(slug.trim().toLowerCase())) {
+      gone = true
+      throw new Error(`placeholder slug "${slug}"`)
+    }
 
     const api = `${API}/api/products/slug/${encodeURIComponent(slug)}`
     const ctrl = new AbortController()
