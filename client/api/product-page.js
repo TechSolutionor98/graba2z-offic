@@ -308,7 +308,26 @@ export default async function handler(req, res) {
     const status = gone ? 404 : 200
     console.error(`product-page: serving plain shell (${status}) -`, err?.message || err)
     res.setHeader("Content-Type", "text/html; charset=utf-8")
-    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate")
+
+    // Only the 404 is cached, and the difference matters.
+    //
+    // A product that is genuinely gone is still gone five minutes later, and the
+    // dead links are exactly the ones that get asked for over and over: search
+    // engines and Facebook hold on to an address long after the slug changed,
+    // and re-crawl it for weeks. Uncached, every one of those re-crawls ran this
+    // function and put another lookup on the origin API, for an answer that
+    // never changes. Cached, the first one answers and the CDN handles the rest.
+    //
+    // The 200 is deliberately NOT cached. It means the product does exist but
+    // something went wrong on the way to it -- a slow API, a 500, a dropped
+    // connection -- so the shell it returns is missing this page's title, meta
+    // tags and structured data. Caching that would pin a degraded version of a
+    // live product page in front of every later visitor, turning one bad second
+    // into ten stale minutes. It has to be retried, not remembered.
+    res.setHeader(
+      "Cache-Control",
+      gone ? "public, max-age=0, s-maxage=300, stale-while-revalidate=3600" : "public, max-age=0, must-revalidate",
+    )
     return res.status(status).send(shell)
   }
 }
