@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<!--
+  Source of public/og-image.jpg -- the picture WhatsApp, Facebook, LinkedIn,
+  X and iMessage show when somebody pastes a grabatoz.ae link.
+
+  It is a picture, not a page: no crawler ever opens this file. It is rendered
+  once to a flat image, and that image is what the og:image tag points at. Edit
+  this file when the logo or the wording changes, then render it again:
+
+      cd client
+      (cd public && python3 -m http.server 4599 >/dev/null 2>&1 &)
+      cp scripts/og-image.html public/_og.html
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+        --headless=new --disable-gpu --hide-scrollbars \
+        --force-device-scale-factor=2 --window-size=1200,630 \
+        --screenshot=/tmp/og@2x.png http://localhost:4599/_og.html
+      sips -z 630 1200 /tmp/og@2x.png --out /tmp/og.png
+      sips -s format jpeg -s formatOptions 82 /tmp/og.png --out public/og-image.jpg
+      rm public/_og.html
+
+  Why 1200x630 and JPEG: WhatsApp ignores an image smaller than 300x200
+  altogether (the old tag pointed at the 269x91 logo, which is why a pasted
+  link showed no picture at all), wants a landscape ratio near 1.91:1 for the
+  big card rather than a tiny square thumbnail, and will not fetch a file much
+  over 300 KB on a phone connection. Flat JPEG, not PNG with transparency --
+  transparency comes out black in WhatsApp's dark theme.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @font-face{font-family:Poppins;font-style:normal;font-weight:400;src:url(/fonts/poppins-latin-400-normal.woff2) format("woff2")}
+      @font-face{font-family:Poppins;font-style:normal;font-weight:600;src:url(/fonts/poppins-latin-600-normal.woff2) format("woff2")}
+      @font-face{font-family:Poppins;font-style:normal;font-weight:700;src:url(/fonts/poppins-latin-700-normal.woff2) format("woff2")}
+
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      html,body{width:1200px;height:630px;overflow:hidden}
+      body{
+        position:relative;background:#000;color:#fff;
+        font-family:Poppins,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+        -webkit-font-smoothing:antialiased;
+      }
+
+      /* Same backdrop as the country-selection page at "/", so the share card
+         and the page it opens are recognisably the same place. */
+      .bg{position:absolute;inset:0;overflow:hidden}
+      .bg img{width:100%;height:100%;object-fit:cover;opacity:.3}
+      .bg::after{
+        content:"";position:absolute;inset:0;
+        background:
+          radial-gradient(90% 70% at 50% 42%, rgba(0,0,0,.25) 0%, rgba(0,0,0,.82) 100%),
+          linear-gradient(to top, #000 0%, rgba(0,0,0,.72) 55%, rgba(0,0,0,.45) 100%);
+      }
+      /* A soft lime wash in the corners, picked up from the brand accent. */
+      .bg::before{
+        content:"";position:absolute;inset:0;z-index:1;
+        background:
+          radial-gradient(42% 60% at 0% 100%, rgba(132,204,22,.20) 0%, transparent 70%),
+          radial-gradient(38% 55% at 100% 0%, rgba(132,204,22,.14) 0%, transparent 70%);
+      }
+
+      main{
+        position:relative;z-index:2;height:100%;
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        /* 64px of clear space on every edge: some chat apps crop the card's
+           corners, and nothing that carries meaning may sit in that band. */
+        padding:64px 72px;text-align:center;
+      }
+
+      .logo{display:block;height:92px;width:auto;filter:drop-shadow(0 6px 28px rgba(0,0,0,.6))}
+
+      h1{
+        margin-top:34px;font-size:52px;line-height:1.14;font-weight:700;
+        letter-spacing:-.025em;max-width:960px;
+        text-shadow:0 2px 24px rgba(0,0,0,.55);
+      }
+      h1 em{font-style:normal;color:#a3e635}
+
+      .sub{
+        margin-top:18px;font-size:23px;font-weight:400;line-height:1.45;
+        color:#e5e7eb;max-width:820px;
+      }
+
+      .chips{display:flex;gap:10px;margin-top:30px;flex-wrap:wrap;justify-content:center}
+      .chips span{
+        padding:9px 20px;border-radius:9999px;font-size:17px;font-weight:600;
+        color:#f3f4f6;background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.22);
+      }
+
+      .domain{
+        margin-top:36px;display:inline-flex;align-items:center;gap:12px;
+        padding:13px 30px;border-radius:9999px;
+        background:#84cc16;color:#0a0a0a;
+        font-size:21px;font-weight:700;letter-spacing:.01em;
+        box-shadow:0 10px 34px rgba(132,204,22,.32);
+      }
+      .domain svg{width:19px;height:19px;fill:currentColor}
+    </style>
+  </head>
+  <body>
+    <div class="bg">
+      <img src="/landing-bg-1600.webp" alt="" />
+    </div>
+
+    <main>
+      <img class="logo" src="/landing-logo.webp" alt="Grab A to Z" />
+
+      <h1>Your ultimate tech store,<br /><em>all in one place</em></h1>
+
+      <p class="sub">Laptops, gaming gear, mobiles, cameras and accessories &mdash; delivered fast across the UAE &amp; GCC.</p>
+
+      <div class="chips">
+        <span>Laptops</span>
+        <span>Gaming</span>
+        <span>Mobiles</span>
+        <span>Cameras</span>
+        <span>Accessories</span>
+      </div>
+
+      <div class="domain">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.93 6h-2.95a15.6 15.6 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.93 8ZM12 4.04c.63.91 1.4 2.3 1.9 3.96h-3.8c.5-1.66 1.27-3.05 1.9-3.96ZM4.26 14A7.9 7.9 0 0 1 4 12c0-.69.1-1.36.26-2h3.38a16.6 16.6 0 0 0 0 4H4.26Zm.81 2h2.95c.33 1.29.8 2.5 1.38 3.56A8.03 8.03 0 0 1 5.07 16Zm2.95-8H5.07a8.03 8.03 0 0 1 4.33-3.56A15.6 15.6 0 0 0 8.02 8ZM12 19.96c-.63-.91-1.4-2.3-1.9-3.96h3.8c-.5 1.66-1.27 3.05-1.9 3.96ZM14.34 14H9.66a14.8 14.8 0 0 1 0-4h4.68a14.8 14.8 0 0 1 0 4Zm.26 5.56c.58-1.06 1.05-2.27 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56ZM16.36 14a16.6 16.6 0 0 0 0-4h3.38a7.97 7.97 0 0 1 0 4h-3.38Z"/></svg>
+        www.grabatoz.ae
+      </div>
+    </main>
+  </body>
+</html>

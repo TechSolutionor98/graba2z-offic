@@ -225,6 +225,32 @@ const buildHead = (p, lang, url) => {
   return tags.filter(Boolean).join("\n    ")
 }
 
+// The block of default share tags app.html carries, markers included.
+//
+// Those defaults describe the shop in general and exist for pages that have
+// nothing better to say. A product page has something better, so the block is
+// replaced rather than added to -- left in place it would leave the document
+// with two <title> tags and two of every og: tag, and which one a crawler
+// reads is not defined anywhere.
+//
+// Matched by the comment markers, not by the tags themselves: the wording
+// inside app.html is free to change without this stopping to work.
+const DEFAULT_SHARE_TAGS = /[ \t]*<!-- default-share-tags -->[\s\S]*?<!-- \/default-share-tags -->\n?/
+
+// Slugs that are a bug somewhere upstream rather than a product.
+//
+// These arrive when something built a link out of a value it did not have --
+// `/product/${product.slug}` where slug was missing gives "/product/null", and
+// a crawler that saw it once asks for it forever after. No product can be named
+// any of these, so forwarding them to the API is a guaranteed wasted round trip
+// on every single request. One log file held 257 of them, more than any real
+// product, all of them reaching the database to be told nothing is there.
+//
+// Treated as genuinely gone, which is both true and useful: 404 is the honest
+// answer, and the 404 path is cached, so the CDN absorbs the repeats instead of
+// waking this function and the origin API every time.
+const INVALID_SLUGS = new Set(["null", "undefined", "nan", "none", "false", "[object object]"])
+
 export default async function handler(req, res) {
   const requested = new URL(req.url, SITE)
   const lang = requested.searchParams.get("lang") === "ar" ? "ar" : "en"
@@ -251,6 +277,10 @@ export default async function handler(req, res) {
   try {
     const url = requested
     if (!slug) throw new Error("no slug")
+    if (INVALID_SLUGS.has(slug.trim().toLowerCase())) {
+      gone = true
+      throw new Error(`placeholder slug "${slug}"`)
+    }
 
     const api = `${API}/api/products/slug/${encodeURIComponent(slug)}`
     const ctrl = new AbortController()
@@ -270,10 +300,14 @@ export default async function handler(req, res) {
     const canonical = `${SITE}/ae-${lang}/product/${slug}`
     const head = buildHead(product, lang, canonical)
 
-    // Replace the empty placeholder title; everything else is added beside it.
-    const html = shell.includes("<title></title>")
-      ? shell.replace("<title></title>", head)
-      : shell.replace("</head>", `    ${head}\n  </head>`)
+    // Swap this page's tags in for the shell's defaults. The two older branches
+    // stay as fallbacks: a shell fetched from a previous deploy (see readShell)
+    // may still be the version with the empty <title> and no default block.
+    const html = DEFAULT_SHARE_TAGS.test(shell)
+      ? shell.replace(DEFAULT_SHARE_TAGS, `    ${head}\n`)
+      : shell.includes("<title></title>")
+        ? shell.replace("<title></title>", head)
+        : shell.replace("</head>", `    ${head}\n  </head>`)
 
     res.setHeader("Content-Type", "text/html; charset=utf-8")
     res.setHeader("Cache-Control", "public, max-age=0, s-maxage=600, stale-while-revalidate=86400")
@@ -292,7 +326,26 @@ export default async function handler(req, res) {
     const status = gone ? 404 : 200
     console.error(`product-page: serving plain shell (${status}) -`, err?.message || err)
     res.setHeader("Content-Type", "text/html; charset=utf-8")
-    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate")
+
+    // Only the 404 is cached, and the difference matters.
+    //
+    // A product that is genuinely gone is still gone five minutes later, and the
+    // dead links are exactly the ones that get asked for over and over: search
+    // engines and Facebook hold on to an address long after the slug changed,
+    // and re-crawl it for weeks. Uncached, every one of those re-crawls ran this
+    // function and put another lookup on the origin API, for an answer that
+    // never changes. Cached, the first one answers and the CDN handles the rest.
+    //
+    // The 200 is deliberately NOT cached. It means the product does exist but
+    // something went wrong on the way to it -- a slow API, a 500, a dropped
+    // connection -- so the shell it returns is missing this page's title, meta
+    // tags and structured data. Caching that would pin a degraded version of a
+    // live product page in front of every later visitor, turning one bad second
+    // into ten stale minutes. It has to be retried, not remembered.
+    res.setHeader(
+      "Cache-Control",
+      gone ? "public, max-age=0, s-maxage=300, stale-while-revalidate=3600" : "public, max-age=0, must-revalidate",
+    )
     return res.status(status).send(shell)
   }
 }

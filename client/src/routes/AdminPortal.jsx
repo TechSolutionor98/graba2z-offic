@@ -93,6 +93,7 @@ import BlogCategories from "../pages/admin/BlogCategories"
 import BlogDashboard from "../pages/admin/BlogDashboard"
 import BlogRating from "../pages/admin/BlogRating"
 import BlogTopics from "../pages/admin/BlogTopics"
+import AdminRedirects from "../pages/admin/AdminRedirects"
 import BuyerProtectionAdmin from "../pages/admin/BuyerProtectionAdmin"
 import CriticalOrders from "../pages/admin/CriticalOrders"
 import EditBlog from "../pages/admin/EditBlog"
@@ -309,6 +310,7 @@ const AdminPortal = () => {
             <Route path="blog-categories" element={<BlogCategories />} />
             <Route path="blog-categories/add" element={<AddBlogCategory />} />
             <Route path="blog-categories/edit/:id" element={<EditBlogCategory />} />
+            <Route path="blog-redirects" element={<AdminRedirects />} />
             <Route path="blog-topics" element={<BlogTopics />} />
             <Route path="blog-topics/add" element={<AddBlogTopic />} />
             <Route path="blog-topics/edit/:id" element={<EditBlogTopic />} />

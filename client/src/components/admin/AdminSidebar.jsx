@@ -184,6 +184,7 @@ const AdminSidebar = () => {
     if (
       path.includes("/admin/blog-dashboard") ||
       path.includes("/admin/blogs") ||
+      path.includes("/admin/blog-redirects") ||
       path.includes("/admin/add-blog") ||
       path.includes("/admin/blog-topics") ||
       path.includes("/admin/blog-categories") ||
@@ -677,6 +678,7 @@ const AdminSidebar = () => {
         { title: "Categories", path: "/admin/blog-categories" },
         { title: "Topics", path: "/admin/blog-topics" },
         { title: "Brands", path: "/admin/blog-brands" },
+        { title: "Redirects", path: "/admin/blog-redirects" },
       ],
     },
     {

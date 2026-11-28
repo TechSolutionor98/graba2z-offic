@@ -7,7 +7,48 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="dns-prefetch" href="https://api.grabatoz.ae" />
     <link rel="preconnect" href="https://api.grabatoz.ae" />
-    <title></title>
+    <!-- default-share-tags -->
+    <!-- The link preview for every page served from this shell: what WhatsApp,
+         Facebook, LinkedIn, X and iMessage show for a pasted grabatoz.ae link.
+
+         None of those crawlers run JavaScript. The app's <SEO> component writes
+         far better per-page tags, but it writes them from React, long after the
+         crawler has read the document and gone. All it ever sees is this file.
+
+         So these are the floor, not the ceiling -- a correct card for any page
+         with no better one -- and deliberately generic, because one file is
+         served for every address.
+
+         og:url is left out on purpose: it is the one tag that cannot be written
+         truthfully here, and a wrong one is worse than none. Facebook treats it
+         as canonical, so hardcoding the homepage would collapse every shared
+         category, brand and blog link into one homepage card. Absent, each app
+         uses the address that was actually pasted.
+
+         data-rh="true" hands these to react-helmet-async, which only clears
+         tags carrying its marker; unmarked, it would add its own beside these
+         and leave the page with two of every tag. api/product-page.js replaces
+         this whole block for product pages, matching the comment markers around
+         it -- so keep them. -->
+    <title data-rh="true">Grabatoz | Buy Laptops, Mobiles &amp; Electronics Online in UAE</title>
+    <meta data-rh="true" name="description" content="Shop laptops, gaming gear, mobiles, cameras and accessories at Grabatoz. Genuine products, great prices and fast delivery across the UAE and GCC." />
+    <meta data-rh="true" property="og:type" content="website" />
+    <meta data-rh="true" property="og:site_name" content="Grabatoz" />
+    <meta data-rh="true" property="og:title" content="Grabatoz | Buy Laptops, Mobiles &amp; Electronics Online in UAE" />
+    <meta data-rh="true" property="og:description" content="Shop laptops, gaming gear, mobiles, cameras and accessories at Grabatoz. Genuine products, great prices and fast delivery across the UAE and GCC." />
+    <meta data-rh="true" property="og:locale" content="en_AE" />
+    <meta data-rh="true" property="og:image" content="https://www.grabatoz.ae/og-image.jpg" />
+    <meta data-rh="true" property="og:image:secure_url" content="https://www.grabatoz.ae/og-image.jpg" />
+    <meta data-rh="true" property="og:image:type" content="image/jpeg" />
+    <meta data-rh="true" property="og:image:width" content="1200" />
+    <meta data-rh="true" property="og:image:height" content="630" />
+    <meta data-rh="true" property="og:image:alt" content="Grabatoz - laptops, gaming, mobiles, cameras and accessories delivered across the UAE and GCC" />
+    <meta data-rh="true" name="twitter:card" content="summary_large_image" />
+    <meta data-rh="true" name="twitter:site" content="@GrabAtoz" />
+    <meta data-rh="true" name="twitter:title" content="Grabatoz | Buy Laptops, Mobiles &amp; Electronics Online in UAE" />
+    <meta data-rh="true" name="twitter:description" content="Shop laptops, gaming gear, mobiles, cameras and accessories at Grabatoz. Genuine products, great prices and fast delivery across the UAE and GCC." />
+    <meta data-rh="true" name="twitter:image" content="https://www.grabatoz.ae/og-image.jpg" />
+    <!-- /default-share-tags -->
 
 
 

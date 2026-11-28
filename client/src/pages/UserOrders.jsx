@@ -12,7 +12,7 @@ import { Dialog, Transition } from "@headlessui/react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { useReactToPrint } from "react-to-print"
-import { getOrderCurrencySymbol, getOrderCountryName } from "../utils/paymentUtils"
+import { getOrderCurrencySymbol, getOrderCountryName, formatOrderPrice } from "../utils/paymentUtils"
 import config from "../config/config"
 import { pushPurchase } from "../utils/gtmTracking"
 import InvoiceComponent from "../components/admin/InvoiceComponent"
@@ -404,7 +404,7 @@ const UserOrders = () => {
                       <div>
                         <p className="text-sm font-medium text-gray-500 mb-1">Total Amount</p>
                         <p className="text-base font-bold text-green-600">
-                          {getOrderCurrencySymbol(order)} {Number(order.totalPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {formatOrderPrice(Number(order.totalPrice || 0), order)}
                         </p>
                       </div>
                       <div className="hidden sm:block w-px h-10 bg-gray-200"></div>
@@ -693,9 +693,9 @@ const UserOrders = () => {
                                       </div>
                                     </div>
                                     <div className="text-right flex flex-col justify-center">
-                                      <span className="font-bold text-gray-900">{getOrderCurrencySymbol(selectedOrder)} {(item.price * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                      <span className="font-bold text-gray-900">{formatOrderPrice((item.price * item.quantity), selectedOrder)}</span>
                                       {item.quantity > 1 && (
-                                        <span className="text-xs text-gray-500">{getOrderCurrencySymbol(selectedOrder)} {item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} each</span>
+                                        <span className="text-xs text-gray-500">{formatOrderPrice(item.price, selectedOrder)} each</span>
                                       )}
                                     </div>
                                   </div>
@@ -715,7 +715,7 @@ const UserOrders = () => {
                                             <CheckCircle className="w-4 h-4 text-green-500" />
                                             <span>{item.name}</span>
                                           </div>
-                                          <span className="font-semibold text-green-900">{getOrderCurrencySymbol(selectedOrder)} {item.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                          <span className="font-semibold text-green-900">{formatOrderPrice(item.price, selectedOrder)}</span>
                                         </div>
                                       ))}
                                     </div>
@@ -755,16 +755,16 @@ const UserOrders = () => {
                               <div className="space-y-3 text-sm">
                                 <div className="flex justify-between text-gray-600">
                                   <span>Subtotal</span>
-                                  <span className="font-medium text-gray-900">{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.itemsPrice || selectedOrder.totalPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  <span className="font-medium text-gray-900">{formatOrderPrice((selectedOrder.itemsPrice || selectedOrder.totalPrice || 0), selectedOrder)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                   <span>Shipping Fee</span>
-                                  <span className="font-medium text-gray-900">{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.shippingPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  <span className="font-medium text-gray-900">{formatOrderPrice((selectedOrder.shippingPrice || 0), selectedOrder)}</span>
                                 </div>
                                 {selectedOrder.taxPrice > 0 && (
                                   <div className="flex justify-between text-gray-600">
                                     <span>Tax</span>
-                                    <span className="font-medium text-gray-900">{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.taxPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className="font-medium text-gray-900">{formatOrderPrice((selectedOrder.taxPrice || 0), selectedOrder)}</span>
                                   </div>
                                 )}
                                 {selectedOrder.discountAmount > 0 && (
@@ -775,7 +775,7 @@ const UserOrders = () => {
                                         <span className="ml-1.5 rounded bg-green-50 px-1.5 py-0.5 font-mono text-xs">{selectedOrder.couponCode}</span>
                                       )}
                                     </span>
-                                    <span className="font-medium">-{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.discountAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className="font-medium">-{formatOrderPrice((selectedOrder.discountAmount || 0), selectedOrder)}</span>
                                   </div>
                                 )}
                                 {selectedOrder.referralDiscountAmount > 0 && (
@@ -786,13 +786,13 @@ const UserOrders = () => {
                                         <span className="ml-1.5 text-xs text-green-700/80">
                                           (
                                           {selectedOrder.referralDiscountType === "fixed"
-                                            ? `${getOrderCurrencySymbol(selectedOrder)} ${Number(selectedOrder.referralDiscountValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} off`
+                                            ? `${formatOrderPrice(Number(selectedOrder.referralDiscountValue), selectedOrder)} off`
                                             : `${selectedOrder.referralDiscountValue}% off`}
                                           )
                                         </span>
                                       )}
                                     </span>
-                                    <span className="font-medium">-{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.referralDiscountAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className="font-medium">-{formatOrderPrice((selectedOrder.referralDiscountAmount || 0), selectedOrder)}</span>
                                   </div>
                                 )}
                                 {selectedOrder.loyaltyDiscountAmount > 0 && (
@@ -805,7 +805,7 @@ const UserOrders = () => {
                                         </span>
                                       )}
                                     </span>
-                                    <span className="font-medium">-{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.loyaltyDiscountAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className="font-medium">-{formatOrderPrice((selectedOrder.loyaltyDiscountAmount || 0), selectedOrder)}</span>
                                   </div>
                                 )}
                                 {/* Fees for the chosen payment method -- a cash handling fee on
@@ -814,12 +814,12 @@ const UserOrders = () => {
                                 {(selectedOrder.paymentCharges || []).map((charge, index) => (
                                   <div key={index} className="flex justify-between text-gray-600">
                                     <span>{charge.name}</span>
-                                    <span className="font-medium text-gray-900">{getOrderCurrencySymbol(selectedOrder)} {(Number(charge.amount) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className="font-medium text-gray-900">{formatOrderPrice((Number(charge.amount) || 0), selectedOrder)}</span>
                                   </div>
                                 ))}
                                 <div className="pt-3 mt-3 border-t border-gray-200 flex justify-between items-center">
                                   <span className="font-bold text-gray-900">Total</span>
-                                  <span className="text-xl font-bold text-green-600">{getOrderCurrencySymbol(selectedOrder)} {(selectedOrder.totalPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  <span className="text-xl font-bold text-green-600">{formatOrderPrice((selectedOrder.totalPrice || 0), selectedOrder)}</span>
                                 </div>
                               </div>
                             </div>
