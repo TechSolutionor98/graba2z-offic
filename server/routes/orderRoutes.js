@@ -374,6 +374,7 @@ router.post(
           quantity,
           image: product.image,
           price: dbPrice,
+          sku: product.sku || "",
           product: product._id,
         }
 

@@ -472,6 +472,7 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                   const showDiscount = !isQuotation && basePrice > salePrice
                   const lineTotal = salePrice * (item.quantity || 0)
                   const baseTotal = basePrice * (item.quantity || 0)
+                  const itemSku = item.selectedColorData?.sku || item.selectedDosData?.sku || item.sku || (typeof item.product === "object" ? item.product?.sku : "") || item.product?.sku || ""
 
                   return (
                     <div
@@ -484,6 +485,10 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                         </div>
                         <div>
                           <h4 className="font-medium text-gray-900">{item.name}</h4>
+                          <p className="text-sm text-gray-600 font-mono mt-1">
+                            <span className="font-semibold text-gray-500">SKU:</span>{" "}
+                            <span className="text-gray-900 font-bold tracking-wide">{itemSku || "N/A"}</span>
+                          </p>
                           {item.selectedColorData && (
                             <p className="text-xs text-purple-600 font-medium mt-1 flex items-center">
                               <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>
@@ -495,7 +500,7 @@ const AdminOrderDetailsModal = ({ isOpen, order: initialOrder, onClose, onUpdate
                               💻 OS: {item.selectedDosData.dosType}
                             </p>
                           )}
-                          <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                          <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
                         </div>
                       </div>
                       <div className="text-right">

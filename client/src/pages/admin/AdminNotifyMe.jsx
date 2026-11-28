@@ -21,6 +21,7 @@ import ConfirmDialog from "../../components/admin/ConfirmDialog"
 import { backInStockAPI } from "../../services/api"
 import { downloadCsv } from "../../utils/csvExport"
 import { useToast } from "../../context/ToastContext"
+import { getFullImageUrl } from "../../utils/imageUtils"
 
 const formatDateTime = (value) => {
   if (!value) return "N/A"
@@ -335,7 +336,17 @@ const AdminNotifyMe = () => {
               ) : (
                 subscriptions.map((sub) => {
                   const productName = sub.metadata?.productName || sub.product?.name || "Product"
-                  const productImg = sub.metadata?.productImage || sub.product?.image || "/placeholder.png"
+                  const rawImg =
+                    (sub.selectedColor && sub.product?.colors?.find((c) => c?.color === sub.selectedColor)?.image) ||
+                    (sub.selectedDos && sub.product?.dos?.find((d) => d?.dosType === sub.selectedDos)?.image) ||
+                    sub.metadata?.productImage ||
+                    sub.product?.image ||
+                    (Array.isArray(sub.product?.galleryImages) && sub.product.galleryImages.find(Boolean)) ||
+                    (Array.isArray(sub.product?.images) && (sub.product.images[0]?.url || sub.product.images[0])) ||
+                    sub.product?.mainImage ||
+                    sub.product?.thumbnail ||
+                    ""
+                  const productImg = getFullImageUrl(rawImg) || "/logo.png"
                   const sku = sub.metadata?.sku || sub.product?.sku || ""
                   const slug = sub.metadata?.slug || sub.product?.slug || sub.product?._id
 
@@ -367,7 +378,8 @@ const AdminNotifyMe = () => {
                             alt={productName}
                             className="h-12 w-12 rounded-lg border border-gray-200 bg-white object-contain p-1 shrink-0"
                             onError={(e) => {
-                              e.target.src = "/placeholder.png"
+                              e.target.onerror = null
+                              e.target.src = "/logo.png"
                             }}
                           />
                           <div className="min-w-0 max-w-xs">

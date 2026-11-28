@@ -268,11 +268,15 @@ const InvoiceComponent = forwardRef(({ order, showStatus, isQuotation }, ref) =>
                   const showDiscount = basePrice > itemPrice
                   const lineTotal = itemPrice * (item.quantity || 0)
                   const baseTotal = basePrice * (item.quantity || 0)
+                  const itemSku = item.selectedColorData?.sku || item.selectedDosData?.sku || item.sku || (typeof item.product === "object" ? item.product?.sku : "") || item.product?.sku || ""
 
                   return (
                     <tr key={index} className="hover:bg-lime-50">
                       <td className="border border-lime-300 px-3 py-2 text-sm">
                         <div className="font-medium text-gray-900">{item.name}</div>
+                        {itemSku && (
+                          <div className="text-xs text-gray-500 font-mono mt-0.5">SKU: {itemSku}</div>
+                        )}
                         {item.selectedColorData && (
                           <div className="text-xs text-purple-600 font-medium mt-1 flex items-center">
                             <span className="inline-block w-3 h-3 rounded-full mr-1 border border-gray-300" style={{backgroundColor: item.selectedColorData.color?.toLowerCase() || '#9333ea'}}></span>

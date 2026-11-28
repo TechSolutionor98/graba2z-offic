@@ -338,6 +338,7 @@ const QuotationInvoiceComponent = forwardRef(({ order, showStatus, isQuotation =
               const split = lineVat(item)
               const qty = Number(item.quantity) || 0
               const unitNet = qty > 0 ? split.net / qty : split.net
+              const itemSku = item.selectedColorData?.sku || item.selectedDosData?.sku || item.sku || (typeof item.product === "object" ? item.product?.sku : "") || item.product?.sku || ""
               return (
                 <tr key={index} className="border-b border-lime-200">
                   <td className="border-x border-lime-200 px-3 py-2 text-sm">
@@ -351,6 +352,9 @@ const QuotationInvoiceComponent = forwardRef(({ order, showStatus, isQuotation =
                     >
                       {item.name}
                     </div>
+                    {itemSku && (
+                      <div className="text-xs text-gray-500 font-mono mt-0.5">SKU: {itemSku}</div>
+                    )}
                     {item.selectedColorData && (
                       <div className="text-xs text-gray-600">Color: {item.selectedColorData.color}</div>
                     )}
